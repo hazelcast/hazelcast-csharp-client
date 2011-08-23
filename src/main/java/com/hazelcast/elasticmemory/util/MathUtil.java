@@ -1,6 +1,6 @@
-package com.hazelcast.elasticmemory;
+package com.hazelcast.elasticmemory.util;
 
-public final class Util {
+public final class MathUtil {
 
 	public static int divideAndCeil(double d, int k) {
 		return (int) Math.ceil(d / k);
@@ -14,5 +14,5 @@ public final class Util {
 		return divideAndCeil(value, factor) * factor;
 	}
 	
-	private Util() {}
+	private MathUtil() {}
 }

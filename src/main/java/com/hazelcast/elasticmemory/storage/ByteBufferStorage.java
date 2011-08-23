@@ -1,6 +1,7 @@
 package com.hazelcast.elasticmemory.storage;
 
-import static com.hazelcast.elasticmemory.Util.*;
+import static com.hazelcast.elasticmemory.util.MathUtil.*;
+
 import java.nio.ByteBuffer;
 
 import com.hazelcast.elasticmemory.EntryRef;
