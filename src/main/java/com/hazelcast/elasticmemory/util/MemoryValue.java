@@ -25,4 +25,22 @@ public final class MemoryValue {
 	public int gigaBytes() {
 		return unit.toGigaBytes(value);
 	}
+	
+	public static MemoryValue parseMemoryValue(String value) {
+		return parseMemoryValue(value, MemoryUnit.Bytes);
+	}
+	
+	public static MemoryValue parseMemoryValue(String value, MemoryUnit defaultUnit) {
+		if(value == null || value.length() == 0) {
+			return new MemoryValue(0, MemoryUnit.Bytes);
+		} else if(value.endsWith("g") || value.endsWith("G")) {
+			return new MemoryValue(Integer.parseInt(value.substring(0, value.length()-1)), MemoryUnit.GigaBytes);
+		} else if(value.endsWith("m") || value.endsWith("M")) {
+			return new MemoryValue(Integer.parseInt(value.substring(0, value.length()-1)), MemoryUnit.MegaBytes);
+		} else if(value.endsWith("k") || value.endsWith("K")) {
+			return new MemoryValue(Integer.parseInt(value.substring(0, value.length()-1)), MemoryUnit.KiloBytes);
+		} else {
+			return new MemoryValue(Integer.parseInt(value), defaultUnit);
+		}
+	}
 }
