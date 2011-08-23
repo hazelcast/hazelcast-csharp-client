@@ -1,4 +1,6 @@
-package com.hazelcast.elasticmemory;
+package com.hazelcast.elasticmemory.storage;
+
+import com.hazelcast.elasticmemory.EntryRef;
 
 public interface Storage {
 	

@@ -1,4 +1,4 @@
-package com.hazelcast.elasticmemory;
+package com.hazelcast.elasticmemory.storage;
 
 import static com.hazelcast.elasticmemory.Util.*;
 

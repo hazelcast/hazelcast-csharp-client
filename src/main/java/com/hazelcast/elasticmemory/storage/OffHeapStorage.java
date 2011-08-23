@@ -1,8 +1,10 @@
-package com.hazelcast.elasticmemory;
+package com.hazelcast.elasticmemory.storage;
 
 import static com.hazelcast.elasticmemory.Util.*;
 
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.hazelcast.elasticmemory.EntryRef;
 
 public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 	
