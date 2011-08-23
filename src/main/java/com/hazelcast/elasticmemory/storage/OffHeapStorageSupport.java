@@ -1,6 +1,6 @@
 package com.hazelcast.elasticmemory.storage;
 
-import static com.hazelcast.elasticmemory.Util.*;
+import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
 abstract class OffHeapStorageSupport {
 

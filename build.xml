@@ -1,0 +1,61 @@
+<project basedir="." name="Elastic Memory" default="jar">
+    
+	<property name="version" value="1.9.5-SNAPSHOT"/>
+    <property name="workspace.dir" value="/java/workspace"/>
+    <property name="elastic.dir" value="${workspace.dir}/elastic-memory/trunk"/>
+    <property name="hazelcast.dir" value="${workspace.dir}/hazelcast/trunk/hazelcast"/>
+	<property name="hazelcast.resource.dir" value="${hazelcast.dir}/src/main/resources"/>
+	<property name="classes.dir" value="target/classes"/>
+    <property name="jar.name" value="hazelcast-enterprise-${version}.jar"/>
+	<property name="jar.file" value="${elastic.dir}/target/${jar.name}"/>
+
+    <target name="jar">
+    	<delete>
+			<fileset dir="${elastic.dir}/target">
+			    <include name="${jar.name}"/>
+			</fileset>
+		</delete>
+    	
+    	<zip destfile="${jar.file}">
+            <zipfileset dir="${hazelcast.dir}/${classes.dir}">
+            	<exclude name="**/META-INF/services/*"/>
+            </zipfileset>
+    		<zipfileset dir="${hazelcast.resource.dir}" >
+    			<include name="**/META-INF/*"/>
+    		</zipfileset>
+            <zipfileset dir="${elastic.dir}/${classes.dir}"/>
+    	</zip>
+    </target>
+	
+	<target name="clean">
+		<delete dir="${basedir}/root"/>
+	</target>
+	
+	<target name="copy">
+		<mkdir dir="${basedir}/root"/>
+		<copy todir="${basedir}/root">
+			<fileset dir="${workspace.dir}/hazelcast/trunk">
+				<exclude name="**/target/**/*"/>
+			</fileset>
+		</copy>
+		
+		<copy todir="${basedir}/root/hazelcast/src" overwrite="true">
+			<fileset dir="${elastic.dir}/src">
+			</fileset>
+		</copy>
+	</target>
+		
+	<target name="mvn build">
+		<exec dir="${basedir}/root" executable="mvn">
+			<arg value="-DskipTests" />
+			<arg value="clean" />
+			<arg value="package" />
+		</exec>
+	</target>	
+	
+	<target name="doAll" depends="clean">
+		<antcall target="copy" />
+		<antcall target="mvn build" />
+	</target>
+	
+</project>
