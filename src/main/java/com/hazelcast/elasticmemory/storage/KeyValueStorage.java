@@ -1,4 +1,4 @@
-package com.hazelcast.elasticmemory;
+package com.hazelcast.elasticmemory.storage;
 
 public interface KeyValueStorage<K> {
 	

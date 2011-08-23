@@ -1,7 +1,9 @@
-package com.hazelcast.elasticmemory;
+package com.hazelcast.elasticmemory.storage;
 
 import static com.hazelcast.elasticmemory.Util.*;
 import java.nio.ByteBuffer;
+
+import com.hazelcast.elasticmemory.EntryRef;
 
 public class ByteBufferStorage {
 	
