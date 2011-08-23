@@ -1,92 +1,92 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <name>elastic-memory</name>
-    <groupId>com.hazelcast</groupId>
-    <artifactId>elastic-memory</artifactId>
-    <packaging>jar</packaging>
-    <version>0.0.1</version>
-
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jdk.version>1.5</jdk.version>
-        <target.dir>target</target.dir>
-    </properties>
-    <licenses>
-        <license>
-            <name>Commercial License</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>hazelcast</distribution>
-        </license>
-    </licenses>
-    <scm>
-        <connection>scm:svn:https://svn.hazelcast.com/svn/elastic-memory/trunk/</connection>
-        <developerConnection>scm:svn:https://svn.hazelcast.com/svn/elastic-memory/trunk/</developerConnection>
-        <url>https://svn.hazelcast.com/viewvc/elastic-memory/</url>
-    </scm>
-    <developers>
-        <developer>
-            <id>talip</id>
-            <name>talip ozturk</name>
-            <email>talip@hazelcast.com</email>
-        </developer>
-        <developer>
-            <id>fuad</id>
-            <name>fuad malikov</name>
-            <email>fuad@hazelcast.com</email>
-        </developer>
-    </developers>
-    <issueManagement>
-        <system>Google Code</system>
-        <url>http://code.google.com/p/hazelcast/issues</url>
-    </issueManagement>
-    <organization>
-        <name>Hazel Bilisim Ltd.</name>
-        <url>http://www.hazelcast.com/</url>
-    </organization>
-
-
-    <build>
-        <plugins>
-            <plugin>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<name>elastic-memory</name>
+	<groupId>com.hazelcast</groupId>
+	<artifactId>elastic-memory</artifactId>
+	<packaging>jar</packaging>
+	<version>0.0.1</version>
+	<properties>
+		<hazelcast.version>1.9.5-SNAPSHOT</hazelcast.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<jdk.version>1.5</jdk.version>
+		<target.dir>target</target.dir>
+	</properties>
+	<licenses>
+		<license>
+			<name>Commercial License</name>
+			<url>http://www.hazelcast.com/licenses/LICENSE.txt</url>
+			<distribution>hazelcast</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:svn:https://svn.hazelcast.com/svn/elastic-memory/trunk/</connection>
+		<developerConnection>scm:svn:https://svn.hazelcast.com/svn/elastic-memory/trunk/</developerConnection>
+		<url>https://svn.hazelcast.com/viewvc/elastic-memory/</url>
+	</scm>
+	<developers>
+		<developer>
+			<id>talip</id>
+			<name>talip ozturk</name>
+			<email>talip@hazelcast.com</email>
+		</developer>
+		<developer>
+			<id>fuad</id>
+			<name>fuad malikov</name>
+			<email>fuad@hazelcast.com</email>
+		</developer>
+	</developers>
+	<issueManagement>
+		<system>Google Code</system>
+		<url>http://code.google.com/p/hazelcast/issues</url>
+	</issueManagement>
+	<organization>
+		<name>Hazel Bilisim Ltd.</name>
+		<url>http://www.hazelcast.com/</url>
+	</organization>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${jdk.version}</source>
+					<target>${jdk.version}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+			 <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
-                    <source>${jdk.version}</source>
-                    <target>${jdk.version}</target>
-                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <archive>
+                        <index>true</index>
+                        <compress>true</compress>
+                        <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.6</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.8.2</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.hazelcast</groupId>
+			<artifactId>hazelcast</artifactId>
+			<version>${hazelcast.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.6</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.8.2</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
 </project>
