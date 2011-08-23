@@ -24,8 +24,8 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 			
 			String heapSize = node.groupProperties.OFFHEAP_TOTAL_SIZE.getValue();
 	        String chunkSize = node.groupProperties.OFFHEAP_CHUNK_SIZE.getValue();
-	        MemoryValue heapSizeValue = getMemoryValue(heapSize, MemoryUnit.MegaBytes);
-	        MemoryValue chunkSizeValue = getMemoryValue(chunkSize, MemoryUnit.KiloBytes);
+	        MemoryValue heapSizeValue = MemoryValue.parseMemoryValue(heapSize, MemoryUnit.MegaBytes);
+	        MemoryValue chunkSizeValue = MemoryValue.parseMemoryValue(chunkSize, MemoryUnit.KiloBytes);
 	        
 	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + heapSize + " OFF-HEAP >>>>>>>>>>");
 	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + chunkSize + " CHUNK-SIZE >>>>>>>>>>");
@@ -59,19 +59,5 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 	
 	public int getOrder() {
 		return 100;
-	}
-	
-	private MemoryValue getMemoryValue(String value, MemoryUnit defaultUnit) {
-		if(value == null || value.length() == 0) {
-			return new MemoryValue(0, MemoryUnit.Bytes);
-		} else if(value.endsWith("g") || value.endsWith("G")) {
-			return new MemoryValue(Integer.parseInt(value.substring(0, value.length()-1)), MemoryUnit.GigaBytes);
-		} else if(value.endsWith("m") || value.endsWith("M")) {
-			return new MemoryValue(Integer.parseInt(value.substring(0, value.length()-1)), MemoryUnit.MegaBytes);
-		} else if(value.endsWith("k") || value.endsWith("K")) {
-			return new MemoryValue(Integer.parseInt(value.substring(0, value.length()-1)), MemoryUnit.KiloBytes);
-		} else {
-			return new MemoryValue(Integer.parseInt(value), defaultUnit);
-		}
 	}
 }
