@@ -44,20 +44,20 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 	
 	private class StorageSegment<K> extends ReentrantLock {
 		
-		private final ByteBufferStorage storage;
+		private final BufferSegment buffer;
 		private final Map<K, EntryRef> space;
 
 		StorageSegment(int totalSizeInMb, int chunkSizeInKb) {
 			super();
 			space = new HashMap<K, EntryRef>(divideAndCeil(totalSizeInMb * Storage._1K, chunkSizeInKb * 2));
-			storage = new ByteBufferStorage(totalSizeInMb, chunkSizeInKb);
+			buffer = new BufferSegment(totalSizeInMb, chunkSizeInKb);
 		}
 
 		public void put(final K key, final byte[] value) {
 			lock();
 			try {
 				remove0(key);
-				EntryRef ref = storage.put(value);
+				EntryRef ref = buffer.put(value);
 				space.put(key, ref);
 			} finally {
 				unlock();
@@ -72,7 +72,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 					space.remove(key);
 					return null;
 				}
-				return storage.get(ref);
+				return buffer.get(ref);
 			} finally {
 				unlock();
 			}
@@ -89,7 +89,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 		
 		private void remove0(final K key) {
 			final EntryRef ref = space.remove(key);
-			storage.remove(ref);
+			buffer.remove(ref);
 		}
 	}
 }

@@ -35,4 +35,5 @@ abstract class OffHeapStorageSupport {
 		this.segmentCount = segmentCount;
 		this.segmentSizeInMb = segmentSizeInMb;
 	}
+	
 }

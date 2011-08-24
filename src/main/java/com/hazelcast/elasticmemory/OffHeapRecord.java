@@ -14,8 +14,8 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
     private volatile EntryRef entryRef;
     private final Storage storage; 
 
-    public OffHeapRecord(Storage storage, CMap cmap, int blockId, Data key, Data value, long ttl, long maxIdleMillis, Long id) {
-        super(cmap, blockId, key, null, ttl, maxIdleMillis, id);
+    public OffHeapRecord(Storage storage, CMap cmap, int blockId, Data key, Data value, long ttl, long maxIdleMillis, long id) {
+        super(cmap, blockId, key, ttl, maxIdleMillis, id);
         this.storage = storage;
         setValue(value);
     }

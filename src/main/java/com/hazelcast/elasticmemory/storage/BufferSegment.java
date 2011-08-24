@@ -3,10 +3,15 @@ package com.hazelcast.elasticmemory.storage;
 import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
 
 import com.hazelcast.elasticmemory.EntryRef;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 
-public class ByteBufferStorage {
+public class BufferSegment {
+	
+	private static final ILogger logger = Logger.getLogger(BufferSegment.class.getName());
 	
 	public final static int _1K = 1024;
 	public final static int _1M = _1K * _1K;
@@ -22,7 +27,7 @@ public class ByteBufferStorage {
 	private final IntQueue chunks;
 	private final ByteBuffer buffer;
 
-	public ByteBufferStorage(int totalSizeInMb, int chunkSizeInKb) {
+	public BufferSegment(int totalSizeInMb, int chunkSizeInKb) {
 		super();
 		this.totalSize = totalSizeInMb * _1M;
 		this.chunkSize = chunkSizeInKb * _1K;
@@ -32,14 +37,14 @@ public class ByteBufferStorage {
 		
 		int index = nextId();
 		this.chunkCount = totalSize / chunkSize;
-		System.out.println("BufferSegment[" + index + "] starting with chunkCount=" + chunkCount);
+		logger.log(Level.FINEST, "BufferSegment[" + index + "] starting with chunkCount=" + chunkCount);
 
 		chunks = new IntQueue(chunkCount);
 		buffer = ByteBuffer.allocateDirect(totalSize);
 		for (int i = 0; i < chunkCount; i++) {
 			chunks.offer(i);
 		}
-		System.out.println("BufferSegment[" + index + "] started!");
+		logger.log(Level.INFO, "BufferSegment[" + index + "] started!");
 	}
 
 	public EntryRef put(final byte[] value) {
