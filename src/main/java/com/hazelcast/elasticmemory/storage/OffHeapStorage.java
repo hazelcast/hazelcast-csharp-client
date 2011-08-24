@@ -40,17 +40,17 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 	}
 	
 	private class StorageSegment extends ReentrantLock {
-		private final ByteBufferStorage storage;
+		private final BufferSegment buffer;
 
 		StorageSegment(int totalSizeInMb, int chunkSizeInKb) {
 			super();
-			storage = new ByteBufferStorage(totalSizeInMb, chunkSizeInKb);
+			buffer = new BufferSegment(totalSizeInMb, chunkSizeInKb);
 		}
 
 		public EntryRef put(final byte[] value) {
 			lock();
 			try {
-				return storage.put(value);
+				return buffer.put(value);
 			} finally {
 				unlock();
 			}
@@ -59,7 +59,7 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 		public byte[] get(final EntryRef entry) {
 			lock();
 			try {
-				return storage.get(entry);
+				return buffer.get(entry);
 			} finally {
 				unlock();
 			}
@@ -68,7 +68,7 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 		public void remove(final EntryRef entry) {
 			lock();
 			try {
-				storage.remove(entry);
+				buffer.remove(entry);
 			} finally {
 				unlock();
 			}
