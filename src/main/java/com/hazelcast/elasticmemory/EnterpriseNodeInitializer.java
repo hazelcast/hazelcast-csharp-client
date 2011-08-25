@@ -4,12 +4,11 @@ import java.util.logging.Level;
 
 import com.hazelcast.elasticmemory.enterprise.InvalidLicenseError;
 import com.hazelcast.elasticmemory.enterprise.Registration;
-import com.hazelcast.elasticmemory.enterprise.Registration.Type;
 import com.hazelcast.elasticmemory.enterprise.RegistrationService;
 import com.hazelcast.elasticmemory.storage.OffHeapStorage;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.elasticmemory.util.MemoryUnit;
-import com.hazelcast.elasticmemory.util.MemoryValue;
+import com.hazelcast.elasticmemory.util.MemorySize;
 import com.hazelcast.impl.Node;
 import com.hazelcast.impl.base.DefaultNodeInitializer;
 import com.hazelcast.impl.base.NodeInitializer;
@@ -45,14 +44,14 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		if(isOffHeapEnabled()) {
 			systemLogger.log(Level.INFO, "Initializing node off-heap store...");
 			
-			String heapSize = node.groupProperties.OFFHEAP_TOTAL_SIZE.getValue();
-	        String chunkSize = node.groupProperties.OFFHEAP_CHUNK_SIZE.getValue();
-	        MemoryValue heapSizeValue = MemoryValue.parseMemoryValue(heapSize, MemoryUnit.MEGABYTES);
-	        MemoryValue chunkSizeValue = MemoryValue.parseMemoryValue(chunkSize, MemoryUnit.KILOBYTES);
+			String heap = node.groupProperties.OFFHEAP_TOTAL_SIZE.getValue();
+	        String chunk = node.groupProperties.OFFHEAP_CHUNK_SIZE.getValue();
+	        MemorySize heapSize = MemorySize.parse(heap, MemoryUnit.MEGABYTES);
+	        MemorySize chunkSize = MemorySize.parse(chunk, MemoryUnit.KILOBYTES);
 	        
-	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + heapSize + " OFF-HEAP >>>>>>>>>>");
-	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + chunkSize + " CHUNK-SIZE >>>>>>>>>>");
-	        storage = new OffHeapStorage(heapSizeValue.megaBytes(), chunkSizeValue.kiloBytes());
+	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + heap + " OFF-HEAP >>>>>>>>>>");
+	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + chunk + " CHUNK-SIZE >>>>>>>>>>");
+	        storage = new OffHeapStorage(heapSize.megaBytes(), chunkSize.kiloBytes());
 		}
 	}
 	
@@ -69,9 +68,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 	}
 
 	public boolean isEnterprise() {
-		return registration != null && registration.isValid()
-			&& (registration.getType() == Type.FULL 
-					|| registration.getType() == Type.TRIAL && !registration.isExpired());
+		return registration != null && registration.isValid();
 	}
 
 	public boolean isOffHeapEnabled() {

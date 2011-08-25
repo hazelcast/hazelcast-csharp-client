@@ -42,7 +42,8 @@ public class Registration {
 	}
 	
 	public boolean isValid() {
-		return true;
+		return (type == Type.FULL 
+				|| type == Type.TRIAL && !isExpired());
 	}
 	
 	public enum Type {
