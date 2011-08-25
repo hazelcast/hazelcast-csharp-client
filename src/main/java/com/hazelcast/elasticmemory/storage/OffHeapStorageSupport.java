@@ -11,13 +11,13 @@ abstract class OffHeapStorageSupport {
 	protected final int segmentSizeInMb;
 	
 	public OffHeapStorageSupport(int totalSizeInMb, int chunkSizeInKb) {
-		this(totalSizeInMb, Math.max(MIN_SEGMENT_COUNT, divideAndCeil(totalSizeInMb, MAX_SEGMENT_SIZE_IN_MB)), chunkSizeInKb);
+		this(totalSizeInMb, Math.max(MIN_SEGMENT_COUNT, divideByAndCeil(totalSizeInMb, MAX_SEGMENT_SIZE_IN_MB)), chunkSizeInKb);
 	}
 	
 	public OffHeapStorageSupport(int totalSizeInMb, int segmentCount, int chunkSizeInKb) {
 		super();
 		
-		int segmentSizeInMb = divideAndCeil(totalSizeInMb, segmentCount);
+		int segmentSizeInMb = divideByAndCeil(totalSizeInMb, segmentCount);
 		if(segmentSizeInMb > MAX_SEGMENT_SIZE_IN_MB) {
 			System.err.println("Segment size exceeded max value! Setting segment size to max = " + MAX_SEGMENT_SIZE_IN_MB + "MB.");
 			segmentSizeInMb = MAX_SEGMENT_SIZE_IN_MB;

@@ -13,7 +13,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 	private final StorageSegment[] segments ;
 	
 	public KeyValueOffHeapStorage(int totalSizeInMb, int chunkSizeInKb) {
-		this(totalSizeInMb, Math.max(MIN_SEGMENT_COUNT, divideAndCeil(totalSizeInMb, MAX_SEGMENT_SIZE_IN_MB)), chunkSizeInKb);
+		this(totalSizeInMb, Math.max(MIN_SEGMENT_COUNT, divideByAndCeil(totalSizeInMb, MAX_SEGMENT_SIZE_IN_MB)), chunkSizeInKb);
 	}
 	
 	public KeyValueOffHeapStorage(int totalSizeInMb, int segmentCount, int chunkSizeInKb) {
@@ -49,7 +49,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 
 		StorageSegment(int totalSizeInMb, int chunkSizeInKb) {
 			super();
-			space = new HashMap<K, EntryRef>(divideAndCeil(totalSizeInMb * Storage._1K, chunkSizeInKb * 2));
+			space = new HashMap<K, EntryRef>(divideByAndCeil(totalSizeInMb * Storage._1K, chunkSizeInKb * 2));
 			buffer = new BufferSegment(totalSizeInMb, chunkSizeInKb);
 		}
 

@@ -47,8 +47,8 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 			
 			String heapSize = node.groupProperties.OFFHEAP_TOTAL_SIZE.getValue();
 	        String chunkSize = node.groupProperties.OFFHEAP_CHUNK_SIZE.getValue();
-	        MemoryValue heapSizeValue = MemoryValue.parseMemoryValue(heapSize, MemoryUnit.MegaBytes);
-	        MemoryValue chunkSizeValue = MemoryValue.parseMemoryValue(chunkSize, MemoryUnit.KiloBytes);
+	        MemoryValue heapSizeValue = MemoryValue.parseMemoryValue(heapSize, MemoryUnit.MEGABYTES);
+	        MemoryValue chunkSizeValue = MemoryValue.parseMemoryValue(chunkSize, MemoryUnit.KILOBYTES);
 	        
 	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + heapSize + " OFF-HEAP >>>>>>>>>>");
 	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + chunkSize + " CHUNK-SIZE >>>>>>>>>>");

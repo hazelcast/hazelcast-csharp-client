@@ -24,7 +24,7 @@ public class BufferSegment {
 	private final int totalSize;
 	private final int chunkSize;
 	private final int chunkCount;
-	private final IntQueue chunks;
+	private final AddressQueue chunks;
 	private final ByteBuffer buffer;
 
 	public BufferSegment(int totalSizeInMb, int chunkSizeInKb) {
@@ -39,7 +39,7 @@ public class BufferSegment {
 		this.chunkCount = totalSize / chunkSize;
 		logger.log(Level.FINEST, "BufferSegment[" + index + "] starting with chunkCount=" + chunkCount);
 
-		chunks = new IntQueue(chunkCount);
+		chunks = new AddressQueue(chunkCount);
 		buffer = ByteBuffer.allocateDirect(totalSize);
 		for (int i = 0; i < chunkCount; i++) {
 			chunks.offer(i);
@@ -53,20 +53,15 @@ public class BufferSegment {
 			return null;
 		}
 
-		final int count = divideAndCeil(length, chunkSize);
-		final int[] indexes = new int[count];
+		final int count = divideByAndCeil(length, chunkSize);
+		final int[] indexes = chunks.poll(count);
 		final EntryRef ref = new EntryRef(indexes, length);
 
 		int offset = 0;
 		for (int i = 0; i < count; i++) {
-			int index = chunks.poll();
-			if (index == IntQueue.NULL_VALUE) {
-				throwOutOfMemoryError("Segment is full!!!");
-			}
-			buffer.position(index * chunkSize);
+			buffer.position(indexes[i] * chunkSize);
 			int l = Math.min(chunkSize, (length - offset));
 			buffer.put(value, offset, l);
-			indexes[i] = index;
 			offset += l;
 		}
 		return ref;
@@ -109,7 +104,7 @@ public class BufferSegment {
 		}
 	}
 
-	private class IntQueue {
+	private class AddressQueue {
 		final static int NULL_VALUE = -1;
 		final int maxSize;
 		final int[] array;
@@ -117,7 +112,7 @@ public class BufferSegment {
 		int remove = 0;
 		int size = 0;
 
-		public IntQueue(int maxSize) {
+		public AddressQueue(int maxSize) {
 			this.maxSize = maxSize;
 			array = new int[maxSize];
 		}
@@ -145,6 +140,19 @@ public class BufferSegment {
 				remove = 0;
 			}
 			return value;
+		}
+		
+		public int[] poll(final int count) {
+			if(count > size) {
+				throwOutOfMemoryError("Segment's has " + size + " available chunks. " +
+						"Data requires " + count + " chunks. Segment is full!");
+			}
+			
+			final int[] result = new int[count];
+			for (int i = 0; i < count; i++) {
+				result[i] = poll();
+			}
+			return result;
 		}
 	}
 	
