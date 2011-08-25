@@ -3,7 +3,7 @@ package com.hazelcast.elasticmemory.enterprise;
 public class InvalidLicenseError extends Error {
 
 	public InvalidLicenseError() {
-		super("Invalid license file! Please contant sales@hazelcast.com");
+		super("Invalid license file! Please contact sales@hazelcast.com");
 	}
 	
 	public InvalidLicenseError(String message) {

@@ -1,5 +1,6 @@
 package com.hazelcast.elasticmemory.enterprise;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
@@ -9,7 +10,11 @@ import com.hazelcast.impl.base.NodeInitializer;
 public class RegistrationService {
 
 	public static Registration getRegistration() throws Exception {
-		final String license = KeyDecrypt.decrypt(new String(readLicense()));
+		final byte[] data = readLicense();
+		if(data == null || data.length == 0) {
+			throw new FileNotFoundException("License file could not be loaded!");
+		}
+		final String license = KeyDecrypt.decrypt(new String(data));
 		final String parts[] = license.split("\\$");
 		final String name = parts[0];
 		final String type = parts[1];

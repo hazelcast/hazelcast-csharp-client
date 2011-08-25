@@ -9,10 +9,17 @@
     <property name="jar.name" value="hazelcast-enterprise-${version}.jar"/>
 	<property name="jar.file" value="${elastic.dir}/target/${jar.name}"/>
 
+	<taskdef resource="proguard/ant/task.properties"
+	         classpath="/Volumes/USERS/mm/Downloads/proguard4.6/lib/proguard.jar" />
+	
+	<target name="produard" depends="jar">
+		<proguard configuration="elastic.pro"/>
+	</target>
+	
     <target name="jar">
     	<delete>
 			<fileset dir="${elastic.dir}/target">
-			    <include name="${jar.name}"/>
+			    <include name="*.jar"/>
 			</fileset>
 		</delete>
     	
@@ -22,24 +29,29 @@
             </zipfileset>
     		<zipfileset dir="${hazelcast.resource.dir}" >
     			<include name="**/META-INF/*"/>
+    			<exclude name="**/META-INF/services/*"/>
     		</zipfileset>
             <zipfileset dir="${elastic.dir}/${classes.dir}"/>
     	</zip>
     </target>
 	
 	<target name="clean">
-		<delete dir="${basedir}/root"/>
+		<delete includeemptydirs="true" failonerror="no">
+			<fileset dir="${basedir}/root">
+			</fileset>
+		</delete>
 	</target>
 	
 	<target name="copy">
-		<mkdir dir="${basedir}/root"/>
+		<mkdir dir="${basedir}/root" />
 		<copy todir="${basedir}/root">
 			<fileset dir="${workspace.dir}/hazelcast/trunk">
 				<exclude name="**/target/**/*"/>
+    			<exclude name="**/META-INF/services/*"/>
 			</fileset>
 		</copy>
 		
-		<copy todir="${basedir}/root/hazelcast/src" overwrite="true">
+		<copy todir="${basedir}/root/hazelcast/src">
 			<fileset dir="${elastic.dir}/src">
 			</fileset>
 		</copy>

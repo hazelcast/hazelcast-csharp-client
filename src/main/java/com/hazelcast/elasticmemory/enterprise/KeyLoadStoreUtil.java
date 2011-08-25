@@ -10,6 +10,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 public class KeyLoadStoreUtil {
 	
@@ -44,9 +45,11 @@ public class KeyLoadStoreUtil {
 	}
 
 	private static byte[] read(InputStream in) throws IOException {
+		if(in == null) {
+			return new byte[0];
+		}
 		float factor = 1.5f;
-		byte[] buffer = new byte[1024];
-		
+		byte[] buffer = new byte[256];
 		int k = 0;
 		int i = 0;
 		while((k = in.read()) > -1) {

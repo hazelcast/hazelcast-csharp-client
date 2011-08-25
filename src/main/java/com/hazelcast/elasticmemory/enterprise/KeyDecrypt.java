@@ -12,11 +12,10 @@ import static com.hazelcast.org.apache.xerces.utils.Base64.*;
 public class KeyDecrypt {
 
 	public static String decrypt(String e) throws GeneralSecurityException, IOException  {
-		String resource = "public";
+		String resource = "public.key";
 		InputStream in = KeyDecrypt.class.getClassLoader().getResourceAsStream(resource);
-
-		PublicKey key = KeyLoadStoreUtil.loadPublicKey(in, "RSA");
 		
+		PublicKey key = KeyLoadStoreUtil.loadPublicKey(in, "RSA");
 		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		

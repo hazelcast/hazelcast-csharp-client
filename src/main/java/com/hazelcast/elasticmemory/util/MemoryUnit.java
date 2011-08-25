@@ -1,29 +1,30 @@
 package com.hazelcast.elasticmemory.util;
 
+import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
 public enum MemoryUnit {
-	Bytes {
+	BYTES {
 		public int convert(int value, MemoryUnit m) {return m.toBytes(value);}
 		public int toBytes(int value) {return value;}
-		public int toKiloBytes(int value) {return value/K;}
-		public int toMegaBytes(int value) {return value/M;}
-		public int toGigaBytes(int value) {return value/G;}
+		public int toKiloBytes(int value) {return divideByAndRound(value, K);}
+		public int toMegaBytes(int value) {return divideByAndRound(value, M);}
+		public int toGigaBytes(int value) {return divideByAndRound(value, G);}
 	},
-	KiloBytes {
+	KILOBYTES {
 		public int convert(int value, MemoryUnit m) {return m.toKiloBytes(value);}
 		public int toBytes(int value) {return value*K;}
 		public int toKiloBytes(int value) {return value;}
-		public int toMegaBytes(int value) {return value/K;}
-		public int toGigaBytes(int value) {return value/M;}
+		public int toMegaBytes(int value) {return divideByAndRound(value, K);}
+		public int toGigaBytes(int value) {return divideByAndRound(value, M);}
 	},
-	MegaBytes {
+	MEGABYTES {
 		public int convert(int value, MemoryUnit m) {return m.toMegaBytes(value);}
 		public int toBytes(int value) {return value*M;}
 		public int toKiloBytes(int value) {return value*K;}
 		public int toMegaBytes(int value) {return value;}
-		public int toGigaBytes(int value) {return value/K;}
+		public int toGigaBytes(int value) {return divideByAndRound(value, K);}
 	},
-	GigaBytes {
+	GIGABYTES {
 		public int convert(int value, MemoryUnit m) {return m.toGigaBytes(value);}
 		public int toBytes(int value) {return value*G;}
 		public int toKiloBytes(int value) {return value*M;}
