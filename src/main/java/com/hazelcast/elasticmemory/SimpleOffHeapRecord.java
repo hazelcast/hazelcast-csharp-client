@@ -11,16 +11,22 @@ import com.hazelcast.nio.Data;
 public final class SimpleOffHeapRecord extends AbstractSimpleRecord implements Record {
 
     private volatile EntryRef entryRef;
-    private final Storage storage; 
+//    private final Storage storage; 
 
-    public SimpleOffHeapRecord(Storage storage, CMap cmap, int blockId, Data key, Data value, long id) {
+//    public SimpleOffHeapRecord(Storage storage, CMap cmap, int blockId, Data key, Data value, long id) {
+//        super(blockId, cmap, id, key);
+//        this.storage = storage;
+//        setValue(value);
+//    }
+    
+    public SimpleOffHeapRecord(CMap cmap, int blockId, Data key, Data value, long id) {
         super(blockId, cmap, id, key);
-        this.storage = storage;
         setValue(value);
     }
 
     public SimpleOffHeapRecord copy() {
-        return new SimpleOffHeapRecord(storage, cmap, blockId, key, getValueData(), id);
+//        return new SimpleOffHeapRecord(getStorage(), cmap, blockId, key, getValueData(), id);
+    	return new SimpleOffHeapRecord(cmap, blockId, key, getValueData(), id);
     }
 
     public Object getValue() {
@@ -28,20 +34,11 @@ public final class SimpleOffHeapRecord extends AbstractSimpleRecord implements R
     }
 
     public Data getValueData() {
-    	return new Data(storage.get(key.getPartitionHash(), entryRef));
+    	return OffHeapRecordHelper.getValueData(key, entryRef, getStorage());
     }
 
     public void setValue(Data value) {
-    	if(value == null || storage == null) {
-    		return;
-    	}
-        storage.remove(key.getPartitionHash(), entryRef);
-        if(value != null && value.buffer != null) {
-        	entryRef = storage.put(key.getPartitionHash(), value.buffer);
-        }
-        else {
-        	entryRef = null;
-        }
+    	entryRef = OffHeapRecordHelper.setValue(key, entryRef, value, getStorage());
     }
 
     public long getCost() {
@@ -71,5 +68,10 @@ public final class SimpleOffHeapRecord extends AbstractSimpleRecord implements R
 	}
 
 	public void addValue(Data value) {
+	}
+	
+	private Storage getStorage() {
+		EnterpriseNodeInitializer initializer = (EnterpriseNodeInitializer) getNode().initializer;
+		return initializer.getOffHeapStorage();
 	}
 }

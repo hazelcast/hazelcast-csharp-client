@@ -60,9 +60,9 @@ public class BufferSegment {
 		int offset = 0;
 		for (int i = 0; i < count; i++) {
 			buffer.position(indexes[i] * chunkSize);
-			int l = Math.min(chunkSize, (length - offset));
-			buffer.put(value, offset, l);
-			offset += l;
+			int len = Math.min(chunkSize, (length - offset));
+			buffer.put(value, offset, len);
+			offset += len;
 		}
 		return ref;
 	}
@@ -144,7 +144,7 @@ public class BufferSegment {
 		
 		public int[] poll(final int count) {
 			if(count > size) {
-				throwOutOfMemoryError("Segment's has " + size + " available chunks. " +
+				throwOutOfMemoryError("Segment has " + size + " available chunks. " +
 						"Data requires " + count + " chunks. Segment is full!");
 			}
 			

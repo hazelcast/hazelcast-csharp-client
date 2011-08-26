@@ -1,6 +1,6 @@
 package com.hazelcast.elasticmemory;
 
-import static com.hazelcast.nio.IOUtil.toObject;
+import static com.hazelcast.nio.IOUtil.*;
 
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.impl.AbstractRecord;
@@ -12,16 +12,22 @@ import com.hazelcast.nio.Data;
 public final class OffHeapRecord extends AbstractRecord implements Record {
 
     private volatile EntryRef entryRef;
-    private final Storage storage; 
+//    private final Storage storage; 
 
-    public OffHeapRecord(Storage storage, CMap cmap, int blockId, Data key, Data value, long ttl, long maxIdleMillis, long id) {
+//    public OffHeapRecord(Storage storage, CMap cmap, int blockId, Data key, Data value, long ttl, long maxIdleMillis, long id) {
+//        super(cmap, blockId, key, ttl, maxIdleMillis, id);
+//        this.storage = storage;
+//        setValue(value);
+//    }
+
+    public OffHeapRecord(CMap cmap, int blockId, Data key, Data value, long ttl, long maxIdleMillis, long id) {
         super(cmap, blockId, key, ttl, maxIdleMillis, id);
-        this.storage = storage;
         setValue(value);
     }
-
+    
     public OffHeapRecord copy() {
-        OffHeapRecord recordCopy = new OffHeapRecord(storage, cmap, blockId, key, getValueData(), getRemainingTTL(), getRemainingIdle(), id);
+//        OffHeapRecord recordCopy = new OffHeapRecord(getStorage(), cmap, blockId, key, getValueData(), getRemainingTTL(), getRemainingIdle(), id);
+    	OffHeapRecord recordCopy = new OffHeapRecord(cmap, blockId, key, getValueData(), getRemainingTTL(), getRemainingIdle(), id);
         if (optionalInfo != null) {
             recordCopy.setIndexes(getIndexes(), getIndexTypes());
             recordCopy.setMultiValues(getMultiValues());
@@ -38,25 +44,21 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
     }
 
     public Data getValueData() {
-    	return new Data(storage.get(key.getPartitionHash(), entryRef));
+    	return OffHeapRecordHelper.getValueData(key, entryRef, getStorage());
     }
 
     public Object setValue(Object value) {
+    	setValue(toData(value));
         return null;
     }
 
+    @Override
+    protected void invalidateValueCache() {
+    }
+    
     public void setValue(Data value) {
-    	if(value == null || storage == null) {
-    		return;
-    	}
-        invalidateValueCache();
-        storage.remove(key.getPartitionHash(), entryRef);
-        if(value != null && value.buffer != null) {
-        	entryRef = storage.put(key.getPartitionHash(), value.buffer);
-        }
-        else {
-        	entryRef = null;
-        }
+    	invalidateValueCache();
+    	entryRef = OffHeapRecordHelper.setValue(key, entryRef, value, getStorage());
     }
 
     public int valueCount() {
@@ -87,5 +89,14 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
 
 	public boolean hasValueData() {
 		return entryRef != null;
+	}
+	
+//	private Storage getStorage() {
+//		return storage;
+//	}
+	
+	private Storage getStorage() {
+		EnterpriseNodeInitializer initializer = (EnterpriseNodeInitializer) getNode().initializer;
+		return initializer.getOffHeapStorage();
 	}
 }

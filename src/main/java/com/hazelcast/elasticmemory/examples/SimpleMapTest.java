@@ -23,7 +23,7 @@ public class SimpleMapTest {
     public static int REMOVE_PERCENTAGE = 20;
 
     public static void main(String[] args) {
-    	System.setProperty("hazelcast.map.simple.record", "true");
+//    	System.setProperty("hazelcast.map.simple.record", "true");
         final ILogger logger = Hazelcast.getLoggingService().getLogger("SimpleMapTest");
         boolean load = false;
         boolean rm = false;

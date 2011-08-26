@@ -17,6 +17,7 @@ public class SimpleOffHeapRecordFactory implements RecordFactory {
 
 	public Record createNewRecord(CMap cmap, int blockId, Data key, Data value,
 			long ttl, long maxIdleMillis, long id) {
-		return new SimpleOffHeapRecord(storage, cmap, blockId, key, value, id);
+//		return new SimpleOffHeapRecord(storage, cmap, blockId, key, value, id);
+		return new SimpleOffHeapRecord(cmap, blockId, key, value, id);
 	}
 }

@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import com.hazelcast.elasticmemory.enterprise.InvalidLicenseError;
 import com.hazelcast.elasticmemory.enterprise.Registration;
 import com.hazelcast.elasticmemory.enterprise.RegistrationService;
+import com.hazelcast.elasticmemory.enterprise.TrialLicenseExpiredError;
 import com.hazelcast.elasticmemory.storage.OffHeapStorage;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.elasticmemory.util.MemoryUnit;
@@ -32,10 +33,13 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 			registration = RegistrationService.getRegistration(); 
 			logger.log(Level.INFO, "Licensed to: " + registration.getOwner() + " on " + registration.getRegistryDate() 
 					+ ", type: " + registration.getType());
-			
 		} catch (Exception e) {
 			logger.log(Level.WARNING, e.getMessage(), e);
 			throw new InvalidLicenseError();
+		}
+		
+		if(!isEnterprise()) {
+			throw new TrialLicenseExpiredError();
 		}
 		
 		systemLogger = node.getLogger("com.hazelcast.system");
