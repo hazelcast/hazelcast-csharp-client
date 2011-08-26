@@ -17,6 +17,7 @@ public class OffHeapRecordFactory implements RecordFactory {
 
 	public Record createNewRecord(CMap cmap, int blockId, Data key, Data value,
 			long ttl, long maxIdleMillis, long id) {
-		return new OffHeapRecord(storage, cmap, blockId, key, value, ttl, maxIdleMillis, id);
+//		return new OffHeapRecord(storage, cmap, blockId, key, value, ttl, maxIdleMillis, id);
+		return new OffHeapRecord(cmap, blockId, key, value, ttl, maxIdleMillis, id);
 	}
 }

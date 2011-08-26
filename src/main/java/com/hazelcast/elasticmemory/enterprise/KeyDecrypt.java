@@ -7,7 +7,7 @@ import java.security.PublicKey;
 
 import javax.crypto.Cipher;
 
-import static com.hazelcast.org.apache.xerces.utils.Base64.*;
+import static com.hazelcast.util.Base64.*;
 
 public class KeyDecrypt {
 
