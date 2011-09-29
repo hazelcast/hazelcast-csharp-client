@@ -68,7 +68,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 			lock();
 			try {
 				final EntryRef ref = space.get(key);
-				if (ref == null || ref.indexes == null || ref.indexes.length == 0) {
+				if (ref == null || ref.isEmpty()) {
 					space.remove(key);
 					return null;
 				}
