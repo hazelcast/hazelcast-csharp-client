@@ -48,19 +48,18 @@ public class BufferSegment {
 	}
 
 	public EntryRef put(final byte[] value) {
-		final int length = value.length;
-		if (length == 0) {
+		if (value.length == 0) {
 			return null;
 		}
 
-		final int count = divideByAndCeil(length, chunkSize);
+		final int count = divideByAndCeil(value.length, chunkSize);
 		final int[] indexes = chunks.poll(count);
-		final EntryRef ref = new EntryRef(indexes, length);
+		final EntryRef ref = new EntryRef(indexes, value.length);
 
 		int offset = 0;
 		for (int i = 0; i < count; i++) {
 			buffer.position(indexes[i] * chunkSize);
-			int len = Math.min(chunkSize, (length - offset));
+			int len = Math.min(chunkSize, (ref.length - offset));
 			buffer.put(value, offset, len);
 			offset += len;
 		}
@@ -68,19 +67,16 @@ public class BufferSegment {
 	}
 
 	public byte[] get(final EntryRef ref) {
-		if (ref == null || ref.indexes == null || ref.indexes.length == 0) {
+		if (ref == null || ref.isEmpty()) {
 			return null;
 		}
 
-		final int[] indexes = ref.indexes;
-		final int length = ref.length;
-		final byte[] value = new byte[length];
-
-		final int chunks = indexes.length;
+		final byte[] value = new byte[ref.length];
+		final int chunkCount = ref.getChunkCount();
 		int offset = 0;
-		for (int i = 0; i < chunks; i++) {
-			buffer.position(indexes[i] * chunkSize);
-			int len = Math.min(chunkSize, (length - offset));
+		for (int i = 0; i < chunkCount; i++) {
+			buffer.position(ref.getChunk(i) * chunkSize);
+			int len = Math.min(chunkSize, (ref.length - offset));
 			buffer.get(value, offset, len);
 			offset += len;
 		}
@@ -88,13 +84,13 @@ public class BufferSegment {
 	}
 
 	public void remove(final EntryRef ref) {
-		if (ref == null || ref.indexes == null || ref.indexes.length == 0) {
+		if (ref == null || ref.isEmpty()) {
 			return;
 		}
 
-		final int[] indexes = ref.indexes;
-		for (int i = 0; i < indexes.length; i++) {
-			assertTrue(chunks.offer(indexes[i]), "Could not offer released indexes! Error in queue...");
+		final int chunkCount = ref.getChunkCount();
+		for (int i = 0; i < chunkCount; i++) {
+			assertTrue(chunks.offer(ref.getChunk(i)), "Could not offer released indexes! Error in queue...");
 		}
 	}
 

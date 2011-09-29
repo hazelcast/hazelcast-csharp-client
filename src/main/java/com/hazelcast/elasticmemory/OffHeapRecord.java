@@ -3,6 +3,7 @@ package com.hazelcast.elasticmemory;
 import static com.hazelcast.nio.IOUtil.*;
 
 import com.hazelcast.elasticmemory.storage.Storage;
+import com.hazelcast.enterprise.EnterpriseNodeInitializer;
 import com.hazelcast.impl.AbstractRecord;
 import com.hazelcast.impl.CMap;
 import com.hazelcast.impl.Record;
@@ -48,6 +49,7 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
     }
 
     public Object setValue(Object value) {
+    	//FIXME: for semaphore
     	setValue(toData(value));
         return null;
     }
@@ -96,7 +98,6 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
 //	}
 	
 	private Storage getStorage() {
-		EnterpriseNodeInitializer initializer = (EnterpriseNodeInitializer) getNode().initializer;
-		return initializer.getOffHeapStorage();
+		return ((EnterpriseNodeInitializer) getNode().initializer).getOffHeapStorage();
 	}
 }

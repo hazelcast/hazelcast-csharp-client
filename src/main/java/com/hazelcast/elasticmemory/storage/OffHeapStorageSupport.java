@@ -4,7 +4,7 @@ import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
 abstract class OffHeapStorageSupport {
 
-	protected static final int MAX_SEGMENT_SIZE_IN_MB = 1024; //divideAndFloor(Integer.MAX_VALUE, _1M);
+	protected static final int MAX_SEGMENT_SIZE_IN_MB = 1024;
 	protected static final int MIN_SEGMENT_COUNT = 2;
 
 	protected final int segmentCount;
