@@ -17,9 +17,9 @@ public class AccessControllerImpl implements IAccessController {
 	
 	private final ILogger logger = Logger.getLogger(IAccessController.class.getName());
 	
-	private final IClusterPolicy policy;
+	private final IPermissionPolicy policy;
 	
-	public AccessControllerImpl(IClusterPolicy policy) {
+	public AccessControllerImpl(IPermissionPolicy policy) {
 		super();
 		this.policy = policy;
 	}
@@ -36,7 +36,7 @@ public class AccessControllerImpl implements IAccessController {
 	}
 	
 	public boolean checkPermission(Subject subject, Permission permission) {
-		PermissionCollection coll = policy.getPermissions(subject, permission);
+		PermissionCollection coll = policy.getPermissions(subject, permission.getClass());
 		return coll != null ? coll.implies(permission) : false;
 	}
 

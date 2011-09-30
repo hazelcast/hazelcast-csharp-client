@@ -29,7 +29,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 	
 	public void beforeInitialize(Node node) {
 		this.node = node;
-		logger = node.getLogger("com.hazelcast.enterprise.NodeInitializer");
+		logger = node.getLogger("com.hazelcast.enterprise.initializer");
 		try {
 			logger.log(Level.INFO, "Checking Hazelcast Enterprise license...");
 			registration = RegistrationService.getRegistration(); 

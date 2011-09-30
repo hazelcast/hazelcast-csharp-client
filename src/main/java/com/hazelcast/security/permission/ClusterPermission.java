@@ -1,5 +1,7 @@
 package com.hazelcast.security.permission;
 
+import static com.hazelcast.security.SecurityConstants.*;
+
 import java.security.Permission;
 
 public abstract class ClusterPermission extends Permission {
@@ -51,22 +53,6 @@ public abstract class ClusterPermission extends Permission {
 		
 		return true;
 	}
-	
-	private static boolean nameMatches(final String name, final String pattern) {
-        final int index = pattern.indexOf('*');
-        if (index == -1) {
-            return name.equals(pattern);
-        } else {
-            final String firstPart = pattern.substring(0, index);
-            final int indexFirstPart = name.indexOf(firstPart, 0);
-            if (indexFirstPart == -1) {
-                return false;
-            }
-            final String secondPart = pattern.substring(index + 1);
-            final int indexSecondPart = name.indexOf(secondPart, index + 1);
-            return indexSecondPart != -1;
-        }
-    }
 	
 	public String getActions() {
 		return actions;

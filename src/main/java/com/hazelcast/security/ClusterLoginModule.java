@@ -1,6 +1,9 @@
 package com.hazelcast.security;
 
+import java.security.Principal;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -8,16 +11,16 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
-import com.hazelcast.config.Config;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 
 public abstract class ClusterLoginModule implements LoginModule {
+
+	protected static final ILogger logger = Logger.getLogger(ClusterLoginModule.class.getName());
 	
 	private CallbackHandler callbackHandler;
-	
 	protected Credentials credentials;
 	protected Subject subject;
-	protected SecurityContext context;
-	protected Config config;
 	protected Map<String, ?> options ;
 	protected Map<String, ?> sharedState;
 
@@ -30,8 +33,6 @@ public abstract class ClusterLoginModule implements LoginModule {
 	}
 
 	public final boolean login() throws LoginException {
-		context = (SecurityContext) options.get(ILoginConfiguration.ATTRIBUTE_SECURITY);
-		config = (Config) options.get(ILoginConfiguration.ATTRIBUTE_CONFIG);
 		final CredentialsCallback cb = new CredentialsCallback();
 		try {
 			callbackHandler.handle(new Callback[]{cb});
@@ -39,27 +40,37 @@ public abstract class ClusterLoginModule implements LoginModule {
 		} catch (Exception e) {
 			throw new LoginException(e.getClass().getName() + ":" + e.getMessage());
 		}
+		logger.log(Level.FINEST, "Authenticating " + credentials.getName());
 		return onLogin();
 	}
 	
 	
 	public final boolean commit() throws LoginException {
+		logger.log(Level.FINEST, "Committing authentication of " + credentials.getName());
 		subject.getPrincipals().add(new ClusterPrincipal(credentials));
 		return onCommit();
 	}
 
 	public final boolean abort() throws LoginException {
+		logger.log(Level.FINEST, "Aborting authentication of " + credentials.getName());
 		clearSubject();
 		return onAbort();
 	}
 
 	public final boolean logout() throws LoginException {
+		logger.log(Level.FINEST, "Logging out " + credentials.getName());
 		clearSubject();
 		return onLogout();
 	}
 	
 	private void clearSubject() {
-		subject.getPrincipals().clear();
+		final Set<Principal> principals = subject.getPrincipals();
+		for (Principal p : principals) {
+			if(p instanceof ClusterPrincipal) {
+				((ClusterPrincipal) p).getPermissions().clear();
+			}
+		}
+		principals.clear();
 		subject.getPrivateCredentials().clear();
 		subject.getPublicCredentials().clear();
 	}
