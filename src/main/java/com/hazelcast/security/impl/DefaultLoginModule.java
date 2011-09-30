@@ -7,7 +7,7 @@ import com.hazelcast.security.ClusterLoginModule;
 import com.hazelcast.security.SecurityConstants;
 import com.hazelcast.security.UsernamePasswordCredentials;
 
-public class DefaultLoginModuleImpl extends ClusterLoginModule implements LoginModule {
+public class DefaultLoginModule extends ClusterLoginModule implements LoginModule {
 
 	private UsernamePasswordCredentials usernamePasswordCredentials;
 	
