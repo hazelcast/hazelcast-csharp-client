@@ -28,9 +28,9 @@ import com.hazelcast.security.permission.MapPermission;
 import com.hazelcast.security.permission.QueuePermission;
 
 
-public class DefaultPermissionPolicyImpl implements IPermissionPolicy {
+public class DefaultPermissionPolicy implements IPermissionPolicy {
 	
-	private static final ILogger logger = Logger.getLogger(DefaultPermissionPolicyImpl.class.getName());
+	private static final ILogger logger = Logger.getLogger(DefaultPermissionPolicy.class.getName());
 	
 	// Configured permissions
 	final ConcurrentMap<String, PermissionCollection> principalPermissions = new ConcurrentHashMap<String, PermissionCollection>();

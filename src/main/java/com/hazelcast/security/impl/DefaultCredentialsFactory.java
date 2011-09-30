@@ -7,7 +7,7 @@ import com.hazelcast.security.Credentials;
 import com.hazelcast.security.ICredentialsFactory;
 import com.hazelcast.security.UsernamePasswordCredentials;
 
-public class DefaultCredentialsFactoryImpl implements ICredentialsFactory {
+public class DefaultCredentialsFactory implements ICredentialsFactory {
 
 	private Credentials credentials ;
 	
