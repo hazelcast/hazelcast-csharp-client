@@ -27,7 +27,7 @@ public final class ClusterPrincipal implements Principal, IPermissionHolder {
 	}
 	
 	public String getName() {
-		return getPrincipal() + '@' + getEndpoint();
+		return credentials.getName();
 	}
 
 	public Credentials getCredentials() {
