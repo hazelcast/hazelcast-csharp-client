@@ -77,4 +77,9 @@ public class ClusterPermissionCollection extends PermissionCollection {
 	public Set<Permission> getPermissions() {
 		return perms;
 	}
+
+	@Override
+	public String toString() {
+		return "ClusterPermissionCollection [permClass=" + permClass + "]";
+	}
 }
