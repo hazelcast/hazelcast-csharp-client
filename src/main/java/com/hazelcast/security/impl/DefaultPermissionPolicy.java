@@ -22,10 +22,21 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.security.ClusterPrincipal;
 import com.hazelcast.security.IPermissionPolicy;
+import com.hazelcast.security.permission.AtomicNumberPermission;
 import com.hazelcast.security.permission.ClusterPermission;
 import com.hazelcast.security.permission.ClusterPermissionCollection;
+import com.hazelcast.security.permission.CountDownLatchPermission;
+import com.hazelcast.security.permission.ExecutorServicePermission;
+import com.hazelcast.security.permission.ListPermission;
+import com.hazelcast.security.permission.ListenerPermission;
+import com.hazelcast.security.permission.LockPermission;
 import com.hazelcast.security.permission.MapPermission;
+import com.hazelcast.security.permission.MultiMapPermission;
 import com.hazelcast.security.permission.QueuePermission;
+import com.hazelcast.security.permission.SemaphorePermission;
+import com.hazelcast.security.permission.SetPermission;
+import com.hazelcast.security.permission.TopicPermission;
+import com.hazelcast.security.permission.TransactionPermission;
 
 
 public class DefaultPermissionPolicy implements IPermissionPolicy {
@@ -40,7 +51,7 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 	
 	public void configure(SecurityConfig securityConfig, Properties properties) {
 		logger.log(Level.FINEST, "Configuring and initializing policy.");
-		final Set<PermissionConfig> permissionConfigs = securityConfig.getPermissionConfigs();
+		final Set<PermissionConfig> permissionConfigs = securityConfig.getClientPermissionConfigs();
 		ClusterPermission permission;
 		PermissionCollection coll;
 		for (PermissionConfig permCfg : permissionConfigs) {
@@ -151,6 +162,39 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 
 		case QUEUE:
 			return new QueuePermission(permissionConfig.getName(), actions);
+			
+		case ATOMIC_NUMBER:
+			return new AtomicNumberPermission(permissionConfig.getName(), actions);
+			
+		case COUNTDOWN_LATCH:
+			return new CountDownLatchPermission(permissionConfig.getName(), actions);
+			
+		case EXECUTOR_SERVICE:
+			return new ExecutorServicePermission(permissionConfig.getName(), actions);
+			
+		case LIST:
+			return new ListPermission(permissionConfig.getName(), actions);
+			
+		case LOCK:
+			return new LockPermission(permissionConfig.getName(), actions);
+		
+		case MULTIMAP:
+			return new MultiMapPermission(permissionConfig.getName(), actions);
+			
+		case SEMAPHORE:
+			return new SemaphorePermission(permissionConfig.getName(), actions);
+			
+		case SET: 
+			return new SetPermission(permissionConfig.getName(), actions);
+			
+		case TOPIC:
+			return new TopicPermission(permissionConfig.getName(), actions);
+			
+		case LISTENER:
+			return new ListenerPermission(permissionConfig.getName());
+			
+		case TRANSACTION:
+			return new TransactionPermission();
 			
 		default:
 			throw new IllegalArgumentException(permissionConfig.getType().toString());

@@ -27,7 +27,8 @@ public class SecurityContextImpl implements SecurityContext {
 	private final Node node;
 	private final IPermissionPolicy policy;
 	private final ICredentialsFactory credentialsFactory;
-	private final Configuration configuration;
+	private final Configuration memberConfiguration;
+	private final Configuration clientConfiguration;
 	private final IAccessController accessController;
 	
 	public SecurityContextImpl(Node node) {
@@ -38,7 +39,7 @@ public class SecurityContextImpl implements SecurityContext {
 		
 		SecurityConfig securityConfig = node.config.getSecurityConfig();
 		
-		PermissionPolicyConfig policyConfig = securityConfig.getPolicyConfig();
+		PermissionPolicyConfig policyConfig = securityConfig.getClientPolicyConfig();
 		if(policyConfig.getClassName() == null) {
 			policyConfig.setClassName(SecurityConstants.DEFAULT_POLICY_CLASS);
 		}
@@ -49,7 +50,7 @@ public class SecurityContextImpl implements SecurityContext {
 		policy = tmpPolicy;
 		policy.configure(securityConfig, policyConfig.getProperties());
 		
-		CredentialsFactoryConfig credentialsFactoryConfig = securityConfig.getCredentialsFactoryConfig();
+		CredentialsFactoryConfig credentialsFactoryConfig = securityConfig.getMemberCredentialsConfig();
 		if(credentialsFactoryConfig.getClassName() == null) {
 			credentialsFactoryConfig.setClassName(SecurityConstants.DEFAULT_CREDENTIALS_FACTORY_CLASS);
 		}
@@ -60,19 +61,22 @@ public class SecurityContextImpl implements SecurityContext {
 		credentialsFactory = tmpCredentialsFactory;
 		credentialsFactory.configure(node.config.getGroupConfig(), policyConfig.getProperties());
 		
-		final List<LoginModuleConfig> modules = securityConfig.getLoginModuleConfigs();
-		if(modules.isEmpty()) {
-			modules.add(getDefaultLoginModuleConfig());
-		}
-		configuration = new LoginConfigurationDelegate(modules.toArray(new LoginModuleConfig[modules.size()]));
+		memberConfiguration = new LoginConfigurationDelegate(getLoginModuleConfigs(securityConfig.getMemberLoginModuleConfigs()));
+		clientConfiguration = new LoginConfigurationDelegate(getLoginModuleConfigs(securityConfig.getClientLoginModuleConfigs()));
 		
 		accessController = new AccessControllerImpl(policy);
 	}
 	
-	public LoginContext createLoginContext(Credentials credentials) throws LoginException {
-		logger.log(Level.FINEST, "Creating LoginContext for: " + credentials.getName());
+	public LoginContext createMemberLoginContext(Credentials credentials) throws LoginException {
+		logger.log(Level.FINEST, "Creating Member LoginContext for: " + credentials.getName());
 		return new LoginContext(node.getConfig().getGroupConfig().getName(), 
-				new Subject(), new ClusterCallbackHandler(credentials), configuration);
+				new Subject(), new ClusterCallbackHandler(credentials), memberConfiguration);
+	}
+	
+	public LoginContext createClientLoginContext(Credentials credentials) throws LoginException {
+		logger.log(Level.FINEST, "Creating Client LoginContext for: " + credentials.getName());
+		return new LoginContext(node.getConfig().getGroupConfig().getName(), 
+				new Subject(), new ClusterCallbackHandler(credentials), clientConfiguration);
 	}
 
 	private Object createImplInstance(final String className) {
@@ -83,6 +87,13 @@ public class SecurityContextImpl implements SecurityContext {
 			throw new IllegalArgumentException("Could not create instance of '" + className 
 					+ "', cause: " + e.getMessage(), e);
 		}
+	}
+	
+	private LoginModuleConfig[] getLoginModuleConfigs(final List<LoginModuleConfig> modules) {
+		if(modules.isEmpty()) {
+			modules.add(getDefaultLoginModuleConfig());
+		}
+		return modules.toArray(new LoginModuleConfig[modules.size()]);
 	}
 	
 	private LoginModuleConfig getDefaultLoginModuleConfig() {

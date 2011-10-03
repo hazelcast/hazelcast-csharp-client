@@ -18,7 +18,7 @@ import com.hazelcast.query.Predicate;
 import com.hazelcast.security.SecurityConstants;
 import com.hazelcast.security.permission.MapPermission;
 
-class SecureMProxy extends SecureProxySupport implements MProxy {
+final class SecureMProxy extends SecureProxySupport implements MProxy {
 	
 	private final MProxy map;
 
@@ -37,6 +37,14 @@ class SecureMProxy extends SecureProxySupport implements MProxy {
 	
 	private void checkRemove() {
 		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_REMOVE));
+	}
+	
+	private void checkListen() {
+		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_LISTEN));
+	}
+	
+	private void checkLock() {
+		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_LOCK));
 	}
 
 	// ------ IMap
@@ -151,6 +159,7 @@ class SecureMProxy extends SecureProxySupport implements MProxy {
 	public Object tryLockAndGet(Object key, long time, TimeUnit timeunit)
 			throws TimeoutException {
 		checkGet();
+		checkLock();
 		return (Object) map.tryLockAndGet(key, time, timeunit);
 	}
 
@@ -165,6 +174,7 @@ class SecureMProxy extends SecureProxySupport implements MProxy {
 	}
 
 	public void lock(Object key) {
+		checkLock();
 		map.lock(key);
 	}
 
@@ -174,10 +184,12 @@ class SecureMProxy extends SecureProxySupport implements MProxy {
 	}
 
 	public boolean tryLock(Object key) {
+		checkLock();
 		return map.tryLock(key);
 	}
 
 	public boolean tryLock(Object key, long time, TimeUnit timeunit) {
+		checkLock();
 		return map.tryLock(key, time, timeunit);
 	}
 
@@ -186,6 +198,7 @@ class SecureMProxy extends SecureProxySupport implements MProxy {
 	}
 
 	public boolean lockMap(long time, TimeUnit timeunit) {
+		checkLock();
 		return map.lockMap(time, timeunit);
 	}
 
@@ -199,6 +212,7 @@ class SecureMProxy extends SecureProxySupport implements MProxy {
 	}
 
 	public void addLocalEntryListener(EntryListener listener) {
+		checkListen();
 		map.addLocalEntryListener(listener);
 	}
 
@@ -209,15 +223,18 @@ class SecureMProxy extends SecureProxySupport implements MProxy {
 
 	public void addEntryListener(EntryListener listener,
 			boolean includeValue) {
+		checkListen();
 		map.addEntryListener(listener, includeValue);
 	}
 
 	public void removeEntryListener(EntryListener listener) {
+		checkListen();
 		map.removeEntryListener(listener);
 	}
 
 	public void addEntryListener(EntryListener listener, Object key,
 			boolean includeValue) {
+		checkListen();
 		map.addEntryListener(listener, key, includeValue);
 	}
 
@@ -289,6 +306,7 @@ class SecureMProxy extends SecureProxySupport implements MProxy {
 	}
 
 	public LocalMapStats getLocalMapStats() {
+		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_STATISTICS));
 		return map.getLocalMapStats();
 	}
 	
@@ -305,10 +323,12 @@ class SecureMProxy extends SecureProxySupport implements MProxy {
 
 	public void addGenericListener(Object listener, Object key,
 			boolean includeValue, InstanceType instanceType) {
+		checkListen();
 		map.addGenericListener(listener, key, includeValue, instanceType);
 	}
 
 	public void removeGenericListener(Object listener, Object key) {
+		checkListen();
 		map.removeGenericListener(listener, key);
 	}
 
