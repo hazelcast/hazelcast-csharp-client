@@ -2,15 +2,15 @@ package com.hazelcast.security.permission;
 
 import static com.hazelcast.security.SecurityConstants.*; 
 
-public class MapPermission extends ClusterPermission {
+public class MapPermission extends InstancePermission {
 	
-	private final static int CREATE 	= 0x1;
-	private final static int DESTROY 	= 0x2;
-	private final static int PUT 		= 0x4;
-	private final static int GET 		= 0x8;
-	private final static int REM 		= 0x16;
-	
-	private final static int ALL 	= PUT | GET | REM | CREATE | DESTROY;
+	private final static int PUT 			= 0x4;
+	private final static int GET 			= 0x8;
+	private final static int REMOVE 		= 0x16;
+	private final static int LISTEN 		= 0x32;
+	private final static int LOCK	 		= 0x64;
+	private final static int STATS	 		= 0x128;
+	private final static int ALL 			= PUT | GET | REMOVE | CREATE | DESTROY | LISTEN | LOCK | STATS;
 
 	public MapPermission(String name, String... actions) {
 		super(name, actions);
@@ -30,9 +30,15 @@ public class MapPermission extends ClusterPermission {
 			} else if(ACTION_GET.equals(actions[i])) {
 				mask |= GET;
 			} else if(ACTION_REMOVE.equals(actions[i])) {
-				mask |= REM;
+				mask |= REMOVE;
 			} else if(ACTION_DESTROY.equals(actions[i])) {
 				mask |= DESTROY;
+			} else if(ACTION_LISTEN.equals(actions[i])) {
+				mask |= LISTEN;
+			} else if(ACTION_LOCK.equals(actions[i])) {
+				mask |= LOCK;
+			} else if(ACTION_STATISTICS.equals(actions[i])) {
+				mask |= STATS;
 			}
 		}
 		return mask;

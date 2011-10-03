@@ -22,19 +22,36 @@ import com.hazelcast.core.LifecycleService;
 import com.hazelcast.core.MultiMap;
 import com.hazelcast.core.Prefix;
 import com.hazelcast.core.Transaction;
+import com.hazelcast.impl.AtomicNumberProxy;
+import com.hazelcast.impl.CountDownLatchProxy;
 import com.hazelcast.impl.FactoryImpl.HazelcastInstanceProxy;
 import com.hazelcast.impl.FactoryImpl.ProxyKey;
 import com.hazelcast.impl.HazelcastInstanceAwareInstance;
 import com.hazelcast.impl.IHazelcastFactory;
+import com.hazelcast.impl.LockProxy;
 import com.hazelcast.impl.MProxy;
+import com.hazelcast.impl.MultiMapProxy;
 import com.hazelcast.impl.Node;
 import com.hazelcast.impl.QProxy;
+import com.hazelcast.impl.SemaphoreProxy;
+import com.hazelcast.impl.TopicProxy;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.partition.PartitionService;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.permission.AtomicNumberPermission;
 import com.hazelcast.security.permission.ClusterPermission;
+import com.hazelcast.security.permission.CountDownLatchPermission;
+import com.hazelcast.security.permission.ExecutorServicePermission;
+import com.hazelcast.security.permission.ListPermission;
+import com.hazelcast.security.permission.ListenerPermission;
+import com.hazelcast.security.permission.LockPermission;
 import com.hazelcast.security.permission.MapPermission;
+import com.hazelcast.security.permission.MultiMapPermission;
 import com.hazelcast.security.permission.QueuePermission;
+import com.hazelcast.security.permission.SemaphorePermission;
+import com.hazelcast.security.permission.SetPermission;
+import com.hazelcast.security.permission.TopicPermission;
+import com.hazelcast.security.permission.TransactionPermission;
 
 public class SecureHazelcastFactory implements IHazelcastFactory {
 
@@ -95,10 +112,13 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 	}
 
 	public ExecutorService getExecutorService() {
-		return factory.getExecutorService();
+		return getExecutorService("default");
 	}
 
 	public ExecutorService getExecutorService(String name) {
+		if (node.securityContext != null) {
+			node.securityContext.checkPermission(new ExecutorServicePermission(name, SecurityConstants.ACTION_CREATE));
+		}
 		return factory.getExecutorService(name);
 	}
 
@@ -107,18 +127,21 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 	}
 
 	public AtomicNumber getAtomicNumber(String name) {
-		return factory.getAtomicNumber(name);
+		return (AtomicNumber) getOrCreateProxyByName(Prefix.ATOMIC_NUMBER + name);
 	}
 
 	public ICountDownLatch getCountDownLatch(String name) {
-		return factory.getCountDownLatch(name);
+		return (ICountDownLatch) getOrCreateProxyByName(Prefix.COUNT_DOWN_LATCH + name);
 	}
 
 	public ISemaphore getSemaphore(String name) {
-		return factory.getSemaphore(name);
+        return (ISemaphore) getOrCreateProxyByName(Prefix.SEMAPHORE + name);
 	}
 
 	public Transaction getTransaction() {
+		if (node.securityContext != null) {
+			node.securityContext.checkPermission(new TransactionPermission());
+		}
 		return factory.getTransaction();
 	}
 
@@ -143,10 +166,16 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 	}
 
 	public void addInstanceListener(InstanceListener instanceListener) {
+		if (node.securityContext != null) {
+			node.securityContext.checkPermission(new ListenerPermission(SecurityConstants.LISTENER_INSTANCE));
+		}
 		factory.addInstanceListener(instanceListener);
 	}
 
 	public void removeInstanceListener(InstanceListener instanceListener) {
+		if (node.securityContext != null) {
+			node.securityContext.checkPermission(new ListenerPermission(SecurityConstants.LISTENER_INSTANCE));
+		}
 		factory.removeInstanceListener(instanceListener);
 	}
 
@@ -183,6 +212,22 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 			return new SecureMProxy(node, (MProxy) proxy);
 		} else if (proxy instanceof QProxy) {
 			return new SecureQProxy(node, (QProxy) proxy);
+		} else if(proxy instanceof MultiMapProxy) {
+			return new SecureMultimapProxy(node, (MultiMapProxy) proxy);
+		} else if(proxy instanceof TopicProxy) {
+			return new SecureTopicProxy(node, (TopicProxy) proxy);
+		} else if(proxy instanceof IList) {
+			return new SecureListProxy(node, (IList) proxy);
+		} else if(proxy instanceof ISet) {
+			return new SecureSetProxy(node, (ISet) proxy);
+		} else if(proxy instanceof AtomicNumberProxy) {
+			return new SecureAtomicNumberProxy(node, (AtomicNumberProxy) proxy);
+		} else if(proxy instanceof LockProxy) {
+			return new SecureLockProxy(node, (LockProxy) proxy);
+		} else if(proxy instanceof CountDownLatchProxy) {
+			return new SecureCountDownLatchProxy(node, (CountDownLatchProxy) proxy);
+		} else if(proxy instanceof SemaphoreProxy) {
+			return new SecureSemaphoreProxy(node, (SemaphoreProxy) proxy);
 		}
 		return proxy;
 	}
@@ -200,14 +245,22 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 		} else if (name.startsWith(Prefix.QUEUE)) {
 			p = new QueuePermission(actualName, action);
 		} else if (name.startsWith(Prefix.TOPIC)) {
+			p = new TopicPermission(actualName, action);
 		} else if (name.startsWith(Prefix.AS_LIST)) {
+			p = new ListPermission(actualName, action);
 		} else if (name.startsWith(Prefix.MULTIMAP)) {
+			p = new MultiMapPermission(actualName, action);
 		} else if (name.startsWith(Prefix.SET)) {
+			p = new SetPermission(actualName, action);
 		} else if (name.startsWith(Prefix.ATOMIC_NUMBER)) {
+			p = new AtomicNumberPermission(actualName, action);
 		} else if (name.startsWith(Prefix.IDGEN)) {
 		} else if (name.startsWith(Prefix.SEMAPHORE)) {
+			p = new SemaphorePermission(actualName, action);
 		} else if (name.startsWith(Prefix.COUNT_DOWN_LATCH)) {
+			p = new CountDownLatchPermission(actualName, action);
 		} else if (name.equals("lock")) {
+			p = new LockPermission(actualName, action);
 		}
 
 		if (p != null && node.securityContext != null) {

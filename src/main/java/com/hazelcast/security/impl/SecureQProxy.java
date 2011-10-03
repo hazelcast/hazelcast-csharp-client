@@ -13,7 +13,7 @@ import com.hazelcast.monitor.LocalQueueStats;
 import com.hazelcast.security.SecurityConstants;
 import com.hazelcast.security.permission.QueuePermission;
 
-class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E> {
+final class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E> {
 
 	final QProxy<E> queue;
 
@@ -38,6 +38,10 @@ class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E>
 		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_REMOVE));
 	}
 	
+	private void checkListen() {
+		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_LISTEN));
+	}
+	
 	// ------ IQueue
 	
 	public String getName() {
@@ -45,14 +49,17 @@ class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E>
 	}
 
 	public LocalQueueStats getLocalQueueStats() {
+		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_STATISTICS));
 		return queue.getLocalQueueStats();
 	}
 
 	public void addItemListener(ItemListener<E> listener, boolean includeValue) {
+		checkListen();
 		queue.addItemListener(listener, includeValue);
 	}
 
 	public void removeItemListener(ItemListener<E> listener) {
+		checkListen();
 		queue.removeItemListener(listener);
 	}
 
@@ -105,10 +112,12 @@ class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E>
 	}
 
 	public boolean isEmpty() {
+		checkGet();
 		return queue.isEmpty();
 	}
 
 	public boolean contains(Object o) {
+		checkGet();
 		return queue.contains(o);
 	}
 
@@ -123,6 +132,7 @@ class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E>
 	}
 
 	public Iterator<E> iterator() {
+		checkGet();
 		return queue.iterator();
 	}
 
@@ -132,10 +142,12 @@ class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E>
 	}
 
 	public Object[] toArray() {
+		checkGet();
 		return queue.toArray();
 	}
 
 	public int remainingCapacity() {
+		checkGet();
 		return queue.remainingCapacity();
 	}
 
@@ -145,14 +157,17 @@ class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E>
 	}
 
 	public <T> T[] toArray(T[] a) {
+		checkGet();
 		return queue.toArray(a);
 	}
 
 	public int drainTo(Collection<? super E> c) {
+		checkPoll();
 		return queue.drainTo(c);
 	}
 
 	public int drainTo(Collection<? super E> c, int maxElements) {
+		checkPoll();
 		return queue.drainTo(c, maxElements);
 	}
 
@@ -162,6 +177,7 @@ class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E>
 	}
 
 	public boolean containsAll(Collection<?> c) {
+		checkGet();
 		return queue.containsAll(c);
 	}
 
