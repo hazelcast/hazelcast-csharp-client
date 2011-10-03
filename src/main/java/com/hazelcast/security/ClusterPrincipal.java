@@ -10,6 +10,7 @@ import com.hazelcast.security.permission.ClusterPermissionCollection;
 public final class ClusterPrincipal implements Principal, IPermissionHolder {
 	
 	private final Credentials credentials;
+	private boolean hasAllPermissions = false;
 	private final Map<Class<? extends Permission>, ClusterPermissionCollection> permissions ;
 
 	ClusterPrincipal(Credentials credentials) {
@@ -42,8 +43,16 @@ public final class ClusterPrincipal implements Principal, IPermissionHolder {
 		return permissions.get(type);
 	}
 	
+	public void setHasAllPermissions(boolean hasAllPermissions) {
+		this.hasAllPermissions = hasAllPermissions;
+	}
+	
+	public boolean isHasAllPermissions() {
+		return hasAllPermissions;
+	}
+	
 	@Override
 	public String toString() {
-		return "ClusterPrincipal [principal=" + getName() + ", endpoint=" + getEndpoint() + "]";
+		return "ClusterPrincipal [principal=" + getPrincipal() + ", endpoint=" + getEndpoint() + "]";
 	}
 }

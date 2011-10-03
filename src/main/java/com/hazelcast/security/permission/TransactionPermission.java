@@ -5,7 +5,7 @@ import java.security.Permission;
 public class TransactionPermission extends ClusterPermission {
 	
 	public TransactionPermission() {
-		super("Transaction");
+		super("<transaction>");
 	}
 	
 	public boolean implies(Permission permission) {

@@ -22,6 +22,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.security.ClusterPrincipal;
 import com.hazelcast.security.IPermissionPolicy;
+import com.hazelcast.security.permission.AllPermissions;
 import com.hazelcast.security.permission.AtomicNumberPermission;
 import com.hazelcast.security.permission.ClusterPermission;
 import com.hazelcast.security.permission.ClusterPermissionCollection;
@@ -99,6 +100,9 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 	}
 	
 	private PermissionCollection getPermissions(ClusterPrincipal principal, Class<? extends Permission> type) {
+		if(principal.isHasAllPermissions()) {
+			return ALLOW_ALL;
+		}
 		ClusterPermissionCollection coll = principal.getPermissions(type);
 		if(coll == null) {
 			coll = new ClusterPermissionCollection(type);
@@ -108,7 +112,7 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 	}
 	
 	private void ensurePrincipalPermissions(ClusterPrincipal principal) {
-		if(principal != null && principal.getPermissions().isEmpty()) {
+		if(principal != null && !principal.isHasAllPermissions() && principal.getPermissions().isEmpty()) {
 			final String principalName = principal.getName();
 			logger.log(Level.FINEST, "Preparing permissions for: " + principalName);
 			final ClusterPermissionCollection all = new ClusterPermissionCollection();
@@ -137,6 +141,12 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 			final Set<Permission> allPermissions = all.getPermissions();
 			final Map<Class<? extends Permission>, ClusterPermissionCollection> permissions = principal.getPermissions();
 			for (Permission perm : allPermissions) {
+				if(perm instanceof AllPermissions) {
+					permissions.clear();
+					principal.setHasAllPermissions(true);
+					logger.log(Level.FINEST, "Granted all-permissions for: " + principalName);
+					return;
+				}
 				Class<? extends Permission> type = perm.getClass();
 				ClusterPermissionCollection coll = permissions.get(type);
 				if(coll == null) {
@@ -196,6 +206,9 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 		case TRANSACTION:
 			return new TransactionPermission();
 			
+		case ALL:
+			return new AllPermissions();
+			
 		default:
 			throw new IllegalArgumentException(permissionConfig.getType().toString());
 		}
@@ -210,6 +223,23 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 		}
 		public void add(Permission permission) {
 		}
+		public String toString() {
+			return "<deny all permissions>";
+		}
 	};
-
+	
+	private static final PermissionCollection ALLOW_ALL = new PermissionCollection() {
+		public boolean implies(Permission permission) {
+			return true;
+		}
+		public Enumeration<Permission> elements() {
+			return null;
+		}
+		public void add(Permission permission) {
+		}
+		public String toString() {
+			return "<allow all permissions>";
+		}
+	};
+	
 }
