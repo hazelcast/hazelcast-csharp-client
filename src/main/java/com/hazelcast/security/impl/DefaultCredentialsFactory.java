@@ -18,4 +18,7 @@ public class DefaultCredentialsFactory implements ICredentialsFactory {
 	public Credentials newCredentials() {
 		return credentials;
 	}
+
+	public void destroy() {
+	}
 }

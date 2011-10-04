@@ -22,8 +22,11 @@ public class ClusterPermissionCollection extends PermissionCollection {
 		super();
 		this.permClass = permClass;
 	}
-
+	
 	public void add(Permission permission) {
+		if(isReadOnly()) {
+			throw new SecurityException("ClusterPermissionCollection is read-only!");
+		}
 		boolean shouldAdd = (permClass != null && permClass.equals(permission.getClass()))
 			|| (permission instanceof ClusterPermission); 
 			
@@ -33,6 +36,9 @@ public class ClusterPermissionCollection extends PermissionCollection {
 	}
 	
 	public void add(PermissionCollection permissions) {
+		if(isReadOnly()) {
+			throw new SecurityException("ClusterPermissionCollection is read-only!");
+		}
 		if(permissions instanceof ClusterPermissionCollection) {
 			for (Permission p : ((ClusterPermissionCollection) permissions).perms) {
 				add(p);
@@ -49,7 +55,10 @@ public class ClusterPermissionCollection extends PermissionCollection {
 		return false;
 	}
 	
-	public void cleanupOverlaps() {
+	public void compact() {
+		if(isReadOnly()) {
+			throw new SecurityException("ClusterPermissionCollection is read-only!");
+		}
 		final Iterator<Permission> iter = perms.iterator();
 		while(iter.hasNext()) {
 			final Permission perm = iter.next();
@@ -64,18 +73,15 @@ public class ClusterPermissionCollection extends PermissionCollection {
 				iter.remove();
 			}
 		}
+		setReadOnly();
 	}
 	
-	public Class<? extends Permission> getType() {
-		return permClass;
-	}
-
 	public Enumeration<Permission> elements() {
 		return Collections.enumeration(perms);
 	}
 	
 	public Set<Permission> getPermissions() {
-		return perms;
+		return Collections.unmodifiableSet(perms);
 	}
 
 	@Override

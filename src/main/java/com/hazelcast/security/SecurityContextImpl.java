@@ -122,4 +122,10 @@ public class SecurityContextImpl implements SecurityContext {
 	public boolean checkPermission(Subject subject, Permission permission) {
 		return accessController.checkPermission(subject, permission);
 	}
+
+	public void destroy() {
+		logger.log(Level.INFO, "Destroying Hazelcast Enterprise security context.");
+		policy.destroy();
+		credentialsFactory.destroy();
+	}
 }
