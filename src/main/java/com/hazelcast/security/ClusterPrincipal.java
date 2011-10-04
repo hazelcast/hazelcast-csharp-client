@@ -1,22 +1,14 @@
 package com.hazelcast.security;
 
-import java.security.Permission;
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.Map;
 
-import com.hazelcast.security.permission.ClusterPermissionCollection;
-
-public final class ClusterPrincipal implements Principal, IPermissionHolder {
+public final class ClusterPrincipal implements Principal {
 	
 	private final Credentials credentials;
-	private boolean hasAllPermissions = false;
-	private final Map<Class<? extends Permission>, ClusterPermissionCollection> permissions ;
 
 	ClusterPrincipal(Credentials credentials) {
 		super();
 		this.credentials = credentials;
-		this.permissions = new HashMap<Class<? extends Permission>, ClusterPermissionCollection>();
 	}
 	
 	public String getEndpoint() {
@@ -33,22 +25,6 @@ public final class ClusterPrincipal implements Principal, IPermissionHolder {
 
 	public Credentials getCredentials() {
 		return credentials;
-	}
-	
-	public Map<Class<? extends Permission>, ClusterPermissionCollection> getPermissions() {
-		return permissions;
-	}
-	
-	public ClusterPermissionCollection getPermissions(Class<? extends Permission> type) {
-		return permissions.get(type);
-	}
-	
-	public void setHasAllPermissions(boolean hasAllPermissions) {
-		this.hasAllPermissions = hasAllPermissions;
-	}
-	
-	public boolean isHasAllPermissions() {
-		return hasAllPermissions;
 	}
 	
 	@Override

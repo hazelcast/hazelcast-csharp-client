@@ -1,8 +1,6 @@
 package com.hazelcast.security;
 
-import java.security.Principal;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 
 import javax.security.auth.Subject;
@@ -64,13 +62,7 @@ public abstract class ClusterLoginModule implements LoginModule {
 	}
 	
 	private void clearSubject() {
-		final Set<Principal> principals = subject.getPrincipals();
-		for (Principal p : principals) {
-			if(p instanceof ClusterPrincipal) {
-				((ClusterPrincipal) p).getPermissions().clear();
-			}
-		}
-		principals.clear();
+		subject.getPrincipals().clear();
 		subject.getPrivateCredentials().clear();
 		subject.getPublicCredentials().clear();
 	}

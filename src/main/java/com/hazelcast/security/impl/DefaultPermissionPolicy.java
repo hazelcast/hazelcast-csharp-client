@@ -6,12 +6,11 @@ import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.Principal;
 import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import javax.security.auth.Subject;
@@ -23,10 +22,12 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.security.ClusterPrincipal;
 import com.hazelcast.security.IPermissionPolicy;
 import com.hazelcast.security.permission.AllPermissions;
+import com.hazelcast.security.permission.AllPermissions.AllPermissionsCollection;
 import com.hazelcast.security.permission.AtomicNumberPermission;
 import com.hazelcast.security.permission.ClusterPermission;
 import com.hazelcast.security.permission.ClusterPermissionCollection;
 import com.hazelcast.security.permission.CountDownLatchPermission;
+import com.hazelcast.security.permission.DenyAllPermissionCollection;
 import com.hazelcast.security.permission.ExecutorServicePermission;
 import com.hazelcast.security.permission.ListPermission;
 import com.hazelcast.security.permission.ListenerPermission;
@@ -43,12 +44,17 @@ import com.hazelcast.security.permission.TransactionPermission;
 public class DefaultPermissionPolicy implements IPermissionPolicy {
 	
 	private static final ILogger logger = Logger.getLogger(DefaultPermissionPolicy.class.getName());
+	private static final PermissionCollection DENY_ALL = new DenyAllPermissionCollection();
+	private static final PermissionCollection ALLOW_ALL = new AllPermissionsCollection(true);
 	
 	// Configured permissions
-	final ConcurrentMap<String, PermissionCollection> principalPermissions = new ConcurrentHashMap<String, PermissionCollection>();
-	final ConcurrentMap<String, PermissionCollection> endpointPermissions = new ConcurrentHashMap<String, PermissionCollection>();
-	final ConcurrentMap<String, PermissionCollection> dualPermissions = new ConcurrentHashMap<String, PermissionCollection>();
-	final PermissionCollection allowAllPermissions = new ClusterPermissionCollection();
+	final ConcurrentMap<String, PermissionCollection> confPrincipalPermissions = new ConcurrentHashMap<String, PermissionCollection>();
+	final ConcurrentMap<String, PermissionCollection> confEndpointPermissions = new ConcurrentHashMap<String, PermissionCollection>();
+	final ConcurrentMap<String, PermissionCollection> confPrincipalAndEndpointPermissions = new ConcurrentHashMap<String, PermissionCollection>();
+	final PermissionCollection confPermissionsForEverbody = new ClusterPermissionCollection();
+	
+	// Principal permissions
+	final ConcurrentMap<String, PrincipalPermissionsHolder> permissionsMap = new ConcurrentHashMap<String, PrincipalPermissionsHolder>();
 	
 	public void configure(SecurityConfig securityConfig, Properties properties) {
 		logger.log(Level.FINEST, "Configuring and initializing policy.");
@@ -58,23 +64,23 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 		for (PermissionConfig permCfg : permissionConfigs) {
 			permission = createPermission(permCfg);
 			if(permCfg.getPrincipal() != null && permCfg.getEndpoint() != null) {
-				coll = getPermissionCollection(dualPermissions, permCfg.getPrincipal() + '@' + permCfg.getEndpoint());
+				coll = getConfigPermissionCollection(confPrincipalAndEndpointPermissions, permCfg.getPrincipal() + '@' + permCfg.getEndpoint());
 			} else if(permCfg.getPrincipal() != null) {
-				coll = getPermissionCollection(principalPermissions, permCfg.getPrincipal());
+				coll = getConfigPermissionCollection(confPrincipalPermissions, permCfg.getPrincipal());
 			} else if(permCfg.getEndpoint() != null) {
-				coll = getPermissionCollection(endpointPermissions, permCfg.getEndpoint());
+				coll = getConfigPermissionCollection(confEndpointPermissions, permCfg.getEndpoint());
 			} else {
-				coll = allowAllPermissions;
+				coll = confPermissionsForEverbody;
 			}
 			coll.add(permission);
 		}
 	}
 	
-	private PermissionCollection getPermissionCollection(ConcurrentMap<String, PermissionCollection> map, String key) {
-		PermissionCollection coll = dualPermissions.get(key);
+	private PermissionCollection getConfigPermissionCollection(ConcurrentMap<String, PermissionCollection> map, String key) {
+		PermissionCollection coll = map.get(key);
 		if(coll == null) {
 			coll = new ClusterPermissionCollection();
-			dualPermissions.put(key, coll);
+			map.put(key, coll);
 		}
 		return coll;
 	}
@@ -86,7 +92,27 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 		}
 		
 		ensurePrincipalPermissions(principal);
-		return getPermissions(principal, type);
+		final PrincipalPermissionsHolder permissionsHolder = permissionsMap.get(principal.getName());
+		if(!permissionsHolder.prepared.get()) {
+			synchronized (permissionsHolder) {
+				if(!permissionsHolder.prepared.get()) {
+					try {
+						permissionsHolder.wait();
+					} catch (InterruptedException ignored) {
+					}
+				}
+			}
+		}
+		
+		if(permissionsHolder.hasAllPermissions) {
+			return ALLOW_ALL;
+		}
+		PermissionCollection coll = permissionsHolder.permissions.get(type);
+		if(coll == null) {
+			coll = DENY_ALL;
+			permissionsHolder.permissions.putIfAbsent(type, coll);
+		}
+		return coll;
 	}
 	
 	private ClusterPrincipal getPrincipal(Subject subject) {
@@ -99,67 +125,69 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 		return null;
 	}
 	
-	private PermissionCollection getPermissions(ClusterPrincipal principal, Class<? extends Permission> type) {
-		if(principal.isHasAllPermissions()) {
-			return ALLOW_ALL;
-		}
-		ClusterPermissionCollection coll = principal.getPermissions(type);
-		if(coll == null) {
-			coll = new ClusterPermissionCollection(type);
-			principal.getPermissions().put(type, coll);
-		}
-		return coll;
-	}
-	
 	private void ensurePrincipalPermissions(ClusterPrincipal principal) {
-		if(principal != null && !principal.isHasAllPermissions() && principal.getPermissions().isEmpty()) {
+		if(principal != null) {
 			final String principalName = principal.getName();
-			logger.log(Level.FINEST, "Preparing permissions for: " + principalName);
-			final ClusterPermissionCollection all = new ClusterPermissionCollection();
-			all.add(allowAllPermissions);
-			
-			final Set<String> names = dualPermissions.keySet();
-			for (String name : names) {
-				if(nameMatches(principalName, name)) {
-					all.add(dualPermissions.get(name));
-				}
-			}
-			
-			final Set<String> endpoints = endpointPermissions.keySet();
-			final String principalEndpoint = principal.getEndpoint(); 
-			for (String endpoint : endpoints) {
-				if(nameMatches(principalEndpoint, endpoint)) {
-					all.add(endpointPermissions.get(endpoint));
-				}
-			}
-			
-			final PermissionCollection pc = principalPermissions.get(principal.getPrincipal());
-			if(pc != null) {
-				all.add(pc);
-			}
-			
-			final Set<Permission> allPermissions = all.getPermissions();
-			final Map<Class<? extends Permission>, ClusterPermissionCollection> permissions = principal.getPermissions();
-			for (Permission perm : allPermissions) {
-				if(perm instanceof AllPermissions) {
-					permissions.clear();
-					principal.setHasAllPermissions(true);
-					logger.log(Level.FINEST, "Granted all-permissions for: " + principalName);
+			if(!permissionsMap.containsKey(principalName)) {
+				final PrincipalPermissionsHolder permissionsHolder = new PrincipalPermissionsHolder();
+				if(permissionsMap.putIfAbsent(principalName, permissionsHolder) != null) {
 					return;
 				}
-				Class<? extends Permission> type = perm.getClass();
-				ClusterPermissionCollection coll = permissions.get(type);
-				if(coll == null) {
-					coll = new ClusterPermissionCollection(type);
-					permissions.put(type, coll);
+				
+				try {
+					logger.log(Level.FINEST, "Preparing permissions for: " + principalName);
+					final ClusterPermissionCollection all = new ClusterPermissionCollection();
+					all.add(confPermissionsForEverbody);
+					
+					final Set<String> names = confPrincipalAndEndpointPermissions.keySet();
+					for (String name : names) {
+						if(nameMatches(principalName, name)) {
+							all.add(confPrincipalAndEndpointPermissions.get(name));
+						}
+					}
+					
+					final Set<String> endpoints = confEndpointPermissions.keySet();
+					final String principalEndpoint = principal.getEndpoint(); 
+					for (String endpoint : endpoints) {
+						if(nameMatches(principalEndpoint, endpoint)) {
+							all.add(confEndpointPermissions.get(endpoint));
+						}
+					}
+					
+					final PermissionCollection pc = confPrincipalPermissions.get(principal.getPrincipal());
+					if(pc != null) {
+						all.add(pc);
+					}
+					
+					final Set<Permission> allPermissions = all.getPermissions();
+					for (Permission perm : allPermissions) {
+						if(perm instanceof AllPermissions) {
+							permissionsHolder.permissions.clear();
+							permissionsHolder.hasAllPermissions = true;
+							logger.log(Level.FINEST, "Granted all-permissions for: " + principalName);
+							return;
+						}
+						Class<? extends Permission> type = perm.getClass();
+						ClusterPermissionCollection coll = (ClusterPermissionCollection) permissionsHolder.permissions.get(type);
+						if(coll == null) {
+							coll = new ClusterPermissionCollection(type);
+							permissionsHolder.permissions.put(type, coll);
+						}
+						coll.add(perm);
+					}
+					
+					logger.log(Level.FINEST, "Compacting permissions for: " + principalName);
+					final Collection<PermissionCollection> principalCollections = permissionsHolder.permissions.values();
+					for (PermissionCollection coll : principalCollections) {
+						((ClusterPermissionCollection) coll).compact();
+					}
+					
+				} finally {
+					synchronized (permissionsHolder) {
+						permissionsHolder.prepared.set(true);
+						permissionsHolder.notifyAll();
+					}
 				}
-				coll.add(perm);
-			}
-			
-			logger.log(Level.FINEST, "Compacting permissions for: " + principalName);
-			final Collection<ClusterPermissionCollection> principalCollections = permissions.values();
-			for (ClusterPermissionCollection coll : principalCollections) {
-				coll.cleanupOverlaps();
 			}
 		}
 	}
@@ -214,32 +242,17 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 		}
 	}
 	
-	private static final PermissionCollection DENY_ALL = new PermissionCollection() {
-		public boolean implies(Permission permission) {
-			return false;
-		}
-		public Enumeration<Permission> elements() {
-			return null;
-		}
-		public void add(Permission permission) {
-		}
-		public String toString() {
-			return "<deny all permissions>";
-		}
-	};
-	
-	private static final PermissionCollection ALLOW_ALL = new PermissionCollection() {
-		public boolean implies(Permission permission) {
-			return true;
-		}
-		public Enumeration<Permission> elements() {
-			return null;
-		}
-		public void add(Permission permission) {
-		}
-		public String toString() {
-			return "<allow all permissions>";
-		}
-	};
-	
+	private class PrincipalPermissionsHolder {
+		final AtomicBoolean prepared = new AtomicBoolean(false);
+		boolean hasAllPermissions = false;
+		final ConcurrentMap<Class<? extends Permission>, PermissionCollection> permissions = 
+			new ConcurrentHashMap<Class<? extends Permission>, PermissionCollection>();
+	}
+
+	public void destroy() {
+		permissionsMap.clear();
+		confEndpointPermissions.clear();
+		confPrincipalAndEndpointPermissions.clear();
+		confPrincipalPermissions.clear();
+	}
 }
