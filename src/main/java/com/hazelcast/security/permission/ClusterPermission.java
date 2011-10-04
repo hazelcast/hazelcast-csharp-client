@@ -1,6 +1,7 @@
 package com.hazelcast.security.permission;
 
 import java.security.Permission;
+import java.security.PermissionCollection;
 
 public abstract class ClusterPermission extends Permission {
 	
@@ -8,6 +9,10 @@ public abstract class ClusterPermission extends Permission {
 
 	public ClusterPermission(String name) {
 		super(name);
+	}
+	
+	public PermissionCollection newPermissionCollection() {
+		return new ClusterPermissionCollection(getClass());
 	}
 	
 	public int hashCode() {
