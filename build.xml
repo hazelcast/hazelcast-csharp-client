@@ -9,13 +9,6 @@
     <property name="jar.name" value="hazelcast-enterprise-${version}.jar"/>
 	<property name="jar.file" value="${elastic.dir}/target/${jar.name}"/>
 
-	<taskdef resource="proguard/ant/task.properties"
-	         classpath="/Volumes/USERS/mm/Downloads/proguard4.6/lib/proguard.jar" />
-	
-	<target name="produard" depends="jar">
-		<proguard configuration="elastic.pro"/>
-	</target>
-	
     <target name="jar">
     	<delete>
 			<fileset dir="${elastic.dir}/target">
