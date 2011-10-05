@@ -1,5 +1,10 @@
 package com.hazelcast.security;
 
+import java.util.Arrays;
+
+import com.hazelcast.config.Config;
+import com.hazelcast.impl.AddressPicker;
+
 public final class SecurityConstants {
 
 	public static final String ATTRIBUTE_CONFIG_GROUP = "com.hazelcast.config.group";
@@ -37,18 +42,10 @@ public final class SecurityConstants {
 	public static final String LISTENER_MIGRATION = "migration";
 	
 	public static boolean nameMatches(final String name, final String pattern) {
-        final int index = pattern.indexOf('*');
-        if (index == -1) {
-            return name.equals(pattern);
-        } else {
-            final String firstPart = pattern.substring(0, index);
-            final int indexFirstPart = name.indexOf(firstPart, 0);
-            if (indexFirstPart == -1) {
-                return false;
-            }
-            final String secondPart = pattern.substring(index + 1);
-            final int indexSecondPart = name.indexOf(secondPart, index + 1);
-            return indexSecondPart != -1;
-        }
+		return Config.nameMatches(name, pattern);
     }
+	
+	public static boolean addressMatches(final String address, final String pattern) {
+		return AddressPicker.matchAddress(address, Arrays.asList(pattern));
+	}
 }

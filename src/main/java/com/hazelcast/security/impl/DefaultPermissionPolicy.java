@@ -1,6 +1,6 @@
 package com.hazelcast.security.impl;
 
-import static com.hazelcast.security.SecurityConstants.nameMatches;
+import static com.hazelcast.security.SecurityConstants.*;
 
 import java.security.Permission;
 import java.security.PermissionCollection;
@@ -21,24 +21,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.security.ClusterPrincipal;
 import com.hazelcast.security.IPermissionPolicy;
-import com.hazelcast.security.permission.AllPermissions;
+import com.hazelcast.security.permission.*;
 import com.hazelcast.security.permission.AllPermissions.AllPermissionsCollection;
-import com.hazelcast.security.permission.AtomicNumberPermission;
-import com.hazelcast.security.permission.ClusterPermission;
-import com.hazelcast.security.permission.ClusterPermissionCollection;
-import com.hazelcast.security.permission.CountDownLatchPermission;
-import com.hazelcast.security.permission.DenyAllPermissionCollection;
-import com.hazelcast.security.permission.ExecutorServicePermission;
-import com.hazelcast.security.permission.ListPermission;
-import com.hazelcast.security.permission.ListenerPermission;
-import com.hazelcast.security.permission.LockPermission;
-import com.hazelcast.security.permission.MapPermission;
-import com.hazelcast.security.permission.MultiMapPermission;
-import com.hazelcast.security.permission.QueuePermission;
-import com.hazelcast.security.permission.SemaphorePermission;
-import com.hazelcast.security.permission.SetPermission;
-import com.hazelcast.security.permission.TopicPermission;
-import com.hazelcast.security.permission.TransactionPermission;
 
 
 public class DefaultPermissionPolicy implements IPermissionPolicy {
@@ -149,7 +133,7 @@ public class DefaultPermissionPolicy implements IPermissionPolicy {
 					final Set<String> endpoints = confEndpointPermissions.keySet();
 					final String principalEndpoint = principal.getEndpoint(); 
 					for (String endpoint : endpoints) {
-						if(nameMatches(principalEndpoint, endpoint)) {
+						if(addressMatches(principalEndpoint, endpoint)) {
 							all.add(confEndpointPermissions.get(endpoint));
 						}
 					}

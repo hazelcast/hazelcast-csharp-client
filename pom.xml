@@ -16,30 +16,9 @@
 		<license>
 			<name>Commercial License</name>
 			<url>http://www.hazelcast.com/licenses/LICENSE.txt</url>
-			<distribution>hazelcast</distribution>
+			<distribution>manual</distribution>
 		</license>
 	</licenses>
-	<scm>
-		<connection>scm:svn:https://svn.hazelcast.com/svn/elastic-memory/trunk/</connection>
-		<developerConnection>scm:svn:https://svn.hazelcast.com/svn/elastic-memory/trunk/</developerConnection>
-		<url>https://svn.hazelcast.com/viewvc/elastic-memory/</url>
-	</scm>
-	<developers>
-		<developer>
-			<id>talip</id>
-			<name>talip ozturk</name>
-			<email>talip@hazelcast.com</email>
-		</developer>
-		<developer>
-			<id>fuad</id>
-			<name>fuad malikov</name>
-			<email>fuad@hazelcast.com</email>
-		</developer>
-	</developers>
-	<issueManagement>
-		<system>Google Code</system>
-		<url>http://code.google.com/p/hazelcast/issues</url>
-	</issueManagement>
 	<organization>
 		<name>Hazel Bilisim Ltd.</name>
 		<url>http://www.hazelcast.com/</url>
@@ -72,6 +51,13 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
+			<version>${hazelcast.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.hazelcast</groupId>
+			<artifactId>hazelcast-client</artifactId>
 			<version>${hazelcast.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
