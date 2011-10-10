@@ -45,7 +45,7 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
     }
 
     public Data getValueData() {
-    	return OffHeapRecordHelper.getValueData(key, entryRef, getStorage());
+    	return OffHeapRecordHelper.getValue(key, entryRef, getStorage());
     }
 
     public Object setValue(Object value) {

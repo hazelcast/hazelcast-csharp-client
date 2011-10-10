@@ -1,5 +1,6 @@
 package com.hazelcast.security;
 
+import java.security.Principal;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -19,8 +20,10 @@ public abstract class ClusterLoginModule implements LoginModule {
 	private CallbackHandler callbackHandler;
 	protected Credentials credentials;
 	protected Subject subject;
-	protected Map<String, ?> options ;
-	protected Map<String, ?> sharedState;
+	protected Map options ;
+	protected Map sharedState;
+	protected boolean loginSucceeded = false;
+	protected boolean commitSucceeded = false;
 
 	public final void initialize(Subject subject, CallbackHandler callbackHandler,
 			Map<String, ?> sharedState, Map<String, ?> options) {
@@ -38,27 +41,44 @@ public abstract class ClusterLoginModule implements LoginModule {
 		} catch (Exception e) {
 			throw new LoginException(e.getClass().getName() + ":" + e.getMessage());
 		}
+		if(credentials == null) {
+			logger.log(Level.WARNING, "Credentials could not be retrieved!");
+			return false;
+		}
 		logger.log(Level.FINEST, "Authenticating " + credentials.getName());
-		return onLogin();
+		sharedState.put(SecurityConstants.ATTRIBUTE_CREDENTIALS, credentials);
+		return loginSucceeded = onLogin();
 	}
 	
 	
 	public final boolean commit() throws LoginException {
+		if(!loginSucceeded) {
+			logger.log(Level.WARNING, "Authentication has been failed! =>" + (credentials != null ? credentials.getName() : "unknown"));
+			return false;
+		}
 		logger.log(Level.FINEST, "Committing authentication of " + credentials.getName());
-		subject.getPrincipals().add(new ClusterPrincipal(credentials));
-		return onCommit();
+		final Principal principal = new ClusterPrincipal(credentials);
+		subject.getPrincipals().add(principal);
+		sharedState.put(SecurityConstants.ATTRIBUTE_PRINCIPAL, principal);
+		return commitSucceeded = onCommit();
 	}
 
 	public final boolean abort() throws LoginException {
 		logger.log(Level.FINEST, "Aborting authentication of " + credentials.getName());
+		final boolean abort = onAbort();
 		clearSubject();
-		return onAbort();
+		loginSucceeded = false;
+		commitSucceeded = false;
+		return abort;
 	}
 
 	public final boolean logout() throws LoginException {
 		logger.log(Level.FINEST, "Logging out " + credentials.getName());
+		final boolean logout = onLogout();
 		clearSubject();
-		return onLogout();
+		loginSucceeded = false;
+		commitSucceeded = false;
+		return logout;
 	}
 	
 	private void clearSubject() {
