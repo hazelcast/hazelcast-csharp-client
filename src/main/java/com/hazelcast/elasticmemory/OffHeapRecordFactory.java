@@ -2,6 +2,7 @@ package com.hazelcast.elasticmemory;
 
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.impl.CMap;
+import com.hazelcast.impl.NearCacheRecord;
 import com.hazelcast.impl.Record;
 import com.hazelcast.impl.concurrentmap.RecordFactory;
 import com.hazelcast.nio.Data;
@@ -19,5 +20,9 @@ public class OffHeapRecordFactory implements RecordFactory {
 			long ttl, long maxIdleMillis, long id) {
 //		return new OffHeapRecord(storage, cmap, blockId, key, value, ttl, maxIdleMillis, id);
 		return new OffHeapRecord(cmap, blockId, key, value, ttl, maxIdleMillis, id);
+	}
+
+	public NearCacheRecord createNewNearCacheRecord(Data key, Data value) {
+		return new OffHeapNearCacheRecord(storage, key, value);
 	}
 }

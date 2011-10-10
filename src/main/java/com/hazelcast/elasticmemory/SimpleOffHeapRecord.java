@@ -35,7 +35,7 @@ public final class SimpleOffHeapRecord extends AbstractSimpleRecord implements R
     }
 
     public Data getValueData() {
-    	return OffHeapRecordHelper.getValueData(key, entryRef, getStorage());
+    	return OffHeapRecordHelper.getValue(key, entryRef, getStorage());
     }
 
     public void setValue(Data value) {

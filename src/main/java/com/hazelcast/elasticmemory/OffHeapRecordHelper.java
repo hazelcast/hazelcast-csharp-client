@@ -8,19 +8,26 @@ final class OffHeapRecordHelper {
 	private static final Data EMPTY_DATA = new Data();
 
 	static EntryRef setValue(final Data key, final EntryRef oldEntryRef, final Data value, final Storage storage) {
+		removeValue(key, oldEntryRef, storage);
     	if(storage == null) {
     		return null;
     	}
-        if(oldEntryRef != null && oldEntryRef.length > 0) {
-        	storage.remove(key.getPartitionHash(), oldEntryRef);
-        }
         if(value != null && value.buffer != null) {
         	return storage.put(key.getPartitionHash(), value.buffer);
         }
         return null;
     }
 	
-	static Data getValueData(final Data key, final EntryRef entryRef, final Storage storage) {
+	static void removeValue(final Data key, final EntryRef entryRef, final Storage storage) {
+    	if(storage == null) {
+    		return;
+    	}
+        if(entryRef != null && entryRef.length > 0) {
+        	storage.remove(key.getPartitionHash(), entryRef);
+        }
+    }
+	
+	static Data getValue(final Data key, final EntryRef entryRef, final Storage storage) {
 		if (entryRef != null && entryRef.length > 0 && storage != null) {
 			final byte[] data = storage.get(key.getPartitionHash(), entryRef);
 			if (data != null && data.length > 0) {

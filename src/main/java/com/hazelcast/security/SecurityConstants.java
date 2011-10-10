@@ -1,14 +1,12 @@
 package com.hazelcast.security;
 
-import java.util.Arrays;
-
-import com.hazelcast.config.Config;
-import com.hazelcast.impl.AddressPicker;
 
 public final class SecurityConstants {
 
 	public static final String ATTRIBUTE_CONFIG_GROUP = "com.hazelcast.config.group";
 	public static final String ATTRIBUTE_CONFIG_PASS = "com.hazelcast.config.pass";
+	public static final String ATTRIBUTE_CREDENTIALS = "com.hazelcast.security.credentials";
+	public static final String ATTRIBUTE_PRINCIPAL = "com.hazelcast.security.principal";
 	
 	public static final String DEFAULT_LOGIN_MODULE = "com.hazelcast.security.impl.DefaultLoginModule";
 	public static final String DEFAULT_POLICY_CLASS = "com.hazelcast.security.impl.DefaultPermissionPolicy";
@@ -40,12 +38,4 @@ public final class SecurityConstants {
 	public static final String LISTENER_INSTANCE = "instance";
 	public static final String LISTENER_MEMBER = "member";
 	public static final String LISTENER_MIGRATION = "migration";
-	
-	public static boolean nameMatches(final String name, final String pattern) {
-		return Config.nameMatches(name, pattern);
-    }
-	
-	public static boolean addressMatches(final String address, final String pattern) {
-		return AddressPicker.matchAddress(address, Arrays.asList(pattern));
-	}
 }

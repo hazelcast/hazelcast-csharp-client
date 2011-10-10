@@ -38,7 +38,7 @@ public class ClientSecurityTest {
 		final Config config = new XmlConfigBuilder().build();
 		final SecurityConfig secCfg = config.getSecurityConfig();
 		secCfg.setEnabled(true);
-		secCfg.addClientPermissionConfig(new PermissionConfig(PermissionType.ALL, "", null, null));
+		secCfg.addClientPermissionConfig(new PermissionConfig(PermissionType.ALL, "", null));
 		
 		Hazelcast.newHazelcastInstance(config);
 		HazelcastClient client = HazelcastClient.newHazelcastClient("dev", "dev-pass", "localhost");
@@ -53,7 +53,9 @@ public class ClientSecurityTest {
 		final Config config = new XmlConfigBuilder().build();
 		final SecurityConfig secCfg = config.getSecurityConfig();
 		secCfg.setEnabled(true);
-		secCfg.addClientPermissionConfig(new PermissionConfig(PermissionType.ALL, "", "dev", "10.10.10.*"));
+		final PermissionConfig pc = new PermissionConfig(PermissionType.ALL, "", "dev");
+		pc.addEndpoint("10.10.10.*");
+		secCfg.addClientPermissionConfig(pc);
 		
 		Hazelcast.newHazelcastInstance(config);
 		HazelcastClient client = HazelcastClient.newHazelcastClient("dev", "dev-pass", "localhost");
@@ -66,7 +68,7 @@ public class ClientSecurityTest {
 		final Config config = new XmlConfigBuilder().build();
 		final SecurityConfig secCfg = config.getSecurityConfig();
 		secCfg.setEnabled(true);
-		PermissionConfig perm = new PermissionConfig(PermissionType.MAP, "test", "dev", null);
+		PermissionConfig perm = new PermissionConfig(PermissionType.MAP, "test", "dev");
 		secCfg.addClientPermissionConfig(perm);
 		perm.addAction(SecurityConstants.ACTION_ALL);
 		
@@ -86,7 +88,7 @@ public class ClientSecurityTest {
 		final Config config = new XmlConfigBuilder().build();
 		final SecurityConfig secCfg = config.getSecurityConfig();
 		secCfg.setEnabled(true);
-		PermissionConfig perm = new PermissionConfig(PermissionType.MAP, "test", "dev", null);
+		PermissionConfig perm = new PermissionConfig(PermissionType.MAP, "test", "dev");
 		secCfg.addClientPermissionConfig(perm);
 		perm.addAction(SecurityConstants.ACTION_PUT);
 		perm.addAction(SecurityConstants.ACTION_GET);

@@ -1,6 +1,6 @@
 package com.hazelcast.security.permission;
 
-import static com.hazelcast.security.SecurityConstants.*;
+import static com.hazelcast.security.SecurityUtil.*;
 
 import java.security.Permission;
 
