@@ -9,6 +9,7 @@ import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.elasticmemory.util.MathUtil;
 import com.hazelcast.elasticmemory.util.MemorySize;
 import com.hazelcast.elasticmemory.util.MemoryUnit;
+import com.hazelcast.enterprise.Registration.Mode;
 import com.hazelcast.impl.IHazelcastFactory;
 import com.hazelcast.impl.Node;
 import com.hazelcast.impl.base.DefaultNodeInitializer;
@@ -34,8 +35,9 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		try {
 			logger.log(Level.INFO, "Checking Hazelcast Enterprise license...");
 			registration = RegistrationService.getRegistration(); 
-			logger.log(Level.INFO, "Licensed to: " + registration.getOwner() + " on " + registration.getRegistryDate() 
-					+ ", type: " + registration.getMode());
+			logger.log(Level.INFO, "Licensed to: " + registration.getOwner() 
+					+ (registration.getMode() == Mode.TRIAL ? " until " + registration.getExpiryDate() : "") 
+					+ ", Type: " + registration.getMode());
 		} catch (Exception e) {
 			logger.log(Level.WARNING, e.getMessage(), e);
 			throw new InvalidLicenseError();
