@@ -56,17 +56,18 @@
 		</copy>
 	</target>
 		
-	<target name="mvn build">
+	<target name="mvn clean package">
 		<exec dir="${basedir}/root" executable="mvn">
 			<arg value="-DskipTests" />
 			<arg value="clean" />
 			<arg value="package" />
 		</exec>
-	</target>	
-	
-	<target name="doAll" depends="clean">
-		<antcall target="copy" />
-		<antcall target="mvn build" />
 	</target>
 	
+	<target name="mvn test">
+		<exec dir="${basedir}/root/hazelcast" executable="mvn">
+			<arg value="test" />
+			<arg value="-P all" />
+		</exec>
+	</target>	
 </project>
