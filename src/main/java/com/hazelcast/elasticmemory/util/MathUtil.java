@@ -18,5 +18,10 @@ public final class MathUtil {
 		return divideByAndRound(value, factor) * factor;
 	}
 	
+	public static boolean isPowerOf2(int x) {
+		if(x <= 0) return false;
+		return (x & (x - 1)) == 0;
+	}
+	
 	private MathUtil() {}
 }

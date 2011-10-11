@@ -11,7 +11,7 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 	private final StorageSegment[] segments ;
 	
 	public OffHeapStorage(int totalSizeInMb, int chunkSizeInKb) {
-		this(totalSizeInMb, Math.max(MIN_SEGMENT_COUNT, divideByAndCeil(totalSizeInMb, MAX_SEGMENT_SIZE_IN_MB)), chunkSizeInKb);
+		this(totalSizeInMb, divideByAndCeil(totalSizeInMb, MAX_SEGMENT_SIZE_IN_MB), chunkSizeInKb);
 	}
 	
 	public OffHeapStorage(int totalSizeInMb, int segmentCount, int chunkSizeInKb) {
