@@ -6,6 +6,7 @@ import com.hazelcast.elasticmemory.OffHeapRecordFactory;
 import com.hazelcast.elasticmemory.SimpleOffHeapRecordFactory;
 import com.hazelcast.elasticmemory.storage.OffHeapStorage;
 import com.hazelcast.elasticmemory.storage.Storage;
+import com.hazelcast.elasticmemory.util.MathUtil;
 import com.hazelcast.elasticmemory.util.MemorySize;
 import com.hazelcast.elasticmemory.util.MemoryUnit;
 import com.hazelcast.impl.IHazelcastFactory;
@@ -50,14 +51,34 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		if(isOffHeapEnabled()) {
 			systemLogger.log(Level.INFO, "Initializing node off-heap store...");
 			
-			String heap = node.groupProperties.OFFHEAP_TOTAL_SIZE.getValue();
+			String total = node.groupProperties.OFFHEAP_TOTAL_SIZE.getValue();
 	        String chunk = node.groupProperties.OFFHEAP_CHUNK_SIZE.getValue();
-	        MemorySize heapSize = MemorySize.parse(heap, MemoryUnit.MEGABYTES);
+	        MemorySize totalSize = MemorySize.parse(total, MemoryUnit.MEGABYTES);
 	        MemorySize chunkSize = MemorySize.parse(chunk, MemoryUnit.KILOBYTES);
+	        checkOffHeapParams(totalSize, chunkSize);
 	        
-	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + heap + " OFF-HEAP >>>>>>>>>>");
-	        systemLogger.log(Level.WARNING, "<<<<<<<<<< " + chunk + " CHUNK-SIZE >>>>>>>>>>");
-	        storage = new OffHeapStorage(heapSize.megaBytes(), chunkSize.kiloBytes());
+	        logger.log(Level.INFO, "Elastic-Memory off-heap storage total size: " + totalSize.megaBytes() + " MB");
+	        logger.log(Level.INFO, "Elastic-Memory off-heap storage chunk size: " + chunkSize.kiloBytes() + " KB");
+	        storage = new OffHeapStorage(totalSize.megaBytes(), chunkSize.kiloBytes());
+		}
+	}
+	
+	private void checkOffHeapParams(MemorySize total, MemorySize chunk) {
+		if(total.megaBytes() == 0) {
+			throw new IllegalArgumentException("Total size must be multitude of megabytes! (Current: " 
+					+ total.bytes() + " bytes)");
+		}
+		if(chunk.kiloBytes() == 0) {
+			throw new IllegalArgumentException("Chunk size must be multitude of kilobytes! (Current: " 
+					+ chunk.bytes() + " bytes)");
+		}
+		if(total.bytes() <= chunk.bytes()) {
+			throw new IllegalArgumentException("Total size must be greater than chunk size => " 
+					+ "Total: " + total.bytes() + ", Chunk: " + chunk.bytes());
+		}
+		if(!MathUtil.isPowerOf2(chunk.kiloBytes())) {
+			throw new IllegalArgumentException("Chunk size must be power of 2 in kilobytes! (Current: " 
+					+ chunk.kiloBytes() + " kilobytes)");
 		}
 	}
 	
