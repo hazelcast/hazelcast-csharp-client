@@ -54,6 +54,11 @@
 				<include name="**/test/**/*"/>
 			</fileset>
 		</copy>
+		<copy todir="${basedir}/root">
+			<fileset dir="${basedir}">
+				<include name="release.sh" />
+			</fileset>
+		</copy>
 	</target>
 		
 	<target name="mvn clean package">
