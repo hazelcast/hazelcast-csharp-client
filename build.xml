@@ -46,6 +46,7 @@
 		
 		<copy todir="${basedir}/root/hazelcast/src">
 			<fileset dir="${elastic.dir}/src">
+				<exclude name="**/test/**/*"/>
 			</fileset>
 		</copy>
 	</target>
