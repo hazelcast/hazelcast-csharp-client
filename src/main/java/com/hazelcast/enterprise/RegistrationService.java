@@ -16,11 +16,18 @@ public class RegistrationService {
 		}
 		final String license = KeyDecrypt.decrypt(new String(data));
 		final String parts[] = license.split("\\$");
-		final String name = parts[0];
-		final String type = parts[1];
-		final long end = Long.parseLong(parts[2]);
-		final long start = Long.parseLong(parts[3]);
-		return new Registration(name, new Date(start), new Date(end), type);
+		if(parts.length > 4) {
+			final LicenseType type = LicenseType.valueOf(parts[4]);
+			if(type != LicenseType.ENTERPRISE) {
+				throw new InvalidLicenseError();
+			}
+			final String name = parts[0];
+			final String mode = parts[1];
+			final long end = Long.parseLong(parts[2]);
+			final long start = Long.parseLong(parts[3]);
+			return new Registration(name, new Date(start), new Date(end), mode);
+		}
+		throw new InvalidLicenseError();
 	}
 	
 	private static byte[] readLicense() throws IOException {
