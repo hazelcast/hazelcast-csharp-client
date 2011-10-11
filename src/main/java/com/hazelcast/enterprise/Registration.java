@@ -9,16 +9,16 @@ public class Registration {
 	private String owner;
 	private Date registryDate;
 	private Date expiryDate;
-	private Type type;
+	private Mode mode;
 	
 	public Registration(String owner, Date registryDate,
-			Date expiryDate, String type) {
+			Date expiryDate, String mode) {
 		super();
 		
 		this.owner = owner;
 		this.registryDate = registryDate;
 		this.expiryDate = expiryDate;
-		this.type = Type.valueOf(type);
+		this.mode = Mode.valueOf(mode);
 	}
 	
 	public String getOwner() {
@@ -33,8 +33,8 @@ public class Registration {
 		return expiryDate;
 	}
 
-	public Type getType() {
-		return type;
+	public Mode getMode() {
+		return mode;
 	}
 	
 	public boolean isExpired() {
@@ -42,11 +42,11 @@ public class Registration {
 	}
 	
 	public boolean isValid() {
-		return (type == Type.FULL 
-				|| type == Type.TRIAL && !isExpired());
+		return (mode == Mode.FULL 
+				|| mode == Mode.TRIAL && !isExpired());
 	}
 	
-	public enum Type {
+	public enum Mode {
 		TRIAL,
 		FULL
 	}
