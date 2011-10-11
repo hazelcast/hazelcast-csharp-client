@@ -74,5 +74,11 @@
 			<arg value="test" />
 			<arg value="-P all" />
 		</exec>
+	</target>
+	
+	<target name="release">
+		<exec dir="${basedir}/root" executable="sh">
+			<arg value="release.sh" />
+		</exec>
 	</target>	
 </project>
