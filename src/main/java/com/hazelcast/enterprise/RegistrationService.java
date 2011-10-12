@@ -1,18 +1,23 @@
 package com.hazelcast.enterprise;
 
-import java.io.FileNotFoundException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Date;
+import java.util.logging.Level;
 
-public class RegistrationService {
+import com.hazelcast.logging.ILogger;
+
+class RegistrationService {
 	
 	private static final String LICENSE_FILE = "hazelcast.license";
 
-	public static Registration getRegistration() throws Exception {
-		final byte[] data = readLicense();
+	static Registration getRegistration(final String path, ILogger logger) throws Exception {
+		final byte[] data = readLicense(path, logger);
 		if(data == null || data.length == 0) {
-			throw new FileNotFoundException("License file could not be loaded!");
+			throw new InvalidLicenseError("License file could not be loaded!");
 		}
 		final String license = KeyDecrypt.decrypt(new String(data));
 		final String parts[] = license.split("\\$");
@@ -30,21 +35,35 @@ public class RegistrationService {
 		throw new InvalidLicenseError();
 	}
 	
-	private static byte[] readLicense() throws IOException {
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-		if(cl == null) {
-			cl = RegistrationService.class.getClassLoader();
-		}
-		final InputStream in;
-		if(cl != null) {
-			in = cl.getResourceAsStream(LICENSE_FILE);
-		} else {
-			in = ClassLoader.getSystemResourceAsStream(LICENSE_FILE);
+	private static byte[] readLicense(String path, ILogger logger) throws IOException {
+		InputStream in = null;
+		if(path != null) {
+			logger.log(Level.INFO, "Loading Hazelcast Enterprise license from: " + path);
+			in = readFromUrl(path, logger);
+			if(in == null) {
+				in = readFromClasspath(path, logger);
+			}
+			if(in == null) {
+				in = readFromFile(path, logger);
+			}
+			if(in == null) {
+				logger.log(Level.WARNING, "Could not load Hazelcast Enterprise license from: " + path);
+			}
+		} 
+		
+		if(in == null) {
+			logger.log(Level.INFO, "Trying to load Hazelcast Enterprise license from classpath.");
+			in = readFromClasspath(LICENSE_FILE, logger);
+			if(in == null) {
+				logger.log(Level.INFO, "Trying to load Hazelcast Enterprise license from working directory.");
+				in = readFromFile(LICENSE_FILE, logger);
+			}
 		}
 		
 		if(in == null) {
-			return new byte[0];
+			return null;
 		}
+		
 		try {
 			byte[] buffer = new byte[256];
 			int k = 0;
@@ -63,8 +82,50 @@ public class RegistrationService {
 			System.arraycopy(buffer, 0, out, 0, i);
 			return out;
 		} finally {
-			in.close();
+			try {
+				in.close();
+			} catch (Exception ignored) {
+			}
 		}
+	}
+	
+	private static InputStream readFromClasspath(String licensePath, ILogger logger) {
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		if(cl == null) {
+			cl = RegistrationService.class.getClassLoader();
+		}
+		final InputStream in;
+		if(cl != null) {
+			in = cl.getResourceAsStream(licensePath);
+		} else {
+			in = ClassLoader.getSystemResourceAsStream(licensePath);
+		}
+		return in;
+	}
+	
+	private static InputStream readFromFile(String path, ILogger logger) {
+		final File file = new File(path);
+		if(file.exists()) {
+			try {
+				return new FileInputStream(file);
+			} catch (IOException e) {
+				logger.log(Level.FINEST, "Could not read license file: " 
+						+ path + " (" + e.getMessage() + ").");
+			}
+		}
+		return null;
+	}
+	
+	private static InputStream readFromUrl(String path, ILogger logger) {
+		try {
+			final URL url = new URL(path);
+			return url.openStream();
+		}
+		catch(IOException e) {
+			logger.log(Level.FINEST, "Could not read license file: " 
+					+ path + " (" + e.getMessage() + ").");
+		}
+		return null;
 	}
 	
 }
