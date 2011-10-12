@@ -35,7 +35,7 @@ class RegistrationService {
 		throw new InvalidLicenseError();
 	}
 	
-	private static byte[] readLicense(String path, ILogger logger) throws IOException {
+	private static byte[] readLicense(final String path, ILogger logger) throws IOException {
 		InputStream in = null;
 		if(path != null) {
 			logger.log(Level.INFO, "Loading Hazelcast Enterprise license from: " + path);

@@ -45,7 +45,7 @@ public abstract class ClusterLoginModule implements LoginModule {
 			logger.log(Level.WARNING, "Credentials could not be retrieved!");
 			return false;
 		}
-		logger.log(Level.FINEST, "Authenticating " + credentials.getName());
+		logger.log(Level.FINEST, "Authenticating " + SecurityUtil.getCredentialsFullName(credentials));
 		sharedState.put(SecurityConstants.ATTRIBUTE_CREDENTIALS, credentials);
 		return loginSucceeded = onLogin();
 	}
@@ -53,10 +53,11 @@ public abstract class ClusterLoginModule implements LoginModule {
 	
 	public final boolean commit() throws LoginException {
 		if(!loginSucceeded) {
-			logger.log(Level.WARNING, "Authentication has been failed! =>" + (credentials != null ? credentials.getName() : "unknown"));
+			logger.log(Level.WARNING, "Authentication has been failed! =>" + (credentials != null 
+					? SecurityUtil.getCredentialsFullName(credentials) : "unknown"));
 			return false;
 		}
-		logger.log(Level.FINEST, "Committing authentication of " + credentials.getName());
+		logger.log(Level.FINEST, "Committing authentication of " + SecurityUtil.getCredentialsFullName(credentials));
 		final Principal principal = new ClusterPrincipal(credentials);
 		subject.getPrincipals().add(principal);
 		sharedState.put(SecurityConstants.ATTRIBUTE_PRINCIPAL, principal);
@@ -64,7 +65,7 @@ public abstract class ClusterLoginModule implements LoginModule {
 	}
 
 	public final boolean abort() throws LoginException {
-		logger.log(Level.FINEST, "Aborting authentication of " + credentials.getName());
+		logger.log(Level.FINEST, "Aborting authentication of " + SecurityUtil.getCredentialsFullName(credentials));
 		final boolean abort = onAbort();
 		clearSubject();
 		loginSucceeded = false;
@@ -73,7 +74,7 @@ public abstract class ClusterLoginModule implements LoginModule {
 	}
 
 	public final boolean logout() throws LoginException {
-		logger.log(Level.FINEST, "Logging out " + credentials.getName());
+		logger.log(Level.FINEST, "Logging out " + SecurityUtil.getCredentialsFullName(credentials));
 		final boolean logout = onLogout();
 		clearSubject();
 		loginSucceeded = false;
