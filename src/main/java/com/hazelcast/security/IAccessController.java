@@ -23,12 +23,27 @@ import java.security.PrivilegedAction;
 
 import javax.security.auth.Subject;
 
+/**
+ * IAccessController is responsible for controlling access to protected resources.
+ */
 public interface IAccessController {
 	
+	/**
+	 * Checks whether current {@link Subject} has been granted specified permission or not.
+	 * @param permission 
+	 * @throws AccessControlException
+	 */
 	void checkPermission(Permission permission) throws AccessControlException;
 	
 	boolean checkPermission(Subject subject, Permission permission);
 	
+	/**
+	 * Perform privileged work as a particular <code>Subject</code>.
+	 * @param subject
+	 * @param action
+	 * @return result returned by the PrivilegedAction's run method.
+	 * @throws SecurityException
+	 */
 	<T> T doAsPrivileged(Subject subject, PrivilegedAction<T> action) throws AccessControlException;
 	
 }

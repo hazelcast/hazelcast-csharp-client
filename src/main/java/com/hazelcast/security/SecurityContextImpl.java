@@ -59,7 +59,7 @@ public class SecurityContextImpl implements SecurityContext {
 			tmpCredentialsFactory = (ICredentialsFactory) createImplInstance(credentialsFactoryConfig.getClassName());
 		}
 		credentialsFactory = tmpCredentialsFactory;
-		credentialsFactory.configure(node.config.getGroupConfig(), policyConfig.getProperties());
+		credentialsFactory.configure(node.config.getGroupConfig(), credentialsFactoryConfig.getProperties());
 		
 		memberConfiguration = new LoginConfigurationDelegate(getLoginModuleConfigs(securityConfig.getMemberLoginModuleConfigs()));
 		clientConfiguration = new LoginConfigurationDelegate(getLoginModuleConfigs(securityConfig.getClientLoginModuleConfigs()));
@@ -68,13 +68,13 @@ public class SecurityContextImpl implements SecurityContext {
 	}
 	
 	public LoginContext createMemberLoginContext(Credentials credentials) throws LoginException {
-		logger.log(Level.FINEST, "Creating Member LoginContext for: " + credentials.getName());
+		logger.log(Level.FINEST, "Creating Member LoginContext for: " + SecurityUtil.getCredentialsFullName(credentials));
 		return new LoginContext(node.getConfig().getGroupConfig().getName(), 
 				new Subject(), new ClusterCallbackHandler(credentials), memberConfiguration);
 	}
 	
 	public LoginContext createClientLoginContext(Credentials credentials) throws LoginException {
-		logger.log(Level.FINEST, "Creating Client LoginContext for: " + credentials.getName());
+		logger.log(Level.FINEST, "Creating Client LoginContext for: " + SecurityUtil.getCredentialsFullName(credentials));
 		return new LoginContext(node.getConfig().getGroupConfig().getName(), 
 				new Subject(), new ClusterCallbackHandler(credentials), clientConfiguration);
 	}

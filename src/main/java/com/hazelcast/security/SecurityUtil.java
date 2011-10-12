@@ -81,5 +81,9 @@ public final class SecurityUtil {
 		return AddressPicker.matchAddress(address, Arrays.asList(pattern));
 	}
 	
+	public static String getCredentialsFullName(Credentials credentials) {
+		return credentials.getPrincipal() + '@' + credentials.getEndpoint();
+	}
+	
 	private SecurityUtil() {}
 }

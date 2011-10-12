@@ -20,7 +20,7 @@ public final class ClusterPrincipal implements Principal {
 	}
 	
 	public String getName() {
-		return credentials.getName();
+		return SecurityUtil.getCredentialsFullName(credentials);
 	}
 
 	public Credentials getCredentials() {
