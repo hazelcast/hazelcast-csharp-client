@@ -35,7 +35,7 @@
 		</delete>
 	</target>
 	
-	<target name="copy">
+	<target name="merge">
 		<mkdir dir="${basedir}/root" />
 		<copy todir="${basedir}/root">
 			<fileset dir="${workspace.dir}/hazelcast/trunk">
@@ -60,23 +60,26 @@
 			</fileset>
 		</copy>
 	</target>
+	
+	<target name="rm-license">
+		<delete>
+			<fileset dir="${basedir}/root">
+			    <include name="**/*.license"/>
+			</fileset>
+		</delete>
+	</target>
 		
-	<target name="mvn clean package">
+	<target name="release" depends="rm-license">
 		<exec dir="${basedir}/root" executable="mvn">
-			<arg value="-DskipTests" />
 			<arg value="clean" />
 			<arg value="package" />
+			<arg value="resources:resources"/>
+			<arg value="assembly:assembly" />
+			<arg value="-DskipTests" />
 		</exec>
 	</target>
 	
-	<target name="mvn test">
-		<exec dir="${basedir}/root/hazelcast" executable="mvn">
-			<arg value="test" />
-			<arg value="-P all" />
-		</exec>
-	</target>
-	
-	<target name="release">
+	<target name="release.sh" depends="rm-license">
 		<exec dir="${basedir}/root" executable="sh">
 			<arg value="release.sh" />
 		</exec>
