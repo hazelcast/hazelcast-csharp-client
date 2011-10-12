@@ -6,4 +6,8 @@ public class InvalidLicenseError extends Error {
 		super("Invalid license file! Please contact sales@hazelcast.com");
 	}
 
+	public InvalidLicenseError(String message) {
+		super(message);
+	}
+	
 }

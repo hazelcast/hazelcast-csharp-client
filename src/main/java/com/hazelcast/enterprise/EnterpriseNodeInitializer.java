@@ -34,7 +34,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		logger = node.getLogger("com.hazelcast.enterprise.initializer");
 		try {
 			logger.log(Level.INFO, "Checking Hazelcast Enterprise license...");
-			registration = RegistrationService.getRegistration(); 
+			registration = RegistrationService.getRegistration(node.groupProperties.LICENSE_PATH.getString(), logger); 
 			logger.log(Level.INFO, "Licensed to: " + registration.getOwner() 
 					+ (registration.getMode() == Mode.TRIAL ? " until " + registration.getExpiryDate() : "") 
 					+ ", Type: " + registration.getMode());
