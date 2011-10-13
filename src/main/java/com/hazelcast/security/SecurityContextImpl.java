@@ -61,8 +61,8 @@ public class SecurityContextImpl implements SecurityContext {
 		credentialsFactory = tmpCredentialsFactory;
 		credentialsFactory.configure(node.config.getGroupConfig(), credentialsFactoryConfig.getProperties());
 		
-		memberConfiguration = new LoginConfigurationDelegate(getLoginModuleConfigs(securityConfig.getMemberLoginModuleConfigs()));
-		clientConfiguration = new LoginConfigurationDelegate(getLoginModuleConfigs(securityConfig.getClientLoginModuleConfigs()));
+		memberConfiguration = new LoginConfigurationDelegate(node.config, getLoginModuleConfigs(securityConfig.getMemberLoginModuleConfigs()));
+		clientConfiguration = new LoginConfigurationDelegate(node.config, getLoginModuleConfigs(securityConfig.getClientLoginModuleConfigs()));
 		
 		accessController = new AccessControllerImpl(policy);
 	}

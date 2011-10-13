@@ -3,6 +3,7 @@ package com.hazelcast.security;
 
 public final class SecurityConstants {
 
+	public static final String ATTRIBUTE_CONFIG = "com.hazelcast.config";
 	public static final String ATTRIBUTE_CONFIG_GROUP = "com.hazelcast.config.group";
 	public static final String ATTRIBUTE_CONFIG_PASS = "com.hazelcast.config.pass";
 	public static final String ATTRIBUTE_CREDENTIALS = "com.hazelcast.security.credentials";
