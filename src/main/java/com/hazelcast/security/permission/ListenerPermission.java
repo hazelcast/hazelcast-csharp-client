@@ -14,12 +14,12 @@ public class ListenerPermission extends ClusterPermission {
 		}
 		
 		InstancePermission that = (InstancePermission) permission;
-		
-		if(!that.getName().equals(this.getName())) {
-			return false;
+		if("all".equals(that.getName())
+				|| that.getName().equals(this.getName())) {
+			return true;
 		}
 		
-		return true;
+		return false;
 	}
 
 	public String getActions() {

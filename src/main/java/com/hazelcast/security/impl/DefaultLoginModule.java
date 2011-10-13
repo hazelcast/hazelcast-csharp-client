@@ -10,18 +10,21 @@ import com.hazelcast.security.UsernamePasswordCredentials;
 public class DefaultLoginModule extends ClusterLoginModule implements LoginModule {
 
 	public boolean onLogin() throws LoginException {
-		final UsernamePasswordCredentials usernamePasswordCredentials = (UsernamePasswordCredentials) credentials;
-		final String group = (String) options.get(SecurityConstants.ATTRIBUTE_CONFIG_GROUP);
-		final String pass = (String) options.get(SecurityConstants.ATTRIBUTE_CONFIG_PASS);
-		
-		if(!group.equals(usernamePasswordCredentials.getUsername())) {
-			return false;
+		if(credentials instanceof UsernamePasswordCredentials) {
+			final UsernamePasswordCredentials usernamePasswordCredentials = (UsernamePasswordCredentials) credentials;
+			final String group = (String) options.get(SecurityConstants.ATTRIBUTE_CONFIG_GROUP);
+			final String pass = (String) options.get(SecurityConstants.ATTRIBUTE_CONFIG_PASS);
+			
+			if(!group.equals(usernamePasswordCredentials.getUsername())) {
+				return false;
+			}
+			
+			if(!pass.equals(new String(usernamePasswordCredentials.getPassword()))) {
+				return false;
+			}
+			return true;
 		}
-		
-		if(!pass.equals(new String(usernamePasswordCredentials.getPassword()))) {
-			return false;
-		}
-		return true;
+		return false;
 	}
 
 	public boolean onCommit() throws LoginException {
