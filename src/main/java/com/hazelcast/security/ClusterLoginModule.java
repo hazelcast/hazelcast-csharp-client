@@ -15,8 +15,7 @@ import com.hazelcast.logging.Logger;
 
 public abstract class ClusterLoginModule implements LoginModule {
 
-	protected static final ILogger logger = Logger.getLogger(ClusterLoginModule.class.getName());
-	
+	protected final ILogger logger = Logger.getLogger(getClass().getName());
 	private CallbackHandler callbackHandler;
 	protected Credentials credentials;
 	protected Subject subject;

@@ -28,7 +28,7 @@ public class DefaultLoginModule extends ClusterLoginModule implements LoginModul
 	}
 
 	public boolean onCommit() throws LoginException {
-		return true;
+		return loginSucceeded;
 	}
 
 	protected boolean onAbort() throws LoginException {
