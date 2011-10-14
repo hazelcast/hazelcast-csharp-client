@@ -1,79 +1,60 @@
-<project basedir="." name="Elastic Memory" default="jar">
+<project basedir="." name="Elastic Memory" default="all">
     
 	<property name="community_version" value="1.9.5-SNAPSHOT"/>
 	<property name="enterprise_version" value="2.0-ee-beta"/>
-	
 	<property name="version" value="${enterprise_version}"/>
+		
     <property name="workspace.dir" value="/java/workspace"/>
     <property name="elastic.dir" value="${workspace.dir}/elastic-memory/trunk"/>
-    <property name="hazelcast.dir" value="${workspace.dir}/hazelcast/trunk/hazelcast"/>
-	<property name="hazelcast.resource.dir" value="${hazelcast.dir}/src/main/resources"/>
-	<property name="classes.dir" value="target/classes"/>
-    <property name="jar.name" value="hazelcast-enterprise-${version}.jar"/>
-	<property name="jar.file" value="${elastic.dir}/target/${jar.name}"/>
-
-    <target name="jar">
-    	<delete>
-			<fileset dir="${elastic.dir}/target">
-			    <include name="*.jar"/>
-			</fileset>
-		</delete>
-    	
-    	<zip destfile="${jar.file}">
-            <zipfileset dir="${hazelcast.dir}/${classes.dir}">
-            	<exclude name="**/META-INF/services/*"/>
-            </zipfileset>
-    		<zipfileset dir="${hazelcast.resource.dir}" >
-    			<include name="**/META-INF/*"/>
-    			<exclude name="**/META-INF/services/*"/>
-    		</zipfileset>
-            <zipfileset dir="${elastic.dir}/${classes.dir}"/>
-    	</zip>
-    </target>
+    <property name="hazelcast.dir" value="${workspace.dir}/hazelcast/trunk"/>
+	<property name="release.dir" value="${workspace.dir}/hazelcast-enterprise"/>
 	
 	<target name="clean">
 		<delete includeemptydirs="true" failonerror="no">
-			<fileset dir="${basedir}/root">
-			</fileset>
+			<fileset dir="${release.dir}" />
 		</delete>
 	</target>
 	
 	<target name="merge">
-		<mkdir dir="${basedir}/root" />
-		<copy todir="${basedir}/root">
-			<fileset dir="${workspace.dir}/hazelcast/trunk">
+		<mkdir dir="${release.dir}" />
+		<copy todir="${release.dir}">
+			<fileset dir="${hazelcast.dir}">
 				<exclude name="**/target/**/*"/>
     			<exclude name="**/META-INF/services/*"/>
 			</fileset>
 		</copy>
 		
-		<copy todir="${basedir}/root/hazelcast/src">
+		<copy todir="${release.dir}/hazelcast/src">
 			<fileset dir="${elastic.dir}/src">
 				<exclude name="**/test/**/*"/>
 			</fileset>
 		</copy>
-		<copy todir="${basedir}/root/hazelcast-client/src">
+		<copy todir="${release.dir}/hazelcast-client/src">
 			<fileset dir="${elastic.dir}/src">
 				<include name="**/test/**/*"/>
 			</fileset>
 		</copy>
-		<copy todir="${basedir}/root">
-			<fileset dir="${basedir}">
+		<!--
+		<copy todir="${release.dir}">
+			<fileset dir="${basedir}/scripts/">
 				<include name="release.sh" />
 			</fileset>
 		</copy>
+		-->
 	</target>
 	
 	<target name="rm-license">
 		<delete>
-			<fileset dir="${basedir}/root">
+			<fileset dir="${release.dir}">
 			    <include name="**/*.license"/>
+				<include name="**/license.txt"/>
+				<include name="**/notice.txt"/>
 			</fileset>
 		</delete>
 	</target>
 		
-	<target name="release" depends="rm-license">
-		<exec dir="${basedir}/root" executable="mvn">
+	<target name="release" depends="rm-license, change-version">
+		<exec dir="${release.dir}" executable="mvn">
 			<arg value="clean" />
 			<arg value="package" />
 			<arg value="resources:resources"/>
@@ -82,15 +63,17 @@
 		</exec>
 	</target>
 	
-	<target name="release.sh" depends="rm-license">
-		<exec dir="${basedir}/root" executable="sh">
-			<arg value="../scripts/release.sh" />
+	<target name="all" depends="clean, merge, rm-license, change-version, release" />
+	 
+	<target name="release.sh" depends="rm-license, change-version">
+		<exec dir="${release.dir}" executable="sh">
+			<arg value="${basedir}/scripts/release.sh" />
 		</exec>
 	</target>	
 	
 	<target name="change-version">
-		<exec dir="${basedir}/root" executable="sh">
-			<arg value="../scripts/change-version.sh" />
+		<exec dir="${release.dir}" executable="sh">
+			<arg value="${basedir}/scripts/change-version.sh" />
 			<arg value="${community_version}"/>
 			<arg value="${enterprise_version}"/>
 		</exec>
