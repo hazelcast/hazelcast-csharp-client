@@ -51,7 +51,7 @@
 		<copy tofile="${release.dir}/src/main/resources/license.txt" file="${basedir}/license/ee-trial-license.txt" />
 	</target>
 
-	<target name="release" depends="license-cleanup, change-version, add-trial-notice">
+	<target name="release" depends="license-cleanup, change-version, add-trial-notice, javadoc">
 		<exec dir="${release.dir}" executable="mvn">
 			<arg value="clean" />
 			<arg value="package" />
@@ -61,9 +61,9 @@
 		</exec>
 	</target>
 
-	<target name="all" depends="clean, merge, license-cleanup, change-version, add-trial-notice, release" />
+	<target name="all" depends="clean, merge, license-cleanup, change-version, add-trial-notice, javadoc, release" />
 
-	<target name="release.sh" depends="license-cleanup, change-version, add-trial-notice">
+	<target name="release.sh" depends="license-cleanup, change-version, add-trial-notice, javadoc">
 		<exec dir="${release.dir}" executable="sh">
 			<arg value="${basedir}/scripts/release.sh" />
 		</exec>
@@ -88,11 +88,20 @@
 				<include name="**/jmx/**" />
 				<include name="**/query/**" />
 				<include name="**/partition/**" />
-				<include name="**/security/*.*" />
+				<exclude name="**/*.html" />
+			</fileset>
+			<fileset dir="${release.dir}/hazelcast/src/main/java/" defaultexcludes="true">
+				<include name="**/security/*Credentials*" />
+				<include name="**/security/*PermissionPolicy*" />
+				<include name="**/security/SecurityContext*" />
 				<exclude name="**/*.html" />
 			</fileset>
 			<fileset dir="${release.dir}/hazelcast-client/src/main/java/" defaultexcludes="true">
 				<include name="**/HazelcastClient.java" />
+				<exclude name="**/*.html" />
+			</fileset>
+			<fileset dir="${release.dir}/hazelcast-hibernate/src/main/java/" defaultexcludes="true">
+				<include name="**/HazelcastAccessor.java" />
 				<exclude name="**/*.html" />
 			</fileset>
 			<doctitle>
