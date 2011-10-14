@@ -7,7 +7,7 @@
 	<packaging>jar</packaging>
 	<version>0.0.1</version>
 	<properties>
-		<hazelcast.version>1.9.5-SNAPSHOT</hazelcast.version>
+		<hazelcast.version>2.0-beta</hazelcast.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jdk.version>1.5</jdk.version>
 		<target.dir>target</target.dir>
