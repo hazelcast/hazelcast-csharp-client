@@ -10,15 +10,17 @@ public class Registration {
 	private Date registryDate;
 	private Date expiryDate;
 	private Mode mode;
+	private int maxNodes;
 	
 	public Registration(String owner, Date registryDate,
-			Date expiryDate, String mode) {
+			Date expiryDate, String mode, int maxNodes) {
 		super();
 		
 		this.owner = owner;
 		this.registryDate = registryDate;
 		this.expiryDate = expiryDate;
 		this.mode = Mode.valueOf(mode);
+		this.maxNodes = maxNodes;
 	}
 	
 	public String getOwner() {
@@ -39,6 +41,10 @@ public class Registration {
 	
 	public boolean isExpired() {
 		return new Date().after(expiryDate);
+	}
+	
+	public int getMaxNodes() {
+		return maxNodes;
 	}
 	
 	public boolean isValid() {

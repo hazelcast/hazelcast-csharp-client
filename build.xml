@@ -1,6 +1,9 @@
 <project basedir="." name="Elastic Memory" default="jar">
     
-	<property name="version" value="1.9.5-SNAPSHOT"/>
+	<property name="community_version" value="1.9.5-SNAPSHOT"/>
+	<property name="enterprise_version" value="2.0-ee-beta"/>
+	
+	<property name="version" value="${enterprise_version}"/>
     <property name="workspace.dir" value="/java/workspace"/>
     <property name="elastic.dir" value="${workspace.dir}/elastic-memory/trunk"/>
     <property name="hazelcast.dir" value="${workspace.dir}/hazelcast/trunk/hazelcast"/>
@@ -81,7 +84,15 @@
 	
 	<target name="release.sh" depends="rm-license">
 		<exec dir="${basedir}/root" executable="sh">
-			<arg value="release.sh" />
+			<arg value="../scripts/release.sh" />
 		</exec>
 	</target>	
+	
+	<target name="change-version">
+		<exec dir="${basedir}/root" executable="sh">
+			<arg value="../scripts/change-version.sh" />
+			<arg value="${community_version}"/>
+			<arg value="${enterprise_version}"/>
+		</exec>
+	</target>
 </project>
