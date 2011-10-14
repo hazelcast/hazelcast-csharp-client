@@ -37,6 +37,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 			registration = RegistrationService.getRegistration(node.groupProperties.LICENSE_PATH.getString(), logger); 
 			logger.log(Level.INFO, "Licensed to: " + registration.getOwner() 
 					+ (registration.getMode() == Mode.TRIAL ? " until " + registration.getExpiryDate() : "") 
+					+ ", Max-Nodes: " + registration.getMaxNodes()
 					+ ", Type: " + registration.getMode());
 		} catch (Exception e) {
 			logger.log(Level.WARNING, e.getMessage(), e);
@@ -84,11 +85,20 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		}
 	}
 	
-	public void afterInitialize(Node node) {
+	public void printNodeInfo(Node node) {
         systemLogger.log(Level.INFO, "Hazelcast Enterprise Edition " + version + " ("
                 + build + ") starting at " + node.getThisAddress());
         systemLogger.log(Level.INFO, "Copyright (C) 2008-2011 Hazelcast.com");
 	}
+	
+	public void afterInitialize(Node node) {
+		final int count = node.getClusterImpl().getMembers().size();
+		if(count > registration.getMaxNodes()) {
+			logger.log(Level.SEVERE, "Exceeded maximum number of nodes allowed in Hazelcast Enterprise license! " +
+					"Max: " + registration.getMaxNodes() + ", Current: " + count);
+			node.shutdown(true, true);
+		}
+    }
 	
 	public RecordFactory getRecordFactory() {
 		return isOffHeapEnabled() ? 

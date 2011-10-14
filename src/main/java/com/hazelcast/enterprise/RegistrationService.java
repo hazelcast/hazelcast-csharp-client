@@ -30,7 +30,13 @@ class RegistrationService {
 			final String mode = parts[1];
 			final long end = Long.parseLong(parts[2]);
 			final long start = Long.parseLong(parts[3]);
-			return new Registration(name, new Date(start), new Date(end), mode);
+			int maxNodes = 1;
+			try {
+				maxNodes = Integer.parseInt(parts[5]);
+			} catch (Exception ex) {
+				logger.log(Level.FINEST, ex.getMessage());
+			}
+			return new Registration(name, new Date(start), new Date(end), mode, maxNodes);
 		}
 		throw new InvalidLicenseError();
 	}
