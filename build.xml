@@ -43,7 +43,7 @@
 		-->
 	</target>
 	
-	<target name="rm-license">
+	<target name="license-cleanup">
 		<delete>
 			<fileset dir="${release.dir}">
 			    <include name="**/*.license"/>
@@ -52,8 +52,14 @@
 			</fileset>
 		</delete>
 	</target>
+	
+	<target name="add-trial-notice">
+		<mkdir dir="${release.dir}/src/main/resources" />
+		<copy tofile="${release.dir}/src/main/resources/license.txt" 
+			file="${basedir}/license/ee-trial-license.txt" />
+	</target>
 		
-	<target name="release" depends="rm-license, change-version">
+	<target name="release" depends="license-cleanup, change-version, add-trial-notice">
 		<exec dir="${release.dir}" executable="mvn">
 			<arg value="clean" />
 			<arg value="package" />
@@ -63,9 +69,9 @@
 		</exec>
 	</target>
 	
-	<target name="all" depends="clean, merge, rm-license, change-version, release" />
+	<target name="all" depends="clean, merge, license-cleanup, change-version, add-trial-notice, release" />
 	 
-	<target name="release.sh" depends="rm-license, change-version">
+	<target name="release.sh" depends="license-cleanup, change-version, add-trial-notice">
 		<exec dir="${release.dir}" executable="sh">
 			<arg value="${basedir}/scripts/release.sh" />
 		</exec>
