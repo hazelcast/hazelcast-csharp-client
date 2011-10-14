@@ -1,6 +1,6 @@
 <project basedir="." name="Elastic Memory" default="all">
     
-	<property name="community_version" value="1.9.5-SNAPSHOT"/>
+	<property name="community_version" value="2.0-beta"/>
 	<property name="enterprise_version" value="2.0-ee-beta"/>
 	<property name="version" value="${enterprise_version}"/>
 		
