@@ -2,6 +2,7 @@ package com.hazelcast.elasticmemory;
 
 import static com.hazelcast.nio.IOUtil.toObject;
 
+import com.hazelcast.elasticmemory.storage.EntryRef;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.impl.NearCacheRecord;
 import com.hazelcast.nio.Data;

@@ -32,9 +32,9 @@ public enum MemoryUnit {
 		public long toGigaBytes(long value) {return value;}
 	};
 
-	private static final long K = 1024;
-	private static final long M = K*K;
-	private static final long G = K*M;
+	private static final int K = 1024;
+	private static final int M = K*K;
+	private static final int G = K*M;
 	
 	public abstract long convert(long value, MemoryUnit m);
 	public abstract long toBytes(long value);
