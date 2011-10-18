@@ -3,6 +3,7 @@ package com.hazelcast.elasticmemory.storage;
 import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 
 import com.hazelcast.elasticmemory.EntryRef;
 
@@ -17,6 +18,7 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 	public OffHeapStorage(int totalSizeInMb, int segmentCount, int chunkSizeInKb) {
 		super(totalSizeInMb, segmentCount, chunkSizeInKb);
 		
+		logger.log(Level.INFO, "Total of " + segmentCount + " segments is going to be initialized...");
 		this.segments = new StorageSegment[segmentCount];
 		for (int i = 0; i < segmentCount; i++) {
 			segments[i] = new StorageSegment(segmentSizeInMb, chunkSizeInKb);
