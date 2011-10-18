@@ -5,7 +5,6 @@ import static com.hazelcast.elasticmemory.util.MathUtil.*;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 
-import com.hazelcast.elasticmemory.EntryRef;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
@@ -67,7 +66,7 @@ public class BufferSegment {
 	}
 
 	public byte[] get(final EntryRef ref) {
-		if (ref == null || ref.isEmpty()) {
+		if (!isEntryRefValid(ref)) {
 			return null;
 		}
 
@@ -84,7 +83,7 @@ public class BufferSegment {
 	}
 
 	public void remove(final EntryRef ref) {
-		if (ref == null || ref.isEmpty()) {
+		if (!isEntryRefValid(ref)) {
 			return;
 		}
 
@@ -92,8 +91,13 @@ public class BufferSegment {
 		for (int i = 0; i < chunkCount; i++) {
 			assertTrue(chunks.offer(ref.getChunk(i)), "Could not offer released indexes! Error in queue...");
 		}
+		ref.invalidate();
 	}
 
+	private boolean isEntryRefValid(EntryRef ref) {
+		return ref != null && !ref.isEmpty() && ref.isValid();
+	}
+	
 	private static void assertTrue(boolean condition, String message) {
 		if(!condition) {
 			throw new AssertionError(message);
@@ -152,24 +156,6 @@ public class BufferSegment {
 		}
 	}
 	
-	abstract static class OffHeapError extends Error {
-		public OffHeapError() {
-			super();
-		}
-		public OffHeapError(String message, Throwable cause) {
-			super(message, cause);
-		}
-		public OffHeapError(String message) {
-			super(message);
-		}
-	}
-	
-	static class OffHeapOutOfMemoryError extends OffHeapError {
-		public OffHeapOutOfMemoryError(String message) {
-			super(message);
-		}
-	}
-
 	static void throwOutOfMemoryError(String error) {
 		throw new OffHeapOutOfMemoryError(error);
 	}

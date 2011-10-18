@@ -5,7 +5,6 @@ import static com.hazelcast.elasticmemory.util.MathUtil.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
-import com.hazelcast.elasticmemory.EntryRef;
 
 public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 	

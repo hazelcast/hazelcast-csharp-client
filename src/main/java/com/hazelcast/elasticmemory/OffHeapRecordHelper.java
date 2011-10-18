@@ -1,5 +1,6 @@
 package com.hazelcast.elasticmemory;
 
+import com.hazelcast.elasticmemory.storage.EntryRef;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.nio.Data;
 
