@@ -4,41 +4,41 @@ import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
 public enum MemoryUnit {
 	BYTES {
-		public int convert(int value, MemoryUnit m) {return m.toBytes(value);}
-		public int toBytes(int value) {return value;}
-		public int toKiloBytes(int value) {return divideByAndRound(value, K);}
-		public int toMegaBytes(int value) {return divideByAndRound(value, M);}
-		public int toGigaBytes(int value) {return divideByAndRound(value, G);}
+		public long convert(long value, MemoryUnit m) {return m.toBytes(value);}
+		public long toBytes(long value) {return value;}
+		public long toKiloBytes(long value) {return divideByAndRound(value, K);}
+		public long toMegaBytes(long value) {return divideByAndRound(value, M);}
+		public long toGigaBytes(long value) {return divideByAndRound(value, G);}
 	},
 	KILOBYTES {
-		public int convert(int value, MemoryUnit m) {return m.toKiloBytes(value);}
-		public int toBytes(int value) {return value*K;}
-		public int toKiloBytes(int value) {return value;}
-		public int toMegaBytes(int value) {return divideByAndRound(value, K);}
-		public int toGigaBytes(int value) {return divideByAndRound(value, M);}
+		public long convert(long value, MemoryUnit m) {return m.toKiloBytes(value);}
+		public long toBytes(long value) {return value*K;}
+		public long toKiloBytes(long value) {return value;}
+		public long toMegaBytes(long value) {return divideByAndRound(value, K);}
+		public long toGigaBytes(long value) {return divideByAndRound(value, M);}
 	},
 	MEGABYTES {
-		public int convert(int value, MemoryUnit m) {return m.toMegaBytes(value);}
-		public int toBytes(int value) {return value*M;}
-		public int toKiloBytes(int value) {return value*K;}
-		public int toMegaBytes(int value) {return value;}
-		public int toGigaBytes(int value) {return divideByAndRound(value, K);}
+		public long convert(long value, MemoryUnit m) {return m.toMegaBytes(value);}
+		public long toBytes(long value) {return value*M;}
+		public long toKiloBytes(long value) {return value*K;}
+		public long toMegaBytes(long value) {return value;}
+		public long toGigaBytes(long value) {return divideByAndRound(value, K);}
 	},
 	GIGABYTES {
-		public int convert(int value, MemoryUnit m) {return m.toGigaBytes(value);}
-		public int toBytes(int value) {return value*G;}
-		public int toKiloBytes(int value) {return value*M;}
-		public int toMegaBytes(int value) {return value*K;}
-		public int toGigaBytes(int value) {return value;}
+		public long convert(long value, MemoryUnit m) {return m.toGigaBytes(value);}
+		public long toBytes(long value) {return value*G;}
+		public long toKiloBytes(long value) {return value*M;}
+		public long toMegaBytes(long value) {return value*K;}
+		public long toGigaBytes(long value) {return value;}
 	};
 
-	private static final int K = 1024;
-	private static final int M = K*K;
-	private static final int G = K*M;
+	private static final long K = 1024;
+	private static final long M = K*K;
+	private static final long G = K*M;
 	
-	public abstract int convert(int value, MemoryUnit m);
-	public abstract int toBytes(int value);
-	public abstract int toKiloBytes(int value);
-	public abstract int toMegaBytes(int value);
-	public abstract int toGigaBytes(int value);
+	public abstract long convert(long value, MemoryUnit m);
+	public abstract long toBytes(long value);
+	public abstract long toKiloBytes(long value);
+	public abstract long toMegaBytes(long value);
+	public abstract long toGigaBytes(long value);
 }

@@ -1,28 +1,28 @@
 package com.hazelcast.elasticmemory.util;
 
 public final class MemorySize {
-	private final int value;
+	private final long value;
 	private final MemoryUnit unit;
 
-	public MemorySize(int value, MemoryUnit unit) {
+	public MemorySize(long value, MemoryUnit unit) {
 		super();
 		this.value = value;
 		this.unit = unit;
 	}
 
-	public int bytes() {
+	public long bytes() {
 		return unit.toBytes(value);
 	}
 
-	public int kiloBytes() {
+	public long kiloBytes() {
 		return unit.toKiloBytes(value);
 	}
 
-	public int megaBytes() {
+	public long megaBytes() {
 		return unit.toMegaBytes(value);
 	}
 
-	public int gigaBytes() {
+	public long gigaBytes() {
 		return unit.toGigaBytes(value);
 	}
 	
@@ -88,7 +88,7 @@ public final class MemorySize {
 			}
 		}
 		
-		return new MemorySize(Integer.parseInt(value), unit);
+		return new MemorySize(Long.parseLong(value), unit);
 	}
 	
 	@Override

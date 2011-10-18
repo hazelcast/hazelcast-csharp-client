@@ -62,7 +62,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 	        
 	        logger.log(Level.INFO, "Elastic-Memory off-heap storage total size: " + totalSize.megaBytes() + " MB");
 	        logger.log(Level.INFO, "Elastic-Memory off-heap storage chunk size: " + chunkSize.kiloBytes() + " KB");
-	        storage = new OffHeapStorage(totalSize.megaBytes(), chunkSize.kiloBytes());
+	        storage = new OffHeapStorage((int) totalSize.megaBytes(), (int) chunkSize.kiloBytes());
 		}
 	}
 	

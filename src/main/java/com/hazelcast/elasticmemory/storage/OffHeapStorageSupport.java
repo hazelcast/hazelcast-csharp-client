@@ -2,10 +2,16 @@ package com.hazelcast.elasticmemory.storage;
 
 import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
-abstract class OffHeapStorageSupport {
+import java.util.logging.Level;
 
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
+
+abstract class OffHeapStorageSupport {
+	
 	protected static final int MAX_SEGMENT_SIZE_IN_MB = 1024;
 
+	protected final ILogger logger = Logger.getLogger(getClass().getName());
 	protected final int segmentCount;
 	protected final int segmentSizeInMb;
 	
@@ -14,13 +20,13 @@ abstract class OffHeapStorageSupport {
 		
 		int segmentSizeInMb = divideByAndCeil(totalSizeInMb, segmentCount);
 		if(segmentSizeInMb > MAX_SEGMENT_SIZE_IN_MB) {
-			System.err.println("Segment size exceeded max value! Setting segment size to max = " + MAX_SEGMENT_SIZE_IN_MB + "MB.");
+			logger.log(Level.WARNING, "Segment size exceeded max value! Setting segment size to max = " + MAX_SEGMENT_SIZE_IN_MB + "MB.");
 			segmentSizeInMb = MAX_SEGMENT_SIZE_IN_MB;
 		}
 		
 		if(totalSizeInMb % segmentSizeInMb != 0) {
 			totalSizeInMb = normalize(totalSizeInMb, segmentSizeInMb);
-			System.err.println("Adjusting totalSize to: " + totalSizeInMb);
+			logger.log(Level.WARNING, "Adjusting totalSize to: " + totalSizeInMb);
 		}
 		
 		segmentCount = totalSizeInMb / segmentSizeInMb;
