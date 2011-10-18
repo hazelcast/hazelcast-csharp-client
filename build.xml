@@ -19,12 +19,12 @@
 
 		<copy todir="${release.dir}/hazelcast/src">
 			<fileset dir="${elastic.dir}/src">
-				<exclude name="**/test/**/*" />
+				<exclude name="**/test/**/*Client*" />
 			</fileset>
 		</copy>
 		<copy todir="${release.dir}/hazelcast-client/src">
-			<fileset dir="${elastic.dir}/src">
-				<include name="**/test/**/*" />
+			<fileset dir="${elastic.dir}/src" defaultexcludes="true">
+				<include name="**/test/**/*Client*" />
 			</fileset>
 		</copy>
 		<!--

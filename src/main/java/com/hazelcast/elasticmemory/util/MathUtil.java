@@ -6,8 +6,20 @@ public final class MathUtil {
 		return (int) Math.ceil(d / k);
 	}
 	
+	public static long divideByAndCeil(double d, long k) {
+		return (long) Math.ceil(d / k);
+	}
+	
 	public static int divideByAndRound(double d, int k) {
 		return (int) Math.rint(d / k);
+	}
+	
+	public static long divideByAndRound(double d, long k) {
+		return (long) Math.rint(d / k);
+	}
+	
+	public static long divideByAndFloor(double d, long k) {
+		return (long) Math.floor(d / k);
 	}
 	
 	public static int divideByAndFloor(double d, int k) {
@@ -18,7 +30,7 @@ public final class MathUtil {
 		return divideByAndRound(value, factor) * factor;
 	}
 	
-	public static boolean isPowerOf2(int x) {
+	public static boolean isPowerOf2(long x) {
 		if(x <= 0) return false;
 		return (x & (x - 1)) == 0;
 	}
