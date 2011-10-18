@@ -55,7 +55,9 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 			systemLogger.log(Level.INFO, "Initializing node off-heap store...");
 			
 			String total = node.groupProperties.OFFHEAP_TOTAL_SIZE.getValue();
+			logger.log(Level.FINEST, ">>>>> Read " + node.groupProperties.OFFHEAP_TOTAL_SIZE.getName() + " as: " + total);
 	        String chunk = node.groupProperties.OFFHEAP_CHUNK_SIZE.getValue();
+	        logger.log(Level.FINEST, ">>>>> Read " + node.groupProperties.OFFHEAP_CHUNK_SIZE.getName() + " as: " + chunk);
 	        MemorySize totalSize = MemorySize.parse(total, MemoryUnit.MEGABYTES);
 	        MemorySize chunkSize = MemorySize.parse(chunk, MemoryUnit.KILOBYTES);
 	        checkOffHeapParams(totalSize, chunkSize);
