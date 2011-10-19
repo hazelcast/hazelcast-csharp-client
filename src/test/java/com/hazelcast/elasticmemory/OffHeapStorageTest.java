@@ -49,7 +49,7 @@ public class OffHeapStorageTest {
 	}
 	
 	private void fillUpBuffer(int count) {
-		final Storage s = new OffHeapStorage((int) total.megaBytes(), (int) chunk.kiloBytes());
+		final Storage s = new OffHeapStorage((int) total.megaBytes(), 2, (int) chunk.kiloBytes());
 		byte[] data = new byte[(int) chunk.bytes()];
 		for (int i = 0; i < count; i++) {
 			s.put(i, data);

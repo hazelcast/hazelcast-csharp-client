@@ -5,9 +5,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.Member;
+import com.hazelcast.impl.GroupProperties;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.monitor.LocalMapOperationStats;
 import com.hazelcast.partition.Partition;
@@ -23,7 +26,11 @@ public class SimpleMapTest {
     public static int REMOVE_PERCENTAGE = 20;
 
     public static void main(String[] args) {
-//    	System.setProperty("hazelcast.map.simple.record", "true");
+    	Config config = new XmlConfigBuilder().build();
+    	config.setProperty(GroupProperties.PROP_ELASTIC_MEMORY_ENABLED, "true");
+    	config.setProperty(GroupProperties.PROP_ELASTIC_MEMORY_TOTAL_SIZE, "256m");
+    	Hazelcast.init(config);
+    	
         final ILogger logger = Hazelcast.getLoggingService().getLogger("SimpleMapTest");
         boolean load = false;
         boolean rm = false;
