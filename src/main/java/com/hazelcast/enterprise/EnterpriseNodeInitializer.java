@@ -10,14 +10,12 @@ import com.hazelcast.elasticmemory.util.MathUtil;
 import com.hazelcast.elasticmemory.util.MemorySize;
 import com.hazelcast.elasticmemory.util.MemoryUnit;
 import com.hazelcast.enterprise.Registration.Mode;
-import com.hazelcast.impl.IHazelcastFactory;
 import com.hazelcast.impl.Node;
 import com.hazelcast.impl.base.DefaultNodeInitializer;
 import com.hazelcast.impl.base.NodeInitializer;
 import com.hazelcast.impl.concurrentmap.RecordFactory;
 import com.hazelcast.security.SecurityContext;
 import com.hazelcast.security.SecurityContextImpl;
-import com.hazelcast.security.impl.SecureHazelcastFactory;
 
 public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements NodeInitializer {
 	
@@ -54,10 +52,10 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		if(isOffHeapEnabled()) {
 			systemLogger.log(Level.INFO, "Initializing node off-heap store...");
 			
-			String total = node.groupProperties.OFFHEAP_TOTAL_SIZE.getValue();
-			logger.log(Level.FINEST, ">>>>> Read " + node.groupProperties.OFFHEAP_TOTAL_SIZE.getName() + " as: " + total);
-	        String chunk = node.groupProperties.OFFHEAP_CHUNK_SIZE.getValue();
-	        logger.log(Level.FINEST, ">>>>> Read " + node.groupProperties.OFFHEAP_CHUNK_SIZE.getName() + " as: " + chunk);
+			String total = node.groupProperties.ELASTIC_MEMORY_TOTAL_SIZE.getValue();
+			logger.log(Level.FINEST, ">>>>> Read " + node.groupProperties.ELASTIC_MEMORY_TOTAL_SIZE.getName() + " as: " + total);
+	        String chunk = node.groupProperties.ELASTIC_MEMORY_CHUNK_SIZE.getValue();
+	        logger.log(Level.FINEST, ">>>>> Read " + node.groupProperties.ELASTIC_MEMORY_CHUNK_SIZE.getName() + " as: " + chunk);
 	        MemorySize totalSize = MemorySize.parse(total, MemoryUnit.MEGABYTES);
 	        MemorySize chunkSize = MemorySize.parse(chunk, MemoryUnit.KILOBYTES);
 	        checkOffHeapParams(totalSize, chunkSize);
@@ -112,16 +110,12 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		return new SecurityContextImpl(node);
 	}
 
-	public IHazelcastFactory getSecureHazelcastFactory() {
-		return new SecureHazelcastFactory(node);
-	}
-	
 	public boolean isRegistered() {
 		return registration != null && registration.isValid();
 	}
 
 	public boolean isOffHeapEnabled() {
-		return node.groupProperties.OFFHEAP_ENABLED.getBoolean();
+		return node.groupProperties.ELASTIC_MEMORY_ENABLED.getBoolean();
 	}
 
 	public Storage getOffHeapStorage() {
