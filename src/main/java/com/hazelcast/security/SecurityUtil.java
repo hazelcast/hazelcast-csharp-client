@@ -82,6 +82,9 @@ public final class SecurityUtil {
 	}
 	
 	public static String getCredentialsFullName(Credentials credentials) {
+		if(credentials == null) {
+			return null;
+		}
 		return credentials.getPrincipal() + '@' + credentials.getEndpoint();
 	}
 	

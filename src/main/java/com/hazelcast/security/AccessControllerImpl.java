@@ -3,7 +3,7 @@ package com.hazelcast.security;
 import java.security.AccessControlException;
 import java.security.Permission;
 import java.security.PermissionCollection;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.logging.Level;
 
 import javax.security.auth.Subject;
@@ -40,7 +40,7 @@ public class AccessControllerImpl implements IAccessController {
 		return coll != null ? coll.implies(permission) : false;
 	}
 
-	public <T> T doAsPrivileged(Subject subject, PrivilegedAction<T> action) throws AccessControlException {
+	public <T> T doAsPrivileged(Subject subject, PrivilegedExceptionAction<T> action) throws Exception,	AccessControlException {
 		final CallContext ctx = ThreadContext.get().getCallContext();
 		Subject s = ctx.getSubject();
 		if(s != null && !s.equals(subject)) {

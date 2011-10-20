@@ -2,8 +2,9 @@ package com.hazelcast.security;
 
 import java.security.AccessControlException;
 import java.security.Permission;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 
 import javax.security.auth.Subject;
@@ -17,9 +18,11 @@ import com.hazelcast.config.LoginModuleConfig;
 import com.hazelcast.config.LoginModuleConfig.LoginModuleUsage;
 import com.hazelcast.config.PermissionPolicyConfig;
 import com.hazelcast.config.SecurityConfig;
+import com.hazelcast.impl.IHazelcastFactory;
 import com.hazelcast.impl.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.nio.Serializer;
+import com.hazelcast.security.impl.SecureHazelcastFactory;
 
 public class SecurityContextImpl implements SecurityContext {
 	
@@ -115,12 +118,20 @@ public class SecurityContextImpl implements SecurityContext {
 	}
 
 	public <T> T doAsPrivileged(Subject subject,
-			PrivilegedAction<T> action) throws SecurityException {
+			PrivilegedExceptionAction<T> action) throws Exception, SecurityException {
 		return accessController.doAsPrivileged(subject, action);
 	}
 	
 	public boolean checkPermission(Subject subject, Permission permission) {
 		return accessController.checkPermission(subject, permission);
+	}
+
+	public IHazelcastFactory getSecureHazelcastFactory() {
+		return new SecureHazelcastFactory(node);
+	}
+	
+	public <V> SecureCallable<V> createSecureCallable(Subject subject, Callable<V> callable) {
+		return new SecureCallableImpl<V>(subject, callable);
 	}
 
 	public void destroy() {

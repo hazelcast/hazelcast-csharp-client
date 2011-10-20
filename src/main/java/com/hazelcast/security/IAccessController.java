@@ -19,7 +19,7 @@ package com.hazelcast.security;
 
 import java.security.AccessControlException;
 import java.security.Permission;
-import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 
 import javax.security.auth.Subject;
 
@@ -41,9 +41,8 @@ public interface IAccessController {
 	 * Perform privileged work as a particular <code>Subject</code>.
 	 * @param subject
 	 * @param action
-	 * @return result returned by the PrivilegedAction's run method.
+	 * @return result returned by the PrivilegedExceptionAction run method.
 	 * @throws SecurityException
 	 */
-	<T> T doAsPrivileged(Subject subject, PrivilegedAction<T> action) throws AccessControlException;
-	
+	<T> T doAsPrivileged(Subject subject, PrivilegedExceptionAction<T> action) throws Exception, AccessControlException;
 }

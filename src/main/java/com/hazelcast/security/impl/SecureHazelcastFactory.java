@@ -1,5 +1,6 @@
 package com.hazelcast.security.impl;
 
+import java.security.Permission;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +25,7 @@ import com.hazelcast.core.Prefix;
 import com.hazelcast.core.Transaction;
 import com.hazelcast.impl.AtomicNumberProxy;
 import com.hazelcast.impl.CountDownLatchProxy;
+import com.hazelcast.impl.ExecutorServiceProxy;
 import com.hazelcast.impl.FactoryImpl.HazelcastInstanceProxy;
 import com.hazelcast.impl.FactoryImpl.ProxyKey;
 import com.hazelcast.impl.HazelcastInstanceAwareInstance;
@@ -65,14 +67,14 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 	}
 
 	public Object getOrCreateProxyByName(String name) {
-		if (!doesProxyExist(name)) {
+		if (!containsInstanceProxy(name)) {
 			checkInstancePermission(name, SecurityConstants.ACTION_CREATE);
 		}
 		return getSecureProxy(factory.getOrCreateProxyByName(name));
 	}
 
 	public Object getOrCreateProxy(ProxyKey proxyKey) {
-		if (!doesProxyExist(proxyKey.getName())) {
+		if (!containsInstanceProxy(proxyKey.getName())) {
 			checkInstancePermission(proxyKey.getName(), SecurityConstants.ACTION_CREATE);
 		}
 		return getSecureProxy(factory.getOrCreateProxy(proxyKey));
@@ -108,7 +110,11 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 	}
 
 	public ILock getLock(Object key) {
-		return (ILock) getOrCreateProxy(new ProxyKey("lock", key));
+		final ProxyKey proxyKey = new ProxyKey("lock", key);
+		if (!containsInstanceProxy(proxyKey)) {
+			checkPermission(new LockPermission(key.toString(), SecurityConstants.ACTION_CREATE));
+		}
+		return new SecureLockProxy(node, (LockProxy) factory.getLock(key));
 	}
 
 	public ExecutorService getExecutorService() {
@@ -116,10 +122,10 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 	}
 
 	public ExecutorService getExecutorService(String name) {
-		if (node.securityContext != null) {
-			node.securityContext.checkPermission(new ExecutorServicePermission(name, SecurityConstants.ACTION_CREATE));
+		if (!containsExecutorServiceProxy(Prefix.EXECUTOR_SERVICE + name)) {
+			checkPermission(new ExecutorServicePermission(name, SecurityConstants.ACTION_CREATE));
 		}
-		return factory.getExecutorService(name);
+		return new SecureExecutorServiceProxy(node, (ExecutorServiceProxy) factory.getExecutorService(name));
 	}
 
 	public IdGenerator getIdGenerator(String name) {
@@ -139,9 +145,7 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 	}
 
 	public Transaction getTransaction() {
-		if (node.securityContext != null) {
-			node.securityContext.checkPermission(new TransactionPermission());
-		}
+		checkPermission(new TransactionPermission());
 		return factory.getTransaction();
 	}
 
@@ -166,16 +170,12 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 	}
 
 	public void addInstanceListener(InstanceListener instanceListener) {
-		if (node.securityContext != null) {
-			node.securityContext.checkPermission(new ListenerPermission(SecurityConstants.LISTENER_INSTANCE));
-		}
+		checkPermission(new ListenerPermission(SecurityConstants.LISTENER_INSTANCE));
 		factory.addInstanceListener(instanceListener);
 	}
 
 	public void removeInstanceListener(InstanceListener instanceListener) {
-		if (node.securityContext != null) {
-			node.securityContext.checkPermission(new ListenerPermission(SecurityConstants.LISTENER_INSTANCE));
-		}
+		checkPermission(new ListenerPermission(SecurityConstants.LISTENER_INSTANCE));
 		factory.removeInstanceListener(instanceListener);
 	}
 
@@ -259,22 +259,39 @@ public class SecureHazelcastFactory implements IHazelcastFactory {
 			p = new SemaphorePermission(actualName, action);
 		} else if (name.startsWith(Prefix.COUNT_DOWN_LATCH)) {
 			p = new CountDownLatchPermission(actualName, action);
-		} else if (name.equals("lock")) {
-			p = new LockPermission(actualName, action);
+//		} else if (name.equals("lock")) {
+//			p = new LockPermission(actualName, action);
 		}
-
-		if (p != null && node.securityContext != null) {
-			node.securityContext.checkPermission(p);
+		checkPermission(p);
+	}
+	
+	private void checkPermission(Permission permission) {
+		if (permission != null && node.securityContext != null) {
+			node.securityContext.checkPermission(permission);
 		}
 	}
 
-	private boolean doesProxyExist(String name) {
-		final Collection<HazelcastInstanceAwareInstance> c = factory.getProxies();
-		for (HazelcastInstanceAwareInstance ins : c) {
-			if (ins.getId().equals(name)) {
-				return true;
-			}
-		}
-		return false;
+	public boolean containsInstanceProxy(String name) {
+		return factory.containsInstanceProxy(name);
 	}
+	
+	public boolean containsInstanceProxy(ProxyKey proxyKey) {
+		return factory.containsInstanceProxy(proxyKey);
+	}
+	
+	public boolean containsExecutorServiceProxy(String name) {
+		return factory.containsExecutorServiceProxy(name);
+	}
+	
+	public Node getNode() {
+		return factory.getNode();
+	}
+	
+	public int hashCode() {
+        return factory.hashCode();
+    }
+
+    public boolean equals(Object o) {
+        return factory.equals(o);
+    }
 }

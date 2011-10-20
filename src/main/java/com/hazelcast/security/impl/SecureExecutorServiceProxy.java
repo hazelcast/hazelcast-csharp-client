@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.hazelcast.core.Prefix;
 import com.hazelcast.impl.ExecutorServiceProxy;
 import com.hazelcast.impl.Node;
 import com.hazelcast.security.SecurityConstants;
@@ -17,14 +18,16 @@ import com.hazelcast.security.permission.ExecutorServicePermission;
 final class SecureExecutorServiceProxy extends SecureProxySupport implements ExecutorService {
 	
 	final ExecutorServiceProxy proxy;
+	final String name;
 	
 	SecureExecutorServiceProxy(Node node, final ExecutorServiceProxy proxy) {
 		super(node);
 		this.proxy = proxy;
+		this.name = proxy.getName().replace(Prefix.EXECUTOR_SERVICE, "");
 	}
 
 	private void checkExecute() {
-		checkPermission(new ExecutorServicePermission(proxy.getName(), SecurityConstants.ACTION_EXECUTE));
+		checkPermission(new ExecutorServicePermission(name, SecurityConstants.ACTION_EXECUTE));
 	}
 	
 	public boolean awaitTermination(long timeout, TimeUnit unit)
