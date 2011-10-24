@@ -3,24 +3,30 @@ package com.hazelcast.security.impl;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.impl.LockProxy;
 import com.hazelcast.impl.Node;
 import com.hazelcast.impl.monitor.LockOperationsCounter;
 import com.hazelcast.monitor.LocalLockStats;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.LockPermission;
 
 final class SecureLockProxy extends SecureProxySupport implements LockProxy {
 	
 	final LockProxy proxy;
+	final LockPermission lockPermission;
+	final LockPermission statsPermission ;
 	
 	SecureLockProxy(Node node, final LockProxy proxy) {
 		super(node);
 		this.proxy = proxy;
+		lockPermission = new LockPermission(getName(), SecurityConstants.ACTION_LOCK);
+		statsPermission = new LockPermission(getName(), SecurityConstants.ACTION_STATISTICS);
 	}
 	
 	private void checkLock() {
-		checkPermission(new LockPermission(getName(), SecurityConstants.ACTION_LOCK));
+		SecurityUtil.checkPermission(node.securityContext, lockPermission);
 	}
 	
 	private final String getName() {
@@ -36,7 +42,7 @@ final class SecureLockProxy extends SecureProxySupport implements LockProxy {
 	}
 
 	public LocalLockStats getLocalLockStats() {
-		checkPermission(new LockPermission(getName(), SecurityConstants.ACTION_STATISTICS));
+		SecurityUtil.checkPermission(node.securityContext, statsPermission);
 		return proxy.getLocalLockStats();
 	}
 
@@ -45,7 +51,7 @@ final class SecureLockProxy extends SecureProxySupport implements LockProxy {
 	}
 
 	public void destroy() {
-		checkPermission(new LockPermission(getName(), SecurityConstants.ACTION_DESTROY));
+		SecurityUtil.checkPermission(node.securityContext, new LockPermission(getName(), SecurityConstants.ACTION_DESTROY));
 		proxy.destroy();
 	}
 
@@ -82,4 +88,7 @@ final class SecureLockProxy extends SecureProxySupport implements LockProxy {
 		return proxy.newCondition();
 	}
 
+	public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+		proxy.setHazelcastInstance(hazelcastInstance);
+	}
 }

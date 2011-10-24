@@ -12,17 +12,13 @@ import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import com.hazelcast.config.CredentialsFactoryConfig;
-import com.hazelcast.config.GroupConfig;
-import com.hazelcast.config.LoginModuleConfig;
+import com.hazelcast.config.*;
 import com.hazelcast.config.LoginModuleConfig.LoginModuleUsage;
-import com.hazelcast.config.PermissionPolicyConfig;
-import com.hazelcast.config.SecurityConfig;
-import com.hazelcast.impl.IHazelcastFactory;
+import com.hazelcast.impl.FactoryImpl.ProxyKey;
 import com.hazelcast.impl.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.nio.Serializer;
-import com.hazelcast.security.impl.SecureHazelcastFactory;
+import com.hazelcast.security.impl.SecureProxyFactory;
 
 public class SecurityContextImpl implements SecurityContext {
 	
@@ -33,6 +29,7 @@ public class SecurityContextImpl implements SecurityContext {
 	private final Configuration memberConfiguration;
 	private final Configuration clientConfiguration;
 	private final IAccessController accessController;
+	private final SecureProxyFactory proxyFactory;
 	
 	public SecurityContextImpl(Node node) {
 		super();
@@ -68,6 +65,7 @@ public class SecurityContextImpl implements SecurityContext {
 		clientConfiguration = new LoginConfigurationDelegate(node.config, getLoginModuleConfigs(securityConfig.getClientLoginModuleConfigs()));
 		
 		accessController = new AccessControllerImpl(policy);
+		proxyFactory = (SecureProxyFactory) node.initializer.getProxyFactory();
 	}
 	
 	public LoginContext createMemberLoginContext(Credentials credentials) throws LoginException {
@@ -125,9 +123,9 @@ public class SecurityContextImpl implements SecurityContext {
 	public boolean checkPermission(Subject subject, Permission permission) {
 		return accessController.checkPermission(subject, permission);
 	}
-
-	public IHazelcastFactory getSecureHazelcastFactory() {
-		return new SecureHazelcastFactory(node);
+	
+	public void checkProxyPermission(final ProxyKey proxyKey) throws AccessControlException {
+		proxyFactory.checkProxyPermission(proxyKey);
 	}
 	
 	public <V> SecureCallable<V> createSecureCallable(Subject subject, Callable<V> callable) {

@@ -5,39 +5,47 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.hazelcast.core.EntryListener;
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.impl.MProxy;
 import com.hazelcast.impl.MultiMapProxy;
 import com.hazelcast.impl.Node;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.MultiMapPermission;
 
 final class SecureMultimapProxy extends SecureProxySupport implements MultiMapProxy {
 
 	final MultiMapProxy proxy; 
+	private final MultiMapPermission putPermission ;
+	private final MultiMapPermission getPermission ;
+	private final MultiMapPermission removePermission ;
+	private final MultiMapPermission listenPermission ;
+	private final MultiMapPermission lockPermission ;
 	
 	SecureMultimapProxy(Node node, final MultiMapProxy proxy) {
 		super(node);
 		this.proxy = proxy;
+		putPermission = new MultiMapPermission(getName(), SecurityConstants.ACTION_PUT);
+		getPermission = new MultiMapPermission(getName(), SecurityConstants.ACTION_GET);
+		removePermission = new MultiMapPermission(getName(), SecurityConstants.ACTION_REMOVE);
+		listenPermission = new MultiMapPermission(getName(), SecurityConstants.ACTION_LISTEN);
+		lockPermission = new MultiMapPermission(getName(), SecurityConstants.ACTION_LOCK);
 	}
 	
 	private void checkPut() {
-		checkPermission(new MultiMapPermission(getName(), SecurityConstants.ACTION_PUT));
+		SecurityUtil.checkPermission(node.securityContext, putPermission);
 	}
-	
 	private void checkGet() {
-		checkPermission(new MultiMapPermission(getName(), SecurityConstants.ACTION_GET));
+		SecurityUtil.checkPermission(node.securityContext, getPermission);
 	}
-	
 	private void checkRemove() {
-		checkPermission(new MultiMapPermission(getName(), SecurityConstants.ACTION_REMOVE));
+		SecurityUtil.checkPermission(node.securityContext, removePermission);
 	}
-	
 	private void checkListen() {
-		checkPermission(new MultiMapPermission(getName(), SecurityConstants.ACTION_LISTEN));
+		SecurityUtil.checkPermission(node.securityContext, listenPermission);
 	}
-	
 	private void checkLock() {
-		checkPermission(new MultiMapPermission(getName(), SecurityConstants.ACTION_LOCK));
+		SecurityUtil.checkPermission(node.securityContext, lockPermission);
 	}
 
 	public MProxy getMProxy() {
@@ -73,7 +81,7 @@ final class SecureMultimapProxy extends SecureProxySupport implements MultiMapPr
 	}
 
 	public void destroy() {
-		checkPermission(new MultiMapPermission(getName(), SecurityConstants.ACTION_DESTROY));
+		SecurityUtil.checkPermission(node.securityContext, new MultiMapPermission(getName(), SecurityConstants.ACTION_DESTROY));
 		proxy.destroy();
 	}
 
@@ -183,5 +191,9 @@ final class SecureMultimapProxy extends SecureProxySupport implements MultiMapPr
 
 	public void unlockMap() {
 		proxy.unlockMap();
+	}
+	
+	public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+		proxy.setHazelcastInstance(hazelcastInstance);
 	}
 }

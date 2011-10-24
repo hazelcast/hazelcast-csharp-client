@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.hazelcast.core.EntryListener;
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.MapEntry;
 import com.hazelcast.impl.MProxy;
 import com.hazelcast.impl.Node;
@@ -16,355 +17,368 @@ import com.hazelcast.monitor.LocalMapStats;
 import com.hazelcast.query.Expression;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.MapPermission;
 
 final class SecureMProxy extends SecureProxySupport implements MProxy {
 	
-	private final MProxy map;
+	private final MProxy proxy;
+	private final MapPermission putPermission ;
+	private final MapPermission getPermission ;
+	private final MapPermission removePermission ;
+	private final MapPermission listenPermission ;
+	private final MapPermission lockPermission ;
+	private final MapPermission statsPermission ;
 
 	SecureMProxy(Node node, MProxy map) {
 		super(node);
-		this.map = map;
+		proxy = map;
+		putPermission = new MapPermission(getName(), SecurityConstants.ACTION_PUT);
+		getPermission = new MapPermission(getName(), SecurityConstants.ACTION_GET);
+		removePermission = new MapPermission(getName(), SecurityConstants.ACTION_REMOVE);
+		listenPermission = new MapPermission(getName(), SecurityConstants.ACTION_LISTEN);
+		lockPermission = new MapPermission(getName(), SecurityConstants.ACTION_LOCK);
+		statsPermission = new MapPermission(getName(), SecurityConstants.ACTION_STATISTICS);
 	}
 	
 	private void checkPut() {
-		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_PUT));
+		SecurityUtil.checkPermission(node.securityContext, putPermission);
 	}
-	
 	private void checkGet() {
-		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_GET));
+		SecurityUtil.checkPermission(node.securityContext, getPermission);
 	}
-	
 	private void checkRemove() {
-		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_REMOVE));
+		SecurityUtil.checkPermission(node.securityContext, removePermission);
 	}
-	
 	private void checkListen() {
-		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_LISTEN));
+		SecurityUtil.checkPermission(node.securityContext, listenPermission);
 	}
-	
 	private void checkLock() {
-		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_LOCK));
+		SecurityUtil.checkPermission(node.securityContext, lockPermission);
 	}
 
 	// ------ IMap
 	
 	public Object putIfAbsent(Object key, Object value) {
 		checkPut();
-		return (Object) map.putIfAbsent(key, value);
+		return (Object) proxy.putIfAbsent(key, value);
 	}
 
 	public void flush() {
-		map.flush();
+		proxy.flush();
 	}
 
 	public String getName() {
-		return map.getName();
+		return proxy.getName();
 	}
 
 	public InstanceType getInstanceType() {
-		return map.getInstanceType();
+		return proxy.getInstanceType();
 	}
 
 	public Map getAll(Set keys) {
 		checkGet();
-		return map.getAll(keys);
+		return proxy.getAll(keys);
 	}
 
 	public boolean remove(Object key, Object value) {
 		checkRemove();
-		return map.remove(key, value);
+		return proxy.remove(key, value);
 	}
 
 	public void destroy() {
-		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_DESTROY));
-		map.destroy();
+		SecurityUtil.checkPermission(node.securityContext, new MapPermission(getName(), SecurityConstants.ACTION_DESTROY));
+		proxy.destroy();
 	}
 
 	public Future<Object> getAsync(Object key) {
 		checkGet();
-		return map.getAsync(key);
+		return proxy.getAsync(key);
 	}
 
 	public Object getId() {
-		return map.getId();
+		return proxy.getId();
 	}
 
 	public boolean replace(Object key, Object oldValue, Object newValue) {
 		checkPut();
-		return map.replace(key, oldValue, newValue);
+		return proxy.replace(key, oldValue, newValue);
 	}
 
 	public Future<Object> putAsync(Object key, Object value) {
 		checkPut();
-		return map.putAsync(key, value);
+		return proxy.putAsync(key, value);
 	}
 
 	public Object replace(Object key, Object value) {
 		checkPut();
-		return (Object) map.replace(key, value);
+		return (Object) proxy.replace(key, value);
 	}
 
 	public Future<Object> removeAsync(Object key) {
 		checkRemove();
-		return map.removeAsync(key);
+		return proxy.removeAsync(key);
 	}
 
 	public Object tryRemove(Object key, long timeout, TimeUnit timeunit)
 			throws TimeoutException {
 		checkRemove();
-		return map.tryRemove(key, timeout, timeunit);
+		return proxy.tryRemove(key, timeout, timeunit);
 	}
 
 	public boolean tryPut(Object key, Object value, long timeout, TimeUnit timeunit) {
 		checkPut();
-		return map.tryPut(key, value, timeout, timeunit);
+		return proxy.tryPut(key, value, timeout, timeunit);
 	}
 
 	public int size() {
 		checkGet();
-		return map.size();
+		return proxy.size();
 	}
 
 	public boolean isEmpty() {
 		checkGet();
-		return map.isEmpty();
+		return proxy.isEmpty();
 	}
 
 	public boolean containsKey(Object key) {
 		checkGet();
-		return map.containsKey(key);
+		return proxy.containsKey(key);
 	}
 
 	public Object put(Object key, Object value, long ttl, TimeUnit timeunit) {
 		checkPut();
-		return (Object) map.put(key, value, ttl, timeunit);
+		return (Object) proxy.put(key, value, ttl, timeunit);
 	}
 
 	public void putTransient(Object key, Object value, long ttl, TimeUnit timeunit) {
 		checkPut();
-		map.putTransient(key, value, ttl, timeunit);
+		proxy.putTransient(key, value, ttl, timeunit);
 	}
 
 	public boolean containsValue(Object value) {
 		checkGet();
-		return map.containsValue(value);
+		return proxy.containsValue(value);
 	}
 
 	public Object putIfAbsent(Object key, Object value, long ttl, TimeUnit timeunit) {
 		checkPut();
-		return (Object) map.putIfAbsent(key, value, ttl, timeunit);
+		return (Object) proxy.putIfAbsent(key, value, ttl, timeunit);
 	}
 
 	public Object tryLockAndGet(Object key, long time, TimeUnit timeunit)
 			throws TimeoutException {
 		checkGet();
 		checkLock();
-		return (Object) map.tryLockAndGet(key, time, timeunit);
+		return (Object) proxy.tryLockAndGet(key, time, timeunit);
 	}
 
 	public Object get(Object key) {
 		checkGet();
-		return (Object) map.get(key);
+		return (Object) proxy.get(key);
 	}
 
 	public void putAndUnlock(Object key, Object value) {
 		checkPut();
-		map.putAndUnlock(key, value);
+		proxy.putAndUnlock(key, value);
 	}
 
 	public void lock(Object key) {
 		checkLock();
-		map.lock(key);
+		proxy.lock(key);
 	}
 
 	public Object put(Object key, Object value) {
 		checkPut();
-		return (Object) map.put(key, value);
+		return (Object) proxy.put(key, value);
 	}
 
 	public boolean tryLock(Object key) {
 		checkLock();
-		return map.tryLock(key);
+		return proxy.tryLock(key);
 	}
 
 	public boolean tryLock(Object key, long time, TimeUnit timeunit) {
 		checkLock();
-		return map.tryLock(key, time, timeunit);
+		return proxy.tryLock(key, time, timeunit);
 	}
 
 	public void unlock(Object key) {
-		map.unlock(key);
+		proxy.unlock(key);
 	}
 
 	public boolean lockMap(long time, TimeUnit timeunit) {
 		checkLock();
-		return map.lockMap(time, timeunit);
+		return proxy.lockMap(time, timeunit);
 	}
 
 	public Object remove(Object key) {
 		checkRemove();
-		return (Object) map.remove(key);
+		return (Object) proxy.remove(key);
 	}
 
 	public void unlockMap() {
-		map.unlockMap();
+		proxy.unlockMap();
 	}
 
 	public void addLocalEntryListener(EntryListener listener) {
 		checkListen();
-		map.addLocalEntryListener(listener);
+		proxy.addLocalEntryListener(listener);
 	}
 
 	public void putAll(Map t) {
 		checkPut();
-		map.putAll(t);
+		proxy.putAll(t);
 	}
 
 	public void addEntryListener(EntryListener listener,
 			boolean includeValue) {
 		checkListen();
-		map.addEntryListener(listener, includeValue);
+		proxy.addEntryListener(listener, includeValue);
 	}
 
 	public void removeEntryListener(EntryListener listener) {
 		checkListen();
-		map.removeEntryListener(listener);
+		proxy.removeEntryListener(listener);
 	}
 
 	public void addEntryListener(EntryListener listener, Object key,
 			boolean includeValue) {
 		checkListen();
-		map.addEntryListener(listener, key, includeValue);
+		proxy.addEntryListener(listener, key, includeValue);
 	}
 
 	public void clear() {
 		checkRemove();
-		map.clear();
+		proxy.clear();
 	}
 
 	public Set<Object> keySet() {
 		checkGet();
-		return map.keySet();
+		return proxy.keySet();
 	}
 
 	public void removeEntryListener(EntryListener listener, Object key) {
-		map.removeEntryListener(listener, key);
+		proxy.removeEntryListener(listener, key);
 	}
 
 	public MapEntry getMapEntry(Object key) {
 		checkGet();
-		return map.getMapEntry(key);
+		return proxy.getMapEntry(key);
 	}
 
 	public boolean evict(Object key) {
 		checkRemove();
-		return map.evict(key);
+		return proxy.evict(key);
 	}
 
 	public Collection<Object> values() {
 		checkGet();
-		return map.values();
+		return proxy.values();
 	}
 
 	public Set<Object> keySet(Predicate predicate) {
 		checkGet();
-		return map.keySet(predicate);
+		return proxy.keySet(predicate);
 	}
 
 	public Set<java.util.Map.Entry> entrySet(Predicate predicate) {
 		checkGet();
-		return map.entrySet(predicate);
+		return proxy.entrySet(predicate);
 	}
 
 	public Set<java.util.Map.Entry> entrySet() {
 		checkGet();
-		return map.entrySet();
+		return proxy.entrySet();
 	}
 
 	public Collection<Object> values(Predicate predicate) {
 		checkGet();
-		return map.values(predicate);
+		return proxy.values(predicate);
 	}
 
 	public Set<Object> localKeySet() {
 		checkGet();
-		return map.localKeySet();
+		return proxy.localKeySet();
 	}
 
 	public Set<Object> localKeySet(Predicate predicate) {
 		checkGet();
-		return map.localKeySet(predicate);
+		return proxy.localKeySet(predicate);
 	}
 
 	public void addIndex(String attribute, boolean ordered) {
-		map.addIndex(attribute, ordered);
+		proxy.addIndex(attribute, ordered);
 	}
 
 	public void addIndex(Expression expression, boolean ordered) {
-		map.addIndex(expression, ordered);
+		proxy.addIndex(expression, ordered);
 	}
 
 	public LocalMapStats getLocalMapStats() {
-		checkPermission(new MapPermission(getName(), SecurityConstants.ACTION_STATISTICS));
-		return map.getLocalMapStats();
+		SecurityUtil.checkPermission(node.securityContext, statsPermission);
+		return proxy.getLocalMapStats();
 	}
 	
 	// ------ MProxy
 	
 	public boolean removeKey(Object key) {
 		checkRemove();
-		return map.removeKey(key);
+		return proxy.removeKey(key);
 	}
 
 	public String getLongName() {
-		return map.getLongName();
+		return proxy.getLongName();
 	}
 
 	public void addGenericListener(Object listener, Object key,
 			boolean includeValue, InstanceType instanceType) {
 		checkListen();
-		map.addGenericListener(listener, key, includeValue, instanceType);
+		proxy.addGenericListener(listener, key, includeValue, instanceType);
 	}
 
 	public void removeGenericListener(Object listener, Object key) {
 		checkListen();
-		map.removeGenericListener(listener, key);
+		proxy.removeGenericListener(listener, key);
 	}
 
 	public boolean containsEntry(Object key, Object value) {
-		return map.containsEntry(key, value);
+		return proxy.containsEntry(key, value);
 	}
 
 	public boolean putMulti(Object key, Object value) {
-		return map.putMulti(key, value);
+		return proxy.putMulti(key, value);
 	}
 
 	public boolean removeMulti(Object key, Object value) {
-		return map.removeMulti(key, value);
+		return proxy.removeMulti(key, value);
 	}
 
 	public boolean add(Object value) {
-		return map.add(value);
+		return proxy.add(value);
 	}
 
 	public int valueCount(Object key) {
-		return map.valueCount(key);
+		return proxy.valueCount(key);
 	}
 
 	public Set allKeys() {
-		return map.allKeys();
+		return proxy.allKeys();
 	}
 
 	public MapOperationsCounter getMapOperationCounter() {
-		return map.getMapOperationCounter();
+		return proxy.getMapOperationCounter();
 	}
 
 	public void putForSync(Object key, Object value) {
-		map.putForSync(key, value);
+		proxy.putForSync(key, value);
 	}
 
 	public void removeForSync(Object key) {
-		map.removeForSync(key);
+		proxy.removeForSync(key);
+	}
+
+	public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+		proxy.setHazelcastInstance(hazelcastInstance);
 	}
 }

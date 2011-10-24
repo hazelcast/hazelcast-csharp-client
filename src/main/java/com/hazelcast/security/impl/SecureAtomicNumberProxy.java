@@ -1,35 +1,44 @@
 package com.hazelcast.security.impl;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.impl.AtomicNumberProxy;
 import com.hazelcast.impl.Node;
 import com.hazelcast.impl.monitor.AtomicNumberOperationsCounter;
 import com.hazelcast.monitor.LocalAtomicNumberStats;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.AtomicNumberPermission;
 
 final class SecureAtomicNumberProxy extends SecureProxySupport implements AtomicNumberProxy {
 	
 	final AtomicNumberProxy proxy;
+	final AtomicNumberPermission addPermission;
+	final AtomicNumberPermission setPermission;
+	final AtomicNumberPermission incPermission;
+	final AtomicNumberPermission decPermission;
+	final AtomicNumberPermission statsPermission;
 	
 	SecureAtomicNumberProxy(Node node, final AtomicNumberProxy proxy) {
 		super(node);
 		this.proxy = proxy;
+		addPermission = new AtomicNumberPermission(getName(), SecurityConstants.ACTION_ADD);
+		setPermission = new AtomicNumberPermission(getName(), SecurityConstants.ACTION_SET);
+		incPermission = new AtomicNumberPermission(getName(), SecurityConstants.ACTION_INCREMENT);
+		decPermission = new AtomicNumberPermission(getName(), SecurityConstants.ACTION_DECREMENT);
+		statsPermission = new AtomicNumberPermission(getName(), SecurityConstants.ACTION_STATISTICS);
 	}
 	
 	private void checkAdd() {
-		checkPermission(new AtomicNumberPermission(getName(), SecurityConstants.ACTION_ADD));
+		SecurityUtil.checkPermission(node.securityContext, addPermission);
 	}
-	
 	private void checkSet() {
-		checkPermission(new AtomicNumberPermission(getName(), SecurityConstants.ACTION_SET));
+		SecurityUtil.checkPermission(node.securityContext, setPermission);
 	}
-	
 	private void checkInc() {
-		checkPermission(new AtomicNumberPermission(getName(), SecurityConstants.ACTION_INCREMENT));
+		SecurityUtil.checkPermission(node.securityContext, incPermission);
 	}
-	
 	private void checkDec() {
-		checkPermission(new AtomicNumberPermission(getName(), SecurityConstants.ACTION_DECREMENT));
+		SecurityUtil.checkPermission(node.securityContext, decPermission);
 	}
 
 	public String getName() {
@@ -78,7 +87,7 @@ final class SecureAtomicNumberProxy extends SecureProxySupport implements Atomic
 	}
 
 	public void destroy() {
-		checkPermission(new AtomicNumberPermission(getName(), SecurityConstants.ACTION_DESTROY));
+		SecurityUtil.checkPermission(node.securityContext, new AtomicNumberPermission(getName(), SecurityConstants.ACTION_DESTROY));
 		proxy.destroy();
 	}
 
@@ -107,7 +116,11 @@ final class SecureAtomicNumberProxy extends SecureProxySupport implements Atomic
 	}
 
 	public LocalAtomicNumberStats getLocalAtomicNumberStats() {
-		checkPermission(new AtomicNumberPermission(getName(), SecurityConstants.ACTION_STATISTICS));
+		SecurityUtil.checkPermission(node.securityContext, statsPermission);
 		return proxy.getLocalAtomicNumberStats();
+	}
+
+	public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+		proxy.setHazelcastInstance(hazelcastInstance);
 	}
 }

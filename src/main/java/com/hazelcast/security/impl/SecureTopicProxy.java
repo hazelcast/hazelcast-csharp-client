@@ -1,24 +1,32 @@
 package com.hazelcast.security.impl;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.impl.Node;
 import com.hazelcast.impl.TopicProxy;
 import com.hazelcast.impl.monitor.TopicOperationsCounter;
 import com.hazelcast.monitor.LocalTopicStats;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.TopicPermission;
 
 final class SecureTopicProxy extends SecureProxySupport implements TopicProxy {
 	
 	private final TopicProxy proxy;
+	final TopicPermission listenPermission;
+	final TopicPermission publishPermission;
+	final TopicPermission statsPermission;
 	
 	SecureTopicProxy(Node node, final TopicProxy proxy) {
 		super(node);
 		this.proxy = proxy;
+		listenPermission = new TopicPermission(getName(), SecurityConstants.ACTION_LISTEN);
+		publishPermission = new TopicPermission(getName(), SecurityConstants.ACTION_LISTEN);
+		statsPermission = new TopicPermission(getName(), SecurityConstants.ACTION_STATISTICS);
 	}
 	
 	private void checkListen() {
-		checkPermission(new TopicPermission(getName(), SecurityConstants.ACTION_LISTEN));
+		SecurityUtil.checkPermission(node.securityContext, listenPermission);
 	}
 	
 	public String getName() {
@@ -26,7 +34,7 @@ final class SecureTopicProxy extends SecureProxySupport implements TopicProxy {
 	}
 
 	public void publish(Object message) {
-		checkPermission(new TopicPermission(getName(), SecurityConstants.ACTION_PUBLISH));
+		SecurityUtil.checkPermission(node.securityContext, publishPermission);
 		proxy.publish(message);
 	}
 
@@ -49,7 +57,7 @@ final class SecureTopicProxy extends SecureProxySupport implements TopicProxy {
 	}
 
 	public LocalTopicStats getLocalTopicStats() {
-		checkPermission(new TopicPermission(getName(), SecurityConstants.ACTION_STATISTICS));
+		SecurityUtil.checkPermission(node.securityContext, statsPermission);
 		return proxy.getLocalTopicStats();
 	}
 
@@ -58,11 +66,15 @@ final class SecureTopicProxy extends SecureProxySupport implements TopicProxy {
 	}
 
 	public void destroy() {
-		checkPermission(new TopicPermission(getName(), SecurityConstants.ACTION_DESTROY));
+		SecurityUtil.checkPermission(node.securityContext, new TopicPermission(getName(), SecurityConstants.ACTION_DESTROY));
 		proxy.destroy();
 	}
 
 	public Object getId() {
 		return proxy.getId();
+	}
+	
+	public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+		proxy.setHazelcastInstance(hazelcastInstance);
 	}
 }
