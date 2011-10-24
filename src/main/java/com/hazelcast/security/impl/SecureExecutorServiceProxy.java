@@ -2,32 +2,28 @@ package com.hazelcast.security.impl;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
-import com.hazelcast.core.Prefix;
-import com.hazelcast.impl.ExecutorServiceProxy;
 import com.hazelcast.impl.Node;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.ExecutorServicePermission;
 
 final class SecureExecutorServiceProxy extends SecureProxySupport implements ExecutorService {
 	
-	final ExecutorServiceProxy proxy;
+	final ExecutorService proxy;
 	final String name;
+	final ExecutorServicePermission executePermission;
 	
-	SecureExecutorServiceProxy(Node node, final ExecutorServiceProxy proxy) {
+	SecureExecutorServiceProxy(Node node, final ExecutorService proxy, String name) {
 		super(node);
 		this.proxy = proxy;
-		this.name = proxy.getName().replace(Prefix.EXECUTOR_SERVICE, "");
+		this.name = name;
+		executePermission = new ExecutorServicePermission(name, SecurityConstants.ACTION_EXECUTE);
 	}
 
 	private void checkExecute() {
-		checkPermission(new ExecutorServicePermission(name, SecurityConstants.ACTION_EXECUTE));
+		SecurityUtil.checkPermission(node.securityContext, executePermission);
 	}
 	
 	public boolean awaitTermination(long timeout, TimeUnit unit)
@@ -35,7 +31,7 @@ final class SecureExecutorServiceProxy extends SecureProxySupport implements Exe
 		return proxy.awaitTermination(timeout, unit);
 	}
 
-	public List<Future> invokeAll(Collection tasks) throws InterruptedException {
+	public List invokeAll(Collection tasks) throws InterruptedException {
 		checkExecute();
 		return proxy.invokeAll(tasks);
 	}
@@ -67,12 +63,12 @@ final class SecureExecutorServiceProxy extends SecureProxySupport implements Exe
 	}
 
 	public void shutdown() {
-		checkPermission(new ExecutorServicePermission(proxy.getName(), SecurityConstants.ACTION_DESTROY));
+		SecurityUtil.checkPermission(node.securityContext, new ExecutorServicePermission(name, SecurityConstants.ACTION_DESTROY));
 		proxy.shutdown();
 	}
 
 	public List<Runnable> shutdownNow() {
-		checkPermission(new ExecutorServicePermission(proxy.getName(), SecurityConstants.ACTION_DESTROY));
+		SecurityUtil.checkPermission(node.securityContext, new ExecutorServicePermission(name, SecurityConstants.ACTION_DESTROY));
 		return proxy.shutdownNow();
 	}
 

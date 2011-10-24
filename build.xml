@@ -1,6 +1,16 @@
 <project basedir="." name="Elastic Memory" default="all">
 
 	<property file="${basedir}/build.properties" />
+	
+	<target name="help">
+		<echo message="clean: Clean release directory." />
+		<echo message="merge: Merge Hazelcast and Elastic-Memory into release directory." />
+		<echo message="license-cleanup: Remove enterprise license file and apache license.txt." />
+		<echo message="change-version: Change version from ${version.community} to ${version.enterprise}" />
+		<echo message="add-trial-notice: Add trial licence.txt." />
+		<echo message="javadoc: Build javadoc." />
+		<echo message="release: Release Enterprise edition to ${release.dir}" />
+	</target>
 
 	<target name="clean">
 		<delete includeemptydirs="true" failonerror="no">

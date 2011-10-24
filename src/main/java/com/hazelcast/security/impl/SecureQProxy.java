@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.ItemListener;
 import com.hazelcast.impl.Node;
@@ -11,203 +12,216 @@ import com.hazelcast.impl.QProxy;
 import com.hazelcast.impl.monitor.QueueOperationsCounter;
 import com.hazelcast.monitor.LocalQueueStats;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.QueuePermission;
 
 final class SecureQProxy<E> extends SecureProxySupport implements IQueue<E>, QProxy<E> {
 
-	final QProxy<E> queue;
+	final QProxy<E> proxy;
+	final QueuePermission offerPermission;
+	final QueuePermission getPermission;
+	final QueuePermission pollPermission;
+	final QueuePermission removePermission;
+	final QueuePermission listenPermission;
+	final QueuePermission statsPermission;
 
 	SecureQProxy(Node node, QProxy<E> queue) {
 		super(node);
-		this.queue = queue;
+		this.proxy = queue;
+		
+		offerPermission = new QueuePermission(getName(), SecurityConstants.ACTION_OFFER);
+		getPermission = new QueuePermission(getName(), SecurityConstants.ACTION_GET);
+		pollPermission = new QueuePermission(getName(), SecurityConstants.ACTION_POLL);
+		removePermission = new QueuePermission(getName(), SecurityConstants.ACTION_REMOVE);
+		listenPermission = new QueuePermission(getName(), SecurityConstants.ACTION_LISTEN);
+		statsPermission = new QueuePermission(getName(), SecurityConstants.ACTION_STATISTICS);
 	}
 
 	private void checkOffer() {
-		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_OFFER));
+		SecurityUtil.checkPermission(node.securityContext, offerPermission);
 	}
-	
 	private void checkGet() {
-		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_GET));
+		SecurityUtil.checkPermission(node.securityContext, getPermission);
 	}
-	
 	private void checkPoll() {
-		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_POLL));
+		SecurityUtil.checkPermission(node.securityContext, pollPermission);
 	}
-	
 	private void checkRemove() {
-		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_REMOVE));
+		SecurityUtil.checkPermission(node.securityContext, removePermission);
 	}
-	
 	private void checkListen() {
-		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_LISTEN));
+		SecurityUtil.checkPermission(node.securityContext, listenPermission);
 	}
 	
 	// ------ IQueue
 	
 	public String getName() {
-		return queue.getName();
+		return proxy.getName();
 	}
 
 	public LocalQueueStats getLocalQueueStats() {
-		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_STATISTICS));
-		return queue.getLocalQueueStats();
+		SecurityUtil.checkPermission(node.securityContext, statsPermission);
+		return proxy.getLocalQueueStats();
 	}
 
 	public void addItemListener(ItemListener<E> listener, boolean includeValue) {
 		checkListen();
-		queue.addItemListener(listener, includeValue);
+		proxy.addItemListener(listener, includeValue);
 	}
 
 	public void removeItemListener(ItemListener<E> listener) {
 		checkListen();
-		queue.removeItemListener(listener);
+		proxy.removeItemListener(listener);
 	}
 
 	public InstanceType getInstanceType() {
-		return queue.getInstanceType();
+		return proxy.getInstanceType();
 	}
 
 	public void destroy() {
-		checkPermission(new QueuePermission(getName(), SecurityConstants.ACTION_DESTROY));
-		queue.destroy();
+		SecurityUtil.checkPermission(node.securityContext, new QueuePermission(getName(), SecurityConstants.ACTION_DESTROY));
+		proxy.destroy();
 	}
 
 	public Object getId() {
-		return queue.getId();
+		return proxy.getId();
 	}
 
 	public boolean offer(E o) {
 		checkOffer();
-		return queue.offer(o);
+		return proxy.offer(o);
 	}
 
 	public E poll() {
 		checkPoll();
-		return queue.poll();
+		return proxy.poll();
 	}
 
 	public E remove() {
 		checkRemove();
-		return queue.remove();
+		return proxy.remove();
 	}
 
 	public boolean offer(E o, long timeout, TimeUnit unit)
 			throws InterruptedException {
 		checkOffer();
-		return queue.offer(o, timeout, unit);
+		return proxy.offer(o, timeout, unit);
 	}
 
 	public int size() {
-		return queue.size();
+		return proxy.size();
 	}
 
 	public E peek() {
 		checkGet();
-		return queue.peek();
+		return proxy.peek();
 	}
 
 	public E element() {
 		checkGet();
-		return queue.element();
+		return proxy.element();
 	}
 
 	public boolean isEmpty() {
 		checkGet();
-		return queue.isEmpty();
+		return proxy.isEmpty();
 	}
 
 	public boolean contains(Object o) {
 		checkGet();
-		return queue.contains(o);
+		return proxy.contains(o);
 	}
 
 	public E poll(long timeout, TimeUnit unit) throws InterruptedException {
 		checkPoll();
-		return queue.poll(timeout, unit);
+		return proxy.poll(timeout, unit);
 	}
 
 	public E take() throws InterruptedException {
 		checkPoll();
-		return queue.take();
+		return proxy.take();
 	}
 
 	public Iterator<E> iterator() {
 		checkGet();
-		return queue.iterator();
+		return proxy.iterator();
 	}
 
 	public void put(E o) throws InterruptedException {
 		checkOffer();
-		queue.put(o);
+		proxy.put(o);
 	}
 
 	public Object[] toArray() {
 		checkGet();
-		return queue.toArray();
+		return proxy.toArray();
 	}
 
 	public int remainingCapacity() {
 		checkGet();
-		return queue.remainingCapacity();
+		return proxy.remainingCapacity();
 	}
 
 	public boolean add(E o) {
 		checkOffer();
-		return queue.add(o);
+		return proxy.add(o);
 	}
 
 	public <T> T[] toArray(T[] a) {
 		checkGet();
-		return queue.toArray(a);
+		return proxy.toArray(a);
 	}
 
 	public int drainTo(Collection<? super E> c) {
 		checkPoll();
-		return queue.drainTo(c);
+		return proxy.drainTo(c);
 	}
 
 	public int drainTo(Collection<? super E> c, int maxElements) {
 		checkPoll();
-		return queue.drainTo(c, maxElements);
+		return proxy.drainTo(c, maxElements);
 	}
 
 	public boolean remove(Object o) {
 		checkRemove();
-		return queue.remove(o);
+		return proxy.remove(o);
 	}
 
 	public boolean containsAll(Collection<?> c) {
 		checkGet();
-		return queue.containsAll(c);
+		return proxy.containsAll(c);
 	}
 
 	public boolean addAll(Collection<? extends E> c) {
 		checkOffer();
-		return queue.addAll(c);
+		return proxy.addAll(c);
 	}
 
 	public boolean removeAll(Collection<?> c) {
 		checkRemove();
-		return queue.removeAll(c);
+		return proxy.removeAll(c);
 	}
 
 	public boolean retainAll(Collection<?> c) {
 		checkRemove();
-		return queue.retainAll(c);
+		return proxy.retainAll(c);
 	}
 
 	public void clear() {
 		checkRemove();
-		queue.clear();
+		proxy.clear();
 	}
-
 
 	// ------ QProxy
 	public QueueOperationsCounter getQueueOperationCounter() {
-		return queue.getQueueOperationCounter();
+		return proxy.getQueueOperationCounter();
 	}
 
 	public String getLongName() {
-		return queue.getLongName();
+		return proxy.getLongName();
+	}
+	
+	public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+		proxy.setHazelcastInstance(hazelcastInstance);
 	}
 }

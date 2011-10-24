@@ -3,126 +3,142 @@ package com.hazelcast.security.impl;
 import java.util.Collection;
 import java.util.Iterator;
 
-import com.hazelcast.core.ISet;
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ItemListener;
+import com.hazelcast.impl.MProxy;
 import com.hazelcast.impl.Node;
+import com.hazelcast.impl.SetProxy;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.SetPermission;
 
-final class SecureSetProxy<E> extends SecureProxySupport implements ISet<E> {
+final class SecureSetProxy<E> extends SecureProxySupport implements SetProxy<E> {
 	
-	final ISet<E> set ;
+	private final SetProxy<E> proxy ;
+	private final SetPermission addPermission ;
+	private final SetPermission getPermission ;
+	private final SetPermission removePermission ;
+	private final SetPermission listenPermission ;
 	
-	SecureSetProxy(Node node, final ISet<E> set ) {
+	SecureSetProxy(Node node, final SetProxy<E> set ) {
 		super(node);
-		this.set = set;
+		proxy = set;
+		addPermission = new SetPermission(getName(), SecurityConstants.ACTION_ADD);
+		getPermission = new SetPermission(getName(), SecurityConstants.ACTION_GET);
+		removePermission = new SetPermission(getName(), SecurityConstants.ACTION_REMOVE);
+		listenPermission = new SetPermission(getName(), SecurityConstants.ACTION_LISTEN);
 	}
 	
 	private void checkAdd() {
-		checkPermission(new SetPermission(getName(), SecurityConstants.ACTION_ADD));
+		SecurityUtil.checkPermission(node.securityContext, addPermission);
 	}
-	
 	private void checkGet() {
-		checkPermission(new SetPermission(getName(), SecurityConstants.ACTION_GET));
+		SecurityUtil.checkPermission(node.securityContext, getPermission);
 	}
-	
 	private void checkRemove() {
-		checkPermission(new SetPermission(getName(), SecurityConstants.ACTION_REMOVE));
+		SecurityUtil.checkPermission(node.securityContext, removePermission);
 	}
-	
 	private void checkListen() {
-		checkPermission(new SetPermission(getName(), SecurityConstants.ACTION_LISTEN));
+		SecurityUtil.checkPermission(node.securityContext, listenPermission);
 	}
 
 	public String getName() {
-		return set.getName();
+		return proxy.getName();
 	}
 
 	public void addItemListener(ItemListener<E> listener, boolean includeValue) {
 		checkListen();
-		set.addItemListener(listener, includeValue);
+		proxy.addItemListener(listener, includeValue);
 	}
 
 	public void removeItemListener(ItemListener<E> listener) {
 		checkListen();
-		set.removeItemListener(listener);
+		proxy.removeItemListener(listener);
 	}
 
 	public InstanceType getInstanceType() {
-		return set.getInstanceType();
+		return proxy.getInstanceType();
 	}
 
 	public void destroy() {
-		checkPermission(new SetPermission(getName(), SecurityConstants.ACTION_DESTROY));
-		set.destroy();
+		SecurityUtil.checkPermission(node.securityContext, new SetPermission(getName(), SecurityConstants.ACTION_DESTROY));
+		proxy.destroy();
 	}
 
 	public Object getId() {
-		return set.getId();
+		return proxy.getId();
 	}
 
 	public int size() {
 		checkGet();
-		return set.size();
+		return proxy.size();
 	}
 
 	public boolean isEmpty() {
 		checkGet();
-		return set.isEmpty();
+		return proxy.isEmpty();
 	}
 
 	public boolean contains(Object o) {
 		checkGet();
-		return set.contains(o);
+		return proxy.contains(o);
 	}
 
 	public Iterator<E> iterator() {
 		checkGet();
-		return set.iterator();
+		return proxy.iterator();
 	}
 
 	public Object[] toArray() {
 		checkGet();
-		return set.toArray();
+		return proxy.toArray();
 	}
 
 	public <T> T[] toArray(T[] a) {
 		checkGet();
-		return set.toArray(a);
+		return proxy.toArray(a);
 	}
 
 	public boolean add(E o) {
 		checkGet();
-		return set.add(o);
+		return proxy.add(o);
 	}
 
 	public boolean remove(Object o) {
 		checkRemove();
-		return set.remove(o);
+		return proxy.remove(o);
 	}
 
 	public boolean containsAll(Collection<?> c) {
 		checkGet();
-		return set.containsAll(c);
+		return proxy.containsAll(c);
 	}
 
 	public boolean addAll(Collection<? extends E> c) {
 		checkAdd();
-		return set.addAll(c);
+		return proxy.addAll(c);
 	}
 
 	public boolean retainAll(Collection<?> c) {
 		checkRemove();
-		return set.retainAll(c);
+		return proxy.retainAll(c);
 	}
 
 	public boolean removeAll(Collection<?> c) {
 		checkRemove();
-		return set.removeAll(c);
+		return proxy.removeAll(c);
 	}
 
 	public void clear() {
 		checkRemove();
-		set.clear();
+		proxy.clear();
+	}
+	
+	public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+		proxy.setHazelcastInstance(hazelcastInstance);
+	}
+
+	public MProxy getMProxy() {
+		return proxy.getMProxy();
 	}
 }

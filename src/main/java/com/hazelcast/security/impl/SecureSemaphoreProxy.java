@@ -3,33 +3,43 @@ package com.hazelcast.security.impl;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.InstanceDestroyedException;
 import com.hazelcast.impl.Node;
 import com.hazelcast.impl.SemaphoreProxy;
 import com.hazelcast.impl.monitor.SemaphoreOperationsCounter;
 import com.hazelcast.monitor.LocalSemaphoreStats;
 import com.hazelcast.security.SecurityConstants;
+import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.SemaphorePermission;
 
 final class SecureSemaphoreProxy extends SecureProxySupport implements SemaphoreProxy {
 	
 	final SemaphoreProxy proxy;
+	final SemaphorePermission acquirePermission;
+	final SemaphorePermission releasePermission;
+	final SemaphorePermission drainPermission;
+	final SemaphorePermission statsPermission;
 	
 	SecureSemaphoreProxy(Node node, final SemaphoreProxy proxy) {
 		super(node);
 		this.proxy = proxy;
+		acquirePermission = new SemaphorePermission(getName(), SecurityConstants.ACTION_ACQUIRE);
+		releasePermission = new SemaphorePermission(getName(), SecurityConstants.ACTION_RELEASE);
+		drainPermission = new SemaphorePermission(getName(), SecurityConstants.ACTION_DRAIN);
+		statsPermission = new SemaphorePermission(getName(), SecurityConstants.ACTION_STATISTICS);
 	}
 	
 	private void checkAcquire() {
-		checkPermission(new SemaphorePermission(getName(), SecurityConstants.ACTION_ACQUIRE));
+		SecurityUtil.checkPermission(node.securityContext, acquirePermission);
 	}
 	
 	private void checkRelease() {
-		checkPermission(new SemaphorePermission(getName(), SecurityConstants.ACTION_RELEASE));
+		SecurityUtil.checkPermission(node.securityContext, releasePermission);
 	}
 	
 	private void checkDrain() {
-		checkPermission(new SemaphorePermission(getName(), SecurityConstants.ACTION_DRAIN));
+		SecurityUtil.checkPermission(node.securityContext, drainPermission);
 	}
 
 	public SemaphoreOperationsCounter getOperationsCounter() {
@@ -45,7 +55,7 @@ final class SecureSemaphoreProxy extends SecureProxySupport implements Semaphore
 	}
 
 	public void destroy() {
-		checkPermission(new SemaphorePermission(getName(), SecurityConstants.ACTION_DESTROY));
+		SecurityUtil.checkPermission(node.securityContext, new SemaphorePermission(getName(), SecurityConstants.ACTION_DESTROY));
 		proxy.destroy();
 	}
 
@@ -199,7 +209,11 @@ final class SecureSemaphoreProxy extends SecureProxySupport implements Semaphore
 	}
 
 	public LocalSemaphoreStats getLocalSemaphoreStats() {
-		checkPermission(new SemaphorePermission(getName(), SecurityConstants.ACTION_STATISTICS));
+		SecurityUtil.checkPermission(node.securityContext, statsPermission);
 		return proxy.getLocalSemaphoreStats();
+	}
+	
+	public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+		proxy.setHazelcastInstance(hazelcastInstance);
 	}
 }

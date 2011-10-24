@@ -1,20 +1,25 @@
 package com.hazelcast.security;
 
+import static org.junit.Assert.*;
+
 import java.io.Serializable;
 import java.security.AccessControlException;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.config.*;
 import com.hazelcast.config.PermissionConfig.PermissionType;
-import com.hazelcast.core.*;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.HazelcastInstanceAware;
+import com.hazelcast.core.IMap;
 
 public class ClientSecurityTest {
 
@@ -134,7 +139,25 @@ public class ClientSecurityTest {
 			.addAction(SecurityConstants.ACTION_LOCK);
 		Hazelcast.newHazelcastInstance(config);
 		HazelcastClient client = createHazelcastClient();
-		client.getLock("test").unlock();
+		try {
+			client.getLock("test").unlock();
+		} finally {
+			client.getLifecycleService().shutdown();
+		}
+	}
+	
+	@Test(expected = AccessControlException.class)
+	public void testLockPermissionFail2() {
+		final Config config = createConfig();
+		addPermission(config, PermissionType.LOCK, "test", "dev")
+			.addAction(SecurityConstants.ACTION_CREATE);
+		Hazelcast.newHazelcastInstance(config);
+		HazelcastClient client = createHazelcastClient();
+		try {
+			client.getLock("test").tryLock();
+		} finally {
+			client.getLifecycleService().shutdown();
+		}
 	}
 	
 	@Test
@@ -183,11 +206,45 @@ public class ClientSecurityTest {
 		client.getExecutorService("test").submit(new DummyCallable()).get();
 	}
 	
+	@Test
+	public void testExecutorPermissionFail4() throws InterruptedException, ExecutionException {
+		final Config config = createConfig();
+		addPermission(config, PermissionType.EXECUTOR_SERVICE, "test", "dev")
+			.addAction(SecurityConstants.ACTION_CREATE).addAction(SecurityConstants.ACTION_EXECUTE);
+		
+		Hazelcast.newHazelcastInstance(config);
+		HazelcastClient client = createHazelcastClient();
+		assertNull(client.getExecutorService("test").submit(new DummyCallableNewThread()).get());
+	}
+	
 	static class DummyCallable implements Callable<Integer>, Serializable, HazelcastInstanceAware {
 		HazelcastInstance hz;
 		public Integer call() throws Exception {
 			hz.getList("list").add("value");
 			return hz.getList("list").size();
+		}
+		public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+			hz = hazelcastInstance;
+		}
+	}
+	
+	static class DummyCallableNewThread implements Callable<Integer>, Serializable, HazelcastInstanceAware {
+		HazelcastInstance hz;
+		public Integer call() throws Exception {
+			final CountDownLatch latch = new CountDownLatch(1); 
+			final AtomicReference<Integer> value = new AtomicReference<Integer>();
+			new Thread() {
+				public void run() {
+					try {
+						hz.getList("list").add("value");
+						value.set(hz.getList("list").size());
+					} finally {
+						latch.countDown();
+					}
+				}
+			}.start();
+			latch.await();
+			return value.get();
 		}
 		public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
 			hz = hazelcastInstance;

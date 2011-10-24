@@ -1,27 +1,50 @@
 package com.hazelcast.security;
 
+import java.security.Permission;
 import java.util.Arrays;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.PermissionConfig;
 import com.hazelcast.impl.AddressPicker;
-import com.hazelcast.security.permission.AllPermissions;
-import com.hazelcast.security.permission.AtomicNumberPermission;
-import com.hazelcast.security.permission.ClusterPermission;
-import com.hazelcast.security.permission.CountDownLatchPermission;
-import com.hazelcast.security.permission.ExecutorServicePermission;
-import com.hazelcast.security.permission.ListPermission;
-import com.hazelcast.security.permission.ListenerPermission;
-import com.hazelcast.security.permission.LockPermission;
-import com.hazelcast.security.permission.MapPermission;
-import com.hazelcast.security.permission.MultiMapPermission;
-import com.hazelcast.security.permission.QueuePermission;
-import com.hazelcast.security.permission.SemaphorePermission;
-import com.hazelcast.security.permission.SetPermission;
-import com.hazelcast.security.permission.TopicPermission;
-import com.hazelcast.security.permission.TransactionPermission;
+import com.hazelcast.impl.ThreadContext;
+import com.hazelcast.security.permission.*;
 
 public final class SecurityUtil {
+	
+	private static final ThreadLocal<Boolean> SECURE_CALL = new ThreadLocal<Boolean>() ;
+	
+	static void setSecureCall() {
+		if(isSecureCall()) {
+			throw new SecurityException("Not allowed! <SECURE_CALL> flag is already set!");
+		}
+		SECURE_CALL.set(Boolean.TRUE);
+	}
+	
+	static void resetSecureCall() {
+		if(!isSecureCall()) {
+			throw new SecurityException("Not allowed! <SECURE_CALL> flag is not set!");
+		}
+		SECURE_CALL.remove();
+	}
+	
+	private static boolean isSecureCall() {
+		final Boolean value = SECURE_CALL.get();
+		return value != null && value.booleanValue();
+	}
+	
+	public static void checkPermission(SecurityContext context, Permission permission) {
+		if (context != null && (ThreadContext.get().isClient() || isSecureCall())) {
+			context.checkPermission(permission);
+		}
+	}
+	
+	public static String getShortInstanceName(String name) {
+		int ix = name.lastIndexOf(':');
+		if (ix > -1) {
+			return name.substring(ix + 1);
+		}
+		return name;
+	}
 
 	public static ClusterPermission createPermission(PermissionConfig permissionConfig) {
 		final String[] actions = permissionConfig.getActions().toArray(new String[0]);

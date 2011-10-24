@@ -1,5 +1,8 @@
 package com.hazelcast.enterprise;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.util.List;
 import java.util.logging.Level;
 
 import com.hazelcast.elasticmemory.OffHeapRecordFactory;
@@ -10,18 +13,24 @@ import com.hazelcast.elasticmemory.util.MathUtil;
 import com.hazelcast.elasticmemory.util.MemorySize;
 import com.hazelcast.elasticmemory.util.MemoryUnit;
 import com.hazelcast.enterprise.Registration.Mode;
+import com.hazelcast.impl.DefaultProxyFactory;
 import com.hazelcast.impl.Node;
+import com.hazelcast.impl.ProxyFactory;
 import com.hazelcast.impl.base.DefaultNodeInitializer;
 import com.hazelcast.impl.base.NodeInitializer;
 import com.hazelcast.impl.concurrentmap.RecordFactory;
 import com.hazelcast.security.SecurityContext;
 import com.hazelcast.security.SecurityContextImpl;
+import com.hazelcast.security.impl.SecureProxyFactory;
 
 public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements NodeInitializer {
 	
+	private static final String MAX_DIRECT_MEMORY_PARAM = "-XX:MaxDirectMemorySize";
+	
 	private Storage storage ;
 	private Registration registration;
-	protected Node node;
+	private SecurityContext securityContext;
+	private boolean securityEnabled = false;
 	
 	public EnterpriseNodeInitializer() {
 		super();
@@ -48,17 +57,28 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		
 		systemLogger = node.getLogger("com.hazelcast.system");
 		parseSystemProps();
+		securityEnabled = node.getConfig().getSecurityConfig().isEnabled();
+		
 		simpleRecord = node.groupProperties.CONCURRENT_MAP_SIMPLE_RECORD.getBoolean();
 		if(isOffHeapEnabled()) {
 			systemLogger.log(Level.INFO, "Initializing node off-heap store...");
 			
+			final MemorySize jvmSize = getJvmDirectMemorySize();
+			if(jvmSize == null) {
+				throw new IllegalArgumentException("JVM max direct memory size argument (" + 
+						MAX_DIRECT_MEMORY_PARAM + ") should be configured in order to use " +
+						"Hazelcast Elastic Memory! " +
+						"(Ex: java " + MAX_DIRECT_MEMORY_PARAM + "=1G -Xmx1G -cp ...)");
+			}
+			
 			String total = node.groupProperties.ELASTIC_MEMORY_TOTAL_SIZE.getValue();
-			logger.log(Level.FINEST, ">>>>> Read " + node.groupProperties.ELASTIC_MEMORY_TOTAL_SIZE.getName() + " as: " + total);
+			logger.log(Level.FINEST, "Read " + node.groupProperties.ELASTIC_MEMORY_TOTAL_SIZE.getName() + " as: " + total);
 	        String chunk = node.groupProperties.ELASTIC_MEMORY_CHUNK_SIZE.getValue();
-	        logger.log(Level.FINEST, ">>>>> Read " + node.groupProperties.ELASTIC_MEMORY_CHUNK_SIZE.getName() + " as: " + chunk);
-	        MemorySize totalSize = MemorySize.parse(total, MemoryUnit.MEGABYTES);
-	        MemorySize chunkSize = MemorySize.parse(chunk, MemoryUnit.KILOBYTES);
-	        checkOffHeapParams(totalSize, chunkSize);
+	        logger.log(Level.FINEST, "Read " + node.groupProperties.ELASTIC_MEMORY_CHUNK_SIZE.getName() + " as: " + chunk);
+	        final MemorySize totalSize = MemorySize.parse(total, MemoryUnit.MEGABYTES);
+	        final MemorySize chunkSize = MemorySize.parse(chunk, MemoryUnit.KILOBYTES);
+	        
+	        checkOffHeapParams(jvmSize, totalSize, chunkSize);
 	        
 	        logger.log(Level.INFO, "Elastic-Memory off-heap storage total size: " + totalSize.megaBytes() + " MB");
 	        logger.log(Level.INFO, "Elastic-Memory off-heap storage chunk size: " + chunkSize.kiloBytes() + " KB");
@@ -66,21 +86,29 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		}
 	}
 	
-	private void checkOffHeapParams(MemorySize total, MemorySize chunk) {
+	private void checkOffHeapParams(MemorySize jvm, MemorySize total, MemorySize chunk) {
+		if(jvm.megaBytes() == 0) {
+			throw new IllegalArgumentException(MAX_DIRECT_MEMORY_PARAM + " must be multitude of megabytes! (Current: " 
+					+ jvm.bytes() + " bytes)");
+		}
 		if(total.megaBytes() == 0) {
-			throw new IllegalArgumentException("Total size must be multitude of megabytes! (Current: " 
+			throw new IllegalArgumentException("Elastic Memory total size must be multitude of megabytes! (Current: " 
 					+ total.bytes() + " bytes)");
 		}
+		if(total.megaBytes() > jvm.megaBytes()) {
+			throw new IllegalArgumentException(MAX_DIRECT_MEMORY_PARAM + " must be greater than or equal to Elastic Memory total size => " 
+					+ MAX_DIRECT_MEMORY_PARAM + ": " + jvm.megaBytes() + " megabytes, Total: " + total.megaBytes() + " megabytes");
+		}
 		if(chunk.kiloBytes() == 0) {
-			throw new IllegalArgumentException("Chunk size must be multitude of kilobytes! (Current: " 
+			throw new IllegalArgumentException("Elastic Memory chunk size must be multitude of kilobytes! (Current: " 
 					+ chunk.bytes() + " bytes)");
 		}
 		if(total.bytes() <= chunk.bytes()) {
-			throw new IllegalArgumentException("Total size must be greater than chunk size => " 
-					+ "Total: " + total.bytes() + ", Chunk: " + chunk.bytes());
+			throw new IllegalArgumentException("Elastic Memory total size must be greater than chunk size => " 
+					+ "Total: " + total.bytes() + " bytes, Chunk: " + chunk.bytes() + " bytes");
 		}
 		if(!MathUtil.isPowerOf2(chunk.kiloBytes())) {
-			throw new IllegalArgumentException("Chunk size must be power of 2 in kilobytes! (Current: " 
+			throw new IllegalArgumentException("Elastic Memory chunk size must be power of 2 in kilobytes! (Current: " 
 					+ chunk.kiloBytes() + " kilobytes)");
 		}
 	}
@@ -100,21 +128,45 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		}
     }
 	
+	public ProxyFactory getProxyFactory() {
+    	return securityEnabled ? new SecureProxyFactory(node) : new DefaultProxyFactory(node.factory);
+    }
+	
 	public RecordFactory getRecordFactory() {
 		return isOffHeapEnabled() ? 
 				(simpleRecord ? new SimpleOffHeapRecordFactory(storage) : new OffHeapRecordFactory(storage)) 
 				: super.getRecordFactory();
 	}
 	
-	public SecurityContext createSecurityContext() {
-		return new SecurityContextImpl(node);
+	public SecurityContext getSecurityContext() {
+		if(securityEnabled && securityContext == null) {
+			securityContext = new SecurityContextImpl(node); 
+		}
+		return securityContext;
 	}
-
-	public boolean isRegistered() {
+	
+	private boolean isRegistered() {
 		return registration != null && registration.isValid();
 	}
 
-	public boolean isOffHeapEnabled() {
+	private MemorySize getJvmDirectMemorySize() {
+		RuntimeMXBean rmx = ManagementFactory.getRuntimeMXBean();
+		List<String> args = rmx.getInputArguments();
+		for (String arg : args) {
+			if(arg.startsWith(MAX_DIRECT_MEMORY_PARAM)) {
+				logger.log(Level.FINEST, "Read JVM " + MAX_DIRECT_MEMORY_PARAM + " as: " + arg);
+				String[] tmp = arg.split("\\=");
+				if(tmp.length == 2) {
+					final String value = tmp[1];
+					return MemorySize.parse(value);
+				}
+				break;
+			}
+		}
+		return null;
+	}
+	
+	private boolean isOffHeapEnabled() {
 		return node.groupProperties.ELASTIC_MEMORY_ENABLED.getBoolean();
 	}
 
