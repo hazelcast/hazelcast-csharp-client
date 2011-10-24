@@ -95,7 +95,7 @@ public class SecureProxyFactory extends DefaultProxyFactory implements ProxyFact
 		return super.createTransaction();
 	}
 
-	public void checkProxyPermission(ProxyKey proxyKey) {
+	public void checkProxy(ProxyKey proxyKey) throws SecurityException {
 		final String name = proxyKey.getName();
 		final String action = SecurityConstants.ACTION_CREATE;
 		final String actualName = getShortInstanceName(name);
