@@ -37,7 +37,7 @@ public class MemberSecurityTest {
 		final SecurityConfig secCfg = config.getSecurityConfig();
 		secCfg.setEnabled(true);
 		CredentialsFactoryConfig credentialsFactoryConfig = new CredentialsFactoryConfig();
-		credentialsFactoryConfig.setFactoryImpl(new ICredentialsFactory() {
+		credentialsFactoryConfig.setImplementation(new ICredentialsFactory() {
 			public Credentials newCredentials() {
 				return new InValidCredentials();
 			}
