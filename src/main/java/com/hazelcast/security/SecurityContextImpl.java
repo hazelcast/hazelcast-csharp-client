@@ -40,7 +40,7 @@ public class SecurityContextImpl implements SecurityContext {
 		if(policyConfig.getClassName() == null) {
 			policyConfig.setClassName(SecurityConstants.DEFAULT_POLICY_CLASS);
 		}
-		IPermissionPolicy tmpPolicy = policyConfig.getPolicyImpl();
+		IPermissionPolicy tmpPolicy = policyConfig.getImplementation();
 		if(tmpPolicy == null) {
 			tmpPolicy = (IPermissionPolicy) createImplInstance(policyConfig.getClassName());
 		}
@@ -51,7 +51,7 @@ public class SecurityContextImpl implements SecurityContext {
 		if(credentialsFactoryConfig.getClassName() == null) {
 			credentialsFactoryConfig.setClassName(SecurityConstants.DEFAULT_CREDENTIALS_FACTORY_CLASS);
 		}
-		ICredentialsFactory tmpCredentialsFactory = credentialsFactoryConfig.getFactoryImpl();
+		ICredentialsFactory tmpCredentialsFactory = credentialsFactoryConfig.getImplementation();
 		if(tmpCredentialsFactory == null) {
 			tmpCredentialsFactory = (ICredentialsFactory) createImplInstance(credentialsFactoryConfig.getClassName());
 		}
