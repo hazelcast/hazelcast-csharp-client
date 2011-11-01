@@ -82,6 +82,9 @@ public final class SecurityUtil {
 		case TOPIC:
 			return new TopicPermission(permissionConfig.getName(), actions);
 			
+		case ID_GENERATOR:
+			return new IdGeneratorPermission(permissionConfig.getName(), actions);
+		
 		case LISTENER:
 			return new ListenerPermission(permissionConfig.getName());
 			
