@@ -5,8 +5,7 @@ import java.lang.management.RuntimeMXBean;
 import java.util.List;
 import java.util.logging.Level;
 
-import com.hazelcast.elasticmemory.OffHeapRecordFactory;
-import com.hazelcast.elasticmemory.SimpleOffHeapRecordFactory;
+import com.hazelcast.elasticmemory.EnterpriseRecordFactory;
 import com.hazelcast.elasticmemory.storage.OffHeapStorage;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.elasticmemory.util.MathUtil;
@@ -133,9 +132,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
     }
 	
 	public RecordFactory getRecordFactory() {
-		return isOffHeapEnabled() ? 
-				(simpleRecord ? new SimpleOffHeapRecordFactory(storage) : new OffHeapRecordFactory(storage)) 
-				: super.getRecordFactory();
+		return new EnterpriseRecordFactory(storage, simpleRecord); 
 	}
 	
 	public SecurityContext getSecurityContext() {
