@@ -12,16 +12,18 @@ import com.hazelcast.nio.Data;
 
 public class EnterpriseRecordFactory extends DefaultRecordFactory implements RecordFactory {
 	
-	final Storage storage; 
+	final Storage storage;
+	final boolean offheapEnabled;
 	
 	public EnterpriseRecordFactory(Storage storage, boolean simple) {
 		super(simple);
 		this.storage = storage;
+		this.offheapEnabled = storage != null;
 	}
 
 	public Record createNewRecord(CMap cmap, int blockId, Data key, Data value,
 			long ttl, long maxIdleMillis, long id) {
-		if(isOffHeap(cmap.getMapConfig())) {
+		if(offheapEnabled && isOffHeapMap(cmap.getMapConfig())) {
 			if(simple) {
 				return new SimpleOffHeapRecord(cmap, blockId, key, value, id);
 			}
@@ -31,13 +33,13 @@ public class EnterpriseRecordFactory extends DefaultRecordFactory implements Rec
 	}
 
 	public NearCacheRecord createNewNearCacheRecord(CMap cmap, Data key, Data value) {
-		if(isOffHeap(cmap.getMapConfig())) {
+		if(offheapEnabled && isOffHeapMap(cmap.getMapConfig())) {
 			return new OffHeapNearCacheRecord(storage, key, value);
 		} 
 		return super.createNewNearCacheRecord(cmap, key, value);
 	}
 	
-	private boolean isOffHeap(MapConfig mapConfig) {
+	private boolean isOffHeapMap(MapConfig mapConfig) {
 		return mapConfig.getStorageType() == StorageType.OFFHEAP;
 	}
 }
