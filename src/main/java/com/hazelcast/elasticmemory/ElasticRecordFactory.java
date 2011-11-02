@@ -2,20 +2,22 @@ package com.hazelcast.elasticmemory;
 
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MapConfig.StorageType;
+import com.hazelcast.elasticmemory.storage.OffHeapError;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.impl.CMap;
+import com.hazelcast.impl.GroupProperties;
 import com.hazelcast.impl.NearCacheRecord;
 import com.hazelcast.impl.Record;
 import com.hazelcast.impl.concurrentmap.DefaultRecordFactory;
 import com.hazelcast.impl.concurrentmap.RecordFactory;
 import com.hazelcast.nio.Data;
 
-public class EnterpriseRecordFactory extends DefaultRecordFactory implements RecordFactory {
+public class ElasticRecordFactory extends DefaultRecordFactory implements RecordFactory {
 	
 	final Storage storage;
 	final boolean offheapEnabled;
 	
-	public EnterpriseRecordFactory(Storage storage, boolean simple) {
+	public ElasticRecordFactory(Storage storage, boolean simple) {
 		super(simple);
 		this.storage = storage;
 		this.offheapEnabled = storage != null;
@@ -23,7 +25,7 @@ public class EnterpriseRecordFactory extends DefaultRecordFactory implements Rec
 
 	public Record createNewRecord(CMap cmap, int blockId, Data key, Data value,
 			long ttl, long maxIdleMillis, long id) {
-		if(offheapEnabled && isOffHeapMap(cmap.getMapConfig())) {
+		if(isOffHeapEnabled(cmap.getMapConfig())) {
 			if(simple) {
 				return new SimpleOffHeapRecord(cmap, blockId, key, value, id);
 			}
@@ -33,13 +35,18 @@ public class EnterpriseRecordFactory extends DefaultRecordFactory implements Rec
 	}
 
 	public NearCacheRecord createNewNearCacheRecord(CMap cmap, Data key, Data value) {
-		if(offheapEnabled && isOffHeapMap(cmap.getMapConfig())) {
+		if(isOffHeapEnabled(cmap.getMapConfig())) {
 			return new OffHeapNearCacheRecord(storage, key, value);
 		} 
 		return super.createNewNearCacheRecord(cmap, key, value);
 	}
 	
-	private boolean isOffHeapMap(MapConfig mapConfig) {
-		return mapConfig.getStorageType() == StorageType.OFFHEAP;
+	private boolean isOffHeapEnabled(MapConfig mapConfig) {
+		final boolean offHeapMap = mapConfig.getStorageType() == StorageType.OFFHEAP;
+		if(!offheapEnabled && offHeapMap) {
+			throw new OffHeapError("Hazelcast Elastic Memory is not enabled! (Set '" 
+					+ GroupProperties.PROP_ELASTIC_MEMORY_ENABLED + "' to true.)");
+		}
+		return offheapEnabled && offHeapMap;
 	}
 }
