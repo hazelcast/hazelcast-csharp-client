@@ -5,7 +5,7 @@ import java.lang.management.RuntimeMXBean;
 import java.util.List;
 import java.util.logging.Level;
 
-import com.hazelcast.elasticmemory.EnterpriseRecordFactory;
+import com.hazelcast.elasticmemory.ElasticRecordFactory;
 import com.hazelcast.elasticmemory.storage.OffHeapStorage;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.elasticmemory.util.MathUtil;
@@ -132,7 +132,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
     }
 	
 	public RecordFactory getRecordFactory() {
-		return new EnterpriseRecordFactory(storage, simpleRecord); 
+		return new ElasticRecordFactory(storage, simpleRecord); 
 	}
 	
 	public SecurityContext getSecurityContext() {
