@@ -59,7 +59,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		securityEnabled = node.getConfig().getSecurityConfig().isEnabled();
 		
 		simpleRecord = node.groupProperties.CONCURRENT_MAP_SIMPLE_RECORD.getBoolean();
-		if(isOffHeapEnabled()) {
+		if(node.groupProperties.ELASTIC_MEMORY_ENABLED.getBoolean()) {
 			systemLogger.log(Level.INFO, "Initializing node off-heap store...");
 			
 			final MemorySize jvmSize = getJvmDirectMemorySize();
@@ -163,10 +163,6 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		return null;
 	}
 	
-	private boolean isOffHeapEnabled() {
-		return node.groupProperties.ELASTIC_MEMORY_ENABLED.getBoolean();
-	}
-
 	public Storage getOffHeapStorage() {
 		return storage;
 	}
