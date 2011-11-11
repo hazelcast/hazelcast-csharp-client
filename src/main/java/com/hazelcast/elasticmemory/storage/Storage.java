@@ -11,4 +11,6 @@ public interface Storage {
 	byte[] get(int hash, EntryRef entry);
 	
 	void remove(int hash, EntryRef entry);
+	
+	void destroy();
 }

@@ -37,4 +37,17 @@ abstract class OffHeapStorageSupport {
 		this.segmentSizeInMb = segmentSizeInMb;
 	}
 	
+	final void destroy(final Destroyable... destroyables) {
+		for (int i = 0; i < destroyables.length; i++) {
+			if(destroyables[i] != null) {
+				destroyables[i].destroy();
+				destroyables[i] = null;
+			}
+		}
+		System.gc();
+	}
+
+	interface Destroyable {
+		void destroy();
+	}
 }

@@ -40,15 +40,19 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 		getSegment(hash).remove(entry);
 	}
 	
-	private class StorageSegment extends ReentrantLock {
-		private final BufferSegment buffer;
+	public void destroy() {
+		destroy(segments);
+	}
+	
+	private class StorageSegment extends ReentrantLock implements Destroyable {
+		private BufferSegment buffer;
 
 		StorageSegment(int totalSizeInMb, int chunkSizeInKb) {
 			super();
 			buffer = new BufferSegment(totalSizeInMb, chunkSizeInKb);
 		}
 
-		public EntryRef put(final byte[] value) {
+		EntryRef put(final byte[] value) {
 			lock();
 			try {
 				return buffer.put(value);
@@ -57,7 +61,7 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 			}
 		}
 
-		public byte[] get(final EntryRef entry) {
+		byte[] get(final EntryRef entry) {
 			lock();
 			try {
 				return buffer.get(entry);
@@ -66,12 +70,19 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 			}
 		}
 		
-		public void remove(final EntryRef entry) {
+		void remove(final EntryRef entry) {
 			lock();
 			try {
 				buffer.remove(entry);
 			} finally {
 				unlock();
+			}
+		}
+		
+		public void destroy() {
+			if(buffer != null) {
+				buffer.destroy();
+				buffer = null;
 			}
 		}
 	}

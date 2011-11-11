@@ -41,9 +41,13 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 		return segments[(hash == Integer.MIN_VALUE) ? 0 : Math.abs(hash) % segmentCount];
 	}
 	
-	private class StorageSegment<K> extends ReentrantLock {
+	public void destroy() {
+		destroy(segments);
+	}
+	
+	private class StorageSegment<K> extends ReentrantLock implements Destroyable {
 		
-		private final BufferSegment buffer;
+		private BufferSegment buffer;
 		private final Map<K, EntryRef> space;
 
 		StorageSegment(int totalSizeInMb, int chunkSizeInKb) {
@@ -52,7 +56,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 			buffer = new BufferSegment(totalSizeInMb, chunkSizeInKb);
 		}
 
-		public void put(final K key, final byte[] value) {
+		void put(final K key, final byte[] value) {
 			lock();
 			try {
 				remove0(key);
@@ -63,7 +67,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 			}
 		}
 
-		public byte[] get(final K key) {
+		byte[] get(final K key) {
 			lock();
 			try {
 				final EntryRef ref = space.get(key);
@@ -77,7 +81,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 			}
 		}
 		
-		public void remove(final K key) {
+		void remove(final K key) {
 			lock();
 			try {
 				remove0(key);
@@ -89,6 +93,14 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 		private void remove0(final K key) {
 			final EntryRef ref = space.remove(key);
 			buffer.remove(ref);
+		}
+		
+		public void destroy() {
+			if(buffer != null) {
+				buffer.destroy();
+				buffer = null;
+			}
+			space.clear();
 		}
 	}
 }

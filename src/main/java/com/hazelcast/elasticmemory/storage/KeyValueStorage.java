@@ -8,4 +8,5 @@ public interface KeyValueStorage<K> {
 	
 	void remove(K key);
 	
+	void destroy();
 }

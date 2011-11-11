@@ -73,7 +73,6 @@ public final class SimpleOffHeapRecord extends AbstractSimpleRecord implements R
 	}
 	
 	private Storage getStorage() {
-		EnterpriseNodeInitializer initializer = (EnterpriseNodeInitializer) getNode().initializer;
-		return initializer.getOffHeapStorage();
+		return ((EnterpriseNodeInitializer) cmap.getNode().initializer).getOffHeapStorage();
 	}
 }

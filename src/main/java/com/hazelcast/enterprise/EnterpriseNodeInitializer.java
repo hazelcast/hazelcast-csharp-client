@@ -60,7 +60,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		
 		simpleRecord = node.groupProperties.CONCURRENT_MAP_SIMPLE_RECORD.getBoolean();
 		if(node.groupProperties.ELASTIC_MEMORY_ENABLED.getBoolean()) {
-			systemLogger.log(Level.INFO, "Initializing node off-heap store...");
+			logger.log(Level.INFO, "Initializing node off-heap storage.");
 			
 			final MemorySize jvmSize = getJvmDirectMemorySize();
 			if(jvmSize == null) {
@@ -165,5 +165,15 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 	
 	public Storage getOffHeapStorage() {
 		return storage;
+	}
+	
+	public void destroy() {
+		logger.log(Level.INFO, "Destroying node initializer.");
+		registration = null;
+		if(storage != null) {
+			logger.log(Level.INFO, "Destroying node off-heap storage.");
+			storage.destroy();
+			storage = null;
+		}
 	}
 }

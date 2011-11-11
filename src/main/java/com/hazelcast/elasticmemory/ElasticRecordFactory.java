@@ -25,7 +25,7 @@ public class ElasticRecordFactory extends DefaultRecordFactory implements Record
 
 	public Record createNewRecord(CMap cmap, int blockId, Data key, Data value,
 			long ttl, long maxIdleMillis, long id) {
-		if(isOffHeapEnabled(cmap.getMapConfig())) {
+		if(isOffHeapRecord(cmap.getMapConfig())) {
 			if(simple) {
 				return new SimpleOffHeapRecord(cmap, blockId, key, value, id);
 			}
@@ -35,18 +35,19 @@ public class ElasticRecordFactory extends DefaultRecordFactory implements Record
 	}
 
 	public NearCacheRecord createNewNearCacheRecord(CMap cmap, Data key, Data value) {
-		if(isOffHeapEnabled(cmap.getMapConfig())) {
+		if(isOffHeapRecord(cmap.getMapConfig())) {
 			return new OffHeapNearCacheRecord(storage, key, value);
 		} 
 		return super.createNewNearCacheRecord(cmap, key, value);
 	}
 	
-	private boolean isOffHeapEnabled(MapConfig mapConfig) {
-		final boolean offHeapMap = mapConfig.getStorageType() == StorageType.OFFHEAP;
+	private boolean isOffHeapRecord(MapConfig mapConfig) {
+		final StorageType storageType = mapConfig.getStorageType();
+		final boolean offHeapMap = storageType == StorageType.OFFHEAP;
 		if(!offheapEnabled && offHeapMap) {
 			throw new OffHeapError("Hazelcast Elastic Memory is not enabled! (Set '" 
 					+ GroupProperties.PROP_ELASTIC_MEMORY_ENABLED + "' to true.)");
 		}
-		return offheapEnabled && offHeapMap;
+		return offheapEnabled && (storageType == null || offHeapMap);
 	}
 }
