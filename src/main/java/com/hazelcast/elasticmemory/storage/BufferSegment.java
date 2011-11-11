@@ -23,8 +23,8 @@ public class BufferSegment {
 	private final int totalSize;
 	private final int chunkSize;
 	private final int chunkCount;
-	private final AddressQueue chunks;
-	private final ByteBuffer buffer;
+	private AddressQueue chunks;
+	private ByteBuffer buffer;
 
 	public BufferSegment(int totalSizeInMb, int chunkSizeInKb) {
 		super();
@@ -102,6 +102,11 @@ public class BufferSegment {
 		if(!condition) {
 			throw new AssertionError(message);
 		}
+	}
+	
+	public void destroy() {
+		buffer = null;
+		chunks = null;
 	}
 
 	private class AddressQueue {
