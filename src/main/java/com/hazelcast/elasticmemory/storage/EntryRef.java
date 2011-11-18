@@ -6,6 +6,8 @@ package com.hazelcast.elasticmemory.storage;
  
 public class EntryRef {
 	
+	public static final EntryRef EMPTY_DATA_REF = new EntryRef(null, 0);
+	
 	public final int length;
 	private final int[] chunks;
 	private /*volatile*/ boolean valid = true;

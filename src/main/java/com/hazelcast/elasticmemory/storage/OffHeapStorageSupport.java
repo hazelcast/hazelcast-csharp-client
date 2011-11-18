@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
-abstract class OffHeapStorageSupport {
+public abstract class OffHeapStorageSupport {
 	
 	protected static final int MAX_SEGMENT_SIZE_IN_MB = 1024;
 
@@ -37,7 +37,7 @@ abstract class OffHeapStorageSupport {
 		this.segmentSizeInMb = segmentSizeInMb;
 	}
 	
-	final void destroy(final Destroyable... destroyables) {
+	protected final void destroy(final Destroyable... destroyables) {
 		for (int i = 0; i < destroyables.length; i++) {
 			if(destroyables[i] != null) {
 				destroyables[i].destroy();
@@ -47,7 +47,7 @@ abstract class OffHeapStorageSupport {
 		System.gc();
 	}
 
-	interface Destroyable {
+	protected interface Destroyable {
 		void destroy();
 	}
 }

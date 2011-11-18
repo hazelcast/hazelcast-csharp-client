@@ -1,10 +1,15 @@
-package com.hazelcast.elasticmemory.storage;
+package com.hazelcast.elasticmemory.storage.kv;
 
 import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.hazelcast.elasticmemory.storage.BufferSegment;
+import com.hazelcast.elasticmemory.storage.EntryRef;
+import com.hazelcast.elasticmemory.storage.OffHeapStorageSupport;
+import com.hazelcast.elasticmemory.storage.Storage;
 
 
 public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements KeyValueStorage<K> {

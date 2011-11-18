@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.config.*;
@@ -21,6 +22,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.IMap;
 
+@RunWith(com.hazelcast.util.RandomBlockJUnit4ClassRunner.class)
 public class ClientSecurityTest {
 
 	@Before

@@ -1,16 +1,12 @@
 package com.hazelcast.enterprise;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.util.List;
 import java.util.logging.Level;
 
 import com.hazelcast.elasticmemory.ElasticRecordFactory;
-import com.hazelcast.elasticmemory.storage.OffHeapStorage;
+import com.hazelcast.elasticmemory.storage.NodeStorageFactory;
+import com.hazelcast.elasticmemory.storage.SingletonStorageFactory;
 import com.hazelcast.elasticmemory.storage.Storage;
-import com.hazelcast.elasticmemory.util.MathUtil;
-import com.hazelcast.elasticmemory.util.MemorySize;
-import com.hazelcast.elasticmemory.util.MemoryUnit;
+import com.hazelcast.elasticmemory.storage.StorageFactory;
 import com.hazelcast.enterprise.Registration.Mode;
 import com.hazelcast.impl.DefaultProxyFactory;
 import com.hazelcast.impl.Node;
@@ -24,8 +20,7 @@ import com.hazelcast.security.impl.SecureProxyFactory;
 
 public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements NodeInitializer {
 	
-	private static final String MAX_DIRECT_MEMORY_PARAM = "-XX:MaxDirectMemorySize";
-	
+	private StorageFactory storageFactory;
 	private Storage storage ;
 	private Registration registration;
 	private SecurityContext securityContext;
@@ -59,56 +54,16 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		securityEnabled = node.getConfig().getSecurityConfig().isEnabled();
 		
 		simpleRecord = node.groupProperties.CONCURRENT_MAP_SIMPLE_RECORD.getBoolean();
+		if(node.groupProperties.ELASTIC_MEMORY_SHARED_STORAGE.getBoolean()) {
+			logger.log(Level.WARNING, "Using SingletonStorageFactory for Hazelcast Elastic Memory...");
+			storageFactory = new SingletonStorageFactory();
+		} else {
+			storageFactory = new NodeStorageFactory(node);
+		}
+		
 		if(node.groupProperties.ELASTIC_MEMORY_ENABLED.getBoolean()) {
 			logger.log(Level.INFO, "Initializing node off-heap storage.");
-			
-			final MemorySize jvmSize = getJvmDirectMemorySize();
-			if(jvmSize == null) {
-				throw new IllegalArgumentException("JVM max direct memory size argument (" + 
-						MAX_DIRECT_MEMORY_PARAM + ") should be configured in order to use " +
-						"Hazelcast Elastic Memory! " +
-						"(Ex: java " + MAX_DIRECT_MEMORY_PARAM + "=1G -Xmx1G -cp ...)");
-			}
-			
-			String total = node.groupProperties.ELASTIC_MEMORY_TOTAL_SIZE.getValue();
-			logger.log(Level.FINEST, "Read " + node.groupProperties.ELASTIC_MEMORY_TOTAL_SIZE.getName() + " as: " + total);
-	        String chunk = node.groupProperties.ELASTIC_MEMORY_CHUNK_SIZE.getValue();
-	        logger.log(Level.FINEST, "Read " + node.groupProperties.ELASTIC_MEMORY_CHUNK_SIZE.getName() + " as: " + chunk);
-	        final MemorySize totalSize = MemorySize.parse(total, MemoryUnit.MEGABYTES);
-	        final MemorySize chunkSize = MemorySize.parse(chunk, MemoryUnit.KILOBYTES);
-	        
-	        checkOffHeapParams(jvmSize, totalSize, chunkSize);
-	        
-	        logger.log(Level.INFO, "Elastic-Memory off-heap storage total size: " + totalSize.megaBytes() + " MB");
-	        logger.log(Level.INFO, "Elastic-Memory off-heap storage chunk size: " + chunkSize.kiloBytes() + " KB");
-	        storage = new OffHeapStorage((int) totalSize.megaBytes(), (int) chunkSize.kiloBytes());
-		}
-	}
-	
-	private void checkOffHeapParams(MemorySize jvm, MemorySize total, MemorySize chunk) {
-		if(jvm.megaBytes() == 0) {
-			throw new IllegalArgumentException(MAX_DIRECT_MEMORY_PARAM + " must be multitude of megabytes! (Current: " 
-					+ jvm.bytes() + " bytes)");
-		}
-		if(total.megaBytes() == 0) {
-			throw new IllegalArgumentException("Elastic Memory total size must be multitude of megabytes! (Current: " 
-					+ total.bytes() + " bytes)");
-		}
-		if(total.megaBytes() > jvm.megaBytes()) {
-			throw new IllegalArgumentException(MAX_DIRECT_MEMORY_PARAM + " must be greater than or equal to Elastic Memory total size => " 
-					+ MAX_DIRECT_MEMORY_PARAM + ": " + jvm.megaBytes() + " megabytes, Total: " + total.megaBytes() + " megabytes");
-		}
-		if(chunk.kiloBytes() == 0) {
-			throw new IllegalArgumentException("Elastic Memory chunk size must be multitude of kilobytes! (Current: " 
-					+ chunk.bytes() + " bytes)");
-		}
-		if(total.bytes() <= chunk.bytes()) {
-			throw new IllegalArgumentException("Elastic Memory total size must be greater than chunk size => " 
-					+ "Total: " + total.bytes() + " bytes, Chunk: " + chunk.bytes() + " bytes");
-		}
-		if(!MathUtil.isPowerOf2(chunk.kiloBytes())) {
-			throw new IllegalArgumentException("Elastic Memory chunk size must be power of 2 in kilobytes! (Current: " 
-					+ chunk.kiloBytes() + " kilobytes)");
+	        storage = storageFactory.createStorage();
 		}
 	}
 	
@@ -146,32 +101,15 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 		return registration != null && registration.isValid();
 	}
 
-	private MemorySize getJvmDirectMemorySize() {
-		RuntimeMXBean rmx = ManagementFactory.getRuntimeMXBean();
-		List<String> args = rmx.getInputArguments();
-		for (String arg : args) {
-			if(arg.startsWith(MAX_DIRECT_MEMORY_PARAM)) {
-				logger.log(Level.FINEST, "Read JVM " + MAX_DIRECT_MEMORY_PARAM + " as: " + arg);
-				String[] tmp = arg.split("\\=");
-				if(tmp.length == 2) {
-					final String value = tmp[1];
-					return MemorySize.parse(value);
-				}
-				break;
-			}
-		}
-		return null;
-	}
-	
 	public Storage getOffHeapStorage() {
 		return storage;
 	}
 	
 	public void destroy() {
-		logger.log(Level.INFO, "Destroying node initializer.");
+		super.destroy();
 		registration = null;
 		if(storage != null) {
-			logger.log(Level.INFO, "Destroying node off-heap storage.");
+			logger.log(Level.FINEST, "Destroying node off-heap storage.");
 			storage.destroy();
 			storage = null;
 		}

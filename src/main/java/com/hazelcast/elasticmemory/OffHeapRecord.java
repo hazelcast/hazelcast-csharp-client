@@ -101,4 +101,8 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
 	private Storage getStorage() {
 		return ((EnterpriseNodeInitializer) cmap.getNode().initializer).getOffHeapStorage();
 	}
+	
+	public void invalidate() {
+		OffHeapRecordHelper.removeValue(key, entryRef, getStorage());
+	}
 }

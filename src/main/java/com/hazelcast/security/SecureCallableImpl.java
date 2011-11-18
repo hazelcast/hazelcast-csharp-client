@@ -20,6 +20,7 @@ import javax.security.auth.Subject;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.*;
 import com.hazelcast.impl.Node;
+import com.hazelcast.impl.Util;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.nio.DataSerializable;
 import com.hazelcast.nio.SerializationHelper;
@@ -247,10 +248,8 @@ public final class SecureCallableImpl<V> implements SecureCallable<V>, DataSeria
 			}
 			return createInstanceProxy(instance);
 		} catch (Exception e) {
-			if(e instanceof RuntimeException) {
-				throw (RuntimeException) e;
-			}
-			throw new RuntimeException(e);
+			Util.throwUncheckedException(e);
+			return null;
 		}
 	}
 	
