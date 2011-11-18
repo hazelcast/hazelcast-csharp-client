@@ -2,18 +2,20 @@ package com.hazelcast.elasticmemory;
 
 import com.hazelcast.elasticmemory.storage.EntryRef;
 import com.hazelcast.elasticmemory.storage.Storage;
+import com.hazelcast.impl.Constants;
 import com.hazelcast.nio.Data;
 
 final class OffHeapRecordHelper {
 
-	private static final Data EMPTY_DATA = new Data();
-
 	static EntryRef setValue(final Data key, final EntryRef oldEntryRef, final Data value, final Storage storage) {
+		if(storage == null) {
+			return null;
+		}
 		removeValue(key, oldEntryRef, storage);
-    	if(storage == null) {
-    		return null;
-    	}
-        if(value != null && value.buffer != null) {
+        if(value != null) {
+        	if(value.buffer == null || value.buffer.length == 0) {
+        		return EntryRef.EMPTY_DATA_REF;
+        	}
         	return storage.put(key.getPartitionHash(), value.buffer);
         }
         return null;
@@ -29,13 +31,16 @@ final class OffHeapRecordHelper {
     }
 	
 	static Data getValue(final Data key, final EntryRef entryRef, final Storage storage) {
+		if(entryRef == EntryRef.EMPTY_DATA_REF) {
+			return Constants.IO.EMPTY_DATA;
+		}
 		if (entryRef != null && entryRef.length > 0 && storage != null) {
 			final byte[] data = storage.get(key.getPartitionHash(), entryRef);
 			if (data != null && data.length > 0) {
 				return new Data(data);
 			}
 		}
-		return EMPTY_DATA;
+		return null;
 	}
 	
 	private OffHeapRecordHelper() {}

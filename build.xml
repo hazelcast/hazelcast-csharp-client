@@ -10,15 +10,14 @@
 		<echo message="add-trial-notice: Add trial licence.txt." />
 		<echo message="javadoc: Build javadoc." />
 		<echo message="release: Release Enterprise edition to ${release.dir}" />
-		<echo message="test-only: clean, merge, change-version, test-only" />
-		<echo message="test: clean, merge, change-version, test" />
+		<echo message="run-test: To run single test" />
+		<echo message="test: To run single test: clean, merge, change-version, run-test" />
+		<echo message="test-all: To run all tests: clean, merge, change-version, test" />
 		<echo message="all: clean, merge, license-cleanup, change-version, add-trial-notice, javadoc, release" />
 	</target>
 
 	<target name="clean">
-		<delete includeemptydirs="true" failonerror="no">
-			<fileset dir="${release.dir}" />
-		</delete>
+		<delete includeemptydirs="true" failonerror="no" dir="${release.dir}" />
 	</target>
 
 	<target name="merge">
@@ -76,24 +75,29 @@
 
 	<target name="all" depends="clean, merge, license-cleanup, change-version, add-trial-notice, javadoc, release" />
 	
-	<target name="test-only" depends="clean, merge, change-version" if="test">
+	<target name="run-test" depends="merge" if="test">
 		<echo message="Running test for === ${test}"  />
 		<exec dir="${release.dir}/hazelcast" executable="mvn">
+			<arg value="-e"/>
 			<arg value="test" />
-			<arg value="-P all" />
+			<arg value="-P elastic" />
 			<arg value="-Dtest=${test}" />
 			<arg value="-Dhazelcast.elastic.memory.enabled=true" />
-			<arg value="-Dhazelcast.elastic.memory.total.size=256m" />
+			<arg value="-Dhazelcast.elastic.memory.shared.storage=true" />
+			<arg value="-Dhazelcast.elastic.memory.total.size=1024m" />
 			<arg value="-Dhazelcast.elastic.memory.chunk.size=1k" />
 		</exec>
 	</target>
 	
-	<target name="test" depends="clean, merge, change-version">
+	<target name="test" depends="clean, merge, change-version, run-test" if="test" />
+	
+	<target name="test-all" depends="clean, merge, change-version">
 		<exec dir="${release.dir}/hazelcast" executable="mvn">
 			<arg value="test" />
-			<arg value="-P all" />
+			<arg value="-P elastic" />
 			<arg value="-Dhazelcast.elastic.memory.enabled=true" />
-			<arg value="-Dhazelcast.elastic.memory.total.size=256m" />
+			<arg value="-Dhazelcast.elastic.memory.shared.storage=true" />
+			<arg value="-Dhazelcast.elastic.memory.total.size=1024m" />
 			<arg value="-Dhazelcast.elastic.memory.chunk.size=1k" />
 		</exec>
 	</target>

@@ -47,8 +47,8 @@ public class BufferSegment {
 	}
 
 	public EntryRef put(final byte[] value) {
-		if (value.length == 0) {
-			return null;
+		if (value == null || value.length == 0) {
+			return EntryRef.EMPTY_DATA_REF;
 		}
 
 		final int count = divideByAndCeil(value.length, chunkSize);

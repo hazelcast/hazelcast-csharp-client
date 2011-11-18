@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.junit.*;
+import org.junit.runner.RunWith;
 
 import com.hazelcast.config.*;
 import com.hazelcast.core.*;
 
+@RunWith(com.hazelcast.util.RandomBlockJUnit4ClassRunner.class)
 public class MemberSecurityTest {
 
 	@Before
