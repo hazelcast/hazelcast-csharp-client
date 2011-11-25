@@ -2,6 +2,7 @@ package com.hazelcast.elasticmemory.storage;
 
 import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
+import java.io.Closeable;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
@@ -44,7 +45,7 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 		destroy(segments);
 	}
 	
-	private class StorageSegment extends ReentrantLock implements Destroyable {
+	private class StorageSegment extends ReentrantLock implements Closeable {
 		private BufferSegment buffer;
 
 		StorageSegment(int totalSizeInMb, int chunkSizeInKb) {
@@ -79,7 +80,7 @@ public class OffHeapStorage extends OffHeapStorageSupport implements Storage {
 			}
 		}
 		
-		public void destroy() {
+		public void close() {
 			if(buffer != null) {
 				buffer.destroy();
 				buffer = null;

@@ -2,6 +2,7 @@ package com.hazelcast.elasticmemory.storage.kv;
 
 import static com.hazelcast.elasticmemory.util.MathUtil.*;
 
+import java.io.Closeable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
@@ -10,7 +11,6 @@ import com.hazelcast.elasticmemory.storage.BufferSegment;
 import com.hazelcast.elasticmemory.storage.EntryRef;
 import com.hazelcast.elasticmemory.storage.OffHeapStorageSupport;
 import com.hazelcast.elasticmemory.storage.Storage;
-
 
 public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements KeyValueStorage<K> {
 	
@@ -50,7 +50,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 		destroy(segments);
 	}
 	
-	private class StorageSegment<K> extends ReentrantLock implements Destroyable {
+	private class StorageSegment<K> extends ReentrantLock implements Closeable {
 		
 		private BufferSegment buffer;
 		private final Map<K, EntryRef> space;
@@ -100,7 +100,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 			buffer.remove(ref);
 		}
 		
-		public void destroy() {
+		public void close() {
 			if(buffer != null) {
 				buffer.destroy();
 				buffer = null;

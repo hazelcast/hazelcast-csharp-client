@@ -51,6 +51,9 @@ public class SingletonStorageFactory extends StorageFactorySupport implements St
 
 	private static void initStorage() {
 		synchronized (MUTEX) {
+			if(STORAGE != null) {
+				throw new IllegalStateException("Storage is already initialized!");
+			}
 			final String total = System.getProperty(GroupProperties.PROP_ELASTIC_MEMORY_TOTAL_SIZE);
 			final String chunk = System.getProperty(GroupProperties.PROP_ELASTIC_MEMORY_CHUNK_SIZE);
 			if (total == null || chunk == null) {
