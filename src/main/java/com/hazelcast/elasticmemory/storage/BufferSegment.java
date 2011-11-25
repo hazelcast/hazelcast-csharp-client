@@ -34,7 +34,7 @@ public class BufferSegment {
 		assertTrue((totalSize % chunkSize == 0), "Segment size[" + totalSizeInMb 
 					+ " MB] must be multitude of chunk size["+ chunkSizeInKb + " KB]!");
 		
-		int index = nextId();
+		final int index = nextId();
 		this.chunkCount = totalSize / chunkSize;
 		logger.log(Level.FINEST, "BufferSegment[" + index + "] starting with chunkCount=" + chunkCount);
 
@@ -149,7 +149,7 @@ public class BufferSegment {
 		
 		public int[] poll(final int count) {
 			if(count > size) {
-				throwOutOfMemoryError("Segment has " + size + " available chunks. " +
+				throw new OffHeapOutOfMemoryError("Segment has " + size + " available chunks. " +
 						"Data requires " + count + " chunks. Segment is full!");
 			}
 			
@@ -159,9 +159,5 @@ public class BufferSegment {
 			}
 			return result;
 		}
-	}
-	
-	static void throwOutOfMemoryError(String error) {
-		throw new OffHeapOutOfMemoryError(error);
 	}
 }
