@@ -60,7 +60,7 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
     }
     
     public void setValue(Data value) {
-    	invalidateValueCache();
+//    	invalidateValueCache();
     	entryRef = OffHeapRecordHelper.setValue(key, entryRef, value, getStorage());
     }
 
@@ -77,9 +77,10 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
     public long getCost() {
         long cost = 0;
         // avoid race condition with local references
+        final EntryRef entry = entryRef;
         final Data dataKey = getKeyData();
-        if (hasValueData()) {
-            cost = entryRef.length;
+        if (entry != null) { // hasValueData()
+            cost = entry.length;
         } else if (getMultiValues() != null && getMultiValues().size() > 0) {
             for (Data data : getMultiValues()) {
                 if (data != null) {
