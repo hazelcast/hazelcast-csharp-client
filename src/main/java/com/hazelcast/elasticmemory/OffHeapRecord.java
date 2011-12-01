@@ -9,6 +9,7 @@ import com.hazelcast.impl.AbstractRecord;
 import com.hazelcast.impl.CMap;
 import com.hazelcast.impl.Record;
 import com.hazelcast.impl.base.DistributedLock;
+import com.hazelcast.impl.concurrentmap.ValueHolder;
 import com.hazelcast.nio.Data;
 
 public final class OffHeapRecord extends AbstractRecord implements Record {
@@ -82,9 +83,9 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
         if (entry != null) { // hasValueData()
             cost = entry.length;
         } else if (getMultiValues() != null && getMultiValues().size() > 0) {
-            for (Data data : getMultiValues()) {
-                if (data != null) {
-                    cost += data.size();
+        	for (ValueHolder valueHolder : getMultiValues()) {
+                if (valueHolder != null) {
+                    cost += valueHolder.getData().size();
                 }
             }
         }
