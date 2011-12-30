@@ -41,7 +41,7 @@ namespace Hazelcast.Client
 		}
 		
 		public string getName() {
-			return name;
+			return name.Substring(2);
 		}
 		
 		public Object tryRemove(K key, long timeout){
