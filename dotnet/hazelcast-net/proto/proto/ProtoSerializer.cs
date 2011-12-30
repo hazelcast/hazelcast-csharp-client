@@ -6,6 +6,7 @@ namespace Hazelcast.Client.IO
 {
 	public class ProtoSerializer: ITypeSerializer
 	{
+		//comment
 		private StringSerializer stringSerializer = new StringSerializer();
 		public ProtoSerializer ()
 		{
