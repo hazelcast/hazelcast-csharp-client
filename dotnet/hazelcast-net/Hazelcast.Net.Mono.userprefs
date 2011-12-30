@@ -1,0 +1,37 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="proto/proto/ProtoSerializer.cs">
+    <Files>
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/EntryListenerManager.cs" Line="77" Column="24" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/Call.cs" Line="4" Column="37" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/IOUtil.cs" Line="10" Column="32" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/OutThread.cs" Line="9" Column="19" />
+      <File FileName="proto/proto/ProtoSerializer.cs" Line="7" Column="39" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="Hazelcast.Client" expanded="True" selected="True">
+            <Node name="Core" expanded="True" />
+            <Node name="Examples" expanded="True" />
+            <Node name="Impl" expanded="True" />
+            <Node name="IO" expanded="True" />
+          </Node>
+          <Node name="Hazelcast.Client.Tests" expanded="True">
+            <Node name="References" expanded="True" />
+          </Node>
+          <Node name="proto" expanded="True" />
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore>
+      <Breakpoint file="/Users/malikov/Documents/dotnet/hazelcast-net/src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/IOUtil.cs" line="22" />
+    </BreakpointStore>
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
