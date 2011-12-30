@@ -9,7 +9,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Hazelcast.Client.Tests</RootNamespace>
     <AssemblyName>Hazelcast.Client.Tests</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,7 +34,14 @@
     <Reference Include="nunit.framework, Version=2.4.8.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Test.cs" />
+    <Compile Include="MapTest.cs" />
+    <Compile Include="PerformanceTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Hazelcast\Hazelcast.Client\Hazelcast.Client\Hazelcast.Client.csproj">
+      <Project>{CD084DC3-3FD9-4BC2-B9A2-66711F2B3F61}</Project>
+      <Name>Hazelcast.Client</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

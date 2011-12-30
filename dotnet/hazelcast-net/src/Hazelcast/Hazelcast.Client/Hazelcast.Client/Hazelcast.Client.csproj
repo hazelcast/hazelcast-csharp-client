@@ -88,6 +88,7 @@
     <Compile Include="Core\ClusterOperation.cs" />
     <Compile Include="Impl\CollectionWrapper.cs" />
     <Compile Include="Impl\BlockingQueue.cs" />
+    <Compile Include="Examples\PerformanceTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
