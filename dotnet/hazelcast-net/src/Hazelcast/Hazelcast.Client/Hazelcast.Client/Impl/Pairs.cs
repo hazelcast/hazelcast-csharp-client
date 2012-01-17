@@ -3,37 +3,45 @@ using System.IO;
 using System.Net;
 using System.Collections.Generic;
 using Hazelcast.Impl.Base;
-using Hazelcast.Client.IO;
+using Hazelcast.IO;
 
 namespace Hazelcast.Impl.Base 
 {
 	public class Pairs: DataSerializable
 	{
-		public List<KeyValue> lsKeyValues = null;
+		public List<KeyValue> lsKeyValues = new List<KeyValue>();
 		public Pairs ()
 		{
 		}
 		
-		public void writeData(BinaryWriter writer){
+		public void writeData(IDataOutput dout){
 			int size = (lsKeyValues == null)?0: lsKeyValues.Count;	
-			writer.Write(IPAddress.HostToNetworkOrder(size) );
+			dout.writeInt(size);
 			if(size > 0){
 				foreach(KeyValue kv in lsKeyValues){
-					kv.writeData(writer);
+					kv.writeData(dout);
 				}
 			}
 		}
 
-   		public void readData(BinaryReader reader){
-			int size = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
+   		public void readData(IDataInput din){
+			int size = din.readInt();
 			if(lsKeyValues==null){
 				lsKeyValues = new List<KeyValue>();
 			}
 			for(int i=0;i<size;i++){
 				KeyValue kv = new KeyValue();
-				kv.readData(reader);
+				kv.readData(din);
 				lsKeyValues.Add(kv);
 			}
+		}
+		
+		public void addKeyValue(KeyValue kv){
+			lsKeyValues.Add(kv);	
+		}
+		
+		public String javaClassName(){
+			return "com.hazelcast.impl.base.Pairs";
 		}
 	}
 }
