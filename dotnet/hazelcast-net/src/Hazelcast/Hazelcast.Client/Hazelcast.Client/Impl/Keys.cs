@@ -17,23 +17,27 @@ namespace Hazelcast.Impl
 			
 		}
 		
-		public void writeData(BinaryWriter writer){
+		public void writeData(IDataOutput dout){
 			int size = (keys == null)?0: keys.Count;	
-			writer.Write(IPAddress.HostToNetworkOrder(size) );
+			dout.writeInt(size);
 			if(size > 0){
 				foreach(Data key in keys){
-					key.writeData(writer);
+					key.writeData(dout);
 				}
 			}
 		}
 
-   		public void readData(BinaryReader reader){
-			int size = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
+   		public void readData(IDataInput din){
+			int size = din.readInt();
 			for(int i=0;i<size;i++){
 				Data data = new Data();
-				data.readData(reader);
+				data.readData(din);
 				keys.Add(data);
 			}
+		}
+		
+		public String javaClassName(){
+			return "com.hazelcast.impl.Keys";
 		}
 		
 		public void Add(Data key){
