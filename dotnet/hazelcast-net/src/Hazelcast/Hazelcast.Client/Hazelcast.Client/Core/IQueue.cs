@@ -12,6 +12,8 @@ namespace Hazelcast.Client
     	bool offer(E e, long timeout);
     
     	E take();
+		
+		E Remove();
     
     	E poll(long timeout);
     
@@ -26,6 +28,10 @@ namespace Hazelcast.Client
    	 	E element();
     
     	E peek();
+		
+		
+		
+		bool addAll(System.Collections.Generic.ICollection<E> collection);
 	}
 }
 

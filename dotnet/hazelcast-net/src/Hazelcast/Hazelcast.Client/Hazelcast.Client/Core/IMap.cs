@@ -4,13 +4,15 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Client
 {
-	public interface IMap<K,V>
+	public interface IMap<K,V> : Instance
 	{
 		V put (K key, V value);
 		
 		V get (K key);
 		
 		V remove (object key);
+		
+		bool remove(Object arg0, Object arg1);
 		
 		/**
      * If this map has a MapStore and write-delay-seconds is
@@ -33,6 +35,8 @@ namespace Hazelcast.Client
      * @return map of entries
      */
 		Dictionary<K, V> getAll (HashSet<K> keys);
+		
+		void putAll(Dictionary<K, V> map);
 
 		/**
      * Asynchronously gets the given key.
@@ -284,25 +288,6 @@ namespace Hazelcast.Client
 		void unlockMap ();
 
 		/**
-     * Adds a local entry listener for this map. Added listener will be only
-     * listening for the events (add/remove/update/evict) of the locally owned entries.
-     * <p/>
-     * Note that entries in distributed map are partitioned across
-     * the cluster members; each member owns and manages the some portion of the
-     * entries. Owned entries are called local entries. This
-     * listener will be listening for the events of local entries. Let's say
-     * your cluster has member1 and member2. On member2 you added a local listener and from
-     * member1, you call <code>map.put(key2, value2)</code>.
-     * If the key2 is owned by member2 then the local listener will be
-     * notified for the add/update event. Also note that entries can migrate to
-     * other nodes for load balancing and/or membership change.
-     *
-     * @param listener entry listener
-     * @see #localKeySet()
-     */
-		//void addLocalEntryListener(EntryListener<K, V> listener);
-
-		/**
      * Adds an entry listener for this map. Listener will get notified
      * for all map add/remove/update/evict events.
      *
@@ -361,6 +346,8 @@ namespace Hazelcast.Client
      * @return <tt>true</tt> if the key is evicted, <tt>false</tt> otherwise.
      */
 		bool evict (object key);
+		
+		void clear();
 
 		/**
      * Queries the map based on the specified predicate and
@@ -383,7 +370,7 @@ namespace Hazelcast.Client
      * @return result entry set of the query
      */
 
-		//Set<Map.Entry<K, V>> entrySet(Predicate predicate);
+		IDictionary<K, V> entrySet(Hazelcast.Query.Predicate predicate);
 
 		/**
      * Queries the map based on the specified predicate and
@@ -395,36 +382,8 @@ namespace Hazelcast.Client
      * @return result value collection of the query
      */
 
-		//Collection<V> values(Predicate predicate);
+		System.Collections.Generic.ICollection<V> values(Hazelcast.Query.Predicate predicate);
 
-		/**
-     * Returns the locally owned set of keys.
-     * <p/>
-     * Each key in this map is owned and managed by a specific
-     * member in the cluster.
-     * <p/>
-     * Note that ownership of these keys might change over time
-     * so that key ownerships can be almost evenly distributed
-     * in the cluster.
-     *
-     * @return locally owned keys.
-     */
-		//System.Collections.Generic.SortedSet<K> localKeySet();
-
-		/**
-     * Returns the keys of matching locally owned entries.
-     * <p/>
-     * Each key in this map is owned and managed by a specific
-     * member in the cluster.
-     * <p/>
-     * Note that ownership of these keys might change over time
-     * so that key ownerships can be almost evenly distributed
-     * in the cluster.
-     *
-     * @param predicate query criteria
-     * @return keys of matching locally owned entries.
-     */
-		//Set<K> localKeySet(Predicate predicate);
 
 		/**
      * Adds an index to this map for the specified entries so
