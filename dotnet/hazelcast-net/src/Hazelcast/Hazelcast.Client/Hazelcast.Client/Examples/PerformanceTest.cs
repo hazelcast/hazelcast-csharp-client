@@ -35,9 +35,6 @@ namespace Hazelcast.Client.Tests
 			statThread.Start();
 		}
 		
-		
-		
-		
 		public void run() {
             while (true) {
                 int key = (int) (GetRandomNumber(0, ENTRY_COUNT));
