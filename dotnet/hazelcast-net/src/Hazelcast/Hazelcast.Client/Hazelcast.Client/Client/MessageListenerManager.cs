@@ -38,7 +38,7 @@ namespace Hazelcast.Client
 	        List<MessageListener<object>> list;
 	        if (messageListeners.TryGetValue(packet.name, out list)) {
 	            foreach (MessageListener<object> messageListener in list) {
-				messageListener.onMessage<object>(new DataMessage<object>(new Data(packet.key)));	
+					messageListener.onMessage<object>(new DataMessage<object>(new Data(packet.key)));	
 	            }
 	        }
 	    }

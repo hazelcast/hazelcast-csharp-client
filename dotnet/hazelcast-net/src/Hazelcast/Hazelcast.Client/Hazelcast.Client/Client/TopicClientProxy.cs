@@ -11,10 +11,10 @@ namespace Hazelcast.Client
 		private ProxyHelper proxyHelper;
 		private ListenerManager lManager;
 		
-		public TopicClientProxy (OutThread outThread, String name, ListenerManager listenerManager)
+		public TopicClientProxy (OutThread outThread, String name, ListenerManager listenerManager, HazelcastClient client)
 		{
 			this.name = name;
-			this.proxyHelper = new ProxyHelper(name, outThread, lManager);
+			this.proxyHelper = new ProxyHelper(name, outThread, lManager, client);
 			this.lManager = listenerManager;
 		}
 		

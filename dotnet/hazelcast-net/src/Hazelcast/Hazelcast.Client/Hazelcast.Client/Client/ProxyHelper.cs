@@ -1,33 +1,45 @@
 
 using System;
 using System.Threading;
+using System.Collections.Generic;
 using Hazelcast.Client.IO;
 using Hazelcast.Client.Impl;
+using Hazelcast.Impl;
 
 
 namespace Hazelcast.Client
 {
 	public class ProxyHelper
 	{
+		static long counter=0;
+		
 		String name;
 		OutThread outThread;
-		static long counter=0;
-		public ProxyHelper (String name, OutThread outThread, ListenerManager listenerManager)
+		HazelcastClient client;
+		
+		public ProxyHelper (String name, OutThread outThread, ListenerManager listenerManager, HazelcastClient client)
 		{
 			this.name = name;
 			this.outThread = outThread;
+			this.client = client;
 		}
 		
-		public Object doOp(ClusterOperation op, Object key, Object val)
+		public V doOp<V>(ClusterOperation op, Object key, Object val)
 		{
-			return this.doOp(op, key, val, 0);
+			Object o = this.doOp<V>(op, key, val, 0);
+			if(o==null)
+				return default(V);
+			return (V)o;
 		}
 		
-		public Object doOp(ClusterOperation op, Object key, Object val, long ttl)
+		public V doOp<V>(ClusterOperation op, Object key, Object val, long ttl)
 		{
 			Packet request = prepareRequest(op, key, val, ttl);
 			Packet response = callAndGetResult(request);
-			return getValue(response);
+			Object o = getValue(response);
+			if(o==null)
+				return default(V);
+			return (V)o;
 		}
 		
 		public Packet callAndGetResult(Packet packet)
@@ -37,10 +49,13 @@ namespace Hazelcast.Client
 		}
 		
 		public Object getValue(Packet response){
-			//Console.WriteLine("Bytes: " );
-			//printBytes(response.value);
 			return IOUtil.toObject(response.value);
 		}
+		
+		public void destroy() {
+        	doOp<object>(ClusterOperation.DESTROY, null, null);
+       	 	client.destroy(name);
+    	}
 		
 		private static void printBytes (byte[] bytes)
 		{
@@ -97,6 +112,18 @@ namespace Hazelcast.Client
 	        fireNForgetCall.FireNforget = true;
 	        outThread.enQueue(fireNForgetCall);
 	    }
+		
+		public System.Collections.Generic.IList<E> entries<E>(Hazelcast.Query.Predicate predicate) {
+ 			Keys keys = doOp<Keys>(ClusterOperation.CONCURRENT_MAP_ITERATE_ENTRIES, default(E), predicate);
+	     	
+			List<E> list = new List<E>();
+			for(int i=0;i<keys.Count();i++){
+				list.Add((E)IOUtil.toObject(keys.Get(i).Buffer));
+			}
+			
+			return list;
+   		
+		}
 		
 		//public static long newCallId() {
 		//	return Interlocked.Increment(ref counter);

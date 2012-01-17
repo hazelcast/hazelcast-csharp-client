@@ -5,44 +5,24 @@ using Hazelcast.Client.Impl;
 using Hazelcast.Core;
 using Hazelcast.Client.IO;
 using Hazelcast.IO;
+using Hazelcast.Impl;
 
 namespace Hazelcast.Client
 {
-	public class QueueClientProxy<E>:IQueue<E>
+	public class QueueClientProxy<E>:CollectionClientProxy<E>, IQueue<E>
 	{
-		private String name;
-		private ProxyHelper proxyHelper;
-		private ListenerManager lManager;
 		
-		
-		public QueueClientProxy (OutThread outThread, String name, ListenerManager listenerManager)
+		public QueueClientProxy (OutThread outThread, String name, ListenerManager listenerManager, HazelcastClient client):base(outThread, name, listenerManager, client)
 		{
-			this.name = name;
-			this.proxyHelper = new ProxyHelper(name, outThread, lManager);
-			this.lManager = listenerManager;
 		}
 		
-		public int Count {
-			get {
-				return size();
-			}
-		}
-		
-		public bool IsReadOnly {
-			get {
-				return false;
-			}
-		}
-		
-		public int size() {
-        	return (int) proxyHelper.doOp(ClusterOperation.BLOCKING_QUEUE_SIZE, null, null);
+		public override int size() {
+        	return proxyHelper.doOp<int>(ClusterOperation.BLOCKING_QUEUE_SIZE, null, null);
     	}
 		
-		public String getName(){
-			return name;
-		}
 		
-		public void Add(E e){
+		public override void Add(E e){
+			
 			innerOffer(e, 0);
 		}
 		
@@ -58,10 +38,11 @@ namespace Hazelcast.Client
 		}
 		
 		private bool innerOffer(E e, long millis) {
-        	return (bool) proxyHelper.doOp(ClusterOperation.BLOCKING_QUEUE_OFFER, e, millis);
+			checkNull(e);
+        	return proxyHelper.doOp<bool>(ClusterOperation.BLOCKING_QUEUE_OFFER, e, millis);
     	}
 		private E innerPoll(long millis) {
-        	return (E) proxyHelper.doOp(ClusterOperation.BLOCKING_QUEUE_POLL, null, millis);
+        	return proxyHelper.doOp<E>(ClusterOperation.BLOCKING_QUEUE_POLL, null, millis);
     	}
 		
 		public E take(){
@@ -77,24 +58,12 @@ namespace Hazelcast.Client
 		}
     
     	public int remainingCapacity(){
-			return (int) proxyHelper.doOp(ClusterOperation.BLOCKING_QUEUE_REMAINING_CAPACITY, null, null);	
+			return proxyHelper.doOp<int>(ClusterOperation.BLOCKING_QUEUE_REMAINING_CAPACITY, null, null);	
 		}
     
-    	public bool Remove(E e){
-			return (bool) proxyHelper.doOp(ClusterOperation.BLOCKING_QUEUE_REMOVE, null, e);
-		}
-		
-		
-    	public bool Contains(E e){
-			IEnumerator<E> enumerator = GetEnumerator();
-			bool found = false;
-			while(enumerator.MoveNext()){
-				found = enumerator.Current.Equals(e);
-				if(found){
-					break;
-				}
-			}	
-			return found;
+    	public override bool Remove(E e){
+			Console.WriteLine("Remove is called");
+			return proxyHelper.doOp<bool>(ClusterOperation.BLOCKING_QUEUE_REMOVE, null, e);
 		}
 	
     	public E Remove() {
@@ -113,13 +82,13 @@ namespace Hazelcast.Client
             	throw new Exception("No such element!");
     	}	
 		
-		public void Clear() {
+		public override void Clear() {
         	while (poll() != null)
             	;
     	}
     
     	public E peek(){
-			return (E) proxyHelper.doOp(ClusterOperation.BLOCKING_QUEUE_PEEK, null, null);
+			return proxyHelper.doOp<E>(ClusterOperation.BLOCKING_QUEUE_PEEK, null, null);
 		}
 		
 		public int drainTo(System.Collections.Generic.ICollection<E> collection){
@@ -135,37 +104,34 @@ namespace Hazelcast.Client
         	}
         	return counter;
 		}
+		
+		public bool addAll(System.Collections.Generic.ICollection<E> c) {
+       		if (c == null)
+            	throw new NullReferenceException();
+        	if (c == this)
+            	throw new Exception("Colllection is equal to this");
+        	bool modified = false;
+        	
+        	foreach(E e in c){
+            	if (offer(e))
+                	modified = true;
+        	}
+        	return modified;
+    	}
 
-		List<E> entries ()
+		public override System.Collections.Generic.IList<E> entries ()
 		{
-			Object[] dItems = (Object[]) proxyHelper.doOp(ClusterOperation.BLOCKING_QUEUE_ENTRIES, null, null);
-			     	List<E> entries = new List<E>();
-			     	foreach (Object entry in dItems) {
-			         	entries.Add((E)IOUtil.toObject(((Data)entry).Buffer));
-			     	}
-			return entries;
-		}
-		
-		public IEnumerator<E> GetEnumerator(){
-			List<E> es = entries ();
-			return es.GetEnumerator();
-		}
-		
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			List<E> es = entries ();
-				
-			return ((IEnumerable)es).GetEnumerator();			  
-		}
-		
-		public void CopyTo(E[] array, int arrayIndex){
-			IEnumerator<E> enumerator = GetEnumerator();
-			while(enumerator.MoveNext()){
-				array[arrayIndex++] = enumerator.Current;
+			Keys keys = proxyHelper.doOp<Keys>(ClusterOperation.BLOCKING_QUEUE_ENTRIES, null, null);
+	     	
+			List<E> list = new List<E>();
+			for(int i=0;i<keys.Count();i++){
+				list.Add((E)IOUtil.toObject(keys.Get(i).Buffer));
 			}
+			
+			return list;
 		}
-		
-		public void addItemListener(ItemListener<E> listener, bool includeValue){
+
+		public override void addItemListener(ItemListener<E> listener, bool includeValue){
 			lock(name){
 				bool shouldCall = listenerManager().noListenerRegistered(name);
             	listenerManager().registerListener(name, listener);
@@ -176,7 +142,7 @@ namespace Hazelcast.Client
 			}	
 		}
 			
-		public void removeItemListener(ItemListener<E> listener){
+		public override void removeItemListener(ItemListener<E> listener){
 			lock(name){
 				listenerManager().removeListener(name, listener);
             	Packet request = proxyHelper.createRequestPacket(ClusterOperation.REMOVE_LISTENER, null, null, -1);
@@ -188,6 +154,12 @@ namespace Hazelcast.Client
 		private QueueItemListenerManager listenerManager() {
         	return lManager.getQueueItemListenerManager();
     	}
+		
+		private void checkNull(E e){
+			if(e == null){
+				throw new NullReferenceException();
+			}
+		}
 		
 	}
 }

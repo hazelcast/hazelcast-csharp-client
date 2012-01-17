@@ -116,7 +116,7 @@ namespace Hazelcast.Client
             	if (holder.includeValue == includeValue) {
             		return false;
             	} else if (includeValue) {
-                	proxyHelper.doOp(ClusterOperation.REMOVE_LISTENER, key, null);
+                	proxyHelper.doOp<object>(ClusterOperation.REMOVE_LISTENER, key, null);
             	}
         	}
         	return true;

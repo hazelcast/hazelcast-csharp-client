@@ -32,6 +32,7 @@ namespace Hazelcast.Client.Impl
             	}
             	if (obj is Packet) {
                 	Packet packet = (Packet) obj;
+					Console.WriteLine("here is the event");
 					if(getInstanceType(packet.name).Equals(InstanceType.MAP)){
                 		entryListenerManager.notifyListeners(packet);
 					}else if(getInstanceType(packet.name).Equals(InstanceType.QUEUE)){
