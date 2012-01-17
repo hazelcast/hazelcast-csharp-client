@@ -36,6 +36,10 @@
   <ItemGroup>
     <Compile Include="MapTest.cs" />
     <Compile Include="PerformanceTest.cs" />
+    <Compile Include="QueueTest.cs" />
+    <Compile Include="SetTest.cs" />
+    <Compile Include="ListTest.cs" />
+    <Compile Include="HazelcastTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
