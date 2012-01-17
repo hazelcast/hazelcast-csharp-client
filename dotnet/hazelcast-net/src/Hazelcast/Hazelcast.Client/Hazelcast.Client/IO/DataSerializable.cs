@@ -1,12 +1,14 @@
 using System;
 using System.IO;
-namespace Hazelcast.Client.IO
+namespace Hazelcast.IO
 {
 	public interface DataSerializable
 	{
-		 void writeData(BinaryWriter writer);
+		 void writeData(IDataOutput dout);
 
-   		 void readData(BinaryReader reader);
+   		 void readData(IDataInput din);
+		
+		 String javaClassName();
 	}
 }
 

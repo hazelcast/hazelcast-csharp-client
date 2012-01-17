@@ -26,7 +26,11 @@ namespace Hazelcast.IO
 			set {
 				partitionHash = value;
 			}
-		}		
+		}	
+		
+		public String javaClassName(){
+			return null;
+		}
 		
 		
 		
@@ -41,26 +45,20 @@ namespace Hazelcast.IO
         	return (Buffer == null) ? 0 : Buffer.Length;
     	}
 		
-		public void writeData(BinaryWriter writer){
+		public void writeData(IDataOutput dout){
 			int s= size();
-			writer.Write(IPAddress.HostToNetworkOrder((int)s) );
+			dout.writeInt(s);
 			if(s > 0){
-				writer.Write(Buffer);
-
-				foreach(byte b in Buffer){
-					Console.Write(b + ".");
-				}
-				Console.WriteLine("");
+				dout.write(Buffer);
 			}
-			Console.WriteLine("Writing partition hash: " + PartitionHash);
-			writer.Write(IPAddress.HostToNetworkOrder(PartitionHash));
-			//Console.WriteLine("Hashcode was " + partitionHash);
+			dout.writeInt(PartitionHash);
 		}
 
-   		public void readData(BinaryReader reader){
-			int size = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
-			Buffer = reader.ReadBytes(size);
-			PartitionHash = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
+   		public void readData(IDataInput din){
+			int size = din.readInt();
+			Buffer = new byte[size];
+			din.readFully(Buffer);
+			PartitionHash = din.readInt();
 		}		
 	}
 }

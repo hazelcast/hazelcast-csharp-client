@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.IO;
+using Hazelcast.IO;
 namespace Hazelcast.Client.IO
 	
 {
@@ -17,6 +18,11 @@ namespace Hazelcast.Client.IO
 				return new byte[0];
 			}
 			return GetSerializer().toByte (obj);
+		}
+		
+		public static Data toData (Object obj)
+		{
+			return new Data(toByte(obj));
 		}
 		
 		public static ClientSerializer GetSerializer(){
@@ -63,6 +69,16 @@ namespace Hazelcast.Client.IO
 				chunkSize--;
 			}
 			return result;
+		}
+		
+		public static void printBytes (byte[] bytes)
+		{
+			Console.WriteLine("Size for is: " + bytes.Length);
+			foreach (byte b in bytes) {
+				Console.Write (b);
+				Console.Write (".");
+			}
+			
 		}
 	}
 }

@@ -1,11 +1,17 @@
 using System;
 using System.IO;
+using Hazelcast.IO;
 namespace Hazelcast.Client.IO
 {
 	public class DataSerializer : ITypeSerializer<DataSerializable>
 	{
 		
 		private static readonly byte SERIALIZER_TYPE_DATA = 0;
+		private static readonly System.Collections.Concurrent.ConcurrentDictionary<String, Type> mapper = new System.Collections.Concurrent.ConcurrentDictionary<String, Type>();
+		
+		public static bool register(String javaClassName, Type type){
+			return mapper.TryAdd(javaClassName, type);
+		}
 		
 		public int CompareTo(object obj) 
 		{
@@ -29,17 +35,15 @@ namespace Hazelcast.Client.IO
 
 		public void write (BinaryWriter writer, DataSerializable obj)
 		{
-			string name = (string)obj.GetType().ToString();
+			string name = (obj.javaClassName()!=null)? obj.javaClassName(): (string)obj.GetType().ToString();
 			//Console.WriteLine("Name as " + name);
-			if (obj is Hazelcast.Impl.Keys){
-				name = "com.hazelcast.impl.Keys";
-			}
 			IOUtil.writeUTF(writer, name);
-			obj.writeData(writer);
+			obj.writeData(new BinaryWriterDataOutput(writer));
 		}
 		public DataSerializable read (BinaryReader reader)
 		{
 			string name = IOUtil.readUTF(reader);
+			
 			
 			if(name.Equals("com.hazelcast.impl.base.Pairs"))
 			{
@@ -49,9 +53,17 @@ namespace Hazelcast.Client.IO
 			{
 				name = "Hazelcast.Impl.Keys";
 			}
-			//Console.WriteLine("Name changed to " + Type.GetType(name));
-			DataSerializable obj = (DataSerializable)Activator.CreateInstance(Type.GetType(name));
-			obj.readData(reader);
+			
+			Type type = Type.GetType(name);
+			
+			if(mapper.ContainsKey(name)){
+				mapper.TryGetValue(name, out type);
+			}
+				
+			Console.WriteLine("Name changed to " +name);
+			Console.WriteLine("Type is: " + type);
+			DataSerializable obj = (DataSerializable)Activator.CreateInstance(type);
+			obj.readData(new BinaryReaderDataInput(reader));
 			return obj;
 		}
 

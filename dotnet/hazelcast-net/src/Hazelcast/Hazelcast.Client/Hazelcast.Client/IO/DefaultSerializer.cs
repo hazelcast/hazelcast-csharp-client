@@ -70,6 +70,9 @@ namespace Hazelcast.Client.IO
 		{
 			byte typeId = reader.ReadByte ();
 			ITypeSerializer serializer = serializersByTypeId[typeId];
+			if(serializer == null){
+				Console.WriteLine("Type id is " + typeId);
+			}
 			return serializer.read (reader);
 		}
 
