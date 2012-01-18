@@ -2,7 +2,7 @@ using System;
 
 namespace Hazelcast.IO
 {
-	interface IDataInput
+	public interface IDataInput
 	{
 		void readFully(byte[] b);
 		
