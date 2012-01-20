@@ -61,7 +61,7 @@ namespace Hazelcast.Client
 		}
 		
 		public string getName() {
-			return name.Substring(2);
+			return name.Substring(Prefix.MAP.Length);
 		}
 		
 		public Object tryRemove(K key, long timeout){
@@ -77,7 +77,9 @@ namespace Hazelcast.Client
     	}
 		
 		public void clear(){
-			
+			foreach (K key in Keys()){
+				this.remove(key);
+			}
 		}
 		
 		public void putTransient(K key, V value, long ttl){
@@ -178,9 +180,13 @@ namespace Hazelcast.Client
 			listenerManager().removeListener(name, key, listener);
 		}
 		
-		//a bit hard to implement
+		
 		public MapEntry<K, V> getMapEntry(K key){
-			return null;
+			CMapEntry cMapEntry = proxyHelper.doOp<CMapEntry>(ClusterOperation.CONCURRENT_MAP_GET_MAP_ENTRY, key, null);
+        	if (cMapEntry == null) 
+            	return null;
+        	
+        	return new ClientMapEntry<K,V>(cMapEntry, key, this);
 		}
 		
 		public bool evict(object key){
@@ -214,14 +220,27 @@ namespace Hazelcast.Client
 	        proxyHelper.doOp<object>(ClusterOperation.CONCURRENT_MAP_PUT_ALL, null, pairs);
     	}
 		
-		public System.Collections.Generic.ICollection<V> values(Hazelcast.Query.Predicate predicate){
+		public System.Collections.Generic.ICollection<V> Values(){
+			return Values (null);
+		}
+		
+		public System.Collections.Generic.ICollection<K> Keys(){
+			return Keys (null);
+		}
+		
+		public System.Collections.Generic.ICollection<V> Values(Hazelcast.Query.Predicate predicate){
 			IDictionary<K,V> dictionary = entrySet(predicate);
 			return dictionary.Values;
 		}
 		
+		public System.Collections.Generic.ICollection<K> Keys(Hazelcast.Query.Predicate predicate){
+			IDictionary<K,V> dictionary = entrySet(predicate);
+			return dictionary.Keys;
+		}
+		
 		public IDictionary<K, V> entrySet(Hazelcast.Query.Predicate predicate) {
-        	 System.Collections.Generic.IList<KeyValue> list = proxyHelper.entries<KeyValue>(predicate);
-        	 Dictionary<K,V> dic = new Dictionary<K,V>();
+        	System.Collections.Generic.IList<KeyValue> list = proxyHelper.entries<K>(predicate);
+        	Dictionary<K,V> dic = new Dictionary<K,V>();
 			foreach(KeyValue kv in list){
 				dic.Add((K)IOUtil.toObject(kv.key.Buffer), (V)IOUtil.toObject(kv.value.Buffer));
 			}

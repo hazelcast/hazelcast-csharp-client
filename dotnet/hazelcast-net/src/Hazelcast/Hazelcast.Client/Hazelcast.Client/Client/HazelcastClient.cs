@@ -47,9 +47,12 @@ namespace Hazelcast.Client
 		}
 		
 		public ISet<E> getSet<E>(String name){
-			return (ISet<E>)getClientProxy(Prefix.SET + name, () => new SetClientProxy<E>(outThread, Prefix.TOPIC +name, listenerManager, this));
+			return (ISet<E>)getClientProxy(Prefix.SET + name, () => new SetClientProxy<E>(outThread, Prefix.SET +name, listenerManager, this));
 		}
 		
+		public IList<E> getList<E>(String name){
+			return (IList<E>)getClientProxy(Prefix.AS_LIST + name, () => new ListClientProxy<E>(outThread, Prefix.AS_LIST +name, listenerManager, this));
+		}
 		private Object getClientProxy(Object o, Func<Object> func)
 		{
 			Object proxy=null;

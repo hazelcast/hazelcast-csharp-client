@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Hazelcast.Client.IO;
 using Hazelcast.Client.Impl;
 using Hazelcast.Impl;
+using Hazelcast.Impl.Base;
 
 
 namespace Hazelcast.Client
@@ -26,6 +27,7 @@ namespace Hazelcast.Client
 		
 		public V doOp<V>(ClusterOperation op, Object key, Object val)
 		{
+			Console.WriteLine("Name is sss " + name);
 			Object o = this.doOp<V>(op, key, val, 0);
 			if(o==null)
 				return default(V);
@@ -113,17 +115,37 @@ namespace Hazelcast.Client
 	        outThread.enQueue(fireNForgetCall);
 	    }
 		
-		public System.Collections.Generic.IList<E> entries<E>(Hazelcast.Query.Predicate predicate) {
+		/*public System.Collections.Generic.IList<E> _entries<E>(Hazelcast.Query.Predicate predicate) {
  			Keys keys = doOp<Keys>(ClusterOperation.CONCURRENT_MAP_ITERATE_ENTRIES, default(E), predicate);
-	     	
 			List<E> list = new List<E>();
 			for(int i=0;i<keys.Count();i++){
+				KeyValue kv = (KeyValue)IOUtil.toObject(keys.Get(i).Buffer);
+				Object o = IOUtil.toObject(kv.value.Buffer);
+				Console.WriteLine("Ne la bu: " + o + ":: " + typeof(E));
+				list.Add((E)o);
+			}
+			return list;	
+		}*/
+		
+		public System.Collections.Generic.IList<KeyValue> entries<E>(Hazelcast.Query.Predicate predicate) {
+ 			Keys keys = doOp<Keys>(ClusterOperation.CONCURRENT_MAP_ITERATE_ENTRIES, default(E), predicate);
+			List<KeyValue> list = new List<KeyValue>();
+			for(int i=0;i<keys.Count();i++){
+				KeyValue kv = (KeyValue)IOUtil.toObject(keys.Get(i).Buffer);
+				list.Add(kv);
+			}
+			return list;	
+		}
+		
+		public System.Collections.Generic.IList<E> keys<E>(Hazelcast.Query.Predicate predicate) {
+	        Keys keys =  doOp<Keys>(ClusterOperation.CONCURRENT_MAP_ITERATE_KEYS, default(E), predicate);
+			List<E> list = new List<E>();
+	        for (int i=0;i<keys.Count();i++){
 				list.Add((E)IOUtil.toObject(keys.Get(i).Buffer));
 			}
 			
-			return list;
-   		
-		}
+	        return list;
+    	}
 		
 		//public static long newCallId() {
 		//	return Interlocked.Increment(ref counter);

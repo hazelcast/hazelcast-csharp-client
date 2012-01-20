@@ -6,11 +6,12 @@ using Hazelcast.Core;
 using Hazelcast.Client.IO;
 using Hazelcast.IO;
 using Hazelcast.Impl;
+using Hazelcast.Impl.Base;
 
 
 namespace Hazelcast.Client
 {
-	public class SetClientProxy<E> : CollectionClientProxy<E>, ISet<E>
+	public class SetClientProxy<E> : CollectionClientProxy<E>, Hazelcast.Client.ISet<E>
 	{
 		
 		public SetClientProxy (OutThread outThread, String name, ListenerManager listenerManager, HazelcastClient client):base(outThread, name, listenerManager, client)
@@ -18,6 +19,15 @@ namespace Hazelcast.Client
 			
 		}
 		
+		public override String getName(){
+			return name.Substring(Prefix.SET.Length);
+		}
+		
+		
+		
+		public InstanceType getInstanceType(){
+			return InstanceType.SET;
+		}
 			
 		public override void addItemListener(ItemListener<E> listener, bool includeValue){
 			
@@ -37,13 +47,51 @@ namespace Hazelcast.Client
     	}
 		
 		
-		public override void Add(E e){
-			proxyHelper.doOp<object>(ClusterOperation.CONCURRENT_MAP_ADD_TO_SET, e, null);
+		void  System.Collections.Generic.ICollection<E>.Add(E e){
+			Add (e);
 		}
 		
-		public override System.Collections.Generic.IList<E> entries(){
-			return proxyHelper.entries<E>(null);
+		public new virtual bool Add(E e){
+			return proxyHelper.doOp<bool>(ClusterOperation.CONCURRENT_MAP_ADD_TO_SET, e, null);
 		}
+		
+		
+		public override System.Collections.Generic.IList<E> entries(){
+			return proxyHelper.keys<E>(null);
+		}
+		
+		
+		public void ExceptWith (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		public void IntersectWith (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		public bool IsProperSubsetOf (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		public bool IsProperSupersetOf (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		public bool IsSubsetOf (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		public bool IsSupersetOf (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		public bool Overlaps (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		public bool SetEquals (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		public void SymmetricExceptWith (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		public void UnionWith (IEnumerable<E> other){
+			throw new Exception("Not implemented!");
+		}
+		
 	}
 }
 

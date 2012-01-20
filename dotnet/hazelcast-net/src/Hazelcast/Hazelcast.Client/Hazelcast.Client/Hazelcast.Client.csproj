@@ -37,6 +37,7 @@
     <Folder Include="IO\" />
     <Folder Include="Examples\" />
     <Folder Include="Client\" />
+    <Folder Include="Query\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\DataAwareItemEvent.cs" />
@@ -89,6 +90,22 @@
     <Compile Include="Impl\CollectionWrapper.cs" />
     <Compile Include="Impl\BlockingQueue.cs" />
     <Compile Include="Examples\PerformanceTest.cs" />
+    <Compile Include="Core\HazelcastInstance.cs" />
+    <Compile Include="Core\ISet.cs" />
+    <Compile Include="Client\SetClientProxy.cs" />
+    <Compile Include="Client\CollectionClientProxy.cs" />
+    <Compile Include="Core\IList.cs" />
+    <Compile Include="Client\ListClientProxy.cs" />
+    <Compile Include="Core\Instance.cs" />
+    <Compile Include="IO\IDataOutput.cs" />
+    <Compile Include="IO\BinaryWriterDataOutput.cs" />
+    <Compile Include="IO\BinaryReaderDataInput.cs" />
+    <Compile Include="Query\Predicate.cs" />
+    <Compile Include="Query\SqlPredicate.cs" />
+    <Compile Include="IO\IDataInput.cs" />
+    <Compile Include="Client\ClientMapEntry.cs" />
+    <Compile Include="Impl\CMapEntry.cs" />
+    <Compile Include="Client\ItemListenerManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

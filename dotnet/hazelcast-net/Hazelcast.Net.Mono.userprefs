@@ -1,29 +1,64 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/MapTest.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/MapClientProxy.cs">
     <Files>
-      <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/MapTest.cs" Line="25" Column="4" />
-      <File FileName="../../../../../dotnet/spring-net/test/Spring/Spring.Core.Tests/Core/MethodArgumentsCriteriaTests.cs" Line="1" Column="1" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/HazelcastClient.cs" Line="28" Column="51" />
+      <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/MapTest.cs" Line="583" Column="1" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Core/EntryListener.cs" Line="13" Column="1" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Core/EntryEvent.cs" Line="6" Column="15" />
+      <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/QueueTest.cs" Line="9" Column="4" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Core/IMap.cs" Line="9" Column="5" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/MapClientProxy.cs" Line="39" Column="20" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ProxyHelper.cs" Line="50" Column="31" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/IOUtil.cs" Line="32" Column="1" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ClientSerializer.cs" Line="26" Column="1" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/DefaultSerializer.cs" Line="76" Column="36" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Impl/Keys.cs" Line="10" Column="15" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Core/Instance.cs" Line="2" Column="22" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/HazelcastClient.cs" Line="46" Column="77" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ListClientProxy.cs" Line="16" Column="163" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/CollectionClientProxy.cs" Line="25" Column="5" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/QueueClientProxy.cs" Line="15" Column="164" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/SetClientProxy.cs" Line="13" Column="49" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/TopicClientProxy.cs" Line="17" Column="72" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="Hazelcast.Client" expanded="True">
-            <Node name="Client" expanded="True" />
+            <Node name="Client" expanded="True">
+              <Node name="MapClientProxy.cs" selected="True" />
+            </Node>
             <Node name="Core" expanded="True" />
             <Node name="Examples" expanded="True" />
             <Node name="Impl" expanded="True" />
             <Node name="IO" expanded="True" />
           </Node>
-          <Node name="Hazelcast.Client.Tests" expanded="True" selected="True">
-            <Node name="References" expanded="True" />
-          </Node>
-          <Node name="proto" expanded="True" />
+          <Node name="Hazelcast.Client.Tests" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
         <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+      <Pad Id="ConnectionManagerPad">
+        <State selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.NUnit.TestPad">
+        <State expanded="True">
+          <Node name="Hazelcast.Client.Tests" expanded="True">
+            <Node name="Hazelcast" expanded="True">
+              <Node name="Client" expanded="True">
+                <Node name="Tests" expanded="True">
+                  <Node name="MapTest" expanded="True">
+                    <Node name="destroyMap" selected="True" />
+                  </Node>
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>

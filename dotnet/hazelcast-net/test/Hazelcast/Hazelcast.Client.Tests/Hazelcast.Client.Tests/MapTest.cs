@@ -287,6 +287,7 @@ namespace Hazelcast.Client.Tests
             assertArrayEquals(new String[]{"1", "2", "3", null, null}, values);
         }
     }
+    */
 
     [Test]
     public void getMapEntry() {
@@ -303,31 +304,26 @@ namespace Hazelcast.Client.Tests
         Assert.AreEqual("b", entry.setValue("c"));
         Assert.AreEqual("c", map.get("a"));
         Assert.AreEqual("c", entry.getValue());
+			
+			map.destroy();
     }
-
+		 
 			 
     [Test]
     public void iterateOverMapKeys() {
         HazelcastClient hClient = getHazelcastClient();
-        Map<String, String> map = hClient.getMap("iterateOverMapKeys");
+        IMap<String, String> map = hClient.getMap<String, String>("iterateOverMapKeys");
         map.put("1", "A");
         map.put("2", "B");
         map.put("3", "C");
-        Set<String> keySet = map.keySet();
-        Assert.AreEqual(3, keySet.size());
-        Set<String> s = new HashSet<String>();
-        for (String string : keySet) {
-            s.add(string);
-            Assert.IsTrue(Arrays.asList("1", "2", "3").contains(string));
-        }
-        Assert.AreEqual(3, s.size());
-        Iterator<String> iterator = keySet.iterator();
-        while (iterator.hasNext()) {
-            iterator.next();
-            iterator.remove();
+        System.Collections.Generic.ICollection<String> keySet = map.Keys();
+        Assert.AreEqual(3, keySet.Count);
+        foreach (String str in keySet) {
+            map.remove(str);
         }
         Assert.AreEqual(0, map.size());
-    }
+        
+	}
 
     [Test]
     public void iterateOverMapEntries() {
@@ -336,25 +332,21 @@ namespace Hazelcast.Client.Tests
         map.put("1", "A");
         map.put("2", "B");
         map.put("3", "C");
-        Set<Entry<String, String>> entrySet = map.entrySet();
-        Assert.AreEqual(3, entrySet.size());
-        Set<String> keySet = map.keySet();
-        for (Entry<String, String> entry : entrySet) {
-            Assert.IsTrue(keySet.contains(entry.getKey()));
-            Assert.AreEqual(entry.getValue(), map.get(entry.getKey()));
+        IDictionary<String, String> entrySet = map.entrySet(null);
+        Assert.AreEqual(3, entrySet.Count);
+        System.Collections.Generic.ICollection<String> keySet = map.Keys();
+        foreach (String key in entrySet.Keys) {
+            Assert.IsTrue(keySet.Contains(key));
+            Assert.AreEqual(entrySet[key], map.get(key));
         }
-        Iterator<Entry<String, String>> it = entrySet.iterator();
-        for (String key : keySet) {
-            MapEntry mapEntry = map.getMapEntry(key);
+			
+        foreach (String key in entrySet.Keys) {
+            MapEntry<String, String> mapEntry = map.getMapEntry(key);
             Assert.AreEqual(1, mapEntry.getHits());
         }
-        while (it.hasNext()) {
-            it.next();
-            it.remove();
-        }
-        Assert.IsTrue(map.isEmpty());
+		map.destroy();
     }
-		 */
+		 
     [Test]
     public void tryLock() {
         HazelcastClient hClient = getHazelcastClient();
@@ -581,7 +573,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void clear() {
         HazelcastClient hClient = getHazelcastClient();
-        IMap<int, int> map = hClient.getMap<int, int>("clear");
+        IMap<int?, int?> map = hClient.getMap<int?, int?>("clear");
         for (int i = 0; i < 100; i++) {
             Assert.IsNull(map.put(i, i));
             Assert.AreEqual(i, map.get(i));
@@ -715,60 +707,18 @@ namespace Hazelcast.Client.Tests
  
     
 
-    [Test]
-    public void testGetNullMapEntry() {
-        HazelcastClient hClient = getHazelcastClient();
-        IMap<String, String> imap = hClient.getMap<String, String>("testGetNullMapEntry");
-        String key = "key";
-        MapEntry<String, String> mapEntry = imap.getMapEntry(key);
-        Assert.IsNull(mapEntry);
-    }
-	
-		/*
-	[Test]
-    public void testTwoMembersWithIndexes() {
-        HazelcastClient hClient = getHazelcastClient();
-        IMap imap = hClient.getMap("testTwoMembersWithIndexes");
-        imap.addIndex("name", false);
-        imap.addIndex("age", true);
-        imap.addIndex("active", false);
-        doFunctionalQueryTest(imap);
-    }
-    public void doFunctionalQueryTest(IMap imap) {
-        imap.put("1", new Employee("joe", 33, false, 14.56));
-        imap.put("2", new Employee("ali", 23, true, 15.00));
-        for (int i = 3; i < 103; i++) {
-            imap.put(String.valueOf(i), new Employee("name" + i, i % 60, ((i % 2) == 1), Double.valueOf(i)));
-        }
-        Set<Map.Entry> entries = imap.entrySet();
-        Assert.AreEqual(102, entries.size());
-        int itCount = 0;
-        for (Map.Entry entry : entries) {
-            Employee c = (Employee) entry.getValue();
-            itCount++;
-        }
-        Assert.AreEqual(102, itCount);
-        EntryObject e = new PredicateBuilder().getEntryObject();
-        Predicate predicate = e.is("active").and(e.get("age").equal(23));
-        entries = imap.entrySet(predicate);
-        Assert.AreEqual(3, entries.size());
-        for (Map.Entry entry : entries) {
-            Employee c = (Employee) entry.getValue();
-            Assert.AreEqual(c.getAge(), 23);
-            Assert.IsTrue(c.isActive());
-        }
-        imap.remove("2");
-        entries = imap.entrySet(predicate);
-        Assert.AreEqual(2, entries.size());
-        for (Map.Entry entry : entries) {
-            Employee c = (Employee) entry.getValue();
-            Assert.AreEqual(c.getAge(), 23);
-            Assert.IsTrue(c.isActive());
-        }
-    }
-		 */
 	    [Test]
-	    public void testSqlPredicate() {
+	    public void testGetNullMapEntry() {
+	        HazelcastClient hClient = getHazelcastClient();
+	        IMap<String, String> imap = hClient.getMap<String, String>("testGetNullMapEntry");
+	        String key = "key";
+	        MapEntry<String, String> mapEntry = imap.getMapEntry(key);
+	        Assert.IsNull(mapEntry);
+	    }
+	
+	    [Test]
+	    [Ignore]
+		public void testSqlPredicate() {
 			IOUtil.printBytes(IOUtil.toByte(new Employee("" + 1, 1, 1 % 2 == 0, 1)));
 			
 	        HazelcastClient hClient = getHazelcastClient();
@@ -776,7 +726,7 @@ namespace Hazelcast.Client.Tests
 	        for (int i = 0; i < 100; i++) {
 	            map.put(i, new Employee("" + i, i, i % 2 == 0, i));
 	        }
-	        System.Collections.Generic.ICollection<Employee> set = map.values(new SqlPredicate("active AND age < 30"));
+	        System.Collections.Generic.ICollection<Employee> set = map.Values(new SqlPredicate("active AND age < 30"));
 	        foreach (Employee e in set) {
 	            Assert.IsTrue(e.getAge() < 30);
 	            Assert.IsTrue(e.isActive());
@@ -793,8 +743,10 @@ namespace Hazelcast.Client.Tests
         bool active;
         double salary;
 		
+		static String className = "com.hazelcast.client.HazelcastClientMapTest$Employee";
+		
 		static Employee(){
-			Hazelcast.Client.IO.DataSerializer.register("com.hazelcast.client.HazelcastClientMapTest$Employee", typeof(Employee));
+			Hazelcast.Client.IO.DataSerializer.register(className, typeof(Employee));
 		}
 		
         public Employee() {
@@ -869,7 +821,8 @@ namespace Hazelcast.Client.Tests
         }
 			
 		public String javaClassName(){
-			return "com.hazelcast.client.HazelcastClientMapTest$Employee";
+			return Employee.className;;
 		}
+		
 	}
 }

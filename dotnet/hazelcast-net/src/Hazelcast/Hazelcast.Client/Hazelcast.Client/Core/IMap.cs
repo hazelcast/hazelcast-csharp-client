@@ -349,18 +349,8 @@ namespace Hazelcast.Client
 		
 		void clear();
 
-		/**
-     * Queries the map based on the specified predicate and
-     * returns the keys of matching entries.
-     * <p/>
-     * Specified predicate runs on all members in parallel.
-     *
-     * @param predicate query criteria
-     * @return result key set of the query
-     */
-		//System.Collections.Generic.SortedSet<K> keySet(Predicate predicate);
-
-		/**
+		
+	/**
      * Queries the map based on the specified predicate and
      * returns the matching entries.
      * <p/>
@@ -371,7 +361,21 @@ namespace Hazelcast.Client
      */
 
 		IDictionary<K, V> entrySet(Hazelcast.Query.Predicate predicate);
+		
+	/**
+     * Queries the map based on the specified predicate and
+     * returns the keys of matching entries.
+     * <p/>
+     * Specified predicate runs on all members in parallel.
+     *
+     * @param predicate query criteria
+     * @return result key set of the query
+     */
+		System.Collections.Generic.ICollection<K> Keys(Hazelcast.Query.Predicate predicate);
+		System.Collections.Generic.ICollection<K> Keys();
 
+		
+		
 		/**
      * Queries the map based on the specified predicate and
      * returns the values of matching entries.
@@ -380,9 +384,9 @@ namespace Hazelcast.Client
      *
      * @param predicate query criteria
      * @return result value collection of the query
-     */
-
-		System.Collections.Generic.ICollection<V> values(Hazelcast.Query.Predicate predicate);
+     */			
+		System.Collections.Generic.ICollection<V> Values(Hazelcast.Query.Predicate predicate);
+		System.Collections.Generic.ICollection<V> Values();
 
 
 		/**

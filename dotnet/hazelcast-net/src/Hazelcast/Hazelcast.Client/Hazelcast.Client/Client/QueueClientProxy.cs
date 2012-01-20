@@ -20,8 +20,12 @@ namespace Hazelcast.Client
         	return proxyHelper.doOp<int>(ClusterOperation.BLOCKING_QUEUE_SIZE, null, null);
     	}
 		
+		public override String getName(){
+			return name.Substring(Prefix.QUEUE.Length);
+		}
 		
-		public override void Add(E e){
+		
+		public void Add(E e){
 			
 			innerOffer(e, 0);
 		}
