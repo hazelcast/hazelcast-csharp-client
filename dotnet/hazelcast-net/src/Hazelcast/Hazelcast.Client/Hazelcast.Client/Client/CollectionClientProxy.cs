@@ -24,7 +24,7 @@ namespace Hazelcast.Client
 		}
 		
 	    public void destroy(){
-			
+			proxyHelper.destroy();			
 		}
 	
 	    public Object getId(){
@@ -86,16 +86,14 @@ namespace Hazelcast.Client
 		
 		public abstract System.Collections.Generic.IList<E> entries();
 		
-		public new abstract void Add(E e);
-		
 		public virtual bool Remove(E e) {
         	return proxyHelper.doOp<bool>(ClusterOperation.CONCURRENT_MAP_REMOVE_ITEM, e, null);
     	}
 		
 		
-		public String getName(){
-			return name.Substring(2);
-		}
+		public abstract String getName();
+		
+		
 		
 		public abstract void addItemListener(ItemListener<E> listener, bool includeValue);
 		

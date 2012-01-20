@@ -9,7 +9,13 @@ namespace Hazelcast.Client.IO
 		private static readonly byte SERIALIZER_TYPE_DATA = 0;
 		private static readonly System.Collections.Concurrent.ConcurrentDictionary<String, Type> mapper = new System.Collections.Concurrent.ConcurrentDictionary<String, Type>();
 		
+		static DataSerializer(){
+			//looks ugly but forces static code to run on the following Classes. 
+			CMapEntry.className.Equals("");	
+		}
+		
 		public static bool register(String javaClassName, Type type){
+			Console.WriteLine("Registering" + javaClassName + " : " + type);
 			return mapper.TryAdd(javaClassName, type);
 		}
 		
@@ -42,12 +48,17 @@ namespace Hazelcast.Client.IO
 		}
 		public DataSerializable read (BinaryReader reader)
 		{
+			
 			string name = IOUtil.readUTF(reader);
 			
 			
 			if(name.Equals("com.hazelcast.impl.base.Pairs"))
 			{
 				name = "Hazelcast.Impl.Base.Pairs";
+			}
+			else if(name.Equals("com.hazelcast.impl.base.KeyValue"))
+			{
+				name = "Hazelcast.Impl.Base.KeyValue";
 			}
 			else if(name.Equals("com.hazelcast.impl.Keys"))
 			{

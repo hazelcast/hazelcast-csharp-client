@@ -6,6 +6,8 @@ namespace Hazelcast.Client
 	public interface ICollection<E>
 	{
 		
+		int size();
+		
 		String getName();
 			
 		void addItemListener(ItemListener<E> listener, bool includeValue);

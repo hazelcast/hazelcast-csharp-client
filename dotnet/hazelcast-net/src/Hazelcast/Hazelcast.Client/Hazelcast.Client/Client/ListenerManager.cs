@@ -12,11 +12,13 @@ namespace Hazelcast.Client.Impl
 		private EntryListenerManager entryListenerManager;
 		private QueueItemListenerManager queueItemListenerManager;
 		private MessageListenerManager messageListenerManager;
+		private ItemListenerManager itemListenerManager;
 		public ListenerManager ()
 		{
 			entryListenerManager = new EntryListenerManager();
 			queueItemListenerManager = new QueueItemListenerManager();
 			messageListenerManager = new MessageListenerManager();
+			itemListenerManager = new ItemListenerManager(entryListenerManager);
 		}
 		
 		public void enQueue(Object o)
@@ -32,13 +34,12 @@ namespace Hazelcast.Client.Impl
             	}
             	if (obj is Packet) {
                 	Packet packet = (Packet) obj;
-					Console.WriteLine("here is the event");
-					if(getInstanceType(packet.name).Equals(InstanceType.MAP)){
-                		entryListenerManager.notifyListeners(packet);
-					}else if(getInstanceType(packet.name).Equals(InstanceType.QUEUE)){
+					if(getInstanceType(packet.name).Equals(InstanceType.QUEUE)){
 						queueItemListenerManager.notifyListeners(packet);			
 					}else if(getInstanceType(packet.name).Equals(InstanceType.TOPIC)){
 						messageListenerManager.notifyListeners(packet);
+					}else {
+                		entryListenerManager.notifyListeners(packet);
 					} 
             	}
 			}
@@ -81,6 +82,10 @@ namespace Hazelcast.Client.Impl
 		}
 		public MessageListenerManager getMessageListenerManager(){
 			return messageListenerManager;
+		}
+		
+		public ItemListenerManager getItemListenerManager(){
+			return itemListenerManager;
 		}
 		
 		public static ListenerManager start ()

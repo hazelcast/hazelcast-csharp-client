@@ -19,7 +19,7 @@ namespace Hazelcast.Client
 		}
 		
 		public String getName(){
-			return this.name;
+			return this.name.Substring(Prefix.TOPIC.Length);
 		}
 
 	    public void publish(E message){

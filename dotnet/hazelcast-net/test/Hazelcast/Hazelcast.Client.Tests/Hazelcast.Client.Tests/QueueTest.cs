@@ -218,11 +218,13 @@ namespace Hazelcast.Client.Tests
 		
 		public void itemAdded<String>(ItemEvent<String> itemEvent) {
 		    Assert.AreEqual("hello", itemEvent.Item);
-		    latch.Signal();
+		    Assert.AreEqual(ItemEventType.ADDED, itemEvent.EventType);
+			latch.Signal();
 		}
 		
 		public void itemRemoved<String>(ItemEvent<String> itemEvent) {
 		    Assert.AreEqual("hello", itemEvent.Item);
+			Assert.AreEqual(ItemEventType.REMOVED, itemEvent.EventType);
 		    latch.Signal();
 		}
 	}
