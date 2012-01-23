@@ -12,13 +12,15 @@ import static com.hazelcast.util.Base64.*;
 public class KeyDecrypt {
 
 	public static String decrypt(String e) throws GeneralSecurityException, IOException  {
+	    final byte decodedData[] = decode(e.getBytes("UTF8"));
+        if (decodedData == null || decodedData.length == 0) {
+            throw new GeneralSecurityException("Invalid Base64 key!");
+        }
 		String resource = "public.key";
 		InputStream in = KeyDecrypt.class.getClassLoader().getResourceAsStream(resource);
-		
 		PublicKey key = KeyLoadStoreUtil.loadPublicKey(in, "RSA");
 		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 		cipher.init(Cipher.DECRYPT_MODE, key);
-		
-		return new String(cipher.doFinal(decode(e.getBytes())), "UTF8");
+		return new String(cipher.doFinal(decodedData), "UTF8");
 	}
 }
