@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Hazelcast.Client;
+using Hazelcast.Core;
 
 namespace Hazelcast.Client.Tests
 {
