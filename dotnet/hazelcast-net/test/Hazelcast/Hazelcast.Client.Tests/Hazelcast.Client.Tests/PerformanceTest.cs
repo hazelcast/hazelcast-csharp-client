@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 using Hazelcast.Client;
+using Hazelcast.Core;
 
 namespace Hazelcast.Client.Tests
 {

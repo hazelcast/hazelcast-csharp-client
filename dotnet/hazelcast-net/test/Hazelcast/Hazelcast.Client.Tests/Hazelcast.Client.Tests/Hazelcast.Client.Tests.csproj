@@ -40,6 +40,14 @@
     <Compile Include="SetTest.cs" />
     <Compile Include="ListTest.cs" />
     <Compile Include="HazelcastTest.cs" />
+    <Compile Include="MultiMapTest.cs" />
+    <Compile Include="IdGeneratorTest.cs" />
+    <Compile Include="LockTest.cs" />
+    <Compile Include="TopicTest.cs" />
+    <Compile Include="TransactionTest.cs" />
+    <Compile Include="AtomicNumberTest.cs" />
+    <Compile Include="CountDownLatchTest.cs" />
+    <Compile Include="ClusterTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

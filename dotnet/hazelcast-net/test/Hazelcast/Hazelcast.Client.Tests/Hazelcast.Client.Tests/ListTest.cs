@@ -13,14 +13,14 @@ namespace Hazelcast.Client.Tests
 	[ExpectedException(typeof(NullReferenceException)) ]
     public void addNull() {
         HazelcastClient hClient = getHazelcastClient();
-        IList<String> list = hClient.getList<String>("addNull");
+        Hazelcast.Core.IList<String> list = hClient.getList<String>("addNull");
         list.Add(null);
     }
 
     [Test]
     public void getListName() {
         HazelcastClient hClient = getHazelcastClient();
-        IList<String> list = hClient.getList<String>("getListName");
+        Hazelcast.Core.IList<String> list = hClient.getList<String>("getListName");
         Assert.AreEqual("getListName", list.getName());
 			list.destroy();
     }
@@ -29,7 +29,7 @@ namespace Hazelcast.Client.Tests
 	[Ignore]
     public void addRemoveItemListener() {
         HazelcastClient hClient = getHazelcastClient();
-        IList<String> list = hClient.getList<String>("addRemoveItemListenerList");
+        Hazelcast.Core.IList<String> list = hClient.getList<String>("addRemoveItemListenerList");
         CountdownEvent addLatch = new CountdownEvent(4);
         CountdownEvent removeLatch = new CountdownEvent(4);
         MyItemListener<String> listener = new MyItemListener<String>(addLatch, removeLatch);
@@ -117,12 +117,12 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void destroy() {
         HazelcastClient hClient = getHazelcastClient();
-        IList<int?> list = hClient.getList<int?>("destroy");
+        Hazelcast.Core.IList<int?> list = hClient.getList<int?>("destroy");
         
 		for (int i = 0; i < 100; i++) {
             list.Add(i);
         }
-        IList<int?> list2 = hClient.getList<int?>("destroy");
+        Hazelcast.Core.IList<int?> list2 = hClient.getList<int?>("destroy");
         Assert.IsTrue(list == list2);
         Assert.IsTrue(list.getId().Equals(list2.getId()));
         list.destroy();
@@ -134,7 +134,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void add() {
         HazelcastClient hClient = getHazelcastClient();
-        IList<int?> list = hClient.getList<int?>("add");
+        Hazelcast.Core.IList<int?> list = hClient.getList<int?>("add");
         int count = 100;
         for (int i = 0; i < count; i++) {
             list.Add(i);
@@ -149,7 +149,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void contains() {
         HazelcastClient hClient = getHazelcastClient();
-        IList<int?> list = hClient.getList<int?>("contains");
+        Hazelcast.Core.IList<int?> list = hClient.getList<int?>("contains");
         int count = 100;
         for (int i = 0; i < count; i++) {
             list.Add(i);
@@ -166,10 +166,11 @@ namespace Hazelcast.Client.Tests
    
 
     [Test]
-    public void size() {
+    public void size() {			
         HazelcastClient hClient = getHazelcastClient();
-        IList<int?> list = hClient.getList<int?>("size");
-        int count = 100;
+        Hazelcast.Core.IList<int?> list = hClient.getList<int?>("size");
+        list.Clear();
+		int count = 100;
         Assert.IsTrue(list.Count==0);
         for (int i = 0; i < count; i++) {
             list.Add(i);
@@ -180,13 +181,13 @@ namespace Hazelcast.Client.Tests
         }
         Assert.IsFalse(list.Count==0);
         Assert.AreEqual(count + count / 2, list.Count);
-			list.destroy();
+		list.destroy();
     }
 
     [Test]
     public void remove() {
         HazelcastClient hClient = getHazelcastClient();
-        IList<int?> list = hClient.getList<int?>("remove");
+        Hazelcast.Core.IList<int?> list = hClient.getList<int?>("remove");
         int count = 100;
         Assert.IsTrue(list.Count==0);
         for (int i = 0; i < count; i++) {
@@ -206,7 +207,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void clear() {
         HazelcastClient hClient = getHazelcastClient();
-        IList<int?> list = hClient.getList<int?>("clear");
+        Hazelcast.Core.IList<int?> list = hClient.getList<int?>("clear");
         int count = 100;
         Assert.IsTrue(list.Count==0);
         for (int i = 0; i < count; i++) {
@@ -221,7 +222,7 @@ namespace Hazelcast.Client.Tests
 	    [Test]
 	    public void iterate() {
 	        HazelcastClient hClient = getHazelcastClient();
-	        IList<int?> list = hClient.getList<int?>("iterate");
+	        Hazelcast.Core.IList<int?> list = hClient.getList<int?>("iterate");
 	        list.Add(1);
 	        list.Add(2);
 	        list.Add(2);
