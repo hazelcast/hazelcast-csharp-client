@@ -1,8 +1,9 @@
 using System;
 using Hazelcast.IO;
+using Hazelcast.Core;
 using Hazelcast.Client.IO;
 
-namespace Hazelcast.Client
+namespace Hazelcast.Impl
 {
 	public class DataMessage<E>:Message<E>
 	{

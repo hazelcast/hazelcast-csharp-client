@@ -1,7 +1,7 @@
 using System;
 using Hazelcast.IO;
 
-namespace Hazelcast.Client
+namespace Hazelcast.Impl
 {
 	public class CMapEntry: DataSerializable, Hazelcast.Core.MapEntry<object,object>
 	{
