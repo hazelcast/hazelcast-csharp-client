@@ -9,7 +9,7 @@ using Hazelcast.Impl;
 
 namespace Hazelcast.Client
 {
-	public abstract class CollectionClientProxy<E>: System.Collections.ObjectModel.Collection<E>, ICollection<E>, System.Collections.Generic.ICollection<E>
+	public abstract class CollectionClientProxy<E>: System.Collections.ObjectModel.Collection<E>, Hazelcast.Core.ICollection<E>, System.Collections.Generic.ICollection<E>
 	{
 		protected String name;
 		protected ProxyHelper proxyHelper;

@@ -11,7 +11,7 @@ using Hazelcast.Impl.Base;
 
 namespace Hazelcast.Client
 {
-	public class SetClientProxy<E> : CollectionClientProxy<E>, Hazelcast.Client.ISet<E>
+	public class SetClientProxy<E> : CollectionClientProxy<E>, Hazelcast.Core.ISet<E>
 	{
 		
 		public SetClientProxy (OutThread outThread, String name, ListenerManager listenerManager, HazelcastClient client):base(outThread, name, listenerManager, client)

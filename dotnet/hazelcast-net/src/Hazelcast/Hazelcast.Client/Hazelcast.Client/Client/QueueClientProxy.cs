@@ -24,6 +24,10 @@ namespace Hazelcast.Client
 			return name.Substring(Prefix.QUEUE.Length);
 		}
 		
+		public InstanceType getInstanceType(){
+			return InstanceType.QUEUE;
+		}
+		
 		
 		public void Add(E e){
 			
@@ -66,7 +70,6 @@ namespace Hazelcast.Client
 		}
     
     	public override bool Remove(E e){
-			Console.WriteLine("Remove is called");
 			return proxyHelper.doOp<bool>(ClusterOperation.BLOCKING_QUEUE_REMOVE, null, e);
 		}
 	
