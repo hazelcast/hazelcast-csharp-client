@@ -106,6 +106,32 @@
     <Compile Include="Client\ClientMapEntry.cs" />
     <Compile Include="Impl\CMapEntry.cs" />
     <Compile Include="Client\ItemListenerManager.cs" />
+    <Compile Include="Core\IMultiMap.cs" />
+    <Compile Include="Client\MultiMapClientProxy.cs" />
+    <Compile Include="Impl\Values.cs" />
+    <Compile Include="Core\IdGenerator.cs" />
+    <Compile Include="Client\IdGeneratorClientProxy.cs" />
+    <Compile Include="Core\ILock.cs" />
+    <Compile Include="Client\LockClientProxy.cs" />
+    <Compile Include="Client\ClientThreadContext.cs" />
+    <Compile Include="Core\Transaction.cs" />
+    <Compile Include="Client\TransactionClientProxy.cs" />
+    <Compile Include="Client\AtomicNumberClientProxy.cs" />
+    <Compile Include="Core\IAtomicNumber.cs" />
+    <Compile Include="Client\ClusterClientProxy.cs" />
+    <Compile Include="Core\ICluster.cs" />
+    <Compile Include="Core\MembershipEvent.cs" />
+    <Compile Include="Core\MembershipListener.cs" />
+    <Compile Include="Core\InstanceListener.cs" />
+    <Compile Include="Core\InstanceEvent.cs" />
+    <Compile Include="Core\InstanceEventType.cs" />
+    <Compile Include="Client\InstanceListenerManager.cs" />
+    <Compile Include="Impl\ProxyKey.cs" />
+    <Compile Include="IO\SerializationHelper.cs" />
+    <Compile Include="Client\MembershipListenerManager.cs" />
+    <Compile Include="Core\Address.cs" />
+    <Compile Include="Core\NodeType.cs" />
+    <Compile Include="Impl\MemberImpl.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

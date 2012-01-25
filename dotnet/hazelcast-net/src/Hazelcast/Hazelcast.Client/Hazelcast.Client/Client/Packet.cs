@@ -64,6 +64,7 @@ namespace Hazelcast.Client
 		public void read (NetworkStream stream)
 		{
 			BinaryReader reader = new BinaryReader (stream);
+
 			int headerSize = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
 			int keySize = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
 			int valueSize = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());

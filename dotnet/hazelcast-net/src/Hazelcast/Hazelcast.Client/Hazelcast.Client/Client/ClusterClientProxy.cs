@@ -64,6 +64,7 @@ namespace Hazelcast.Client
 	    }
 	
 	    public void addInstanceListener(InstanceListener listener) {
+			Console.WriteLine("Listener Registered! " + instanceListenerManager().noListenerRegistered());
 	        if (instanceListenerManager().noListenerRegistered()) {
 	            Call c = instanceListenerManager().createNewAddListenerCall(proxyHelper);
 	            proxyHelper.doCall(c);

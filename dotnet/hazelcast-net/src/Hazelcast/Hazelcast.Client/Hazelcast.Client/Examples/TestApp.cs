@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Examples
 			this.hazelcast = client;
 		}
 		
-		public static void Main (){
+		public static void Main2 (){
 			HazelcastClient client = HazelcastClient.newHazelcastClient("dev", "dev-pass", "localhost");
 			TestApp testApp = new TestApp(client);
 			Console.WriteLine("Starting the TestApp");
@@ -275,7 +275,7 @@ namespace Hazelcast.Client.Examples
 			} else if (first.ToLower().Equals("long") || first.ToLower().Equals("executeLong".ToLower())) {
 			    //executeLong(args);
 			} else if (first.ToLower().Equals("instances")) {
-			    //handleInstances(args);
+			    handleInstances(args);
 			} else if (first.ToLower().Equals("quit") || first.ToLower().Equals("exit")) {
 			    return;
 			} else {
@@ -407,6 +407,13 @@ namespace Hazelcast.Client.Examples
 	            }
 	        }
 	    }
+		
+		protected void handleInstances(String[] args) {
+        System.Collections.Generic.ICollection<Instance> instances = hazelcast.getInstances();
+        foreach (Instance instance in instances) {
+            println(instance);
+        }
+    }
 		
 		protected void handleIterator(String[] args) {
 	        System.Collections.Generic.IEnumerator<object> it = null;

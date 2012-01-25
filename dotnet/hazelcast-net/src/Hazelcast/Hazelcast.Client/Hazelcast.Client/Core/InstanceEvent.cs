@@ -23,6 +23,11 @@ namespace Hazelcast.Core
 	    public Instance getInstance() {
 	        return instance;
 	    }
+		
+		public override string ToString ()
+		{
+			return string.Format ("InstanceEvent +["+ instanceEventType+ ": "+instance.getId()+"]");
+		}
 	}
 }
 
