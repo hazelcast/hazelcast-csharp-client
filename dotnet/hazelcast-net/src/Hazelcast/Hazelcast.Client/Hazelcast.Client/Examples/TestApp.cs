@@ -21,11 +21,17 @@ namespace Hazelcast.Client.Examples
 	
 	public class TestApp : MessageListener<Object>, EntryListener<Object, Object>, ItemListener<Object>   
 	{
+		
+		private ISet<Object> set = null;
+		
+		private IList<Object> list = null;
+		
 		private IQueue<Object> queue = null;
 
     	private ITopic<Object> topic = null;
 
     	private IMap<Object, Object> map = null;
+		
 		
 		private volatile HazelcastClient hazelcast;
 		
@@ -67,6 +73,17 @@ namespace Hazelcast.Client.Examples
 	        return map;
 	    }
 		
+		public ISet<Object> getSet() {
+	        set = hazelcast.getSet<Object>(_namespace);
+	        return set;
+	    }
+		
+		public IList<Object> getList() {
+	        list = hazelcast.getList<Object>(_namespace);
+	        return list;
+	    }
+		
+		
 		public void stop() {
 	        running = false;
 	    }
@@ -77,8 +94,7 @@ namespace Hazelcast.Client.Examples
 	        }
 			println("Initiated the reader");
 	        running = true;
-	        //while (running) {
-	        for(int i=0;i<10;i++){
+	        while (running) {
 				print("hazelcast[" + _namespace + "] > ");
 	            String command = lineReader.readLine();
 	            handleCommand(command);
@@ -107,7 +123,7 @@ namespace Hazelcast.Client.Examples
 			    first = args[0];
 			}
 			if (command.StartsWith("help")) {
-			    //handleHelp(command);
+			    handleHelp(command);
 			} else if (first.StartsWith("#") && first.Length > 1) {
 			    int repeat = Int32.Parse(first.Substring(1));
 			    DateTime t0 = System.DateTime.Now;
@@ -149,7 +165,7 @@ namespace Hazelcast.Client.Examples
 			} else if ("who".Equals(first)) {
 			    //println(hazelcast.getCluster());
 			} else if (first.IndexOf("ock") != -1 && first.IndexOf(".") == -1) {
-			    //handleLock(args);
+			    handleLock(args);
 			} else if (first.IndexOf(".size") != -1) {
 			    handleSize(args);
 			} else if (first.IndexOf(".clear") != -1) {
@@ -157,7 +173,7 @@ namespace Hazelcast.Client.Examples
 			} else if (first.IndexOf(".destroy") != -1) {
 			    handleDestroy(args);
 			} else if (first.IndexOf(".iterator") != -1) {
-			    //handleIterator(args);
+			    handleIterator(args);
 			} else if (first.IndexOf(".contains") != -1) {
 			    handleContains(args);
 			} else if (first.IndexOf(".stats") != -1) {
@@ -179,13 +195,13 @@ namespace Hazelcast.Client.Examples
 			} else if ("q.pollmany".Equals(first)) {
 			    handleQPollMany(args);
 			} else if ("s.add".Equals(first)) {
-			    //handleSetAdd(args);
+			    handleSetAdd(args);
 			} else if ("s.remove".Equals(first)) {
-			    //handleSetRemove(args);
+			    handleSetRemove(args);
 			} else if ("s.addmany".Equals(first)) {
-			    //handleSetAddMany(args);
+			    handleSetAddMany(args);
 			} else if ("s.removemany".Equals(first)) {
-			    //handleSetRemoveMany(args);
+			    handleSetRemoveMany(args);
 			} else if (first.Equals("m.replace")) {
 			    handleMapReplace(args);
 			} else if (first.ToLower().Equals("m.putIfAbsent".ToLower())) {
@@ -213,11 +229,11 @@ namespace Hazelcast.Client.Examples
 			} else if (command.ToLower().Equals("m.localKeys".ToLower())) {
 			    //handleMapLocalKeys();
 			} else if (command.Equals("m.keys")) {
-			    //handleMapKeys();
+			    handleMapKeys();
 			} else if (command.Equals("m.values")) {
-			    //handleMapValues();
+			    handleMapValues();
 			} else if (command.Equals("m.entries")) {
-			    //handleMapEntries();
+			    handleMapEntries();
 			} else if (first.Equals("m.lock")) {
 			    handleMapLock(args);
 			} else if (first.ToLower().Equals("m.tryLock".ToLower())) {
@@ -231,25 +247,23 @@ namespace Hazelcast.Client.Examples
 			} else if (first.Equals("m.unlock")) {
 			    handleMapUnlock(args);
 			} else if (first.Equals("l.add")) {
-			    //handleListAdd(args);
-			} else if (first.Equals("l.set")) {
-			    //handleListSet(args);
+			    handleListAdd(args);
 			} else if ("l.addmany".Equals(first)) {
-			    //handleListAddMany(args);
+			    handleListAddMany(args);
 			} else if (first.Equals("l.remove")) {
-			    //handleListRemove(args);
+			    handleListRemove(args);
 			} else if (first.Equals("l.contains")) {
-			    //handleListContains(args);
+			    handleListContains(args);
 			} else if (first.Equals("execute")) {
 			    //execute(args);
 			} else if (first.Equals("partitions")) {
 			    //handlePartitions(args);
 			} else if (first.Equals("txn")) {
-			    //hazelcast.getTransaction().begin();
+			    hazelcast.getTransaction().begin();
 			} else if (first.Equals("commit")) {
-			    //hazelcast.getTransaction().commit();
+			    hazelcast.getTransaction().commit();
 			} else if (first.Equals("rollback")) {
-			    //hazelcast.getTransaction().rollback();
+			    hazelcast.getTransaction().rollback();
 			} else if (first.ToLower().Equals("executeOnKey".ToLower())) {
 			    //executeOnKey(args);
 			} else if (first.ToLower().Equals("executeOnMember".ToLower())) {
@@ -271,7 +285,7 @@ namespace Hazelcast.Client.Examples
 		protected void handleAddListener(String[] args) {
 	        String first = args[0];
 	        if (first.StartsWith("s.")) {
-	            //getSet().addItemListener(this, true);
+	            getSet().addItemListener(this, true);
 	        } else if (first.StartsWith("m.")) {
 	            if (args.Length > 1) {
 	                getMap().addEntryListener(this, args[1], true);
@@ -283,14 +297,14 @@ namespace Hazelcast.Client.Examples
 	        } else if (first.StartsWith("t.")) {
 	            getTopic().addMessageListener(this);
 	        } else if (first.StartsWith("l.")) {
-	            //getList().addItemListener(this, true);
+	            getList().addItemListener(this, true);
 	        }
 	    }
 		
 		protected void handleRemoveListener(String[] args) {
 	        String first = args[0];
 	        if (first.StartsWith("s.")) {
-	            //getSet().removeItemListener(this);
+	            getSet().removeItemListener(this);
 	        } else if (first.StartsWith("m.")) {
 	            if (args.Length > 1) {
 	                getMap().removeEntryListener(this, args[1]);
@@ -302,7 +316,7 @@ namespace Hazelcast.Client.Examples
 	        } else if (first.StartsWith("t.")) {
 	            getTopic().removeMessageListener(this);
 	        } else if (first.StartsWith("l.")) {
-	            //getList().removeItemListener(this);
+	            getList().removeItemListener(this);
 	        }
 	    }
 		
@@ -310,13 +324,13 @@ namespace Hazelcast.Client.Examples
 	        int size = 0;
 	        String iteratorStr = args[0];
 	        if (iteratorStr.StartsWith("s.")) {
-	            //size = getSet().size();
+	            size = getSet().size();
 	        } else if (iteratorStr.StartsWith("m.")) {
 	            size = getMap().size();
 	        } else if (iteratorStr.StartsWith("q.")) {
 	            size = getQueue().Count;
 	        } else if (iteratorStr.StartsWith("l.")) {
-	            //size = getList().size();
+	            size = getList().size();
 	        }
 	        println("Size = " + size);
 	    }
@@ -324,13 +338,13 @@ namespace Hazelcast.Client.Examples
 		protected void handleClear(String[] args) {
 	        String iteratorStr = args[0];
 	        if (iteratorStr.StartsWith("s.")) {
-	            //getSet().clear();
+	            getSet().Clear();
 	        } else if (iteratorStr.StartsWith("m.")) {
-	            //getMap().clear();
+	            getMap().clear();
 	        } else if (iteratorStr.StartsWith("q.")) {
 	            getQueue().Clear();
 	        } else if (iteratorStr.StartsWith("l.")) {
-	            //getList().clear();
+	            getList().Clear();
 	        }
 	        println("Cleared all.");
 	    }
@@ -338,13 +352,13 @@ namespace Hazelcast.Client.Examples
 		protected void handleDestroy(String[] args) {
         	String iteratorStr = args[0];
 	        if (iteratorStr.StartsWith("s.")) {
-	            //getSet().destroy();
+	            getSet().destroy();
 	        } else if (iteratorStr.StartsWith("m.")) {
-	            //getMap().destroy();
+	            getMap().destroy();
 	        } else if (iteratorStr.StartsWith("q.")) {
-	            //getQueue().destroy();
+	            getQueue().destroy();
 	        } else if (iteratorStr.StartsWith("l.")) {
-	            //getList().destroy();
+	            getList().destroy();
 	        }
 	        println("Destroyed!");
 	    }
@@ -361,15 +375,132 @@ namespace Hazelcast.Client.Examples
 	        String data = args[1];
 	        bool result = false;
 	        if (iteratorStr.StartsWith("s.")) {
-	            //result = getSet().contains(data);
+	            result = getSet().Contains(data);
 	        } else if (iteratorStr.StartsWith("m.")) {
 	            result = (key) ? getMap().containsKey(data) : getMap().containsValue(data);
 	        } else if (iteratorStr.StartsWith("q.")) {
 	            result = getQueue().Contains(data);
 	        } else if (iteratorStr.StartsWith("l.")) {
-	            //result = getList().contains(data);
+	            result = getList().Contains(data);
 	        }
 	        println("Contains : " + result);
+	    }
+		
+		protected void handleLock(String[] args) {
+	        String lockStr = args[0];
+	        String key = args[1];
+	        ILock _lock = hazelcast.getLock(key);
+	        if (lockStr.ToLower().Equals("lock")) {
+				_lock.Lock();
+	            println("true");
+	        } else if (lockStr.ToLower().Equals("unlock")) {
+	            _lock.unLock();
+	            println("true");
+	        } else if (lockStr.ToLower().Equals("trylock")) {
+	            String timeout = args.Length > 2 ? args[2] : null;
+	            if (timeout == null) {
+	                println(_lock.tryLock());
+	            } else {
+	                long time = long.Parse(timeout);
+	                println(_lock.tryLock(time*1000));
+	                
+	            }
+	        }
+	    }
+		
+		protected void handleIterator(String[] args) {
+	        System.Collections.Generic.IEnumerator<object> it = null;
+	        String iteratorStr = args[0];
+	        if (iteratorStr.StartsWith("s.")) {
+	            it = getSet().GetEnumerator();
+	        } else if (iteratorStr.StartsWith("m.")) {
+	            it = getMap().Keys().GetEnumerator();
+	        } else if (iteratorStr.StartsWith("q.")) {
+	            it = getQueue().GetEnumerator();
+	        } else if (iteratorStr.StartsWith("l.")) {
+	            it = getList().GetEnumerator();
+	        }
+	        
+	        int count = 1;
+	        while (it.MoveNext()) {
+	            print(count++ + " " + it.Current);
+	            println("");
+	        }
+	    }
+		
+		
+		protected void handleSetAdd(String[] args) {
+	        println(getSet().Add(args[1]));
+	    }
+		protected void handleSetRemove(String[] args) {
+	        println(getSet().Remove(args[1]));
+	    }
+	
+	    protected void handleSetAddMany(String[] args) {
+	        int count = 1;
+	        if (args.Length > 1)
+	            count = int.Parse(args[1]);
+	        int successCount = 0;
+	        System.DateTime t0 = System.DateTime.Now;
+	        for (int i = 0; i < count; i++) {
+	            bool success = getSet().Add("obj" + i);
+	            if (success)
+	                successCount++;
+	        }
+	        double seconds = (System.DateTime.Now - t0).TotalSeconds;
+	        println("Added " + successCount + " objects.");
+	        println("size = " + getSet().Count + ", " + successCount / seconds + " evt/s");
+	    }
+		
+		 protected void handleListAddMany(String[] args) {
+	        int count = 1;
+	        if (args.Length > 1)
+	            count = int.Parse(args[1]);
+	        int successCount = 0;
+	        System.DateTime t0 = System.DateTime.Now;
+	        for (int i = 0; i < count; i++) {
+	            getList().Add("obj" + i);
+	                successCount++;
+	        }
+	        double seconds = (System.DateTime.Now - t0).TotalSeconds;
+	        println("Added " + successCount + " objects.");
+	        println("size = " + getSet().Count + ", " + successCount / seconds + " evt/s");
+	    }
+	
+	    protected void handleSetRemoveMany(String[] args) {
+	        int count = 1;
+	        if (args.Length > 1)
+	            count = int.Parse(args[1]);
+	        int successCount = 0;
+	        System.DateTime t0 = System.DateTime.Now;
+	        for (int i = 0; i < count; i++) {
+	            getSet().Remove("obj" + i);
+	            successCount++;
+	        }
+	        double seconds = (System.DateTime.Now - t0).TotalSeconds;
+	        println("Removed " + successCount + " objects.");
+	        println("size = " + getSet().Count + ", " + successCount / seconds + " evt/s");
+	    }
+		
+		protected void handleListAdd(String[] args) {
+	        getList().Add(args[1]);
+			println("true");
+	        
+	    }
+		protected void handleListContains(String[] args) {
+	        println(getList().Contains(args[1]));
+	    }
+	
+	    protected void handleListRemove(String[] args) {
+	        int index = -1;
+	        index = int.Parse(args[1]);
+	        if (index >= 0) {
+				getList().RemoveAt(index);
+	            println("true");
+	        } else {
+				getList().Remove(args[1]);
+	            println("true");
+	        }
 	    }
 		
 		protected void handleTopicPublish(String[] args) {
@@ -535,6 +666,37 @@ namespace Hazelcast.Client.Examples
 	        }
 	        DateTime t1 = System.DateTime.Now;
 	        println("size = " + getMap().size() + ", " + count * 1000 / (t1 - t0).TotalMilliseconds + " evt/s");
+	    }
+		
+		protected void handleMapKeys() {
+	        System.Collections.Generic.ICollection<object> coll = getMap().Keys();
+			int count = 0;
+			foreach (object o in coll){
+				count++;
+	            println(o);
+			}
+	        println("Total " + count);	
+	    }
+	
+	    protected void handleMapEntries() {
+	        System.Collections.Generic.ICollection<object> coll = getMap().Keys();
+			int count = 0;
+			foreach (object o in coll){
+				count++;
+				MapEntry<object,object> entry = getMap().getMapEntry(o);
+	            println(entry.getKey() + " : " + entry.getValue());
+			}
+	        println("Total " + count);
+	    }
+	
+	    protected void handleMapValues() {
+	        System.Collections.Generic.ICollection<object> coll = getMap().Keys();
+			int count = 0;
+			foreach (object o in coll){
+				count++;
+	            println(getMap().get(o));
+			}
+			println("Total " + count);	
 	    }
 	
 	    protected void handleMapLock(String[] args) {
