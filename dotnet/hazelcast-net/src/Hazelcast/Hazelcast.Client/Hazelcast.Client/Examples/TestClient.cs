@@ -11,19 +11,20 @@ namespace Hazelcast.Client
 {
 	public class TestClient
 	{
-		public static void Main2 ()
+		public static void Main()
 		{
 			//ProtoSerializer serializer = new ProtoSerializer();
 			//DefaultSerializer.register(serializer);
 			
+			Console.WriteLine("Basliyor!!!");
 			HazelcastClient client = HazelcastClient.newHazelcastClient ("dev", "dev-pass", "localhost");
-			
+			client.addInstanceListener(new MyInstanceListener());
 			
 			IMap<object, object> map = client.getMap<object, object>("default");
 			IQueue<String> queue = client.getQueue<String>("default");
 			ITopic<String> topic = client.getTopic<String>("default");
-			/*Console.WriteLine("Put Result: " + map.put("key", "value"));
-			Console.WriteLine("Get Result: " + map.get("key"));
+			Console.WriteLine("Put Result: " + map.put("key", "value"));
+			/*Console.WriteLine("Get Result: " + map.get("key"));
 			Console.WriteLine("Remove Result: " + map.remove("key"));
 			Console.WriteLine("Put Result: " + map.put("key", "value"));
 			Console.WriteLine("Flush Map: "); map.flush();
@@ -176,6 +177,19 @@ namespace Hazelcast.Client
 			Console.WriteLine("Evicted" + e.Key + ": " + e.Value + ": "+ e.OldValue);
 		}	
 	}
+	
+	class MyInstanceListener: InstanceListener{
+			public MyInstanceListener (){
+			
+			}
+			public void instanceCreated(InstanceEvent e){
+				Console.WriteLine(e);
+			}
+	
+		    public void instanceDestroyed(InstanceEvent e){
+				Console.WriteLine(e);
+			}
+		}
 
 	[Serializable()]
 	public class Employee2 : ISerializable

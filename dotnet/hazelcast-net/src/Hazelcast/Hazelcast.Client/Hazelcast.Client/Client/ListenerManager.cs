@@ -44,7 +44,7 @@ namespace Hazelcast.Client.Impl
 						
 	                    Object eventType = Hazelcast.Client.IO.IOUtil.toObject(packet.value);
 	                    Console.WriteLine("EventType: " + eventType);
-						if (eventType is InstanceEventType) {
+						if (0.Equals(eventType) || 2.Equals(eventType)) {
 	                        instanceListenerManager.notifyListeners(packet);
 	                    } else {
 	                        membershipListenerManager.notifyListeners(packet);

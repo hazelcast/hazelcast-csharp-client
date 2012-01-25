@@ -36,7 +36,8 @@ namespace Hazelcast.Client
 	
 	    public void notifyListeners(Packet packet) {
 	        String id = (String) IOUtil.toObject(packet.key);
-	        InstanceEventType instanceEventType = (InstanceEventType) IOUtil.toObject(packet.value);
+	        int eventType =  (int)IOUtil.toObject(packet.value);
+			InstanceEventType instanceEventType = (InstanceEventType)eventType;
 	        InstanceEvent e = new InstanceEvent(instanceEventType, (Instance) client.getClientProxy(id));
 	        foreach (InstanceListener listener in instanceListeners) {
 	            if(instanceEventType.Equals(InstanceEventType.CREATED))

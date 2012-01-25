@@ -4,7 +4,7 @@ namespace Hazelcast.Core
 {
 	public enum InstanceEventType
 	{
-		CREATED=1,
+		CREATED=0,
 		DESTROYED=2
 	}
 }
