@@ -1,6 +1,6 @@
 using System;
 
-namespace Hazelcast.Client
+namespace Hazelcast.Core
 {
 	public interface MessageListener<out E>
 	{

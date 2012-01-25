@@ -1,6 +1,7 @@
 using System;
+using Hazelcast.Core;
 
-namespace Hazelcast.Client
+namespace Hazelcast.Core
 {
 	public interface HazelcastInstance
 	{
@@ -44,7 +45,7 @@ namespace Hazelcast.Client
      * @param name name of the distributed list
      * @return distributed list instance with the specified name
      */
-    //IList<E> getList<E>(String name);
+    IList<E> getList<E>(String name);
 
     /**
      * Returns the distributed map instance with the specified name.
@@ -60,7 +61,7 @@ namespace Hazelcast.Client
      * @param name name of the distributed multimap
      * @return distributed multimap instance with the specified name
      */
-    //MultiMap<K, V> getMultiMap<K, V> (String name);
+    IMultiMap<K, V> getMultiMap<K, V> (String name);
 
     /**
      * Returns the distributed lock instance for the specified key object.
@@ -87,7 +88,7 @@ namespace Hazelcast.Client
      * @param key key of the lock instance
      * @return distributed lock instance for the specified key.
      */
-    //ILock getLock(Object key);
+    ILock getLock(Object key);
 
     /**
      * Returns the Cluster that this Hazelcast instance is part of.
@@ -97,7 +98,7 @@ namespace Hazelcast.Client
      *
      * @return cluster that this Hazelcast instance is part of
      */
-    //Cluster getCluster();
+    ICluster getCluster();
 
     /**
      * Returns the default distributed executor service. Executor
@@ -153,7 +154,7 @@ namespace Hazelcast.Client
      *
      * @return transaction for the current thread
      */
-    //Transaction getTransaction();
+    Transaction getTransaction();
 
     /**
      * Creates cluster-wide unique IDs. Generated IDs are long type primitive values
@@ -164,7 +165,7 @@ namespace Hazelcast.Client
      * @param name name of the IdGenerator
      * @return IdGenerator for the given name
      */
-    //IdGenerator getIdGenerator(String name);
+    IdGenerator getIdGenerator(String name);
 
     /**
      * Creates cluster-wide atomic long. Hazelcast AtomicNumber is distributed
@@ -173,7 +174,7 @@ namespace Hazelcast.Client
      * @param name name of the AtomicNumber proxy
      * @return AtomicNumber proxy for the given name
      */
-    //AtomicNumber getAtomicNumber(String name);
+    IAtomicNumber getAtomicNumber(String name);
 
     /**
      * Creates cluster-wide CountDownLatch. Hazelcast ICountDownLatch is distributed
@@ -201,7 +202,7 @@ namespace Hazelcast.Client
      *
      * @return the collection of instances created by Hazelcast.
      */
-    //Collection<Instance> getInstances();
+    System.Collections.Generic.ICollection<Instance> getInstances();
 
     /**
      * Add a instance listener which will be notified when a
@@ -210,7 +211,7 @@ namespace Hazelcast.Client
      *
      * @param instanceListener instance listener
      */
-    //void addInstanceListener(InstanceListener instanceListener);
+    void addInstanceListener(InstanceListener instanceListener);
 
     /**
      * Removes the specified instance listener. Returns silently
@@ -218,7 +219,7 @@ namespace Hazelcast.Client
      *
      * @param instanceListener instance listener to remove
      */
-    //void removeInstanceListener(InstanceListener instanceListener);
+    void removeInstanceListener(InstanceListener instanceListener);
 
     /**
      * Returns the configuration of this Hazelcast instance.

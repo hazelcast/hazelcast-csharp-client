@@ -1,7 +1,7 @@
 using System;
 using Hazelcast.Core;
 
-namespace Hazelcast.Client
+namespace Hazelcast.Core
 {
 	public interface ICollection<E>
 	{
