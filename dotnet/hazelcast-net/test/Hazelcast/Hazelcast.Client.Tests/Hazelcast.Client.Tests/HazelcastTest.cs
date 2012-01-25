@@ -8,10 +8,14 @@ namespace Hazelcast.Client.Tests
 		
 		public static HazelcastClient getHazelcastClient(){
 			if(client==null){
-				client = HazelcastClient.newHazelcastClient("dev", "dev-pass", "localhost");		
+				client = newHazelcastClient();
 			}
 			return client;
 			
+		}
+		
+		public static HazelcastClient newHazelcastClient(){
+			return HazelcastClient.newHazelcastClient("dev", "dev-pass", "localhost");		
 		}
 		
 		public HazelcastTest ()

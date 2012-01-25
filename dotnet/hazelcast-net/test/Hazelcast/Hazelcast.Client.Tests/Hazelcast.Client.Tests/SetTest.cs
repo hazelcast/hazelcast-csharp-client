@@ -16,7 +16,7 @@ namespace Hazelcast.Client.Tests
 	[Test]
     public void getSetName() {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<String> set = hClient.getSet<String>("getSetName");
+        Hazelcast.Core.ISet<String> set = hClient.getSet<String>("getSetName");
         Assert.AreEqual("getSetName", set.getName());
 			set.destroy();
     }
@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Tests
 	[Ignore]
     public void addRemoveItemListener()  {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<String> set = hClient.getSet<String>("addRemoveItemListenerSet");
+        Hazelcast.Core.ISet<String> set = hClient.getSet<String>("addRemoveItemListenerSet");
         CountdownEvent addLatch = new CountdownEvent(2);
         CountdownEvent removeLatch = new CountdownEvent(2);
         ItemListener<String> listener = new MyItemListener<String>(addLatch, removeLatch);
@@ -91,11 +91,11 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void destroy() {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<int?> set = hClient.getSet<int?>("destroy");
+        Hazelcast.Core.ISet<int?> set = hClient.getSet<int?>("destroy");
         for (int i = 0; i < 100; i++) {
             Assert.IsTrue(set.Add(i));
         }
-        ISet<int?> set2 = hClient.getSet<int?>("destroy");
+        Hazelcast.Core.ISet<int?> set2 = hClient.getSet<int?>("destroy");
         Assert.IsTrue(set == set2);
         Assert.IsTrue(set.getId().Equals(set2.getId()));
         set.destroy();
@@ -110,7 +110,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void add() {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<int?> set = hClient.getSet<int?>("add");
+        Hazelcast.Core.ISet<int?> set = hClient.getSet<int?>("add");
         int count = 100;
         for (int i = 0; i < count; i++) {
             Assert.IsTrue(set.Add(i));
@@ -125,7 +125,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void contains() {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<int?> set = hClient.getSet<int?>("contains");
+        Hazelcast.Core.ISet<int?> set = hClient.getSet<int?>("contains");
         int count = 100;
         for (int i = 0; i < count; i++) {
             set.Add(i);
@@ -142,7 +142,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void addAll() {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<int?> set = hClient.getSet<int?>("addAll");
+        Hazelcast.Core.ISet<int?> set = hClient.getSet<int?>("addAll");
         List<int?> arr = new List<int?>();
         int count = 100;
         for (int i = 0; i < count; i++) {
@@ -158,7 +158,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void containsAll() {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<int?> set = hClient.getSet<int?>("containsAll");
+        Hazelcast.Core.ISet<int?> set = hClient.getSet<int?>("containsAll");
         List<int?> arrList = new List<int?>();
         int count = 100;
         for (int i = 0; i < count; i++) {
@@ -186,7 +186,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void size() {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<int?> set = hClient.getSet<int?>("size");
+        Hazelcast.Core.ISet<int?> set = hClient.getSet<int?>("size");
         int count = 100;
         Assert.IsTrue(set.Count==0);
         for (int i = 0; i < count; i++) {
@@ -204,7 +204,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void remove() {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<int?> set = hClient.getSet<int?>("remove");
+        Hazelcast.Core.ISet<int?> set = hClient.getSet<int?>("remove");
         int count = 100;
         Assert.IsTrue(set.Count==0);
         for (int i = 0; i < count; i++) {
@@ -224,7 +224,7 @@ namespace Hazelcast.Client.Tests
     [Test]
     public void clear() {
         HazelcastClient hClient = getHazelcastClient();
-        ISet<int?> set = hClient.getSet<int?>("clear");
+        Hazelcast.Core.ISet<int?> set = hClient.getSet<int?>("clear");
         int count = 100;
         Assert.IsTrue(set.Count==0);
         for (int i = 0; i < count; i++) {
@@ -239,7 +239,7 @@ namespace Hazelcast.Client.Tests
 	    [Test]
 	    public void addIterateAndRemove() {
 	        HazelcastClient hClient = getHazelcastClient();
-	        ISet<int?> set = hClient.getSet<int?>("iterate");
+	        Hazelcast.Core.ISet<int?> set = hClient.getSet<int?>("iterate");
 	        set.Add(1);
 	        set.Add(2);
 	        set.Add(2);
