@@ -139,9 +139,15 @@ namespace Hazelcast.Client
 				
 				writer.Write (System.Net.IPAddress.HostToNetworkOrder ((long)callId));
 				writer.Write (responseType);
-				byte[] b2 = System.Text.Encoding.ASCII.GetBytes (name);
-				writer.Write (System.Net.IPAddress.HostToNetworkOrder ((int)b2.Length));
-				writer.Write (b2);
+				int nameLen = 0;
+				byte[] b2 = null;
+				if(name!=null){
+					b2 = System.Text.Encoding.ASCII.GetBytes (name);
+					nameLen = b2.Length;
+				}
+				writer.Write (System.Net.IPAddress.HostToNetworkOrder (nameLen));
+				if(nameLen > 0)
+					writer.Write (b2);
 				writer.Write ((byte)0);
 				
 				writer.Write(System.Net.IPAddress.HostToNetworkOrder ((int)-1));

@@ -33,8 +33,7 @@ namespace Hazelcast.Client
         	EntryEvent<object, object> e = new EntryEvent<object, object>(packet.name, null, (int) packet.longValue, IOUtil.toObject(packet.key), oldValue, value);
         	String name = packet.name;
         	Object key = toKey(e.Key);
-			//Console.WriteLine("Name: " + name + " Key: " + key + " Value: " + value + "OldValue: " + oldValue) ;
-        	if (entryListeners.ContainsKey(name)) {
+			if (entryListeners.ContainsKey(name)) {
            		notifyListeners(e, entryListeners[name][NULL_KEY]);
             	if (key != NULL_KEY) {
 					if(entryListeners[name].ContainsKey(key)){

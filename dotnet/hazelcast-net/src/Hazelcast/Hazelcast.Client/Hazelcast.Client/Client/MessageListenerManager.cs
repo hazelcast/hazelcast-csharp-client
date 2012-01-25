@@ -2,6 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Hazelcast.IO;
+using Hazelcast.Core;
+using Hazelcast.Impl;
 
 namespace Hazelcast.Client
 {
@@ -27,6 +29,17 @@ namespace Hazelcast.Client
 	            listeners = newListenersList;
 	        }
 	        listeners.Add(messageListener);
+	    }
+		
+		public void removeListener<E>(String name, MessageListener<E> messageListener) {
+	        if (!messageListeners.ContainsKey(name)) {
+	            return;
+	        }
+	        messageListeners[name].Remove(messageListener);
+	        if (messageListeners[name].Count==0) {
+				List<MessageListener<object>> list = null;
+	            messageListeners.TryRemove(name, out list);
+	        }
 	    }
 		
 		public Call createNewAddListenerCall(ProxyHelper proxyHelper) {

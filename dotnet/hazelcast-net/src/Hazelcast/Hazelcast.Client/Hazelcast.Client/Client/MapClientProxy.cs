@@ -5,6 +5,7 @@ using Hazelcast.Client.Impl;
 using Hazelcast.Core;
 using System.Collections.Generic;
 using Hazelcast.Impl.Base;
+using Hazelcast.Impl;
 namespace Hazelcast.Client
 {
 	public class MapClientProxy<K, V>: IMap<K,V>
@@ -30,12 +31,14 @@ namespace Hazelcast.Client
 	
 	    public Object getId(){
 			return name;
-			
+		}
+		
+		public string getName() {
+			return name.Substring(Prefix.MAP.Length);
 		}
 		
 		public V put(K key, V value){
 			Object o = proxyHelper.doOp<V>(ClusterOperation.CONCURRENT_MAP_PUT, key, value);
-			Console.WriteLine("res is :"+o);
 			if(o==null)
 				return default(V);
 			return (V)o;
@@ -58,10 +61,6 @@ namespace Hazelcast.Client
 		
 		public void flush(){
 			proxyHelper.doOp<object>(ClusterOperation.CONCURRENT_MAP_FLUSH, null, null);
-		}
-		
-		public string getName() {
-			return name.Substring(Prefix.MAP.Length);
 		}
 		
 		public Object tryRemove(K key, long timeout){

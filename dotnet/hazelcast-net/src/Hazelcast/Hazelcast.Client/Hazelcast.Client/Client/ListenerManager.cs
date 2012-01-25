@@ -13,12 +13,17 @@ namespace Hazelcast.Client.Impl
 		private QueueItemListenerManager queueItemListenerManager;
 		private MessageListenerManager messageListenerManager;
 		private ItemListenerManager itemListenerManager;
-		public ListenerManager ()
+		private MembershipListenerManager membershipListenerManager;
+		private InstanceListenerManager instanceListenerManager;
+		
+		public ListenerManager (HazelcastClient client)
 		{
 			entryListenerManager = new EntryListenerManager();
 			queueItemListenerManager = new QueueItemListenerManager();
 			messageListenerManager = new MessageListenerManager();
 			itemListenerManager = new ItemListenerManager(entryListenerManager);
+			membershipListenerManager = new MembershipListenerManager(client);
+			instanceListenerManager = new InstanceListenerManager(client);
 		}
 		
 		public void enQueue(Object o)
@@ -34,7 +39,17 @@ namespace Hazelcast.Client.Impl
             	}
             	if (obj is Packet) {
                 	Packet packet = (Packet) obj;
-					if(getInstanceType(packet.name).Equals(InstanceType.QUEUE)){
+					Console.WriteLine("packet name is  " + packet.name);
+					if (packet.name == null) {
+						
+	                    Object eventType = Hazelcast.Client.IO.IOUtil.toObject(packet.value);
+	                    Console.WriteLine("EventType: " + eventType);
+						if (eventType is InstanceEventType) {
+	                        instanceListenerManager.notifyListeners(packet);
+	                    } else {
+	                        membershipListenerManager.notifyListeners(packet);
+	                    }
+					}else if(getInstanceType(packet.name).Equals(InstanceType.QUEUE)){
 						queueItemListenerManager.notifyListeners(packet);			
 					}else if(getInstanceType(packet.name).Equals(InstanceType.TOPIC)){
 						messageListenerManager.notifyListeners(packet);
@@ -88,9 +103,17 @@ namespace Hazelcast.Client.Impl
 			return itemListenerManager;
 		}
 		
-		public static ListenerManager start ()
+		public MembershipListenerManager getMembershipListenerManager(){
+			return membershipListenerManager;	
+		}
+		
+		public InstanceListenerManager getInstanceListenerManager() {
+	        return instanceListenerManager;
+	    }
+		
+		public static ListenerManager start (HazelcastClient client)
 		{
-			ListenerManager listenerManager = new ListenerManager();
+			ListenerManager listenerManager = new ListenerManager(client);
 			Thread thread = new Thread (new ThreadStart (listenerManager.run));
 			thread.Start ();
 			return listenerManager;

@@ -21,8 +21,22 @@ namespace Hazelcast.Client
 		public String getName(){
 			return this.name.Substring(Prefix.TOPIC.Length);
 		}
+		
+		public InstanceType getInstanceType(){
+			return InstanceType.TOPIC;
+		}
+	
+	    public void destroy(){
+			proxyHelper.destroy();
+		}
+	
+	    public Object getId(){
+			return name;
+		}
+	
 
 	    public void publish(E message){
+			ProxyHelper.check(message);
 			proxyHelper.doFireAndForget(ClusterOperation.TOPIC_PUBLISH, message, null);
 		}
 	
@@ -43,6 +57,12 @@ namespace Hazelcast.Client
 	    }
 	
 	    public void removeMessageListener(MessageListener<E> listener){
+			lock(name) {
+            messageListenerManager().removeListener<E>(name, listener);
+            if (messageListenerManager().noListenerRegistered(name)) {
+                proxyHelper.doOp<object>(ClusterOperation.REMOVE_LISTENER, null, null);
+            }
+        }
 			
 		}
 		

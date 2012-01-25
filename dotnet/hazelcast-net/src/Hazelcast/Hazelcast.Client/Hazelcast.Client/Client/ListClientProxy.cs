@@ -11,7 +11,7 @@ using Hazelcast.Impl.Base;
 
 namespace Hazelcast.Client
 {
-	public class ListClientProxy<E> : CollectionClientProxy<E>, IList<E>
+	public class ListClientProxy<E> : CollectionClientProxy<E>, Hazelcast.Core.IList<E>
 	{
 		
 		public ListClientProxy (OutThread outThread, String name, ListenerManager listenerManager, HazelcastClient client):base(outThread, name, listenerManager, client)
@@ -52,13 +52,8 @@ namespace Hazelcast.Client
 		
 		
 		public void Add(E e){
-			Console.WriteLine("Beni mi");
 			proxyHelper.doOp<bool>(ClusterOperation.CONCURRENT_MAP_ADD_TO_LIST, e, null);
 		}
-		
-		//public new bool Add(E e){
-		//	return true;
-		//}
 		
 		public override System.Collections.Generic.IList<E> entries(){
 			System.Collections.Generic.IList<KeyValue> list = proxyHelper.entries<E>(null);

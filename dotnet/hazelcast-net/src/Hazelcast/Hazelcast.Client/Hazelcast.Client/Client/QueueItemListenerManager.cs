@@ -37,7 +37,6 @@ namespace Hazelcast.Client
 		
 		public void notifyListeners(Packet packet) 
 		{
-			Console.WriteLine("Notify is called");
 	        List<ItemListener<Object>> list = null;
 	        if (queueItemListeners.TryGetValue(packet.name, out list)) {
 	            foreach (ItemListener<Object> listener in list) {

@@ -27,7 +27,6 @@ namespace Hazelcast.Client
 		
 		public V doOp<V>(ClusterOperation op, Object key, Object val)
 		{
-			Console.WriteLine("Name is sss " + name);
 			Object o = this.doOp<V>(op, key, val, 0);
 			if(o==null)
 				return default(V);
@@ -115,18 +114,6 @@ namespace Hazelcast.Client
 	        outThread.enQueue(fireNForgetCall);
 	    }
 		
-		/*public System.Collections.Generic.IList<E> _entries<E>(Hazelcast.Query.Predicate predicate) {
- 			Keys keys = doOp<Keys>(ClusterOperation.CONCURRENT_MAP_ITERATE_ENTRIES, default(E), predicate);
-			List<E> list = new List<E>();
-			for(int i=0;i<keys.Count();i++){
-				KeyValue kv = (KeyValue)IOUtil.toObject(keys.Get(i).Buffer);
-				Object o = IOUtil.toObject(kv.value.Buffer);
-				Console.WriteLine("Ne la bu: " + o + ":: " + typeof(E));
-				list.Add((E)o);
-			}
-			return list;	
-		}*/
-		
 		public System.Collections.Generic.IList<KeyValue> entries<E>(Hazelcast.Query.Predicate predicate) {
  			Keys keys = doOp<Keys>(ClusterOperation.CONCURRENT_MAP_ITERATE_ENTRIES, default(E), predicate);
 			List<KeyValue> list = new List<KeyValue>();
@@ -145,6 +132,12 @@ namespace Hazelcast.Client
 			}
 			
 	        return list;
+    	}
+		
+		public static void check(Object obj) {
+	        if (obj == null) {
+	            throw new NullReferenceException("Object cannot be null.");
+	        }
     	}
 		
 		//public static long newCallId() {
