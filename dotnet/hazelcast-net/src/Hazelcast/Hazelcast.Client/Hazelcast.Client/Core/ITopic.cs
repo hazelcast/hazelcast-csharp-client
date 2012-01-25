@@ -1,8 +1,7 @@
 using System;
-
-namespace Hazelcast.Client
+namespace Hazelcast.Core
 {
-	public interface ITopic<E>
+	public interface ITopic<E>: Instance
 	{
 		String getName();
 

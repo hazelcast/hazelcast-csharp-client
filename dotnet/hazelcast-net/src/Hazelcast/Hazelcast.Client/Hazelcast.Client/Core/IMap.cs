@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
 
-namespace Hazelcast.Client
+namespace Hazelcast.Core
 {
 	public interface IMap<K,V> : Instance
 	{

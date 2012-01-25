@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace Hazelcast.Client
+namespace Hazelcast.Core
 {
-	public interface IQueue<E>:ICollection<E>, System.Collections.Generic.ICollection<E>
+	public interface IQueue<E>:ICollection<E>, System.Collections.Generic.ICollection<E>, Instance
 	{
     	bool offer(E e);
     
