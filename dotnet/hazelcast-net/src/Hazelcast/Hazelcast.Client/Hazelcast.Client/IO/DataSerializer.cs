@@ -1,6 +1,9 @@
 using System;
 using System.IO;
 using Hazelcast.IO;
+using Hazelcast.Impl.Base;
+using Hazelcast.Impl;
+using Hazelcast.Core;
 namespace Hazelcast.Client.IO
 {
 	public class DataSerializer : ITypeSerializer<DataSerializable>
@@ -11,11 +14,15 @@ namespace Hazelcast.Client.IO
 		
 		static DataSerializer(){
 			//looks ugly but forces static code to run on the following Classes. 
+			MemberImpl.className.Equals("");
+			Address.className.Equals("");
 			CMapEntry.className.Equals("");	
+			Values.className.Equals("");
+			ProxyKey.className.Equals("");
+			
 		}
 		
 		public static bool register(String javaClassName, Type type){
-			Console.WriteLine("Registering" + javaClassName + " : " + type);
 			return mapper.TryAdd(javaClassName, type);
 		}
 		
@@ -42,7 +49,6 @@ namespace Hazelcast.Client.IO
 		public void write (BinaryWriter writer, DataSerializable obj)
 		{
 			string name = (obj.javaClassName()!=null)? obj.javaClassName(): (string)obj.GetType().ToString();
-			//Console.WriteLine("Name as " + name);
 			IOUtil.writeUTF(writer, name);
 			obj.writeData(new BinaryWriterDataOutput(writer));
 		}
@@ -65,17 +71,18 @@ namespace Hazelcast.Client.IO
 				name = "Hazelcast.Impl.Keys";
 			}
 			
+			DataSerializable obj = (DataSerializable)createInstance(name);
+			obj.readData(new BinaryReaderDataInput(reader));
+			return obj;
+		}
+		
+		public static Object createInstance(String name){
 			Type type = Type.GetType(name);
 			
 			if(mapper.ContainsKey(name)){
 				mapper.TryGetValue(name, out type);
 			}
-				
-			Console.WriteLine("Name changed to " +name);
-			Console.WriteLine("Type is: " + type);
-			DataSerializable obj = (DataSerializable)Activator.CreateInstance(type);
-			obj.readData(new BinaryReaderDataInput(reader));
-			return obj;
+			return Activator.CreateInstance(type);
 		}
 
 		void ITypeSerializer.write (BinaryWriter writer, object obj)
