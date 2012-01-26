@@ -254,7 +254,7 @@ namespace Hazelcast.Core
      *
      * @return lifecycle service
      */
-    //LifecycleService getLifecycleService();
+    LifecycleService getLifecycleService();
 	}
 }
 

@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 
 namespace Hazelcast.Client.Impl
 {
-	public class ListenerManager
+	public class ListenerManager : ClientThread
 	{
 		BlockingCollection<Object> queue = new BlockingCollection<Object>(1000);
 		private EntryListenerManager entryListenerManager;
@@ -31,33 +31,31 @@ namespace Hazelcast.Client.Impl
 			queue.Add(o);
 		}
 		
-		public void run(){
-			while(true){
-				Object obj;
-            	if (!queue.TryTake(out obj, 100)) {
-               		return;
-            	}
-            	if (obj is Packet) {
-                	Packet packet = (Packet) obj;
-					Console.WriteLine("packet name is  " + packet.name);
-					if (packet.name == null) {
-						
-	                    Object eventType = Hazelcast.Client.IO.IOUtil.toObject(packet.value);
-	                    Console.WriteLine("EventType: " + eventType);
-						if (0.Equals(eventType) || 2.Equals(eventType)) {
-	                        instanceListenerManager.notifyListeners(packet);
-	                    } else {
-	                        membershipListenerManager.notifyListeners(packet);
-	                    }
-					}else if(getInstanceType(packet.name).Equals(InstanceType.QUEUE)){
-						queueItemListenerManager.notifyListeners(packet);			
-					}else if(getInstanceType(packet.name).Equals(InstanceType.TOPIC)){
-						messageListenerManager.notifyListeners(packet);
-					}else {
-                		entryListenerManager.notifyListeners(packet);
-					} 
-            	}
-			}
+		protected override void customRun(){
+			Object obj;
+        	if (!queue.TryTake(out obj, 100)) {
+           		return;
+        	}
+        	if (obj is Packet) {
+            	Packet packet = (Packet) obj;
+				Console.WriteLine("packet name is  " + packet.name);
+				if (packet.name == null) {
+					
+                    Object eventType = Hazelcast.Client.IO.IOUtil.toObject(packet.value);
+                    Console.WriteLine("EventType: " + eventType);
+					if (0.Equals(eventType) || 2.Equals(eventType)) {
+                        instanceListenerManager.notifyListeners(packet);
+                    } else {
+                        membershipListenerManager.notifyListeners(packet);
+                    }
+				}else if(getInstanceType(packet.name).Equals(InstanceType.QUEUE)){
+					queueItemListenerManager.notifyListeners(packet);			
+				}else if(getInstanceType(packet.name).Equals(InstanceType.TOPIC)){
+					messageListenerManager.notifyListeners(packet);
+				}else {
+            		entryListenerManager.notifyListeners(packet);
+				} 
+        	}
 		}
 		
 		public static InstanceType getInstanceType(String name) 

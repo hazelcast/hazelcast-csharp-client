@@ -149,9 +149,9 @@ namespace Hazelcast.Client.Examples
 			} else if ("silent".Equals(first)) {
 			    silent = Boolean.Parse(args[1]);
 			} else if ("restart".Equals(first)) {
-			    //hazelcast.restart();
+			    hazelcast.getLifecycleService().restart();
 			} else if ("shutdown".Equals(first)) {
-			    //hazelcast.shutdown() ;
+			    hazelcast.getLifecycleService().shutdown() ;
 			} else if ("echo".Equals(first)) {
 			    echo = Boolean.Parse(args[1]);
 			    println("echo: " + echo);
@@ -163,7 +163,7 @@ namespace Hazelcast.Client.Examples
 			} else if ("whoami".Equals(first)) {
 			    //println(hazelcast.getCluster().getLocalMember());
 			} else if ("who".Equals(first)) {
-			    //println(hazelcast.getCluster());
+			    println(hazelcast.getCluster());
 			} else if (first.IndexOf("ock") != -1 && first.IndexOf(".") == -1) {
 			    handleLock(args);
 			} else if (first.IndexOf(".size") != -1) {

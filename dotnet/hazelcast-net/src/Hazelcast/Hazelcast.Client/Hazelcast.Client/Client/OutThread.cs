@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Hazelcast.Client
 {
-	public class OutThread
+	public class OutThread:ClientThread 	
 	{
 		TcpClient tcpClient;
 		ConcurrentDictionary<long, Call> calls;
@@ -23,16 +23,14 @@ namespace Hazelcast.Client
 			this.calls = calls;
 		}
 
-		public void run ()
+		protected override void customRun ()
 		{
-			while (true) {
-				Call call = (Call)inQ.Take();
-				if(!call.FireNforget)
-					calls.AddOrUpdate (call.getId (), call, null);
-				Packet packet = call.getRequest ();
-				if (packet != null) {
-					send (packet);
-				}
+			Call call = (Call)inQ.Take();
+			if(!call.FireNforget)
+				calls.AddOrUpdate (call.getId (), call, null);
+			Packet packet = call.getRequest ();
+			if (packet != null) {
+				send (packet);
 			}
 		}
 		
@@ -59,6 +57,10 @@ namespace Hazelcast.Client
 			Thread thread = new Thread (new ThreadStart (outThread.run));
 			thread.Start ();
 			return outThread;
+		}
+		
+		public void shutdown(){
+			
 		}
 	}
 }

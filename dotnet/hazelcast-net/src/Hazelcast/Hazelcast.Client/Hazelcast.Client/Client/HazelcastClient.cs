@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Hazelcast.Client.Impl;
 using Hazelcast.Core;
+using System.Threading;
 namespace Hazelcast.Client
 {
 	public class HazelcastClient: HazelcastInstance
@@ -14,6 +15,7 @@ namespace Hazelcast.Client
 		private readonly ListenerManager listenerManager;
 		private readonly String groupName;
 		private readonly ClusterClientProxy clusterClientProxy;
+		private readonly LifecycleServiceClientImpl lifecycleService;
 		
 		//private readonly PartitionClientProxy partitionClientProxy;
 		ConcurrentDictionary<long, Call> calls = new ConcurrentDictionary<long, Call>();
@@ -28,6 +30,7 @@ namespace Hazelcast.Client
 			this.inThread = InThread.start(tcp, calls, listenerManager);
 			this.groupName = groupName;
 			clusterClientProxy = new ClusterClientProxy(outThread, listenerManager, this);
+			lifecycleService = new LifecycleServiceClientImpl(this);
     		//partitionClientProxy = new PartitionClientProxy(this);
 			
 		}
@@ -114,6 +117,10 @@ namespace Hazelcast.Client
 	        clusterClientProxy.removeInstanceListener(instanceListener);
 	    }
 		
+		public LifecycleService getLifecycleService() {
+	        return lifecycleService;
+		}
+		
 		
 		public Object getClientProxy(Object o){
 			Object proxy = null;
@@ -174,6 +181,18 @@ namespace Hazelcast.Client
 				proxies.Remove(name);
 			}
 		}
+		
+		public void doShutdown() {
+        
+	        //connectionManager.shutdown();
+	        outThread.shutdown();
+	        inThread.shutdown();
+	        listenerManager.shutdown();
+	        //ClientThreadContext.shutdown();
+	        //active = false;
+	    }
+		
+		
 	}
 }
 
