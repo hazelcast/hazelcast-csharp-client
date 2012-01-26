@@ -16,6 +16,8 @@ namespace Hazelcast.Client
 		private readonly String groupName;
 		private readonly ClusterClientProxy clusterClientProxy;
 		private readonly LifecycleServiceClientImpl lifecycleService;
+		private readonly long id;
+		private static long clientIdCounter = 0;
 		
 		//private readonly PartitionClientProxy partitionClientProxy;
 		ConcurrentDictionary<long, Call> calls = new ConcurrentDictionary<long, Call>();
@@ -23,11 +25,13 @@ namespace Hazelcast.Client
 		
 		private HazelcastClient (String groupName, String groupPass, String address)
 		{
+			id = incrementId();
+			String prefix = "hz.client." + this.id + ".";
 			TcpClient tcp = new TcpClient(address, 5701);
 			tcp.GetStream().Write(Packet.HEADER, 0, Packet.HEADER.Length);
-			this.listenerManager = ListenerManager.start(this);
-			this.outThread = OutThread.start(tcp, calls);
-			this.inThread = InThread.start(tcp, calls, listenerManager);
+			this.listenerManager = ListenerManager.start(this, prefix);
+			this.outThread = OutThread.start(tcp, calls, prefix);
+			this.inThread = InThread.start(tcp, calls, listenerManager, prefix);
 			this.groupName = groupName;
 			clusterClientProxy = new ClusterClientProxy(outThread, listenerManager, this);
 			lifecycleService = new LifecycleServiceClientImpl(this);
@@ -191,6 +195,17 @@ namespace Hazelcast.Client
 	        //ClientThreadContext.shutdown();
 	        //active = false;
 	    }
+		
+		private static long incrementId ()
+		{
+			long initialValue, computedValue;
+			do {
+				initialValue = clientIdCounter;
+				computedValue = initialValue + 1;
+				
+			} while (initialValue != Interlocked.CompareExchange (ref clientIdCounter, computedValue, initialValue));
+			return computedValue;
+		}
 		
 		
 	}

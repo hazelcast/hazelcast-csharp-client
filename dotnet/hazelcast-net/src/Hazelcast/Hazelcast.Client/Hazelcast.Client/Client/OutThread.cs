@@ -51,10 +51,11 @@ namespace Hazelcast.Client
 			inQ.Add(call);
 		}
 
-		public static OutThread start (TcpClient tcpClient, ConcurrentDictionary<long, Call> calls)
+		public static OutThread start (TcpClient tcpClient, ConcurrentDictionary<long, Call> calls, String prefix)
 		{
 			OutThread outThread = new OutThread (tcpClient, calls);
 			Thread thread = new Thread (new ThreadStart (outThread.run));
+			thread.Name = prefix + "OutThread";
 			thread.Start ();
 			return outThread;
 		}

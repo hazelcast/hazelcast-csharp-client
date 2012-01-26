@@ -109,10 +109,11 @@ namespace Hazelcast.Client.Impl
 	        return instanceListenerManager;
 	    }
 		
-		public static ListenerManager start (HazelcastClient client)
+		public static ListenerManager start (HazelcastClient client, String prefix)
 		{
 			ListenerManager listenerManager = new ListenerManager(client);
 			Thread thread = new Thread (new ThreadStart (listenerManager.run));
+			thread.Name = prefix + "Listener";
 			thread.Start ();
 			return listenerManager;
 		}
