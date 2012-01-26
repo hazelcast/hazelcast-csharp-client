@@ -132,6 +132,9 @@
     <Compile Include="Core\Address.cs" />
     <Compile Include="Core\NodeType.cs" />
     <Compile Include="Impl\MemberImpl.cs" />
+    <Compile Include="Core\LifecycleService.cs" />
+    <Compile Include="Client\LifecycleServiceClientImpl.cs" />
+    <Compile Include="Client\ClientThread.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
