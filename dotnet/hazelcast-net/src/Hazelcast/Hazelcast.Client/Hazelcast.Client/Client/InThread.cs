@@ -73,9 +73,11 @@ namespace Hazelcast.Client
 		
 		
 		
-		public static InThread start(TcpClient tcpClient, ConcurrentDictionary<long, Call> calls, ListenerManager listenerManager){
+		public static InThread start(TcpClient tcpClient, ConcurrentDictionary<long, Call> calls, 
+		                             ListenerManager listenerManager, String prefix){
 			InThread inThread = new InThread(tcpClient, calls, listenerManager);
 			Thread thread =  new Thread(new ThreadStart(inThread.run));
+			thread.Name = prefix + "InThread";
 			thread.Start();
 			return inThread;
 		}
