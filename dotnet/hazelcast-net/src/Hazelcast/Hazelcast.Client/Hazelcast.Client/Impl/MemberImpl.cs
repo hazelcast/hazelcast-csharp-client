@@ -23,6 +23,11 @@ namespace Hazelcast.Impl
 		public MemberImpl ()
 		{
 		}
+		
+		public MemberImpl (Address addres)
+		{
+			this.address = address;
+		}
 		public void readData(IDataInput din){
 	        address = new Address();
 	        address.readData(din);

@@ -27,6 +27,13 @@ namespace Hazelcast.Core
 		{
 		}
 		
+		public Address (IPEndPoint ipEndPoint)
+		{
+			this.ip = ipEndPoint.Address.GetAddressBytes();
+			this.port = ipEndPoint.Port;
+			this.ipEndPoint = ipEndPoint;
+		}
+		
 		public void writeData(IDataOutput dout) {
 	        dout.write(ip);
 	        dout.writeInt(port);
@@ -54,9 +61,6 @@ namespace Hazelcast.Core
 		}
 		
 		public System.Net.IPEndPoint getIPEndPoint(){
-			//if(host==null){
-			//	host = toString(ip);
-			//}	
 			if(ipEndPoint==null){
 				ipEndPoint = new IPEndPoint(new IPAddress(ip), port);
 			}

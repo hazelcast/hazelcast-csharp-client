@@ -16,7 +16,9 @@ namespace Hazelcast.Client
 		private readonly String groupName;
 		private readonly ClusterClientProxy clusterClientProxy;
 		private readonly LifecycleServiceClientImpl lifecycleService;
+		private readonly ConnectionManager connectionManager;
 		private readonly long id;
+		private readonly ClientProperties properties;
 		private static long clientIdCounter = 0;
 		
 		//private readonly PartitionClientProxy partitionClientProxy;
@@ -41,6 +43,14 @@ namespace Hazelcast.Client
 		
 		public OutThread OutThread {
 			get{ return outThread;}	
+		}
+		
+		public InThread InThread {
+			get{ return inThread;}	
+		}
+		
+		public ClientProperties ClientProperties{
+			get{ return properties;}
 		}
 		
 		public ListenerManager ListenerManager {

@@ -14,6 +14,8 @@ namespace Hazelcast.Client
 		private ListenerManager listenerManager;
 		private volatile bool headerRead = false;
 		
+		public Int64 lastReceived;
+		
 		
 		public InThread (TcpClient tcpClient, ConcurrentDictionary<long, Call> calls, ListenerManager listenerManager)
 		{
@@ -39,6 +41,8 @@ namespace Hazelcast.Client
 			}
 			Packet packet = new Packet();
 			packet.read(stream);
+			System.Threading.Interlocked.Exchange(ref lastReceived, DateTime.Now.Ticks);
+
 			if(calls.ContainsKey(packet.callId)){
 				Call call = calls[packet.callId];
 				call.setResult(packet);	
