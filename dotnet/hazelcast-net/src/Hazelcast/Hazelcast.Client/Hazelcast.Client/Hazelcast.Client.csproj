@@ -38,6 +38,7 @@
     <Folder Include="Examples\" />
     <Folder Include="Client\" />
     <Folder Include="Query\" />
+    <Folder Include="Security\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\DataAwareItemEvent.cs" />
@@ -135,6 +136,12 @@
     <Compile Include="Core\LifecycleService.cs" />
     <Compile Include="Client\LifecycleServiceClientImpl.cs" />
     <Compile Include="Client\ClientThread.cs" />
+    <Compile Include="Client\ConnectionManager.cs" />
+    <Compile Include="Client\Connection.cs" />
+    <Compile Include="Client\ClientBinder.cs" />
+    <Compile Include="Security\Credentials.cs" />
+    <Compile Include="Client\Extensions.cs" />
+    <Compile Include="Client\ClientProperties.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
