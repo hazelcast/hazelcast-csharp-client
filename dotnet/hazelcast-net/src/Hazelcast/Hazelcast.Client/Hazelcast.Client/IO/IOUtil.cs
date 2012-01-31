@@ -73,7 +73,6 @@ namespace Hazelcast.Client.IO
 		
 		public static void printBytes (byte[] bytes)
 		{
-			Console.WriteLine("Size for is: " + bytes.Length);
 			foreach (byte b in bytes) {
 				Console.Write (b);
 				Console.Write (".");

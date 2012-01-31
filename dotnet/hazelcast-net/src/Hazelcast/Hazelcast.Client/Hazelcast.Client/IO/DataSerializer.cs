@@ -79,10 +79,9 @@ namespace Hazelcast.Client.IO
 		public static Object createInstance(String name){
 			Type type = Type.GetType(name);
 			
-			if(mapper.ContainsKey(name)){
+			if(mapper.ContainsKey(name))
 				mapper.TryGetValue(name, out type);
-			}
-			Console.WriteLine("Instance is created and the type is " +name + "::" + type);
+			
 			return Activator.CreateInstance(type);
 		}
 

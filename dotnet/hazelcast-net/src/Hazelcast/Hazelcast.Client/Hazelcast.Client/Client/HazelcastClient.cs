@@ -26,10 +26,8 @@ namespace Hazelcast.Client
 		ConcurrentDictionary<long, Call> calls = new ConcurrentDictionary<long, Call>();
 		Dictionary<Object, Object> proxies = new Dictionary<Object, Object>();
 		
-		//private HazelcastClient (String groupName, String groupPass, String address)
 		private HazelcastClient(ClientProperties properties, Credentials credentials, bool shuffle, IPEndPoint[] clusterMembers, bool automatic)
-		{
-			Console.WriteLine("Starting!!!");
+		{			
 			this.properties = properties;
 			long timeout = properties.getLong(ClientPropertyName.CONNECTION_TIMEOUT);
 				lifecycleService = new LifecycleServiceClientImpl(this);
@@ -84,6 +82,7 @@ namespace Hazelcast.Client
 		}
 		
 		public static HazelcastClient newHazelcastClient(String groupName, String groupPassword, String address){
+			Console.WriteLine(groupName + ": " + groupPassword + ": " + address);
 			ClientProperties prop = ClientProperties.createBaseClientProperties(groupName, groupPassword);
 			IPEndPoint[] addresses = new IPEndPoint[1];
 			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials();
@@ -97,7 +96,7 @@ namespace Hazelcast.Client
 		private static IPEndPoint parse(String address) {
 	        String[] separated = address.Split(':');
 	        int port = (separated.Length > 1) ? int.Parse(separated[1]) : 5701;
-	        IPEndPoint iPEndPoint = new IPEndPoint(Dns.GetHostEntry(address).AddressList[0], port);
+	        IPEndPoint iPEndPoint = new IPEndPoint(Dns.GetHostEntry(separated[0]).AddressList[0], port);
 	        return iPEndPoint;
 	    }
 		

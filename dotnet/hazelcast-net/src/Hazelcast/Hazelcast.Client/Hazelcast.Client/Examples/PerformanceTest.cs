@@ -18,7 +18,7 @@ namespace Hazelcast.Client.Tests
 		int gets;
 		int removes;
 		//[Test()]
-		public static void Main ()
+		public static void Main2 ()
 		{
 			PerformanceTest test = new PerformanceTest();
 			test.start();

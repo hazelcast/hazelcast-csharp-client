@@ -50,13 +50,47 @@ namespace Hazelcast.Client.Examples
 			this.hazelcast = client;
 		}
 		
-		public static void Main2 (){
-			HazelcastClient client = HazelcastClient.newHazelcastClient("dev", "dev-pass", "localhost");
-			TestApp testApp = new TestApp(client);
-			Console.WriteLine("Starting the TestApp");
-			testApp.start();
+		public static void Main (String[] args){
+			HazelcastClient client = Connect(args);
+			if(client!=null){
+				TestApp testApp = new TestApp(client);
+				Console.WriteLine("Starting the TestApp");
+				testApp.start();
+			}
 		}
-		
+		public static HazelcastClient Connect (String[] args){
+			if(args==null || args.Length == 0){
+				message();
+				Environment.Exit(-1);
+				return null;
+			}
+			else{
+				String ip = "localhost";
+	        	String groupName = "dev";
+	        	String pass = "dev-pass";
+	        	if (args.Length > 0) {
+	            	ip = args[0];
+	        	}
+	        	if (args.Length > 2) {
+	           		groupName = args[1];
+	            	pass = args[2];
+	        	}
+	        	println("Connecting to " + ip);
+	        	String[] ips = null;
+	        	if (ip.IndexOf(':') == -1) {
+	            	ip = ip + ":5701";
+	        	} 
+	        	HazelcastClient hz = HazelcastClient.newHazelcastClient(groupName, pass, ip);
+	        	println(hz.getCluster().getMembers());
+				return hz;
+			}
+		}
+	
+	    private static void message() {
+	        println("Make sure you started Hazelcast server first.");
+	        println("You should provide the following parameters to application '<hazelcast-server-ip> <group-name> <group-password>'");
+	        println("If group-name is 'dev' and password is 'dev-pass', '<hazelcast-server-ip>' will be enough ");
+	    }	
 		
 		public IQueue<Object> getQueue() {
         	queue = hazelcast.getQueue<Object>(_namespace);
@@ -824,11 +858,11 @@ namespace Hazelcast.Client.Examples
 	        silent = silentBefore;
     	}
 		
-		public void print(Object o){
+		public static void print(Object o){
 			Console.Write(o);
 		}
 		
-		public void println(Object o){
+		public static void println(Object o){
 			Console.WriteLine(o);
 		}	
 	}
