@@ -38,11 +38,9 @@ namespace Hazelcast.Client.Impl
         	}
         	if (obj is Packet) {
             	Packet packet = (Packet) obj;
-				Console.WriteLine("packet name is  " + packet.name);
 				if (packet.name == null) {
 					
                     Object eventType = Hazelcast.Client.IO.IOUtil.toObject(packet.value);
-                    Console.WriteLine("EventType: " + eventType);
 					if (0.Equals(eventType) || 2.Equals(eventType)) {
                         instanceListenerManager.notifyListeners(packet);
                     } else {

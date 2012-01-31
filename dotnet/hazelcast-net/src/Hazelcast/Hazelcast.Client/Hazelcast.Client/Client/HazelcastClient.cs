@@ -82,7 +82,6 @@ namespace Hazelcast.Client
 		}
 		
 		public static HazelcastClient newHazelcastClient(String groupName, String groupPassword, String address){
-			Console.WriteLine(groupName + ": " + groupPassword + ": " + address);
 			ClientProperties prop = ClientProperties.createBaseClientProperties(groupName, groupPassword);
 			IPEndPoint[] addresses = new IPEndPoint[1];
 			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials();
