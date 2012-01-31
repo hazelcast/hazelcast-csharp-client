@@ -11,20 +11,23 @@ namespace Hazelcast.Client
 {
 	public class TestClient
 	{
-		public static void Main()
+		public static void Main2()
 		{
 			//ProtoSerializer serializer = new ProtoSerializer();
 			//DefaultSerializer.register(serializer);
 			
 			Console.WriteLine("Basliyor!!!");
 			HazelcastClient client = HazelcastClient.newHazelcastClient ("dev", "dev-pass", "localhost");
-			client.addInstanceListener(new MyInstanceListener());
+			//client.addInstanceListener(new MyInstanceListener());
 			
 			IMap<object, object> map = client.getMap<object, object>("default");
 			IQueue<String> queue = client.getQueue<String>("default");
 			ITopic<String> topic = client.getTopic<String>("default");
+			
+			Console.WriteLine("Putting");
+			client.getCluster().getMembers();
 			Console.WriteLine("Put Result: " + map.put("key", "value"));
-			/*Console.WriteLine("Get Result: " + map.get("key"));
+			Console.WriteLine("Get Result: " + map.get("key"));
 			Console.WriteLine("Remove Result: " + map.remove("key"));
 			Console.WriteLine("Put Result: " + map.put("key", "value"));
 			Console.WriteLine("Flush Map: "); map.flush();
@@ -43,7 +46,7 @@ namespace Hazelcast.Client
 			Console.WriteLine("UnLocking Map: "); map.unlockMap();
 			Console.WriteLine("Evict Map: " + map.evict("key"));
 			Console.WriteLine("Add index: "); map.addIndex("name1", false);
-			getAll(map);
+			//getAll(map);
 			map.addEntryListener(new MyEntryListener<object, object>(),true);
 			map.put("key", "value1");
 			map.put("key", "value2");
@@ -58,7 +61,7 @@ namespace Hazelcast.Client
 				map.put(""+i, ""+i);
 			}
 			Console.WriteLine("Took " + (System.DateTime.Now-start));
-			*/
+			
 			
 			topic.addMessageListener(new MyMessageListener<String>());
 			topic.publish("naber guduk");

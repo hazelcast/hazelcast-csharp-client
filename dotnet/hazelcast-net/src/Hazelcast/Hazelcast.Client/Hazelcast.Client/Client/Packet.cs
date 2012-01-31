@@ -31,7 +31,7 @@ namespace Hazelcast.Client
 
 		public byte PACKET_VERSION = 6;
 
-		public void write (NetworkStream stream)
+		public void write (Stream stream)
 		{
 			MemoryStream header = new MemoryStream ();
 			writeHeader (header);
@@ -61,14 +61,13 @@ namespace Hazelcast.Client
 			}
 		}
 
-		public void read (NetworkStream stream)
+		public void read (Stream stream)
 		{
 			BinaryReader reader = new BinaryReader (stream);
 
 			int headerSize = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
 			int keySize = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
 			int valueSize = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
-			//Console.WriteLine("Value size is: " + valueSize);
 			int packetVersion = reader.ReadByte ();
 			if (packetVersion != PACKET_VERSION) {
 				//throw exception, I don't know how. 
@@ -157,6 +156,18 @@ namespace Hazelcast.Client
 			
 			
 		}
+		
+		public override string ToString ()
+		{
+			return string.Format ("[Packet] " + (ClusterOperation)operation);
+		}
+		public void set(String name, ClusterOperation operation,
+                    byte[] key, byte[] value) {
+        this.name = name;
+        this.operation = (byte)operation;
+        this.key = key;
+        this.value = value;
+    }
 		
 		private byte setTrue(byte number, int index){
 			return (byte) (number | POWERS[index]);

@@ -113,8 +113,8 @@ namespace Hazelcast.Client
 	        return lookForLiveConnection(attemptsLimit, reconnectionTimeout);
 	    }
 	
-	    private Connection lookForLiveConnection(int attemptsLimit,
-	                                             int reconnectionTimeout) {
+	    private Connection lookForLiveConnection(int attemptsLimit, int reconnectionTimeout) {
+			Console.WriteLine("Looking for alive connection!");
 	        lookingForLiveConnection = true;
 	        try {
 	            bool restored = false;
@@ -131,7 +131,7 @@ namespace Hazelcast.Client
 	                                currentConnection = connection;
 	                            } catch (Exception e) {
 	                                closeConnection(connection);
-	                                //logger.log(Level.WARNING, "got an exception on getConnection:" + e.getMessage(), e);
+	                                Console.WriteLine("got an exception on getConnection: " + e.Message + "\n" + e.StackTrace);
 	                                restored = false;
 	                            }
 	                        }
@@ -326,7 +326,8 @@ namespace Hazelcast.Client
 	    public void shutdown() {
 	        //logger.log(Level.INFO, getClass().getSimpleName() + " shutdown");
 	        running = false;
-	        heartbeatTimer.Dispose();
+			if(heartbeatTimer!=null)
+	        	heartbeatTimer.Dispose();
 	    }
 		
 		private int incrementLastDisconnectedConnectionId ()

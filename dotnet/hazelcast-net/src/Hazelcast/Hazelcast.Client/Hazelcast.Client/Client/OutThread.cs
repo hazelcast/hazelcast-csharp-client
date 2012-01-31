@@ -12,14 +12,15 @@ namespace Hazelcast.Client
 {
 	public class OutThread:ClientThread 	
 	{
-		TcpClient tcpClient;
+		ConnectionManager connectionManager;
+		Connection connection;
+			
 		ConcurrentDictionary<long, Call> calls;
 
-		//BlockingQueue<Call> inQ = new BlockingQueue<Call> (1000);
 		BlockingCollection<Call> inQ = new BlockingCollection<Call>(1000);
-		public OutThread (TcpClient tcpClient, ConcurrentDictionary<long, Call> calls)
+		public OutThread (ConnectionManager connectionManager, ConcurrentDictionary<long, Call> calls)
 		{
-			this.tcpClient = tcpClient;
+			this.connectionManager = connectionManager;
 			this.calls = calls;
 		}
 
@@ -30,7 +31,11 @@ namespace Hazelcast.Client
 				calls.AddOrUpdate (call.getId (), call, null);
 			Packet packet = call.getRequest ();
 			if (packet != null) {
-				send (packet);
+				connection = connectionManager.getConnection();
+				if(connection == null){
+					throw new Exception("No Connection");
+				}
+				write(connection, packet);
 			}
 		}
 		
@@ -38,11 +43,10 @@ namespace Hazelcast.Client
 			return inQ.Contains(call);
 		}
 		
-		public void send (Packet packet)
+		public static void send (Connection connection, Packet packet)
 		{
-			NetworkStream stream = tcpClient.GetStream();
+			Stream stream = connection.getNetworkStream();
 			packet.write (stream);
-			//tcpClient.GetStream ().Flush ();
 		}
 
 
@@ -51,17 +55,31 @@ namespace Hazelcast.Client
 			inQ.Add(call);
 		}
 
-		public static OutThread start (TcpClient tcpClient, ConcurrentDictionary<long, Call> calls, String prefix)
+		public OutThread start (String prefix)
 		{
-			OutThread outThread = new OutThread (tcpClient, calls);
-			Thread thread = new Thread (new ThreadStart (outThread.run));
+			Thread thread = new Thread (new ThreadStart (this.run));
 			thread.Name = prefix + "OutThread";
 			thread.Start ();
-			return outThread;
+			return this;
 		}
 		
+		public static void write(Connection connection, Packet packet){
+			//Console.WriteLine(connection + " Sending " + packet);
+	        if (connection != null) {
+	            Stream stream = connection.getNetworkStream();
+	            if (!connection.headersWritten) {
+	                stream.Write(Packet.HEADER, 0, Packet.HEADER.Length);
+	                connection.headersWritten = true;
+	            }
+	            send (connection, packet);
+				stream.Flush();
+	        }	    
+		}
+		
+		
 		public void shutdown(){
-			
+			if(connection!=null)
+				connection.close();	
 		}
 	}
 }

@@ -6,7 +6,7 @@ using System.Threading;
 namespace Hazelcast.Client.Tests
 {
 	[TestFixture()]
-	public class ClusterTest: HazelcastTest
+	public class ClusterTest: HazelcastTest, InstanceListener
 	{
 		DateTime dt = new DateTime(1970,1,1);
 		
@@ -90,20 +90,15 @@ namespace Hazelcast.Client.Tests
 		}
 		
 		[Test()]
+		[Ignore]
 		public void instanceListener()
 		{
-			HazelcastClient client = getHazelcastClient();
-			ICluster cluster = client.getCluster();
+			HazelcastClient client = getHazelcastClient();		
 			
 			CountdownEvent added = new CountdownEvent(1);
 			CountdownEvent removed = new CountdownEvent(1);
-			
-			
-			cluster.addMembershipListener(new MyMembershipListener(added, removed));
-			
-			foreach(Instance i in client.getInstances()){
-				Console.WriteLine(i.getId());
-			}
+			client.addInstanceListener(new MyInstanceListener(added, removed));
+			//client.addInstanceListener(this);
 			IMap<String, String> ins = client.getMap<String, String>("someNewMap");
 			ins.put("1","1");
 			ins.destroy();
@@ -130,8 +125,14 @@ namespace Hazelcast.Client.Tests
 				Console.WriteLine(e);
 			}
 		}
-
-		
+		public void instanceCreated(InstanceEvent e){
+			Console.WriteLine(e);
+		}
+	
+	
+	    public void instanceDestroyed(InstanceEvent e){
+			Console.WriteLine(e);
+		}
 	}
 }
 

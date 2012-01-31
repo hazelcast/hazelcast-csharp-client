@@ -3,48 +3,40 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Collections.Concurrent;
 using Hazelcast.Client.Impl;
+using System.IO;
+
 
 namespace Hazelcast.Client
 {
 	public class InThread : ClientThread
 	{
 		
-		private TcpClient tcpClient;
+		private ConnectionManager connectionManager;
+		private Connection connection;
 		private ConcurrentDictionary<long, Call> calls;
-		private ListenerManager listenerManager;
-		private volatile bool headerRead = false;
-		
+		private ListenerManager listenerManager;		
 		public Int64 lastReceived;
 		
 		
-		public InThread (TcpClient tcpClient, ConcurrentDictionary<long, Call> calls, ListenerManager listenerManager)
+		public InThread (ConnectionManager connectionManager, ConcurrentDictionary<long, Call> calls, ListenerManager listenerManager)
 		{
-			this.tcpClient = tcpClient;
+			this.connectionManager = connectionManager;
 			this.calls = calls;
 			this.listenerManager = listenerManager;
 		}
 		
 		protected override void customRun(){
-			if(!headerRead)
-			{
-				byte[] header = new byte[3];
-				this.tcpClient.GetStream().Read(header, 0, 3);
-				if(equals(header, Packet.HEADER)){
-					
-				}
-				headerRead = true;
+			connection = connectionManager.getConnection();
+			if(connection == null){
+				throw new Exception("Cluster is down!");
 			}
-			NetworkStream stream = tcpClient.GetStream();
-			if(!stream.CanRead){
-				Thread.Sleep(100);
+			Packet packet = readPacket(this.connection);
+			if(packet == null)
 				return;
-			}
-			Packet packet = new Packet();
-			packet.read(stream);
 			System.Threading.Interlocked.Exchange(ref lastReceived, DateTime.Now.Ticks);
-
-			if(calls.ContainsKey(packet.callId)){
-				Call call = calls[packet.callId];
+			
+			Call call;
+			if(calls.TryGetValue(packet.callId, out call)){
 				call.setResult(packet);	
 			}
 			else{
@@ -73,17 +65,37 @@ namespace Hazelcast.Client
 			
 		}
 		
+		public Packet readPacket(Connection connection){
+        	Stream stream = connection.getNetworkStream();
+			if(!connection.headerRead)
+			{
+				byte[] header = new byte[3];
+				stream.Read(header, 0, 3);
+				if(equals(header, Packet.HEADER)){
+					
+				}
+				connection.headerRead = true;
+			}
+			
+			if(!stream.CanRead){
+				Thread.Sleep(100);
+				return null;
+			}
+			
+			Packet packet = new Packet();
+			packet.read(stream);	
+			return packet;
+    	}
 		
 		
 		
 		
-		public static InThread start(TcpClient tcpClient, ConcurrentDictionary<long, Call> calls, 
-		                             ListenerManager listenerManager, String prefix){
-			InThread inThread = new InThread(tcpClient, calls, listenerManager);
-			Thread thread =  new Thread(new ThreadStart(inThread.run));
+		public InThread start(String prefix)
+		{
+			Thread thread =  new Thread(new ThreadStart(this.run));
 			thread.Name = prefix + "InThread";
 			thread.Start();
-			return inThread;
+			return this;
 		}
 	}
 }

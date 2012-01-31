@@ -118,6 +118,7 @@ namespace Hazelcast.Client.Tests
 	    }
 	
 	    [Test]
+		[Ignore]
 	    public void add2listenerAndRemoveOne(){
 	        HazelcastClient hClient = getHazelcastClient();
 	        ITopic<String> topic = hClient.getTopic<String>("removeMessageListener");
