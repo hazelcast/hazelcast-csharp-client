@@ -16,7 +16,6 @@ namespace Hazelcast.Client
 			//ProtoSerializer serializer = new ProtoSerializer();
 			//DefaultSerializer.register(serializer);
 			
-			Console.WriteLine("Basliyor!!!");
 			HazelcastClient client = HazelcastClient.newHazelcastClient ("dev", "dev-pass", "localhost");
 			//client.addInstanceListener(new MyInstanceListener());
 			

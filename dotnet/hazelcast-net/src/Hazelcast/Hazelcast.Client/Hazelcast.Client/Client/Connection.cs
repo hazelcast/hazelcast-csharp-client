@@ -36,7 +36,6 @@ namespace Hazelcast.Client
 			initiate(address, id);
 		}
 	    private void initiate(IPEndPoint address, int id) {
-			Console.WriteLine("Initiating the connection to " + address);
 	        this.id = id;
 	        this.address = address;
 	        try {
