@@ -49,8 +49,11 @@ namespace Hazelcast.Client
 			return doCall(call);
 		}
 		
-		public Object getValue(Packet response){
-			return IOUtil.toObject(response.value);
+		public Object getValue(Packet packet){
+			Object response = IOUtil.toObject(packet.value);
+			if(response is ClientServiceException)
+				throw ((ClientServiceException)response).Exception;
+			return response;
 		}
 		
 		public void destroy() {

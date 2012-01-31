@@ -8,8 +8,8 @@ namespace Hazelcast.Client
 		
 		public static ClientPropertyName GROUP_NAME = new ClientPropertyName("hazelcast.client.group.name", null);
         public static ClientPropertyName GROUP_PASSWORD = new ClientPropertyName("hazelcast.client.group.password", null);
-        public static ClientPropertyName INIT_CONNECTION_ATTEMPTS_LIMIT = new ClientPropertyName("hazelcast.client.init.connection.attempts.limit", "5");
-        public static ClientPropertyName RECONNECTION_ATTEMPTS_LIMIT = new ClientPropertyName("hazelcast.client.reconnection.attempts.limit", "5");
+        public static ClientPropertyName INIT_CONNECTION_ATTEMPTS_LIMIT = new ClientPropertyName("hazelcast.client.init.connection.attempts.limit", "1");
+        public static ClientPropertyName RECONNECTION_ATTEMPTS_LIMIT = new ClientPropertyName("hazelcast.client.reconnection.attempts.limit", "1");
         public static ClientPropertyName CONNECTION_TIMEOUT = new ClientPropertyName("hazelcast.client.connection.timeout", "300000");
         public static ClientPropertyName RECONNECTION_TIMEOUT = new ClientPropertyName("hazelcast.client.reconnection.timeout", "5000");
 		
@@ -81,8 +81,8 @@ namespace Hazelcast.Client
 	    }
 	
 	    public String getProperty(ClientPropertyName name) {
-	        String str = this.properties[name];
-	        if (str == null) {
+			String str = null;
+	        if (!this.properties.TryGetValue(name, out str)) {
 	            str = name.DefaultValue;
 	        }
 	        if (str == null) {

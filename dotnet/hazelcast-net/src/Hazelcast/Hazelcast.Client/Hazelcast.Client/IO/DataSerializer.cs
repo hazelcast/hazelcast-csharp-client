@@ -19,7 +19,7 @@ namespace Hazelcast.Client.IO
 			CMapEntry.className.Equals("");	
 			Values.className.Equals("");
 			ProxyKey.className.Equals("");
-			
+			ClientServiceException.className.Equals("");
 		}
 		
 		public static bool register(String javaClassName, Type type){
@@ -82,6 +82,7 @@ namespace Hazelcast.Client.IO
 			if(mapper.ContainsKey(name)){
 				mapper.TryGetValue(name, out type);
 			}
+			Console.WriteLine("Instance is created and the type is " +name + "::" + type);
 			return Activator.CreateInstance(type);
 		}
 

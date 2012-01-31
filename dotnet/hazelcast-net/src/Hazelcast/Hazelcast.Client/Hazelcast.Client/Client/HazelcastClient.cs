@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using Hazelcast.Client.Impl;
 using Hazelcast.Core;
 using System.Threading;
+using Hazelcast.Security;
+using System.Net;
 namespace Hazelcast.Client
 {
 	public class HazelcastClient: HazelcastInstance
@@ -13,7 +15,6 @@ namespace Hazelcast.Client
 		private readonly OutThread outThread;		
 		private readonly InThread inThread;
 		private readonly ListenerManager listenerManager;
-		private readonly String groupName;
 		private readonly ClusterClientProxy clusterClientProxy;
 		private readonly LifecycleServiceClientImpl lifecycleService;
 		private readonly ConnectionManager connectionManager;
@@ -25,16 +26,41 @@ namespace Hazelcast.Client
 		ConcurrentDictionary<long, Call> calls = new ConcurrentDictionary<long, Call>();
 		Dictionary<Object, Object> proxies = new Dictionary<Object, Object>();
 		
-		private HazelcastClient (String groupName, String groupPass, String address)
+		//private HazelcastClient (String groupName, String groupPass, String address)
+		private HazelcastClient(ClientProperties properties, Credentials credentials, bool shuffle, IPEndPoint[] clusterMembers, bool automatic)
 		{
+			Console.WriteLine("Starting!!!");
+			this.properties = properties;
+			long timeout = properties.getLong(ClientPropertyName.CONNECTION_TIMEOUT);
+				lifecycleService = new LifecycleServiceClientImpl(this);
+			connectionManager = automatic ? 
+					new ConnectionManager(this, credentials, lifecycleService, clusterMembers[0], timeout) :
+                	new ConnectionManager(this, credentials, lifecycleService, clusterMembers, shuffle, timeout);
+			connectionManager.setBinder(new DefaultClientBinder(this));	
+		
+			this.outThread = new OutThread(connectionManager, calls);
+			this.inThread = new InThread(connectionManager, calls, listenerManager);
+			this.listenerManager = new ListenerManager(this);
+
+			
+			try {
+	            Connection c = connectionManager.getInitConnection();
+	            if (c == null) {
+	                connectionManager.shutdown();
+	                throw new Exception("Unable to connect to cluster");
+	            }
+	        } catch (Exception e) {
+	            connectionManager.shutdown();
+	            throw new Exception("Unable to connect to cluster" + e.Message);
+	        }
+			
 			id = incrementId();
 			String prefix = "hz.client." + this.id + ".";
-			TcpClient tcp = new TcpClient(address, 5701);
-			tcp.GetStream().Write(Packet.HEADER, 0, Packet.HEADER.Length);
-			this.listenerManager = ListenerManager.start(this, prefix);
-			this.outThread = OutThread.start(tcp, calls, prefix);
-			this.inThread = InThread.start(tcp, calls, listenerManager, prefix);
-			this.groupName = groupName;
+			this.outThread.start(prefix);
+			this.inThread.start(prefix);
+			this.listenerManager.start(prefix);
+			
+			
 			clusterClientProxy = new ClusterClientProxy(outThread, listenerManager, this);
 			lifecycleService = new LifecycleServiceClientImpl(this);
     		//partitionClientProxy = new PartitionClientProxy(this);
@@ -57,12 +83,26 @@ namespace Hazelcast.Client
 			get{ return listenerManager;}
 		}
 		
-		public static HazelcastClient newHazelcastClient(String groupName, String groupPass, String address){
-			return new HazelcastClient(groupName, groupPass, address);
+		public static HazelcastClient newHazelcastClient(String groupName, String groupPassword, String address){
+			ClientProperties prop = ClientProperties.createBaseClientProperties(groupName, groupPassword);
+			IPEndPoint[] addresses = new IPEndPoint[1];
+			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials();
+			credentials.setUsername(groupName);
+			credentials.setPassword(groupPassword);
+			addresses[0] = parse(address);
+			return new HazelcastClient(prop, credentials, false, addresses, true);
 		}
 		
+		
+		private static IPEndPoint parse(String address) {
+	        String[] separated = address.Split(':');
+	        int port = (separated.Length > 1) ? int.Parse(separated[1]) : 5701;
+	        IPEndPoint iPEndPoint = new IPEndPoint(Dns.GetHostEntry(address).AddressList[0], port);
+	        return iPEndPoint;
+	    }
+		
 		public String getName(){
-			return groupName;	
+			return null;	
 		}
 		
 		public ICluster getCluster(){

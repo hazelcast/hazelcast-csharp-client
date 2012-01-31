@@ -142,6 +142,11 @@
     <Compile Include="Security\Credentials.cs" />
     <Compile Include="Client\Extensions.cs" />
     <Compile Include="Client\ClientProperties.cs" />
+    <Compile Include="Client\DefaultClientBinder.cs" />
+    <Compile Include="Client\Bind.cs" />
+    <Compile Include="Security\AbstractCredentials.cs" />
+    <Compile Include="Security\UsernamePasswordCredentials.cs" />
+    <Compile Include="Impl\ClientServiceException.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

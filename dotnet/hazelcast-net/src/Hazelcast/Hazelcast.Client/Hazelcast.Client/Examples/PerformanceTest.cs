@@ -18,7 +18,7 @@ namespace Hazelcast.Client.Tests
 		int gets;
 		int removes;
 		//[Test()]
-		public static void Main2 ()
+		public static void Main ()
 		{
 			PerformanceTest test = new PerformanceTest();
 			test.start();
@@ -30,9 +30,11 @@ namespace Hazelcast.Client.Tests
 			for (int i = 0; i < THREAD_COUNT; i++) {
             	Thread thread = new Thread(new ThreadStart(this.run));
 				thread.Start();
+				thread.Name = "HZ_CLIENT_Thread_"+i;
 				Console.WriteLine("Thread" + i + " started");
             }
 			Thread statThread = new Thread(new ThreadStart(this.stats));
+			
 			statThread.Start();
 		}
 		
@@ -40,6 +42,7 @@ namespace Hazelcast.Client.Tests
             while (true) {
                 int key = (int) (GetRandomNumber(0, ENTRY_COUNT));
                 int operation = ((int) (GetRandomNumber(0,100)));
+				Console.WriteLine(Thread.CurrentThread.Name + ": " + operation);
                 if (operation < GET_PERCENTAGE) {
                     map.get(""+key);
                     Interlocked.Increment(ref gets);

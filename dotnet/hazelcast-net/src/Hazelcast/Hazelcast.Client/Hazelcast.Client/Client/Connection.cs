@@ -11,15 +11,13 @@ namespace Hazelcast.Client
 	public class Connection
 	{
 		private static int BUFFER_SIZE = 16 << 10; // 32k
-	    private volatile TcpClient tcpClient;
+	    public volatile TcpClient tcpClient;
 	    private IPEndPoint address;
 	    private int id;
-	    //private DataOutputStream dos;
-	    //private DataInputStream dis;
-		private BufferedStream bs = null;
+		//private Stream bs = null;
 		
-	    bool headersWritten = false;
-	    bool headerRead = false;
+	    public volatile bool headersWritten = false;
+	    public volatile bool headerRead = false;
 	
 	    /**
 	     * Creates the Socket to the given host and port
@@ -32,28 +30,37 @@ namespace Hazelcast.Client
 	    public Connection(String host, int port, int id) {
 			IPHostEntry ipHostEntry = Dns.GetHostEntry(host);
 	        initiate(new IPEndPoint(ipHostEntry.AddressList[0], port), id);
-	    }
+		}
 	
 		public Connection(IPEndPoint address, int id) {
 			initiate(address, id);
 		}
 	    private void initiate(IPEndPoint address, int id) {
+			Console.WriteLine("Initiating the connection to " + address);
 	        this.id = id;
 	        this.address = address;
 	        try {
-	            IPEndPoint isa = new IPEndPoint(address.Address, address.Port);
-	            TcpClient tcp = new TcpClient(isa);
+	            TcpClient tcp = new TcpClient();
 				tcp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 				
 				LingerOption lingerOption = new LingerOption (true, 5);
 				tcp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lingerOption);
 	            this.tcpClient = tcp;
+				tcp.Connect(address.Address, address.Port);
+			
 				
-				bs = new BufferedStream(tcpClient.GetStream(), BUFFER_SIZE);
+				//bs = new BufferedStream(tcpClient.GetStream(), BUFFER_SIZE);
+				//bs = tcpClient.GetStream();
 	        } catch (Exception e) {
+				Console.WriteLine("Exception " + e.Message);
+				Console.WriteLine(e.StackTrace);
 	            throw new Exception(e.ToString());
 	        }
 	    }
+		
+		public Socket getSocket(){
+			return tcpClient.Client;
+		}
 	
 	    public IPEndPoint getAddress() {
 	        return address;
@@ -64,26 +71,16 @@ namespace Hazelcast.Client
 	    }
 	
 	    public void close() {
-	        bs.Close();
 			tcpClient.Close();
 	    }
 	
-	    
 	    public override String ToString() {
 	        return "Connection [" + id + "]" + " [" + address + " -> " + tcpClient.Client.LocalEndPoint.ToString()+ "]";
 	    }
-	
-	    //public DataOutputStream getOutputStream() {
-	    //    return dos;
-	    //}
 		
 		public Stream getNetworkStream(){
-			return bs;
+			return tcpClient.GetStream();
 		}
-	
-	    //public DataInputStream getInputStream() {
-	    //    return dis;
-	    //}
 	
 	    public Member getMember() {
 	        return new MemberImpl(new Address(address));
