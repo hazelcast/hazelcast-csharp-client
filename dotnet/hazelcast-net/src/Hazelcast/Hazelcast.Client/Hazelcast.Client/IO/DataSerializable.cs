@@ -7,8 +7,6 @@ namespace Hazelcast.IO
 		 void writeData(IDataOutput dout);
 
    		 void readData(IDataInput din);
-		
-		 String javaClassName();
 	}
 }
 

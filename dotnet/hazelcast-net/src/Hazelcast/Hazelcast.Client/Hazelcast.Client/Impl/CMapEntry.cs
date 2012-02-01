@@ -1,5 +1,6 @@
 using System;
 using Hazelcast.IO;
+using Hazelcast.Client;
 
 namespace Hazelcast.Impl
 {
@@ -18,13 +19,6 @@ namespace Hazelcast.Impl
     	private object key = null;
     	private object value = null;
 		
-		public static String className = "com.hazelcast.impl.CMap$CMapEntry";
-	
-		static CMapEntry ()
-		{
-			Hazelcast.Client.IO.DataSerializer.register(className, typeof(CMapEntry));
-			
-		}
 		public CMapEntry ()
 		{
 		}
@@ -99,12 +93,7 @@ namespace Hazelcast.Impl
             version = din.readLong();
             hits = din.readInt();
             valid = din.readBoolean();
-        }
-		public String javaClassName(){
-			return CMapEntry.className;
-		}
-		
-		
+        }	
 	}
 }
 

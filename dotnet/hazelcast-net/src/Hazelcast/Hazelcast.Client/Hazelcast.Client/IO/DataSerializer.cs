@@ -4,26 +4,27 @@ using Hazelcast.IO;
 using Hazelcast.Impl.Base;
 using Hazelcast.Impl;
 using Hazelcast.Core;
+using Hazelcast.Cluster;
+using Hazelcast.Security;
 namespace Hazelcast.Client.IO
 {
 	public class DataSerializer : ITypeSerializer<DataSerializable>
 	{
 		
 		private static readonly byte SERIALIZER_TYPE_DATA = 0;
-		private static readonly System.Collections.Concurrent.ConcurrentDictionary<String, Type> mapper = new System.Collections.Concurrent.ConcurrentDictionary<String, Type>();
 		
 		static DataSerializer(){
-			//looks ugly but forces static code to run on the following Classes. 
-			MemberImpl.className.Equals("");
-			Address.className.Equals("");
-			CMapEntry.className.Equals("");	
-			Values.className.Equals("");
-			ProxyKey.className.Equals("");
-			ClientServiceException.className.Equals("");
-		}
-		
-		public static bool register(String javaClassName, Type type){
-			return mapper.TryAdd(javaClassName, type);
+			TypeRegistry.register("com.hazelcast.impl.MemberImpl", typeof(MemberImpl));
+			TypeRegistry.register("com.hazelcast.nio.Address", typeof(Address));		
+			TypeRegistry.register("com.hazelcast.impl.CMap$CMapEntry", typeof(CMapEntry));		
+			TypeRegistry.register("com.hazelcast.impl.base.Values", typeof(Values));		
+			TypeRegistry.register("com.hazelcast.impl.FactoryImpl$ProxyKey", typeof(ProxyKey));		
+			TypeRegistry.register("com.hazelcast.impl.ClientServiceException", typeof(ClientServiceException));		
+			TypeRegistry.register("com.hazelcast.impl.Keys", typeof(Keys));		
+			TypeRegistry.register("com.hazelcast.impl.base.KeyValue", typeof(KeyValue));
+			TypeRegistry.register("com.hazelcast.impl.base.Pairs", typeof(Pairs));
+			TypeRegistry.register("com.hazelcast.cluster.Bind", typeof(Bind));
+			TypeRegistry.register("com.hazelcast.security.UsernamePasswordCredentials", typeof(UsernamePasswordCredentials));
 		}
 		
 		public int CompareTo(object obj) 
@@ -48,7 +49,13 @@ namespace Hazelcast.Client.IO
 
 		public void write (BinaryWriter writer, DataSerializable obj)
 		{
-			string name = (obj.javaClassName()!=null)? obj.javaClassName(): (string)obj.GetType().ToString();
+			string name = TypeRegistry.getJavaName(obj.GetType());
+			
+			
+			if(name == null){
+				name = (string)obj.GetType().ToString();
+			}
+			
 			IOUtil.writeUTF(writer, name);
 			obj.writeData(new BinaryWriterDataOutput(writer));
 		}
@@ -62,14 +69,7 @@ namespace Hazelcast.Client.IO
 			{
 				name = "Hazelcast.Impl.Base.Pairs";
 			}
-			else if(name.Equals("com.hazelcast.impl.base.KeyValue"))
-			{
-				name = "Hazelcast.Impl.Base.KeyValue";
-			}
-			else if(name.Equals("com.hazelcast.impl.Keys"))
-			{
-				name = "Hazelcast.Impl.Keys";
-			}
+			
 			
 			DataSerializable obj = (DataSerializable)createInstance(name);
 			obj.readData(new BinaryReaderDataInput(reader));
@@ -77,11 +77,11 @@ namespace Hazelcast.Client.IO
 		}
 		
 		public static Object createInstance(String name){
-			Type type = Type.GetType(name);
-			
-			if(mapper.ContainsKey(name))
-				mapper.TryGetValue(name, out type);
-			
+			Type type = TypeRegistry.getType(name);
+			if(type==null){
+				type = Type.GetType(name);
+			}
+
 			return Activator.CreateInstance(type);
 		}
 

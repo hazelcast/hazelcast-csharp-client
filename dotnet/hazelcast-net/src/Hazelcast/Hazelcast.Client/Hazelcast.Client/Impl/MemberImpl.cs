@@ -12,14 +12,6 @@ namespace Hazelcast.Impl
     	protected NodeType nodeType;
 		protected String uuid;
 		
-		public static String className = "com.hazelcast.impl.MemberImpl";
-		
-		static MemberImpl ()
-		{
-			Hazelcast.Client.IO.DataSerializer.register(className, typeof(MemberImpl));
-			
-		}
-		
 		public MemberImpl ()
 		{
 		}
@@ -46,10 +38,6 @@ namespace Hazelcast.Impl
 	            dout.writeUTF(uuid);
 	        }
 	    }
-		
-		public String javaClassName(){
-			return className;
-		}
 		
 		public bool isLiteMember(){
 			return nodeType.Equals(NodeType.LITE_MEMBER);

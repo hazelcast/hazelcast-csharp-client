@@ -33,7 +33,13 @@ namespace Hazelcast.Client
         } else if (obj is DataSerializable) {
             dout.writeByte(7);
 			DataSerializable ds = (DataSerializable)obj;
-            dout.writeUTF(ds.javaClassName());
+			string name = TypeRegistry.getJavaName(obj.GetType());
+			 
+			if(name == null){
+				name = (string)obj.GetType().ToString();
+			}	
+				
+            dout.writeUTF(name);
             ds.writeData(dout);
         } else if (obj is System.DateTime) {
             dout.writeByte(8);

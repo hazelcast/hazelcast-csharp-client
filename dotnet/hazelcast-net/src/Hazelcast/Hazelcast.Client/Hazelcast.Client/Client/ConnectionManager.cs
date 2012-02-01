@@ -27,15 +27,16 @@ namespace Hazelcast.Client
 		
 	
 	    public ConnectionManager(HazelcastClient client, Credentials credentials, LifecycleServiceClientImpl lifecycleService,
-	                             IPEndPoint[] clusterMembers, bool shuffle, long timeout) {
+	                             List<Address> clusterMembers, bool shuffle, long timeout) {
 	        this.TIMEOUT = timeout;
 	        this.client = client;
 	        this.lifecycleService = lifecycleService;
-			lock(clusterMembers){
-				foreach (IPEndPoint ip in clusterMembers){
-		        	this.clusterMembers.Add(ip);
+			
+			lock(this.clusterMembers){
+			    foreach(Address address in clusterMembers){
+					this.clusterMembers.Add(address.getIPEndPoint());
 				}
-		        if (shuffle) {
+				if (shuffle) {
 		            this.clusterMembers.Shuffle();
 		        }
 			}
@@ -43,12 +44,12 @@ namespace Hazelcast.Client
 	    }
 	
 	    public ConnectionManager(HazelcastClient client, Credentials credentials, LifecycleServiceClientImpl lifecycleService,
-	                             IPEndPoint address, long timeout) {
+	                             Address address, long timeout) {
 	        this.TIMEOUT = timeout;
 	        this.client = client;
 	        this.lifecycleService = lifecycleService;
-			lock(clusterMembers){
-	        	this.clusterMembers.Add(address);
+			lock(this.clusterMembers){
+	        	this.clusterMembers.Add(address.getIPEndPoint());
 			}
 	        this.credentials = credentials;
 	    }
@@ -99,8 +100,8 @@ namespace Hazelcast.Client
 		public Connection getInitConnection(){
 	        if (currentConnection == null) {
 	            lock (this) {
-	                int attemptsLimit = client.ClientProperties.getInteger(ClientPropertyName.INIT_CONNECTION_ATTEMPTS_LIMIT);
-	                int reconnectionTimeout = client.ClientProperties.getInteger(ClientPropertyName.RECONNECTION_TIMEOUT);
+	                int attemptsLimit = client.ClientConfig.InitialConnectionAttemptLimit;
+	                int reconnectionTimeout = client.ClientConfig.ReConnectionTimeOut;
 	                currentConnection = lookForLiveConnection(attemptsLimit, reconnectionTimeout);
 	            }
 	        }
@@ -108,8 +109,8 @@ namespace Hazelcast.Client
 	    }
 	
 	    public Connection lookForLiveConnection() {
-	        int attemptsLimit = client.ClientProperties.getInteger(ClientPropertyName.RECONNECTION_ATTEMPTS_LIMIT);
-	        int reconnectionTimeout = client.ClientProperties.getInteger(ClientPropertyName.RECONNECTION_TIMEOUT);
+	        int attemptsLimit = client.ClientConfig.ReconnectionAttemptLimit;
+	        int reconnectionTimeout = client.ClientConfig.ReConnectionTimeOut;
 	        return lookForLiveConnection(attemptsLimit, reconnectionTimeout);
 	    }
 	

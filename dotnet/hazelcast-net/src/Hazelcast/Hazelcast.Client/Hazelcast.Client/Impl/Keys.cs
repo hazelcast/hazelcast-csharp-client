@@ -36,7 +36,7 @@ namespace Hazelcast.Impl
 			}
 		}
 		
-		public String javaClassName(){
+		public String getJavaClassName(){
 			return "com.hazelcast.impl.Keys";
 		}
 		

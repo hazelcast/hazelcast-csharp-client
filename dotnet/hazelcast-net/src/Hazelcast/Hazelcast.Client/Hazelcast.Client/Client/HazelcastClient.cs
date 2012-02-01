@@ -19,21 +19,24 @@ namespace Hazelcast.Client
 		private readonly LifecycleServiceClientImpl lifecycleService;
 		private readonly ConnectionManager connectionManager;
 		private readonly long id;
-		private readonly ClientProperties properties;
+		private readonly ClientConfig config;
 		private static long clientIdCounter = 0;
 		
 		//private readonly PartitionClientProxy partitionClientProxy;
 		ConcurrentDictionary<long, Call> calls = new ConcurrentDictionary<long, Call>();
 		Dictionary<Object, Object> proxies = new Dictionary<Object, Object>();
 		
-		private HazelcastClient(ClientProperties properties, Credentials credentials, bool shuffle, IPEndPoint[] clusterMembers, bool automatic)
+		private HazelcastClient(ClientConfig config, Credentials credentials, bool shuffle, bool automatic)
 		{			
-			this.properties = properties;
-			long timeout = properties.getLong(ClientPropertyName.CONNECTION_TIMEOUT);
-				lifecycleService = new LifecycleServiceClientImpl(this);
+			this.config = config;
+			long timeout = config.ConnectionTimeout;
+			if(config.TypeConverter!=null)
+				TypeRegistry.setTypeConverter(config.TypeConverter);
+			
+			lifecycleService = new LifecycleServiceClientImpl(this);
 			connectionManager = automatic ? 
-					new ConnectionManager(this, credentials, lifecycleService, clusterMembers[0], timeout) :
-                	new ConnectionManager(this, credentials, lifecycleService, clusterMembers, shuffle, timeout);
+					new ConnectionManager(this, credentials, lifecycleService, config.TcpIpConfig.Addresses[0], timeout) :
+                	new ConnectionManager(this, credentials, lifecycleService, config.TcpIpConfig.Addresses, shuffle, timeout);
 			connectionManager.setBinder(new DefaultClientBinder(this));	
 		
 			this.outThread = new OutThread(connectionManager, calls);
@@ -73,30 +76,38 @@ namespace Hazelcast.Client
 			get{ return inThread;}	
 		}
 		
-		public ClientProperties ClientProperties{
-			get{ return properties;}
+		public ClientConfig ClientConfig{
+			get{ return config;}
 		}
 		
 		public ListenerManager ListenerManager {
 			get{ return listenerManager;}
 		}
 		
-		public static HazelcastClient newHazelcastClient(String groupName, String groupPassword, String address){
-			ClientProperties prop = ClientProperties.createBaseClientProperties(groupName, groupPassword);
-			IPEndPoint[] addresses = new IPEndPoint[1];
+		public static HazelcastClient newHazelcastClient(ClientConfig config){
+			
 			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials();
-			credentials.setUsername(groupName);
-			credentials.setPassword(groupPassword);
-			addresses[0] = parse(address);
-			return new HazelcastClient(prop, credentials, false, addresses, true);
+			credentials.setUsername(config.GroupConfig.Name);
+			credentials.setPassword(config.GroupConfig.Password);
+		
+			return new HazelcastClient(config, credentials, false, true);
 		}
 		
 		
-		private static IPEndPoint parse(String address) {
+		public static HazelcastClient newHazelcastClient(String groupName, String groupPassword, String address){
+			ClientConfig config = new ClientConfig();
+			config.TcpIpConfig.addAddress(parse(address));
+			config.GroupConfig.Name = groupName;
+			config.GroupConfig.Password = groupPassword;
+			
+			return newHazelcastClient(config);
+		}
+
+		private static Address parse(String address) {
 	        String[] separated = address.Split(':');
 	        int port = (separated.Length > 1) ? int.Parse(separated[1]) : 5701;
 	        IPEndPoint iPEndPoint = new IPEndPoint(Dns.GetHostEntry(separated[0]).AddressList[0], port);
-	        return iPEndPoint;
+			return new Address(iPEndPoint);
 	    }
 		
 		public String getName(){

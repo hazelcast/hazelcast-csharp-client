@@ -51,8 +51,10 @@ namespace Hazelcast.Client
 		
 		public Object getValue(Packet packet){
 			Object response = IOUtil.toObject(packet.value);
-			if(response is ClientServiceException)
+			if(response is ClientServiceException){
+				Console.WriteLine("Exception is: " + ((ClientServiceException)response).Exception);
 				throw ((ClientServiceException)response).Exception;
+			}
 			return response;
 		}
 		
