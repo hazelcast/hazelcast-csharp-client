@@ -9,13 +9,6 @@ namespace Hazelcast.Impl.Base
 		
 		List<Data> lsValues;
 		
-		public static String className = "com.hazelcast.impl.base.Values";
-		static Values()
-		{
-			Hazelcast.Client.IO.DataSerializer.register(className, typeof(Values));
-			
-		}
-		
 		public Values ()
 		{
 		}
@@ -39,11 +32,7 @@ namespace Hazelcast.Impl.Base
 	            lsValues.Add(data);
 	        }
 		}
-		
-		public String javaClassName(){
-			return Values.className;
-		}
-		
+	
 		public System.Collections.Generic.ICollection<V> getCollection<V>(){
 			List<V> list = new List<V>();
 			foreach( Data d in lsValues){

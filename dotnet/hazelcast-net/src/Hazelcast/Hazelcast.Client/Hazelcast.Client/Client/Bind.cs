@@ -4,11 +4,10 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Cluster
 {
-	public class Bind : DataSerializable {
+	public class Bind : DataSerializable{
     
 	    Address address;
 		
-		public static string className="com.hazelcast.cluster.Bind";
 	
 	    public Bind() {
 	    }
@@ -29,10 +28,6 @@ namespace Hazelcast.Cluster
 	    public void writeData(IDataOutput dout){
 	        address.writeData(dout);
 	    }
-			
-		public String javaClassName(){
-			return className;	
-		}	
 	}
 }
 

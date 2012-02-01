@@ -78,6 +78,7 @@ namespace Hazelcast.Client.IO
 				Console.Write (".");
 			}
 			
+			
 		}
 	}
 }

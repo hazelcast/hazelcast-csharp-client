@@ -7,8 +7,7 @@ namespace Hazelcast.Security
 	{
 		
 		private byte[] password;
-		
-		public static String className = "com.hazelcast.security.UsernamePasswordCredentials";
+	
 		
 		public UsernamePasswordCredentials ()
 		{
@@ -45,10 +44,6 @@ namespace Hazelcast.Security
 	            din.readFully(password);
 	        }
 	    }
-		
-		public override String javaClassName(){
-			return className;
-		}
 	}
 }
 

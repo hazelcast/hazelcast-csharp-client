@@ -4,6 +4,8 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Collections.Generic;
 using Hazelcast.Core;
+using System.Net;
+using Hazelcast.Client.Examples;
 
 
 using Hazelcast.Client.IO;
@@ -15,12 +17,24 @@ namespace Hazelcast.Client
 		{
 			//ProtoSerializer serializer = new ProtoSerializer();
 			//DefaultSerializer.register(serializer);
+			ClientConfig config = new ClientConfig();
+			config.GroupConfig.Name = "dev";
+			config.GroupConfig.Password = "dev-pass";
+			IPAddress ip = Dns.GetHostEntry("localhost").AddressList[0];
+			config.TcpIpConfig.addAddress(new Address(new IPEndPoint(ip, 5701)));
+			config.TypeConverter = new MyTypeConverter();
 			
-			HazelcastClient client = HazelcastClient.newHazelcastClient ("dev", "dev-pass", "localhost");
+			HazelcastClient client = HazelcastClient.newHazelcastClient (config);
 			//client.addInstanceListener(new MyInstanceListener());
 			
-			IMap<object, object> map = client.getMap<object, object>("default");
-			IQueue<String> queue = client.getQueue<String>("default");
+			IMap<string, MyCSharpClass> map = client.getMap<string, MyCSharpClass>("default");
+			
+			map.put("1", new MyCSharpClass("A", 5));
+			
+			map.put("1", new MyCSharpClass("B", 10));
+			
+			
+			/*IQueue<String> queue = client.getQueue<String>("default");
 			ITopic<String> topic = client.getTopic<String>("default");
 			
 			Console.WriteLine("Putting");
@@ -69,7 +83,7 @@ namespace Hazelcast.Client
 			
 			
 			
-			
+			*/
 			
 						
 			

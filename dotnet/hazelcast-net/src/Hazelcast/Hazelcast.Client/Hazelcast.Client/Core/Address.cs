@@ -11,17 +11,9 @@ namespace Hazelcast.Core
 
     	private int port = -1;
 		
-		public static String className = "com.hazelcast.nio.Address";
-		
 		private String host;
 		
 		private IPEndPoint ipEndPoint;
-		
-		static Address ()
-		{
-			Hazelcast.Client.IO.DataSerializer.register(className, typeof(Address));
-			
-		}
 		
 		public Address ()
 		{
@@ -44,10 +36,6 @@ namespace Hazelcast.Core
 	        port = din.readInt();
 	        // setHost();
 	    }
-		
-		public String javaClassName(){
-			return className;	
-		}
 		
 		public String getHost(){
 			if(host==null){

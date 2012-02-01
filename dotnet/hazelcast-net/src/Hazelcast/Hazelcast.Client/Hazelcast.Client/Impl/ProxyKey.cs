@@ -8,12 +8,6 @@ namespace Hazelcast.Client
 		private String name;
         private Object key;
 		
-		public static String className = "com.hazelcast.impl.FactoryImpl$ProxyKey";
-		
-		static ProxyKey(){
-			Hazelcast.Client.IO.DataSerializer.register(className, typeof(ProxyKey));
-		}
-		
 		public ProxyKey(){
 			
 		}
@@ -58,12 +52,6 @@ namespace Hazelcast.Client
                 key = readObject(din);
             }
 		}
-		
-		public String javaClassName(){
-			return className;	
-		}
-		
-		
 	}
 }
 

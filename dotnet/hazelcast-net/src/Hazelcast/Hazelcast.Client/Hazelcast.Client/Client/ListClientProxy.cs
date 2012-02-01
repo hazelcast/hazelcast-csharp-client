@@ -42,6 +42,7 @@ namespace Hazelcast.Client
     	}
 		
 		public override bool Contains(E e){
+			ProxyHelper.check(e);
         	return proxyHelper.doOp<bool>(ClusterOperation.CONCURRENT_MAP_CONTAINS_KEY, e, null);
     	}
 		
@@ -52,6 +53,7 @@ namespace Hazelcast.Client
 		
 		
 		public void Add(E e){
+			ProxyHelper.check(e);
 			proxyHelper.doOp<bool>(ClusterOperation.CONCURRENT_MAP_ADD_TO_LIST, e, null);
 		}
 		

@@ -39,10 +39,6 @@ namespace Hazelcast.Impl.Base
 		public void addKeyValue(KeyValue kv){
 			lsKeyValues.Add(kv);	
 		}
-		
-		public String javaClassName(){
-			return "com.hazelcast.impl.base.Pairs";
-		}
 	}
 }
 

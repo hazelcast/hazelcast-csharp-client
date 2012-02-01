@@ -43,9 +43,6 @@ namespace Hazelcast.Security
 	    protected abstract void writeDataInternal(IDataOutput dout);
 	
 	    protected abstract void readDataInternal(IDataInput din);
-			
-		public abstract String javaClassName();
-		
 	}
 }
 

@@ -4,10 +4,7 @@ using Hazelcast.IO;
 namespace Hazelcast.Impl
 {
 	public class ClientServiceException: DataSerializable {
-		
-		public static String className= "com.hazelcast.impl.ClientServiceException";
-															
-	    Exception exception;
+		Exception exception;
 		
 		public Exception Exception {
 			get {
@@ -18,10 +15,6 @@ namespace Hazelcast.Impl
 			}
 		}	
 		
-		static ClientServiceException() {
-	    	Hazelcast.Client.IO.DataSerializer.register(className, typeof(ClientServiceException));
-	    }
-		
 	    public ClientServiceException() {
 	    
 	    }
@@ -31,12 +24,8 @@ namespace Hazelcast.Impl
 	    }
 	
 	    public void readData(IDataInput din) {
-	      	exception = new Exception(din.readUTF());
+	      	exception = new Exception("Exception on Server: "+din.readUTF());
 	    }
-		
-		public String javaClassName(){
-			return className;
-		}
 	}
 }
 
