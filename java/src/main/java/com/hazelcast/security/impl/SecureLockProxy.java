@@ -1,8 +1,5 @@
 package com.hazelcast.security.impl;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.impl.LockProxy;
 import com.hazelcast.impl.Node;
@@ -12,83 +9,91 @@ import com.hazelcast.security.SecurityConstants;
 import com.hazelcast.security.SecurityUtil;
 import com.hazelcast.security.permission.LockPermission;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+
 final class SecureLockProxy extends SecureProxySupport implements LockProxy {
-	
-	final LockProxy proxy;
-	final LockPermission lockPermission;
-	final LockPermission statsPermission ;
-	
-	SecureLockProxy(Node node, final LockProxy proxy) {
-		super(node);
-		this.proxy = proxy;
-		lockPermission = new LockPermission(getName(), SecurityConstants.ACTION_LOCK);
-		statsPermission = new LockPermission(getName(), SecurityConstants.ACTION_STATISTICS);
-	}
-	
-	private void checkLock() {
-		SecurityUtil.checkPermission(node.securityContext, lockPermission);
-	}
-	
-	private final String getName() {
-		return getLockObject().toString();
-	}
-	
-	public Object getLockObject() {
-		return proxy.getLockObject();
-	}
 
-	public LockOperationsCounter getLockOperationCounter() {
-		return proxy.getLockOperationCounter();
-	}
+    final LockProxy proxy;
+    final LockPermission lockPermission;
+    final LockPermission statsPermission;
 
-	public LocalLockStats getLocalLockStats() {
-		SecurityUtil.checkPermission(node.securityContext, statsPermission);
-		return proxy.getLocalLockStats();
-	}
+    SecureLockProxy(Node node, final LockProxy proxy) {
+        super(node);
+        this.proxy = proxy;
+        lockPermission = new LockPermission(getName(), SecurityConstants.ACTION_LOCK);
+        statsPermission = new LockPermission(getName(), SecurityConstants.ACTION_STATISTICS);
+    }
 
-	public InstanceType getInstanceType() {
-		return proxy.getInstanceType();
-	}
+    private void checkLock() {
+        SecurityUtil.checkPermission(node.securityContext, lockPermission);
+    }
 
-	public void destroy() {
-		SecurityUtil.checkPermission(node.securityContext, new LockPermission(getName(), SecurityConstants.ACTION_DESTROY));
-		proxy.destroy();
-	}
+    private final String getName() {
+        return getLockObject().toString();
+    }
 
-	public Object getId() {
-		return proxy.getId();
-	}
+    public Object getLockObject() {
+        return proxy.getLockObject();
+    }
 
-	public void lock() {
-		checkLock();
-		proxy.lock();
-	}
+    public LockOperationsCounter getLockOperationCounter() {
+        return proxy.getLockOperationCounter();
+    }
 
-	public void lockInterruptibly() throws InterruptedException {
-		checkLock();
-		proxy.lockInterruptibly();
-	}
+    public LocalLockStats getLocalLockStats() {
+        SecurityUtil.checkPermission(node.securityContext, statsPermission);
+        return proxy.getLocalLockStats();
+    }
 
-	public boolean tryLock() {
-		checkLock();
-		return proxy.tryLock();
-	}
+    public InstanceType getInstanceType() {
+        return proxy.getInstanceType();
+    }
 
-	public boolean tryLock(long time, TimeUnit unit)
-			throws InterruptedException {
-		checkLock();
-		return proxy.tryLock(time, unit);
-	}
+    public void destroy() {
+        SecurityUtil.checkPermission(node.securityContext, new LockPermission(getName(), SecurityConstants.ACTION_DESTROY));
+        proxy.destroy();
+    }
 
-	public void unlock() {
-		proxy.unlock();
-	}
+    public Object getId() {
+        return proxy.getId();
+    }
 
-	public Condition newCondition() {
-		return proxy.newCondition();
-	}
+    public void lock() {
+        checkLock();
+        proxy.lock();
+    }
 
-	public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
-		proxy.setHazelcastInstance(hazelcastInstance);
-	}
+    public void lockInterruptibly() throws InterruptedException {
+        checkLock();
+        proxy.lockInterruptibly();
+    }
+
+    public boolean tryLock() {
+        checkLock();
+        return proxy.tryLock();
+    }
+
+    public boolean tryLock(long time, TimeUnit unit)
+            throws InterruptedException {
+        checkLock();
+        return proxy.tryLock(time, unit);
+    }
+
+    public void forceUnlock() {
+        checkLock();
+        proxy.forceUnlock();
+    }
+
+    public void unlock() {
+        proxy.unlock();
+    }
+
+    public Condition newCondition() {
+        return proxy.newCondition();
+    }
+
+    public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+        proxy.setHazelcastInstance(hazelcastInstance);
+    }
 }
