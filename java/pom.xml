@@ -1,41 +1,41 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<name>elastic-memory</name>
-	<groupId>com.hazelcast</groupId>
-	<artifactId>elastic-memory</artifactId>
-	<packaging>jar</packaging>
-	<version>0.0.1</version>
-	<properties>
-		<hazelcast.version>2.0-beta</hazelcast.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jdk.version>1.5</jdk.version>
-		<target.dir>target</target.dir>
-	</properties>
-	<licenses>
-		<license>
-			<name>Commercial License</name>
-			<url>http://www.hazelcast.com/licenses/LICENSE.txt</url>
-			<distribution>manual</distribution>
-		</license>
-	</licenses>
-	<organization>
-		<name>Hazel Bilisim Ltd.</name>
-		<url>http://www.hazelcast.com/</url>
-	</organization>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>${jdk.version}</source>
-					<target>${jdk.version}</target>
-					<encoding>${project.build.sourceEncoding}</encoding>
-				</configuration>
-			</plugin>
-			 <plugin>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>elastic-memory</name>
+    <groupId>com.hazelcast</groupId>
+    <artifactId>elastic-memory</artifactId>
+    <packaging>jar</packaging>
+    <version>0.0.1</version>
+    <properties>
+        <hazelcast.version>2.0-RC1</hazelcast.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jdk.version>1.5</jdk.version>
+        <target.dir>target</target.dir>
+    </properties>
+    <licenses>
+        <license>
+            <name>Commercial License</name>
+            <url>http://www.hazelcast.com/licenses/LICENSE.txt</url>
+            <distribution>manual</distribution>
+        </license>
+    </licenses>
+    <organization>
+        <name>Hazel Bilisim Ltd.</name>
+        <url>http://www.hazelcast.com/</url>
+    </organization>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.3.2</version>
@@ -47,23 +47,23 @@
                     </archive>
                 </configuration>
             </plugin>
-		</plugins>
-	</build>
-	<dependencies>
-		<dependency>
-			<groupId>com.hazelcast</groupId>
-			<artifactId>hazelcast</artifactId>
-			<version>${hazelcast.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.hazelcast</groupId>
-			<artifactId>hazelcast-client</artifactId>
-			<version>${hazelcast.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast</artifactId>
+            <version>${hazelcast.version}</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-client</artifactId>
+            <version>${hazelcast.version}</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
         <dependency> <!-- reuse src/test/java code from moduleA! -->
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
@@ -71,17 +71,17 @@
             <version>${hazelcast.version}</version>
             <classifier>tests</classifier>
         </dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.6</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.8.2</version>
-			<scope>provided</scope>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.8.2</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 </project>
