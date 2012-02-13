@@ -1,36 +1,30 @@
 package com.hazelcast.elasticmemory;
 
-import static com.hazelcast.nio.IOUtil.*;
-
 import com.hazelcast.elasticmemory.storage.EntryRef;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.enterprise.EnterpriseNodeInitializer;
 import com.hazelcast.impl.AbstractRecord;
 import com.hazelcast.impl.CMap;
+import com.hazelcast.impl.DefaultRecord;
 import com.hazelcast.impl.Record;
 import com.hazelcast.impl.base.DistributedLock;
 import com.hazelcast.impl.concurrentmap.ValueHolder;
 import com.hazelcast.nio.Data;
 
+import static com.hazelcast.nio.IOUtil.toData;
+import static com.hazelcast.nio.IOUtil.toObject;
+
 public final class OffHeapRecord extends AbstractRecord implements Record {
 
     private volatile EntryRef entryRef;
-//    private final Storage storage; 
-
-//    public OffHeapRecord(Storage storage, CMap cmap, int blockId, Data key, Data value, long ttl, long maxIdleMillis, long id) {
-//        super(cmap, blockId, key, ttl, maxIdleMillis, id);
-//        this.storage = storage;
-//        setValue(value);
-//    }
 
     public OffHeapRecord(CMap cmap, int blockId, Data key, Data value, long ttl, long maxIdleMillis, long id) {
         super(cmap, blockId, key, ttl, maxIdleMillis, id);
-        setValue(value);
+        setValueData(value);
     }
-    
-    public OffHeapRecord copy() {
-//        OffHeapRecord recordCopy = new OffHeapRecord(getStorage(), cmap, blockId, key, getValueData(), getRemainingTTL(), getRemainingIdle(), id);
-    	OffHeapRecord recordCopy = new OffHeapRecord(cmap, blockId, key, getValueData(), getRemainingTTL(), getRemainingIdle(), id);
+
+    public Record copy() {
+        Record recordCopy = new DefaultRecord(cmap, blockId, key, getValueData(), getRemainingTTL(), getRemainingIdle(), id);
         if (optionalInfo != null) {
             recordCopy.setIndexes(getIndexes(), getIndexTypes());
             recordCopy.setMultiValues(getMultiValues());
@@ -47,22 +41,22 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
     }
 
     public Data getValueData() {
-    	return OffHeapRecordHelper.getValue(key, entryRef, getStorage());
+        return OffHeapRecordHelper.getValue(key, entryRef, getStorage());
     }
 
     public Object setValue(Object value) {
-    	//FIXME: for semaphore
-    	setValue(toData(value));
+        //FIXME: for semaphore
+        setValueData(toData(value));
         return null;
     }
 
     @Override
     protected void invalidateValueCache() {
     }
-    
-    public void setValue(Data value) {
+
+    public void setValueData(Data value) {
 //    	invalidateValueCache();
-    	entryRef = OffHeapRecordHelper.setValue(key, entryRef, value, getStorage());
+        entryRef = OffHeapRecordHelper.setValue(key, entryRef, value, getStorage());
     }
 
     public int valueCount() {
@@ -83,7 +77,7 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
         if (entry != null) { // hasValueData()
             cost = entry.length;
         } else if (getMultiValues() != null && getMultiValues().size() > 0) {
-        	for (ValueHolder valueHolder : getMultiValues()) {
+            for (ValueHolder valueHolder : getMultiValues()) {
                 if (valueHolder != null) {
                     cost += valueHolder.getData().size();
                 }
@@ -92,19 +86,15 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
         return cost + dataKey.size() + 312;
     }
 
-	public boolean hasValueData() {
-		return entryRef != null;
-	}
-	
-//	private Storage getStorage() {
-//		return storage;
-//	}
-	
-	private Storage getStorage() {
-		return ((EnterpriseNodeInitializer) cmap.getNode().initializer).getOffHeapStorage();
-	}
-	
-	public void invalidate() {
-		OffHeapRecordHelper.removeValue(key, entryRef, getStorage());
-	}
+    public boolean hasValueData() {
+        return entryRef != null;
+    }
+
+    private Storage getStorage() {
+        return ((EnterpriseNodeInitializer) cmap.getNode().initializer).getOffHeapStorage();
+    }
+
+    public void invalidate() {
+        OffHeapRecordHelper.removeValue(key, entryRef, getStorage());
+    }
 }

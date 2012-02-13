@@ -1,34 +1,27 @@
 package com.hazelcast.elasticmemory;
 
-import static com.hazelcast.nio.IOUtil.toObject;
-
 import com.hazelcast.elasticmemory.storage.EntryRef;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.enterprise.EnterpriseNodeInitializer;
 import com.hazelcast.impl.AbstractSimpleRecord;
 import com.hazelcast.impl.CMap;
 import com.hazelcast.impl.Record;
+import com.hazelcast.impl.SimpleRecord;
 import com.hazelcast.nio.Data;
+
+import static com.hazelcast.nio.IOUtil.toObject;
 
 public final class SimpleOffHeapRecord extends AbstractSimpleRecord implements Record {
 
     private volatile EntryRef entryRef;
-//    private final Storage storage; 
 
-//    public SimpleOffHeapRecord(Storage storage, CMap cmap, int blockId, Data key, Data value, long id) {
-//        super(blockId, cmap, id, key);
-//        this.storage = storage;
-//        setValue(value);
-//    }
-    
     public SimpleOffHeapRecord(CMap cmap, int blockId, Data key, Data value, long id) {
         super(blockId, cmap, id, key);
-        setValue(value);
+        setValueData(value);
     }
 
-    public SimpleOffHeapRecord copy() {
-//        return new SimpleOffHeapRecord(getStorage(), cmap, blockId, key, getValueData(), id);
-    	return new SimpleOffHeapRecord(cmap, blockId, key, getValueData(), id);
+    public Record copy() {
+        return new SimpleRecord(blockId, cmap, id, key, getValueData());
     }
 
     public Object getValue() {
@@ -36,11 +29,11 @@ public final class SimpleOffHeapRecord extends AbstractSimpleRecord implements R
     }
 
     public Data getValueData() {
-    	return OffHeapRecordHelper.getValue(key, entryRef, getStorage());
+        return OffHeapRecordHelper.getValue(key, entryRef, getStorage());
     }
 
-    public void setValue(Data value) {
-    	entryRef = OffHeapRecordHelper.setValue(key, entryRef, value, getStorage());
+    public void setValueData(Data value) {
+        entryRef = OffHeapRecordHelper.setValue(key, entryRef, value, getStorage());
     }
 
     public long getCost() {
@@ -53,30 +46,30 @@ public final class SimpleOffHeapRecord extends AbstractSimpleRecord implements R
         return cost + dataKey.size() + 30;
     }
 
-	public boolean hasValueData() {
-		return entryRef != null;
-	}
+    public boolean hasValueData() {
+        return entryRef != null;
+    }
 
-	public Object setValue(Object value) {
-		return null;
-	}
+    public Object setValue(Object value) {
+        return null;
+    }
 
-	public int valueCount() {
-		return 1;
-	}
+    public int valueCount() {
+        return 1;
+    }
 
-	public boolean containsValue(Data value) {
-		return false;
-	}
+    public boolean containsValue(Data value) {
+        return false;
+    }
 
-	public void addValue(Data value) {
-	}
-	
-	private Storage getStorage() {
-		return ((EnterpriseNodeInitializer) cmap.getNode().initializer).getOffHeapStorage();
-	}
-	
-	public void invalidate() {
-		OffHeapRecordHelper.removeValue(key, entryRef, getStorage());
-	}
+    public void addValue(Data value) {
+    }
+
+    private Storage getStorage() {
+        return ((EnterpriseNodeInitializer) cmap.getNode().initializer).getOffHeapStorage();
+    }
+
+    public void invalidate() {
+        OffHeapRecordHelper.removeValue(key, entryRef, getStorage());
+    }
 }
