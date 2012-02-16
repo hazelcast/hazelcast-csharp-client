@@ -40,7 +40,7 @@ namespace Hazelcast.Client
 			proxyHelper.doFireAndForget(ClusterOperation.TOPIC_PUBLISH, message, null);
 		}
 	
-	    public void addMessageListener(MessageListener<E> listener){
+	    public void addMessageListener(MessageListener<Object> listener){
 			lock (name) {
 	            bool shouldCall = messageListenerManager().noListenerRegistered(name);
 	            messageListenerManager().registerListener(name, listener);
@@ -51,14 +51,14 @@ namespace Hazelcast.Client
 			
 		}
 		
-		private void doAddListenerCall(MessageListener<E> messageListener) {
+		private void doAddListenerCall(MessageListener<Object> messageListener) {
 	        Call c = messageListenerManager().createNewAddListenerCall(proxyHelper);
 	        proxyHelper.doCall(c);
 	    }
 	
-	    public void removeMessageListener(MessageListener<E> listener){
+	    public void removeMessageListener(MessageListener<Object> listener){
 			lock(name) {
-            messageListenerManager().removeListener<E>(name, listener);
+            messageListenerManager().removeListener(name, listener);
             if (messageListenerManager().noListenerRegistered(name)) {
                 proxyHelper.doOp<object>(ClusterOperation.REMOVE_LISTENER, null, null);
             }

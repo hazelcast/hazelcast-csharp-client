@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using Hazelcast.Core;
 
 namespace Hazelcast.Client
@@ -10,12 +11,15 @@ namespace Hazelcast.Client
 	{
 		readonly long id;
 		readonly Packet request;
-		volatile Packet response;
-		long sent = 0;
-		long written = 0;
-		long received = 0;
-		long replied = 0;
+		
+		//public  Stopwatch pre = new Stopwatch();
+		//public  Stopwatch on = new Stopwatch();
+		//public  Stopwatch post = new Stopwatch();
 		volatile bool fireNforget = false;
+		
+		public System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+	
+		
 		
 		static long callIdGen = 0;
 		
@@ -43,10 +47,10 @@ namespace Hazelcast.Client
 		}
 		
 
-		public Packet getResult ()
+		public Packet getResult (int timeout)
 		{
-			//Packet response = inQ.Dequeue ();
-			Packet response = inbQ.Take();
+			Packet response = null; 
+            inbQ.TryTake(out response, timeout);
 			return response;
 		}
 
@@ -77,6 +81,29 @@ namespace Hazelcast.Client
             	outThread.enQueue(this);
            	}
       	}
+		/*
+		private static long preClient = 0;
+		
+		private static long onServer = 0;
+		
+    	private static long postClient = 0;
+
+	    public void collect() {
+	        //Console.WriteLine(pre.ElapsedTicks / (Stopwatch.Frequency / 1000));
+	        //Console.WriteLine(on.ElapsedTicks / (Stopwatch.Frequency / 1000));
+	        //Console.WriteLine(post.ElapsedTicks / (Stopwatch.Frequency / 1000));
+			Interlocked.Add(ref preClient, pre.ElapsedTicks);
+			Interlocked.Add(ref onServer, on.ElapsedTicks);
+			Interlocked.Add(ref postClient, post.ElapsedTicks);
+	    }
+	    public static void printAndReset(){
+	        long pre = Interlocked.Exchange(ref preClient, 0);
+	        long on = Interlocked.Exchange(ref onServer, 0);
+	        long post = Interlocked.Exchange(ref postClient, 0);
+			Console.WriteLine("Total pre  in ms>     " + pre/(Stopwatch.Frequency/1000));
+	        Console.WriteLine("Total onServer  in ms>" + on / (Stopwatch.Frequency / 1000));
+	        Console.WriteLine("Total After in ms >   " + post / (Stopwatch.Frequency / 1000));
+	    }*/
 	}
 }
 

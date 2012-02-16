@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Examples
 			this.hazelcast = client;
 		}
 		
-		public static void Main (String[] args){
+		public static void Main2 (String[] args){
 			HazelcastClient client = Connect(args);
 			if(client!=null){
 				TestApp testApp = new TestApp(client);

@@ -27,13 +27,13 @@ namespace Hazelcast.Client
 			return InstanceType.LIST;
 		}
 			
-		public override void addItemListener(ItemListener<E> listener, bool includeValue){
+		public override void addItemListener(ItemListener<Object> listener, bool includeValue){
 			Call c = itemListenerManager().createNewAddListenerCall(proxyHelper, includeValue);
         	itemListenerManager().registerListener(name, listener);
         	proxyHelper.doCall(c);	
 		}
 			
-		public override void removeItemListener(ItemListener<E> listener){
+		public override void removeItemListener(ItemListener<Object> listener){
 			
 		}
 		

@@ -138,7 +138,7 @@ namespace Hazelcast.Client
 			return list;
 		}
 
-		public override void addItemListener(ItemListener<E> listener, bool includeValue){
+		public override void addItemListener(ItemListener<Object> listener, bool includeValue){
 			lock(name){
 				bool shouldCall = listenerManager().noListenerRegistered(name);
             	listenerManager().registerListener(name, listener);
@@ -149,7 +149,7 @@ namespace Hazelcast.Client
 			}	
 		}
 			
-		public override void removeItemListener(ItemListener<E> listener){
+		public override void removeItemListener(ItemListener<Object> listener){
 			lock(name){
 				listenerManager().removeListener(name, listener);
             	Packet request = proxyHelper.createRequestPacket(ClusterOperation.REMOVE_LISTENER, null, null, -1);

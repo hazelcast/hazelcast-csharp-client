@@ -27,28 +27,29 @@ namespace Hazelcast.Client
 		
 		protected override void customRun(){
 			connection = connectionManager.getConnection();
-			if(connection == null){
+			if(connection == null)
 				throw new Exception("Cluster is down!");
-			}
+			
 			Packet packet = readPacket(this.connection);
 			if(packet == null)
 				return;
-			System.Threading.Interlocked.Exchange(ref lastReceived, DateTime.Now.Ticks);
+			Interlocked.Exchange(ref lastReceived, DateTime.Now.Ticks);
 			
 			Call call;
-			if(calls.TryGetValue(packet.callId, out call)){
-				call.setResult(packet);	
-			}
-			else{
-				if(packet.operation == (byte)ClusterOperation.EVENT){
-					listenerManager.enQueue(packet);		
-				} 
-				else
-				{
-					Console.WriteLine("Unkown call result: " + packet.callId + ", " + packet.operation);
-				}
-				
-			}
+                if (calls.TryGetValue(packet.callId, out call))
+                {
+                    //call.on.Stop();
+                    //call.post.Start();
+                    //Console.WriteLine("Received Answer for " + call.getId());
+                    call.setResult(packet);
+                }
+                else
+                {
+                    if (packet.operation == (byte)ClusterOperation.EVENT)
+                    	listenerManager.enQueue(packet);
+                    else
+                        Console.WriteLine("Unkown call result: " + packet.callId + ", " + packet.operation);
+                }
 		}
 		
 		public static bool equals(byte[] b1, byte[] b2){

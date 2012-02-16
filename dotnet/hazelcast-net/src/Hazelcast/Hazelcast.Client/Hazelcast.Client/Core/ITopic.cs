@@ -7,9 +7,9 @@ namespace Hazelcast.Core
 
 	    void publish(E message);
 	
-	    void addMessageListener(MessageListener<E> listener);
+	    void addMessageListener(MessageListener<Object> listener);
 	
-	    void removeMessageListener(MessageListener<E> listener);
+	    void removeMessageListener(MessageListener<Object> listener);
 	}
 }
 
