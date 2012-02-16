@@ -22,7 +22,7 @@ namespace Hazelcast.Client
 	        return messageListeners[name].Count == 0;
 	    }
 		
-		public void registerListener<E>(String name, MessageListener<E> messageListener) {
+		public void registerListener(String name, MessageListener<Object> messageListener) {
 	        List<MessageListener<object>> newListenersList = new List<MessageListener<object>>();
 	        List<MessageListener<object>> listeners = messageListeners.GetOrAdd(name, newListenersList);
 	        if (listeners == null) {
@@ -31,7 +31,7 @@ namespace Hazelcast.Client
 	        listeners.Add(messageListener);
 	    }
 		
-		public void removeListener<E>(String name, MessageListener<E> messageListener) {
+		public void removeListener(String name, MessageListener<Object> messageListener) {
 	        if (!messageListeners.ContainsKey(name)) {
 	            return;
 	        }

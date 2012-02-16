@@ -12,12 +12,12 @@ namespace Hazelcast.Client
 {
 	public class OutThread:ClientThread 	
 	{
-		ConnectionManager connectionManager;
+		readonly ConnectionManager connectionManager;
 		Connection connection;
 			
-		ConcurrentDictionary<long, Call> calls;
-
-		BlockingCollection<Call> inQ = new BlockingCollection<Call>(1000);
+		readonly ConcurrentDictionary<long, Call> calls;
+		
+		readonly BlockingCollection<Call> inQ = new BlockingCollection<Call>(1000);
 		public OutThread (ConnectionManager connectionManager, ConcurrentDictionary<long, Call> calls)
 		{
 			this.connectionManager = connectionManager;
@@ -26,9 +26,11 @@ namespace Hazelcast.Client
 
 		protected override void customRun ()
 		{
-			Call call = (Call)inQ.Take();
+			Call call = inQ.Take();
+			//call.pre.Stop();
+			//call.on.Start();
 			if(!call.FireNforget)
-				calls.AddOrUpdate (call.getId (), call, null);
+				calls.TryAdd(call.getId (), call);
 			Packet packet = call.getRequest ();
 			if (packet != null) {
 				connection = connectionManager.getConnection();
@@ -64,18 +66,15 @@ namespace Hazelcast.Client
 		}
 		
 		public static void write(Connection connection, Packet packet){
-			//Console.WriteLine(connection + " Sending " + packet);
-	        if (connection != null) {
+			if (connection != null) {
 	            Stream stream = connection.getNetworkStream();
 	            if (!connection.headersWritten) {
 	                stream.Write(Packet.HEADER, 0, Packet.HEADER.Length);
 	                connection.headersWritten = true;
 	            }
 	            send (connection, packet);
-				stream.Flush();
-	        }	    
+			}
 		}
-		
 		
 		public void shutdown(){
 			if(connection!=null)

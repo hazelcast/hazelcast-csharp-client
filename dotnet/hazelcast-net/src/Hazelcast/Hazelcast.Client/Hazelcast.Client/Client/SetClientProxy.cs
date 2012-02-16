@@ -29,11 +29,11 @@ namespace Hazelcast.Client
 			return InstanceType.SET;
 		}
 			
-		public override void addItemListener(ItemListener<E> listener, bool includeValue){
+		public override void addItemListener(ItemListener<Object> listener, bool includeValue){
 			
 		}
 			
-		public override void removeItemListener(ItemListener<E> listener){
+		public override void removeItemListener(ItemListener<Object> listener){
 			
 		}
 		

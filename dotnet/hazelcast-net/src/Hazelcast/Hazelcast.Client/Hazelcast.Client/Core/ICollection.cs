@@ -10,9 +10,9 @@ namespace Hazelcast.Core
 		
 		String getName();
 			
-		void addItemListener(ItemListener<E> listener, bool includeValue);
+		void addItemListener(ItemListener<Object> listener, bool includeValue);
 			
-		void removeItemListener(ItemListener<E> listener);
+		void removeItemListener(ItemListener<Object> listener);
 	}
 }
 

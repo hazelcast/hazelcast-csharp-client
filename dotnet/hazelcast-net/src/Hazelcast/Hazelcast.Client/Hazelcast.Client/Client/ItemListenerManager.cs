@@ -13,7 +13,7 @@ namespace Hazelcast.Client
 	        this.entryListenerManager = entryListenerManager;
 	    }
 	
-	    public void registerListener<E>(String name, ItemListener<E> itemListener) {
+	    public void registerListener(String name, ItemListener<object> itemListener) {
 	        lock(itemListener2EntryListener){
 				EntryListener<Object, Object> e = new EntryAdapter<Object, Object>(itemListener, name);
 		        entryListenerManager.registerListener<Object,Object>(name, null, true, e);
@@ -21,7 +21,7 @@ namespace Hazelcast.Client
 			}
 	    }
 	
-	    public void removeListener<E>(String name, ItemListener<E> itemListener) {
+	    public void removeListener(String name, ItemListener<Object> itemListener) {
 	        EntryListener<Object,Object> entryListener;
 			itemListener2EntryListener.TryRemove(itemListener, out entryListener);
 	        entryListenerManager.removeListener<Object,Object>(name, null, entryListener);

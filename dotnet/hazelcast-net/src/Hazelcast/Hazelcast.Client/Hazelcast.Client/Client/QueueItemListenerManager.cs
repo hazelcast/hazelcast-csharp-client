@@ -20,7 +20,7 @@ namespace Hazelcast.Client
         	return queueItemListeners[name].Count == 0;
     	}
 		
-		public void registerListener<E>(String name, ItemListener<E> listener) {
+		public void registerListener(String name, ItemListener<Object> listener) {
         	List<ItemListener<Object>> newListenersList = new List<ItemListener<Object>>();
         	List<ItemListener<Object>> listeners = queueItemListeners.GetOrAdd(name, newListenersList);
         	if (listeners == null) {
@@ -50,7 +50,7 @@ namespace Hazelcast.Client
 	        }
     	}
 		
-		public void removeListener<E>(String name, ItemListener<E> listener) {
+		public void removeListener(String name, ItemListener<Object> listener) {
 	        if (!queueItemListeners.ContainsKey(name)) {
 	            return;
 	        }

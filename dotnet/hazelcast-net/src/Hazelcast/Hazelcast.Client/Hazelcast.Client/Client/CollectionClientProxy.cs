@@ -95,9 +95,9 @@ namespace Hazelcast.Client
 		
 		
 		
-		public abstract void addItemListener(ItemListener<E> listener, bool includeValue);
+		public abstract void addItemListener(ItemListener<Object> listener, bool includeValue);
 		
-		public abstract void removeItemListener(ItemListener<E> listener);
+		public abstract void removeItemListener(ItemListener<Object> listener);
 	}
 }
 

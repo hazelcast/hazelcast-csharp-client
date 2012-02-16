@@ -19,11 +19,11 @@ namespace Hazelcast.Client
 
 		public int threadId;
 
-		public long ttl = -1;
+        public long ttl = -1;
 
-		public long timeout = -1;
+        public long timeout = -1;
 
-		public long longValue;
+        public long longValue;
 
 		public byte responseType = 2;
 
@@ -40,16 +40,8 @@ namespace Hazelcast.Client
 			
 			using (BinaryWriter writer = new BinaryWriter (body)) {
 				writer.Write (System.Net.IPAddress.HostToNetworkOrder (headerInBytes.Length));
-				if(key==null){
-					writer.Write(0);
-				}else{
-					writer.Write (System.Net.IPAddress.HostToNetworkOrder (key.Length));
-				}
-				if(value==null){
-					writer.Write (0);	
-				} else{
-					writer.Write (System.Net.IPAddress.HostToNetworkOrder (value.Length));
-				}
+				writer.Write(key==null?0:System.Net.IPAddress.HostToNetworkOrder (key.Length));
+				writer.Write (value==null?0:System.Net.IPAddress.HostToNetworkOrder (value.Length));	
 				writer.Write (PACKET_VERSION);
 				writer.Write (headerInBytes);
 				if(key!=null)
@@ -63,48 +55,53 @@ namespace Hazelcast.Client
 
 		public void read (Stream stream)
 		{
-			BinaryReader reader = new BinaryReader (stream);
+			    BinaryReader reader = new BinaryReader (stream);
 
-			int headerSize = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
-			int keySize = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
-			int valueSize = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
-			int packetVersion = reader.ReadByte ();
-			if (packetVersion != PACKET_VERSION) {
-				//throw exception, I don't know how. 
-			}
-			readHeader (reader);
-			this.key = new byte[keySize];
-			reader.Read (this.key, 0, keySize);
-			this.value = new byte[valueSize];
-			reader.Read (this.value, 0, valueSize);
+                int headerSize = IPAddress.NetworkToHostOrder(reader.ReadInt32());
+                int keySize = IPAddress.NetworkToHostOrder(reader.ReadInt32());
+                int valueSize = IPAddress.NetworkToHostOrder(reader.ReadInt32());
+                int packetVersion = reader.ReadByte();
+                if (packetVersion != PACKET_VERSION) 
+                    throw new Exception("Packet versions do not match. Expected " + PACKET_VERSION + " but found " + packetVersion); 
+             
+                readHeader(reader);
+                this.key = new byte[keySize];
+                if (keySize > 0)
+                    readFully(this.key, 0, keySize, reader);
+                    
+                this.value = new byte[valueSize];
+                if (valueSize > 0)
+                    readFully(this.value, 0, valueSize, reader);
+                    
 		}
 
 		public void readHeader (BinaryReader reader)
 		{
-			this.operation = reader.ReadByte ();
-			int blockId = reader.ReadInt32 ();
-			int threadId = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
-			byte booleans = reader.ReadByte ();
-			if(isTrue(booleans, 1)){
-				timeout = IPAddress.NetworkToHostOrder (reader.ReadInt64 ());
-			}
-			if(isTrue(booleans, 2)){
-				ttl = IPAddress.NetworkToHostOrder (reader.ReadInt64 ());
-			}
-			if(isTrue(booleans, 4)){
-				longValue = IPAddress.NetworkToHostOrder (reader.ReadInt64 ());
-			}
-			this.callId = IPAddress.NetworkToHostOrder (reader.ReadInt64 ());
-			this.responseType = reader.ReadByte ();
-			int nameLength = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
-			if (nameLength > 0) {
-				byte[] b = new byte[nameLength];
-				reader.Read (b, 0, nameLength);
-				this.name = System.Text.Encoding.ASCII.GetString (b);
-			}
-			byte indexCount = reader.ReadByte ();
-			int keyPartitionHash = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
-			int valuePartitionHash = IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
+                this.operation = reader.ReadByte();
+                int blockId = reader.ReadInt32();
+                int threadId = IPAddress.NetworkToHostOrder(reader.ReadInt32());
+                byte booleans = reader.ReadByte();
+                if (isTrue(booleans, 1))
+                	timeout = IPAddress.NetworkToHostOrder(reader.ReadInt64());
+               
+                if (isTrue(booleans, 2))
+                    ttl = IPAddress.NetworkToHostOrder(reader.ReadInt64());
+                
+                if (isTrue(booleans, 4))
+                	longValue = IPAddress.NetworkToHostOrder(reader.ReadInt64());
+                
+                this.callId = IPAddress.NetworkToHostOrder(reader.ReadInt64());
+                this.responseType = reader.ReadByte();
+                int nameLength = IPAddress.NetworkToHostOrder(reader.ReadInt32());
+                if (nameLength > 0)
+                {
+                    byte[] b = new byte[nameLength];
+                    readFully(b, 0, nameLength, reader);
+                    this.name = System.Text.Encoding.ASCII.GetString(b);
+                }
+                byte indexCount = reader.ReadByte();
+                int keyPartitionHash = IPAddress.NetworkToHostOrder(reader.ReadInt32());
+                int valuePartitionHash = IPAddress.NetworkToHostOrder(reader.ReadInt32());
 		}
 
 
@@ -126,7 +123,7 @@ namespace Hazelcast.Client
 				}
 				booleans = setTrue(booleans, 6); //client = true
 				booleans = setTrue(booleans, 7); //lockAddressNull == true
-				writer.Write ((byte)booleans); // eskiden 192 idi
+				writer.Write ((byte)booleans); 
 				if(timeout!=-1){
 					writer.Write(System.Net.IPAddress.HostToNetworkOrder((long)timeout));
 				}
@@ -161,14 +158,27 @@ namespace Hazelcast.Client
 		{
 			return string.Format ("[Packet] " + (ClusterOperation)operation);
 		}
+		
 		public void set(String name, ClusterOperation operation,
                     byte[] key, byte[] value) {
-        this.name = name;
-        this.operation = (byte)operation;
-        this.key = key;
-        this.value = value;
-    }
+	        this.name = name;
+	        this.operation = (byte)operation;
+	        this.key = key;
+	        this.value = value;
+	    }
 		
+        public void readFully(byte[] b, int off, int len, BinaryReader reader)
+        {
+            int n = 0;
+            while (n < len)
+            {
+                int count = reader.Read(b, off + n, len - n);
+                if (count < 0)
+                    throw new Exception("End of file");
+                n += count;
+            }
+        }
+
 		private byte setTrue(byte number, int index){
 			return (byte) (number | POWERS[index]);
 		}

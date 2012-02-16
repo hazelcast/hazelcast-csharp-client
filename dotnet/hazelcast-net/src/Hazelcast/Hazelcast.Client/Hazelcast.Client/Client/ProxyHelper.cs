@@ -100,15 +100,28 @@ namespace Hazelcast.Client
     	}
 		
 		public Packet doCall(Call call){
+			//call.pre.Start();
 			outThread.enQueue(call);
-			Packet response = call.getResult();
-			return response;
+            int timeout = 5000;
+            for (int i = 0; ; i++)
+            {
+                Packet response = call.getResult(timeout);
+                if (response != null) {
+                    //call.post.Stop();
+                    //call.collect();
+                    return response;
+                }
+                if (i > 0)
+                {
+                    Console.WriteLine("There is no response for " + call.getId()+ " in " + (timeout * i) + " seconds.");
+                }
+            }
+			
 			
 		}
 		
 		public Call createCall(Packet request) {
-        	//long id = newCallId();
-			return new Call(request);
+        	return new Call(request);
         }
 		
 		public void doFireAndForget(ClusterOperation operation, Object key, Object value) {
@@ -143,10 +156,6 @@ namespace Hazelcast.Client
 	            throw new NullReferenceException("Object cannot be null.");
 	        }
     	}
-		
-		//public static long newCallId() {
-		//	return Interlocked.Increment(ref counter);
-    	//}
     }
 		
 }
