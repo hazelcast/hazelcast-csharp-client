@@ -1,6 +1,7 @@
 package com.hazelcast.elasticmemory;
 
 import com.hazelcast.elasticmemory.storage.EntryRef;
+import com.hazelcast.elasticmemory.storage.OffHeapData;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.enterprise.EnterpriseNodeInitializer;
 import com.hazelcast.impl.AbstractSimpleRecord;
@@ -29,7 +30,16 @@ public final class SimpleOffHeapRecord extends AbstractSimpleRecord implements R
     }
 
     public Data getValueData() {
-        return OffHeapRecordHelper.getValue(key, entryRef, getStorage());
+        final EntryRef ref = entryRef;
+        OffHeapData value = OffHeapRecordHelper.getValue(key, ref, getStorage());
+        if (value != null) {
+            if (value.isValid()) {
+                return value;
+            } else {
+                getValueData();
+            }
+        }
+        return null;
     }
 
     public void setValueData(Data value) {

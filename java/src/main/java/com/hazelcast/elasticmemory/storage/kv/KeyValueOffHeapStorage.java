@@ -1,18 +1,6 @@
 package com.hazelcast.elasticmemory.storage.kv;
 
-import static com.hazelcast.elasticmemory.util.MathUtil.*;
-
-import java.io.Closeable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
-
-import com.hazelcast.elasticmemory.storage.BufferSegment;
-import com.hazelcast.elasticmemory.storage.EntryRef;
-import com.hazelcast.elasticmemory.storage.OffHeapStorageSupport;
-import com.hazelcast.elasticmemory.storage.Storage;
-
-public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements KeyValueStorage<K> {
+/*public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements KeyValueStorage<K> {
 	
 	private final StorageSegment[] segments ;
 	
@@ -72,6 +60,7 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 			}
 		}
 
+        // TODO: update for lock free implementation!
 		byte[] get(final K key) {
 			lock();
 			try {
@@ -80,7 +69,8 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 					space.remove(key);
 					return null;
 				}
-				return buffer.get(ref);
+				OffHeapData value = buffer.get(ref); // under-lock, can not be invalid!
+                return value != null ? value.data : null;
 			} finally {
 				unlock();
 			}
@@ -108,4 +98,4 @@ public class KeyValueOffHeapStorage<K> extends OffHeapStorageSupport implements 
 			space.clear();
 		}
 	}
-}
+}*/

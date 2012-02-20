@@ -1,10 +1,5 @@
 package com.hazelcast.elasticmemory.examples;
 
-import java.util.concurrent.ExecutorService;
-
-import java.util.concurrent.Executors;
-import java.util.logging.Level;
-
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
@@ -14,6 +9,10 @@ import com.hazelcast.impl.GroupProperties;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.monitor.LocalMapOperationStats;
 import com.hazelcast.partition.Partition;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 public class SimpleMapTest {
 
@@ -26,11 +25,12 @@ public class SimpleMapTest {
     public static int REMOVE_PERCENTAGE = 20;
 
     public static void main(String[] args) {
-    	Config config = new XmlConfigBuilder().build();
-    	config.setProperty(GroupProperties.PROP_ELASTIC_MEMORY_ENABLED, "true");
-    	config.setProperty(GroupProperties.PROP_ELASTIC_MEMORY_TOTAL_SIZE, "256m");
-    	Hazelcast.init(config);
-    	
+        System.setProperty("hazelcast.local.localAddress", "127.0.0.1");
+        Config config = new XmlConfigBuilder().build();
+        config.setProperty(GroupProperties.PROP_ELASTIC_MEMORY_ENABLED, "true");
+        config.setProperty(GroupProperties.PROP_ELASTIC_MEMORY_TOTAL_SIZE, "256m");
+        Hazelcast.init(config);
+
         final ILogger logger = Hazelcast.getLoggingService().getLogger("SimpleMapTest");
         boolean load = false;
         boolean rm = false;
@@ -59,11 +59,11 @@ public class SimpleMapTest {
             logger.log(Level.INFO, "    // means 200 threads, value-size 130 bytes, 10% put, 85% get");
             logger.log(Level.INFO, "");
         }
-        
-        if(!rm) {
-        	REMOVE_PERCENTAGE = (100 - PUT_PERCENTAGE - GET_PERCENTAGE);
+
+        if (!rm) {
+            REMOVE_PERCENTAGE = (100 - PUT_PERCENTAGE - GET_PERCENTAGE);
         }
-        
+
         logger.log(Level.INFO, "Starting Test with ");
         logger.log(Level.INFO, "      Thread Count: " + THREAD_COUNT);
         logger.log(Level.INFO, "       Entry Count: " + ENTRY_COUNT);
@@ -87,24 +87,24 @@ public class SimpleMapTest {
                 }
             }
         }
-        if(PUT_PERCENTAGE != 0 || REMOVE_PERCENTAGE != 0 || GET_PERCENTAGE != 0) {
-	        for (int i = 0; i < THREAD_COUNT; i++) {
-	            es.execute(new Runnable() {
-	                public void run() {
-	                    while (true) {
-	                        int key = (int) (Math.random() * ENTRY_COUNT);
-	                        int operation = ((int) (Math.random() * 100));
-	                        if (operation < GET_PERCENTAGE) {
-	                            map.get(String.valueOf(key));
-	                        } else if (operation < GET_PERCENTAGE + PUT_PERCENTAGE) {
-	                            map.put(key, new byte[VALUE_SIZE]);
-	                        } else {
-	                            map.remove(key);
-	                        }
-	                    }
-	                }
-	            });
-	        }
+        if (PUT_PERCENTAGE != 0 || REMOVE_PERCENTAGE != 0 || GET_PERCENTAGE != 0) {
+            for (int i = 0; i < THREAD_COUNT; i++) {
+                es.execute(new Runnable() {
+                    public void run() {
+                        while (true) {
+                            int key = (int) (Math.random() * ENTRY_COUNT);
+                            int operation = ((int) (Math.random() * 100));
+                            if (operation < GET_PERCENTAGE) {
+                                map.get(key);
+                            } else if (operation < GET_PERCENTAGE + PUT_PERCENTAGE) {
+                                map.put(key, new byte[VALUE_SIZE]);
+                            } else {
+                                map.remove(key);
+                            }
+                        }
+                    }
+                });
+            }
         }
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
