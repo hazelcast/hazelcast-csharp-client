@@ -1,6 +1,7 @@
 package com.hazelcast.elasticmemory;
 
 import com.hazelcast.elasticmemory.storage.EntryRef;
+import com.hazelcast.elasticmemory.storage.OffHeapData;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.enterprise.EnterpriseNodeInitializer;
 import com.hazelcast.impl.AbstractRecord;
@@ -36,27 +37,35 @@ public final class OffHeapRecord extends AbstractRecord implements Record {
         return recordCopy;
     }
 
-    public Object getValue() {
-        return toObject(getValueData());
+    protected void invalidateValueCache() {
     }
 
     public Data getValueData() {
-        return OffHeapRecordHelper.getValue(key, entryRef, getStorage());
+        final EntryRef ref = entryRef;
+        OffHeapData value = OffHeapRecordHelper.getValue(key, ref, getStorage());
+        if (value != null) {
+            if (value.isValid()) {
+                return value;
+            } else {
+                getValueData();
+            }
+        }
+        return null;
+    }
+
+    public void setValueData(Data value) {
+//    	invalidateValueCache();
+        entryRef = OffHeapRecordHelper.setValue(key, entryRef, value, getStorage());
+    }
+
+    public Object getValue() {
+        return toObject(getValueData());
     }
 
     public Object setValue(Object value) {
         //FIXME: for semaphore
         setValueData(toData(value));
         return null;
-    }
-
-    @Override
-    protected void invalidateValueCache() {
-    }
-
-    public void setValueData(Data value) {
-//    	invalidateValueCache();
-        entryRef = OffHeapRecordHelper.setValue(key, entryRef, value, getStorage());
     }
 
     public int valueCount() {

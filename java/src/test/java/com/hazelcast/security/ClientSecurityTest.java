@@ -1,5 +1,6 @@
 package com.hazelcast.security;
 
+import com.hazelcast.client.ClientConfig;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.PermissionConfig;
@@ -29,6 +30,7 @@ public class ClientSecurityTest {
     @Before
     @After
     public void cleanup() {
+        HazelcastClient.shutdownAll();
         Hazelcast.shutdownAll();
     }
 
@@ -118,7 +120,8 @@ public class ClientSecurityTest {
     }
 
     private HazelcastClient createHazelcastClient() {
-        HazelcastClient client = HazelcastClient.newHazelcastClient("dev", "dev-pass", "localhost");
+        ClientConfig config = new ClientConfig().addAddress("127.0.0.1");
+        HazelcastClient client = HazelcastClient.newHazelcastClient(config);
         return client;
     }
 

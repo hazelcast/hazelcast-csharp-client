@@ -1,14 +1,22 @@
 package com.hazelcast.elasticmemory.storage;
 
+import com.hazelcast.cluster.NodeAware;
+import com.hazelcast.elasticmemory.error.OffHeapError;
+import com.hazelcast.elasticmemory.error.OffHeapOutOfMemoryError;
+import com.hazelcast.impl.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.nio.Data;
 
+import java.io.Closeable;
 import java.nio.ByteBuffer;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 import static com.hazelcast.elasticmemory.util.MathUtil.divideByAndCeil;
 
-public class BufferSegment {
+public class BufferSegment implements Closeable, NodeAware {
 
     private static final ILogger logger = Logger.getLogger(BufferSegment.class.getName());
 
@@ -21,11 +29,14 @@ public class BufferSegment {
         return ID++;
     }
 
+    private final Lock lock = new ReentrantLock();
     private final int totalSize;
     private final int chunkSize;
     private final int chunkCount;
     private AddressQueue chunks;
-    private ByteBuffer buffer;
+    private volatile ByteBuffer mainBuffer; // used only for duplicates; no read, no write
+    private ByteBuffer serviceThreadBuffer;
+    private Node node;
 
     public BufferSegment(int totalSizeInMb, int chunkSizeInKb) {
         super();
@@ -37,66 +48,84 @@ public class BufferSegment {
 
         final int index = nextId();
         this.chunkCount = totalSize / chunkSize;
-        logger.log(Level.FINEST, "BufferSegment[" + index + "] starting with chunkCount=" + chunkCount);
+        logger.log(Level.INFO, "BufferSegment[" + index + "] starting with chunkCount=" + chunkCount);
 
         chunks = new AddressQueue(chunkCount);
-        buffer = ByteBuffer.allocateDirect(totalSize);
+        mainBuffer = ByteBuffer.allocateDirect(totalSize);
+        serviceThreadBuffer = mainBuffer.duplicate();
         for (int i = 0; i < chunkCount; i++) {
             chunks.offer(i);
         }
         logger.log(Level.INFO, "BufferSegment[" + index + "] started!");
     }
 
-    public EntryRef put(final byte[] value) {
+    public EntryRef put(final Data data) {
+        final byte[] value = data != null ? data.buffer : null;
         if (value == null || value.length == 0) {
             return EntryRef.EMPTY_DATA_REF;
         }
 
         final int count = divideByAndCeil(value.length, chunkSize);
-        final int[] indexes = chunks.poll(count);
-        final EntryRef ref = new EntryRef(indexes, value.length);
-
+        final int[] indexes = reserve(count);  // operation under lock
+        final ByteBuffer buffer = getBuffer(false);   // volatile read
+        if (buffer == null) {
+            throw new BufferSegmentClosedError();
+        }
         int offset = 0;
         for (int i = 0; i < count; i++) {
             buffer.position(indexes[i] * chunkSize);
-            int len = Math.min(chunkSize, (ref.length - offset));
+            int len = Math.min(chunkSize, (value.length - offset));
             buffer.put(value, offset, len);
             offset += len;
         }
-        return ref;
+        return new EntryRef(indexes, value.length); // volatile write
     }
 
-    public byte[] get(final EntryRef ref) {
-        if (!isEntryRefValid(ref)) {
+    public OffHeapData get(final EntryRef ref) {
+        if (!isEntryRefValid(ref)) {  // volatile read
             return null;
         }
 
         final byte[] value = new byte[ref.length];
         final int chunkCount = ref.getChunkCount();
         int offset = 0;
+        final ByteBuffer buffer = getBuffer(true);  // volatile read
+        if (buffer == null) {
+            throw new BufferSegmentClosedError();
+        }
         for (int i = 0; i < chunkCount; i++) {
             buffer.position(ref.getChunk(i) * chunkSize);
             int len = Math.min(chunkSize, (ref.length - offset));
             buffer.get(value, offset, len);
             offset += len;
         }
-        return value;
+        // volatile read
+        return isEntryRefValid(ref) ? new OffHeapData(value, OffHeapData.VALID)
+                : OffHeapData.INVALID_OFF_HEAP_DATA;
+    }
+
+    private ByteBuffer getBuffer(boolean readonly) { // volatile read
+        return mainBuffer != null ?
+                (isServiceThread() ? serviceThreadBuffer :
+                        (readonly ? mainBuffer.asReadOnlyBuffer() : mainBuffer.duplicate())
+                ) : null;
     }
 
     public void remove(final EntryRef ref) {
-        if (!isEntryRefValid(ref)) {
+        if (!isEntryRefValid(ref)) { // volatile read
             return;
         }
-
+        ref.invalidate(); // volatile write
         final int chunkCount = ref.getChunkCount();
+        final int[] indexes = new int[chunkCount];
         for (int i = 0; i < chunkCount; i++) {
-            assertTrue(chunks.offer(ref.getChunk(i)), "Could not offer released indexes! Error in queue...");
+            indexes[i] = ref.getChunk(i);
         }
-        ref.invalidate();
+        assertTrue(release(indexes), "Could not offer released indexes! Error in queue...");
     }
 
-    private boolean isEntryRefValid(EntryRef ref) {
-        return ref != null && !ref.isEmpty() && ref.isValid();
+    private boolean isEntryRefValid(final EntryRef ref) {
+        return ref != null && !ref.isEmpty() && ref.isValid();  //isValid() volatile read
     }
 
     private static void assertTrue(boolean condition, String message) {
@@ -105,9 +134,54 @@ public class BufferSegment {
         }
     }
 
-    public void destroy() {
-        buffer = null;
-        chunks = null;
+    private boolean isServiceThread() {
+        return node != null && node.isServiceThread();
+    }
+
+    public void close() {
+        lock.lock();
+        try {
+            chunks = null;
+            mainBuffer = null; // volatile write
+            serviceThreadBuffer = null;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private int[] reserve(final int count) {
+        lock.lock();
+        try {
+            if (chunks == null) {
+                throw new BufferSegmentClosedError();
+            }
+            final int[] indexes = new int[count];
+            return chunks.poll(indexes);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private boolean release(final int[] indexes) {
+        lock.lock();
+        try {
+            boolean b = true;
+            for (int i = 0; i < indexes.length; i++) {
+                int index = indexes[i];
+                b = chunks.offer(index) && b;
+            }
+            return b;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public Node getNode() {
+        return node;
+    }
+
+    public void setNode(final Node node) {
+        this.node = node;
     }
 
     private class AddressQueue {
@@ -148,17 +222,23 @@ public class BufferSegment {
             return value;
         }
 
-        public int[] poll(final int count) {
+        public int[] poll(final int[] indexes) {
+            final int count = indexes.length;
             if (count > size) {
                 throw new OffHeapOutOfMemoryError("Segment has " + size + " available chunks. " +
                         "Data requires " + count + " chunks. Segment is full!");
             }
 
-            final int[] result = new int[count];
             for (int i = 0; i < count; i++) {
-                result[i] = poll();
+                indexes[i] = poll();
             }
-            return result;
+            return indexes;
+        }
+    }
+
+    private class BufferSegmentClosedError extends OffHeapError {
+        public BufferSegmentClosedError() {
+            super("BufferSegment is closed!");
         }
     }
 }

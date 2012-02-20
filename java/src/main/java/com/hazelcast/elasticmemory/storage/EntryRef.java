@@ -6,11 +6,12 @@ public class EntryRef {
 
     public final int length;
     private final int[] chunks;
-    private boolean valid = true;
+    private volatile boolean valid;
 
     EntryRef(int[] indexes, int length) {
         this.chunks = indexes;
         this.length = length;
+        this.valid = true; // volatile write
     }
 
     public boolean isEmpty() {
@@ -26,11 +27,11 @@ public class EntryRef {
     }
 
     boolean isValid() {
-        return valid;
+        return valid; // volatile read
     }
 
     void invalidate() {
-        valid = false;
+        valid = false;  // volatile write
     }
 
     protected Object clone() throws CloneNotSupportedException {

@@ -1,154 +1,156 @@
-<project basedir="." name="Elastic Memory" default="help">
+<project basedir="../../../" name="Elastic Memory" default="help">
 
-	<property file="${basedir}/build.properties" />
-	
-	<target name="help">
-		<echo message="clean: Clean release directory." />
-		<echo message="merge: Merge Hazelcast and Elastic-Memory into release directory." />
-		<echo message="license-cleanup: Remove enterprise license file and apache license.txt." />
-		<echo message="change-version: Change version from ${version.community} to ${version.enterprise}" />
-		<echo message="add-trial-notice: Add trial licence.txt." />
-		<echo message="javadoc: Build javadoc." />
-		<echo message="release: Release Enterprise edition to ${release.dir}" />
-		<echo message="run-test: To run single test" />
-		<echo message="test: To run single test: clean, merge, change-version, run-test" />
-		<echo message="test-all: To run all tests: clean, merge, change-version, test" />
-		<echo message="all: clean, merge, license-cleanup, change-version, add-trial-notice, javadoc, release" />
-	</target>
+    <property file="${basedir}/elastic-memory/trunk/java/build.properties"/>
 
-	<target name="clean">
-		<delete includeemptydirs="true" failonerror="no" dir="${release.dir}" />
-	</target>
+    <target name="help">
+        <echo message="clean: Clean release directory."/>
+        <echo message="merge: Merge Hazelcast and Elastic-Memory into release directory."/>
+        <echo message="license-cleanup: Remove enterprise license file and apache license.txt."/>
+        <echo message="change-version: Change version from ${version.community} to ${version.enterprise}"/>
+        <echo message="add-trial-notice: Add trial licence.txt."/>
+        <echo message="javadoc: Build javadoc."/>
+        <echo message="release: Release Enterprise edition to ${release.dir}"/>
+        <echo message="run-test: To run single test"/>
+        <echo message="test: To run single test: clean, merge, change-version, run-test"/>
+        <echo message="test-all: To run all tests: clean, merge, change-version, test"/>
+        <echo message="all: clean, merge, license-cleanup, change-version, add-trial-notice, javadoc, release"/>
+    </target>
 
-	<target name="merge">
-		<mkdir dir="${release.dir}" />
-		<copy todir="${release.dir}">
-			<fileset dir="${hazelcast.dir}">
-				<exclude name="**/target/**/*" />
-				<exclude name="**/META-INF/services/*" />
-			</fileset>
-		</copy>
+    <target name="clean">
+        <delete includeemptydirs="true" failonerror="no" dir="${release.dir}"/>
+    </target>
 
-		<copy todir="${release.dir}/hazelcast/src">
-			<fileset dir="${elastic.dir}/src">
-				<exclude name="**/test/**/*Client*" />
-			</fileset>
-		</copy>
-		<copy todir="${release.dir}/hazelcast-client/src">
-			<fileset dir="${elastic.dir}/src" defaultexcludes="true">
-				<include name="**/test/**/*Client*" />
-			</fileset>
-		</copy>
-		<!--
-		<copy todir="${release.dir}">
-			<fileset dir="${basedir}/scripts/">
-				<include name="release.sh" />
-			</fileset>
-		</copy>
-		-->
-	</target>
+    <target name="merge">
+        <mkdir dir="${release.dir}"/>
+        <copy todir="${release.dir}">
+            <fileset dir="${hazelcast.dir}">
+                <exclude name="**/target/**/*"/>
+                <exclude name="**/META-INF/services/*"/>
+            </fileset>
+        </copy>
 
-	<target name="license-cleanup">
-		<delete>
-			<fileset dir="${release.dir}">
-				<include name="**/*.license" />
-				<include name="**/license.txt" />
-				<include name="**/notice.txt" />
-			</fileset>
-		</delete>
-	</target>
+        <copy todir="${release.dir}/hazelcast/src">
+            <fileset dir="${elastic.dir}/src">
+                <exclude name="**/test/**/*Client*"/>
+            </fileset>
+        </copy>
+        <copy todir="${release.dir}/hazelcast-client/src">
+            <fileset dir="${elastic.dir}/src" defaultexcludes="true">
+                <include name="**/test/**/*Client*"/>
+            </fileset>
+        </copy>
+        <!--
+          <copy todir="${release.dir}">
+              <fileset dir="${elastic.dir}/scripts/">
+                  <include name="release.sh" />
+              </fileset>
+          </copy>
+          -->
+    </target>
 
-	<target name="add-trial-notice">
-		<mkdir dir="${release.dir}/src/main/resources" />
-		<copy tofile="${release.dir}/src/main/resources/license.txt" file="${basedir}/license/ee-trial-license.txt" />
-	</target>
+    <target name="license-cleanup">
+        <delete>
+            <fileset dir="${release.dir}">
+                <include name="**/*.license"/>
+                <include name="**/license.txt"/>
+                <include name="**/notice.txt"/>
+            </fileset>
+        </delete>
+    </target>
 
-	<target name="release" depends="license-cleanup, change-version, add-trial-notice, javadoc">
-		<exec dir="${release.dir}" executable="mvn">
-			<arg value="clean" />
-			<arg value="package" />
-			<arg value="resources:resources" />
-			<arg value="assembly:assembly" />
-			<arg value="-DskipTests" />
-		</exec>
-	</target>
+    <target name="add-trial-notice">
+        <mkdir dir="${release.dir}/src/main/resources"/>
+        <copy tofile="${release.dir}/src/main/resources/license.txt"
+              file="${elastic.dir}/license/ee-trial-license.txt"/>
+    </target>
 
-	<target name="all" depends="clean, merge, license-cleanup, change-version, add-trial-notice, javadoc, release" />
-	
-	<target name="run-test" depends="merge" if="test">
-		<echo message="Running test for === ${test}"  />
-		<exec dir="${release.dir}/hazelcast" executable="mvn">
-			<arg value="-e"/>
-			<arg value="test" />
-			<arg value="-P elastic" />
-			<arg value="-Dtest=${test}" />
-			<arg value="-Dhazelcast.elastic.memory.enabled=true" />
-			<arg value="-Dhazelcast.elastic.memory.shared.storage=true" />
-			<arg value="-Dhazelcast.elastic.memory.total.size=1024m" />
-			<arg value="-Dhazelcast.elastic.memory.chunk.size=1k" />
-		</exec>
-	</target>
-	
-	<target name="test" depends="clean, merge, change-version, run-test" if="test" />
-	
-	<target name="test-all" depends="clean, merge, change-version">
-		<exec dir="${release.dir}/hazelcast" executable="mvn">
-			<arg value="test" />
-			<arg value="-P elastic" />
-			<arg value="-Dhazelcast.elastic.memory.enabled=true" />
-			<arg value="-Dhazelcast.elastic.memory.shared.storage=true" />
-			<arg value="-Dhazelcast.elastic.memory.total.size=1024m" />
-			<arg value="-Dhazelcast.elastic.memory.chunk.size=1k" />
-		</exec>
-	</target>
+    <target name="release" depends="license-cleanup, change-version, add-trial-notice, javadoc">
+        <exec dir="${release.dir}" executable="mvn">
+            <arg value="clean"/>
+            <arg value="package"/>
+            <arg value="resources:resources"/>
+            <arg value="assembly:assembly"/>
+            <arg value="-DskipTests"/>
+        </exec>
+    </target>
 
-	<target name="release.sh" depends="license-cleanup, change-version, add-trial-notice, javadoc">
-		<exec dir="${release.dir}" executable="sh">
-			<arg value="${basedir}/scripts/release.sh" />
-		</exec>
-	</target>
+    <target name="all" depends="clean, merge, license-cleanup, change-version, add-trial-notice, javadoc, release"/>
 
-	<target name="change-version">
-		<exec dir="${release.dir}" executable="sh">
-			<arg value="${basedir}/scripts/change-version.sh" />
-			<arg value="${version.community}" />
-			<arg value="${version.enterprise}" />
-		</exec>
-	</target>
+    <target name="run-test" depends="merge" if="test">
+        <echo message="Running test for === ${test}"/>
+        <exec dir="${release.dir}/hazelcast" executable="mvn">
+            <arg value="-e"/>
+            <arg value="test"/>
+            <arg value="-P elastic"/>
+            <arg value="-Dtest=${test}"/>
+            <arg value="-Dhazelcast.elastic.memory.enabled=true"/>
+            <arg value="-Dhazelcast.elastic.memory.shared.storage=true"/>
+            <arg value="-Dhazelcast.elastic.memory.total.size=1024m"/>
+            <arg value="-Dhazelcast.elastic.memory.chunk.size=1k"/>
+        </exec>
+    </target>
 
-	<target name="javadoc">
-		<javadoc destdir="${release.dir}/javadoc" author="true" version="true" use="true" windowtitle="Hazelcast API - ${version.community}">
-			<fileset dir="${release.dir}/hazelcast/src/main/java/" defaultexcludes="true">
-				<include name="**/nio/DataSerializable*" />
-				<include name="**/core/**" />
-				<include name="**/monitor/**" />
-				<include name="**/merge/**" />
-				<include name="**/config/**" />
-				<include name="**/jmx/**" />
-				<include name="**/query/**" />
-				<include name="**/partition/**" />
-				<exclude name="**/*.html" />
-			</fileset>
-			<fileset dir="${release.dir}/hazelcast/src/main/java/" defaultexcludes="true">
-				<include name="**/security/*Credentials*" />
-				<include name="**/security/*PermissionPolicy*" />
-				<include name="**/security/SecurityContext*" />
-				<exclude name="**/*.html" />
-			</fileset>
-			<fileset dir="${release.dir}/hazelcast-client/src/main/java/" defaultexcludes="true">
-				<include name="**/HazelcastClient.java" />
-				<exclude name="**/*.html" />
-			</fileset>
-			<fileset dir="${release.dir}/hazelcast-hibernate/src/main/java/" defaultexcludes="true">
-				<include name="**/HazelcastAccessor.java" />
-				<exclude name="**/*.html" />
-			</fileset>
-			<doctitle>
-				<![CDATA[<h1>Hazelcast ${version.community}</h1>]]>
-	        </doctitle>
-			<bottom><![CDATA[<i>Copyright © 2008-2011 Hazel Ltd. All Rights Reserved.</i>]]></bottom>
-			<link href="http://java.sun.com/j2se/1.5.0/docs/api/" />
-			<link href="http://java.sun.com/products/servlet/2.3/javadoc/" />
-		</javadoc>
-	</target>
+    <target name="test" depends="clean, merge, change-version, run-test" if="test"/>
+
+    <target name="test-all" depends="clean, merge, change-version">
+        <exec dir="${release.dir}/hazelcast" executable="mvn">
+            <arg value="test"/>
+            <arg value="-P elastic"/>
+            <arg value="-Dhazelcast.elastic.memory.enabled=true"/>
+            <arg value="-Dhazelcast.elastic.memory.shared.storage=true"/>
+            <arg value="-Dhazelcast.elastic.memory.total.size=1024m"/>
+            <arg value="-Dhazelcast.elastic.memory.chunk.size=1k"/>
+        </exec>
+    </target>
+
+    <target name="release.sh" depends="license-cleanup, change-version, add-trial-notice, javadoc">
+        <exec dir="${release.dir}" executable="sh">
+            <arg value="${elastic.dir}/scripts/release.sh"/>
+        </exec>
+    </target>
+
+    <target name="change-version">
+        <exec dir="${release.dir}" executable="sh">
+            <arg value="${elastic.dir}/scripts/change-version.sh"/>
+            <arg value="${version.community}"/>
+            <arg value="${version.enterprise}"/>
+        </exec>
+    </target>
+
+    <target name="javadoc">
+        <javadoc destdir="${release.dir}/javadoc" author="true" version="true" use="true"
+                 windowtitle="Hazelcast API - ${version.community}">
+            <fileset dir="${release.dir}/hazelcast/src/main/java/" defaultexcludes="true">
+                <include name="**/nio/DataSerializable*"/>
+                <include name="**/core/**"/>
+                <include name="**/monitor/**"/>
+                <include name="**/merge/**"/>
+                <include name="**/config/**"/>
+                <include name="**/jmx/**"/>
+                <include name="**/query/**"/>
+                <include name="**/partition/**"/>
+                <exclude name="**/*.html"/>
+            </fileset>
+            <fileset dir="${release.dir}/hazelcast/src/main/java/" defaultexcludes="true">
+                <include name="**/security/*Credentials*"/>
+                <include name="**/security/*PermissionPolicy*"/>
+                <include name="**/security/SecurityContext*"/>
+                <exclude name="**/*.html"/>
+            </fileset>
+            <fileset dir="${release.dir}/hazelcast-client/src/main/java/" defaultexcludes="true">
+                <include name="**/HazelcastClient.java"/>
+                <exclude name="**/*.html"/>
+            </fileset>
+            <fileset dir="${release.dir}/hazelcast-hibernate/src/main/java/" defaultexcludes="true">
+                <include name="**/HazelcastAccessor.java"/>
+                <exclude name="**/*.html"/>
+            </fileset>
+            <doctitle>
+                <![CDATA[<h1>Hazelcast ${version.community}</h1>]]>
+            </doctitle>
+            <bottom><![CDATA[<i>Copyright © 2008-2011 Hazel Ltd. All Rights Reserved.</i>]]></bottom>
+            <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+            <link href="http://java.sun.com/products/servlet/2.3/javadoc/"/>
+        </javadoc>
+    </target>
 </project>

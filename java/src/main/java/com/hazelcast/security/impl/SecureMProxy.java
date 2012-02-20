@@ -170,6 +170,11 @@ final class SecureMProxy extends SecureProxySupport implements MProxy {
         return (Object) proxy.putIfAbsent(key, value, ttl, timeunit);
     }
 
+    public void set(final Object key, final Object value, final long ttl, final TimeUnit timeunit) {
+        checkPut();
+        proxy.set(key, value, ttl, timeunit);
+    }
+
     public Object tryLockAndGet(Object key, long time, TimeUnit timeunit)
             throws TimeoutException {
         checkGet();
