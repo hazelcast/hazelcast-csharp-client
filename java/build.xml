@@ -129,12 +129,10 @@
                 <include name="**/jmx/**"/>
                 <include name="**/query/**"/>
                 <include name="**/partition/**"/>
-                <exclude name="**/*.html"/>
-            </fileset>
-            <fileset dir="${release.dir}/hazelcast/src/main/java/" defaultexcludes="true">
                 <include name="**/security/*Credentials*"/>
                 <include name="**/security/*PermissionPolicy*"/>
                 <include name="**/security/SecurityContext*"/>
+                <exclude name="**/impl/partition/**"/>
                 <exclude name="**/*.html"/>
             </fileset>
             <fileset dir="${release.dir}/hazelcast-client/src/main/java/" defaultexcludes="true">
@@ -148,7 +146,7 @@
             <doctitle>
                 <![CDATA[<h1>Hazelcast ${version.community}</h1>]]>
             </doctitle>
-            <bottom><![CDATA[<i>Copyright © 2008-2011 Hazel Ltd. All Rights Reserved.</i>]]></bottom>
+            <bottom><![CDATA[<i>Copyright © 2008-2012 Hazel Ltd. All Rights Reserved.</i>]]></bottom>
             <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
             <link href="http://java.sun.com/products/servlet/2.3/javadoc/"/>
         </javadoc>
