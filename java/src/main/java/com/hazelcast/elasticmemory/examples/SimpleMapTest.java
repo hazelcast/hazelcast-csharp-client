@@ -27,6 +27,7 @@ public class SimpleMapTest {
     public static void main(String[] args) {
         System.setProperty("hazelcast.local.localAddress", "127.0.0.1");
         Config config = new XmlConfigBuilder().build();
+        config.setLicenseKey("HGKBMJFI9CND0U22DV20H201R407Z");
         config.setProperty(GroupProperties.PROP_ELASTIC_MEMORY_ENABLED, "true");
         config.setProperty(GroupProperties.PROP_ELASTIC_MEMORY_TOTAL_SIZE, "256m");
         Hazelcast.init(config);

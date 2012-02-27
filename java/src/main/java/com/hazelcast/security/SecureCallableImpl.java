@@ -1,5 +1,15 @@
 package com.hazelcast.security;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.core.*;
+import com.hazelcast.impl.Node;
+import com.hazelcast.impl.Util;
+import com.hazelcast.logging.LoggingService;
+import com.hazelcast.nio.DataSerializable;
+import com.hazelcast.nio.SerializationHelper;
+import com.hazelcast.partition.PartitionService;
+
+import javax.security.auth.Subject;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -14,17 +24,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-
-import javax.security.auth.Subject;
-
-import com.hazelcast.config.Config;
-import com.hazelcast.core.*;
-import com.hazelcast.impl.Node;
-import com.hazelcast.impl.Util;
-import com.hazelcast.logging.LoggingService;
-import com.hazelcast.nio.DataSerializable;
-import com.hazelcast.nio.SerializationHelper;
-import com.hazelcast.partition.PartitionService;
 
 public final class SecureCallableImpl<V> implements SecureCallable<V>, DataSerializable {
 	
@@ -229,7 +228,10 @@ public final class SecureCallableImpl<V> implements SecureCallable<V>, DataSeria
 		public PartitionService getPartitionService() {
 			return hazelcast.getPartitionService();
 		}
-		public LoggingService getLoggingService() {
+        public ClientService getClientService() {
+            return hazelcast.getClientService();
+        }
+        public LoggingService getLoggingService() {
 			return hazelcast.getLoggingService();
 		}
 		public LifecycleService getLifecycleService() {

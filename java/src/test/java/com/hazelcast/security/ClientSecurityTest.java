@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 
 @RunWith(com.hazelcast.util.RandomBlockJUnit4ClassRunner.class)
 public class ClientSecurityTest {
-
+    
     @Before
     @After
     public void cleanup() {
