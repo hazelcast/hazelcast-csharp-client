@@ -33,9 +33,11 @@ namespace Hazelcast.Client
 
 		public void write (Stream stream)
 		{
+			
 			MemoryStream header = new MemoryStream ();
 			writeHeader (header);
 			byte[] headerInBytes = header.ToArray ();
+			
 			MemoryStream body = new MemoryStream ();
 			
 			using (BinaryWriter writer = new BinaryWriter (body)) {
