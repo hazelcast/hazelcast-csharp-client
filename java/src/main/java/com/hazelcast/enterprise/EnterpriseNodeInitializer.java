@@ -5,7 +5,6 @@ import com.hazelcast.elasticmemory.storage.InstanceStorageFactory;
 import com.hazelcast.elasticmemory.storage.SingletonStorageFactory;
 import com.hazelcast.elasticmemory.storage.Storage;
 import com.hazelcast.elasticmemory.storage.StorageFactory;
-import com.hazelcast.enterprise.Registration.Mode;
 import com.hazelcast.impl.DefaultProxyFactory;
 import com.hazelcast.impl.Node;
 import com.hazelcast.impl.ProxyFactory;
@@ -16,13 +15,16 @@ import com.hazelcast.security.SecurityContext;
 import com.hazelcast.security.SecurityContextImpl;
 import com.hazelcast.security.impl.SecureProxyFactory;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.logging.Level;
 
 public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements NodeInitializer {
 
     private StorageFactory storageFactory;
     private Storage storage;
-    private Registration registration;
+    private License license;
+    private Date validUntil;
     private SecurityContext securityContext;
     private boolean securityEnabled = false;
 
@@ -35,13 +37,18 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
         logger = node.getLogger("com.hazelcast.enterprise.initializer");
         try {
             logger.log(Level.INFO, "Checking Hazelcast Enterprise license...");
-            registration = RegistrationService.getRegistration(node.groupProperties.LICENSE_PATH.getString(), logger);
-            logger.log(Level.INFO, "Licensed to: " + registration.getOwner()
-                    + (registration.getMode() == Mode.TRIAL ? " until " + registration.getExpiryDate() : "")
-                    + ", Max-Nodes: " + registration.getMaxNodes()
-                    + ", Type: " + registration.getMode());
+            String licenseKey = node.groupProperties.ENTERPRISE_LICENSE_KEY.getString();
+            if (licenseKey == null) {
+                licenseKey = node.getConfig().getLicenseKey();
+            }
+            license = KeyGenUtil.extractLicense(licenseKey != null ? licenseKey.toCharArray() : null);
+            Calendar cal = Calendar.getInstance();
+            cal.set(license.year, license.month, license.day);
+            validUntil = cal.getTime();
+            logger.log(Level.INFO, "Licensed type: " + (license.full ? "Full" : "Trial")
+                    + ", Valid until: " + validUntil
+                    + ", Max nodes: " + license.nodes);
         } catch (Exception e) {
-            logger.log(Level.WARNING, e.getMessage(), e);
             throw new InvalidLicenseError();
         }
 
@@ -74,10 +81,15 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
     }
 
     public void afterInitialize(Node node) {
+        if (license == null) {
+            logger.log(Level.SEVERE, "Hazelcast Enterprise license could not be found!");
+            node.shutdown(true, true);
+            return;
+        }
         final int count = node.getClusterImpl().getMembers().size();
-        if (count > registration.getMaxNodes()) {
+        if (count > license.nodes) {
             logger.log(Level.SEVERE, "Exceeded maximum number of nodes allowed in Hazelcast Enterprise license! " +
-                    "Max: " + registration.getMaxNodes() + ", Current: " + count);
+                    "Max: " + license.nodes + ", Current: " + count);
             node.shutdown(true, true);
         }
     }
@@ -98,7 +110,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
     }
 
     private boolean isRegistered() {
-        return registration != null && registration.isValid();
+        return license != null && System.currentTimeMillis() < validUntil.getTime();
     }
 
     public Storage getOffHeapStorage() {
@@ -107,7 +119,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 
     public void destroy() {
         super.destroy();
-        registration = null;
+        license = null;
         if (storage != null) {
             logger.log(Level.FINEST, "Destroying node off-heap storage.");
             storage.destroy();
