@@ -745,9 +745,9 @@ namespace Hazelcast.Client.Tests
 		
 		static String className = "com.hazelcast.client.HazelcastClientMapTest$Employee";
 		
-		static Employee(){
-			Hazelcast.Client.IO.DataSerializer.register(className, typeof(Employee));
-		}
+		//static Employee(){
+		//	Hazelcast.Client.IO.DataSerializer.register(className, typeof(Employee));
+		//}
 		
         public Employee() {
         }
