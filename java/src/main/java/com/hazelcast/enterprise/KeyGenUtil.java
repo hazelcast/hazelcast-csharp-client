@@ -153,5 +153,4 @@ public class KeyGenUtil {
         }
         return Integer.toString(Math.abs(result)).toCharArray();
     }
-
 }
