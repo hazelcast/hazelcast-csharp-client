@@ -80,7 +80,7 @@ namespace Hazelcast.Client.Examples
 	        	if (ip.IndexOf(':') == -1) {
 	            	ip = ip + ":5701";
 	        	} 
-	        	HazelcastClient hz = HazelcastClient.newHazelcastClient(groupName, pass, ip);
+	        	HazelcastClient hz = HazelcastClient.newHazelcastClient(new ClientConfig());
 	        	println(hz.getCluster().getMembers());
 				return hz;
 			}

@@ -177,7 +177,6 @@
     <Compile Include="IO\TypeRegistry.cs" />
     <Compile Include="Client\ClientConfig.cs" />
     <Compile Include="Client\GroupConfig.cs" />
-    <Compile Include="Client\TcpIpConfig.cs" />
     <Compile Include="IO\ITypeConverter.cs" />
     <Compile Include="Examples\MyTypeConverter.cs" />
     <Compile Include="Examples\MyCSharpClass.cs" />

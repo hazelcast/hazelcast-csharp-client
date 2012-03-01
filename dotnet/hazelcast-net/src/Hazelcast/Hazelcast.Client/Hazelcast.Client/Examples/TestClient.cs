@@ -18,12 +18,6 @@ namespace Hazelcast.Client
 			//ProtoSerializer serializer = new ProtoSerializer();
 			//DefaultSerializer.register(serializer);
 			ClientConfig config = new ClientConfig();
-			config.GroupConfig.Name = "dev";
-			config.GroupConfig.Password = "dev-pass";
-			IPAddress ip = Dns.GetHostEntry("localhost").AddressList[0];
-			config.TcpIpConfig.addAddress(new Address(new IPEndPoint(ip, 5701)));
-			config.TypeConverter = new MyTypeConverter();
-			
 			HazelcastClient client = HazelcastClient.newHazelcastClient (config);
 			//client.addInstanceListener(new MyInstanceListener());
 			
