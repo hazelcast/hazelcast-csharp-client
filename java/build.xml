@@ -44,7 +44,7 @@
             <arg value="test"/>
             <arg value="-P elastic"/>
             <arg value="-Dtest=${test}"/>
-            <arg value="-dhazelcast.enterprise.license.key=${license.key}"/>
+            <arg value="-Dhazelcast.enterprise.license.key=${license.key}"/>
             <arg value="-Dhazelcast.elastic.memory.enabled=true"/>
             <arg value="-Dhazelcast.elastic.memory.shared.storage=true"/>
             <arg value="-Dhazelcast.elastic.memory.total.size=1024m"/>
