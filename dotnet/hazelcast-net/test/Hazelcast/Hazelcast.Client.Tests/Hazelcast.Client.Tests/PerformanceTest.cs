@@ -9,7 +9,7 @@ namespace Hazelcast.Client.Tests
 	[TestFixture()]
 	public class PerformanceTest
 	{
-		static HazelcastClient client = HazelcastClient.newHazelcastClient("dev", "dev-pass", "localhost");
+		static HazelcastClient client = HazelcastClient.newHazelcastClient(new ClientConfig());
 		static IMap<String, byte[]> map = client.getMap<String, byte[]>("perf");
 		int ENTRY_COUNT = 10000;
 		int GET_PERCENTAGE = 40;
