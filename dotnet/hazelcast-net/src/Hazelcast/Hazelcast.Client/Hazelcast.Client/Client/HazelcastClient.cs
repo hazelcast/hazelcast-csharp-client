@@ -26,19 +26,26 @@ namespace Hazelcast.Client
 		ConcurrentDictionary<long, Call> calls = new ConcurrentDictionary<long, Call>();
 		Dictionary<Object, Object> proxies = new Dictionary<Object, Object>();
 		
-		private HazelcastClient(ClientConfig config, Credentials credentials, bool shuffle, bool automatic)
+		private HazelcastClient(ClientConfig config)
 		{			
-			this.config = config;
-			long timeout = config.ConnectionTimeout;
+			this.config = config;			
 			if(config.TypeConverter!=null)
 				TypeRegistry.setTypeConverter(config.TypeConverter);
 			
+			if(config.Credentials == null){
+				UsernamePasswordCredentials cr = new UsernamePasswordCredentials();
+				cr.setUsername(config.GroupConfig.Name);
+				cr.setPassword(config.GroupConfig.Password);
+				config.Credentials = cr;
+			}
+			
+			if(config.AddressList.Count == 0){
+				config.addAddress("localhost");
+			}
+			
 			lifecycleService = new LifecycleServiceClientImpl(this);
-			connectionManager = automatic ? 
-					new ConnectionManager(this, credentials, lifecycleService, config.TcpIpConfig.Addresses[0], timeout) :
-                	new ConnectionManager(this, credentials, lifecycleService, config.TcpIpConfig.Addresses, shuffle, timeout);
+			connectionManager = new ConnectionManager(this, config, lifecycleService);
 			connectionManager.setBinder(new DefaultClientBinder(this));	
-		
 			this.outThread = new OutThread(connectionManager, calls);
 			this.inThread = new InThread(connectionManager, calls, listenerManager);
 			this.listenerManager = new ListenerManager(this);
@@ -48,11 +55,12 @@ namespace Hazelcast.Client
 	            Connection c = connectionManager.getInitConnection();
 	            if (c == null) {
 	                connectionManager.shutdown();
-	                throw new Exception("Unable to connect to cluster");
+	                throw new Exception("No member available to connect.");
 	            }
 	        } catch (Exception e) {
 	            connectionManager.shutdown();
-	            throw new Exception("Unable to connect to cluster" + e.Message);
+				Console.Write(e.StackTrace);
+	            throw new Exception("Unable to connect to cluster: " + e.Message);
 	        }
 			
 			id = incrementId();
@@ -89,18 +97,9 @@ namespace Hazelcast.Client
 			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials();
 			credentials.setUsername(config.GroupConfig.Name);
 			credentials.setPassword(config.GroupConfig.Password);
-		
-			return new HazelcastClient(config, credentials, false, true);
-		}
-		
-		
-		public static HazelcastClient newHazelcastClient(String groupName, String groupPassword, String address){
-			ClientConfig config = new ClientConfig();
-			config.TcpIpConfig.addAddress(parse(address));
-			config.GroupConfig.Name = groupName;
-			config.GroupConfig.Password = groupPassword;
+			config.Credentials = credentials;
 			
-			return newHazelcastClient(config);
+			return new HazelcastClient(config);
 		}
 
 		private static Address parse(String address) {

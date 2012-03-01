@@ -15,7 +15,7 @@ namespace Hazelcast.Client
 
 		public String name;
 
-		public byte operation;
+		public short operation;
 
 		public int threadId;
 
@@ -29,7 +29,7 @@ namespace Hazelcast.Client
 
 		public long callId = 9;
 
-		public byte PACKET_VERSION = 6;
+		public byte PACKET_VERSION = 7;
 
 		public void write (Stream stream)
 		{
@@ -79,8 +79,8 @@ namespace Hazelcast.Client
 
 		public void readHeader (BinaryReader reader)
 		{
-                this.operation = reader.ReadByte();
-                int blockId = reader.ReadInt32();
+                this.operation = IPAddress.NetworkToHostOrder(reader.ReadInt16());
+                int blockId = IPAddress.NetworkToHostOrder(reader.ReadInt32());
                 int threadId = IPAddress.NetworkToHostOrder(reader.ReadInt32());
                 byte booleans = reader.ReadByte();
                 if (isTrue(booleans, 1))
@@ -110,7 +110,7 @@ namespace Hazelcast.Client
 		public void writeHeader (MemoryStream ms)
 		{
 			using (BinaryWriter writer = new BinaryWriter (ms)) {
-				writer.Write (operation);
+				writer.Write (System.Net.IPAddress.HostToNetworkOrder((short)operation));
 				writer.Write (System.Net.IPAddress.HostToNetworkOrder (1));
 				writer.Write (System.Net.IPAddress.HostToNetworkOrder (threadId));
 				byte booleans = 0;

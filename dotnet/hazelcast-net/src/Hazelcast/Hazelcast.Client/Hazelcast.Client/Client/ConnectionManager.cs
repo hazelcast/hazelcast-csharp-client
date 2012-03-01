@@ -17,7 +17,7 @@ namespace Hazelcast.Client
 	    private HazelcastClient client;
 	    private volatile int lastDisconnectedConnectionId = -1;
 	    private ClientBinder binder;
-	    private Credentials credentials;
+	    private ClientConfig config;
 	
 	    private volatile bool lookingForLiveConnection = false;
 	    private volatile bool running = true;
@@ -26,32 +26,14 @@ namespace Hazelcast.Client
 	    Timer heartbeatTimer = null;
 		
 	
-	    public ConnectionManager(HazelcastClient client, Credentials credentials, LifecycleServiceClientImpl lifecycleService,
-	                             List<Address> clusterMembers, bool shuffle, long timeout) {
-	        this.TIMEOUT = timeout;
+	    public ConnectionManager(HazelcastClient client, ClientConfig config, LifecycleServiceClientImpl lifecycleService) {
+	        this.TIMEOUT = config.ConnectionTimeout;
 	        this.client = client;
 	        this.lifecycleService = lifecycleService;
-			
-			lock(this.clusterMembers){
-			    foreach(Address address in clusterMembers){
-					this.clusterMembers.Add(address.getIPEndPoint());
-				}
-				if (shuffle) {
-		            this.clusterMembers.Shuffle();
-		        }
+			this.config = config;
+			foreach (IPEndPoint ip in config.AddressList){
+				clusterMembers.Add(ip);
 			}
-	        this.credentials = credentials;
-	    }
-	
-	    public ConnectionManager(HazelcastClient client, Credentials credentials, LifecycleServiceClientImpl lifecycleService,
-	                             Address address, long timeout) {
-	        this.TIMEOUT = timeout;
-	        this.client = client;
-	        this.lifecycleService = lifecycleService;
-			lock(this.clusterMembers){
-	        	this.clusterMembers.Add(address.getIPEndPoint());
-			}
-	        this.credentials = credentials;
 	    }
 	
 	    void scheduleHeartbeatTimerTask() {
@@ -218,7 +200,7 @@ namespace Hazelcast.Client
 	    //}
 	
 	    void bindConnection(Connection connection) {
-	        binder.bind(connection, credentials);
+	        binder.bind(connection, config.Credentials);
 	    }
 	
 	    public void destroyConnection(Connection connection) {

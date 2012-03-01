@@ -1,11 +1,15 @@
 using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Globalization;
+using Hazelcast.Security;
 
 namespace Hazelcast.Client
 {
 	public class ClientConfig
 	{
 		private GroupConfig groupConfig = new GroupConfig();
-		private TcpIpConfig tcpIpConfig = new TcpIpConfig();
+		List<IPEndPoint> addressList = new List<IPEndPoint>();
 		private int connectionTimeout = 300000;
 		
 		private Hazelcast.IO.ITypeConverter typeConverter;
@@ -13,9 +17,18 @@ namespace Hazelcast.Client
 		private int initialConnectionAttemptLimit = 1;
 		private int reconnectionAttemptLimit = 1;	
 		private int reConnectionTimeOut = 5000;
+		private bool shuffle;
+		private bool automatic;
+		
+		private Credentials credentials;
 
+	
 		public ClientConfig ()
 		{
+		}
+		
+		public List<IPEndPoint> AddressList{
+			get{return this.addressList;}
 		}
 		
 		
@@ -28,6 +41,15 @@ namespace Hazelcast.Client
 			}
 		}
 		
+		public Credentials Credentials {
+			get {
+				return this.credentials;
+			}
+			set {
+				credentials = value;
+			}
+		}
+		
 		public int ConnectionTimeout {
 			get {
 				return this.connectionTimeout;
@@ -37,14 +59,23 @@ namespace Hazelcast.Client
 			}
 		}
 
-		public TcpIpConfig TcpIpConfig {
+		public bool Automatic {
 			get {
-				return this.tcpIpConfig;
+				return this.automatic;
 			}
 			set {
-				tcpIpConfig = value;
+				automatic = value;
 			}
 		}
+
+		public bool Shuffle {
+			get {
+				return this.shuffle;
+			}
+			set {
+				shuffle = value;
+			}
+		}		
 		
 		
 		public int InitialConnectionAttemptLimit {
@@ -81,6 +112,42 @@ namespace Hazelcast.Client
 			set {
 				typeConverter = value;
 			}
+		}
+	
+	    public ClientConfig addAddress(String address) {
+	        this.addressList.Add(parse(address));
+	        return this;
+	    }
+
+	   	private static IPEndPoint parse(String address) {
+	        String[] separated = address.Split(':');
+	        int port = (separated.Length > 1) ? int.Parse(separated[1]) : 5701;
+			IPEndPoint iPEndPoint = null;
+			try
+			{
+				iPEndPoint = CreateIPEndPoint(address);
+			}catch(FormatException ex){
+				iPEndPoint = new IPEndPoint(Dns.GetHostEntry(separated[0]).AddressList[0], port);	
+			}
+			 
+			return iPEndPoint;
+	    }
+		
+		public static IPEndPoint CreateIPEndPoint(string endPoint)
+		{
+		    string[] ep = endPoint.Split(':');
+		    if(ep.Length != 2) throw new FormatException("Invalid endpoint format");
+		    IPAddress ip;
+		    if(!IPAddress.TryParse(ep[0], out ip))
+		    {
+		        throw new FormatException("Invalid ip-adress");
+		    }
+		    int port;
+		    if(!int.TryParse(ep[1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out port))
+		    {
+		        throw new FormatException("Invalid port");
+		    }
+		    return new IPEndPoint(ip, port);
 		}
 		
 	}
