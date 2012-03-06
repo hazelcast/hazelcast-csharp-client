@@ -23,8 +23,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
 
     private StorageFactory storageFactory;
     private Storage storage;
-    private License license;
-    private Date validUntil;
+    private volatile License license;
     private SecurityContext securityContext;
     private boolean securityEnabled = false;
 
@@ -35,6 +34,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
     public void beforeInitialize(Node node) {
         this.node = node;
         logger = node.getLogger("com.hazelcast.enterprise.initializer");
+        Date validUntil = null;
         try {
             logger.log(Level.INFO, "Checking Hazelcast Enterprise license...");
             String licenseKey = node.groupProperties.ENTERPRISE_LICENSE_KEY.getString();
@@ -43,7 +43,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
             }
             license = KeyGenUtil.extractLicense(licenseKey != null ? licenseKey.toCharArray() : null);
             Calendar cal = Calendar.getInstance();
-            cal.set(license.year, license.month, license.day);
+            cal.set(license.year, license.month, license.day, 23, 59, 59);
             validUntil = cal.getTime();
             logger.log(Level.INFO, "Licensed type: " + (license.full ? "Full" : "Trial")
                     + ", Valid until: " + validUntil
@@ -52,7 +52,8 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
             throw new InvalidLicenseError();
         }
 
-        if (!isRegistered()) {
+        if (license == null || validUntil == null ||
+                System.currentTimeMillis() > validUntil.getTime()) {
             throw new TrialLicenseExpiredError();
         }
 
@@ -107,10 +108,6 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
             securityContext = new SecurityContextImpl(node);
         }
         return securityContext;
-    }
-
-    private boolean isRegistered() {
-        return license != null && System.currentTimeMillis() < validUntil.getTime();
     }
 
     public Storage getOffHeapStorage() {

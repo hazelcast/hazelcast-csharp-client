@@ -2,14 +2,25 @@ package com.hazelcast.enterprise;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.InMemoryXmlConfig;
+import com.hazelcast.core.Hazelcast;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+@RunWith(com.hazelcast.util.RandomBlockJUnit4ClassRunner.class)
 public class LicenseTest {
+
+    @Before
+    @After
+    public void cleanup() {
+        Hazelcast.shutdownAll();
+    }
 
     @Test
     public void testXmlConfig() {
@@ -72,5 +83,26 @@ public class LicenseTest {
             char[] key = KeyGenUtil.generateKey(full, enterprise, day, month, year, nodes);
             Assert.assertTrue(keys.add(new String(key)));
         }
+    }
+
+    @Test
+    public void testLicenseValid() {
+        Config config = new Config();
+        config.setLicenseKey(new String(KeyGenUtil.generateKey(false, false, 1, 1, 2015, 10)));
+        Hazelcast.newHazelcastInstance(config);
+    }
+
+    @Test(expected = InvalidLicenseError.class)
+    public void testLicenseNotFound() {
+        Config config = new Config();
+        config.setLicenseKey("invalid key");
+        Hazelcast.newHazelcastInstance(config);
+    }
+
+    @Test(expected = TrialLicenseExpiredError.class)
+    public void testLicenseExpired() {
+        Config config = new Config();
+        config.setLicenseKey(new String(KeyGenUtil.generateKey(false, false, 1, 1, 2011, 10)));
+        Hazelcast.newHazelcastInstance(config);
     }
 }
