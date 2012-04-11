@@ -11,6 +11,7 @@ import java.util.logging.Level;
 
 public abstract class StorageFactorySupport implements StorageFactory {
 
+    static final String MAX_HEAP_MEMORY_PARAM = "-Xmx";
     static final String MAX_DIRECT_MEMORY_PARAM = "-XX:MaxDirectMemorySize";
 
     static Storage createStorage(final String total, final String chunk) {
@@ -20,14 +21,17 @@ public abstract class StorageFactorySupport implements StorageFactory {
         logger.log(Level.INFO, "Elastic-Memory off-heap storage chunk size: " + chunkSize.kiloBytes() + " KB");
 
         MemorySize jvmSize = getJvmDirectMemorySize();
-        if (jvmSize == null && totalSize.megaBytes() <= 64) {
-            jvmSize = new MemorySize(64, MemoryUnit.MEGABYTES);
+        if (jvmSize == null) {
+            jvmSize = getJvmHeapMemorySize();
         }
         if (jvmSize == null) {
-            throw new IllegalArgumentException("JVM max direct memory size argument (" +
+            logger.log(Level.WARNING, "Either JVM max memory argument (" + MAX_HEAP_MEMORY_PARAM + ") or" +
+                    " max direct memory size argument (" +
                     MAX_DIRECT_MEMORY_PARAM + ") should be configured in order to use " +
                     "Hazelcast Elastic Memory! " +
-                    "(Ex: java " + MAX_DIRECT_MEMORY_PARAM + "=1G -Xmx1G -cp ...)");
+                    "(Ex: java " + MAX_DIRECT_MEMORY_PARAM + "=1G -Xmx1G -cp ...)" +
+                    " Using default parameters...");
+            jvmSize = new MemorySize(64, MemoryUnit.MEGABYTES);
         }
         checkOffHeapParams(jvmSize, totalSize, chunkSize);
 
@@ -43,9 +47,11 @@ public abstract class StorageFactorySupport implements StorageFactory {
             throw new IllegalArgumentException("Elastic Memory total size must be multitude of megabytes! (Current: "
                     + total.bytes() + " bytes)");
         }
-        if (total.megaBytes() > jvm.megaBytes()) {
-            throw new IllegalArgumentException(MAX_DIRECT_MEMORY_PARAM + " must be greater than or equal to Elastic Memory total size => "
-                    + MAX_DIRECT_MEMORY_PARAM + ": " + jvm.megaBytes() + " megabytes, Total: " + total.megaBytes() + " megabytes");
+        if (total.megaBytes() >= jvm.megaBytes()) {
+            throw new IllegalArgumentException(MAX_DIRECT_MEMORY_PARAM + " or " + MAX_HEAP_MEMORY_PARAM
+                    + " must be greater than Elastic Memory total size => "
+                    + MAX_DIRECT_MEMORY_PARAM + "(" + MAX_HEAP_MEMORY_PARAM + "): " + jvm.megaBytes()
+                    + " megabytes, Total: " + total.megaBytes() + " megabytes");
         }
         if (chunk.kiloBytes() == 0) {
             throw new IllegalArgumentException("Elastic Memory chunk size must be multitude of kilobytes! (Current: "
@@ -73,6 +79,19 @@ public abstract class StorageFactorySupport implements StorageFactory {
                     return MemorySize.parse(value);
                 }
                 break;
+            }
+        }
+        return null;
+    }
+
+    static MemorySize getJvmHeapMemorySize() {
+        RuntimeMXBean rmx = ManagementFactory.getRuntimeMXBean();
+        List<String> args = rmx.getInputArguments();
+        for (String arg : args) {
+            if (arg.startsWith(MAX_HEAP_MEMORY_PARAM)) {
+                logger.log(Level.FINEST, "Read JVM " + MAX_HEAP_MEMORY_PARAM + " as: " + arg);
+                final String value = arg.substring(MAX_HEAP_MEMORY_PARAM.length());
+                return MemorySize.parse(value);
             }
         }
         return null;
