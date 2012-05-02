@@ -26,6 +26,24 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.0-alpha-2</version>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <files>
+                                <file>build.properties</file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
@@ -45,6 +63,22 @@
                         <compress>true</compress>
                         <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
                     </archive>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.11</version>
+                <configuration>
+                    <argLine>-Xms128m -Xmx512m -XX:MaxPermSize=128M
+                        -Dhazelcast.version.check.enabled=false
+                        -Dhazelcast.mancenter.enabled=false
+                        -Dhazelcast.enterprise.license.key=${license.key}
+                        -Dhazelcast.elastic.memory.enabled=true
+                        -Dhazelcast.elastic.memory.total.size=128m
+                        -Dhazelcast.elastic.memory.chunk.size=1k
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>
