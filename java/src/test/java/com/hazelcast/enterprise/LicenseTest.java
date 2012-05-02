@@ -3,6 +3,7 @@ package com.hazelcast.enterprise;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.InMemoryXmlConfig;
 import com.hazelcast.core.Hazelcast;
+import com.hazelcast.impl.GroupProperties;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -94,15 +95,27 @@ public class LicenseTest {
 
     @Test(expected = InvalidLicenseError.class)
     public void testLicenseNotFound() {
-        Config config = new Config();
-        config.setLicenseKey("invalid key");
-        Hazelcast.newHazelcastInstance(config);
+        final String systemKey = System.getProperty(GroupProperties.PROP_ENTERPRISE_LICENSE_KEY, "");
+        try {
+            System.setProperty(GroupProperties.PROP_ENTERPRISE_LICENSE_KEY, "");
+            Config config = new Config();
+            config.setLicenseKey("invalid key");
+            Hazelcast.newHazelcastInstance(config);
+        } finally {
+            System.setProperty(GroupProperties.PROP_ENTERPRISE_LICENSE_KEY, systemKey);
+        }
     }
 
     @Test(expected = TrialLicenseExpiredError.class)
     public void testLicenseExpired() {
-        Config config = new Config();
-        config.setLicenseKey(new String(KeyGenUtil.generateKey(false, false, 1, 1, 2011, 10)));
-        Hazelcast.newHazelcastInstance(config);
+        final String systemKey = System.getProperty(GroupProperties.PROP_ENTERPRISE_LICENSE_KEY, "");
+        try {
+            System. setProperty(GroupProperties.PROP_ENTERPRISE_LICENSE_KEY, "");
+            Config config = new Config();
+            config.setLicenseKey(new String(KeyGenUtil.generateKey(false, false, 1, 1, 2011, 10)));
+            Hazelcast.newHazelcastInstance(config);
+        } finally {
+            System.setProperty(GroupProperties.PROP_ENTERPRISE_LICENSE_KEY, systemKey);
+        }
     }
 }

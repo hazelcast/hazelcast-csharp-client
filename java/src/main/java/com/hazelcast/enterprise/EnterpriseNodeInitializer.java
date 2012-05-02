@@ -38,7 +38,7 @@ public class EnterpriseNodeInitializer extends DefaultNodeInitializer implements
         try {
             logger.log(Level.INFO, "Checking Hazelcast Enterprise license...");
             String licenseKey = node.groupProperties.ENTERPRISE_LICENSE_KEY.getString();
-            if (licenseKey == null) {
+            if (licenseKey == null || "".equals(licenseKey)) {
                 licenseKey = node.getConfig().getLicenseKey();
             }
             license = KeyGenUtil.extractLicense(licenseKey != null ? licenseKey.toCharArray() : null);
