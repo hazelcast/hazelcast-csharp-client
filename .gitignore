@@ -1,28 +1,6 @@
-
-# /
-/*.settings
-/*.classpath
-/*.project
-/target
-/*.dll
-/*.mdb
-
-# /java/
-/java/*.settings
-/java/*.classpath
-/java/*.project
-/java/target
-/java/*.dll
-/java/*.mdb
-
-# /java/src/main/resources/
-/java/src/main/resources/*.license
-
-# /java/target/
-/java/target/*.settings
-/java/target/*.classpath
-/java/target/*.project
-/java/target/target
-/java/target/classes
-/java/target/*.dll
-/java/target/*.mdb
+bin
+Debug
+*.dll
+*.mdb
+*.exe
+*.pidb
