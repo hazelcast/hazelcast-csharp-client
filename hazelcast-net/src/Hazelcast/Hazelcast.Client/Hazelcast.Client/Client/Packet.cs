@@ -29,7 +29,7 @@ namespace Hazelcast.Client
 
 		public long callId = 9;
 
-		public byte PACKET_VERSION = 7;
+		public byte PACKET_VERSION = 8;
 
 		public void write (Stream stream)
 		{
