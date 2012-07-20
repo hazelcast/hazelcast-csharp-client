@@ -15,6 +15,8 @@ namespace Hazelcast.Core
 		
 		private IPEndPoint ipEndPoint;
 		
+		private readonly byte IPv4 = 4;
+    	
 		public Address ()
 		{
 		}
@@ -22,19 +24,42 @@ namespace Hazelcast.Core
 		public Address (IPEndPoint ipEndPoint)
 		{
 			this.ip = ipEndPoint.Address.GetAddressBytes();
+			
 			this.port = ipEndPoint.Port;
 			this.ipEndPoint = ipEndPoint;
 		}
 		
 		public void writeData(IDataOutput dout) {
-	        dout.write(ip);
 	        dout.writeInt(port);
+			dout.writeByte(IPv4);
+			getHost();
+			if(host == null){
+				dout.writeInt(0);
+			}
+			else{
+				
+				System.Text.UTF8Encoding  encoding=new System.Text.UTF8Encoding();
+    			Byte[] bytes = encoding.GetBytes(host);
+				dout.writeInt(bytes.Length);
+				dout.write(bytes);
+			}
+			
+			dout.write(ip);
+	        
 	    }
 	
 	    public void readData(IDataInput din) {
-	        din.readFully(ip);
 	        port = din.readInt();
-	        // setHost();
+			din.readByte();
+			int length = din.readInt();
+			Byte[] bytes = new Byte[length];
+			din.readFully(bytes);
+			System.Text.UTF8Encoding  encoding=new System.Text.UTF8Encoding();
+			host = encoding.GetString(bytes);
+			string[] split = host.Split('.');
+			for(int i=0;i<split.Length;i++){
+				ip[i] = Byte.Parse(split[i]);
+			}
 	    }
 		
 		public String getHost(){

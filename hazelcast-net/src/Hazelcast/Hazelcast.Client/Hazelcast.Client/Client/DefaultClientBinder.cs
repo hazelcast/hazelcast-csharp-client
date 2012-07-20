@@ -21,11 +21,11 @@ namespace Hazelcast.Client
 	        //logger.log(Level.FINEST, connection + " -> "
 	        //        + connection.getAddress().getHostName() + ":" + connection.getSocket().getLocalPort());
 	        auth(connection, credentials);
-			IPEndPoint iPEndPoint = new IPEndPoint(connection.getAddress().Address, ((IPEndPoint)connection.getSocket().LocalEndPoint).Port);
-	        Bind b = new Bind(new Address(iPEndPoint));
-	        Packet bind = new Packet();
-	        bind.set("remotelyProcess", ClusterOperation.REMOTELY_PROCESS, null, IOUtil.toByte(b));
-	        write(connection, bind);
+			//IPEndPoint iPEndPoint = new IPEndPoint(connection.getAddress().Address, ((IPEndPoint)connection.getSocket().LocalEndPoint).Port);
+	        //Bind b = new Bind(new Address(iPEndPoint));
+	        //Packet bind = new Packet();
+	        //bind.set("remotelyProcess", ClusterOperation.REMOTELY_PROCESS, null, IOUtil.toByte(b));
+	        //write(connection, bind);
 	    }
 	
 	    void auth(Connection connection, Credentials credentials){
