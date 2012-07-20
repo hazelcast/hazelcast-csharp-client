@@ -97,7 +97,6 @@ namespace Hazelcast.Client
 	    }
 	
 	    private Connection lookForLiveConnection(int attemptsLimit, int reconnectionTimeout) {
-			Console.WriteLine("Looking for alive connection!");
 	        lookingForLiveConnection = true;
 	        try {
 	            bool restored = false;
