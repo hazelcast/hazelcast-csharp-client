@@ -1,12 +1,12 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/Packet.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/MapTest.cs">
     <Files>
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Core/EntryListener.cs" Line="1" Column="1" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Core/EntryEvent.cs" Line="1" Column="1" />
       <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/QueueTest.cs" Line="1" Column="1" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Core/IMap.cs" Line="1" Column="1" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/MapClientProxy.cs" Line="39" Column="20" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/MapClientProxy.cs" Line="39" Column="3" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ProxyHelper.cs" Line="1" Column="1" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/IOUtil.cs" Line="1" Column="1" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ClientSerializer.cs" Line="1" Column="1" />
@@ -20,11 +20,12 @@
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/SetClientProxy.cs" Line="1" Column="1" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/TopicClientProxy.cs" Line="1" Column="1" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/Packet.cs" Line="40" Column="4" />
+      <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/MapTest.cs" Line="14" Column="8" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
-        <State expanded="True" selected="True">
-          <Node name="Hazelcast.Client" expanded="True">
+        <State expanded="True">
+          <Node name="Hazelcast.Client" expanded="True" selected="True">
             <Node name="Client" expanded="True" />
             <Node name="Core" expanded="True" />
           </Node>
