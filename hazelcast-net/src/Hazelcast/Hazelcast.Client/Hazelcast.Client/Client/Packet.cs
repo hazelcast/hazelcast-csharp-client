@@ -79,7 +79,7 @@ namespace Hazelcast.Client
 
 		public void readHeader (BinaryReader reader)
 		{
-                this.operation = IPAddress.NetworkToHostOrder(reader.ReadInt16());
+			this.operation = IPAddress.NetworkToHostOrder(reader.ReadInt16());
                 int blockId = IPAddress.NetworkToHostOrder(reader.ReadInt32());
                 int threadId = IPAddress.NetworkToHostOrder(reader.ReadInt32());
                 byte booleans = reader.ReadByte();
@@ -101,9 +101,10 @@ namespace Hazelcast.Client
                     readFully(b, 0, nameLength, reader);
                     this.name = System.Text.Encoding.ASCII.GetString(b);
                 }
-                byte indexCount = reader.ReadByte();
+				reader.ReadByte(); // index length, not used in client
                 int keyPartitionHash = IPAddress.NetworkToHostOrder(reader.ReadInt32());
                 int valuePartitionHash = IPAddress.NetworkToHostOrder(reader.ReadInt32());
+				reader.ReadByte(); // redo data, not used in client
 		}
 
 
@@ -147,10 +148,11 @@ namespace Hazelcast.Client
 				writer.Write (System.Net.IPAddress.HostToNetworkOrder (nameLen));
 				if(nameLen > 0)
 					writer.Write (b2);
-				writer.Write ((byte)0);
+				writer.Write ((byte)0);//index length, not used in client
 				
 				writer.Write(System.Net.IPAddress.HostToNetworkOrder ((int)-1));
 				writer.Write(System.Net.IPAddress.HostToNetworkOrder ((int)-1));
+				writer.Write ((byte)0);//redo data, not used in client
 			}
 			
 			

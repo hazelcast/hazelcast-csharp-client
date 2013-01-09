@@ -61,16 +61,11 @@ namespace Hazelcast.Client.IO
 		}
 		public DataSerializable read (BinaryReader reader)
 		{
-			
 			string name = IOUtil.readUTF(reader);
-			
-			
-			if(name.Equals("com.hazelcast.impl.base.Pairs"))
+			if(name!=null & name.Equals("com.hazelcast.impl.base.Pairs"))
 			{
 				name = "Hazelcast.Impl.Base.Pairs";
 			}
-			
-			
 			DataSerializable obj = (DataSerializable)createInstance(name);
 			obj.readData(new BinaryReaderDataInput(reader));
 			return obj;

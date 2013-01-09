@@ -29,10 +29,12 @@ namespace Hazelcast.Client
 	    }
 	
 	    void auth(Connection connection, Credentials credentials){
-	        Packet auth = new Packet();
+
+			Console.WriteLine("UTH");	
+			Packet auth = new Packet();
 	        auth.set("", ClusterOperation.CLIENT_AUTHENTICATE, new byte[0], IOUtil.toByte(credentials));
 	        Packet packet = writeAndRead(connection, auth);
-	        Object response = IOUtil.toObject(packet.value);
+			Object response = IOUtil.toObject(packet.value);
 	        //logger.log(Level.FINEST, "auth responce:" + response);
 			//TODO Exception handling
 	        if (response is Exception) {
@@ -45,7 +47,6 @@ namespace Hazelcast.Client
 	
 	    Packet writeAndRead(Connection connection, Packet packet) {
 	        write(connection, packet);
-			
 	        return client.InThread.readPacket(connection);
 	    }
 	
