@@ -53,9 +53,8 @@ namespace Hazelcast.Client.IO
 			
 			
 			if(name == null){
-				name = (string)obj.GetType().ToString();
+				name = (string)obj.GetType().AssemblyQualifiedName;
 			}
-			
 			IOUtil.writeUTF(writer, name);
 			obj.writeData(new BinaryWriterDataOutput(writer));
 		}
@@ -72,11 +71,11 @@ namespace Hazelcast.Client.IO
 		}
 		
 		public static Object createInstance(String name){
+
 			Type type = TypeRegistry.getType(name);
 			if(type==null){
 				type = Type.GetType(name);
 			}
-
 			return Activator.CreateInstance(type);
 		}
 
