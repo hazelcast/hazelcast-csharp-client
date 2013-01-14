@@ -49,6 +49,8 @@
     <Compile Include="CountDownLatchTest.cs" />
     <Compile Include="ClusterTest.cs" />
     <Compile Include="ConnectionTest.cs" />
+    <Compile Include="Customer.cs" />
+    <Compile Include="Program.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

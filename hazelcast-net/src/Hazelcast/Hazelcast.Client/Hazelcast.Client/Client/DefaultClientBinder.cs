@@ -29,8 +29,6 @@ namespace Hazelcast.Client
 	    }
 	
 	    void auth(Connection connection, Credentials credentials){
-
-			Console.WriteLine("UTH");	
 			Packet auth = new Packet();
 	        auth.set("", ClusterOperation.CLIENT_AUTHENTICATE, new byte[0], IOUtil.toByte(credentials));
 	        Packet packet = writeAndRead(connection, auth);
