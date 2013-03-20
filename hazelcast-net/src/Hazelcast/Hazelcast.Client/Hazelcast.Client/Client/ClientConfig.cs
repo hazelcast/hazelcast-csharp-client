@@ -22,6 +22,8 @@ namespace Hazelcast.Client
 		
 		private Credentials credentials;
 
+		private SocketInterceptor socketInterceptor;
+
 	
 		public ClientConfig ()
 		{
@@ -49,6 +51,16 @@ namespace Hazelcast.Client
 				credentials = value;
 			}
 		}
+
+		public SocketInterceptor SocketInterceptor {
+			get {
+				return this.socketInterceptor;
+			}
+			set {
+				socketInterceptor = value;
+			}
+		}
+
 		
 		public int ConnectionTimeout {
 			get {

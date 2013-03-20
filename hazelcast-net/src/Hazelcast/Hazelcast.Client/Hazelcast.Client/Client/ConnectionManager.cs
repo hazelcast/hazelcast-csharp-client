@@ -109,6 +109,13 @@ namespace Hazelcast.Client
 	                        restored = connection != null;
 	                        if (restored) {
 	                            try {
+
+									if (config != null) {
+										SocketInterceptor socketInterceptor = config.SocketInterceptor;
+										if (socketInterceptor != null) {
+											socketInterceptor.onConnect(connection.getSocket());
+										}
+									}
 	                                bindConnection(connection);
 	                                currentConnection = connection;
 	                            } catch (Exception e) {

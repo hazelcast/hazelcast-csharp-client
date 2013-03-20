@@ -1,25 +1,30 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/DefaultClientBinder.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Security/AbstractCredentials.cs">
     <Files>
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ProxyHelper.cs" Line="1" Column="1" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/IOUtil.cs" Line="33" Column="3" />
-      <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/ConnectionTest.cs" Line="13" Column="23" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/DataSerializer.cs" Line="47" Column="32" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/DefaultClientBinder.cs" Line="36" Column="57" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/DefaultClientBinder.cs" Line="33" Column="99" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/Packet.cs" Line="81" Column="4" />
+      <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/Program.cs" Line="20" Column="17" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/DataSerializer.cs" Line="78" Column="5" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/MapClientProxy.cs" Line="244" Column="1" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ClientSerializer.cs" Line="26" Column="1" />
+      <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/Customer.cs" Line="12" Column="28" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ClientConfig.cs" Line="37" Column="28" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/HazelcastClient.cs" Line="97" Column="31" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Security/UsernamePasswordCredentials.cs" Line="6" Column="64" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Security/AbstractCredentials.cs" Line="6" Column="2" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="Hazelcast.Client" expanded="True">
-            <Node name="Client" expanded="True">
-              <Node name="DefaultClientBinder.cs" selected="True" />
+            <Node name="Client" expanded="True" />
+            <Node name="Security" expanded="True">
+              <Node name="AbstractCredentials.cs" selected="True" />
             </Node>
-            <Node name="Core" expanded="True" />
-            <Node name="IO" expanded="True" />
           </Node>
-          <Node name="Hazelcast.Client.Tests" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
@@ -34,8 +39,8 @@
             <Node name="Hazelcast" expanded="True">
               <Node name="Client" expanded="True">
                 <Node name="Tests" expanded="True">
-                  <Node name="MapTest" expanded="True">
-                    <Node name="containsKey" selected="True" />
+                  <Node name="Program" expanded="True">
+                    <Node name="connect" selected="True" />
                   </Node>
                 </Node>
               </Node>
