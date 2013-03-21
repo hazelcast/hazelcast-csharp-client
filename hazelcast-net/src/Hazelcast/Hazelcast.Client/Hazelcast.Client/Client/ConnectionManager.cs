@@ -4,6 +4,7 @@ using System.Threading;
 using System.Collections.Generic;
 using Hazelcast.Security;
 using Hazelcast.Core;
+using System.Diagnostics;
 
 namespace Hazelcast.Client
 {
@@ -80,12 +81,14 @@ namespace Hazelcast.Client
 		}
 	    
 		public Connection getInitConnection(){
+
+
 	        if (currentConnection == null) {
 	            lock (this) {
-	                int attemptsLimit = client.ClientConfig.InitialConnectionAttemptLimit;
-	                int reconnectionTimeout = client.ClientConfig.ReConnectionTimeOut;
+					int attemptsLimit = client.ClientConfig.InitialConnectionAttemptLimit;
+					int reconnectionTimeout = client.ClientConfig.ReConnectionTimeOut;
 	                currentConnection = lookForLiveConnection(attemptsLimit, reconnectionTimeout);
-	            }
+				}
 	        }
 	        return currentConnection;
 	    }

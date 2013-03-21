@@ -46,13 +46,15 @@ namespace Hazelcast.Client.IO
 			int length = str.Length;
 			int chunkSize = length / STRING_CHUNK_SIZE + 1;
 			writer.Write (System.Net.IPAddress.HostToNetworkOrder (length));
-			
 			for (int i = 0; i < chunkSize; i++) {
 				writer.Write ((byte)0);
 				int beginIndex = Math.Max (0, i * STRING_CHUNK_SIZE - 1);
 				int endIndex = Math.Min ((i + 1) * STRING_CHUNK_SIZE - 1, length);
-				writer.Write (str.Substring (beginIndex, endIndex));
+				String sub = str.Substring (beginIndex, (endIndex-beginIndex));
+				writer.Write(sub);
+
 			}
+
 		}
 		public static String readUTF (BinaryReader reader)
 		{

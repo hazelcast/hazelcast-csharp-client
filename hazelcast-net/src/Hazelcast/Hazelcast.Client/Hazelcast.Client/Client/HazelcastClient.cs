@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Collections.Concurrent;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Hazelcast.Client.Impl;
 using Hazelcast.Core;
 using System.Threading;
@@ -27,30 +28,29 @@ namespace Hazelcast.Client
 		Dictionary<Object, Object> proxies = new Dictionary<Object, Object>();
 		
 		private HazelcastClient(ClientConfig config)
-		{			
+		{		
 			this.config = config;			
 			if(config.TypeConverter!=null)
 				TypeRegistry.setTypeConverter(config.TypeConverter);
-			
+
 			if(config.Credentials == null){
 				UsernamePasswordCredentials cr = new UsernamePasswordCredentials();
 				cr.setUsername(config.GroupConfig.Name);
 				cr.setPassword(config.GroupConfig.Password);
 				config.Credentials = cr;
 			}
-			
 			if(config.AddressList.Count == 0){
 				config.addAddress("localhost");
 			}
-			
+
 			lifecycleService = new LifecycleServiceClientImpl(this);
 			connectionManager = new ConnectionManager(this, config, lifecycleService);
 			connectionManager.setBinder(new DefaultClientBinder(this));	
+
 			this.outThread = new OutThread(connectionManager, calls);
 			this.inThread = new InThread(connectionManager, calls, listenerManager);
 			this.listenerManager = new ListenerManager(this);
 
-			
 			try {
 	            Connection c = connectionManager.getInitConnection();
 	            if (c == null) {
@@ -62,18 +62,18 @@ namespace Hazelcast.Client
 				Console.Write(e.StackTrace);
 	            throw new Exception("Unable to connect to cluster: " + e.Message);
 	        }
+
+
+
 			
 			id = incrementId();
 			String prefix = "hz.client." + this.id + ".";
 			this.outThread.start(prefix);
 			this.inThread.start(prefix);
 			this.listenerManager.start(prefix);
-			
-			
+
 			clusterClientProxy = new ClusterClientProxy(outThread, listenerManager, this);
 			lifecycleService = new LifecycleServiceClientImpl(this);
-    		//partitionClientProxy = new PartitionClientProxy(this);
-			
 		}
 		
 		public OutThread OutThread {
