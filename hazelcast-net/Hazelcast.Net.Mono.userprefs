@@ -1,29 +1,45 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Security/AbstractCredentials.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/Program.cs">
     <Files>
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ProxyHelper.cs" Line="1" Column="1" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/IOUtil.cs" Line="33" Column="3" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ProxyHelper.cs" Line="83" Column="29" />
       <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/DefaultClientBinder.cs" Line="33" Column="99" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/Packet.cs" Line="81" Column="4" />
-      <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/Program.cs" Line="20" Column="17" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/DataSerializer.cs" Line="78" Column="5" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/MapClientProxy.cs" Line="244" Column="1" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ClientSerializer.cs" Line="26" Column="1" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/Packet.cs" Line="8" Column="2" />
+      <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/Program.cs" Line="37" Column="20" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/DataSerializer.cs" Line="50" Column="20" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/MapClientProxy.cs" Line="48" Column="25" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ClientSerializer.cs" Line="7" Column="68" />
       <File FileName="test/Hazelcast/Hazelcast.Client.Tests/Hazelcast.Client.Tests/Customer.cs" Line="12" Column="28" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ClientConfig.cs" Line="37" Column="28" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/HazelcastClient.cs" Line="97" Column="31" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Security/UsernamePasswordCredentials.cs" Line="6" Column="64" />
-      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Security/AbstractCredentials.cs" Line="6" Column="2" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/HazelcastClient.cs" Line="32" Column="4" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Security/UsernamePasswordCredentials.cs" Line="28" Column="6" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Security/AbstractCredentials.cs" Line="28" Column="3" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/SocketInterceptor.cs" Line="2" Column="26" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/Connection.cs" Line="1" Column="1" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ConnectionManager.cs" Line="102" Column="92" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/OutThread.cs" Line="68" Column="3" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/InThread.cs" Line="69" Column="3" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ListenerManager.cs" Line="26" Column="39" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/EntryListenerManager.cs" Line="16" Column="3" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/QueueItemListenerManager.cs" Line="12" Column="3" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/MessageListenerManager.cs" Line="14" Column="3" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ItemListenerManager.cs" Line="12" Column="6" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/MembershipListenerManager.cs" Line="15" Column="6" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/InstanceListenerManager.cs" Line="15" Column="6" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ClientBinder.cs" Line="8" Column="3" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/BinaryWriterDataOutput.cs" Line="11" Column="17" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/Client/ClientConfig.cs" Line="134" Column="31" />
+      <File FileName="src/Hazelcast/Hazelcast.Client/Hazelcast.Client/IO/IOUtil.cs" Line="51" Column="5" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="Hazelcast.Client" expanded="True">
             <Node name="Client" expanded="True" />
-            <Node name="Security" expanded="True">
-              <Node name="AbstractCredentials.cs" selected="True" />
-            </Node>
+            <Node name="IO" expanded="True" />
+            <Node name="Security" expanded="True" />
+          </Node>
+          <Node name="Hazelcast.Client.Tests" expanded="True">
+            <Node name="Program.cs" selected="True" />
           </Node>
         </State>
       </Pad>

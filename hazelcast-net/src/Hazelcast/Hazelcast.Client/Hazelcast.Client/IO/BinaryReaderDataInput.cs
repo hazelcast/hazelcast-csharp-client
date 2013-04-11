@@ -51,9 +51,10 @@ namespace Hazelcast.IO
 		public int readInt(){
 			return IPAddress.NetworkToHostOrder (reader.ReadInt32 ());
 		}
-		
+
+		//IPAddress.NetworkToHostOrder(reader.ReadInt64());
     	public long readLong(){
-			return reader.ReadInt64();
+			return IPAddress.NetworkToHostOrder(reader.ReadInt64());
 		}
 
     	public float readFloat(){

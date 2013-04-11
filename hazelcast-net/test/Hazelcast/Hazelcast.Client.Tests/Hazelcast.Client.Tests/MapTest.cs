@@ -128,13 +128,14 @@ namespace Hazelcast.Client.Tests
         Assert.AreEqual(1, map.size());
 		map.destroy();
     }
-		
-		/*
+
+
+
     [Test]
     public void putAndGetEmployeeObjects() {
         HazelcastClient hClient = getHazelcastClient();
         int counter = 1000;
-        Map<String, Employee> clientMap = hClient.getMap("putAndGetEmployeeObjects");
+        IMap<String, Employee> clientMap = hClient.getMap<String, Employee>("putAndGetEmployeeObjects");
         for (int i = 0; i < counter; i++) {
             Employee employee = new Employee("name" + i, i, true, 5000 + i);
             employee.setMiddleName("middle" + i);
@@ -153,7 +154,6 @@ namespace Hazelcast.Client.Tests
 //        }
     }
     
-    */
 		
 		
     [Test]
@@ -732,27 +732,37 @@ namespace Hazelcast.Client.Tests
 	            Assert.IsTrue(e.isActive());
 	        }
 	    }
-		
+
+		[Test]
+		public void serializeEmployee(){
+			HazelcastClient hClient = getHazelcastClient();
+			IMap<String, Employee> clientMap = hClient.getMap<String, Employee>("employee");
+			Employee employee = new Employee("name", 34, true, 1);
+			clientMap.put("1", employee);
+			Console.WriteLine("PUT");
+			Assert.IsTrue(34 == clientMap.get("1").getAge());
+			Assert.IsTrue("name".Equals(clientMap.get("1").getName()));
+			Assert.IsTrue(true == clientMap.get("1").isActive());
+			//Assert.IsTrue(1 == clientMap.get("1").getSalary());
+		}
+
+
 	}
 	
 	class Employee: DataSerializable {
         String name;
         String familyName;
         String middleName;
-        int age;
+        long age;
         bool active;
         double salary;
 		
 		static String className = "com.hazelcast.client.HazelcastClientMapTest$Employee";
 		
-		//static Employee(){
-		//	Hazelcast.Client.IO.DataSerializer.register(className, typeof(Employee));
-		//}
-		
         public Employee() {
         }
 
-        public Employee(String name, int age, bool live, double price) {
+        public Employee(String name, long age, bool live, double price) {
             this.name = name;
             this.age = age;
             this.active = live;
@@ -779,7 +789,7 @@ namespace Hazelcast.Client.Tests
             return name;
         }
 
-        public int getAge() {
+        public long getAge() {
             return age;
         }
 
@@ -792,16 +802,16 @@ namespace Hazelcast.Client.Tests
         }
 
         public void writeData(Hazelcast.IO.IDataOutput dout) {
-            dout.writeBoolean(name==null);
+            dout.writeBoolean(name!=null);
             if(name!=null)
                 dout.writeUTF(name);
-            dout.writeBoolean(familyName==null);
+            dout.writeBoolean(familyName!=null);
             if(familyName!=null)
                 dout.writeUTF(familyName);
-            dout.writeBoolean(middleName==null);
+            dout.writeBoolean(middleName!=null);
             if(middleName!=null)
                 dout.writeUTF(middleName);
-            dout.writeInt(age);
+            dout.writeLong(age);
             dout.writeBoolean(active);
             dout.writeDouble(salary);
 
@@ -815,7 +825,7 @@ namespace Hazelcast.Client.Tests
             if(din.readBoolean())
                 this.middleName = din.readUTF();
 
-            this.age = din.readInt();
+            this.age = din.readLong();
             this.active = din.readBoolean();
             this.salary = din.readDouble();
         }
