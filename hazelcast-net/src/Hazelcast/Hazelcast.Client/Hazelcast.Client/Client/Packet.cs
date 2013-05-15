@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.IO;
 using System.Net;
 using System.Threading;
+using Hazelcast.Client.IO;
 namespace Hazelcast.Client
 {
 	public class Packet
@@ -69,11 +70,11 @@ namespace Hazelcast.Client
                 readHeader(reader);
                 this.key = new byte[keySize];
                 if (keySize > 0)
-                    readFully(this.key, 0, keySize, reader);
+                    IOUtil.readFully(this.key, 0, keySize, reader);
                     
                 this.value = new byte[valueSize];
                 if (valueSize > 0)
-                    readFully(this.value, 0, valueSize, reader);
+					IOUtil.readFully(this.value, 0, valueSize, reader);
                     
 		}
 
@@ -98,7 +99,7 @@ namespace Hazelcast.Client
                 if (nameLength > 0)
                 {
                     byte[] b = new byte[nameLength];
-                    readFully(b, 0, nameLength, reader);
+					IOUtil.readFully(b, 0, nameLength, reader);
                     this.name = System.Text.Encoding.ASCII.GetString(b);
                 }
 				reader.ReadByte(); // index length, not used in client
@@ -170,19 +171,7 @@ namespace Hazelcast.Client
 	        this.key = key;
 	        this.value = value;
 	    }
-		
-        public void readFully(byte[] b, int off, int len, BinaryReader reader)
-        {
-            int n = 0;
-            while (n < len)
-            {
-                int count = reader.Read(b, off + n, len - n);
-                if (count < 0)
-                    throw new Exception("End of file");
-                n += count;
-            }
-        }
-
+	
 		private byte setTrue(byte number, int index){
 			return (byte) (number | POWERS[index]);
 		}

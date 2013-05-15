@@ -5,6 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using Hazelcast.Query;
 using Hazelcast.Client;
+using Hazelcast.Client.IO;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using NUnit.Framework;
@@ -15,6 +16,48 @@ namespace Hazelcast.Client.Tests
 	[TestFixture()]
 	public class Program
 	{
+		[Test()]
+		public void text ()
+		{
+			System.IO.MemoryStream stream = new System.IO.MemoryStream();
+			System.IO.BinaryWriter writer = new System.IO.BinaryWriter(stream, Encoding.UTF8);
+
+
+			String s = "";
+			for(int i=0;i<5000;i++){
+				s+=i+".";
+			}
+			IOUtil.writeUTF(writer, s);
+//			writer.Write(s);
+//			writer.Write((short)290);
+
+			Console.WriteLine("Length is " + stream.Length);
+			for(int i=0;i<stream.Length;i++){
+				Console.Write (stream.GetBuffer()[i] + ".");
+			}
+			Console.WriteLine();
+
+			Console.WriteLine("7BitEncoded is");
+			Write7BitEncodedInt(290);
+		}
+
+		protected void Write7BitEncodedInt (int value)
+		{
+			do
+			{
+				int num = value >> 7 & 33554431;
+				byte b = (byte)(value & 127);
+				if (num != 0)
+				{
+					b |= 128;
+				}
+				Console.Write(b);
+				Console.Write(".");
+				value = num;
+			}
+			while (value != 0);
+		}
+
 		[Test()]
 		public void connect ()
 		{
@@ -27,16 +70,16 @@ namespace Hazelcast.Client.Tests
 
 
 			String s = "";
-			for(int i=0;i<4374;i++){
-				s += (""+i);
+			for(int i=0;i<5000;i++){
+				s += ("."+i);
 			}
 			Console.WriteLine("String is " + s);
 
 			HazelcastClient Hazelcast = HazelcastClient.newHazelcastClient(clientConfig);
-			IMap<String, String> map = Hazelcast.getMap<String, String>("myMapZZ");
+			IMap<String, String> map = Hazelcast.getMap<String, String>("default");
 			map.put("1", s);
 			String val = map.get("1");
-			Console.WriteLine(val.Equals(s) + " Value is  " + map.get("1"));
+			Console.WriteLine(val.Equals(s) + " Value is  " + val);
 //			sw.Reset();
 //			sw.Start();
 //			//Allmost all cluster operations that you can do with ordinary HazelcastInstance
