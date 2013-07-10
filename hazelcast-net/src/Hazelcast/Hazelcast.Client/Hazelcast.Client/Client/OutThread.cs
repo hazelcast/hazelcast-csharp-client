@@ -31,6 +31,7 @@ namespace Hazelcast.Client
 			//call.on.Start();
 			if(!call.FireNforget)
 				calls.TryAdd(call.getId (), call);
+
 			Packet packet = call.getRequest ();
 			if (packet != null) {
 				connection = connectionManager.getConnection();
@@ -54,6 +55,7 @@ namespace Hazelcast.Client
 
 		public void enQueue (Call call)
 		{
+			Console.WriteLine("EnQ");
 			inQ.Add(call);
 		}
 
