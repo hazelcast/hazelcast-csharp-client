@@ -51,9 +51,6 @@
     <Compile Include="ConnectionTest.cs" />
     <Compile Include="Customer.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="gcpd\TypeConverter.cs" />
-    <Compile Include="gcpd\DataWrapper.cs" />
-    <Compile Include="gcpd\Program.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -61,8 +58,5 @@
       <Project>{CD084DC3-3FD9-4BC2-B9A2-66711F2B3F61}</Project>
       <Name>Hazelcast.Client</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="gcpd\" />
   </ItemGroup>
 </Project>
