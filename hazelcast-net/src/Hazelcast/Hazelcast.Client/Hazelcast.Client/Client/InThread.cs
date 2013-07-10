@@ -36,7 +36,7 @@ namespace Hazelcast.Client
 			Interlocked.Exchange(ref lastReceived, DateTime.Now.Ticks);
 			
 			Call call;
-                if (calls.TryGetValue(packet.callId, out call))
+                if (calls.TryRemove(packet.callId, out call))
                 {
                     //call.on.Stop();
                     //call.post.Start();
