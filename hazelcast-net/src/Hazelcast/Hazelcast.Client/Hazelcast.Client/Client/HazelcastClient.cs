@@ -48,7 +48,7 @@ namespace Hazelcast.Client
 			connectionManager.setBinder(new DefaultClientBinder(this));	
 
 			this.outThread = new OutThread(connectionManager, calls);
-			this.inThread = new InThread(connectionManager, calls, listenerManager);
+			this.inThread = new InThread(connectionManager, calls, this);
 			this.listenerManager = new ListenerManager(this);
 
 			try {

@@ -38,7 +38,8 @@ namespace Hazelcast.Client
 	    private void initiate(IPEndPoint address, int id) {
 	        this.id = id;
 	        this.address = address;
-	        try {
+	        try 
+            {
 	            TcpClient tcp = new TcpClient();
 				tcp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 				
@@ -46,14 +47,8 @@ namespace Hazelcast.Client
 				tcp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lingerOption);
 	            this.tcpClient = tcp;
 				tcp.Connect(address.Address, address.Port);
-			
-				
-				//bs = new BufferedStream(tcpClient.GetStream(), BUFFER_SIZE);
-				//bs = tcpClient.GetStream();
 	        } catch (Exception e) {
-				Console.WriteLine("Exception " + e.Message);
-				Console.WriteLine(e.StackTrace);
-	            throw new Exception(e.ToString());
+                throw e;
 	        }
 	    }
 		

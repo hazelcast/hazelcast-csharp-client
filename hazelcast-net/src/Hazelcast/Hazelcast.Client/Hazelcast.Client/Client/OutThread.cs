@@ -26,20 +26,29 @@ namespace Hazelcast.Client
 
 		protected override void customRun ()
 		{
-			Call call = inQ.Take();
-			//call.pre.Stop();
-			//call.on.Start();
-			if(!call.FireNforget)
-				calls.TryAdd(call.getId (), call);
+            Call call = inQ.Take();
+            //call.pre.Stop();
+            //call.on.Start();
+            if (!call.FireNforget)
+                calls.TryAdd(call.getId(), call);
 
-			Packet packet = call.getRequest ();
-			if (packet != null) {
-				connection = connectionManager.getConnection();
-				if(connection == null){
-					throw new Exception("No Connection");
-				}
-				write(connection, packet);
-			}
+            Packet packet = call.getRequest();
+            if (packet != null)
+            {
+                connection = connectionManager.getConnection();
+                if (connection == null)
+                {
+                    throw new Exception("No Connection");
+                }
+                try
+                {
+                    write(connection, packet);
+                }
+                catch (System.ObjectDisposedException ode)
+                {
+                    call.setResult(new Exception("HazelcastClient is not active"));
+                }
+            }
 		}
 		
 		public bool contains(Call call){
@@ -55,7 +64,6 @@ namespace Hazelcast.Client
 
 		public void enQueue (Call call)
 		{
-			Console.WriteLine("EnQ");
 			inQ.Add(call);
 		}
 
