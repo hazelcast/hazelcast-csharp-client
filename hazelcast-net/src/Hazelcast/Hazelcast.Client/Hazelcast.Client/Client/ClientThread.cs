@@ -17,11 +17,14 @@ namespace Hazelcast.Client
 		protected abstract void customRun();
 		
 		public void run() {
-	        try {
-	            while (running) {
-	            	customRun();
-	            }
-	        } finally {
+            try
+            {
+                while (running)
+                {
+                    customRun();
+                }
+            }
+            finally {
 	            terminate();
 	        }
 		}	

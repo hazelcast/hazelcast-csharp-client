@@ -14,28 +14,32 @@ namespace Hazelcast.Client
 		private ConnectionManager connectionManager;
 		private Connection connection;
 		private ConcurrentDictionary<long, Call> calls;
-		private ListenerManager listenerManager;		
+		private ListenerManager listenerManager;
+        private HazelcastClient client;
 		public Int64 lastReceived;
 		
 		
-		public InThread (ConnectionManager connectionManager, ConcurrentDictionary<long, Call> calls, ListenerManager listenerManager)
+		public InThread (ConnectionManager connectionManager, ConcurrentDictionary<long, Call> calls, HazelcastClient client)
 		{
 			this.connectionManager = connectionManager;
 			this.calls = calls;
-			this.listenerManager = listenerManager;
+			this.listenerManager = client.ListenerManager;
+            this.client = client;
 		}
 		
 		protected override void customRun(){
-			connection = connectionManager.getConnection();
-			if(connection == null)
-				throw new Exception("Cluster is down!");
-			
-			Packet packet = readPacket(this.connection);
-			if(packet == null)
-				return;
-			Interlocked.Exchange(ref lastReceived, DateTime.Now.Ticks);
-			
-			Call call;
+            try
+            {
+                connection = connectionManager.getConnection();
+                if (connection == null)
+                    throw new Exception("Cluster is down!");
+
+                Packet packet = readPacket(this.connection);
+                if (packet == null)
+                    return;
+                Interlocked.Exchange(ref lastReceived, DateTime.Now.Ticks);
+
+                Call call;
                 if (calls.TryRemove(packet.callId, out call))
                 {
                     //call.on.Stop();
@@ -46,10 +50,21 @@ namespace Hazelcast.Client
                 else
                 {
                     if (packet.operation == (byte)ClusterOperation.EVENT)
-                    	listenerManager.enQueue(packet);
+                        listenerManager.enQueue(packet);
                     else
                         Console.WriteLine("Unkown call result: " + packet.callId + ", " + packet.operation);
                 }
+            }
+            catch (Exception e) {
+                Console.WriteLine("Exception on Socket, terminating all existing calls ("+calls.Count+") and shutting down the client");
+                foreach (long id in calls.Keys) {
+                    Call call;
+                    calls.TryRemove(id, out call);
+                    call.setResult(new Exception("Exception on the socket to the Member, possibly Member left."));
+                }
+                client.getLifecycleService().shutdown();
+                Console.WriteLine("Client is shutdown!");
+            }
 		}
 		
 		public static bool equals(byte[] b1, byte[] b2){

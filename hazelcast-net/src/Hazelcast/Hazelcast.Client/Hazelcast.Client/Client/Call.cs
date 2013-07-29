@@ -23,7 +23,7 @@ namespace Hazelcast.Client
 		
 		static long callIdGen = 0;
 		
-		readonly BlockingCollection<Packet> inbQ = new BlockingCollection<Packet>(1);
+		readonly BlockingCollection<Object> inbQ = new BlockingCollection<Object>(1);
 		
 		public Call (Packet request)
 		{
@@ -49,12 +49,16 @@ namespace Hazelcast.Client
 
 		public Packet getResult (int timeout)
 		{
-			Packet response = null; 
+			Object response = null; 
             inbQ.TryTake(out response, timeout);
-			return response;
+            if (response is Exception) {
+                throw (Exception)response;
+            }
+            else 
+			    return (Packet) response;
 		}
 
-		public void setResult (Packet response)
+		public void setResult (Object response)
 		{
 			//this.inQ.Enqueue (response);
 			inbQ.Add(response);
