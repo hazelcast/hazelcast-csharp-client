@@ -44,9 +44,14 @@ namespace Hazelcast.Client
                 {
                     write(connection, packet);
                 }
-                catch (System.ObjectDisposedException ode)
+                catch (System.InvalidOperationException e)
                 {
-                    call.setResult(new Exception("HazelcastClient is not active"));
+                    call.setResult(new Exception("Connection is broken!"));
+                }
+                catch (Exception e) {
+                    if (!running || terminated || connection == null || connection.IsClosed()) {
+                        return;
+                    }
                 }
             }
 		}

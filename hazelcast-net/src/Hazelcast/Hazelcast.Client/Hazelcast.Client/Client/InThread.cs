@@ -55,16 +55,21 @@ namespace Hazelcast.Client
                         Console.WriteLine("Unkown call result: " + packet.callId + ", " + packet.operation);
                 }
             }
-            catch (Exception e) {
-                Console.WriteLine("Exception on Socket, terminating all existing calls ("+calls.Count+") and shutting down the client");
-                foreach (long id in calls.Keys) {
+            catch (Exception e)
+            {
+                if (!running || terminated) 
+                    return;
+
+               new Thread(client.getLifecycleService().shutdown).Start();
+               Console.WriteLine("Exception on Socket, terminating all existing calls (" + calls.Count + ") and shutting down the client");
+                
+                foreach (long id in calls.Keys)
+                {
                     Call call;
                     calls.TryRemove(id, out call);
-                    call.setResult(new Exception("Exception on the socket to the Member, possibly Member left."));
+                    call.setResult(new Exception("Connection is broken!"));
                 }
-                client.getLifecycleService().shutdown();
-                Console.WriteLine("Client is shutdown!");
-            }
+           }
 		}
 		
 		public static bool equals(byte[] b1, byte[] b2){
@@ -113,5 +118,20 @@ namespace Hazelcast.Client
 			thread.Start();
 			return this;
 		}
+
+        public void shutdown() {
+        lock (monitor) {
+            if (running) {
+                this.running = false;
+                try {
+                    if (connection != null) {
+                        connection.close();
+                    }
+                } catch (IOException ignored) {
+                }
+                    Monitor.Wait(monitor,5000);
+            }
+        }
+    }
 	}
 }
