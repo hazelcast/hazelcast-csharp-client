@@ -14,6 +14,7 @@ namespace Hazelcast.Client
 	    public volatile TcpClient tcpClient;
 	    private IPEndPoint address;
 	    private int id;
+        private volatile Boolean closed = false;
 		//private Stream bs = null;
 		
 	    public volatile bool headersWritten = false;
@@ -47,6 +48,7 @@ namespace Hazelcast.Client
 				tcp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lingerOption);
 	            this.tcpClient = tcp;
 				tcp.Connect(address.Address, address.Port);
+                closed = false;
 	        } catch (Exception e) {
                 throw e;
 	        }
@@ -65,15 +67,20 @@ namespace Hazelcast.Client
 	    }
 	
 	    public void close() {
+            closed = true;
 			tcpClient.Close();
 	    }
+
+        public bool IsClosed() {
+            return closed;
+        }
 	
 	    public override String ToString() {
 	        return "Connection [" + id + "]" + " [" + address + " -> " + tcpClient.Client.LocalEndPoint.ToString()+ "]";
 	    }
 		
 		public Stream getNetworkStream(){
-			return tcpClient.GetStream();
+			return tcpClient==null ? null: tcpClient.GetStream();
 		}
 	
 	    public Member getMember() {
