@@ -91,7 +91,8 @@ namespace Hazelcast.Client.Spi
 	    {
             if (proxyType.ContainsGenericParameters)
 	        {
-	            Type[] genericTypeArguments = interfaceType.GenericTypeArguments;
+                //Type[] genericTypeArguments = interfaceType.GenericTypeArguments;
+	            Type[] genericTypeArguments = interfaceType.GetGenericArguments();
 	            var mgType = proxyType.MakeGenericType(genericTypeArguments);
                 return Activator.CreateInstance(mgType,new object[]{name,id}) as ClientProxy;
 	        }

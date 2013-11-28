@@ -11,7 +11,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-	public sealed class ListenerSupport<TE>:IListenerSupport
+	public sealed class ListenerSupport<TE>:IListenerSupport where TE:EventArgs
 	{
 		private readonly ClientContext context;
 

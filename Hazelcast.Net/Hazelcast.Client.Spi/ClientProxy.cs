@@ -27,7 +27,7 @@ namespace Hazelcast.Client.Spi
 			this.objectName = objectName;
 		}
 
-		protected internal string Listen<T>(object registrationRequest, object partitionKey, EventHandler<T> handler)
+		protected internal string Listen<T>(object registrationRequest, object partitionKey, EventHandler<T> handler) where T:EventArgs
 		{
 			var listenerSupport = new ListenerSupport<T>(context, registrationRequest, handler, partitionKey);
 			string registrationId = listenerSupport.Listen();
@@ -35,9 +35,9 @@ namespace Hazelcast.Client.Spi
 			return registrationId;
 		}
 
-		protected internal string Listen<T>(object registrationRequest, EventHandler<T> handler)
+        protected internal string Listen<T>(object registrationRequest, EventHandler<T> handler) where T : EventArgs
 		{
-			return Listen(registrationRequest, null, handler);
+			return Listen<T>(registrationRequest, null, handler);
 		}
 
 		protected internal bool StopListening(string registrationId)
