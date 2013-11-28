@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net", "Hazelcast.Net\Hazelcast.Net.csproj", "{538C038C-9681-42CB-9F2C-22017547A53E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Test", "Hazelcast.Test\Hazelcast.Test.csproj", "{20F910E8-C1BC-4D44-8460-351FDF0DD54D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{538C038C-9681-42CB-9F2C-22017547A53E} = {538C038C-9681-42CB-9F2C-22017547A53E}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{538C038C-9681-42CB-9F2C-22017547A53E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{538C038C-9681-42CB-9F2C-22017547A53E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{538C038C-9681-42CB-9F2C-22017547A53E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{538C038C-9681-42CB-9F2C-22017547A53E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20F910E8-C1BC-4D44-8460-351FDF0DD54D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20F910E8-C1BC-4D44-8460-351FDF0DD54D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20F910E8-C1BC-4D44-8460-351FDF0DD54D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20F910E8-C1BC-4D44-8460-351FDF0DD54D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
