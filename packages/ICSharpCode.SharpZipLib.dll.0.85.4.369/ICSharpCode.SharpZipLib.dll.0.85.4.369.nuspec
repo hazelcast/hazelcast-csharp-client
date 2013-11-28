@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>ICSharpCode.SharpZipLib.dll</id>
+    <version>0.85.4.369</version>
+    <title>ICSharpCode.SharpZipLib.dll</title>
+    <authors>hnguyen</authors>
+    <owners>hnguyen</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>packaging version 0.85.4.369</description>
+    <releaseNotes>packaging version 0.85.4.369</releaseNotes>
+    <copyright>Copyright 2012</copyright>
+    <language />
+    <tags>zip</tags>
+  </metadata>
+</package>
