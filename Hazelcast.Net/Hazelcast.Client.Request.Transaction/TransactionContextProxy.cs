@@ -127,7 +127,7 @@ namespace Hazelcast.Client.Request.Transaction
             }
             if (proxyType != null)
             {
-                Type[] genericTypeArguments = typeof(T).GenericTypeArguments;
+                Type[] genericTypeArguments = typeof(T).GetGenericArguments();
                 var mgType = proxyType.MakeGenericType(genericTypeArguments);
                 return Activator.CreateInstance(mgType, new object[] { name, this }) as ClientTxnProxy;
             }

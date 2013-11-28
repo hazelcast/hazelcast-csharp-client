@@ -55,7 +55,7 @@ namespace Hazelcast.Test
 
         
 
-        private static void Main(string[] args)
+        private static void Main1(string[] args)
         {
             var clientConfig = new ClientConfig();
             clientConfig.AddAddress("127.0.0.1");
