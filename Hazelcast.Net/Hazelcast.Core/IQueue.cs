@@ -1,54 +1,46 @@
 using System.Collections.Generic;
-using Hazelcast.Hazelcast.Core;
-using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Core
 {
     /// <summary>Concurrent, blocking, distributed, observable queue.</summary>
     /// <remarks>Concurrent, blocking, distributed, observable queue.</remarks>
     /// <seealso cref="IBaseQueue{E}">BaseQueue&lt;E&gt;</seealso>
-    public interface IQueue<E>: IBaseQueue<E>, IHazelcastCollection<E>
+    public interface IQueue<E> : IBaseQueue<E>, IHazelcastCollection<E>
     {
-
-        /// <summary>
-        ///     <inheritDoc></inheritDoc>
-        /// </summary>
         //int Count { get; }
-
-        /// <summary>
-        ///     <inheritDoc></inheritDoc>
-        /// </summary>
         //new bool Add(E e);
-
+        //bool Offer(E e);
         /// <summary>
         ///     <inheritDoc></inheritDoc>
         /// </summary>
-        //bool Offer(E e);
-
+        /// <summary>
+        ///     <inheritDoc></inheritDoc>
+        /// </summary>
+        /// <summary>
+        ///     <inheritDoc></inheritDoc>
+        /// </summary>
         /// <summary>
         ///     <inheritDoc></inheritDoc>
         /// </summary>
         /// <exception cref="System.Exception"></exception>
         void Put(E e);
 
+        //bool Offer(E e, long timeout, TimeUnit unit);
         /// <summary>
         ///     <inheritDoc></inheritDoc>
         /// </summary>
         /// <exception cref="System.Exception"></exception>
-        //bool Offer(E e, long timeout, TimeUnit unit);
-
         /// <summary>
         ///     <inheritDoc></inheritDoc>
         /// </summary>
         /// <exception cref="System.Exception"></exception>
         E Take();
 
+        //E Poll(long timeout, TimeUnit unit);
         /// <summary>
         ///     <inheritDoc></inheritDoc>
         /// </summary>
         /// <exception cref="System.Exception"></exception>
-        //E Poll(long timeout, TimeUnit unit);
-
         /// <summary>
         ///     <inheritDoc></inheritDoc>
         /// </summary>
@@ -79,11 +71,10 @@ namespace Hazelcast.Core
         /// </summary>
         E Remove();
 
+        //E Poll();
         /// <summary>
         ///     <inheritDoc></inheritDoc>
         /// </summary>
-        //E Poll();
-
         /// <summary>
         ///     <inheritDoc></inheritDoc>
         /// </summary>
@@ -93,6 +84,7 @@ namespace Hazelcast.Core
         ///     <inheritDoc></inheritDoc>
         /// </summary>
         E Peek();
+
 /*
         /// <summary>
         ///     <inheritDoc></inheritDoc>

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Hazelcast.Net.Ext;
 
-namespace Hazelcast.Hazelcast.Core
+namespace Hazelcast.Core
 {
     public interface IBlockingQueue<E>
     {

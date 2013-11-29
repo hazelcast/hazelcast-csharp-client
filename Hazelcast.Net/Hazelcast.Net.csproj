@@ -262,7 +262,6 @@
     <Compile Include="Hazelcast.Net.Ext\IDataOutput.cs" />
     <Compile Include="Hazelcast.Net.Ext\IDataInput.cs" />
     <Compile Include="Hazelcast.Net.Ext\InputOutputStreams.cs" />
-    <Compile Include="Hazelcast.Net.Ext\MyDictionary.cs" />
     <Compile Include="Hazelcast.Net.Ext\TimeUnit.cs" />
     <Compile Include="Hazelcast.Serialization.Hook\ClientDataSerializerHook.cs" />
     <Compile Include="Hazelcast.Client\Client.cs" />
@@ -468,11 +467,6 @@
     <Compile Include="Hazelcast.Transaction\TransactionNotActiveException.cs" />
     <Compile Include="Hazelcast.Transaction\TransactionOptions.cs" />
     <Compile Include="Hazelcast.Transaction\TransactionState.cs" />
-    <Compile Include="Hazelcast.Util.Executor\AbstractExecutorThreadFactory.cs" />
-    <Compile Include="Hazelcast.Util.Executor\CompletedFuture.cs" />
-    <Compile Include="Hazelcast.Util.Executor\DelegatingFuture.cs" />
-    <Compile Include="Hazelcast.Util.Executor\PoolExecutorThreadFactory.cs" />
-    <Compile Include="Hazelcast.Util.Executor\SingleExecutorThreadFactory.cs" />
     <Compile Include="Hazelcast.Util\AbstractLoadBalancer.cs" />
     <Compile Include="Hazelcast.Util\AddressHelper.cs" />
     <Compile Include="Hazelcast.Util\AddressUtil.cs" />
