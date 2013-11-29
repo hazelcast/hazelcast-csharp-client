@@ -141,7 +141,7 @@ namespace Hazelcast.Client.Spi
 
         public ICollection<IMember> GetMemberList()
         {
-            var members = MembersRef;
+            IDictionary<Address, IMember> members = MembersRef;
             return members != null ? members.Values : new HashSet<IMember>();
         }
 
@@ -370,7 +370,8 @@ namespace Hazelcast.Client.Spi
                     var address = new Address(isa);
                     try
                     {
-                        IConnection connection = client.GetConnectionManager().FirstConnection(address, ManagerAuthenticator);
+                        IConnection connection = client.GetConnectionManager()
+                            .FirstConnection(address, ManagerAuthenticator);
                         active = true;
                         clusterListener.FireConnectionEvent(false);
                         return connection;
@@ -481,7 +482,7 @@ namespace Hazelcast.Client.Spi
             auth.SetReAuth(reAuth);
             auth.SetFirstConnection(firstConnection);
             ISerializationService serializationService = client.GetSerializationService();
-            var data1 = serializationService.ToData(auth);
+            Data data1 = serializationService.ToData(auth);
             connection.Write(data1);
             Data addressData = connection.Read();
             var address = ErrorHandler.ReturnResultOrThrowException<Address>(serializationService.ToObject(addressData));

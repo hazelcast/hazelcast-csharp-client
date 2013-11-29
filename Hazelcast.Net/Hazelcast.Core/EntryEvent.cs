@@ -26,11 +26,13 @@ namespace Hazelcast.Core
 
         protected internal V value;
 
-        public EntryEvent(object source, IMember member, EntryEventType eventType, K key, V value): this(source, member, eventType, key, default(V), value)
+        public EntryEvent(object source, IMember member, EntryEventType eventType, K key, V value)
+            : this(source, member, eventType, key, default(V), value)
         {
         }
 
-        public EntryEvent(object source, IMember member, EntryEventType eventType, K key, V oldValue, V value): base(source)
+        public EntryEvent(object source, IMember member, EntryEventType eventType, K key, V oldValue, V value)
+            : base(source)
         {
             name = (string) source;
             this.member = member;

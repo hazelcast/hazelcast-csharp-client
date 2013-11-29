@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Hazelcast.Client.Connection;
 using Hazelcast.Core;
 using Hazelcast.IO;
@@ -11,7 +12,7 @@ namespace Hazelcast.Client.Spi
         void Stop();
         IMember GetMember(Address address);
         IMember GetMember(string uuid);
-        System.Collections.Generic.ICollection<IMember> GetMemberList();
+        ICollection<IMember> GetMemberList();
 
         Address GetMasterAddress();
         int GetSize();

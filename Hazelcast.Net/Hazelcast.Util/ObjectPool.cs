@@ -1,17 +1,13 @@
-using System;
-using Hazelcast.Util;
-
-
 namespace Hazelcast.Util
 {
     public interface IObjectPool<E> where E : class
-	{
-		E Take();
+    {
+        E Take();
 
-		void Release(E e);
+        void Release(E e);
 
-		int Size();
+        int Size();
 
-		void Destroy();
-	}
+        void Destroy();
+    }
 }

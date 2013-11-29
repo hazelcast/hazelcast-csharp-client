@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace Hazelcast.Net.Ext
 {
-
     public static class Extensions
     {
         public static bool IsInterrupted(this Thread thread)
@@ -24,8 +20,9 @@ namespace Hazelcast.Net.Ext
 
         public static DateTime CreateDateTime(this DateTime dateTime, long sinceEpoxMillis)
         {
-            return new DateTime(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local).Ticks + (sinceEpoxMillis * 10000));
+            return new DateTime(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local).Ticks + (sinceEpoxMillis*10000));
         }
+
         public static DateTime EpoxDateTime(this DateTime dateTime)
         {
             return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);

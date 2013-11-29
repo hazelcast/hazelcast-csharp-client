@@ -1,5 +1,4 @@
-﻿
-using Hazelcast.Client.Connection;
+﻿using Hazelcast.Client.Connection;
 using Hazelcast.IO;
 
 namespace Hazelcast.Util
@@ -8,7 +7,7 @@ namespace Hazelcast.Util
 
     public delegate TE DestructorMethod<TE>(TE e);
 
-    public delegate V ConstructorMethod<K,V>(K arg);
+    public delegate V ConstructorMethod<K, V>(K arg);
 
     public delegate void Runnable();
 
@@ -19,5 +18,4 @@ namespace Hazelcast.Util
     internal delegate Connection NewConnection(Address address);
 
     public delegate void Authenticator(IConnection connection);
-
 }

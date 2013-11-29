@@ -1,4 +1,3 @@
-using System;
 using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Core
@@ -8,7 +7,6 @@ namespace Hazelcast.Core
     /// </summary>
     public interface ILock : IDistributedObject
     {
-
         /// <summary>
         ///     <inheritDoc></inheritDoc>
         /// </summary>

@@ -6,16 +6,10 @@ namespace Hazelcast.IO.Serialization
     [Serializable]
     public abstract class BinaryClassDefinition : IClassDefinition
     {
+        [NonSerialized] private byte[] binary;
         protected internal int classId;
         protected internal int factoryId;
         protected internal int version = -1;
-
-        [NonSerialized] 
-        private byte[] binary;
-
-        public BinaryClassDefinition()
-        {
-        }
 
         public int GetFactoryId()
         {
@@ -32,14 +26,6 @@ namespace Hazelcast.IO.Serialization
         {
             return version;
         }
-        public byte[] GetBinary()
-        {
-            return binary;
-        }
-        internal void SetBinary(byte[] binary)
-        {
-            this.binary = binary;
-        }
 
         public abstract void WriteData(IObjectDataOutput output);
         public abstract void ReadData(IObjectDataInput input);
@@ -51,6 +37,14 @@ namespace Hazelcast.IO.Serialization
         public abstract int GetFieldClassId(string fieldName);
         public abstract int GetFieldCount();
 
+        public byte[] GetBinary()
+        {
+            return binary;
+        }
 
+        internal void SetBinary(byte[] binary)
+        {
+            this.binary = binary;
+        }
     }
 }

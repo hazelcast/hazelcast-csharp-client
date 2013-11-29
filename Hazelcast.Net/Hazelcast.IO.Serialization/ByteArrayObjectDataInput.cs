@@ -441,7 +441,7 @@ namespace Hazelcast.IO.Serialization
 
         public T ReadObject<T>()
         {
-            return (T)ReadObject();
+            return (T) ReadObject();
         }
 
         /// <summary>

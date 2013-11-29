@@ -5,7 +5,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Core
 {
-    public interface IHazelcastMap<K, V>:IBaseMap<K,V>
+    public interface IHazelcastMap<K, V> : IBaseMap<K, V>
     {
         //IBaseMap
         //bool ContainsKey(object key);
@@ -68,8 +68,8 @@ namespace Hazelcast.Core
         //IDictionary<K, object> ExecuteOnEntries(EntryProcessor<K, V> entryProcessor, IPredicate<K, V> predicate);
         void PutAll<K>(IDictionary<K, V> m);
         void Clear();
-
     }
+
     /// <summary>Concurrent, distributed, observable and queryable map.</summary>
     /// <remarks>
     ///     Concurrent, distributed, observable and queryable map.

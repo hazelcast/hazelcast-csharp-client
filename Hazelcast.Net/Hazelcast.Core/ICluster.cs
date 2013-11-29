@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Hazelcast.Core
 {
     /// <summary>Hazelcast cluster interface.</summary>
@@ -32,7 +34,7 @@ namespace Hazelcast.Core
         ///     order. First member is the oldest member.
         /// </remarks>
         /// <returns>current members of the cluster</returns>
-        System.Collections.Generic.ISet<IMember> GetMembers();
+        ISet<IMember> GetMembers();
 
         /// <summary>Returns this Hazelcast instance member</summary>
         /// <returns>this Hazelcast instance member</returns>

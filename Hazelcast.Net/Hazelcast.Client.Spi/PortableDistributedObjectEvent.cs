@@ -3,69 +3,68 @@ using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
-
 namespace Hazelcast.Client.Spi
 {
-
     public class PortableDistributedObjectEvent : EventArgs, IPortable
-	{
-		private DistributedObjectEvent.EventType eventType;
+    {
+        private DistributedObjectEvent.EventType eventType;
 
-		private string name;
+        private string name;
 
-		private string serviceName;
+        private string serviceName;
 
-		public PortableDistributedObjectEvent()
-		{
-		}
+        public PortableDistributedObjectEvent()
+        {
+        }
 
-		public PortableDistributedObjectEvent(DistributedObjectEvent.EventType eventType, string name, string serviceName)
-		{
-			this.eventType = eventType;
-			this.name = name;
-			this.serviceName = serviceName;
-		}
+        public PortableDistributedObjectEvent(DistributedObjectEvent.EventType eventType, string name,
+            string serviceName)
+        {
+            this.eventType = eventType;
+            this.name = name;
+            this.serviceName = serviceName;
+        }
 
-		public virtual DistributedObjectEvent.EventType GetEventType()
-		{
-			return eventType;
-		}
+        public virtual int GetFactoryId()
+        {
+            return SpiPortableHook.Id;
+        }
 
-		public virtual string GetName()
-		{
-			return name;
-		}
+        public virtual int GetClassId()
+        {
+            return SpiPortableHook.DistributedObjectEvent;
+        }
 
-		//REQUIRED
-		public virtual string GetServiceName()
-		{
-			return serviceName;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WritePortable(IPortableWriter writer)
+        {
+            writer.WriteUTF("n", name);
+            writer.WriteUTF("s", serviceName);
+            writer.WriteUTF("t", eventType.ToString());
+        }
 
-		public virtual int GetFactoryId()
-		{
-			return SpiPortableHook.Id;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void ReadPortable(IPortableReader reader)
+        {
+            name = reader.ReadUTF("n");
+            serviceName = reader.ReadUTF("s");
+            Enum.TryParse(reader.ReadUTF("t"), true, out eventType);
+        }
 
-		public virtual int GetClassId()
-		{
-			return SpiPortableHook.DistributedObjectEvent;
-		}
+        public virtual DistributedObjectEvent.EventType GetEventType()
+        {
+            return eventType;
+        }
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void WritePortable(IPortableWriter writer)
-		{
-			writer.WriteUTF("n", name);
-			writer.WriteUTF("s", serviceName);
-			writer.WriteUTF("t", eventType.ToString());
-		}
+        public virtual string GetName()
+        {
+            return name;
+        }
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void ReadPortable(IPortableReader reader)
-		{
-			name = reader.ReadUTF("n");
-			serviceName = reader.ReadUTF("s");
-            Enum.TryParse(reader.ReadUTF("t"), true,out eventType);
-		}
-	}
+        //REQUIRED
+        public virtual string GetServiceName()
+        {
+            return serviceName;
+        }
+    }
 }

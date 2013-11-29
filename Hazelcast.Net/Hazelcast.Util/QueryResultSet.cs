@@ -5,10 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
 using Hazelcast.Serialization.Hook;
-using Hazelcast.Util;
-
 
 namespace Hazelcast.Util
 {
@@ -166,22 +163,20 @@ namespace Hazelcast.Util
     //    }
     //}
 
-    [System.Serializable]
+    [Serializable]
     internal class QueryResultSet : ICollection, IIdentifiedDataSerializable
     {
-
-        [System.NonSerialized]
-        internal readonly ISerializationService serializationService;
         internal readonly ConcurrentBag<QueryResultEntry> entries = new ConcurrentBag<QueryResultEntry>();
-        internal IterationType iterationType;
-        internal bool data;
-        private object _syncRoot;
+        [NonSerialized] internal readonly ISerializationService serializationService;
         private bool _isSynchronized;
+        private object _syncRoot;
+        internal bool data;
+        internal IterationType iterationType;
 
         public QueryResultSet()
-		{
-			serializationService = null;
-		}
+        {
+            serializationService = null;
+        }
 
         public IEnumerator GetEnumerator()
         {
@@ -195,10 +190,7 @@ namespace Hazelcast.Util
 
         public int Count
         {
-            get
-            {
-                return entries.Count;
-            }
+            get { return entries.Count; }
         }
 
         public object SyncRoot
@@ -246,7 +238,7 @@ namespace Hazelcast.Util
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder("QueryResultSet{");
+            var sb = new StringBuilder("QueryResultSet{");
             sb.Append("entries=").Append(entries);
             sb.Append(", iterationType=").Append(iterationType);
             sb.Append(", data=").Append(data);
@@ -264,8 +256,8 @@ namespace Hazelcast.Util
 
         internal _QueryResultIterator(QueryResultSet enclosing)
         {
-            this._enclosing = enclosing;
-            this._enumerator = enclosing.entries.GetEnumerator();
+            _enclosing = enclosing;
+            _enumerator = enclosing.entries.GetEnumerator();
         }
 
         public bool MoveNext()
@@ -273,25 +265,27 @@ namespace Hazelcast.Util
             if (_enumerator.MoveNext())
             {
                 QueryResultEntry entry = _enumerator.Current;
-                if (this._enclosing.iterationType == IterationType.Value)
+                if (_enclosing.iterationType == IterationType.Value)
                 {
                     Data valueData = entry.GetValueData();
-                    _Current = (this._enclosing.data) ? valueData : this._enclosing.serializationService.ToObject(valueData);
+                    _Current = (_enclosing.data) ? valueData : _enclosing.serializationService.ToObject(valueData);
                     return true;
                 }
-                if (this._enclosing.iterationType == IterationType.Key)
+                if (_enclosing.iterationType == IterationType.Key)
                 {
                     Data keyData = entry.GetKeyData();
-                    _Current = (this._enclosing.data) ? keyData : this._enclosing.serializationService.ToObject(keyData);
+                    _Current = (_enclosing.data) ? keyData : _enclosing.serializationService.ToObject(keyData);
                     return true;
                 }
                 else
                 {
                     Data keyData = entry.GetKeyData();
                     Data valueData = entry.GetValueData();
-                    var keyValuePair = new KeyValuePair<object, object>(this._enclosing.serializationService.ToObject(keyData), this._enclosing.serializationService.ToObject(valueData));
+                    var keyValuePair =
+                        new KeyValuePair<object, object>(_enclosing.serializationService.ToObject(keyData),
+                            _enclosing.serializationService.ToObject(valueData));
                     var valuePair = new KeyValuePair<object, object>(keyData, valueData);
-                    _Current = (this._enclosing.data) ? valuePair : keyValuePair;
+                    _Current = (_enclosing.data) ? valuePair : keyValuePair;
                     return true;
                 }
             }

@@ -1,61 +1,57 @@
 using System.Collections.Generic;
-using Hazelcast.Client.Request.Collection;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
-
 namespace Hazelcast.Client.Request.Collection
 {
-	
-	public class CollectionCompareAndRemoveRequest : CollectionRequest
-	{
-		private ICollection<Data> valueSet;
+    public class CollectionCompareAndRemoveRequest : CollectionRequest
+    {
+        private bool retain;
+        private ICollection<Data> valueSet;
 
-		private bool retain;
+        public CollectionCompareAndRemoveRequest()
+        {
+        }
 
-		public CollectionCompareAndRemoveRequest()
-		{
-		}
+        public CollectionCompareAndRemoveRequest(string name, ICollection<Data> valueSet, bool retain) : base(name)
+        {
+            this.valueSet = valueSet;
+            this.retain = retain;
+        }
 
-		public CollectionCompareAndRemoveRequest(string name, ICollection<Data> valueSet, bool retain) : base(name)
-		{
-			this.valueSet = valueSet;
-			this.retain = retain;
-		}
+        public override int GetClassId()
+        {
+            return CollectionPortableHook.CollectionCompareAndRemove;
+        }
 
-		public override int GetClassId()
-		{
-			return CollectionPortableHook.CollectionCompareAndRemove;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public override void WritePortable(IPortableWriter writer)
+        {
+            base.WritePortable(writer);
+            writer.WriteBoolean("r", retain);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            output.WriteInt(valueSet.Count);
+            foreach (Data value in valueSet)
+            {
+                value.WriteData(output);
+            }
+        }
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void WritePortable(IPortableWriter writer)
-		{
-			base.WritePortable(writer);
-			writer.WriteBoolean("r", retain);
-			IObjectDataOutput output = writer.GetRawDataOutput();
-			output.WriteInt(valueSet.Count);
-			foreach (Data value in valueSet)
-			{
-				value.WriteData(output);
-			}
-		}
-
-		/// <exception cref="System.IO.IOException"></exception>
-		public override void ReadPortable(IPortableReader reader)
-		{
-			base.ReadPortable(reader);
-			retain = reader.ReadBoolean("r");
-			IObjectDataInput input = reader.GetRawDataInput();
-			int size = input.ReadInt();
-		    valueSet = new HashSet<Data>();
-			for (int i = 0; i < size; i++)
-			{
-				var value = new Data();
-				value.ReadData(input);
-				valueSet.Add(value);
-			}
-		}
-	}
+        /// <exception cref="System.IO.IOException"></exception>
+        public override void ReadPortable(IPortableReader reader)
+        {
+            base.ReadPortable(reader);
+            retain = reader.ReadBoolean("r");
+            IObjectDataInput input = reader.GetRawDataInput();
+            int size = input.ReadInt();
+            valueSet = new HashSet<Data>();
+            for (int i = 0; i < size; i++)
+            {
+                var value = new Data();
+                value.ReadData(input);
+                valueSet.Add(value);
+            }
+        }
+    }
 }

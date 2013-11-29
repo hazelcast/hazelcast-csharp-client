@@ -131,7 +131,7 @@ namespace Hazelcast.Client.Spi
     {
         public EventData(object data)
         {
-            this.Data = data;
+            Data = data;
         }
 
         public object Data { get; set; }

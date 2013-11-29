@@ -303,7 +303,7 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual P ReadPortable<P>(string fieldName) where P:IPortable
+        public virtual P ReadPortable<P>(string fieldName) where P : IPortable
         {
             IFieldDefinition fd = cd.Get(fieldName);
             if (fd == null)
@@ -323,7 +323,7 @@ namespace Hazelcast.IO.Serialization
                     {
                         ctxIn.SetFactoryId(fd.GetFactoryId());
                         ctxIn.SetClassId(fd.GetClassId());
-                        return (P)serializer.ReadAndInitialize(input);
+                        return (P) serializer.ReadAndInitialize(input);
                     }
                     finally
                     {

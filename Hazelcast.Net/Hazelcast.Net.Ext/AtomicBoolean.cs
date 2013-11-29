@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 
 namespace Hazelcast.Net.Ext
@@ -21,7 +20,6 @@ namespace Hazelcast.Net.Ext
             int e = expect ? 1 : 0;
             int u = update ? 1 : 0;
             return (Interlocked.CompareExchange(ref value, u, e) == e);
-
         }
 
         public bool Get()
@@ -47,14 +45,12 @@ namespace Hazelcast.Net.Ext
 
         public bool GetAndSet(bool newValue)
         {
-            for (; ; )
+            for (;;)
             {
                 bool current = Get();
                 if (CompareAndSet(current, newValue))
                     return current;
             }
         }
-
     }
 }
-

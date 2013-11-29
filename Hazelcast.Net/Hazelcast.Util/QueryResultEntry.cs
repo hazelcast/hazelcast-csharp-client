@@ -1,15 +1,13 @@
 using Hazelcast.IO.Serialization;
-using Hazelcast.Util;
-
 
 namespace Hazelcast.Util
 {
-	public interface QueryResultEntry
-	{
-		Data GetKeyData();
+    public interface QueryResultEntry
+    {
+        Data GetKeyData();
 
-		Data GetValueData();
+        Data GetValueData();
 
-		Data GetIndexKey();
-	}
+        Data GetIndexKey();
+    }
 }

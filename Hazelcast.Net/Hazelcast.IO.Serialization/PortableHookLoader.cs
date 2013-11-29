@@ -13,8 +13,8 @@ namespace Hazelcast.IO.Serialization
 
         private readonly IDictionary<int, IPortableFactory> configuredFactories;
 
-        private ICollection<IClassDefinition> definitions = new HashSet<IClassDefinition>();
         private readonly IDictionary<int, IPortableFactory> factories = new Dictionary<int, IPortableFactory>();
+        private ICollection<IClassDefinition> definitions = new HashSet<IClassDefinition>();
 
         internal PortableHookLoader(IDictionary<int, IPortableFactory> configuredFactories)
         {
@@ -44,7 +44,7 @@ namespace Hazelcast.IO.Serialization
                     ICollection<IClassDefinition> defs = hook.GetBuiltinDefinitions();
                     if (defs != null && defs.Count > 0)
                     {
-                        definitions=definitions.Union(defs).ToList();
+                        definitions = definitions.Union(defs).ToList();
                     }
                 }
             }
@@ -54,7 +54,7 @@ namespace Hazelcast.IO.Serialization
             }
             if (configuredFactories != null)
             {
-                foreach (KeyValuePair<int, IPortableFactory> entry in configuredFactories)
+                foreach (var entry in configuredFactories)
                 {
                     Register(entry.Key, entry.Value);
                 }
@@ -74,7 +74,7 @@ namespace Hazelcast.IO.Serialization
         private void Register(int factoryId, IPortableFactory factory)
         {
             IPortableFactory current;
-            factories.TryGetValue(factoryId,out current);
+            factories.TryGetValue(factoryId, out current);
             if (current != null)
             {
                 if (current.Equals(factory))

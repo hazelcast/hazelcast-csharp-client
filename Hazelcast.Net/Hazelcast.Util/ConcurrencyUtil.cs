@@ -1,13 +1,7 @@
-using System;
-using Hazelcast.Net.Ext;
-using Hazelcast.Util;
-
-
 namespace Hazelcast.Util
 {
-	
-	public class ConcurrencyUtil
-	{
+    public class ConcurrencyUtil
+    {
         //public static V GetOrPutSynchronized<K, V>(ConcurrentMap<K, V> map, K key, object mutex, ConstructorFunction<K, V> func)
         //{
         //    if (mutex == null)
@@ -41,5 +35,5 @@ namespace Hazelcast.Util
         //    }
         //    return value;
         //}
-	}
+    }
 }

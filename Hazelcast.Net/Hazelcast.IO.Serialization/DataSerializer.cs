@@ -11,7 +11,7 @@ namespace Hazelcast.IO.Serialization
     {
         private const string FactoryId = "com.hazelcast.DataSerializerHook";
 
-        private readonly IDictionary<int, IDataSerializableFactory> factories = 
+        private readonly IDictionary<int, IDataSerializableFactory> factories =
             new Dictionary<int, IDataSerializableFactory>();
 
         internal DataSerializer(IDictionary<int, IDataSerializableFactory> dataSerializableFactories)
@@ -57,7 +57,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public IDataSerializable Read(IObjectDataInput input)
         {
-            IDataSerializable ds=null;
+            IDataSerializable ds = null;
             bool identified = input.ReadBoolean();
             int id = 0;
             int factoryId = 0;
@@ -85,11 +85,12 @@ namespace Hazelcast.IO.Serialization
                 else
                 {
                     className = input.ReadUTF();
-                    var type = Type.GetType(className,false,true);
+                    Type type = Type.GetType(className, false, true);
                     if (type != null) ds = Activator.CreateInstance(type) as IDataSerializable;
                     if (ds == null)
                     {
-                        throw new HazelcastSerializationException("Not able to create an instance for className: " +className);
+                        throw new HazelcastSerializationException("Not able to create an instance for className: " +
+                                                                  className);
                     }
                 }
                 //ClassLoaderUtil.newInstance(in.getClassLoader(), className);
@@ -138,7 +139,7 @@ namespace Hazelcast.IO.Serialization
         private void Register(int factoryId, IDataSerializableFactory factory)
         {
             IDataSerializableFactory current;
-            factories.TryGetValue(factoryId,out current);
+            factories.TryGetValue(factoryId, out current);
             if (current != null)
             {
                 if (current.Equals(factory))

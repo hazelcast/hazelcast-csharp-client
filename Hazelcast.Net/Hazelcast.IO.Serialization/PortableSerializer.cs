@@ -14,7 +14,7 @@ namespace Hazelcast.IO.Serialization
         internal PortableSerializer(ISerializationContext context, IDictionary<int, IPortableFactory> portableFactories)
         {
             this.context = context;
-            factories=factories.Union(portableFactories).ToDictionary(x => x.Key, x => x.Value);
+            factories = factories.Union(portableFactories).ToDictionary(x => x.Key, x => x.Value);
         }
 
         public int GetTypeId()
@@ -60,7 +60,7 @@ namespace Hazelcast.IO.Serialization
             int dataClassId = ctxIn.GetClassId();
             int dataVersion = ctxIn.GetVersion();
             IPortableFactory portableFactory = null;
-            factories.TryGetValue(factoryId,out portableFactory);
+            factories.TryGetValue(factoryId, out portableFactory);
             if (portableFactory == null)
             {
                 throw new HazelcastSerializationException("Could not find IPortableFactory for factory-id: " + factoryId);

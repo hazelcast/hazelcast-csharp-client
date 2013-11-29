@@ -1,13 +1,7 @@
-using System.IO;
-using Hazelcast.IO;
-using Hazelcast.IO.Ssl;
-using Hazelcast.Net.Ext;
-
-
 namespace Hazelcast.IO.Ssl
 {
-	public class BasicSSLContextFactory : SSLContextFactory
-	{
+    public class BasicSSLContextFactory : SSLContextFactory
+    {
         //private const string JavaNetSslPrefix = "javax.net.ssl.";
 
         //private SSLContext sslContext;
@@ -83,5 +77,5 @@ namespace Hazelcast.IO.Ssl
         //{
         //    return sslContext;
         //}
-	}
+    }
 }

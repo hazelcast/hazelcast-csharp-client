@@ -36,7 +36,7 @@ namespace Hazelcast.IO.Serialization
         {
             output.WriteInt(index);
             output.WriteUTF(fieldName);
-            output.WriteByte((byte)((int) type));
+            output.WriteByte((byte) ((int) type));
             output.WriteInt(factoryId);
             output.WriteInt(classId);
         }
@@ -46,7 +46,7 @@ namespace Hazelcast.IO.Serialization
         {
             index = input.ReadInt();
             fieldName = input.ReadUTF();
-            type = (FieldType)input.ReadByte();
+            type = (FieldType) input.ReadByte();
             factoryId = input.ReadInt();
             classId = input.ReadInt();
         }

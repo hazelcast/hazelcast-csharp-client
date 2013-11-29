@@ -1,90 +1,88 @@
+using System;
 using System.Text;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
-
 namespace Hazelcast.Client.Spi
 {
-	
-	[System.Serializable]
-	public class ObjectNamespace : IDataSerializable
-	{
-		private string service;
+    [Serializable]
+    public class ObjectNamespace : IDataSerializable
+    {
+        private string objectName;
+        private string service;
 
-		private string objectName;
+        public ObjectNamespace()
+        {
+        }
 
-		public ObjectNamespace()
-		{
-		}
+        public ObjectNamespace(string serviceName, string objectName)
+        {
+            service = serviceName;
+            this.objectName = objectName;
+        }
 
-		public ObjectNamespace(string serviceName, string objectName)
-		{
-			this.service = serviceName;
-			this.objectName = objectName;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteData(IObjectDataOutput output)
+        {
+            output.WriteUTF(service);
+            output.WriteObject(objectName);
+        }
 
-		public virtual string GetServiceName()
-		{
-			return service;
-		}
+        // writing as object for backward-compatibility
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void ReadData(IObjectDataInput input)
+        {
+            service = input.ReadUTF();
+            objectName = input.ReadObject<string>();
+        }
 
-		public virtual string GetObjectName()
-		{
-			return objectName;
-		}
+        public virtual string GetServiceName()
+        {
+            return service;
+        }
 
-		public override bool Equals(object o)
-		{
-			if (this == o)
-			{
-				return true;
-			}
-			if (o == null || GetType() != o.GetType())
-			{
-				return false;
-			}
-			ObjectNamespace that = (ObjectNamespace)o;
-			if (objectName != null ? !objectName.Equals(that.objectName) : that.objectName != null)
-			{
-				return false;
-			}
-			if (service != null ? !service.Equals(that.service) : that.service != null)
-			{
-				return false;
-			}
-			return true;
-		}
+        public virtual string GetObjectName()
+        {
+            return objectName;
+        }
 
-		public override int GetHashCode()
-		{
-			int result = service != null ? service.GetHashCode() : 0;
-			result = 31 * result + (objectName != null ? objectName.GetHashCode() : 0);
-			return result;
-		}
+        public override bool Equals(object o)
+        {
+            if (this == o)
+            {
+                return true;
+            }
+            if (o == null || GetType() != o.GetType())
+            {
+                return false;
+            }
+            var that = (ObjectNamespace) o;
+            if (objectName != null ? !objectName.Equals(that.objectName) : that.objectName != null)
+            {
+                return false;
+            }
+            if (service != null ? !service.Equals(that.service) : that.service != null)
+            {
+                return false;
+            }
+            return true;
+        }
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void WriteData(IObjectDataOutput output)
-		{
-			output.WriteUTF(service);
-			output.WriteObject(objectName);
-		}
+        public override int GetHashCode()
+        {
+            int result = service != null ? service.GetHashCode() : 0;
+            result = 31*result + (objectName != null ? objectName.GetHashCode() : 0);
+            return result;
+        }
 
-		// writing as object for backward-compatibility
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void ReadData(IObjectDataInput input)
-		{
-			service = input.ReadUTF();
-			objectName = input.ReadObject<string>();
-		}
-
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
-			sb.Append("ObjectNamespace");
-			sb.Append("{service='").Append(service).Append('\'');
-			sb.Append(", objectName=").Append(objectName);
-			sb.Append('}');
-			return sb.ToString();
-		}
-	}
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append("ObjectNamespace");
+            sb.Append("{service='").Append(service).Append('\'');
+            sb.Append(", objectName=").Append(objectName);
+            sb.Append('}');
+            return sb.ToString();
+        }
+    }
 }

@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using Hazelcast.Core;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
@@ -16,7 +14,7 @@ namespace Hazelcast.IO.Serialization
         internal readonly int version;
 
         internal SerializationContext(SerializationService serializationService,
-            System.Collections.Generic.ICollection<int> portableFactories, int version)
+            ICollection<int> portableFactories, int version)
         {
             this.serializationService = serializationService;
             this.version = version;
@@ -75,7 +73,7 @@ namespace Hazelcast.IO.Serialization
 
         private void RegisterNestedDefinitions(ClassDefinition cd)
         {
-            System.Collections.Generic.ICollection<IClassDefinition> nestedDefinitions = cd.GetNestedClassDefinitions();
+            ICollection<IClassDefinition> nestedDefinitions = cd.GetNestedClassDefinitions();
             foreach (IClassDefinition classDefinition in nestedDefinitions)
             {
                 var nestedCD = (ClassDefinition) classDefinition;
@@ -101,15 +99,11 @@ namespace Hazelcast.IO.Serialization
         //    var compressedStream = new MemoryStream();
         //    var compressionStream = new DeflateStream(compressedStream, CompressionMode.Compress);
         //    compressionStream.Write(decompressedData,0,decompressedData.Length);
-
         //    compressionStream.Close();
-
         //    byte[] compressedData = compressedStream.ToArray();
-
         //    output.Write(compressedData);
         //    compressedStream.Close();
         //}
-
         internal static void CompressZip(byte[] decompressedData, IBufferObjectDataOutput output)
         {
             var compressedStream = new MemoryStream();
@@ -130,7 +124,6 @@ namespace Hazelcast.IO.Serialization
         //    var decompressedStream = new MemoryStream();
         //    var decompressionStream = new DeflateStream(decompressedStream, CompressionMode.Decompress);
         //    decompressionStream.Write(compressedData,0,compressedData.Length);
-
         //    decompressionStream.Close();
         //    byte[] decompressedData = decompressedStream.ToArray();
         //    output.Write(decompressedData);
@@ -152,15 +145,15 @@ namespace Hazelcast.IO.Serialization
 
             byte[] resBuffer = null;
 
-            MemoryStream mInStream = new MemoryStream(compressedData);
-            MemoryStream mOutStream = new MemoryStream(compressedData.Length);
-            InflaterInputStream infStream = new InflaterInputStream(mInStream);
+            var mInStream = new MemoryStream(compressedData);
+            var mOutStream = new MemoryStream(compressedData.Length);
+            var infStream = new InflaterInputStream(mInStream);
 
             mInStream.Position = 0;
 
             try
             {
-                byte[] tmpBuffer = new byte[compressedData.Length];
+                var tmpBuffer = new byte[compressedData.Length];
                 int read = 0;
                 do
                 {
@@ -169,7 +162,6 @@ namespace Hazelcast.IO.Serialization
                     {
                         mOutStream.Write(tmpBuffer, 0, read);
                     }
-
                 } while (read > 0);
 
                 resBuffer = mOutStream.ToArray();
@@ -181,7 +173,7 @@ namespace Hazelcast.IO.Serialization
                 mOutStream.Close();
             }
 
-            output.Write(resBuffer); 
+            output.Write(resBuffer);
         }
 
         internal static long CombineToLong(int x, int y)
@@ -208,7 +200,7 @@ namespace Hazelcast.IO.Serialization
 
             internal virtual IClassDefinition Lookup(int classId, int version)
             {
-                ClassDefinition retVal=null;
+                ClassDefinition retVal = null;
                 versionedDefinitions.TryGetValue(CombineToLong(classId, version), out retVal);
                 return retVal;
             }
@@ -236,7 +228,8 @@ namespace Hazelcast.IO.Serialization
                 cd.ReadData(_enclosing.serializationService.CreateObjectDataInput(binary));
                 cd.SetBinary(compressedBinary);
                 _enclosing.RegisterNestedDefinitions(cd);
-                var currentCd = versionedDefinitions.GetOrAdd(CombineToLong(cd.classId, _enclosing.GetVersion()), cd);
+                ClassDefinition currentCd =
+                    versionedDefinitions.GetOrAdd(CombineToLong(cd.classId, _enclosing.GetVersion()), cd);
                 return currentCd ?? cd;
             }
 

@@ -1,18 +1,15 @@
-using Hazelcast.Client;
-
-
 namespace Hazelcast.Client
 {
-	public sealed class ClientTypes
-	{
-		public const string Java = "JVM";
+    public sealed class ClientTypes
+    {
+        public const string Java = "JVM";
 
-		public const string Csharp = "CSP";
+        public const string Csharp = "CSP";
 
-		public const string Cpp = "CPP";
+        public const string Cpp = "CPP";
 
-		public const string Python = "PHY";
+        public const string Python = "PHY";
 
-		public const string Ruby = "RBY";
-	}
+        public const string Ruby = "RBY";
+    }
 }

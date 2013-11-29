@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hazelcast.Net.Ext
+﻿namespace Hazelcast.Net.Ext
 {
     public interface InputStream
     {
@@ -25,14 +23,14 @@ namespace Hazelcast.Net.Ext
 
     public interface OutputStream
     {
-         void Write(int b);
+        void Write(int b);
 
-         void Write(byte[] b);
+        void Write(byte[] b);
 
-         void Write(byte[] b, int off, int len);
+        void Write(byte[] b, int off, int len);
 
         void Flush();
 
-         void Close();
+        void Close();
     }
 }

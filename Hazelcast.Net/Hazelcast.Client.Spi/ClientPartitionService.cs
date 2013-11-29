@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Client.Request.Partition;
 using Hazelcast.Core;
 using Hazelcast.IO;
@@ -20,7 +20,7 @@ namespace Hazelcast.Client.Spi
         private readonly HazelcastClient client;
 
         private readonly ConcurrentDictionary<int, Address> partitions = new ConcurrentDictionary<int, Address>();
-            //271, 0.75f, 1);
+        //271, 0.75f, 1);
 
         private readonly AtomicBoolean updating = new AtomicBoolean(false);
 
@@ -88,7 +88,6 @@ namespace Hazelcast.Client.Spi
                     __RefreshPartitions();
                     Thread.Sleep(10000);
                 }
-
             }
             catch (ThreadInterruptedException)
             {
@@ -97,7 +96,7 @@ namespace Hazelcast.Client.Spi
 
         private void __RefreshPartitions()
         {
-            System.Diagnostics.Debug.WriteLine("Refresh Partitions at "+ DateTime.Now.ToLocalTime());
+            Debug.WriteLine("Refresh Partitions at " + DateTime.Now.ToLocalTime());
 
             if (updating.CompareAndSet(false, true))
             {

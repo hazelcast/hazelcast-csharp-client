@@ -1,92 +1,86 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
-using System.Collections.Concurrent;
-using Hazelcast.Client;
-using Hazelcast.Client.Connection;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
-using Hazelcast.Net.Ext;
 using Hazelcast.Util;
-
 
 namespace Hazelcast.Client.Connection
 {
-
     public class ConnectionWrapper : IConnection
     {
-        private static readonly ILogger logger = Logger.GetLogger(typeof(ConnectionWrapper));
+        private static readonly ILogger logger = Logger.GetLogger(typeof (ConnectionWrapper));
 
         private readonly IConnection _connection;
+        private readonly SmartClientConnectionManager _enclosing;
 
         internal ConnectionWrapper(SmartClientConnectionManager enclosing, IConnection connection)
         {
-            this._enclosing = enclosing;
-            this._connection = connection;
+            _enclosing = enclosing;
+            _connection = connection;
         }
 
         public virtual Address GetRemoteEndpoint()
         {
-            return this._connection.GetRemoteEndpoint();
+            return _connection.GetRemoteEndpoint();
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual bool Write(Data data)
         {
-            return this._connection.Write(data);
+            return _connection.Write(data);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual Data Read()
         {
-            return this._connection.Read();
+            return _connection.Read();
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void Release()
         {
-            this._enclosing.ReleaseConnection(this);
+            _enclosing.ReleaseConnection(this);
         }
 
         public virtual void Close()
         {
-            logger.Info("Closing connection -> " + this._connection);
-            IOUtil.CloseResource(this._connection);
+            logger.Info("Closing connection -> " + _connection);
+            IOUtil.CloseResource(_connection);
         }
 
         public virtual int GetId()
         {
-            return this._connection.GetId();
+            return _connection.GetId();
         }
 
         public virtual long GetLastReadTime()
         {
-            return this._connection.GetLastReadTime();
+            return _connection.GetLastReadTime();
         }
 
         public virtual void SetRemoteEndpoint(Address address)
         {
-            this._connection.SetRemoteEndpoint(address);
-        }
-
-        public override string ToString()
-        {
-            return this._connection.ToString();
+            _connection.SetRemoteEndpoint(address);
         }
 
         public virtual IPEndPoint GetLocalSocketAddress()
         {
-            return this._connection.GetLocalSocketAddress();
+            return _connection.GetLocalSocketAddress();
         }
-
-        private readonly SmartClientConnectionManager _enclosing;
 
         public void Dispose()
         {
-            this._connection.Dispose();
+            _connection.Dispose();
+        }
+
+        public override string ToString()
+        {
+            return _connection.ToString();
         }
     }
 
@@ -94,26 +88,21 @@ namespace Hazelcast.Client.Connection
     {
         private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
 
-        private readonly int poolSize;
+        private readonly ConcurrentDictionary<Address, IObjectPool<ConnectionWrapper>>
+            _connPool = new ConcurrentDictionary<Address, IObjectPool<ConnectionWrapper>>();
 
         private readonly Authenticator authenticator;
 
         private readonly HazelcastClient client;
+        private readonly HeartBeatChecker heartbeat;
+        private readonly int poolSize;
 
         private readonly Router router;
 
-        private readonly ConcurrentDictionary<Address, IObjectPool<ConnectionWrapper>>
-            _connPool = new ConcurrentDictionary<Address, IObjectPool<ConnectionWrapper>>();
-
+        private readonly SocketInterceptor socketInterceptor;
         private readonly SocketOptions socketOptions;
 
-        private readonly SocketInterceptor socketInterceptor;
-
-        private readonly HeartBeatChecker heartbeat;
-
         private volatile bool live = true;
-
-        private delegate void Del(int x);
 
         public SmartClientConnectionManager(HazelcastClient client, Authenticator authenticator,
             LoadBalancer loadBalancer)
@@ -134,13 +123,12 @@ namespace Hazelcast.Client.Connection
                         Type type = Type.GetType(sic.GetClassName());
                         if (type != null)
                         {
-                            implementation = (SocketInterceptor)Activator.CreateInstance(type);
+                            implementation = (SocketInterceptor) Activator.CreateInstance(type);
                         }
                         else
                         {
                             throw new NullReferenceException("SocketInterceptor class is not found");
                         }
-                       
                     }
                     catch (Exception e)
                     {
@@ -182,7 +170,7 @@ namespace Hazelcast.Client.Connection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual IConnection FirstConnection(Address address,Authenticator authenticator)
+        public virtual IConnection FirstConnection(Address address, Authenticator authenticator)
         {
             return NewConnection(address, authenticator);
         }
@@ -249,6 +237,26 @@ namespace Hazelcast.Client.Connection
             return connection;
         }
 
+        public virtual void RemoveConnectionPool(Address address)
+        {
+            IObjectPool<ConnectionWrapper> pool = null;
+            _connPool.TryRemove(address, out pool);
+            if (pool != null)
+            {
+                pool.Destroy();
+            }
+        }
+
+        public virtual void Shutdown()
+        {
+            live = false;
+            foreach (var pool in _connPool.Values)
+            {
+                pool.Destroy();
+            }
+            _connPool.Clear();
+        }
+
         private void CheckLive()
         {
             if (!live)
@@ -260,14 +268,11 @@ namespace Hazelcast.Client.Connection
         private IObjectPool<ConnectionWrapper> CreateNew(Address address)
         {
             return new QueueBasedObjectPool<ConnectionWrapper>(poolSize,
-                delegate()
-                {
-                    return new ConnectionWrapper(this, NewConnection(address, authenticator));
-                },//
+                delegate { return new ConnectionWrapper(this, NewConnection(address, authenticator)); }, //
                 delegate(ConnectionWrapper wrapper)
                 {
                     wrapper.Close();
-                    return wrapper; 
+                    return wrapper;
                 });
         }
 
@@ -276,7 +281,7 @@ namespace Hazelcast.Client.Connection
         {
             CheckLive();
             IObjectPool<ConnectionWrapper> pool = null;
-           _connPool.TryGetValue(address,out pool);
+            _connPool.TryGetValue(address, out pool);
             if (pool == null)
             {
                 if (client.GetClientClusterService().GetMember(address) == null)
@@ -284,9 +289,9 @@ namespace Hazelcast.Client.Connection
                     return null;
                 }
                 pool = CreateNew(address);
-                _connPool.TryAdd(address,pool);
+                _connPool.TryAdd(address, pool);
             }
-            return pool;    
+            return pool;
         }
 
         internal void ReleaseConnection(ConnectionWrapper connection)
@@ -310,24 +315,6 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        public virtual void RemoveConnectionPool(Address address)
-        {
-            IObjectPool<ConnectionWrapper> pool = null;
-            _connPool.TryRemove(address, out pool);
-            if (pool != null)
-            {
-                pool.Destroy();
-            }
-        }
-
-        public virtual void Shutdown()
-        {
-            live = false;
-            foreach (IObjectPool<ConnectionWrapper> pool in _connPool.Values)
-            {
-                pool.Destroy();
-            }
-            _connPool.Clear();
-        }
+        private delegate void Del(int x);
     }
 }

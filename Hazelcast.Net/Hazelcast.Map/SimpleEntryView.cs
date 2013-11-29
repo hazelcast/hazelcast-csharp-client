@@ -1,34 +1,31 @@
+using System;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Map;
 using Hazelcast.Serialization.Hook;
-
 
 namespace Hazelcast.Map
 {
-	[System.Serializable]
-	public class SimpleEntryView<K, V> : IEntryView<K, V>, IIdentifiedDataSerializable
-	{
-		private K key;
+    [Serializable]
+    public class SimpleEntryView<K, V> : IEntryView<K, V>, IIdentifiedDataSerializable
+    {
+        private long cost;
 
-		private V value;
+        private long creationTime;
 
-		private long cost;
+        private long expirationTime;
 
-		private long creationTime;
+        private long hits;
+        private K key;
 
-		private long expirationTime;
+        private long lastAccessTime;
 
-		private long hits;
+        private long lastStoredTime;
 
-		private long lastAccessTime;
+        private long lastUpdateTime;
+        private V value;
 
-		private long lastStoredTime;
-
-		private long lastUpdateTime;
-
-		private long version;
+        private long version;
 
         //public SimpleEntryView(K key, V value, RecordStatistics statistics, long recordVersion)
         //{
@@ -45,148 +42,144 @@ namespace Hazelcast.Map
         //    version = recordVersion;
         //}
 
-		public SimpleEntryView()
-		{
-		}
+        public virtual K GetKey()
+        {
+            return key;
+        }
 
-		public virtual K GetKey()
-		{
-			return key;
-		}
+        public virtual V GetValue()
+        {
+            return value;
+        }
 
-		public virtual void SetKey(K key)
-		{
-			this.key = key;
-		}
+        public virtual long GetCost()
+        {
+            return cost;
+        }
 
-		public virtual V GetValue()
-		{
-			return value;
-		}
+        public virtual long GetCreationTime()
+        {
+            return creationTime;
+        }
 
-		public virtual void SetValue(V value)
-		{
-			this.value = value;
-		}
+        public virtual long GetExpirationTime()
+        {
+            return expirationTime;
+        }
 
-		public virtual long GetCost()
-		{
-			return cost;
-		}
+        public virtual long GetHits()
+        {
+            return hits;
+        }
 
-		public virtual void SetCost(long cost)
-		{
-			this.cost = cost;
-		}
+        public virtual long GetLastAccessTime()
+        {
+            return lastAccessTime;
+        }
 
-		public virtual long GetCreationTime()
-		{
-			return creationTime;
-		}
+        public virtual long GetLastStoredTime()
+        {
+            return lastStoredTime;
+        }
 
-		public virtual void SetCreationTime(long creationTime)
-		{
-			this.creationTime = creationTime;
-		}
+        public virtual long GetLastUpdateTime()
+        {
+            return lastUpdateTime;
+        }
 
-		public virtual long GetExpirationTime()
-		{
-			return expirationTime;
-		}
+        public virtual long GetVersion()
+        {
+            return version;
+        }
 
-		public virtual void SetExpirationTime(long expirationTime)
-		{
-			this.expirationTime = expirationTime;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteData(IObjectDataOutput output)
+        {
+            output.WriteObject(key);
+            output.WriteObject(value);
+            output.WriteLong(cost);
+            output.WriteLong(creationTime);
+            output.WriteLong(expirationTime);
+            output.WriteLong(hits);
+            output.WriteLong(lastAccessTime);
+            output.WriteLong(lastStoredTime);
+            output.WriteLong(lastUpdateTime);
+            output.WriteLong(version);
+        }
 
-		public virtual long GetHits()
-		{
-			return hits;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void ReadData(IObjectDataInput input)
+        {
+            key = input.ReadObject<K>();
+            value = input.ReadObject<V>();
+            cost = input.ReadLong();
+            creationTime = input.ReadLong();
+            expirationTime = input.ReadLong();
+            hits = input.ReadLong();
+            lastAccessTime = input.ReadLong();
+            lastStoredTime = input.ReadLong();
+            lastUpdateTime = input.ReadLong();
+            version = input.ReadLong();
+        }
 
-		public virtual void SetHits(long hits)
-		{
-			this.hits = hits;
-		}
+        public virtual int GetFactoryId()
+        {
+            return MapDataSerializerHook.FId;
+        }
 
-		public virtual long GetLastAccessTime()
-		{
-			return lastAccessTime;
-		}
+        public virtual int GetId()
+        {
+            return MapDataSerializerHook.EntryView;
+        }
 
-		public virtual void SetLastAccessTime(long lastAccessTime)
-		{
-			this.lastAccessTime = lastAccessTime;
-		}
+        public virtual void SetKey(K key)
+        {
+            this.key = key;
+        }
 
-		public virtual long GetLastStoredTime()
-		{
-			return lastStoredTime;
-		}
+        public virtual void SetValue(V value)
+        {
+            this.value = value;
+        }
 
-		public virtual void SetLastStoredTime(long lastStoredTime)
-		{
-			this.lastStoredTime = lastStoredTime;
-		}
+        public virtual void SetCost(long cost)
+        {
+            this.cost = cost;
+        }
 
-		public virtual long GetLastUpdateTime()
-		{
-			return lastUpdateTime;
-		}
+        public virtual void SetCreationTime(long creationTime)
+        {
+            this.creationTime = creationTime;
+        }
 
-		public virtual void SetLastUpdateTime(long lastUpdateTime)
-		{
-			this.lastUpdateTime = lastUpdateTime;
-		}
+        public virtual void SetExpirationTime(long expirationTime)
+        {
+            this.expirationTime = expirationTime;
+        }
 
-		public virtual long GetVersion()
-		{
-			return version;
-		}
+        public virtual void SetHits(long hits)
+        {
+            this.hits = hits;
+        }
 
-		public virtual void SetVersion(long version)
-		{
-			this.version = version;
-		}
+        public virtual void SetLastAccessTime(long lastAccessTime)
+        {
+            this.lastAccessTime = lastAccessTime;
+        }
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void WriteData(IObjectDataOutput output)
-		{
-			output.WriteObject(key);
-			output.WriteObject(value);
-			output.WriteLong(cost);
-			output.WriteLong(creationTime);
-			output.WriteLong(expirationTime);
-			output.WriteLong(hits);
-			output.WriteLong(lastAccessTime);
-			output.WriteLong(lastStoredTime);
-			output.WriteLong(lastUpdateTime);
-			output.WriteLong(version);
-		}
+        public virtual void SetLastStoredTime(long lastStoredTime)
+        {
+            this.lastStoredTime = lastStoredTime;
+        }
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void ReadData(IObjectDataInput input)
-		{
-			key = input.ReadObject<K>();
-			value = input.ReadObject<V>();
-			cost = input.ReadLong();
-			creationTime = input.ReadLong();
-			expirationTime = input.ReadLong();
-			hits = input.ReadLong();
-			lastAccessTime = input.ReadLong();
-			lastStoredTime = input.ReadLong();
-			lastUpdateTime = input.ReadLong();
-			version = input.ReadLong();
-		}
+        public virtual void SetLastUpdateTime(long lastUpdateTime)
+        {
+            this.lastUpdateTime = lastUpdateTime;
+        }
 
-		public virtual int GetFactoryId()
-		{
-			return MapDataSerializerHook.FId;
-		}
-
-		public virtual int GetId()
-		{
-			return MapDataSerializerHook.EntryView;
-		}
-	}
+        public virtual void SetVersion(long version)
+        {
+            this.version = version;
+        }
+    }
 }

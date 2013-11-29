@@ -5,7 +5,6 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 using Hazelcast.Serialization.Hook;
-using Hazelcast.Util;
 
 namespace Hazelcast.Core
 {
@@ -15,7 +14,7 @@ namespace Hazelcast.Core
         private readonly bool localMember;
 
         private Address address;
-        
+
         //[NonSerialized] 
         //private volatile long lastPing = 0;
 

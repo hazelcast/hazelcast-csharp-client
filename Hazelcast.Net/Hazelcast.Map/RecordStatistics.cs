@@ -1,8 +1,3 @@
-using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
-using Hazelcast.Util;
-
-
 namespace Hazelcast.Map
 {
     //[System.Serializable]

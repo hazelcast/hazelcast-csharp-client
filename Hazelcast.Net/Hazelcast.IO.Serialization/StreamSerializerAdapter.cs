@@ -16,7 +16,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public void Write(IObjectDataOutput output, object obj)
         {
-            serializer.Write(output, (T)obj);
+            serializer.Write(output, (T) obj);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -32,7 +32,7 @@ namespace Hazelcast.IO.Serialization
             byte[] bytes;
             try
             {
-                serializer.Write(output, (T)obj);
+                serializer.Write(output, (T) obj);
                 bytes = output.ToByteArray();
             }
             finally

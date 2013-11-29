@@ -1,10 +1,10 @@
 //using Hazelcast.Core;
+
 using System.Collections.Generic;
 using Hazelcast.Client;
 using Hazelcast.Core;
 using Hazelcast.Security;
 using Hazelcast.Util;
-
 
 namespace Hazelcast.Config
 {
@@ -92,7 +92,7 @@ namespace Hazelcast.Config
 
         private IDictionary<string, NearCacheConfig> nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
 
-        private System.Collections.Generic.IList<ProxyFactoryConfig> proxyFactoryConfigs =
+        private IList<ProxyFactoryConfig> proxyFactoryConfigs =
             new List<ProxyFactoryConfig>();
 
         /// <summary>If true, client will redo the operations that were executing on the server and client lost the connection.</summary>
@@ -250,14 +250,14 @@ namespace Hazelcast.Config
         }
 
         // required for spring module
-        public virtual ClientConfig SetAddresses(System.Collections.Generic.IList<string> addresses)
+        public virtual ClientConfig SetAddresses(IList<string> addresses)
         {
             addressList.Clear();
             addressList.AddRange(addresses);
             return this;
         }
 
-        public virtual System.Collections.Generic.IList<string> GetAddresses()
+        public virtual IList<string> GetAddresses()
         {
             if (addressList.Count == 0)
             {
@@ -277,12 +277,12 @@ namespace Hazelcast.Config
             return this;
         }
 
-        public virtual System.Collections.Generic.IList<ListenerConfig> GetListenerConfigs()
+        public virtual IList<ListenerConfig> GetListenerConfigs()
         {
             return listenerConfigs;
         }
 
-        public virtual ClientConfig SetListenerConfigs(System.Collections.Generic.IList<ListenerConfig> listenerConfigs)
+        public virtual ClientConfig SetListenerConfigs(IList<ListenerConfig> listenerConfigs)
         {
             this.listenerConfigs = new List<ListenerConfig>(listenerConfigs);
             return this;
@@ -343,13 +343,13 @@ namespace Hazelcast.Config
             return this;
         }
 
-        public virtual System.Collections.Generic.IList<ProxyFactoryConfig> GetProxyFactoryConfigs()
+        public virtual IList<ProxyFactoryConfig> GetProxyFactoryConfigs()
         {
             return proxyFactoryConfigs;
         }
 
         public virtual ClientConfig SetProxyFactoryConfigs(
-            System.Collections.Generic.IList<ProxyFactoryConfig> proxyFactoryConfigs)
+            IList<ProxyFactoryConfig> proxyFactoryConfigs)
         {
             this.proxyFactoryConfigs = proxyFactoryConfigs;
             return this;
@@ -372,7 +372,7 @@ namespace Hazelcast.Config
             map.TryGetValue(name, out t);
             if (t == null)
             {
-                System.Collections.Generic.ICollection<string> tNames = map.Keys;
+                ICollection<string> tNames = map.Keys;
                 foreach (string pattern in tNames)
                 {
                     if (NameMatches(name, pattern))

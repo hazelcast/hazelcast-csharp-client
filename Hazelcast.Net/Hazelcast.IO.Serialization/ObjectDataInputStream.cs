@@ -31,6 +31,76 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
+        public int Read()
+        {
+            return ReadByte();
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public long Skip(long n)
+        {
+            //From JDK
+            long remaining = n;
+            int nr;
+            if (n <= 0)
+            {
+                return 0;
+            }
+            var size = (int) Math.Min(2048, remaining);
+            var skipBuffer = new byte[size];
+            while (remaining > 0)
+            {
+                nr = Read(skipBuffer, 0, (int) Math.Min(size, remaining));
+                if (nr < 0)
+                {
+                    break;
+                }
+                remaining -= nr;
+            }
+            return n - remaining;
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public int Available()
+        {
+            return (int) _binaryReader.BaseStream.Length;
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public int Read(byte[] b)
+        {
+            return _binaryReader.Read(b, 0, b.Length);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public int Read(byte[] b, int off, int len)
+        {
+            return _binaryReader.Read(b, off, len);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public void Close()
+        {
+            _binaryReader.Close();
+        }
+
+        public void Mark(int readlimit)
+        {
+            throw new NotSupportedException();
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public void Reset()
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool MarkSupported()
+        {
+            return false;
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
         public virtual void ReadFully(byte[] b)
         {
             ReadFully(b, 0, b.Length);
@@ -229,7 +299,7 @@ namespace Hazelcast.IO.Serialization
 
         public T ReadObject<T>()
         {
-            return (T)serializationService.ReadObject(this);
+            return (T) serializationService.ReadObject(this);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -253,76 +323,6 @@ namespace Hazelcast.IO.Serialization
         public virtual ISerializationContext GetSerializationContext()
         {
             return serializationService.GetSerializationContext();
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public  int Read()
-        {
-            return ReadByte();
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public  long Skip(long n)
-        {
-            //From JDK
-            long remaining = n;
-            int nr;
-            if (n <= 0)
-            {
-                return 0;
-            }
-            var size = (int) Math.Min(2048, remaining);
-            var skipBuffer = new byte[size];
-            while (remaining > 0)
-            {
-                nr = Read(skipBuffer, 0, (int) Math.Min(size, remaining));
-                if (nr < 0)
-                {
-                    break;
-                }
-                remaining -= nr;
-            }
-            return n - remaining;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public  int Available()
-        {
-            return (int) _binaryReader.BaseStream.Length;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public  int Read(byte[] b)
-        {
-            return _binaryReader.Read(b, 0, b.Length);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public  int Read(byte[] b, int off, int len)
-        {
-            return _binaryReader.Read(b, off, len);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public  void Close()
-        {
-            _binaryReader.Close();
-        }
-
-        public  void Mark(int readlimit)
-        {
-            throw new NotSupportedException();
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public  void Reset()
-        {
-            throw new NotSupportedException();
-        }
-
-        public  bool MarkSupported()
-        {
-            return false;
         }
     }
 }

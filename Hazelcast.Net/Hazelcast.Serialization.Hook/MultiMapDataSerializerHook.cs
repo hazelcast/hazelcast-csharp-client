@@ -102,7 +102,8 @@ namespace Hazelcast.Serialization.Hook
             constructors[Values] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
             constructors[TxnCommitBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
             constructors[TxnCommit] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnGenerateRecordId] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
+            constructors[TxnGenerateRecordId] =
+                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
             constructors[TxnLockAndGet] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
             constructors[TxnPrepareBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
             constructors[TxnPrepare] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };

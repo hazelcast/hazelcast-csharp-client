@@ -13,17 +13,11 @@ namespace Hazelcast.Client.Proxy
     //.Net reviewed
     public class AbstractClientCollectionProxy<E> : ClientProxy, IHazelcastCollection<E>
     {
-
         protected internal readonly string partitionKey;
 
         public AbstractClientCollectionProxy(string serviceName, string objectName) : base(serviceName, objectName)
         {
             partitionKey = GetPartitionKey();
-        }
-
-        protected internal override void OnDestroy()
-        {
-            throw new NotImplementedException();
         }
 
         public virtual IEnumerator<E> GetEnumerator()
@@ -111,7 +105,7 @@ namespace Hazelcast.Client.Proxy
             if (a.Length < array.Length)
             {
                 // Make a new array of a's runtime type, but my contents:
-                var tmp= new T[array.Length];
+                var tmp = new T[array.Length];
                 Array.Copy(array, 0, tmp, 0, array.Length);
                 return tmp;
             }
@@ -163,24 +157,36 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new CollectionAddListenerRequest(GetName(), includeValue);
             request.SetServiceName(GetServiceName());
-            return Listen<PortableItemEvent>(request, GetPartitionKey(), (sender, args) => HandleItemListener(args, listener, includeValue));
-        }
-
-        private void HandleItemListener(PortableItemEvent portableItemEvent, IItemListener<E> listener, bool includeValue)
-        {
-            E item = includeValue ? (E)GetContext().GetSerializationService().ToObject(portableItemEvent.GetItem()) : default(E);
-            IMember member = GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
-            ItemEvent<E> itemEvent = new ItemEvent<E>(GetName(), portableItemEvent.GetEventType(), item, member);
-            if (portableItemEvent.GetEventType() == ItemEventType.Added){
-                listener.ItemAdded(itemEvent);
-            } else {
-                listener.ItemRemoved(itemEvent);
-            }
+            return Listen<PortableItemEvent>(request, GetPartitionKey(),
+                (sender, args) => HandleItemListener(args, listener, includeValue));
         }
 
         public bool RemoveItemListener(string registrationId)
         {
             return StopListening(registrationId);
+        }
+
+        protected internal override void OnDestroy()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void HandleItemListener(PortableItemEvent portableItemEvent, IItemListener<E> listener,
+            bool includeValue)
+        {
+            E item = includeValue
+                ? (E) GetContext().GetSerializationService().ToObject(portableItemEvent.GetItem())
+                : default(E);
+            IMember member = GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
+            var itemEvent = new ItemEvent<E>(GetName(), portableItemEvent.GetEventType(), item, member);
+            if (portableItemEvent.GetEventType() == ItemEventType.Added)
+            {
+                listener.ItemAdded(itemEvent);
+            }
+            else
+            {
+                listener.ItemRemoved(itemEvent);
+            }
         }
 
         private bool CompareAndRemove<T>(bool retain, ICollection<T> c)
@@ -232,6 +238,7 @@ namespace Hazelcast.Client.Proxy
                 throw new ArgumentNullException("o");
             }
         }
+
         protected IEnumerable<E> GetAll()
         {
             var request = new CollectionGetAllRequest(GetName());
@@ -240,11 +247,9 @@ namespace Hazelcast.Client.Proxy
             var list = new List<E>(collection.Count);
             foreach (Data value in collection)
             {
-                list.Add((E)ToObject(value));
+                list.Add((E) ToObject(value));
             }
             return list;
         }
-
     }
-
 }

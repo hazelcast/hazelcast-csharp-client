@@ -1,23 +1,20 @@
-using Hazelcast.Client.Request.Concurrent.Atomiclong;
 using Hazelcast.Serialization.Hook;
-
 
 namespace Hazelcast.Client.Request.Concurrent.Atomiclong
 {
-	
-	public class SetRequest : AtomicLongRequest
-	{
-		public SetRequest()
-		{
-		}
+    public class SetRequest : AtomicLongRequest
+    {
+        public SetRequest()
+        {
+        }
 
-		public SetRequest(string name, long value) : base(name, value)
-		{
-		}
+        public SetRequest(string name, long value) : base(name, value)
+        {
+        }
 
-		public override int GetClassId()
-		{
-			return AtomicLongPortableHook.Set;
-		}
-	}
+        public override int GetClassId()
+        {
+            return AtomicLongPortableHook.Set;
+        }
+    }
 }
