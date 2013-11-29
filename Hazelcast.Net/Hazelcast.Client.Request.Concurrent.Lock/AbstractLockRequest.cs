@@ -2,71 +2,68 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
-
 namespace Hazelcast.Client.Request.Concurrent.Lock
 {
-	
-	public abstract class AbstractLockRequest : IPortable
-	{
-		protected internal Data key;
+    public abstract class AbstractLockRequest : IPortable
+    {
+        protected internal Data key;
 
-		private int threadId;
+        private int threadId;
 
-		private long ttl = -1;
+        private long timeout = -1;
+        private long ttl = -1;
 
-		private long timeout = -1;
+        public AbstractLockRequest()
+        {
+        }
 
-		public AbstractLockRequest()
-		{
-		}
+        public AbstractLockRequest(Data key, int threadId)
+        {
+            this.key = key;
+            this.threadId = threadId;
+        }
 
-		public AbstractLockRequest(Data key, int threadId)
-		{
-			this.key = key;
-			this.threadId = threadId;
-		}
+        public AbstractLockRequest(Data key, int threadId, long ttl, long timeout)
+        {
+            this.key = key;
+            this.threadId = threadId;
+            this.ttl = ttl;
+            this.timeout = timeout;
+        }
 
-		public AbstractLockRequest(Data key, int threadId, long ttl, long timeout)
-		{
-			this.key = key;
-			this.threadId = threadId;
-			this.ttl = ttl;
-			this.timeout = timeout;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WritePortable(IPortableWriter writer)
+        {
+            writer.WriteInt("tid", threadId);
+            writer.WriteLong("ttl", ttl);
+            writer.WriteLong("timeout", timeout);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            key.WriteData(output);
+        }
 
-		protected internal object GetKey()
-		{
-			return key;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void ReadPortable(IPortableReader reader)
+        {
+            threadId = reader.ReadInt("tid");
+            ttl = reader.ReadLong("ttl");
+            timeout = reader.ReadLong("timeout");
+            IObjectDataInput input = reader.GetRawDataInput();
+            key = new Data();
+            key.ReadData(input);
+        }
 
-		public string GetServiceName()
-		{
-			return ServiceNames.Lock;
-		}
+        public abstract int GetClassId();
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void WritePortable(IPortableWriter writer)
-		{
-			writer.WriteInt("tid", threadId);
-			writer.WriteLong("ttl", ttl);
-			writer.WriteLong("timeout", timeout);
-			IObjectDataOutput output = writer.GetRawDataOutput();
-			key.WriteData(output);
-		}
+        public abstract int GetFactoryId();
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void ReadPortable(IPortableReader reader)
-		{
-			threadId = reader.ReadInt("tid");
-			ttl = reader.ReadLong("ttl");
-			timeout = reader.ReadLong("timeout");
-			IObjectDataInput input = reader.GetRawDataInput();
-			key = new Data();
-			key.ReadData(input);
-		}
+        protected internal object GetKey()
+        {
+            return key;
+        }
 
-		public abstract int GetClassId();
-
-		public abstract int GetFactoryId();
-	}
+        public string GetServiceName()
+        {
+            return ServiceNames.Lock;
+        }
+    }
 }

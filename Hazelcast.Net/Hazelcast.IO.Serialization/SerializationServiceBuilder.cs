@@ -9,15 +9,16 @@ namespace Hazelcast.IO.Serialization
 {
     public sealed class SerializationServiceBuilder
     {
-        private System.Collections.Generic.ICollection<IClassDefinition> classDefinitions =
-            new HashSet<IClassDefinition>();
-
         private readonly IDictionary<int, IDataSerializableFactory> dataSerializableFactories =
             new Dictionary<int, IDataSerializableFactory>();
 
         private readonly IDictionary<int, IPortableFactory> portableFactories = new Dictionary<int, IPortableFactory>();
 
         private bool checkClassDefErrors = true;
+
+        private ICollection<IClassDefinition> classDefinitions =
+            new HashSet<IClassDefinition>();
+
         private SerializationConfig config;
 
         private bool enableCompression;
@@ -144,35 +145,35 @@ namespace Hazelcast.IO.Serialization
             {
                 AddConfigDataSerializableFactories(dataSerializableFactories, config);
                 AddConfigPortableFactories(portableFactories, config);
-                classDefinitions=classDefinitions.Union(config.GetClassDefinitions()).ToList();
+                classDefinitions = classDefinitions.Union(config.GetClassDefinitions()).ToList();
             }
             ISerializationService ss = new SerializationService(
-                CreateInputOutputFactory(), 
-                version, 
+                CreateInputOutputFactory(),
+                version,
                 dataSerializableFactories,
                 portableFactories,
                 classDefinitions,
                 checkClassDefErrors,
-                managedContext, 
+                managedContext,
                 partitioningStrategy,
-                initialOutputBufferSize, 
-                enableCompression, 
+                initialOutputBufferSize,
+                enableCompression,
                 enableSharedObject);
             if (config != null)
             {
                 if (config.GetGlobalSerializerConfig() != null)
                 {
                     GlobalSerializerConfig globalSerializerConfig = config.GetGlobalSerializerConfig();
-                    var serializer = globalSerializerConfig.GetImplementation();
+                    ISerializer serializer = globalSerializerConfig.GetImplementation();
                     if (serializer == null)
                     {
                         try
                         {
-                            var className = globalSerializerConfig.GetClassName();
-                            var type = Type.GetType(className);
+                            string className = globalSerializerConfig.GetClassName();
+                            Type type = Type.GetType(className);
                             if (type != null)
                             {
-                                serializer=Activator.CreateInstance(type) as ISerializer;
+                                serializer = Activator.CreateInstance(type) as ISerializer;
                             }
                         }
                         catch (Exception e)
@@ -195,8 +196,8 @@ namespace Hazelcast.IO.Serialization
                     {
                         try
                         {
-                            var className = serializerConfig.GetClassName();
-                            var type = Type.GetType(className);
+                            string className = serializerConfig.GetClassName();
+                            Type type = Type.GetType(className);
                             if (type != null)
                             {
                                 serializer = Activator.CreateInstance(type) as ISerializer;
@@ -216,7 +217,7 @@ namespace Hazelcast.IO.Serialization
                     {
                         try
                         {
-                            var className = serializerConfig.GetTypeClassName();
+                            string className = serializerConfig.GetTypeClassName();
                             typeClass = Type.GetType(className);
                         }
                         catch (TypeLoadException e)
@@ -225,9 +226,9 @@ namespace Hazelcast.IO.Serialization
                         }
                     }
                     //call by reflaction
-                    MethodInfo method = typeof(ISerializationService).GetMethod("Register");
+                    MethodInfo method = typeof (ISerializationService).GetMethod("Register");
                     MethodInfo generic = method.MakeGenericMethod(typeClass);
-                    generic.Invoke(null, new object[] { serializer });
+                    generic.Invoke(null, new object[] {serializer});
                     //mimics: ss.Register<typeClass>(serializer);"
                     //
                 }
@@ -255,7 +256,7 @@ namespace Hazelcast.IO.Serialization
             foreach (var entry in config.GetDataSerializableFactories())
             {
                 int factoryId = entry.Key;
-                var factory = entry.Value;
+                IDataSerializableFactory factory = entry.Value;
                 if (factoryId <= 0)
                 {
                     throw new ArgumentException("IDataSerializableFactory factoryId must be positive! -> " + factory);
@@ -281,11 +282,11 @@ namespace Hazelcast.IO.Serialization
                     throw new ArgumentException("IDataSerializableFactory with factoryId '" + factoryId +
                                                 "' is already registered!");
                 }
-                IDataSerializableFactory factory=null;
+                IDataSerializableFactory factory = null;
                 try
                 {
                     //TODO CLASSLOAD
-                    var type = Type.GetType(factoryClassName);
+                    Type type = Type.GetType(factoryClassName);
                     if (type != null)
                     {
                         factory = Activator.CreateInstance(type) as IDataSerializableFactory;
@@ -303,7 +304,7 @@ namespace Hazelcast.IO.Serialization
                 var aware = f as IHazelcastInstanceAware;
                 if (aware != null)
                 {
-                    aware.SetHazelcastInstance(hazelcastInstance);   
+                    aware.SetHazelcastInstance(hazelcastInstance);
                 }
             }
         }

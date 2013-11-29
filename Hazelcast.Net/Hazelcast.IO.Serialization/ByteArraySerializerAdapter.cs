@@ -8,13 +8,13 @@ namespace Hazelcast.IO.Serialization
 
         public ByteArraySerializerAdapter(IByteArraySerializer<T> serializer)
         {
-            this._serializer = serializer;
+            _serializer = serializer;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public void Write(IObjectDataOutput output, object obj)
         {
-            byte[] bytes = _serializer.Write((T)obj);
+            byte[] bytes = _serializer.Write((T) obj);
             output.WriteInt(bytes != null ? bytes.Length : 0);
             output.Write(bytes);
         }
@@ -35,7 +35,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public byte[] Write(object obj)
         {
-            return _serializer.Write((T)obj);
+            return _serializer.Write((T) obj);
         }
 
         /// <exception cref="System.IO.IOException"></exception>

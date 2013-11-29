@@ -1,14 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Hazelcast.Config;
-using Hazelcast.Logging;
-
-
 namespace Hazelcast.Config
 {
-	public abstract class AbstractXmlConfigHelper
-	{
+    public abstract class AbstractXmlConfigHelper
+    {
         //private static readonly ILogger logger = Logger.GetLogger(typeof(AbstractXmlConfigHelper));
 
         //protected internal bool domLevel3 = true;
@@ -434,5 +427,5 @@ namespace Hazelcast.Config
         //        }
         //    }
         //}
-	}
+    }
 }

@@ -40,9 +40,9 @@ namespace Hazelcast.Core
         bool Contains(Object o);
 
 
-        int DrainTo<T>(ICollection<T> c) where T:E;
+        int DrainTo<T>(ICollection<T> c) where T : E;
 
 
-        int DrainTo<T>(ICollection<T> c, int maxElements) where T:E;
+        int DrainTo<T>(ICollection<T> c, int maxElements) where T : E;
     }
 }

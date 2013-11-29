@@ -4,12 +4,11 @@ namespace Hazelcast.Core
 {
     /// <summary>Concurrent, distributed, partitioned, listenable collection.</summary>
     /// <remarks>Concurrent, distributed, partitioned, listenable collection.</remarks>
-    public interface IHazelcastCollection<T> : ICollection<T>,JCollection<T>, IDistributedObject
+    public interface IHazelcastCollection<T> : ICollection<T>, JCollection<T>, IDistributedObject
     {
+        //string GetName();
         /// <summary>Returns the name of this collection</summary>
         /// <returns>name of this collection</returns>
-        //string GetName();
-
         /// <summary>Adds an item listener for this collection.</summary>
         /// <remarks>
         ///     Adds an item listener for this collection. Listener will get notified
@@ -34,10 +33,9 @@ namespace Hazelcast.Core
 
         //override ICollection add to return bool
         new bool Add(T item);
-
     }
 
-    public interface JCollection<E>:IEnumerable<E>
+    public interface JCollection<E> : IEnumerable<E>
     {
         //int size();
         int Size();
@@ -60,7 +58,7 @@ namespace Hazelcast.Core
         T[] ToArray<T>(T[] a);
 
         //boolean add(E e);
-         //bool Add(E item);
+        //bool Add(E item);
 
 
         //boolean remove(Object o);
@@ -78,7 +76,7 @@ namespace Hazelcast.Core
         //boolean retainAll(Collection<?> c);
         bool RetainAll<T>(ICollection<T> c);
 
-        
+
         //boolean addAll(Collection<? extends E> c);
         bool AddAll<T>(ICollection<T> c);
 
@@ -87,7 +85,3 @@ namespace Hazelcast.Core
         //void Clear();
     }
 }
-
-
-
-

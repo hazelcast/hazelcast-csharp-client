@@ -1,8 +1,3 @@
-using Hazelcast.Config;
-using Hazelcast.Net.Ext;
-using Hazelcast.Security;
-
-
 namespace Hazelcast.Security
 {
     ///// <summary>

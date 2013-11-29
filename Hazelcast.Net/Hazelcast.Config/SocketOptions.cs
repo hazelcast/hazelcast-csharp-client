@@ -1,103 +1,96 @@
 using Hazelcast.Client.Connection;
-using Hazelcast.Config;
-
 
 namespace Hazelcast.Config
 {
-	
-	public class SocketOptions
-	{
-		private bool tcpNoDelay = false;
+    public class SocketOptions
+    {
+        private int bufferSize = 32;
+        private bool keepAlive = true;
 
-		private bool keepAlive = true;
+        private int lingerSeconds = 3;
+        private bool reuseAddress = true;
 
-		private bool reuseAddress = true;
+        private ISocketFactory socketFactory;
+        private bool tcpNoDelay;
+        private int timeout = -1;
 
-		private int lingerSeconds = 3;
+        // socket options
+        // in kb
+        public virtual bool IsTcpNoDelay()
+        {
+            return tcpNoDelay;
+        }
 
-		private int timeout = -1;
+        public virtual SocketOptions SetTcpNoDelay(bool tcpNoDelay)
+        {
+            this.tcpNoDelay = tcpNoDelay;
+            return this;
+        }
 
-		private int bufferSize = 32;
+        public virtual bool IsKeepAlive()
+        {
+            return keepAlive;
+        }
 
-		private ISocketFactory socketFactory;
+        public virtual SocketOptions SetKeepAlive(bool keepAlive)
+        {
+            this.keepAlive = keepAlive;
+            return this;
+        }
 
-		// socket options
-		// in kb
-		public virtual bool IsTcpNoDelay()
-		{
-			return tcpNoDelay;
-		}
+        public virtual bool IsReuseAddress()
+        {
+            return reuseAddress;
+        }
 
-		public virtual SocketOptions SetTcpNoDelay(bool tcpNoDelay)
-		{
-			this.tcpNoDelay = tcpNoDelay;
-			return this;
-		}
+        public virtual SocketOptions SetReuseAddress(bool reuseAddress)
+        {
+            this.reuseAddress = reuseAddress;
+            return this;
+        }
 
-		public virtual bool IsKeepAlive()
-		{
-			return keepAlive;
-		}
+        public virtual int GetLingerSeconds()
+        {
+            return lingerSeconds;
+        }
 
-		public virtual SocketOptions SetKeepAlive(bool keepAlive)
-		{
-			this.keepAlive = keepAlive;
-			return this;
-		}
+        public virtual SocketOptions SetLingerSeconds(int lingerSeconds)
+        {
+            this.lingerSeconds = lingerSeconds;
+            return this;
+        }
 
-		public virtual bool IsReuseAddress()
-		{
-			return reuseAddress;
-		}
+        public virtual int GetTimeout()
+        {
+            return timeout;
+        }
 
-		public virtual SocketOptions SetReuseAddress(bool reuseAddress)
-		{
-			this.reuseAddress = reuseAddress;
-			return this;
-		}
+        public virtual SocketOptions SetTimeout(int timeout)
+        {
+            this.timeout = timeout;
+            return this;
+        }
 
-		public virtual int GetLingerSeconds()
-		{
-			return lingerSeconds;
-		}
+        public virtual int GetBufferSize()
+        {
+            return bufferSize;
+        }
 
-		public virtual SocketOptions SetLingerSeconds(int lingerSeconds)
-		{
-			this.lingerSeconds = lingerSeconds;
-			return this;
-		}
+        public virtual SocketOptions SetBufferSize(int bufferSize)
+        {
+            this.bufferSize = bufferSize;
+            return this;
+        }
 
-		public virtual int GetTimeout()
-		{
-			return timeout;
-		}
+        public virtual ISocketFactory GetSocketFactory()
+        {
+            return socketFactory;
+        }
 
-		public virtual SocketOptions SetTimeout(int timeout)
-		{
-			this.timeout = timeout;
-			return this;
-		}
-
-		public virtual int GetBufferSize()
-		{
-			return bufferSize;
-		}
-
-		public virtual SocketOptions SetBufferSize(int bufferSize)
-		{
-			this.bufferSize = bufferSize;
-			return this;
-		}
-
-		public virtual ISocketFactory GetSocketFactory()
-		{
-			return socketFactory;
-		}
-
-		public virtual SocketOptions SetSocketFactory(ISocketFactory socketFactory)
-		{
-			this.socketFactory = socketFactory;
-			return this;
-		}
-	}
+        public virtual SocketOptions SetSocketFactory(ISocketFactory socketFactory)
+        {
+            this.socketFactory = socketFactory;
+            return this;
+        }
+    }
 }

@@ -16,7 +16,7 @@ namespace Hazelcast.Client.Proxy
 
         public override string GetName()
         {
-            return (string)GetId();
+            return (string) GetId();
         }
 
         protected internal virtual void ThrowExceptionIfNull(object o)

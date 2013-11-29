@@ -1,16 +1,7 @@
-using System;
-using System.IO;
-using Hazelcast.Client.Connection;
-using Hazelcast.IO.Ssl;
-using Hazelcast.Net.Ext;
-using Hazelcast.Util;
-
-
 namespace Hazelcast.Client.Connection
 {
-	
-	public class SSLSocketFactory //: ISocketFactory
-	{
+    public class SSLSocketFactory //: ISocketFactory
+    {
         //private readonly Properties properties;
 
         //private readonly SSLContextFactory sslContextFactory;
@@ -65,5 +56,5 @@ namespace Hazelcast.Client.Connection
         //    Hazelcast.Net.Ext.SSLSocketFactory factory = sslContext.GetSocketFactory();
         //    return (SSLSocket)factory.CreateSocket();
         //}
-	}
+    }
 }

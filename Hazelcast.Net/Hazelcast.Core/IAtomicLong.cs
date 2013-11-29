@@ -5,11 +5,10 @@ namespace Hazelcast.Core
     /// </summary>
     public interface IAtomicLong : IDistributedObject
     {
+        //string GetName();
         /// <summary>Returns the name of this IAtomicLong instance.</summary>
         /// <remarks>Returns the name of this IAtomicLong instance.</remarks>
         /// <returns>name of this instance</returns>
-        //string GetName();
-
         /// <summary>Atomically adds the given value to the current value.</summary>
         /// <remarks>Atomically adds the given value to the current value.</remarks>
         /// <param name="delta">the value to add</param>

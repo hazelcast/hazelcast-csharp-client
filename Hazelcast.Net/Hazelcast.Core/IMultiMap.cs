@@ -29,11 +29,10 @@ namespace Hazelcast.Core
     /// <seealso cref="IMap{K, V}">IMap&lt;K, V&gt;</seealso>
     public interface IMultiMap<K, V> : IBaseMultiMap<K, V>, IDistributedObject
     {
+        //string GetName();
         /// <summary>Returns the name of this multimap.</summary>
         /// <remarks>Returns the name of this multimap.</remarks>
         /// <returns>the name of this multimap</returns>
-        //string GetName();
-
         /// <summary>Stores a key-value pair in the multimap.</summary>
         /// <remarks>
         ///     Stores a key-value pair in the multimap.

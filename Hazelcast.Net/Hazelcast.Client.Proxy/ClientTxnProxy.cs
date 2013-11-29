@@ -8,65 +8,64 @@ using Hazelcast.Partition.Strategy;
 using Hazelcast.Transaction;
 using Hazelcast.Util;
 
-
 namespace Hazelcast.Client.Proxy
 {
     public abstract class ClientTxnProxy : ITransactionalObject
-	{
-		internal readonly string objectName;
+    {
+        internal readonly string objectName;
 
-		internal readonly TransactionContextProxy proxy;
+        internal readonly TransactionContextProxy proxy;
 
-		internal ClientTxnProxy(string objectName, TransactionContextProxy proxy)
-		{
-			this.objectName = objectName;
-			this.proxy = proxy;
-		}
+        internal ClientTxnProxy(string objectName, TransactionContextProxy proxy)
+        {
+            this.objectName = objectName;
+            this.proxy = proxy;
+        }
 
-		internal T Invoke<T>(object request)
-		{
-			ClientClusterService clusterService = (ClientClusterService)proxy.GetClient().GetClientClusterService();
-			try
-			{
-				return clusterService.SendAndReceiveFixedConnection<T>(proxy.GetConnection(), request);
-			}
-			catch (IOException e)
-			{
-				throw ExceptionUtil.Rethrow(new HazelcastException(e));
-			}
-		}
+        public void Destroy()
+        {
+            OnDestroy();
+            var request = new ClientDestroyRequest(objectName, GetServiceName());
+            Invoke<object>(request);
+        }
 
-		internal abstract void OnDestroy();
+        public virtual object GetId()
+        {
+            return objectName;
+        }
 
-		public void Destroy()
-		{
-			OnDestroy();
-			ClientDestroyRequest request = new ClientDestroyRequest(objectName, GetServiceName());
-			Invoke<object>(request);
-		}
+        public virtual string GetPartitionKey()
+        {
+            return StringPartitioningStrategy.GetPartitionKey(GetName());
+        }
 
-		public virtual object GetId()
-		{
-			return objectName;
-		}
+        public abstract string GetName();
 
-		public virtual string GetPartitionKey()
-		{
-			return StringPartitioningStrategy.GetPartitionKey(GetName());
-		}
+        public abstract string GetServiceName();
 
-		internal virtual Data ToData(object obj)
-		{
-			return proxy.GetClient().GetSerializationService().ToData(obj);
-		}
+        internal T Invoke<T>(object request)
+        {
+            var clusterService = (ClientClusterService) proxy.GetClient().GetClientClusterService();
+            try
+            {
+                return clusterService.SendAndReceiveFixedConnection<T>(proxy.GetConnection(), request);
+            }
+            catch (IOException e)
+            {
+                throw ExceptionUtil.Rethrow(new HazelcastException(e));
+            }
+        }
 
-		internal virtual object ToObject(Data data)
-		{
-			return proxy.GetClient().GetSerializationService().ToObject(data);
-		}
+        internal abstract void OnDestroy();
 
-		public abstract string GetName();
+        internal virtual Data ToData(object obj)
+        {
+            return proxy.GetClient().GetSerializationService().ToData(obj);
+        }
 
-		public abstract string GetServiceName();
-	}
+        internal virtual object ToObject(Data data)
+        {
+            return proxy.GetClient().GetSerializationService().ToObject(data);
+        }
+    }
 }

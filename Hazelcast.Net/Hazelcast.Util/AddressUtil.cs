@@ -43,7 +43,7 @@ namespace Hazelcast.Util
         public static AddressHolder GetAddressHolder(string address, int defaultPort)
         {
             int indexBracketStart = address.IndexOf('[');
-            int indexBracketEnd = indexBracketStart>=0? address.IndexOf(']', indexBracketStart):-1;
+            int indexBracketEnd = indexBracketStart >= 0 ? address.IndexOf(']', indexBracketStart) : -1;
             int indexColon = address.IndexOf(':');
             int lastIndexColon = address.LastIndexOf(':');
             string host;

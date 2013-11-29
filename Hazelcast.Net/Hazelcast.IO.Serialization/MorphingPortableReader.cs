@@ -4,8 +4,8 @@ namespace Hazelcast.IO.Serialization
 {
     internal class IncompatibleClassChangeError : SystemException
     {
-        
     }
+
     public class MorphingPortableReader : DefaultPortableReader
     {
         public MorphingPortableReader(PortableSerializer serializer, IBufferObjectDataInput input, IClassDefinition cd)

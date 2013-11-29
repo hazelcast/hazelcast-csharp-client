@@ -1,71 +1,66 @@
-using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.IO.Serialization;
 
-
 namespace Hazelcast.Client.Spi
 {
-	
-	public sealed class ClientContext
-	{
-		private readonly ISerializationService serializationService;
+    public sealed class ClientContext
+    {
+        private readonly ClientConfig clientConfig;
+        private readonly IClientClusterService clusterService;
 
-		private readonly IClientClusterService clusterService;
+        private readonly IClientExecutionService executionService;
+        private readonly IClientInvocationService invocationService;
+        private readonly IClientPartitionService partitionService;
 
-		private readonly IClientPartitionService partitionService;
+        private readonly ProxyManager proxyManager;
+        private readonly ISerializationService serializationService;
 
-		private readonly IClientInvocationService invocationService;
+        internal ClientContext(ISerializationService serializationService, IClientClusterService clusterService,
+            IClientPartitionService partitionService, IClientInvocationService invocationService,
+            IClientExecutionService executionService, ProxyManager proxyManager, ClientConfig clientConfig)
+        {
+            this.serializationService = serializationService;
+            this.clusterService = clusterService;
+            this.partitionService = partitionService;
+            this.invocationService = invocationService;
+            this.executionService = executionService;
+            this.proxyManager = proxyManager;
+            this.clientConfig = clientConfig;
+        }
 
-		private readonly IClientExecutionService executionService;
+        public ISerializationService GetSerializationService()
+        {
+            return serializationService;
+        }
 
-		private readonly ProxyManager proxyManager;
+        public IClientClusterService GetClusterService()
+        {
+            return clusterService;
+        }
 
-		private readonly ClientConfig clientConfig;
+        public IClientPartitionService GetPartitionService()
+        {
+            return partitionService;
+        }
 
-		internal ClientContext(ISerializationService serializationService, IClientClusterService clusterService, IClientPartitionService partitionService, IClientInvocationService invocationService, IClientExecutionService executionService, ProxyManager proxyManager, ClientConfig clientConfig)
-		{
-			this.serializationService = serializationService;
-			this.clusterService = clusterService;
-			this.partitionService = partitionService;
-			this.invocationService = invocationService;
-			this.executionService = executionService;
-			this.proxyManager = proxyManager;
-			this.clientConfig = clientConfig;
-		}
+        public IClientInvocationService GetInvocationService()
+        {
+            return invocationService;
+        }
 
-		public ISerializationService GetSerializationService()
-		{
-			return serializationService;
-		}
+        public IClientExecutionService GetExecutionService()
+        {
+            return executionService;
+        }
 
-		public IClientClusterService GetClusterService()
-		{
-			return clusterService;
-		}
+        public void RemoveProxy(ClientProxy proxy)
+        {
+            proxyManager.RemoveProxy(proxy.GetServiceName(), proxy.GetName());
+        }
 
-		public IClientPartitionService GetPartitionService()
-		{
-			return partitionService;
-		}
-
-		public IClientInvocationService GetInvocationService()
-		{
-			return invocationService;
-		}
-
-		public IClientExecutionService GetExecutionService()
-		{
-			return executionService;
-		}
-
-		public void RemoveProxy(ClientProxy proxy)
-		{
-			proxyManager.RemoveProxy(proxy.GetServiceName(), proxy.GetName());
-		}
-
-		public ClientConfig GetClientConfig()
-		{
-			return clientConfig;
-		}
-	}
+        public ClientConfig GetClientConfig()
+        {
+            return clientConfig;
+        }
+    }
 }

@@ -9,6 +9,16 @@ namespace Hazelcast.IO.Serialization
 
         private int version;
 
+        public abstract int Read();
+        public abstract int Read(byte[] b);
+        public abstract int Read(byte[] b, int off, int len);
+        public abstract long Skip(long n);
+        public abstract int Available();
+        public abstract void Close();
+        public abstract void Mark(int readlimit);
+        public abstract void Reset();
+        public abstract bool MarkSupported();
+
         internal int GetFactoryId()
         {
             return factoryId;
@@ -45,15 +55,5 @@ namespace Hazelcast.IO.Serialization
             classId = cd != null ? cd.GetClassId() : -1;
             version = cd != null ? cd.GetVersion() : -1;
         }
-
-        public abstract int Read();
-        public abstract int Read(byte[] b);
-        public abstract int Read(byte[] b, int off, int len);
-        public abstract long Skip(long n);
-        public abstract int Available();
-        public abstract void Close();
-        public abstract void Mark(int readlimit);
-        public abstract void Reset();
-        public abstract bool MarkSupported();
     }
 }

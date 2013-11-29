@@ -1,24 +1,21 @@
 using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Queue;
 using Hazelcast.Serialization.Hook;
-
 
 namespace Hazelcast.Client.Request.Queue
 {
-	
-	public class IteratorRequest : QueueRequest, IRetryableRequest
-	{
-		public IteratorRequest()
-		{
-		}
+    public class IteratorRequest : QueueRequest, IRetryableRequest
+    {
+        public IteratorRequest()
+        {
+        }
 
-		public IteratorRequest(string name) : base(name)
-		{
-		}
+        public IteratorRequest(string name) : base(name)
+        {
+        }
 
-		public override int GetClassId()
-		{
-			return QueuePortableHook.Iterator;
-		}
-	}
+        public override int GetClassId()
+        {
+            return QueuePortableHook.Iterator;
+        }
+    }
 }

@@ -1,37 +1,34 @@
 using System;
-using System.IO;
 using System.Xml;
-using Hazelcast.Config;
 using Hazelcast.Logging;
+
 //using Hazelcast.Net.Ext;
 //using Hazelcast.Security;
 //using Hazelcast.Util;
 
-
 namespace Hazelcast.Config
 {
-	public class XmlClientConfigBuilder : AbstractXmlConfigHelper
-	{
-		private static readonly ILogger logger = Logger.GetLogger(typeof(XmlClientConfigBuilder));
+    public class XmlClientConfigBuilder : AbstractXmlConfigHelper
+    {
+        private static readonly ILogger logger = Logger.GetLogger(typeof (XmlClientConfigBuilder));
 
-		private ClientConfig clientConfig;
+        private ClientConfig clientConfig;
 
-	    private XmlReader reader;
+        private XmlReader reader;
 
-		/// <exception cref="System.IO.IOException"></exception>
+        /// <exception cref="System.IO.IOException"></exception>
         public XmlClientConfigBuilder(string configFileUri)
-		{
-		    reader = XmlReader.Create(configFileUri);
+        {
+            reader = XmlReader.Create(configFileUri);
             if (reader == null)
-			{
+            {
                 throw new ArgumentNullException("configFileUri", "Could not load " + configFileUri);
-			}
-		}
+            }
+        }
 
 
-		public XmlClientConfigBuilder()
-		{
-            
+        public XmlClientConfigBuilder()
+        {
             //string configFile = Runtime.GetProperty("hazelcast.client.config");
             //try
             //{
@@ -97,24 +94,24 @@ namespace Hazelcast.Config
             //{
             //    logger.Severe("Error while creating configuration:" + e.Message, e);
             //}
-		}
+        }
 
-		public virtual ClientConfig Build()
-		{
-			ClientConfig clientConfig = new ClientConfig();
+        public virtual ClientConfig Build()
+        {
+            var clientConfig = new ClientConfig();
 
             //TODO NOT IMPLEMENTED
-		    return clientConfig;
-		    //try
-		    //{
-		    //    Parse(clientConfig);
-		    //    return clientConfig;
-		    //}
-		    //catch (Exception e)
-		    //{
-		    //    throw ExceptionUtil.Rethrow(e);
-		    //}
-		}
+            return clientConfig;
+            //try
+            //{
+            //    Parse(clientConfig);
+            //    return clientConfig;
+            //}
+            //catch (Exception e)
+            //{
+            //    throw ExceptionUtil.Rethrow(e);
+            //}
+        }
 
         ///// <exception cref="System.Exception"></exception>
         //private void Parse(ClientConfig clientConfig)
@@ -497,5 +494,5 @@ namespace Hazelcast.Config
         //    }
         //    clientConfig.SetCredentials(credentials);
         //}
-	}
+    }
 }

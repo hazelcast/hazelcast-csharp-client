@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Request.Map
         /// <exception cref="System.IO.IOException"></exception>
         protected internal override void ReadDataInner(IObjectDataInput reader)
         {
-            predicate = reader.ReadObject<IPredicate<K,V>>();
+            predicate = reader.ReadObject<IPredicate<K, V>>();
         }
     }
 }

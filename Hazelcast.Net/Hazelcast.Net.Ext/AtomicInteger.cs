@@ -1,8 +1,7 @@
+using System.Threading;
+
 namespace Hazelcast.Net.Ext
 {
-    using System;
-    using System.Threading;
-
     internal class AtomicInteger
     {
         private int val;
@@ -44,12 +43,12 @@ namespace Hazelcast.Net.Ext
 
         public int Get()
         {
-            return this.val;
+            return val;
         }
 
         public void Set(int newValue)
         {
-            this.val = newValue;
+            val = newValue;
         }
 
         public int IncrementAndGet()
@@ -59,7 +58,7 @@ namespace Hazelcast.Net.Ext
 
         public int GetAndIncrement()
         {
-            for (; ; )
+            for (;;)
             {
                 int current = Get();
                 int next = current + 1;
@@ -69,9 +68,5 @@ namespace Hazelcast.Net.Ext
                 }
             }
         }
-
     }
-
 }
-
-

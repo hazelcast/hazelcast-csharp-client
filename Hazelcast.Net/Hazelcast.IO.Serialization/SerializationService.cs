@@ -2,10 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Numerics;
-using System.Runtime.Serialization;
 using Hazelcast.Core;
+using Hazelcast.IO.Serialization.DefaultSerializers;
 using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
@@ -50,7 +48,7 @@ namespace Hazelcast.IO.Serialization
         internal SerializationService(IInputOutputFactory inputOutputFactory, int version,
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
             IDictionary<int, IPortableFactory> portableFactories,
-            System.Collections.Generic.ICollection<IClassDefinition> classDefinitions, bool checkClassDefErrors,
+            ICollection<IClassDefinition> classDefinitions, bool checkClassDefErrors,
             IManagedContext managedContext,
             IPartitioningStrategy partitionStrategy, int initialOutputBufferSize, bool enableCompression,
             bool enableSharedObject)
@@ -65,29 +63,30 @@ namespace Hazelcast.IO.Serialization
             {
                 serializationContext.RegisterClassDefinition(cd);
             }
-            dataSerializerAdapter = new StreamSerializerAdapter<IDataSerializable>(this, new DataSerializer(dataSerializableFactories));
+            dataSerializerAdapter = new StreamSerializerAdapter<IDataSerializable>(this,
+                new DataSerializer(dataSerializableFactories));
             portableSerializer = new PortableSerializer(serializationContext, loader.GetFactories());
             portableSerializerAdapter = new StreamSerializerAdapter<IPortable>(this, portableSerializer);
 
-            RegisterConstant<IDataSerializable>( dataSerializerAdapter);
-            RegisterConstant<IPortable>( portableSerializerAdapter);
+            RegisterConstant<IDataSerializable>(dataSerializerAdapter);
+            RegisterConstant<IPortable>(portableSerializerAdapter);
 
-            RegisterConstant<byte>( new ConstantSerializers.ByteSerializer());
-            RegisterConstant<bool>( new ConstantSerializers.BooleanSerializer());
-            RegisterConstant<char>( new ConstantSerializers.CharSerializer());
-            RegisterConstant<short>( new ConstantSerializers.ShortSerializer());
-            RegisterConstant<int>( new ConstantSerializers.IntegerSerializer());
-            RegisterConstant<long>( new ConstantSerializers.LongSerializer());
-            RegisterConstant<float>( new ConstantSerializers.FloatSerializer());
-            RegisterConstant<double>( new ConstantSerializers.DoubleSerializer());
-            RegisterConstant<byte[]>( new ConstantSerializers.TheByteArraySerializer());
-            RegisterConstant<char[]>( new ConstantSerializers.CharArraySerializer());
-            RegisterConstant<short[]>( new ConstantSerializers.ShortArraySerializer());
-            RegisterConstant<int[]>( new ConstantSerializers.IntegerArraySerializer());
-            RegisterConstant<long[]>( new ConstantSerializers.LongArraySerializer());
-            RegisterConstant<float[]>( new ConstantSerializers.FloatArraySerializer());
-            RegisterConstant<double[]>( new ConstantSerializers.DoubleArraySerializer());
-            RegisterConstant<string>( new ConstantSerializers.StringSerializer());
+            RegisterConstant<byte>(new ConstantSerializers.ByteSerializer());
+            RegisterConstant<bool>(new ConstantSerializers.BooleanSerializer());
+            RegisterConstant<char>(new ConstantSerializers.CharSerializer());
+            RegisterConstant<short>(new ConstantSerializers.ShortSerializer());
+            RegisterConstant<int>(new ConstantSerializers.IntegerSerializer());
+            RegisterConstant<long>(new ConstantSerializers.LongSerializer());
+            RegisterConstant<float>(new ConstantSerializers.FloatSerializer());
+            RegisterConstant<double>(new ConstantSerializers.DoubleSerializer());
+            RegisterConstant<byte[]>(new ConstantSerializers.TheByteArraySerializer());
+            RegisterConstant<char[]>(new ConstantSerializers.CharArraySerializer());
+            RegisterConstant<short[]>(new ConstantSerializers.ShortArraySerializer());
+            RegisterConstant<int[]>(new ConstantSerializers.IntegerArraySerializer());
+            RegisterConstant<long[]>(new ConstantSerializers.LongArraySerializer());
+            RegisterConstant<float[]>(new ConstantSerializers.FloatArraySerializer());
+            RegisterConstant<double[]>(new ConstantSerializers.DoubleArraySerializer());
+            RegisterConstant<string>(new ConstantSerializers.StringSerializer());
 
             //SafeRegister<DateTime>( new DefaultSerializers.DateSerializer());
             //SafeRegister<BigInteger>( new DefaultSerializers.BigIntegerSerializer());
@@ -95,7 +94,7 @@ namespace Hazelcast.IO.Serialization
             //SafeRegister<Externalizable>( new DefaultSerializers.Externalizer(enableCompression));
             //SafeRegister<ISerializable>(new DefaultSerializers.ObjectSerializer(enableSharedObject, enableCompression));
             //SafeRegister<Type>( new DefaultSerializers.ClassSerializer());
-            SafeRegister<Enum>( new DefaultSerializers.EnumSerializer());
+            SafeRegister<Enum>(new EnumSerializer());
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
         }
 
@@ -244,7 +243,8 @@ namespace Hazelcast.IO.Serialization
                 {
                     if (active)
                     {
-                        throw new HazelcastSerializationException("There is no suitable de-serializer for type " +typeId);
+                        throw new HazelcastSerializationException("There is no suitable de-serializer for type " +
+                                                                  typeId);
                     }
                     throw new HazelcastInstanceNotActiveException();
                 }
@@ -317,7 +317,7 @@ namespace Hazelcast.IO.Serialization
                 throw new ArgumentException("Type id must be positive! Current: " + serializer.GetTypeId() +
                                             ", Serializer: " + serializer);
             }
-            SafeRegister(typeof(T), CreateSerializerAdapter<T>(serializer));
+            SafeRegister(typeof (T), CreateSerializerAdapter<T>(serializer));
         }
 
 
@@ -339,12 +339,7 @@ namespace Hazelcast.IO.Serialization
                                                         "] has been already registered for type-id: " +
                                                         serializer.GetTypeId());
                 }
-
-
             }
-
-
-
         }
 
         public ISerializationContext GetSerializationContext()
@@ -357,7 +352,7 @@ namespace Hazelcast.IO.Serialization
             return new DefaultPortableReader(portableSerializer, CreateObjectDataInput(data), data.GetClassDefinition());
         }
 
-        private void RegisterClassDefinitions(System.Collections.Generic.ICollection<IClassDefinition> classDefinitions,
+        private void RegisterClassDefinitions(ICollection<IClassDefinition> classDefinitions,
             bool checkClassDefErrors)
         {
             IDictionary<int, IClassDefinition> classDefMap =
@@ -480,7 +475,7 @@ namespace Hazelcast.IO.Serialization
             }
             ISerializerAdapter serializer;
             constantTypesMap.TryGetValue(type, out serializer);
-            if (serializer  != null)
+            if (serializer != null)
             {
                 return serializer;
             }
@@ -525,7 +520,7 @@ namespace Hazelcast.IO.Serialization
             Type[] types = type.GetInterfaces();
             if (types.Length > 0)
             {
-                foreach (var _type in types)
+                foreach (Type _type in types)
                 {
                     interfaces.Add(_type);
                 }
@@ -554,13 +549,13 @@ namespace Hazelcast.IO.Serialization
 
         private void RegisterConstant<T>(ISerializerAdapter serializer)
         {
-            constantTypesMap.Add(typeof(T), serializer);
+            constantTypesMap.Add(typeof (T), serializer);
             constantTypeIds[IndexForDefaultType(serializer.GetTypeId())] = serializer;
         }
 
         private void SafeRegister<T>(ISerializer serializer)
         {
-            SafeRegister(typeof(T), CreateSerializerAdapter<T>(serializer));
+            SafeRegister(typeof (T), CreateSerializerAdapter<T>(serializer));
         }
 
         private void SafeRegister(Type type, ISerializerAdapter serializer)
@@ -571,17 +566,16 @@ namespace Hazelcast.IO.Serialization
             }
             if (!typeMap.TryAdd(type, serializer))
             {
-                var current =typeMap.GetOrAdd(type, serializer);
+                ISerializerAdapter current = typeMap.GetOrAdd(type, serializer);
                 if (current != null && current.GetImpl().GetType() != serializer.GetImpl().GetType())
                 {
                     throw new InvalidOperationException("Serializer[" + current.GetImpl() +
                                                         "] has been already registered for type: " + type);
                 }
-                
             }
             if (!idMap.TryAdd(serializer.GetTypeId(), serializer))
             {
-                var current = idMap.GetOrAdd(serializer.GetTypeId(), serializer);
+                ISerializerAdapter current = idMap.GetOrAdd(serializer.GetTypeId(), serializer);
                 if (current != null && current.GetImpl().GetType() != serializer.GetImpl().GetType())
                 {
                     throw new InvalidOperationException("Serializer [" + current.GetImpl() +
@@ -589,7 +583,6 @@ namespace Hazelcast.IO.Serialization
                                                         serializer.GetTypeId());
                 }
             }
-
         }
 
         public ISerializerAdapter SerializerFor(int typeId)

@@ -1,71 +1,69 @@
+using System;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
-
 namespace Hazelcast.Client.Request.Cluster
 {
-	
-	[System.Serializable]
-	public sealed class ClientMembershipEvent : IIdentifiedDataSerializable
-	{
-		public const int MemberAdded = MembershipEvent.MemberAdded;
+    [Serializable]
+    public sealed class ClientMembershipEvent : IIdentifiedDataSerializable
+    {
+        public const int MemberAdded = MembershipEvent.MemberAdded;
 
-		public const int MemberRemoved = MembershipEvent.MemberRemoved;
+        public const int MemberRemoved = MembershipEvent.MemberRemoved;
 
-		private IMember member;
+        private int eventType;
+        private IMember member;
 
-		private int eventType;
+        public ClientMembershipEvent()
+        {
+        }
 
-		public ClientMembershipEvent()
-		{
-		}
+        public ClientMembershipEvent(IMember member, int eventType)
+        {
+            this.member = member;
+            this.eventType = eventType;
+        }
 
-		public ClientMembershipEvent(IMember member, int eventType)
-		{
-			this.member = member;
-			this.eventType = eventType;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public void WriteData(IObjectDataOutput output)
+        {
+            member.WriteData(output);
+            output.WriteInt(eventType);
+        }
 
-		/// <summary>Returns the membership event type; #MEMBER_ADDED or #MEMBER_REMOVED</summary>
-		/// <returns>the membership event type</returns>
-		public int GetEventType()
-		{
-			return eventType;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public void ReadData(IObjectDataInput input)
+        {
+            member = new Member();
+            member.ReadData(input);
+            eventType = input.ReadInt();
+        }
 
-		/// <summary>Returns the removed or added member.</summary>
-		/// <remarks>Returns the removed or added member.</remarks>
-		/// <returns>member which is removed/added</returns>
-		public IMember GetMember()
-		{
-			return member;
-		}
+        public int GetFactoryId()
+        {
+            return ClusterDataSerializerHook.FId;
+        }
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public void WriteData(IObjectDataOutput output)
-		{
-			member.WriteData(output);
-			output.WriteInt(eventType);
-		}
+        public int GetId()
+        {
+            return ClusterDataSerializerHook.MembershipEvent;
+        }
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public void ReadData(IObjectDataInput input)
-		{
-			member = new Member();
-			member.ReadData(input);
-			eventType = input.ReadInt();
-		}
+        /// <summary>Returns the membership event type; #MEMBER_ADDED or #MEMBER_REMOVED</summary>
+        /// <returns>the membership event type</returns>
+        public int GetEventType()
+        {
+            return eventType;
+        }
 
-		public int GetFactoryId()
-		{
-			return ClusterDataSerializerHook.FId;
-		}
-
-		public int GetId()
-		{
-			return ClusterDataSerializerHook.MembershipEvent;
-		}
-	}
+        /// <summary>Returns the removed or added member.</summary>
+        /// <remarks>Returns the removed or added member.</remarks>
+        /// <returns>member which is removed/added</returns>
+        public IMember GetMember()
+        {
+            return member;
+        }
+    }
 }

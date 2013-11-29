@@ -1,12 +1,5 @@
-using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
-using Hazelcast.Serialization.Hook;
-
-
 namespace Hazelcast.Client.Request.Executor
 {
-	
     //[System.Serializable]
     //public sealed class TargetCallableRequest : IIdentifiedDataSerializable
     //{

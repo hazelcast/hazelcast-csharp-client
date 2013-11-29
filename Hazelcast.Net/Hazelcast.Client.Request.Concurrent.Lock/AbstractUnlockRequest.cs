@@ -2,66 +2,63 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
-
 namespace Hazelcast.Client.Request.Concurrent.Lock
 {
-	
-	public abstract class AbstractUnlockRequest : IPortable
-	{
-		protected internal Data key;
+    public abstract class AbstractUnlockRequest : IPortable
+    {
+        private bool force;
+        protected internal Data key;
 
-		private int threadId;
+        private int threadId;
 
-		private bool force;
+        public AbstractUnlockRequest()
+        {
+        }
 
-		public AbstractUnlockRequest()
-		{
-		}
+        public AbstractUnlockRequest(Data key, int threadId)
+        {
+            this.key = key;
+            this.threadId = threadId;
+        }
 
-		public AbstractUnlockRequest(Data key, int threadId)
-		{
-			this.key = key;
-			this.threadId = threadId;
-		}
+        protected internal AbstractUnlockRequest(Data key, int threadId, bool force)
+        {
+            this.key = key;
+            this.threadId = threadId;
+            this.force = force;
+        }
 
-		protected internal AbstractUnlockRequest(Data key, int threadId, bool force)
-		{
-			this.key = key;
-			this.threadId = threadId;
-			this.force = force;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WritePortable(IPortableWriter writer)
+        {
+            writer.WriteInt("tid", threadId);
+            writer.WriteBoolean("force", force);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            key.WriteData(output);
+        }
 
-		protected internal object GetKey()
-		{
-			return key;
-		}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void ReadPortable(IPortableReader reader)
+        {
+            threadId = reader.ReadInt("tid");
+            force = reader.ReadBoolean("force");
+            IObjectDataInput input = reader.GetRawDataInput();
+            key = new Data();
+            key.ReadData(input);
+        }
 
-		public string GetServiceName()
-		{
-			return ServiceNames.Lock;
-		}
+        public abstract int GetClassId();
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void WritePortable(IPortableWriter writer)
-		{
-			writer.WriteInt("tid", threadId);
-			writer.WriteBoolean("force", force);
-			IObjectDataOutput output = writer.GetRawDataOutput();
-			key.WriteData(output);
-		}
+        public abstract int GetFactoryId();
 
-		/// <exception cref="System.IO.IOException"></exception>
-		public virtual void ReadPortable(IPortableReader reader)
-		{
-			threadId = reader.ReadInt("tid");
-			force = reader.ReadBoolean("force");
-			IObjectDataInput input = reader.GetRawDataInput();
-			key = new Data();
-			key.ReadData(input);
-		}
+        protected internal object GetKey()
+        {
+            return key;
+        }
 
-		public abstract int GetClassId();
-
-		public abstract int GetFactoryId();
-	}
+        public string GetServiceName()
+        {
+            return ServiceNames.Lock;
+        }
+    }
 }

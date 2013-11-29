@@ -1,16 +1,13 @@
 using System;
-using Hazelcast.Core;
-using Hazelcast.Net.Ext;
-using Hazelcast.Util;
-
 
 namespace Hazelcast.Util
 {
-	
-	public sealed class ExceptionUtil
-	{
-		public static Exception Rethrow(Exception t)
-		{
+    public sealed class ExceptionUtil
+    {
+        private const string ExceptionSeparator = "------ End remote and begin local stack-trace ------";
+
+        public static Exception Rethrow(Exception t)
+        {
             throw t;
             //if (t. is Error)
             //{
@@ -46,11 +43,11 @@ namespace Hazelcast.Util
             //        }
             //    }
             //}
-		}
+        }
 
-		/// <exception cref="T"></exception>
-		public static Exception Rethrow<T>(Exception t) where T:Exception
-		{
+        /// <exception cref="T"></exception>
+        public static Exception Rethrow<T>(Exception t) where T : Exception
+        {
             return Rethrow<Exception>(t);
             //System.Type allowedType = typeof(T);
             //if (t is Error)
@@ -94,20 +91,18 @@ namespace Hazelcast.Util
             //        }
             //    }
             //}
-		}
+        }
 
-		/// <exception cref="System.Exception"></exception>
-		public static Exception RethrowAllowInterrupted(Exception t)
-		{
-			return Rethrow<Exception>(t);
-		}
+        /// <exception cref="System.Exception"></exception>
+        public static Exception RethrowAllowInterrupted(Exception t)
+        {
+            return Rethrow<Exception>(t);
+        }
 
         public static T SneakyThrow<T>(Exception t) where T : Exception
-		{
-            throw (T)t;
-		}
-
-		private const string ExceptionSeparator = "------ End remote and begin local stack-trace ------";
+        {
+            throw t;
+        }
 
         //public static void FixRemoteStackTrace(Exception remoteCause, StackTraceElement[] localSideStackTrace)
         //{
@@ -118,5 +113,5 @@ namespace Hazelcast.Util
         //    System.Array.Copy(localSideStackTrace, 1, newStackTrace, remoteStackTrace.Length + 1, localSideStackTrace.Length - 1);
         //    remoteCause.SetStackTrace(newStackTrace);
         //}
-	}
+    }
 }

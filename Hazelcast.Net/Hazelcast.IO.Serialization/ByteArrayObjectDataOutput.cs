@@ -20,45 +20,14 @@ namespace Hazelcast.IO.Serialization
             this.service = service;
         }
 
-        public void Write(int b)
-        {
-            EnsureAvailable(1);
-            buffer[pos++] = unchecked((byte) (b));
-        }
-
         void IDataOutput.Write(byte[] b)
         {
             Write(b, 0, b.Length);
         }
 
-        void OutputStream.Write(byte[] b)
-        {
-            Write(b,0,b.Length);
-        }
-
         public virtual void Write(int position, int b)
         {
             buffer[position] = unchecked((byte) b);
-        }
-
-        public void Write(byte[] b, int off, int len)
-        {
-            if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
-            {
-                throw new IndexOutOfRangeException();
-            }
-            if (len == 0)
-            {
-                return;
-            }
-            EnsureAvailable(len);
-            Array.Copy(b, off, buffer, pos, len);
-            pos += len;
-        }
-
-        public void Flush()
-        {
-            throw new NotImplementedException();
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -349,7 +318,7 @@ namespace Hazelcast.IO.Serialization
         public virtual bool IsBigEndian()
         {
             //TODO BIG ENDIAN
-            return true;//!BitConverter.IsLittleEndian;
+            return true; //!BitConverter.IsLittleEndian;
         }
 
         public void Dispose()
@@ -360,6 +329,43 @@ namespace Hazelcast.IO.Serialization
         public virtual ISerializationContext GetSerializationContext()
         {
             return service.GetSerializationContext();
+        }
+
+        public void Write(int b)
+        {
+            EnsureAvailable(1);
+            buffer[pos++] = unchecked((byte) (b));
+        }
+
+        void OutputStream.Write(byte[] b)
+        {
+            Write(b, 0, b.Length);
+        }
+
+        public void Write(byte[] b, int off, int len)
+        {
+            if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
+            {
+                throw new IndexOutOfRangeException();
+            }
+            if (len == 0)
+            {
+                return;
+            }
+            EnsureAvailable(len);
+            Array.Copy(b, off, buffer, pos, len);
+            pos += len;
+        }
+
+        public void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Close()
+        {
+            Clear();
+            buffer = null;
         }
 
         internal void EnsureAvailable(int len)
@@ -383,12 +389,6 @@ namespace Hazelcast.IO.Serialization
         public virtual int Available()
         {
             return buffer != null ? buffer.Length - pos : 0;
-        }
-
-        public void Close()
-        {
-            Clear();
-            buffer = null;
         }
 
         public override string ToString()

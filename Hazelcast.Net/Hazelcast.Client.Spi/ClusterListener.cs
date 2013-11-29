@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
-using Hazelcast.Client;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Request.Cluster;
-using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -21,29 +17,30 @@ namespace Hazelcast.Client.Spi
 {
     public class ClusterListener
     {
-        private static readonly ILogger logger = Logger.GetLogger(typeof(ClusterListener));
+        private static readonly ILogger logger = Logger.GetLogger(typeof (ClusterListener));
 
-        private readonly ClientClusterService _clientClusterService;
         private readonly HazelcastClient _client;
+        private readonly ClientClusterService _clientClusterService;
+        private readonly Thread _thread;
         private readonly List<IMember> members = new List<IMember>();
-        private Thread _thread;
 
         private volatile IConnection _connection;
-        public IConnection Connection
-        {
-            get { return _connection; }
-        }
 
 
         public ClusterListener(ClientClusterService clientClusterService, string name)
         {
-            this._clientClusterService = clientClusterService;
-            this._client = clientClusterService.Client;
+            _clientClusterService = clientClusterService;
+            _client = clientClusterService.Client;
             _thread = new Thread(Run)
             {
                 IsBackground = true,
-                Name=("ClusterListener"+new Random().Next()).Substring(0,20)
+                Name = ("ClusterListener" + new Random().Next()).Substring(0, 20)
             };
+        }
+
+        public IConnection Connection
+        {
+            get { return _connection; }
         }
 
         public void Run()
@@ -98,14 +95,16 @@ namespace Hazelcast.Client.Spi
 
         public void FireConnectionEvent(bool disconnected)
         {
-            var lifecycleService = (LifecycleService)_client.GetLifecycleService();
-            LifecycleEvent.LifecycleState state = disconnected ? LifecycleEvent.LifecycleState.ClientDisconnected : LifecycleEvent.LifecycleState.ClientConnected;
+            var lifecycleService = (LifecycleService) _client.GetLifecycleService();
+            LifecycleEvent.LifecycleState state = disconnected
+                ? LifecycleEvent.LifecycleState.ClientDisconnected
+                : LifecycleEvent.LifecycleState.ClientConnected;
             lifecycleService.FireLifecycleEvent(state);
         }
 
         internal virtual void SetInitialConn(IConnection conn)
         {
-            this._connection = conn;
+            _connection = conn;
         }
 
         internal virtual void Start()
@@ -137,12 +136,10 @@ namespace Hazelcast.Client.Spi
             if (members.Count > 0)
             {
                 addresses.UnionWith(GetClusterAddresses());
-                
             }
             addresses.UnionWith(_clientClusterService.GetConfigAddresses());
             return _clientClusterService.ConnectToOne(addresses);
         }
-
 
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -153,7 +150,7 @@ namespace Hazelcast.Client.Spi
             _connection.Write(request);
             Data response = _connection.Read();
 
-            var result = serializationService.ToObject(response);
+            object result = serializationService.ToObject(response);
 
             var coll = ErrorHandler.ReturnResultOrThrowException<SerializableCollection>(result);
             IDictionary<string, IMember> prevMembers = new Dictionary<string, IMember>();
@@ -168,7 +165,7 @@ namespace Hazelcast.Client.Spi
             }
             foreach (Data d in coll.GetCollection())
             {
-                members.Add((IMember)serializationService.ToObject(d));
+                members.Add((IMember) serializationService.ToObject(d));
             }
             UpdateMembersRef();
             logger.Info(_clientClusterService.MembersString());
@@ -179,8 +176,8 @@ namespace Hazelcast.Client.Spi
             {
                 if (!prevMembers.Remove(member.GetUuid()))
                 {
-                    events.Add(new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberAdded, eventMembers));
-
+                    events.Add(new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberAdded,
+                        eventMembers));
                 }
             }
             foreach (IMember member in prevMembers.Values)
@@ -202,7 +199,7 @@ namespace Hazelcast.Client.Spi
             while (_thread.IsAlive)
             {
                 Data eventData = _connection.Read();
-                var evnt = (ClientMembershipEvent)serializationService.ToObject(eventData);
+                var evnt = (ClientMembershipEvent) serializationService.ToObject(eventData);
                 IMember member = evnt.GetMember();
                 if (evnt.GetEventType() == MembershipEvent.MemberAdded)
                 {
@@ -216,7 +213,8 @@ namespace Hazelcast.Client.Spi
                 UpdateMembersRef();
                 logger.Info(_clientClusterService.MembersString());
 
-                var membershipEvent = new MembershipEvent(_client.GetCluster(), member,evnt.GetEventType(),new ReadOnlyCollection<IMember>(members));
+                var membershipEvent = new MembershipEvent(_client.GetCluster(), member, evnt.GetEventType(),
+                    new ReadOnlyCollection<IMember>(members));
                 FireMembershipEvent(membershipEvent);
             }
         }
@@ -228,15 +226,17 @@ namespace Hazelcast.Client.Spi
 
         private void _FireMembershipEvent(MembershipEvent membershipEvent)
         {
-            foreach (var listener in  _clientClusterService.Listeners.Values) 
+            foreach (IMembershipListener listener in  _clientClusterService.Listeners.Values)
             {
-                if (membershipEvent.GetEventType() == MembershipEvent.MemberAdded) {
+                if (membershipEvent.GetEventType() == MembershipEvent.MemberAdded)
+                {
                     listener.MemberAdded(membershipEvent);
-                } else {
+                }
+                else
+                {
                     listener.MemberRemoved(membershipEvent);
                 }
-            }                
-            
+            }
         }
 
         private void UpdateMembersRef()
@@ -252,14 +252,10 @@ namespace Hazelcast.Client.Spi
 
         private List<IPEndPoint> GetClusterAddresses()
         {
-            var socketAddresses = members.Select(member => member.GetSocketAddress()).ToList();
+            List<IPEndPoint> socketAddresses = members.Select(member => member.GetSocketAddress()).ToList();
             var r = new Random();
-            var shuffled = socketAddresses.OrderBy(x => r.Next());
+            IOrderedEnumerable<IPEndPoint> shuffled = socketAddresses.OrderBy(x => r.Next());
             return new List<IPEndPoint>(shuffled);
         }
-
-
-
     }
-
 }

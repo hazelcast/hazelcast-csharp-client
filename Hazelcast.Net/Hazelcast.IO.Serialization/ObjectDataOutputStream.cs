@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using Hazelcast.Net.Ext;
 using Hazelcast.Util;
 
@@ -21,7 +20,8 @@ namespace Hazelcast.IO.Serialization
         {
         }
 
-        public ObjectDataOutputStream(BinaryWriter binaryWriter, ISerializationService serializationService,bool isBigEndian)
+        public ObjectDataOutputStream(BinaryWriter binaryWriter, ISerializationService serializationService,
+            bool isBigEndian)
         {
             this.serializationService = serializationService;
             _binaryWriter = binaryWriter;
@@ -32,18 +32,6 @@ namespace Hazelcast.IO.Serialization
         public void Dispose()
         {
             throw new NotImplementedException();
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public  void Write(int b)
-        {
-            this.WriteInt(b);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public  void Write(byte[] b, int off, int len)
-        {
-            _binaryWriter.Write(b, off, len);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -67,7 +55,7 @@ namespace Hazelcast.IO.Serialization
             }
             else
             {
-                _binaryWriter.Write(ByteFlipperUtil.ReverseBytes((short)v));
+                _binaryWriter.Write(ByteFlipperUtil.ReverseBytes((short) v));
             }
         }
 
@@ -81,7 +69,7 @@ namespace Hazelcast.IO.Serialization
             }
             else
             {
-                _binaryWriter.Write(ByteFlipperUtil.ReverseBytes((char)v));
+                _binaryWriter.Write(ByteFlipperUtil.ReverseBytes((char) v));
             }
         }
 
@@ -243,12 +231,6 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public  void Write(byte[] b)
-        {
-            this.Write(b,0,b.Length);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteObject(object @object)
         {
             serializationService.WriteObject(this, @object);
@@ -270,13 +252,31 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public  void Flush()
+        public void Write(int b)
+        {
+            WriteInt(b);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public void Write(byte[] b, int off, int len)
+        {
+            _binaryWriter.Write(b, off, len);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public void Write(byte[] b)
+        {
+            Write(b, 0, b.Length);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public void Flush()
         {
             _binaryWriter.Flush();
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public  void Close()
+        public void Close()
         {
             _binaryWriter.Close();
         }

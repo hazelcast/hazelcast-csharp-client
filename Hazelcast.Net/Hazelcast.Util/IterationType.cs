@@ -1,12 +1,9 @@
-using Hazelcast.Util;
-
-
 namespace Hazelcast.Util
 {
-	public enum IterationType
-	{
-		Key,
-		Value,
-		Entry
-	}
+    public enum IterationType
+    {
+        Key,
+        Value,
+        Entry
+    }
 }

@@ -1,12 +1,8 @@
-using System;
 using System.Collections.Generic;
-using Hazelcast.Client.Proxy;
 using Hazelcast.Client.Request.Collection;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
-
 
 namespace Hazelcast.Client.Proxy
 {
@@ -24,7 +20,7 @@ namespace Hazelcast.Client.Proxy
 
         public void Insert(int index, E item)
         {
-            Add(index,item);
+            Add(index, item);
         }
 
         public void RemoveAt(int index)
@@ -35,12 +31,12 @@ namespace Hazelcast.Client.Proxy
         public E this[int index]
         {
             get { return Get(index); }
-            set { Set(index,value); }
+            set { Set(index, value); }
         }
 
         public E Get(int index)
         {
-            ListGetRequest request = new ListGetRequest(GetName(), index);
+            var request = new ListGetRequest(GetName(), index);
             return Invoke<E>(request);
         }
 
@@ -48,21 +44,21 @@ namespace Hazelcast.Client.Proxy
         {
             ThrowExceptionIfNull(element);
             Data value = ToData(element);
-            ListSetRequest request = new ListSetRequest(GetName(), index, value);
+            var request = new ListSetRequest(GetName(), index, value);
             return Invoke<E>(request);
         }
 
         public void Add(int index, E element)
         {
-			ThrowExceptionIfNull(element);
-			Data value = ToData(element);
-			ListAddRequest request = new ListAddRequest(GetName(), value, index);
-			Invoke<object>(request);
-		}
+            ThrowExceptionIfNull(element);
+            Data value = ToData(element);
+            var request = new ListAddRequest(GetName(), value, index);
+            Invoke<object>(request);
+        }
 
         public E Remove(int index)
         {
-            ListRemoveRequest request = new ListRemoveRequest(GetName(), index);
+            var request = new ListRemoveRequest(GetName(), index);
             return Invoke<E>(request);
         }
 
@@ -80,16 +76,8 @@ namespace Hazelcast.Client.Proxy
                 ThrowExceptionIfNull(e);
                 valueList.Add(ToData(e));
             }
-            ListAddAllRequest request = new ListAddAllRequest(GetName(), valueList, index);
-            bool result = Invoke<bool>(request);
-            return result;
-        }
-        private int IndexOfInternal(object o, bool last)
-        {
-            ThrowExceptionIfNull(o);
-            Data value = ToData(o);
-            ListIndexOfRequest request = new ListIndexOfRequest(GetName(), value, last);
-            int result = Invoke<int>(request);
+            var request = new ListAddAllRequest(GetName(), valueList, index);
+            var result = Invoke<bool>(request);
             return result;
         }
 
@@ -105,16 +93,24 @@ namespace Hazelcast.Client.Proxy
 
         public virtual IList<E> SubList(int fromIndex, int toIndex)
         {
-            ListSubRequest request = new ListSubRequest(GetName(), fromIndex, toIndex);
-            SerializableCollection result = Invoke<SerializableCollection>(request);
+            var request = new ListSubRequest(GetName(), fromIndex, toIndex);
+            var result = Invoke<SerializableCollection>(request);
             ICollection<Data> collection = result.GetCollection();
             IList<E> list = new List<E>(collection.Count);
             foreach (Data value in collection)
             {
-                list.Add((E)ToObject(value));
+                list.Add((E) ToObject(value));
             }
             return list;
         }
+
+        private int IndexOfInternal(object o, bool last)
+        {
+            ThrowExceptionIfNull(o);
+            Data value = ToData(o);
+            var request = new ListIndexOfRequest(GetName(), value, last);
+            var result = Invoke<int>(request);
+            return result;
+        }
     }
-	
 }

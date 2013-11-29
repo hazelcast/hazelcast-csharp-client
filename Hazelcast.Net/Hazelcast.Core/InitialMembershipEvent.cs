@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Hazelcast.Core
 {
@@ -18,8 +19,9 @@ namespace Hazelcast.Core
     [Serializable]
     public class InitialMembershipEvent : EventObject
     {
-        private readonly System.Collections.Generic.ICollection<IMember> members;
-        public InitialMembershipEvent(ICluster cluster, System.Collections.Generic.ICollection<IMember> members) : base(cluster)
+        private readonly ICollection<IMember> members;
+
+        public InitialMembershipEvent(ICluster cluster, ICollection<IMember> members) : base(cluster)
         {
             this.members = members;
         }
@@ -33,7 +35,7 @@ namespace Hazelcast.Core
         ///     for more information.
         /// </summary>
         /// <returns>a set of members.</returns>
-        public virtual System.Collections.Generic.ICollection<IMember> GetMembers()
+        public virtual ICollection<IMember> GetMembers()
         {
             return members;
         }
