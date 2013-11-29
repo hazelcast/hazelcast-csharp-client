@@ -2,21 +2,19 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Hazelcast.Client;
 using Hazelcast.Client.Request.Queue;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
-using Hazelcast.Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
 using Hazelcast.Util;
-
 
 namespace Hazelcast.Client.Proxy
 {
     public sealed class ClientQueueProxy<E> : ClientProxy, IQueue<E>
     {
         private readonly string name;
+
         public ClientQueueProxy(string serviceName, string name)
             : base(serviceName, name)
         {
@@ -26,22 +24,8 @@ namespace Hazelcast.Client.Proxy
         public string AddItemListener(IItemListener<E> listener, bool includeValue)
         {
             var request = new AddListenerRequest(GetName(), includeValue);
-            return Listen<PortableItemEvent>(request, GetPartitionKey(), (sender, args) => HandleItemListener(args, listener, includeValue));
-        }
-
-        private void HandleItemListener(PortableItemEvent portableItemEvent, IItemListener<E> listener, bool includeValue)
-        {
-            E item = includeValue ? (E)GetContext().GetSerializationService().ToObject(portableItemEvent.GetItem()) : default(E);
-            IMember member = GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
-            ItemEvent<E> itemEvent = new ItemEvent<E>(GetName(), portableItemEvent.GetEventType(), item, member);
-            if (portableItemEvent.GetEventType() == ItemEventType.Added)
-            {
-                listener.ItemAdded(itemEvent);
-            }
-            else
-            {
-                listener.ItemRemoved(itemEvent);
-            }
+            return Listen<PortableItemEvent>(request, GetPartitionKey(),
+                (sender, args) => HandleItemListener(args, listener, includeValue));
         }
 
         public bool RemoveItemListener(string registrationId)
@@ -73,28 +57,31 @@ namespace Hazelcast.Client.Proxy
         public bool Offer(E e, long timeout, TimeUnit unit)
         {
             Data data = GetContext().GetSerializationService().ToData(e);
-            OfferRequest request = new OfferRequest(name, unit.ToMillis(timeout), data);
-            bool result = Invoke<bool>(request);
+            var request = new OfferRequest(name, unit.ToMillis(timeout), data);
+            var result = Invoke<bool>(request);
             return result;
         }
+
         public void Put(E e)
         {
             Offer(e, -1, TimeUnit.MILLISECONDS);
         }
+
         public E Take()
         {
             return Poll(-1, TimeUnit.MILLISECONDS);
         }
+
         public E Poll(long timeout, TimeUnit unit)
         {
-            PollRequest request = new PollRequest(name, unit.ToMillis(timeout));
+            var request = new PollRequest(name, unit.ToMillis(timeout));
             return Invoke<E>(request);
         }
 
         public int RemainingCapacity()
         {
-            RemainingCapacityRequest request = new RemainingCapacityRequest(name);
-            int result = Invoke<int>(request);
+            var request = new RemainingCapacityRequest(name);
+            var result = Invoke<int>(request);
             return result;
         }
 
@@ -102,8 +89,8 @@ namespace Hazelcast.Client.Proxy
         public bool Remove(object o)
         {
             Data data = GetContext().GetSerializationService().ToData(o);
-            RemoveRequest request = new RemoveRequest(name, data);
-            bool result = Invoke<bool>(request);
+            var request = new RemoveRequest(name, data);
+            var result = Invoke<bool>(request);
             return result;
         }
 
@@ -111,8 +98,8 @@ namespace Hazelcast.Client.Proxy
         {
             ICollection<Data> list = new List<Data>(1);
             list.Add(GetContext().GetSerializationService().ToData(o));
-            ContainsRequest request = new ContainsRequest(name, list);
-            bool result = Invoke<bool>(request);
+            var request = new ContainsRequest(name, list);
+            var result = Invoke<bool>(request);
             return result;
         }
 
@@ -123,13 +110,13 @@ namespace Hazelcast.Client.Proxy
 
         public int DrainTo<T>(ICollection<T> c, int maxElements) where T : E
         {
-            DrainRequest request = new DrainRequest(name, maxElements);
-            PortableCollection result = Invoke<PortableCollection>(request);
+            var request = new DrainRequest(name, maxElements);
+            var result = Invoke<PortableCollection>(request);
             ICollection<Data> coll = result.GetCollection();
             foreach (Data data in coll)
             {
-                E e = (E)GetContext().GetSerializationService().ToObject(data);
-                c.Add((T)e);
+                var e = (E) GetContext().GetSerializationService().ToObject(data);
+                c.Add((T) e);
             }
             return coll.Count;
         }
@@ -165,9 +152,10 @@ namespace Hazelcast.Client.Proxy
             }
             return res;
         }
+
         public E Peek()
         {
-            PeekRequest request = new PeekRequest(name);
+            var request = new PeekRequest(name);
             return Invoke<E>(request);
         }
 
@@ -200,19 +188,19 @@ namespace Hazelcast.Client.Proxy
 
         public IEnumerator<E> GetEnumerator()
         {
-            var coll = GetAll();
+            ICollection<Data> coll = GetAll();
             return new QueueIterator<E>(coll.GetEnumerator(), GetContext().GetSerializationService());
         }
 
 
         public E[] ToArray()
         {
-            var coll = GetAll();
+            ICollection<Data> coll = GetAll();
             int i = 0;
-            E[] array = new E[coll.Count];
+            var array = new E[coll.Count];
             foreach (Data data in coll)
             {
-                array[i++] = (E)GetContext().GetSerializationService().ToObject(data);
+                array[i++] = (E) GetContext().GetSerializationService().ToObject(data);
             }
             return array;
         }
@@ -233,40 +221,32 @@ namespace Hazelcast.Client.Proxy
             return a;
         }
 
-        private ICollection<Data> GetAll()
-        {
-            IteratorRequest request = new IteratorRequest(name);
-            PortableCollection result = Invoke<PortableCollection>(request);
-            ICollection<Data> coll = result.GetCollection();
-            return coll;
-        }
-
         public bool ContainsAll<_T0>(ICollection<_T0> c)
         {
             IList<Data> list = GetDataList(c);
-            ContainsRequest request = new ContainsRequest(name, list);
-            bool result = Invoke<bool>(request);
+            var request = new ContainsRequest(name, list);
+            var result = Invoke<bool>(request);
             return result;
         }
 
         public bool AddAll<T>(ICollection<T> c)
         {
-            AddAllRequest request = new AddAllRequest(name, GetDataList(c));
-            bool result = Invoke<bool>(request);
+            var request = new AddAllRequest(name, GetDataList(c));
+            var result = Invoke<bool>(request);
             return result;
         }
 
         public bool RemoveAll<T>(ICollection<T> c)
         {
-            CompareAndRemoveRequest request = new CompareAndRemoveRequest(name, GetDataList(c), false);
-            bool result = Invoke<bool>(request);
+            var request = new CompareAndRemoveRequest(name, GetDataList(c), false);
+            var result = Invoke<bool>(request);
             return result;
         }
 
         public bool RetainAll<T>(ICollection<T> c)
         {
-            CompareAndRemoveRequest request = new CompareAndRemoveRequest(name, GetDataList(c), true);
-            bool result = Invoke<bool>(request);
+            var request = new CompareAndRemoveRequest(name, GetDataList(c), true);
+            var result = Invoke<bool>(request);
             return result;
         }
 
@@ -277,7 +257,7 @@ namespace Hazelcast.Client.Proxy
 
         public void Clear()
         {
-            ClearRequest request = new ClearRequest(name);
+            var request = new ClearRequest(name);
             Invoke<object>(request);
         }
 
@@ -285,14 +265,45 @@ namespace Hazelcast.Client.Proxy
         {
             ICollection<Data> list = new List<Data>(1);
             list.Add(GetContext().GetSerializationService().ToData(item));
-            ContainsRequest request = new ContainsRequest(name, list);
-            bool result = Invoke<bool>(request);
+            var request = new ContainsRequest(name, list);
+            var result = Invoke<bool>(request);
             return result;
         }
 
         public void CopyTo(E[] array, int arrayIndex)
         {
             GetAll().ToArray().CopyTo(array, arrayIndex);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        private void HandleItemListener(PortableItemEvent portableItemEvent, IItemListener<E> listener,
+            bool includeValue)
+        {
+            E item = includeValue
+                ? (E) GetContext().GetSerializationService().ToObject(portableItemEvent.GetItem())
+                : default(E);
+            IMember member = GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
+            var itemEvent = new ItemEvent<E>(GetName(), portableItemEvent.GetEventType(), item, member);
+            if (portableItemEvent.GetEventType() == ItemEventType.Added)
+            {
+                listener.ItemAdded(itemEvent);
+            }
+            else
+            {
+                listener.ItemRemoved(itemEvent);
+            }
+        }
+
+        private ICollection<Data> GetAll()
+        {
+            var request = new IteratorRequest(name);
+            var result = Invoke<PortableCollection>(request);
+            ICollection<Data> coll = result.GetCollection();
+            return coll;
         }
 
         protected internal override void OnDestroy()
@@ -320,11 +331,6 @@ namespace Hazelcast.Client.Proxy
                 dataList.Add(GetContext().GetSerializationService().ToData(o));
             }
             return dataList;
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 

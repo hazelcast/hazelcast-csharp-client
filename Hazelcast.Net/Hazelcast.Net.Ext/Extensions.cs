@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace Hazelcast.Hazelcast.Net.Ext
+namespace Hazelcast.Net.Ext
 {
 
     public static class Extensions
