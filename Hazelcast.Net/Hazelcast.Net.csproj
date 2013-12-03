@@ -1,0 +1,165 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CD084DC3-3FD9-4BC2-B9A2-66711F2B3F61}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>
+    </RootNamespace>
+    <AssemblyName>Hazelcast.Net</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Hazelcast.Core\DataAwareItemEvent.cs" />
+    <Compile Include="Hazelcast.Core\EntryEvent.cs" />
+    <Compile Include="Hazelcast.Core\EntryEventType.cs" />
+    <Compile Include="Hazelcast.Core\EntryListener.cs" />
+    <Compile Include="Hazelcast.Core\EventListener.cs" />
+    <Compile Include="Hazelcast.Core\ICollection.cs" />
+    <Compile Include="Hazelcast.Core\IMap.cs" />
+    <Compile Include="Hazelcast.Core\InstanceType.cs" />
+    <Compile Include="Hazelcast.Core\IQueue.cs" />
+    <Compile Include="Hazelcast.Core\ItemEvent.cs" />
+    <Compile Include="Hazelcast.Core\ItemEventType.cs" />
+    <Compile Include="Hazelcast.Core\ItemListener.cs" />
+    <Compile Include="Hazelcast.Core\ITopic.cs" />
+    <Compile Include="Hazelcast.Core\MapEntry.cs" />
+    <Compile Include="Hazelcast.Core\Member.cs" />
+    <Compile Include="Hazelcast.Core\Message.cs" />
+    <Compile Include="Hazelcast.Core\MessageListener.cs" />
+    <Compile Include="Hazelcast.Core\Prefix.cs" />
+    <Compile Include="Hazelcast.IO\CustomSerializerAdaptor.cs" />
+    <Compile Include="Hazelcast.IO\Data.cs" />
+    <Compile Include="Hazelcast.Impl\DataMessage.cs" />
+    <Compile Include="Hazelcast.IO\DataSerializable.cs" />
+    <Compile Include="Hazelcast.IO\DataSerializer.cs" />
+    <Compile Include="Hazelcast.IO\DefaultSerializer.cs" />
+    <Compile Include="Hazelcast.Client\EntryListenerManager.cs" />
+    <Compile Include="Hazelcast.Client\HazelcastClient.cs" />
+    <Compile Include="Hazelcast.IO\ICustomSerializer.cs" />
+    <Compile Include="Hazelcast.Client\InThread.cs" />
+    <Compile Include="Hazelcast.IO\IOUtil.cs" />
+    <Compile Include="Hazelcast.IO\ITypeSerializer.cs" />
+    <Compile Include="Hazelcast.Impl\Keys.cs" />
+    <Compile Include="Hazelcast.Impl\KeyValue.cs" />
+    <Compile Include="Hazelcast.Client\ListenerManager.cs" />
+    <Compile Include="Hazelcast.Client\MapClientProxy.cs" />
+    <Compile Include="Hazelcast.Client\MessageListenerManager.cs" />
+    <Compile Include="Hazelcast.Client\OutThread.cs" />
+    <Compile Include="Hazelcast.Client\Packet.cs" />
+    <Compile Include="Hazelcast.Impl\Pairs.cs" />
+    <Compile Include="Hazelcast.Client\ProxyHelper.cs" />
+    <Compile Include="Hazelcast.Client\QueueClientProxy.cs" />
+    <Compile Include="Hazelcast.Client\QueueItemListenerManager.cs" />
+    <Compile Include="Hazelcast.Examples\TestApp.cs" />
+    <Compile Include="Hazelcast.Examples\TestClient.cs" />
+    <Compile Include="Hazelcast.Client\TopicClientProxy.cs" />
+    <Compile Include="Hazelcast.Client\Call.cs" />
+    <Compile Include="Hazelcast.Client\ClientSerializer.cs" />
+    <Compile Include="Hazelcast.Core\ClusterOperation.cs" />
+    <Compile Include="Hazelcast.Impl\CollectionWrapper.cs" />
+    <Compile Include="Hazelcast.Impl\BlockingQueue.cs" />
+    <Compile Include="Hazelcast.Examples\PerformanceTest.cs" />
+    <Compile Include="Hazelcast.Core\HazelcastInstance.cs" />
+    <Compile Include="Hazelcast.Core\ISet.cs" />
+    <Compile Include="Hazelcast.Client\SetClientProxy.cs" />
+    <Compile Include="Hazelcast.Client\CollectionClientProxy.cs" />
+    <Compile Include="Hazelcast.Core\IList.cs" />
+    <Compile Include="Hazelcast.Client\ListClientProxy.cs" />
+    <Compile Include="Hazelcast.Core\Instance.cs" />
+    <Compile Include="Hazelcast.IO\IDataOutput.cs" />
+    <Compile Include="Hazelcast.IO\BinaryWriterDataOutput.cs" />
+    <Compile Include="Hazelcast.IO\BinaryReaderDataInput.cs" />
+    <Compile Include="Hazelcast.Query\Predicate.cs" />
+    <Compile Include="Hazelcast.Query\SqlPredicate.cs" />
+    <Compile Include="Hazelcast.IO\IDataInput.cs" />
+    <Compile Include="Hazelcast.Client\ClientMapEntry.cs" />
+    <Compile Include="Hazelcast.Impl\CMapEntry.cs" />
+    <Compile Include="Hazelcast.Client\ItemListenerManager.cs" />
+    <Compile Include="Hazelcast.Core\IMultiMap.cs" />
+    <Compile Include="Hazelcast.Client\MultiMapClientProxy.cs" />
+    <Compile Include="Hazelcast.Impl\Values.cs" />
+    <Compile Include="Hazelcast.Core\IdGenerator.cs" />
+    <Compile Include="Hazelcast.Client\IdGeneratorClientProxy.cs" />
+    <Compile Include="Hazelcast.Core\ILock.cs" />
+    <Compile Include="Hazelcast.Client\LockClientProxy.cs" />
+    <Compile Include="Hazelcast.Client\ClientThreadContext.cs" />
+    <Compile Include="Hazelcast.Core\Transaction.cs" />
+    <Compile Include="Hazelcast.Client\TransactionClientProxy.cs" />
+    <Compile Include="Hazelcast.Client\AtomicNumberClientProxy.cs" />
+    <Compile Include="Hazelcast.Core\IAtomicNumber.cs" />
+    <Compile Include="Hazelcast.Client\ClusterClientProxy.cs" />
+    <Compile Include="Hazelcast.Core\ICluster.cs" />
+    <Compile Include="Hazelcast.Core\MembershipEvent.cs" />
+    <Compile Include="Hazelcast.Core\MembershipListener.cs" />
+    <Compile Include="Hazelcast.Core\InstanceListener.cs" />
+    <Compile Include="Hazelcast.Core\InstanceEvent.cs" />
+    <Compile Include="Hazelcast.Core\InstanceEventType.cs" />
+    <Compile Include="Hazelcast.Client\InstanceListenerManager.cs" />
+    <Compile Include="Hazelcast.Impl\ProxyKey.cs" />
+    <Compile Include="Hazelcast.IO\SerializationHelper.cs" />
+    <Compile Include="Hazelcast.Client\MembershipListenerManager.cs" />
+    <Compile Include="Hazelcast.Core\Address.cs" />
+    <Compile Include="Hazelcast.Core\NodeType.cs" />
+    <Compile Include="Hazelcast.Impl\MemberImpl.cs" />
+    <Compile Include="Hazelcast.Core\LifecycleService.cs" />
+    <Compile Include="Hazelcast.Client\LifecycleServiceClientImpl.cs" />
+    <Compile Include="Hazelcast.Client\ClientThread.cs" />
+    <Compile Include="Hazelcast.Client\ConnectionManager.cs" />
+    <Compile Include="Hazelcast.Client\Connection.cs" />
+    <Compile Include="Hazelcast.Client\ClientBinder.cs" />
+    <Compile Include="Hazelcast.Security\Credentials.cs" />
+    <Compile Include="Hazelcast.Client\Extensions.cs" />
+    <Compile Include="Hazelcast.Client\DefaultClientBinder.cs" />
+    <Compile Include="Hazelcast.Client\Bind.cs" />
+    <Compile Include="Hazelcast.Security\AbstractCredentials.cs" />
+    <Compile Include="Hazelcast.Security\UsernamePasswordCredentials.cs" />
+    <Compile Include="Hazelcast.Impl\ClientServiceException.cs" />
+    <Compile Include="Hazelcast.IO\TypeRegistry.cs" />
+    <Compile Include="Hazelcast.Client\ClientConfig.cs" />
+    <Compile Include="Hazelcast.Client\GroupConfig.cs" />
+    <Compile Include="Hazelcast.IO\ITypeConverter.cs" />
+    <Compile Include="Hazelcast.Examples\MyTypeConverter.cs" />
+    <Compile Include="Hazelcast.Examples\MyCSharpClass.cs" />
+    <Compile Include="Hazelcast.IO\SocketInterceptor.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

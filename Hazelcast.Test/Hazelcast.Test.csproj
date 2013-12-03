@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{05C74A19-7374-4E72-B118-E41876C75120}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace></RootNamespace>
+    <AssemblyName>Hazelcast.Test</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>Hazelcast.Test.SimpleMapTestFromClient</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>  
+  <ItemGroup>
+    <Compile Include="Hazelcast.Client.Tests\MapTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\PerformanceTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\QueueTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\SetTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\ListTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\HazelcastTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\MultiMapTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\IdGeneratorTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\LockTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\TopicTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\TransactionTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\AtomicNumberTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\CountDownLatchTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\ClusterTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\ConnectionTest.cs" />
+    <Compile Include="Hazelcast.Client.Tests\Customer.cs" />
+    <Compile Include="Hazelcast.Client.Tests\Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj">
+      <Project>{CD084DC3-3FD9-4BC2-B9A2-66711F2B3F61}</Project>
+      <Name>Hazelcast.Net</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
