@@ -7,7 +7,8 @@
     <ProjectGuid>{20F910E8-C1BC-4D44-8460-351FDF0DD54D}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Hazelcast.Test</RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <AssemblyName>Hazelcast.Test</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -33,6 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>Hazelcast.Test.SimpleMapTestFromClient</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL" />
@@ -76,10 +80,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj">
-      <Project>{538C038C-9681-42CB-9F2C-22017547A53E}</Project>
+      <Project>{CD084DC3-3FD9-4BC2-B9A2-66711F2B3F61}</Project>
       <Name>Hazelcast.Net</Name>
     </ProjectReference>
   </ItemGroup>

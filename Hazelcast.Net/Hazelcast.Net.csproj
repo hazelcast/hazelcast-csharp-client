@@ -7,7 +7,8 @@
     <ProjectGuid>{538C038C-9681-42CB-9F2C-22017547A53E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Hazelcast</RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <AssemblyName>Hazelcast.Net</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -23,15 +24,30 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release\x86\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\x64\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <MSBuildCommunityTasksPath>..\.build</MSBuildCommunityTasksPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
   <ItemGroup>
     <Compile Include="Hazelcast.Core\EntryAdapter.cs" />
     <Compile Include="Hazelcast.Core\IAtomicLong.cs" />
@@ -488,12 +504,14 @@
     <Compile Include="Hazelcast.Util\ThreadUtil.cs" />
     <Compile Include="Hazelcast.Util\ValidationUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib">
@@ -503,12 +521,69 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.XML" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hazelcast-client-default.xml.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
+
+  <Target Name="Version">
+    <Version BuildType="None" RevisionType="BuildIncrement" VersionFile="version.txt">
+      <Output TaskParameter="Major" PropertyName="Major" />
+      <Output TaskParameter="Minor" PropertyName="Minor" />
+      <Output TaskParameter="Build" PropertyName="Build" />
+      <Output TaskParameter="Revision" PropertyName="Revision" />
+    </Version>
+    <Message Text="Version: $(Major).$(Minor).$(Build).$(Revision)" />
+    <GitVersion LocalPath="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="CommitHash" PropertyName="CommitHash" />
+    </GitVersion>
+    <Message Text="Version: $(Major).$(Minor).$(Build).$(Revision)" />
+    <Message Text="Commit Hash: $(CommitHash)" />
+    <Time>
+      <Output TaskParameter="Month" PropertyName="Month" />
+      <Output TaskParameter="Day" PropertyName="Day" />
+      <Output TaskParameter="Year" PropertyName="Year" />
+    </Time>
+    <AssemblyInfo CodeLanguage="CS" 
+	OutputFile="Properties\AssemblyInfo.cs" 
+	GenerateClass="false" 
+	AssemblyTitle="Hazelcast .Net Client" 
+	AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" 
+	AssemblyCompany="Hazelcast Inc." 
+	AssemblyProduct="Hazelcast Enterprise Edition" 
+	AssemblyCopyright="Copyright (c) 2008-2013, Hazelcast, Inc" 
+	AssemblyConfiguration="Commit $(CommitHash)" 
+	ComVisible="false" 
+	CLSCompliant="false" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" 
+	AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" 
+	AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" />
   </Target>
-  <Target Name="AfterBuild">
+  
+  <Target Name="Merge" DependsOnTargets="Build">
+    <!-- Merge together files -->
+    <ILMerge InputAssemblies="$(OutputPath)\Hazelcast.Net.dll;$(OutputPath)\ICSharpCode.SharpZipLib.dll"
+             Internalize="true"
+             OutputFile="$(OutputPath)\Hazelcast.Client.dll"
+             ToolPath="..\packages\ilmerge.2.13.0307\" />
+
+    <!-- Cleanup unneed files -->
+	<CreateItem Include="$(OutputPath)\Hazelcast.Net.*;$(OutputPath)\ICSharpCode.SharpZipLib.*" Exclude="$(OutputPath)\Hazelcast.Client.*" >
+      <Output TaskParameter="Include" ItemName="PurgeBuildFiles" />
+    </CreateItem>
+      <Delete Files="@(PurgeBuildFiles)" />
+    </Target>
+    
+	<Target Name="Nightly" >
+		<Message Text="Build Committed Revision: $(Revision)" />
+    </Target>
+	
+	<Target Name="Release" DependsOnTargets="Merge">
+		<Message Text="Build Committed Revision: $(Revision)" />
   </Target>
-  -->
 </Project>
