@@ -23,7 +23,9 @@ namespace Hazelcast.Impl
 	        dout.writeUTF(exception.Message);
 	    }
 	
-	    public void readData(IDataInput din) {
+	    public void readData(IDataInput din)
+	    {
+	        bool isDS=din.readBoolean();
 	      	exception = new Exception("Exception on Server: "+din.readUTF());
 	    }
 	}
