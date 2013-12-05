@@ -16,7 +16,7 @@ namespace Hazelcast.Client.Tests
 		
 		public static HazelcastClient newHazelcastClient(){
 			ClientConfig config = new ClientConfig();
-			config.addAddress("127.0.0.1");
+			config.addAddress("127.0.0.1:5701");
 			return HazelcastClient.newHazelcastClient(config);		
 		}
 		
