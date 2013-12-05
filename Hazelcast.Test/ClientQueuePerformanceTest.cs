@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Test
 
         //    static HazelcastInstance second;
         /// <exception cref="System.Exception"></exception>
-        public static void Main(string[] args)
+        public static void Main111(string[] args)
         {
             var config = new ClientConfig();
             config.AddAddress("127.0.0.1");
