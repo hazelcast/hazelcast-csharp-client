@@ -72,6 +72,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientTxnQueueTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTxnSetTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTxnTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientXmlTest.cs" />
     <Compile Include="Hazelcast.Client.Test\GenericEvent.cs" />
     <Compile Include="PortableTests.cs" />
     <Compile Include="Program.cs" />
