@@ -47,7 +47,7 @@ namespace Hazelcast.Config
                 }
                 if (input == null)
                 {
-                    input = new StreamReader(Properties.Resources.hazelcastclientdefault);
+                    input = new StreamReader(Properties.Resources.hazelcast_client_default);
                     logger.Info("Using Default configuration file at ");
                 }
                 if (input == null)
@@ -59,6 +59,15 @@ namespace Hazelcast.Config
             {
                 logger.Severe("Error while creating configuration:" + e.Message, e);
             }
+        }
+        
+        public XmlClientConfigBuilder(StreamReader input)
+        {
+            if (input == null)
+            {
+                throw new ArgumentNullException("input");
+            }
+            this.input = input;
         }
 
         public virtual ClientConfig Build()
@@ -160,8 +169,8 @@ namespace Hazelcast.Config
                         nearCacheConfig.SetInvalidateOnChange(Boolean.Parse(GetTextContent(child)));
                         break;
                 }
-                clientConfig.AddNearCacheConfig(name, nearCacheConfig);
             }
+            clientConfig.AddNearCacheConfig(name, nearCacheConfig);
         }
 
         private void HandleLoadBalancer(XmlNode node)

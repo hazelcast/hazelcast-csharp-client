@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>
     </RootNamespace>
-    <AssemblyName>Hazelcast.Net</AssemblyName>
+    <AssemblyName>HazelcastClient3x</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -23,6 +23,16 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\AnyCPU\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>pdbonly</DebugType>
@@ -528,10 +538,14 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\hazelcast-client-default.xml.txt" />
+    <Content Include="Resources\hazelcast-client-default.xml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hazelcast-config-full.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-
   <Target Name="Version">
     <Version BuildType="None" RevisionType="BuildIncrement" VersionFile="version.txt">
       <Output TaskParameter="Major" PropertyName="Major" />
@@ -550,40 +564,23 @@
       <Output TaskParameter="Day" PropertyName="Day" />
       <Output TaskParameter="Year" PropertyName="Year" />
     </Time>
-    <AssemblyInfo CodeLanguage="CS" 
-	OutputFile="Properties\AssemblyInfo.cs" 
-	GenerateClass="false" 
-	AssemblyTitle="Hazelcast .Net Client" 
-	AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" 
-	AssemblyCompany="Hazelcast Inc." 
-	AssemblyProduct="Hazelcast Enterprise Edition" 
-	AssemblyCopyright="Copyright (c) 2008-2013, Hazelcast, Inc" 
-	AssemblyConfiguration="Commit $(CommitHash)" 
-	ComVisible="false" 
-	CLSCompliant="false" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" 
-	AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" 
-	AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" />
+    <AssemblyInfo CodeLanguage="CS" OutputFile="Properties\AssemblyInfo.cs" GenerateClass="false" AssemblyTitle="Hazelcast .Net Client" AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" AssemblyCompany="Hazelcast Inc." AssemblyProduct="Hazelcast Enterprise Edition" AssemblyCopyright="Copyright (c) 2008-2013, Hazelcast, Inc" AssemblyConfiguration="Commit $(CommitHash)" ComVisible="false" CLSCompliant="false" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" />
   </Target>
-  
   <Target Name="Merge" DependsOnTargets="Build">
     <!-- Merge together files -->
-    <ILMerge InputAssemblies="$(OutputPath)\Hazelcast.Net.dll;$(OutputPath)\ICSharpCode.SharpZipLib.dll"
-             Internalize="true"
-             OutputFile="$(OutputPath)\Hazelcast.Client.dll"
-             ToolPath="..\packages\ilmerge.2.13.0307\" />
-
+    <ILMerge InputAssemblies="$(OutputPath)\HazelcastClient3x.dll;$(OutputPath)\ICSharpCode.SharpZipLib.dll" Internalize="true" OutputFile="$(OutputPath)\..\HazelcastClient3x.dll" ToolPath="..\packages\ilmerge.2.13.0307\" />
     <!-- Cleanup unneed files -->
-	<CreateItem Include="$(OutputPath)\Hazelcast.Net.*;$(OutputPath)\ICSharpCode.SharpZipLib.*" Exclude="$(OutputPath)\Hazelcast.Client.*" >
+    <CreateItem Include="$(OutputPath)\HazelcastClient3x.*;$(OutputPath)\ICSharpCode.SharpZipLib.*">
       <Output TaskParameter="Include" ItemName="PurgeBuildFiles" />
     </CreateItem>
-      <Delete Files="@(PurgeBuildFiles)" />
-    </Target>
-    
-	<Target Name="Nightly" >
-		<Message Text="Build Committed Revision: $(Revision)" />
-    </Target>
-	
-	<Target Name="Release" DependsOnTargets="Merge">
-		<Message Text="Build Committed Revision: $(Revision)" />
+    <Delete Files="@(PurgeBuildFiles)" />
+	<MV SourceFiles="$(OutputPath)\..\HazelcastClient3x.dll" DestinationFiles="$(OutputPath)\HazelcastClient3x.dll" />	
+	<MV SourceFiles="$(OutputPath)\..\HazelcastClient3x.pdb" DestinationFiles="$(OutputPath)\HazelcastClient3x.pdb" />	
+  </Target>
+  <Target Name="Nightly">
+    <Message Text="Build Committed Revision: $(Revision)" />
+  </Target>
+  <Target Name="Release" DependsOnTargets="Merge">
+    <Message Text="Build Committed Revision: $(Revision)" />
   </Target>
 </Project>
