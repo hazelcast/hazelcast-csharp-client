@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>
     </RootNamespace>
-    <AssemblyName>Hazelcast.Net</AssemblyName>
+    <AssemblyName>HazelcastClient2x</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -23,6 +23,16 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\AnyCPU\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>pdbonly</DebugType>
@@ -200,10 +210,7 @@
   <Target Name="Nightly">
     <Message Text="Build Committed Revision: $(Revision)" />
   </Target>
-  <Target Name="Rename" DependsOnTargets="Build">
-    <MV SourceFiles="$(OutputPath)\Hazelcast.Net.dll" DestinationFiles="$(OutputPath)\Hazelcast.Client.dll" />
-  </Target>
-  <Target Name="Release" DependsOnTargets="Rename">
+  <Target Name="Release" DependsOnTargets="Build">
     <Message Text="Build Committed Revision: $(Revision)" />
   </Target>
 </Project>
