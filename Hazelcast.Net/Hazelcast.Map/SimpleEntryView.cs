@@ -122,6 +122,11 @@ namespace Hazelcast.Map
             version = input.ReadLong();
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual int GetFactoryId()
         {
             return MapDataSerializerHook.FId;

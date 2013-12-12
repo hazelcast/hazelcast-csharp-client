@@ -166,7 +166,7 @@ namespace Hazelcast.Util
     [Serializable]
     internal class QueryResultSet : ICollection, IIdentifiedDataSerializable
     {
-        internal readonly ConcurrentBag<QueryResultEntry> entries = new ConcurrentBag<QueryResultEntry>();
+        internal readonly ConcurrentBag<IQueryResultEntry> entries = new ConcurrentBag<IQueryResultEntry>();
         [NonSerialized] internal readonly ISerializationService serializationService;
         private bool _isSynchronized;
         private object _syncRoot;
@@ -208,7 +208,7 @@ namespace Hazelcast.Util
             output.WriteBoolean(data);
             output.WriteUTF(iterationType.ToString());
             output.WriteInt(entries.Count);
-            foreach (QueryResultEntry queryResultEntry in entries)
+            foreach (IQueryResultEntry queryResultEntry in entries)
             {
                 output.WriteObject(queryResultEntry);
             }
@@ -222,8 +222,13 @@ namespace Hazelcast.Util
             int size = input.ReadInt();
             for (int i = 0; i < size; i++)
             {
-                entries.Add(input.ReadObject<QueryResultEntry>());
+                entries.Add(input.ReadObject<IQueryResultEntry>());
             }
+        }
+
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
         }
 
         public int GetFactoryId()
@@ -251,7 +256,7 @@ namespace Hazelcast.Util
     {
         private readonly QueryResultSet _enclosing;
 
-        private readonly IEnumerator<QueryResultEntry> _enumerator;
+        private readonly IEnumerator<IQueryResultEntry> _enumerator;
         private object _Current;
 
         internal _QueryResultIterator(QueryResultSet enclosing)
@@ -264,7 +269,7 @@ namespace Hazelcast.Util
         {
             if (_enumerator.MoveNext())
             {
-                QueryResultEntry entry = _enumerator.Current;
+                IQueryResultEntry entry = _enumerator.Current;
                 if (_enclosing.iterationType == IterationType.Value)
                 {
                     Data valueData = entry.GetValueData();

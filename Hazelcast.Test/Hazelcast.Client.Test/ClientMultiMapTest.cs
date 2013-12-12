@@ -108,6 +108,9 @@ namespace Hazelcast.Client.Test
             
 			mm.AddEntryListener(listener1, true);
 			mm.AddEntryListener(listener2, "key3", true);
+
+            Thread.Sleep(1000);
+
 			mm.Put("key1", "value1");
 			mm.Put("key1", "value2");
 			mm.Put("key1", "value3");

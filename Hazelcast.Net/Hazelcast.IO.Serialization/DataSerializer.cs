@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Serialization.Hook;
+using Hazelcast.Transaction;
 using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
@@ -14,6 +16,12 @@ namespace Hazelcast.IO.Serialization
         private readonly IDictionary<int, IDataSerializableFactory> factories =
             new Dictionary<int, IDataSerializableFactory>();
 
+
+        private readonly IDictionary<string, Type> class2Type = new Dictionary<string, Type>()
+        {
+            {"com.hazelcast.query.SqlPredicate", typeof(SqlPredicate)},
+            {"com.hazelcast.transaction.TransactionOptions", typeof(TransactionOptions)}
+        }; 
         internal DataSerializer(IDictionary<int, IDataSerializableFactory> dataSerializableFactories)
         {
             try
@@ -85,15 +93,14 @@ namespace Hazelcast.IO.Serialization
                 else
                 {
                     className = input.ReadUTF();
-                    Type type = Type.GetType(className, false, true);
+                    Type type = null;
+                    class2Type.TryGetValue(className, out type);
                     if (type != null) ds = Activator.CreateInstance(type) as IDataSerializable;
                     if (ds == null)
                     {
-                        throw new HazelcastSerializationException("Not able to create an instance for className: " +
-                                                                  className);
+                        throw new HazelcastSerializationException("Not able to create an instance for className: " +className);
                     }
                 }
-                //ClassLoaderUtil.newInstance(in.getClassLoader(), className);
                 ds.ReadData(input);
                 return ds;
             }
@@ -126,7 +133,7 @@ namespace Hazelcast.IO.Serialization
             }
             else
             {
-                output.WriteUTF(obj.GetType().FullName);
+                output.WriteUTF(obj.GetJavaClassName());
             }
             obj.WriteData(output);
         }

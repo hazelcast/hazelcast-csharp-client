@@ -48,6 +48,11 @@ namespace Hazelcast.Transaction
             transactionType = (TransactionType) input.ReadInt();
         }
 
+        public string GetJavaClassName()
+        {
+            return "com.hazelcast.transaction.TransactionOptions";
+        }
+
         /// <summary>
         ///     Gets the
         ///     <see cref="TransactionType">TransactionType</see>

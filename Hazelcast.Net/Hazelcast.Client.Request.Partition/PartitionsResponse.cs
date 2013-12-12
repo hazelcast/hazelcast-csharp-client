@@ -66,6 +66,11 @@ namespace Hazelcast.Client.Request.Partition
             }
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         public Address[] GetMembers()
         {
             return members;

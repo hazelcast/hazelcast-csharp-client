@@ -41,5 +41,10 @@ namespace Hazelcast.Client.Request.Executor
         {
             name = input.ReadUTF();
         }
+
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

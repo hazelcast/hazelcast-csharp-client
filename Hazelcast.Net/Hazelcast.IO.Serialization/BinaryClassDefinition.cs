@@ -29,6 +29,11 @@ namespace Hazelcast.IO.Serialization
 
         public abstract void WriteData(IObjectDataOutput output);
         public abstract void ReadData(IObjectDataInput input);
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         public abstract IFieldDefinition Get(string name);
         public abstract IFieldDefinition Get(int fieldIndex);
         public abstract bool HasField(string fieldName);

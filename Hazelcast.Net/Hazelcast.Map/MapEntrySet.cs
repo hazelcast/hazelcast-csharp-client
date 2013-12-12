@@ -44,6 +44,11 @@ namespace Hazelcast.Map
             }
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         public int GetFactoryId()
         {
             return MapDataSerializerHook.FId;

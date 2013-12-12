@@ -63,6 +63,11 @@ namespace Hazelcast.IO.Serialization
             partitionHash = input.ReadInt();
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         ///     WARNING:
         ///     <p />

@@ -13,9 +13,9 @@ namespace Hazelcast.Core
     ///             <li>
     ///                 Methods, including but not limited to <tt>get</tt>, <tt>containsKey</tt>,
     ///                 <tt>containsValue</tt>, <tt>remove</tt>, <tt>put</tt>,
-    ///                 <tt>lock</tt>, <tt>unlock</tt>, do not use <tt>hashCode</tt> and <tt>equals</tt>
+    ///                 <tt>lock</tt>, <tt>unlock</tt>, do not use <tt>GetHashCode</tt> and <tt>Equals</tt>
     ///                 implementations of keys,
-    ///                 instead they use <tt>hashCode</tt> and <tt>equals</tt> of binary (serialized) forms of the objects.
+    ///                 instead they use <tt>GetHashCode</tt> and <tt>Equals</tt> of binary (serialized) forms of the objects.
     ///             </li>
     ///             <li>
     ///                 Methods, including but not limited to <tt>get</tt>, <tt>remove</tt>,
@@ -26,7 +26,7 @@ namespace Hazelcast.Core
     ///         </ul>
     ///     </p>
     /// </remarks>
-    /// <seealso cref="IMap{K, V}">IMap&lt;K, V&gt;</seealso>
+    /// <seealso cref="IHazelcastMap{K, V}">IMap&lt;K, V&gt;</seealso>
     public interface IMultiMap<K, V> : IBaseMultiMap<K, V>, IDistributedObject
     {
         //string GetName();
@@ -41,8 +41,8 @@ namespace Hazelcast.Core
         ///         <b>Warning:</b>
         ///     </p>
         ///     <p>
-        ///         This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///         the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///         This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///         the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///         defined in <tt>key</tt>'s class.
         ///     </p>
         /// </remarks>
@@ -62,8 +62,8 @@ namespace Hazelcast.Core
         ///         <b>Warning:</b>
         ///     </p>
         ///     <p>
-        ///         This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///         the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///         This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///         the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///         defined in <tt>key</tt>'s class.
         ///     </p>
         ///     <p />
@@ -84,8 +84,8 @@ namespace Hazelcast.Core
         ///     <p>
         ///         <b>Warning:</b>
         ///     </p>
-        ///     This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///     the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///     This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///     the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///     defined in <tt>key</tt>'s class.
         /// </remarks>
         /// <param name="key">the key of the entry to remove</param>
@@ -101,8 +101,8 @@ namespace Hazelcast.Core
         ///         <b>Warning:</b>
         ///     </p>
         ///     <p>
-        ///         This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///         the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///         This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///         the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///         defined in <tt>key</tt>'s class.
         ///     </p>
         ///     <p />
@@ -195,8 +195,8 @@ namespace Hazelcast.Core
         ///         <b>Warning:</b>
         ///     </p>
         ///     <p>
-        ///         This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///         the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///         This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///         the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///         defined in <tt>key</tt>'s class.
         ///     </p>
         /// </remarks>
@@ -217,8 +217,8 @@ namespace Hazelcast.Core
         /// <remarks>
         ///     Returns whether the multimap contains the given key-value pair.
         ///     <p />
-        ///     This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///     the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///     This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///     the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///     defined in <tt>key</tt>'s class.
         /// </remarks>
         /// <param name="key">the key whose existence is checked.</param>
@@ -243,8 +243,8 @@ namespace Hazelcast.Core
         ///         <b>Warning:</b>
         ///     </p>
         ///     <p>
-        ///         This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///         the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///         This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///         the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///         defined in <tt>key</tt>'s class.
         ///     </p>
         /// </remarks>
@@ -307,8 +307,8 @@ namespace Hazelcast.Core
         ///         <b>Warning:</b>
         ///     </p>
         ///     <p>
-        ///         This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///         the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///         This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///         the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///         defined in <tt>key</tt>'s class.
         ///     </p>
         /// </remarks>
@@ -339,8 +339,8 @@ namespace Hazelcast.Core
         ///             <b>Warning:</b>
         ///         </p>
         ///         <p>
-        ///             This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///             the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///             This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///             the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///             defined in <tt>key</tt>'s class.
         ///         </p>
         /// </remarks>
@@ -367,8 +367,8 @@ namespace Hazelcast.Core
         ///             <p>
         ///                 <b>Warning:</b>
         ///             </p>
-        ///             This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///             the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///             This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///             the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///             defined in <tt>key</tt>'s class.
         /// </remarks>
         /// <param name="key">key to lock.</param>
@@ -385,8 +385,8 @@ namespace Hazelcast.Core
         ///         <p>
         ///             <b>Warning:</b>
         ///         </p>
-        ///         This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///         the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///         This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///         the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///         defined in <tt>key</tt>'s class.
         /// </remarks>
         /// <param name="key">key to lock to be checked.</param>
@@ -404,8 +404,8 @@ namespace Hazelcast.Core
         ///             <b>Warning:</b>
         ///         </p>
         ///         <p>
-        ///             This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///             the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///             This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///             the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///             defined in <tt>key</tt>'s class.
         ///         </p>
         /// </remarks>
@@ -430,8 +430,8 @@ namespace Hazelcast.Core
         ///             <b>Warning:</b>
         ///         </p>
         ///         <p>
-        ///             This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///             the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///             This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///             the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///             defined in <tt>key</tt>'s class.
         ///         </p>
         /// </remarks>
@@ -453,8 +453,8 @@ namespace Hazelcast.Core
         ///         <b>Warning:</b>
         ///     </p>
         ///     <p>
-        ///         This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///         the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///         This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///         the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///         defined in <tt>key</tt>'s class.
         ///     </p>
         /// </remarks>
@@ -470,8 +470,8 @@ namespace Hazelcast.Core
         ///     <p>
         ///         <b>Warning:</b>
         ///     </p>
-        ///     This method uses <tt>hashCode</tt> and <tt>equals</tt> of binary form of
-        ///     the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        ///     This method uses <tt>GetHashCode</tt> and <tt>Equals</tt> of binary form of
+        ///     the <tt>key</tt>, not the actual implementations of <tt>GetHashCode</tt> and <tt>Equals</tt>
         ///     defined in <tt>key</tt>'s class.
         /// </remarks>
         /// <param name="key">key to lock.</param>

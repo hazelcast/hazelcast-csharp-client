@@ -51,6 +51,11 @@ namespace Hazelcast.IO.Serialization
             classId = input.ReadInt();
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual FieldType GetFieldType()
         {
             return type;

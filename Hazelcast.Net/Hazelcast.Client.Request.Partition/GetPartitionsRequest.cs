@@ -28,5 +28,10 @@ namespace Hazelcast.Client.Request.Partition
         public void ReadData(IObjectDataInput input)
         {
         }
+
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

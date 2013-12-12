@@ -41,6 +41,11 @@ namespace Hazelcast.Client.Request.Cluster
             eventType = input.ReadInt();
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         public int GetFactoryId()
         {
             return ClusterDataSerializerHook.FId;

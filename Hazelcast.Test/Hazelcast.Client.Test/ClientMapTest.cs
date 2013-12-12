@@ -519,14 +519,18 @@ namespace Hazelcast.Client.Test
 		}
 
 
-		//    @Test
-		//    public void testValues() {
-		//        fillMap();
-		//
-		//        final Collection values = map.values(new SqlPredicate("this == value1"));
-		//        Assert.assertEquals(1, values.size());
-		//        Assert.assertEquals("value1", values.iterator().next());
-		//    }
+        [Test]
+		public void TestValues() 
+        {
+		    FillMap();
+		
+		    var values = map.Values(new SqlPredicate("this == value1"));
+		    Assert.AreEqual(1, values.Count);
+            IEnumerator<object> enumerator = values.GetEnumerator();
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("value1", enumerator.Current);
+		}
+
 		/// <exception cref="System.Exception"></exception>
 		[Test]
 		public virtual void TestReplace()
@@ -574,84 +578,98 @@ namespace Hazelcast.Client.Test
 		//        Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
 		//        Assert.assertEquals(2,map.get(1));
 		//    }
-		//    @Test
-		//    public void testListener() throws InterruptedException {
-		//        final CountdownEvent latch1Add = new CountdownEvent(5);
-		//        final CountdownEvent latch1Remove = new CountdownEvent(2);
-		//
-		//        final CountdownEvent latch2Add = new CountdownEvent(1);
-		//        final CountdownEvent latch2Remove = new CountdownEvent(1);
-		//
-		//        EntryListener listener1 = new EntryAdapter() {
-		//            public void entryAdded(EntryEvent event) {
-		//                latch1Add.Signal();
-		//            }
-		//
-		//            public void entryRemoved(EntryEvent event) {
-		//                latch1Remove.Signal();
-		//            }
-		//        };
-		//
-		//        EntryListener listener2 = new EntryAdapter() {
-		//            public void entryAdded(EntryEvent event) {
-		//                latch2Add.Signal();
-		//            }
-		//
-		//            public void entryRemoved(EntryEvent event) {
-		//                latch2Remove.Signal();
-		//            }
-		//        };
-		//
-		//        map.addEntryListener(listener1, false);
-		//        map.addEntryListener(listener2, "key3", true);
-		//
-		//        Thread.sleep(1000);
-		//
-		//        map.put("key1", "value1");
-		//        map.put("key2", "value2");
-		//        map.put("key3", "value3");
-		//        map.put("key4", "value4");
-		//        map.put("key5", "value5");
-		//
-		//        map.remove("key1");
-		//        map.remove("key3");
-		//
-		//        Assert.assertTrue(latch1Add.await(10, TimeUnit.SECONDS));
-		//        Assert.assertTrue(latch1Remove.await(10, TimeUnit.SECONDS));
-		//        Assert.assertTrue(latch2Add.await(5, TimeUnit.SECONDS));
-		//        Assert.assertTrue(latch2Remove.await(5, TimeUnit.SECONDS));
-		//    }
-		//    @Test
-		//    public void testPredicateListenerWithPortableKey() throws InterruptedException {
-		//        IMap tradeMap = client.getMap("tradeMap");
-		//        final CountdownEvent CountdownEvent = new CountdownEvent(1);
-		//        final AtomicInteger atomicInteger = new AtomicInteger(0);
-		//        EntryListener listener = new EntryListener() {
-		//            @Override
-		//            public void entryAdded(EntryEvent event) {
-		//                atomicInteger.incrementAndGet();
-		//                CountdownEvent.Signal();
-		//            }
-		//
-		//            @Override
-		//            public void entryRemoved(EntryEvent event) {
-		//            }
-		//
-		//            @Override
-		//            public void entryUpdated(EntryEvent event) {
-		//            }
-		//
-		//            @Override
-		//            public void entryEvicted(EntryEvent event) {
-		//            }
-		//        };
-		//        final AuthenticationRequest key = new AuthenticationRequest(new UsernamePasswordCredentials("a", "b"));
-		//        tradeMap.addEntryListener(listener, key, true);
-		//        final AuthenticationRequest key2 = new AuthenticationRequest(new UsernamePasswordCredentials("a", "c"));
-		//        tradeMap.put(key2, 1);
-		//        Assert.assertFalse(CountdownEvent.await(15, TimeUnit.SECONDS));
-		//        Assert.assertEquals(0,atomicInteger.get());
-		//    }
+		   
+        /// <exception cref="System.Exception"></exception>
+		[Test]
+        public void testListener()
+        {
+			CountdownEvent latch1Add = new CountdownEvent(5);
+			CountdownEvent latch1Remove = new CountdownEvent(2);
+			CountdownEvent latch2Add = new CountdownEvent(1);
+			CountdownEvent latch2Remove = new CountdownEvent(1);
+            EntryAdapter<object,object> listener1=new EntryAdapter<object, object>(
+                delegate(EntryEvent<object, object> @event) { latch1Add.Signal(); },
+                delegate(EntryEvent<object, object> @event) { latch1Remove.Signal(); }, 
+                delegate(EntryEvent<object, object> @event) {  },
+                delegate(EntryEvent<object, object> @event) {  }  ); 
+
+            EntryAdapter<object,object> listener2=new EntryAdapter<object, object>(
+                delegate(EntryEvent<object, object> @event)
+                {
+                    latch2Add.Signal();
+                },
+                delegate(EntryEvent<object, object> @event)
+                {
+                    latch2Remove.Signal();
+                }, 
+                delegate(EntryEvent<object, object> @event) {  },
+                delegate(EntryEvent<object, object> @event) {  }  ); 
+            
+			map.AddEntryListener(listener1, false);
+			map.AddEntryListener(listener2, "key3", true);
+
+            Thread.Sleep(1000);
+
+			map.Put("key1", "value1");
+			map.Put("key2", "value2");
+			map.Put("key3", "value3");
+			map.Put("key4", "value4");
+			map.Put("key5", "value5");
+
+            Thread.Sleep(1000);
+
+			map.Remove("key1");
+			map.Remove("key3");
+
+			Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(1000)));
+            Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
+            Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
+            Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
+        }
+
+        ///// <exception cref="System.Exception"></exception>
+        //[Test]
+        //public void testPredicateListenerWithPortableKey() throws InterruptedException {
+        //    //var tradeMap = client.getMap("tradeMap");
+        //    //final CountdownEvent CountdownEvent = new CountdownEvent(1);
+        //    //final AtomicInteger atomicInteger = new AtomicInteger(0);
+
+        //    var countdownEvent = new CountdownEvent(1);
+        //    EntryAdapter<object,object> listener=new EntryAdapter<object, object>(
+        //        delegate(EntryEvent<object, object> @event) { countdownEvent.Signal(); },
+        //        delegate(EntryEvent<object, object> @event) {  }, 
+        //        delegate(EntryEvent<object, object> @event) {  },
+        //        delegate(EntryEvent<object, object> @event) {  }  ); 
+
+        //    //EntryListener listener = new EntryListener() {
+        //    //    @Override
+        //    //    public void entryAdded(EntryEvent event) {
+        //    //        atomicInteger.incrementAndGet();
+        //    //        countdownEvent.Signal();
+        //    //    }
+		
+        //    //    @Override
+        //    //    public void entryRemoved(EntryEvent event) {
+        //    //    }
+		
+        //    //    @Override
+        //    //    public void entryUpdated(EntryEvent event) {
+        //    //    }
+		
+        //    //    @Override
+        //    //    public void entryEvicted(EntryEvent event) {
+        //    //    }
+        //    //};
+        //    var key = new AuthenticationRequest(new UsernamePasswordCredentials("a", "b"));
+        //    tradeMap.addEntryListener(listener, key, true);
+
+        //    var key2 = new AuthenticationRequest(new UsernamePasswordCredentials("a", "c"));
+        //    tradeMap.put(key2, 1);
+		    
+        //    Assert.assertFalse(CountdownEvent.await(15, TimeUnit.SECONDS));
+        //    Assert.assertEquals(0,atomicInteger.get());
+        //}
+
 		//    @Test
 		//    public void testBasicPredicate() {
 		//        fillMap();

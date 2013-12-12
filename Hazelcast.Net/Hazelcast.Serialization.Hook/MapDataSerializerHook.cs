@@ -1,6 +1,7 @@
 using System;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Map;
+using Hazelcast.Util;
 
 namespace Hazelcast.Serialization.Hook
 {
@@ -39,8 +40,8 @@ namespace Hazelcast.Serialization.Hook
             constructors[EntrySet] = delegate { return new MapEntrySet(); };
             constructors[EntryView] = delegate { return new SimpleEntryView<object, object>(); };
             constructors[MapStats] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[QueryResultEntry] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[QueryResultSet] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
+            constructors[QueryResultEntry] = delegate { return new QueryResultEntry();};
+            constructors[QueryResultSet] = delegate { return new QueryResultSet(); };
             return new ArrayDataSerializableFactory(constructors);
         }
     }

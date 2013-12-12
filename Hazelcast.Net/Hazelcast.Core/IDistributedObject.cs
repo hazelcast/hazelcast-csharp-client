@@ -4,7 +4,7 @@ namespace Hazelcast.Core
 {
     /// <summary>Base interface for all distributed objects.</summary>
     /// <remarks>Base interface for all distributed objects.</remarks>
-    /// <seealso cref="IMap{K, V}">IMap&lt;K, V&gt;</seealso>
+    /// <seealso cref="IHazelcastMap{K, V}">IMap&lt;K, V&gt;</seealso>
     /// <seealso cref="IQueue{E}">IQueue&lt;E&gt;</seealso>
     /// <seealso cref="IMultiMap{K,V}">IMultiMap&lt;K, V&gt;</seealso>
     /// <seealso cref="ITopic{E}">ITopic&lt;E&gt;</seealso>
