@@ -5,9 +5,9 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapAddEntryListenerRequest : IPortable
+    public class MapAddEntryListenerRequest<K, V> : IPortable
     {
-        private readonly IPredicate<object, object> predicate;
+        private IPredicate<K, V> predicate;
 
         private bool includeValue;
         private Data key;
@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Request.Map
             this.key = key;
         }
 
-        public MapAddEntryListenerRequest(string name, Data key, bool includeValue, IPredicate<object, object> predicate)
+        public MapAddEntryListenerRequest(string name, Data key, bool includeValue, IPredicate<K, V> predicate)
             : this(name, key, includeValue)
         {
             this.predicate = predicate;
@@ -81,12 +81,12 @@ namespace Hazelcast.Client.Request.Map
             if (reader.ReadBoolean("pre"))
             {
                 //TODO PREDICATE
-                //    IObjectDataInput input = reader.GetRawDataInput();
-                //    predicate = input.ReadObject<>();
-                //    if (hasKey)
-                //    {
-                //        key = input.ReadObject();
-                //    }
+                IObjectDataInput input = reader.GetRawDataInput();
+                predicate = input.ReadObject<IPredicate<K, V>>();
+                if (hasKey)
+                {
+                    key = input.ReadObject<Data>();
+                }
             }
             else
             {

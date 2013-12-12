@@ -2,10 +2,7 @@ namespace Hazelcast.Core
 {
     /// <summary>Base interface for Hazelcast distributed maps.</summary>
     /// <remarks>Base interface for Hazelcast distributed maps.</remarks>
-    /// <?></?>
-    /// <?></?>
-    /// 
-    /// <seealso cref="IMap{K, V}">IMap&lt;K, V&gt;</seealso>
+    /// <seealso cref="IHazelcastMap{K, V}">IHazelcastMap&lt;K, V&gt;</seealso>
     /// <seealso cref="ITransactionalMap{K,V}">ITransactionalMap&lt;K, V&gt;</seealso>
     public interface IBaseMap<K, V> : IDistributedObject
     {
@@ -64,7 +61,7 @@ namespace Hazelcast.Core
         ///     If the map previously contained a mapping for
         ///     the key, the old value is replaced by the specified value.
         ///     <p /> This method is preferred to
-        ///     <see cref="IBaseMap{K,V}.Put(object, object)">BaseMap&lt;K, V&gt;.Put(object, object)</see>
+        ///     <see cref="IBaseMap{K,V}.Put(K, V)">BaseMap&lt;K, V&gt;.Put(K, V)</see>
         ///     if the old value is not needed.
         /// </remarks>
         /// <param name="key">key</param>
@@ -151,6 +148,7 @@ namespace Hazelcast.Core
         ///     <p>
         ///         The map will not contain a mapping for the specified key once the
         ///         call returns.
+        ///     </p>
         /// </remarks>
         /// <param name="key">key</param>
         /// <returns>
@@ -171,10 +169,12 @@ namespace Hazelcast.Core
         ///         The map will not contain a mapping for the specified key once the
         ///         call returns.
         ///         *
-        ///         <p>
-        ///             This method is preferred to
-        ///             <see cref="IBaseMap{K,V}.Remove(object)">BaseMap&lt;K, V&gt;.Remove(object)</see>
-        ///             if the old value is not needed.
+        ///     </p>
+        ///     <p>
+        ///         This method is preferred to
+        ///         <see cref="IBaseMap{K,V}.Remove(object)">BaseMap&lt;K, V&gt;.Remove(object)</see>
+        ///         if the old value is not needed.
+        ///     </p>
         /// </remarks>
         /// <param name="key">key</param>
         void Delete(object key);

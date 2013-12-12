@@ -61,6 +61,11 @@ namespace Hazelcast.Client.Spi
             }
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         public int GetFactoryId()
         {
             return SpiDataSerializerHook.FId;

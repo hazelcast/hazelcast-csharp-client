@@ -790,6 +790,11 @@ namespace Hazelcast.Test
             input.ReadFully(data);
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
 
         public override bool Equals(object o)
         {
@@ -852,6 +857,11 @@ namespace Hazelcast.Test
             portable = input.ReadObject<NamedPortable>();
             ds2 = new SimpleDataSerializable();
             ds2.ReadData(input);
+        }
+
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
         }
 
 

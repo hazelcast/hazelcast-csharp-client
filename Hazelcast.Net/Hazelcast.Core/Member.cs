@@ -100,6 +100,11 @@ namespace Hazelcast.Core
             uuid = input.ReadUTF();
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <exception cref="System.IO.IOException"></exception>
         public void WriteData(IObjectDataOutput output)
         {

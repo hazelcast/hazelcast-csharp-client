@@ -8,7 +8,7 @@ namespace Hazelcast.Core
     /// <?></?>
     /// 
     /// <seealso cref="IEntryListener{K,V}">IEntryListener&lt;K, V&gt;</seealso>
-    /// <seealso cref="IMap{K, V}.AddEntryListener(IEntryListener{K,V}, bool)">
+    /// <seealso cref="IHazelcastMap{K, V}.AddEntryListener(IEntryListener{K,V}, bool)">
     ///     IMap&lt;K, V&gt;.AddEntryListener(IEntryListener
     ///     &lt;K, V&gt;, bool)
     /// </seealso>

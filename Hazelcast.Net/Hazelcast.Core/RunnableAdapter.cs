@@ -33,6 +33,11 @@ namespace Hazelcast.Core
             task = input.ReadObject<Runnable>();
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         public int GetFactoryId()
         {
             return ExecutorDataSerializerHook.FId;

@@ -27,5 +27,10 @@ namespace Hazelcast.Client.Request.Cluster
         public void ReadData(IObjectDataInput input)
         {
         }
+
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

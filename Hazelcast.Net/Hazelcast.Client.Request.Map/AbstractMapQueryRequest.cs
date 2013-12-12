@@ -30,7 +30,7 @@ namespace Hazelcast.Client.Request.Map
         public virtual void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            writer.WriteUTF("t", iterationType.ToString());
+            writer.WriteUTF("t", iterationType.ToString().ToUpper());
             WritePortableInner(writer);
         }
 
@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Request.Map
         public virtual void ReadPortable(IPortableReader reader)
         {
             name = reader.ReadUTF("n");
-            Enum.TryParse(reader.ReadUTF("t"), out iterationType);
+            Enum.TryParse(reader.ReadUTF("t"), false, out iterationType);
             ReadPortableInner(reader);
         }
 

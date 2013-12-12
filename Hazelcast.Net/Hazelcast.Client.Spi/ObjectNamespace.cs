@@ -6,7 +6,7 @@ using Hazelcast.IO.Serialization;
 namespace Hazelcast.Client.Spi
 {
     [Serializable]
-    public class ObjectNamespace : IDataSerializable
+    public class ObjectNamespace //: IDataSerializable
     {
         private string objectName;
         private string service;
@@ -21,20 +21,20 @@ namespace Hazelcast.Client.Spi
             this.objectName = objectName;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WriteData(IObjectDataOutput output)
-        {
-            output.WriteUTF(service);
-            output.WriteObject(objectName);
-        }
+        ///// <exception cref="System.IO.IOException"></exception>
+        //public virtual void WriteData(IObjectDataOutput output)
+        //{
+        //    output.WriteUTF(service);
+        //    output.WriteObject(objectName);
+        //}
 
-        // writing as object for backward-compatibility
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadData(IObjectDataInput input)
-        {
-            service = input.ReadUTF();
-            objectName = input.ReadObject<string>();
-        }
+        //// writing as object for backward-compatibility
+        ///// <exception cref="System.IO.IOException"></exception>
+        //public virtual void ReadData(IObjectDataInput input)
+        //{
+        //    service = input.ReadUTF();
+        //    objectName = input.ReadObject<string>();
+        //}
 
         public virtual string GetServiceName()
         {

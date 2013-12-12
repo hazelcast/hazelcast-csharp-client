@@ -95,6 +95,11 @@ namespace Hazelcast.IO
             }
         }
 
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
         public int GetFactoryId()
         {
             return Data.FactoryId;

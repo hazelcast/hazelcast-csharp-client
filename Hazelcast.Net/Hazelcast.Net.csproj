@@ -23,6 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\Debug\HazelcastClient3x.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -281,6 +282,7 @@
     <Compile Include="Hazelcast.Client.Spi\SerializableCollection.cs" />
     <Compile Include="Hazelcast.Client\AuthenticationException.cs" />
     <Compile Include="Hazelcast.Core\IBlockingQueue.cs" />
+    <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
     <Compile Include="Hazelcast.Logging\LogLevel.cs" />
     <Compile Include="Hazelcast.Logging\TraceLogFactory.cs" />
     <Compile Include="Hazelcast.Net.Ext\CountDownLatch.cs" />
@@ -574,8 +576,8 @@
       <Output TaskParameter="Include" ItemName="PurgeBuildFiles" />
     </CreateItem>
     <Delete Files="@(PurgeBuildFiles)" />
-	<MV SourceFiles="$(OutputPath)\..\HazelcastClient3x.dll" DestinationFiles="$(OutputPath)\HazelcastClient3x.dll" />	
-	<MV SourceFiles="$(OutputPath)\..\HazelcastClient3x.pdb" DestinationFiles="$(OutputPath)\HazelcastClient3x.pdb" />	
+    <MV SourceFiles="$(OutputPath)\..\HazelcastClient3x.dll" DestinationFiles="$(OutputPath)\HazelcastClient3x.dll" />
+    <MV SourceFiles="$(OutputPath)\..\HazelcastClient3x.pdb" DestinationFiles="$(OutputPath)\HazelcastClient3x.pdb" />
   </Target>
   <Target Name="Nightly">
     <Message Text="Build Committed Revision: $(Revision)" />

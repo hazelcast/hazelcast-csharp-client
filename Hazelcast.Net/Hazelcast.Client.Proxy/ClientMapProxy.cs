@@ -280,7 +280,7 @@ namespace Hazelcast.Client.Proxy
 
         public string AddEntryListener(IEntryListener<K, V> listener, bool includeValue)
         {
-            var request = new MapAddEntryListenerRequest(name, includeValue);
+            var request = new MapAddEntryListenerRequest<K, V>(name, includeValue);
             EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
             return Listen(request, handler);
         }
@@ -293,7 +293,7 @@ namespace Hazelcast.Client.Proxy
         public string AddEntryListener(IEntryListener<K, V> listener, K key, bool includeValue)
         {
             Data keyData = ToData(key);
-            var request = new MapAddEntryListenerRequest(name, keyData, includeValue);
+            var request = new MapAddEntryListenerRequest<K, V>(name, keyData, includeValue);
             EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
             return Listen(request, keyData, handler);
         }
@@ -448,69 +448,58 @@ namespace Hazelcast.Client.Proxy
         public string AddEntryListener(IEntryListener<K, V> listener, IPredicate<K, V> predicate, K key,
             bool includeValue)
         {
-            throw new NotSupportedException("EntryView not implemented");
-            //Data keyData = ToData(key);
-            //MapAddEntryListenerRequest request = new MapAddEntryListenerRequest(name, keyData, includeValue, predicate);
-            //EventHandler<PortableEntryEvent> handler = CreateHandler(listener, includeValue);
-            //return Listen(request, keyData, handler);
+            Data keyData = ToData(key);
+            MapAddEntryListenerRequest<K, V> request = new MapAddEntryListenerRequest<K, V>(name, keyData, includeValue, predicate);
+            EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
+            return Listen(request, keyData, handler);
         }
 
         public string AddEntryListener(IEntryListener<K, V> listener, IPredicate<K, V> predicate, bool includeValue)
         {
-            throw new NotSupportedException("EntryView not implemented");
-
-            //MapAddEntryListenerRequest request = new MapAddEntryListenerRequest(name, null, includeValue, predicate);
-            //EventHandler<PortableEntryEvent> handler = CreateHandler(listener, includeValue);
-            //return Listen(request, null, handler);
+            MapAddEntryListenerRequest<K, V> request = new MapAddEntryListenerRequest<K, V>(name, null, includeValue, predicate);
+            EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
+            return Listen(request, null, handler);
         }
 
         public ICollection<K> KeySet(IPredicate<K, V> predicate)
         {
-            throw new NotSupportedException("");
-            //var request = new MapQueryRequest<K,V>(name, predicate, IterationType.Key);
-            //var result = Invoke<QueryResultSet>(request);
-            //ICollection<K> keySet = new HashSet<K>();
-            //foreach (object data in result)
-            //{
-            //    K key = ToObject<K>((Data)data);
-            //    keySet.Add(key);
-            //}
-            //return keySet;
+            var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Key);
+            var result = Invoke<QueryResultSet>(request);
+            ICollection<K> keySet = new HashSet<K>();
+            foreach (object data in result)
+            {
+                K key = ToObject<K>((Data)data);
+                keySet.Add(key);
+            }
+            return keySet;
         }
 
         public ICollection<KeyValuePair<K, V>> EntrySet(IPredicate<K, V> predicate)
         {
-            throw new NotSupportedException("");
-            //var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Entry);
-            //var result = Invoke<QueryResultSet>(request);
-            //ICollection<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
-            //foreach (object data in result)
-            //{
-            //    KeyValuePair<Data, Data> dataEntry = (KeyValuePair<Data, Data>)data;
-            //    K key = ToObject<K>(dataEntry.Key);
-            //    V value = ToObject<V>(dataEntry.Value);
-            //    entrySet.Add(new KeyValuePair<K, V>(key, value));
-            //}
-            //return entrySet;
+            var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Entry);
+            var result = Invoke<QueryResultSet>(request);
+            ICollection<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
+            foreach (object data in result)
+            {
+                KeyValuePair<Data, Data> dataEntry = (KeyValuePair<Data, Data>)data;
+                K key = ToObject<K>(dataEntry.Key);
+                V value = ToObject<V>(dataEntry.Value);
+                entrySet.Add(new KeyValuePair<K, V>(key, value));
+            }
+            return entrySet;
         }
 
         public ICollection<V> Values(IPredicate<K, V> predicate)
         {
-            throw new NotSupportedException("");
-            //var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Value);
-            //var result = Invoke<QueryResultSet>(request);
-            //ICollection<V> values = new List<V>(result.Count);
-            //foreach (object data in result)
-            //{
-            //    V value = ToObject<V>((Data)data);
-            //    values.Add(value);
-            //}
-            //return values;
-        }
-
-        public ICollection<K> LocalKeySet(IPredicate<K, V> predicate)
-        {
-            throw new NotSupportedException("Locality is ambiguous for client!!!");
+            var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Value);
+            var result = Invoke<QueryResultSet>(request);
+            ICollection<V> values = new List<V>(result.Count);
+            foreach (object data in result)
+            {
+                var value = ToObject<V>((Data)data);
+                values.Add(value);
+            }
+            return values;
         }
 
         public object ExecuteOnKey(K key, EntryProcessor<K, V> entryProcessor)

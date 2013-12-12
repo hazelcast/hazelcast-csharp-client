@@ -37,7 +37,7 @@ namespace Hazelcast.Serialization.Hook
         public const int EntrySet = 31;
         public const int Size = 33;
         public const int Query = 34;
-        public const int SqlQuery = 35;
+        //public const int SqlQuery = 35;
         public const int Clear = 36;
         public const int GetLocalMapStats = 37;
         public const int ExecuteOnKey = 38;
@@ -82,7 +82,7 @@ namespace Hazelcast.Serialization.Hook
             constructors[Evict] = arg => new MapEvictRequest();
             constructors[AddInterceptor] = arg => new MapAddInterceptorRequest();
             constructors[RemoveInterceptor] = arg => new MapRemoveInterceptorRequest();
-            constructors[AddEntryListener] = arg => new MapAddEntryListenerRequest();
+            constructors[AddEntryListener] = arg => new MapAddEntryListenerRequest<object,object>();
             constructors[GetEntryView] = arg => new MapGetEntryViewRequest();
             constructors[AddIndex] = arg => new MapAddIndexRequest();
             constructors[KeySet] = arg => new MapKeySetRequest();
@@ -91,7 +91,7 @@ namespace Hazelcast.Serialization.Hook
             constructors[Size] = arg => new MapSizeRequest();
             constructors[Clear] = arg => new MapClearRequest();
             constructors[Query] = arg => new MapQueryRequest<object, object>();
-            constructors[SqlQuery] = arg => new MapSQLQueryRequest();
+            //constructors[SqlQuery] = arg => new MapSQLQueryRequest();
             constructors[ExecuteOnKey] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
             //arg => new MapExecuteOnKeyRequest(); 
             constructors[ExecuteOnAllKeys] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
