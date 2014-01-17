@@ -7,9 +7,9 @@ using Hazelcast.Core;
 namespace Hazelcast.Client.Tests
 {
 	[TestFixture()]
-	public class PerformanceTest
+	public class PerformanceTest : HazelcastTest
 	{
-		static HazelcastClient client = HazelcastClient.newHazelcastClient(new ClientConfig());
+	    static HazelcastClient client = getHazelcastClient();//HazelcastClient.newHazelcastClient(new ClientConfig());
 		static IMap<String, byte[]> map = client.getMap<String, byte[]>("perf");
 		int ENTRY_COUNT = 10000;
 		int GET_PERCENTAGE = 40;
@@ -18,6 +18,8 @@ namespace Hazelcast.Client.Tests
 		int puts;
 		int gets;
 		int removes;
+
+
 		//[Test()]
 		public static void Main ()
 		{

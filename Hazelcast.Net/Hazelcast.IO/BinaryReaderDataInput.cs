@@ -62,7 +62,7 @@ namespace Hazelcast.IO
 		}
 		
     	public double readDouble(){
-			return reader.ReadDouble();
+            return BitConverter.Int64BitsToDouble(readLong());
 		}
 
     	public String readLine(){
