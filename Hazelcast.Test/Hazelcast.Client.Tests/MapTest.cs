@@ -746,6 +746,34 @@ namespace Hazelcast.Client.Tests
 			//Assert.IsTrue(1 == clientMap.get("1").getSalary());
 		}
 
+            
+        [Test]
+        public void testMapPutAndGet2() {
+            HazelcastClient hClient = getHazelcastClient();
+            IMap<String, short> map = hClient.getMap<String, short>("testMapPutAndGet2");
+
+            short value1 = 1;
+            short value = map.put("key", value1);
+
+            Assert.AreEqual(value1, map.get("key"));
+            Assert.AreEqual(1, map.size());
+            //Assert.IsNull(value);
+
+            value = map.put("key", value1);
+            Assert.AreEqual(value1, map.get("key"));
+            Assert.AreEqual(1, map.size());
+            Assert.AreEqual(value1, value);
+
+            short newValue = 2;
+            value = map.put("key", newValue);
+            Assert.AreEqual(value1, value);
+            Assert.AreEqual(newValue, map.get("key"));
+            Assert.AreEqual(1, map.size());
+
+            //var entry = map.getMapEntry("key");
+            //Assert.AreEqual("Hello", entry.getKey());
+            //Assert.AreEqual(newValue, entry.getValue());
+        }
 
 	}
 	

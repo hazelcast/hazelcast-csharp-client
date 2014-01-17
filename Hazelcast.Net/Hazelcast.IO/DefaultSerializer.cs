@@ -359,7 +359,9 @@ namespace Hazelcast.Client.IO
 
 		public bool isSuitable (Object obj)
 		{
-			return obj is ISerializable;
+		    Type type = obj.GetType();
+		    return type.IsSerializable;
+		    //return (obj is ISerializable);
 		}
 
 		public byte getTypeId ()
