@@ -748,7 +748,7 @@ namespace Hazelcast.Client.Tests
 
             
         [Test]
-        public void testMapPutAndGet2() {
+        public void testMapPutAndGetShort() {
             HazelcastClient hClient = getHazelcastClient();
             IMap<String, short> map = hClient.getMap<String, short>("testMapPutAndGet2");
 
@@ -773,6 +773,41 @@ namespace Hazelcast.Client.Tests
             //var entry = map.getMapEntry("key");
             //Assert.AreEqual("Hello", entry.getKey());
             //Assert.AreEqual(newValue, entry.getValue());
+        }
+
+	    [Test]
+	    public void testMapPutAndGet()
+	    {
+            testMapPutAndGetGeneric<short>(1,2);
+            testMapPutAndGetGeneric<byte>(1, 2);
+            testMapPutAndGetGeneric<sbyte>(1, 2);
+            testMapPutAndGetGeneric<uint>(1, 2);
+            testMapPutAndGetGeneric<ulong>(1, 2);
+            testMapPutAndGetGeneric<ushort>(1, 2);
+            testMapPutAndGetGeneric<string>("1", "2");
+            testMapPutAndGetGeneric<int>(1, 2);
+	    }
+        
+        private void testMapPutAndGetGeneric<T>(T value1,T newValue) {
+            HazelcastClient hClient = getHazelcastClient();
+            IMap<String, T> map = hClient.getMap<String, T>("testMapPutAndGetGeneric"+typeof(T).Name);
+
+            T value = map.put("key", value1);
+
+            Assert.AreEqual(value1, map.get("key"));
+            Assert.AreEqual(1, map.size());
+            //Assert.IsNull(value);
+
+            value = map.put("key", value1);
+            Assert.AreEqual(value1, map.get("key"));
+            Assert.AreEqual(1, map.size());
+            Assert.AreEqual(value1, value);
+
+            value = map.put("key", newValue);
+            Assert.AreEqual(value1, value);
+            Assert.AreEqual(newValue, map.get("key"));
+            Assert.AreEqual(1, map.size());
+
         }
 
 	}
