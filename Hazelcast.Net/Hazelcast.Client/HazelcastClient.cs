@@ -59,7 +59,7 @@ namespace Hazelcast.Client
 	            }
 	        } catch (Exception e) {
 	            connectionManager.shutdown();
-				Console.Write(e.StackTrace);
+				//Console.Write(e.StackTrace);
 	            throw new Exception("Unable to connect to cluster: " + e.Message);
 	        }
 

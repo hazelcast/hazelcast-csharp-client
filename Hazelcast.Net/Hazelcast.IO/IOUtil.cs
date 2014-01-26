@@ -187,15 +187,15 @@ namespace Hazelcast.Client.IO
 			return new String(chararr, 0, chararr_count);
 		}
 		
-		public static void printBytes (byte[] bytes)
-		{
-			foreach (byte b in bytes) {
-				Console.Write (b);
-				Console.Write (".");
-			}
+        //public static void printBytes (byte[] bytes)
+        //{
+        //    foreach (byte b in bytes) {
+        //        Console.Write (b);
+        //        Console.Write (".");
+        //    }
 			
 			
-		}
+        //}
 	}
 }
 

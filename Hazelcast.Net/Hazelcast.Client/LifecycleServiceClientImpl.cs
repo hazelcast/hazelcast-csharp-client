@@ -51,7 +51,7 @@ namespace Hazelcast.Client
 			    hazelcastClient.doShutdown();
 			    running = false;
 			    double time = (System.DateTime.Now - begin).TotalMilliseconds;
-			    Console.WriteLine("HazelcastClient shutdown completed in " + time + " ms.");
+			    //Console.WriteLine("HazelcastClient shutdown completed in " + time + " ms.");
 			    //fireLifecycleEvent(SHUTDOWN);
 			}
 	    }

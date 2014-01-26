@@ -52,7 +52,7 @@ namespace Hazelcast.Client
 		public Object getValue(Packet packet){
 			Object response = IOUtil.toObject(packet.value);
 			if(response is ClientServiceException){
-				Console.WriteLine("Exception is: " + ((ClientServiceException)response).Exception);
+				//Console.WriteLine("Exception is: " + ((ClientServiceException)response).Exception);
 				throw ((ClientServiceException)response).Exception;
 			}
 			return response;
@@ -63,14 +63,14 @@ namespace Hazelcast.Client
        	 	client.destroy(name);
     	}
 		
-		private static void printBytes (byte[] bytes)
-		{
-			foreach (byte b in bytes) {
-				Console.Write (b);
-				Console.Write (".");
-			}
+        //private static void printBytes (byte[] bytes)
+        //{
+        //    foreach (byte b in bytes) {
+        //        Console.Write (b);
+        //        Console.Write (".");
+        //    }
 			
-		}
+        //}
 		
 		
 		public Packet prepareRequest(ClusterOperation operation, Object key, Object val, long ttl) {
@@ -113,7 +113,7 @@ namespace Hazelcast.Client
                 }
                 if (i > 0)
                 {
-                    Console.WriteLine("There is no response for Call " + call.getId()+ " in " + (timeout * i) + " seconds.");
+                    //Console.WriteLine("There is no response for Call " + call.getId()+ " in " + (timeout * i) + " seconds.");
                 }
             }
 			

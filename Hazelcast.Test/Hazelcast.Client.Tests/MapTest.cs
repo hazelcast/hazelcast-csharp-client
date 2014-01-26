@@ -719,7 +719,7 @@ namespace Hazelcast.Client.Tests
 	    [Test]
 	    [Ignore]
 		public void testSqlPredicate() {
-			IOUtil.printBytes(IOUtil.toByte(new Employee("" + 1, 1, 1 % 2 == 0, 1)));
+			//IOUtil.printBytes(IOUtil.toByte(new Employee("" + 1, 1, 1 % 2 == 0, 1)));
 			
 	        HazelcastClient hClient = getHazelcastClient();
 	        IMap<int?, Employee> map = hClient.getMap<int?, Employee>("testSqlPredicate");

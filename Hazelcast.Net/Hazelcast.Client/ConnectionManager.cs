@@ -123,7 +123,7 @@ namespace Hazelcast.Client
 	                                currentConnection = connection;
 	                            } catch (Exception e) {
 	                                closeConnection(connection);
-	                                Console.WriteLine("got an exception on getConnection: " + e.Message + "\n" + e.StackTrace);
+	                                //Console.WriteLine("got an exception on getConnection: " + e.Message + "\n" + e.StackTrace);
 	                                restored = false;
 	                            }
 	                        }

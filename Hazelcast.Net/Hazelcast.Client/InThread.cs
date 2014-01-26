@@ -51,8 +51,7 @@ namespace Hazelcast.Client
                 {
                     if (packet.operation == (byte)ClusterOperation.EVENT)
                         listenerManager.enQueue(packet);
-                    else
-                        Console.WriteLine("Unkown call result: " + packet.callId + ", " + packet.operation);
+                    //else Console.WriteLine("Unkown call result: " + packet.callId + ", " + packet.operation);
                 }
             }
             catch (Exception e)
@@ -61,7 +60,7 @@ namespace Hazelcast.Client
                     return;
 
                new Thread(client.getLifecycleService().shutdown).Start();
-               Console.WriteLine("Exception on Socket, terminating all existing calls (" + calls.Count + ") and shutting down the client");
+               //Console.WriteLine("Exception on Socket, terminating all existing calls (" + calls.Count + ") and shutting down the client");
                 
                 foreach (long id in calls.Keys)
                 {
