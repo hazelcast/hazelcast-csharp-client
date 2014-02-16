@@ -9,12 +9,11 @@ namespace Hazelcast.Client.Test
 	[NUnit.Framework.TestFixture]
 	public class ClientTxnSetTest:HazelcastBaseTest
 	{
-		internal const string name = "test";
+        //internal const string name = "test";
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
             //map = client.GetMap<object, object>(name);
         }
 
@@ -28,6 +27,7 @@ namespace Hazelcast.Client.Test
 		[NUnit.Framework.Test]
 		public virtual void TestAddRemove()
 		{
+		    var name = Name;
             var s = client.GetSet<object>(name);
 			s.Add("item1");
 			ITransactionContext context = client.NewTransactionContext();

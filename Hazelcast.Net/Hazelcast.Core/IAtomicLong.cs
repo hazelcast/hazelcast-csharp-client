@@ -1,11 +1,12 @@
+using System;
+
 namespace Hazelcast.Core
 {
     /// <summary>
-    ///     IAtomicLong is a redundant and highly available distributed Atomic Long to the
+    ///     IAtomicLong is a redundant and highly available distributed Atomic Long
     /// </summary>
     public interface IAtomicLong : IDistributedObject
     {
-        //string GetName();
         /// <summary>Returns the name of this IAtomicLong instance.</summary>
         /// <remarks>Returns the name of this IAtomicLong instance.</remarks>
         /// <returns>name of this instance</returns>
@@ -65,5 +66,38 @@ namespace Hazelcast.Core
         /// <remarks>Atomically sets the given value.</remarks>
         /// <param name="newValue">the new value</param>
         void Set(long newValue);
+
+       // /// <summary>
+       // /// Alters the currently stored value by applying a function on it.
+       // /// </summary>
+       // /// <param name="function">the function</param>
+       // /// <exception cref="ArgumentNullException">if function is null</exception>
+       // void Alter(Func<long, long> function);
+
+       // /// <summary>
+       // /// Alters the currently stored value by applying a function on it and gets the result.
+       // /// </summary>
+       // /// <param name="function">the function</param>
+       // /// <returns>the new value</returns>
+       // /// <exception cref="ArgumentNullException">if function is null</exception>
+       // long AlterAndGet(Func<long, long> function);
+
+       ///// <summary>
+       // /// Alters the currently stored value by applying a function on it and gets the old value.
+       // /// </summary>
+       // /// <param name="function">the function</param>
+       // /// <returns>the old value</returns>
+       // /// <exception cref="ArgumentNullException">if function is null</exception>
+       // long GetAndAlter(Func<long, long> function);
+
+       // /// <summary>
+       // /// Applies a function on the value, the actual stored value will not change.
+       // /// </summary>
+       // /// <param name="function">the function</param>
+       // /// <returns>the result of the function application</returns>
+       // /// <exception cref="ArgumentNullException">if function is null</exception>
+       // R Apply<R>(Func<long, R> function);
+   
+
     }
 }

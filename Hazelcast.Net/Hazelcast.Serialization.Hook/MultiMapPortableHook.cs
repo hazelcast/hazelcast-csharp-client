@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hazelcast.Client.Request.Map;
 using Hazelcast.Client.Request.Multimap;
 using Hazelcast.IO.Serialization;
 
@@ -30,6 +31,11 @@ namespace Hazelcast.Serialization.Hook
         public const int TxnMmRemove = 21;
         public const int TxnMmValueCount = 22;
         public const int TxnMmSize = 23;
+        public const int RemoveEntryListener = 23;
+        public const int TxnMmRemoveAll = 25;
+
+        public const int TotalSize = TxnMmRemoveAll+1;
+
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.MultimapPortableFactory, -12);
 
         public virtual int GetFactoryId()
@@ -39,28 +45,8 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[TxnMmSize + 1];
-            constructors[Clear] = arg => new ClearRequest();
-            constructors[ContainsEntry] = arg => new ContainsEntryRequest();
-            constructors[Count] = arg => new CountRequest();
-            constructors[EntrySet] = arg => new EntrySetRequest();
-            constructors[GetAll] = arg => new GetAllRequest();
-            constructors[KeySet] = arg => new KeySetRequest();
-            constructors[Put] = arg => new PutRequest();
-            constructors[RemoveAll] = arg => new RemoveAllRequest();
-            constructors[Remove] = arg => new RemoveRequest();
-            constructors[Size] = arg => new SizeRequest();
-            constructors[Values] = arg => new ValuesRequest();
-            constructors[AddEntryListener] = arg => new AddEntryListenerRequest();
+            var constructors = new Func<int, IPortable>[TotalSize];
             constructors[EntrySetResponse] = arg => new PortableEntrySetResponse();
-            constructors[Lock] = arg => new MultiMapLockRequest();
-            constructors[Unlock] = arg => new MultiMapUnlockRequest();
-            constructors[IsLocked] = arg => new MultiMapIsLockedRequest();
-            constructors[TxnMmPut] = arg => new TxnMultiMapPutRequest();
-            constructors[TxnMmGet] = arg => new TxnMultiMapGetRequest();
-            constructors[TxnMmRemove] = arg => new TxnMultiMapRemoveRequest();
-            constructors[TxnMmValueCount] = arg => new TxnMultiMapValueCountRequest();
-            constructors[TxnMmSize] = arg => new TxnMultiMapSizeRequest();
             return new ArrayPortableFactory(constructors);
         }
 

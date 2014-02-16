@@ -28,11 +28,5 @@ namespace Hazelcast.Client.Request.Queue
             writer.WriteInt("m", maxSize);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            maxSize = reader.ReadInt("m");
-        }
     }
 }

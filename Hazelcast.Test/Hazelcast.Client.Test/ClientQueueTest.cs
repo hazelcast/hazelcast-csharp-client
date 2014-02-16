@@ -10,15 +10,19 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientQueueTest:HazelcastBaseTest
 	{
-		internal const string queueName = "ClientQueueTest";
+        internal const string queueName = "ClientQueueTest";
 
 		internal static IQueue<object> q;
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            q = client.GetQueue<object>(queueName);
+            //CAUTION TEST SERVER SHOULD CONFIGURE A QUEUE WITH NAME starts with queueName
+            //which is configured as;
+            //QueueConfig queueConfig = config.getQueueConfig(queueName);
+            //queueConfig.setMaxSize(6);
+            //
+            q = client.GetQueue<object>(queueName + Name);
         }
 
         [TearDown]

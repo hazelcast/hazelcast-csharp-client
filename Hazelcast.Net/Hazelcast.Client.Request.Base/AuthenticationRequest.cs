@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Base
 {
-    public sealed class AuthenticationRequest : IPortable
+    public sealed class AuthenticationRequest : ClientRequest
     {
         private ICredentials credentials;
         private bool firstConnection;
@@ -28,18 +28,18 @@ namespace Hazelcast.Client.Request.Base
             this.principal = principal;
         }
 
-        public int GetFactoryId()
+        public override int GetFactoryId()
         {
             return ClientPortableHook.Id;
         }
 
-        public int GetClassId()
+        public override int GetClassId()
         {
             return ClientPortableHook.Auth;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WritePortable("credentials", credentials);
             if (principal != null)
@@ -54,23 +54,9 @@ namespace Hazelcast.Client.Request.Base
             writer.WriteBoolean("firstConnection", firstConnection);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadPortable(IPortableReader reader)
-        {
-            credentials = reader.ReadPortable<ICredentials>("credentials");
-            principal = reader.ReadPortable<ClientPrincipal>("principal");
-            reAuth = reader.ReadBoolean("reAuth");
-            firstConnection = reader.ReadBoolean("firstConnection");
-        }
-
         public void SetReAuth(bool reAuth)
         {
             this.reAuth = reAuth;
-        }
-
-        public bool IsFirstConnection()
-        {
-            return firstConnection;
         }
 
         public void SetFirstConnection(bool firstConnection)

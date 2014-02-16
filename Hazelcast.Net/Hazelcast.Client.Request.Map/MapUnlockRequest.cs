@@ -12,12 +12,13 @@ namespace Hazelcast.Client.Request.Map
         {
         }
 
-        public MapUnlockRequest(string name, Data key, int threadId) : base(key, threadId, false)
+        public MapUnlockRequest(string name, Data key, long threadId) : base(key, threadId, false)
         {
             this.name = name;
         }
 
-        public MapUnlockRequest(string name, Data key, int threadId, bool force) : base(key, threadId, force)
+        public MapUnlockRequest(string name, Data key, long threadId, bool force)
+            : base(key, threadId, force)
         {
             this.name = name;
         }
@@ -39,11 +40,5 @@ namespace Hazelcast.Client.Request.Map
             base.WritePortable(writer);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            base.ReadPortable(reader);
-        }
     }
 }

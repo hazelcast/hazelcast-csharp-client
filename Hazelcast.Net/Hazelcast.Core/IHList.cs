@@ -5,7 +5,7 @@ namespace Hazelcast.Core
     /// <summary>
     ///     Concurrent, distributed implementation of
     /// </summary>
-    public interface IHazelcastList<E> : IList<E>, IHazelcastCollection<E>
+    public interface IHList<E> : IList<E>, IHCollection<E>
     {
         E Get(int index);
         E Set(int index, E element);

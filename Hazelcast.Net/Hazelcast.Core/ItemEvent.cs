@@ -5,10 +5,6 @@ namespace Hazelcast.Core
     /// <summary>Map Item event.</summary>
     /// <remarks>Map Item event.</remarks>
     /// <seealso cref="EntryEvent{K, V}">EntryEvent&lt;K, V&gt;</seealso>
-    /// <seealso cref="ICollection{E}.AddListener(IItemListener{E}, bool)">
-    ///     ICollection&lt;E&gt;
-    ///     .AddListener(IItemListener&lt;E&gt;, bool)
-    /// </seealso>
     [Serializable]
     public class ItemEvent<E> : EventObject
     {

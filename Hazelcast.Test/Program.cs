@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using Hazelcast.Client;
 using Hazelcast.Config;
@@ -7,13 +9,60 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Test
 {
+    class MyClass:IDisposable
+    {
+        private bool disposed;
+
+        private int _data = 10;
+
+        public int Data
+        {
+            get
+            {
+                return _data;
+            }
+            set
+            {
+                _data = value;
+            }
+        }
+
+        public MyClass()
+        {
+        }
+
+        ~MyClass()
+        {
+            Dispose(false);
+            Console.WriteLine("finalized:"+Data);
+        }
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            Console.WriteLine("Dispose:" + Data);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called. 
+            if (!this.disposed)
+            {
+                // Note disposing has been done.
+                disposed = true;
+
+            }
+        }
+
+    }
     class Program
     {
+        private static ConcurrentDictionary<string, MyClass> dict = new ConcurrentDictionary<string, MyClass>(); 
         static void Main2(string[] args)
         {
             ClientConfig clientConfig = new ClientConfig();
 
-            clientConfig.AddAddress("192.168.1.162");
+            clientConfig.GetNetworkConfig().AddAddress("192.168.1.162");
 
             var hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
 
@@ -24,7 +73,6 @@ namespace Hazelcast.Test
             //hzMap.Put("key3","Value3");
             //hzMap.Put("key4","Value4");
 
-
             Console.WriteLine(hzMap.Get("key1"));
             Console.WriteLine(hzMap.Get("key2"));
             Console.WriteLine(hzMap.Get("key3"));
@@ -33,12 +81,29 @@ namespace Hazelcast.Test
             Console.ReadKey();
 
         }
+        static void Main1(string[] args)
+        {
+            using (var myClass=new MyClass())
+            {
+                myClass.Data = 17;
+                //dict.TryAdd("den", myClass);
+
+            }
+
+            MyClass o;
+            dict.TryGetValue("den", out o);
+
+            //Console.WriteLine(o.Data);
+            Console.WriteLine(dict.Count);
+            Console.ReadKey();
+
+        }
 
         static void Main11(string[] args)
         {
             ClientConfig clientConfig = new ClientConfig();
 
-            clientConfig.AddAddress("127.0.0.1");
+            clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
 
             var hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
 

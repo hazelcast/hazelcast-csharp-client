@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Logging;
 using Hazelcast.Transaction;
 
 namespace Hazelcast.Client
@@ -36,17 +37,17 @@ namespace Hazelcast.Client
             return GetClient().GetTopic<E>(name);
         }
 
-        public IHazelcastSet<E> GetSet<E>(string name)
+        public IHSet<E> GetSet<E>(string name)
         {
             return GetClient().GetSet<E>(name);
         }
 
-        public IHazelcastList<E> GetList<E>(string name)
+        public IHList<E> GetList<E>(string name)
         {
             return GetClient().GetList<E>(name);
         }
 
-        public IHazelcastMap<K, V> GetMap<K, V>(string name)
+        public IMap<K, V> GetMap<K, V>(string name)
         {
             return GetClient().GetMap<K, V>(name);
         }
@@ -66,27 +67,15 @@ namespace Hazelcast.Client
             return GetClient().GetCluster();
         }
 
-        public IClient GetLocalEndpoint()
+        public IEndpoint GetLocalEndpoint()
         {
             return GetClient().GetLocalEndpoint();
         }
 
-        public IExecutorService GetExecutorService(string name)
-        {
-            return GetClient().GetExecutorService(name);
-        }
-
-        /// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
-        public T ExecuteTransaction<T>(ITransactionalTask<T> task)
-        {
-            return GetClient().ExecuteTransaction(task);
-        }
-
-        /// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
-        public T ExecuteTransaction<T>(TransactionOptions options, ITransactionalTask<T> task)
-        {
-            return GetClient().ExecuteTransaction(options, task);
-        }
+        //public IExecutorService GetExecutorService(string name)
+        //{
+        //    return GetClient().GetExecutorService(name);
+        //}
 
         public ITransactionContext NewTransactionContext()
         {
@@ -170,13 +159,6 @@ namespace Hazelcast.Client
         public void Shutdown()
         {
             GetLifecycleService().Shutdown();
-        }
-
-        public ILock GetLock(object key)
-        {
-            //TODO FIXME
-            throw new NotSupportedException("Not implemented yet");
-            //return GetClient().GetLock(key);
         }
 
         public ClientConfig GetClientConfig()

@@ -1,10 +1,11 @@
 using System;
+using System.IO;
 using System.Text;
 
 namespace Hazelcast.IO.Serialization
 {
     [Serializable]
-    public sealed class Data : IIdentifiedDataSerializable
+    public sealed class Data : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         public const int FactoryId = 0;
         public const int Id = 0;
@@ -61,11 +62,6 @@ namespace Hazelcast.IO.Serialization
                 input.ReadFully(buffer);
             }
             partitionHash = input.ReadInt();
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -284,6 +280,22 @@ namespace Hazelcast.IO.Serialization
             sb.Append(", totalSize=").Append(TotalSize());
             sb.Append('}');
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context"></param>
+        /// <exception cref="HazelcastSerializationException"></exception>
+        public void PostConstruct(ISerializationContext context)
+        {
+            if (classDefinition != null && classDefinition is BinaryClassDefinitionProxy) {
+            try {
+                classDefinition = ((BinaryClassDefinitionProxy) classDefinition).ToReal(context);
+            } catch (IOException e) {
+                throw new HazelcastSerializationException(e);
+            }
+        }
         }
     }
 }

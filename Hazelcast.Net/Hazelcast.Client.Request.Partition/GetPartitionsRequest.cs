@@ -6,32 +6,22 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Partition
 {
-    [Serializable]
-    public sealed class GetPartitionsRequest : IIdentifiedDataSerializable, IRetryableRequest
+    public sealed class GetPartitionsRequest : ClientRequest, IRetryableRequest
     {
-        public int GetFactoryId()
+        public override int GetFactoryId()
         {
-            return PartitionDataSerializerHook.FId;
+            return ClientPortableHook.Id;
         }
 
-        public int GetId()
+        public override int GetClassId()
         {
-            return PartitionDataSerializerHook.GetPartitions;
+            return ClientPortableHook.GetPartitions;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public void WriteData(IObjectDataOutput output)
-        {
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadData(IObjectDataInput input)
+        public override void WritePortable(IPortableWriter writer)
         {
         }
 
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
-        }
+
     }
 }

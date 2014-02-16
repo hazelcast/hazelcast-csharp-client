@@ -14,7 +14,7 @@ namespace Hazelcast.Serialization.Hook
 
         public IPortableFactory CreateFactory()
         {
-            return null;
+            return new ArrayPortableFactory();
         }
 
         public ICollection<IClassDefinition> GetBuiltinDefinitions()

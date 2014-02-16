@@ -6,35 +6,29 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Config;
 using Hazelcast.Core;
+using Hazelcast.Util;
+using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     public class HazelcastBaseTest
     {
-        protected static volatile IHazelcastInstance client ;
+        protected IHazelcastInstance client ;
 
-        protected static volatile object loc=new object();
+        protected static volatile Random random = new Random((int)Clock.CurrentTimeMillis());
 
-        protected static IHazelcastInstance InitClient()
+
+        protected IHazelcastInstance InitClient()
         {
-            if (client == null)
-            {
-                lock (loc)
-                {
-                    if (client == null)
-                    {
-                        client = NewHazelcastClient();
-                    }
-                }
-            }
+            client = NewHazelcastClient();
             return client;
-
         }
 
-        protected static IHazelcastInstance NewHazelcastClient()
+        protected IHazelcastInstance NewHazelcastClient()
         {
             var config = new ClientConfig();
-            config.AddAddress("127.0.0.1");
+            config.GetNetworkConfig().AddAddress("127.0.0.1");
+            config.AddNearCacheConfig("nearCachedMap*", new NearCacheConfig().SetInMemoryFormat(InMemoryFormat.Object));
             return HazelcastClient.NewHazelcastClient(config);
         }
 
@@ -42,6 +36,33 @@ namespace Hazelcast.Client.Test
         {
         }
 
+        [TestFixtureSetUp]
+        public void InitFixture()
+        {
+            InitClient();
+            while (!client.GetLifecycleService().IsRunning())
+            {
+                Console.WriteLine("Waiting to start up  client");
+                Thread.Sleep(100);
+            }
+        }
 
+        [TestFixtureTearDown]
+        public void TearDown()
+        {
+            Console.WriteLine("TearDown Shut down client");
+            //Task.Factory.StartNew(client.Shutdown);
+            client.Shutdown();
+            Console.WriteLine("Shut down client");
+            client = null;
+        }
+
+        protected string Name
+        {
+            get
+            {
+                return "csharp-name-" + random.Next(1000000);
+            }
+        }
     }
 }

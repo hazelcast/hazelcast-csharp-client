@@ -8,7 +8,7 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Client.Spi
 {
     [Serializable]
-    public sealed class SerializableCollection : IIdentifiedDataSerializable, IEnumerable<Data>
+    public sealed class SerializableCollection : IdentifiedDataSerializable,IIdentifiedDataSerializable, IEnumerable<Data>
     {
         private ICollection<Data> collection;
 
@@ -59,11 +59,6 @@ namespace Hazelcast.Client.Spi
             {
                 collection.Add(IOUtil.ReadData(input));
             }
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
         }
 
         public int GetFactoryId()

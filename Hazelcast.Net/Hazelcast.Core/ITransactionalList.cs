@@ -3,9 +3,7 @@ using Hazelcast.Transaction;
 namespace Hazelcast.Core
 {
     /// <summary>
-    ///     Transactional implementation of
-    ///     <see cref="IHazelcastList{E}">IHazelcastList&lt;E&gt;</see>
-    ///     .
+    /// Transactional implementation of <see cref="IHList{E}">IHList&lt;E&gt;</see>
     /// </summary>
     public interface ITransactionalList<E> : ITransactionalObject
     {

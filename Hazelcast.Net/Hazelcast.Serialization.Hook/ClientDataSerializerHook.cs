@@ -1,3 +1,5 @@
+using System;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
@@ -6,6 +8,8 @@ namespace Hazelcast.Serialization.Hook
     {
         public static readonly int Id = FactoryIdHelper.GetFactoryId(FactoryIdHelper.ClientDsFactory, -3);
 
+        public static readonly int ClientResponse = 1;
+
         public int GetFactoryId()
         {
             return Id;
@@ -13,7 +17,9 @@ namespace Hazelcast.Serialization.Hook
 
         public IDataSerializableFactory CreateFactory()
         {
-            return null;
+            var constructors = new Func<int, IIdentifiedDataSerializable>[ClientResponse + 1];
+            constructors[ClientResponse] = delegate { return new ClientResponse(); };
+            return new ArrayDataSerializableFactory(constructors);
         }
     }
 }

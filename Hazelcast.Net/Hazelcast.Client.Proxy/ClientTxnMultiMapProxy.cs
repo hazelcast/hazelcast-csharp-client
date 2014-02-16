@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Proxy
             }
             foreach (Data data in collection)
             {
-                coll.Add((V) ToObject(data));
+                coll.Add( ToObject<V>(data));
             }
             return coll;
         }
@@ -52,7 +52,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual ICollection<V> Remove(object key)
         {
-            var request = new TxnMultiMapRemoveRequest(GetName(), ToData(key));
+            var request = new TxnMultiMapRemoveAllRequest(GetName(), ToData(key));
             var portableCollection = Invoke<PortableCollection>(request);
             ICollection<Data> collection = portableCollection.GetCollection();
             ICollection<V> coll;
@@ -66,7 +66,7 @@ namespace Hazelcast.Client.Proxy
             }
             foreach (Data data in collection)
             {
-                coll.Add((V) ToObject(data));
+                coll.Add( ToObject<V>(data));
             }
             return coll;
         }

@@ -10,7 +10,7 @@ namespace Hazelcast.Core
     ///         compares the serialized byte version of the objects.
     ///     </b>
     /// </summary>
-    public interface IHazelcastSet<E> : /*ISet<E>,*/ IHazelcastCollection<E>
+    public interface IHSet<E> : /*ISet<E>,*/ IHCollection<E>
     {
     }
 }

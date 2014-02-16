@@ -1,9 +1,10 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Atomiclong
 {
-    public abstract class AtomicLongRequest : IPortable
+    public abstract class AtomicLongRequest : ClientRequest
     {
         internal long delta;
         internal string name;
@@ -18,25 +19,17 @@ namespace Hazelcast.Client.Request.Concurrent.Atomiclong
             this.delta = delta;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return AtomicLongPortableHook.FId;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteLong("d", delta);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            delta = reader.ReadLong("d");
-        }
-
-        public abstract int GetClassId();
     }
 }

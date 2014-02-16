@@ -1,9 +1,10 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public abstract class MultiMapRequest : IPortable
+    public abstract class MultiMapRequest : ClientRequest
     {
         internal string name;
 
@@ -16,23 +17,16 @@ namespace Hazelcast.Client.Request.Multimap
             this.name = name;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MultiMapPortableHook.FId;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-        }
-
-        public abstract int GetClassId();
     }
 }

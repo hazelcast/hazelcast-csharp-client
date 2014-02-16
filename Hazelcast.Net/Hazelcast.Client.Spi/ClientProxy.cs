@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Core;
+using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Util;
 
@@ -9,29 +12,15 @@ namespace Hazelcast.Client.Spi
 {
     public abstract class ClientProxy : IDistributedObject
     {
-        private readonly ConcurrentDictionary<string, IListenerSupport> listenerSupportMap =
-            new ConcurrentDictionary<string, IListenerSupport>();
-
         private readonly string objectName;
         private readonly string serviceName;
-
         private volatile ClientContext context;
 
-        protected internal ClientProxy(string serviceName, string objectName)
+   
+        protected ClientProxy(String serviceName, String objectName) 
         {
             this.serviceName = serviceName;
             this.objectName = objectName;
-        }
-
-        [Obsolete]
-        public object GetId()
-        {
-            return objectName;
-        }
-
-        public string GetName()
-        {
-            return objectName;
         }
 
         public string GetPartitionKey()
@@ -39,7 +28,11 @@ namespace Hazelcast.Client.Spi
             return StringPartitioningStrategy.GetPartitionKey(GetName());
         }
 
-        //REQUIRED
+        public string GetName()
+        {
+           return objectName;
+        }
+
         public string GetServiceName()
         {
             return serviceName;
@@ -51,7 +44,7 @@ namespace Hazelcast.Client.Spi
             var request = new ClientDestroyRequest(objectName, GetServiceName());
             try
             {
-                context.GetInvocationService().InvokeOnRandomTarget<Object>(request);
+                context.GetInvocationService().InvokeOnRandomTarget<object>(request);
             }
             catch (Exception e)
             {
@@ -61,33 +54,24 @@ namespace Hazelcast.Client.Spi
             context = null;
         }
 
-        protected internal string Listen<T>(object registrationRequest, object partitionKey, EventHandler<T> handler)
-            where T : EventArgs
+        protected virtual string Listen(ClientRequest registrationRequest, Object partitionKey, DistributedEventHandler handler)
         {
-            var listenerSupport = new ListenerSupport<T>(context, registrationRequest, handler, partitionKey);
-            string registrationId = listenerSupport.Listen();
-            listenerSupportMap.TryAdd(registrationId, listenerSupport);
-            return registrationId;
+            return ListenerUtil.Listen(context, registrationRequest, partitionKey, handler);
         }
 
-        protected internal string Listen<T>(object registrationRequest, EventHandler<T> handler) where T : EventArgs
+
+        protected virtual string Listen(ClientRequest registrationRequest, DistributedEventHandler handler)
         {
-            return Listen(registrationRequest, null, handler);
+            return ListenerUtil.Listen(context, registrationRequest, null, handler);
         }
 
-        protected internal bool StopListening(string registrationId)
+        protected virtual bool StopListening(ClientRequest request, String registrationId)
         {
-            IListenerSupport listenerSupport = null;
-            listenerSupportMap.TryRemove(registrationId, out listenerSupport);
-            if (listenerSupport != null)
-            {
-                listenerSupport.Stop();
-                return true;
-            }
-            return false;
+            return ListenerUtil.StopListening(context, request, registrationId);
         }
 
-        protected internal ClientContext GetContext()
+
+        protected virtual ClientContext GetContext()
         {
             ClientContext ctx = context;
             if (ctx == null)
@@ -97,11 +81,51 @@ namespace Hazelcast.Client.Spi
             return context;
         }
 
-        internal void SetContext(ClientContext context)
+        internal virtual void SetContext(ClientContext context)
         {
             this.context = context;
         }
 
-        protected internal abstract void OnDestroy();
+        protected abstract void OnDestroy();
+
+        protected virtual T Invoke<T>(ClientRequest request, object key)
+        {
+            try {
+                var task = GetContext().GetInvocationService().InvokeOnKeyOwner<T>(request, key);
+                var result = task.Result;
+                return context.GetSerializationService().ToObject<T>(result);
+            } catch (Exception e) {
+                throw ExceptionUtil.Rethrow(e);
+            }  
+        }
+        protected virtual T Invoke<T>(ClientRequest request)
+        {
+            try {
+                var task = GetContext().GetInvocationService().InvokeOnRandomTarget<T>(request);
+                return context.GetSerializationService().ToObject<T>(task.Result);
+            } catch (Exception e) {
+                throw ExceptionUtil.Rethrow(e);
+            }  
+        }
+
+        protected internal virtual Data ToData(object o)
+        {
+            return GetContext().GetSerializationService().ToData(o);
+        }
+
+        protected internal virtual T ToObject<T>(Data data)
+        {
+            return GetContext().GetSerializationService().ToObject<T>(data);
+        }
+
+        protected internal virtual void ThrowExceptionIfNull(object o)
+        {
+            if (o == null)
+            {
+                throw new ArgumentNullException("o");
+            }
+        }
+
     }
+
 }

@@ -1,25 +1,33 @@
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
+    /// <summary>
+    /// invocation service
+    /// </summary>
     public interface IClientInvocationService
     {
         /// <exception cref="System.Exception"></exception>
-        T InvokeOnRandomTarget<T>(object request);
+        Task<T> InvokeOnRandomTarget<T>(ClientRequest request);
 
         /// <exception cref="System.Exception"></exception>
-        T InvokeOnTarget<T>(object request, Address target);
+        Task<T> InvokeOnTarget<T>(ClientRequest request, Address target);
 
         /// <exception cref="System.Exception"></exception>
-        T InvokeOnKeyOwner<T>(object request, object key);
+        Task<T> InvokeOnKeyOwner<T>(ClientRequest request, object key);
 
         /// <exception cref="System.Exception"></exception>
-        void InvokeOnRandomTarget(object request, ResponseHandler handler);
+        Task<T> InvokeOnRandomTarget<T>(ClientRequest request, DistributedEventHandler handler);
 
         /// <exception cref="System.Exception"></exception>
-        void InvokeOnTarget(object request, Address target, ResponseHandler handler);
+        Task<T> InvokeOnTarget<T>(ClientRequest request, Address target, DistributedEventHandler handler);
 
         /// <exception cref="System.Exception"></exception>
-        void InvokeOnKeyOwner(object request, object key, ResponseHandler handler);
+        Task<T> InvokeOnKeyOwner<T>(ClientRequest request, object key, DistributedEventHandler handler);
+
     }
 }

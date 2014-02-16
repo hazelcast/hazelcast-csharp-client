@@ -18,7 +18,7 @@ namespace Hazelcast.Util
 
 
     [System.Serializable]
-    public class QueryResultEntry : IIdentifiedDataSerializable, IQueryResultEntry
+    public class QueryResultEntry : IdentifiedDataSerializable,IIdentifiedDataSerializable, IQueryResultEntry
     {
         private Data indexKey;
 

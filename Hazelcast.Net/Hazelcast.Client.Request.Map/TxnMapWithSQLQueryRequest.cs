@@ -36,14 +36,5 @@ namespace Hazelcast.Client.Request.Map
             }
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        protected internal override void ReadDataInner(IObjectDataInput input)
-        {
-            bool hasPredicate = input.ReadBoolean();
-            if (hasPredicate)
-            {
-                predicate = input.ReadUTF();
-            }
-        }
     }
 }

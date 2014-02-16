@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Collection;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
@@ -11,7 +12,7 @@ using Hazelcast.Util;
 namespace Hazelcast.Client.Proxy
 {
     //.Net reviewed
-    public class AbstractClientCollectionProxy<E> : ClientProxy, IHazelcastCollection<E>
+    public class AbstractClientCollectionProxy<E> : ClientProxy, IHCollection<E>
     {
         protected internal readonly string partitionKey;
 
@@ -157,25 +158,23 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new CollectionAddListenerRequest(GetName(), includeValue);
             request.SetServiceName(GetServiceName());
-            return Listen<PortableItemEvent>(request, GetPartitionKey(),
-                (sender, args) => HandleItemListener(args, listener, includeValue));
+            return Listen(request, GetPartitionKey(), (args) => HandleItemListener((PortableItemEvent)args, listener, includeValue));
         }
 
         public bool RemoveItemListener(string registrationId)
         {
-            return StopListening(registrationId);
+            var request = new CollectionRemoveListenerRequest(GetName(), registrationId, GetServiceName());
+            return StopListening(request,registrationId);
         }
 
-        protected internal override void OnDestroy()
+        protected override void OnDestroy()
         {
-            throw new NotImplementedException();
         }
 
         private void HandleItemListener(PortableItemEvent portableItemEvent, IItemListener<E> listener,
             bool includeValue)
         {
-            E item = includeValue
-                ? (E) GetContext().GetSerializationService().ToObject(portableItemEvent.GetItem())
+            E item = includeValue ? GetContext().GetSerializationService().ToObject<E>(portableItemEvent.GetItem())
                 : default(E);
             IMember member = GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
             var itemEvent = new ItemEvent<E>(GetName(), portableItemEvent.GetEventType(), item, member);
@@ -203,7 +202,7 @@ namespace Hazelcast.Client.Proxy
             return result;
         }
 
-        protected internal virtual T Invoke<T>(object req)
+        protected override T Invoke<T>(ClientRequest req)
         {
             var collectionRequest = req as CollectionRequest;
             if (collectionRequest != null)
@@ -211,32 +210,7 @@ namespace Hazelcast.Client.Proxy
                 CollectionRequest request = collectionRequest;
                 request.SetServiceName(GetServiceName());
             }
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<T>(req, GetPartitionKey());
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
-
-        protected internal virtual Data ToData(object o)
-        {
-            return GetContext().GetSerializationService().ToData(o);
-        }
-
-        protected internal virtual object ToObject(Data data)
-        {
-            return GetContext().GetSerializationService().ToObject(data);
-        }
-
-        protected internal virtual void ThrowExceptionIfNull(object o)
-        {
-            if (o == null)
-            {
-                throw new ArgumentNullException("o");
-            }
+            return base.Invoke<T>(req,GetPartitionKey());
         }
 
         protected IEnumerable<E> GetAll()
@@ -247,7 +221,7 @@ namespace Hazelcast.Client.Proxy
             var list = new List<E>(collection.Count);
             foreach (Data value in collection)
             {
-                list.Add((E) ToObject(value));
+                list.Add(ToObject<E>(value));
             }
             return list;
         }

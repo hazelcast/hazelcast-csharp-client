@@ -9,7 +9,7 @@ namespace Hazelcast.IO.Serialization
 
         Data ToData(object obj, IPartitioningStrategy strategy);
 
-        object ToObject(Data data);
+        T ToObject<T>(object input);
 
         void WriteObject(IObjectDataOutput objectDataOutput, object obj);
 

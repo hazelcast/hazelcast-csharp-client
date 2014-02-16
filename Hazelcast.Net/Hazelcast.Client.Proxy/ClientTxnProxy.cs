@@ -1,8 +1,8 @@
-using System.IO;
+using System;
+using System.Runtime.Remoting;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Client.Spi;
-using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Transaction;
@@ -29,11 +29,6 @@ namespace Hazelcast.Client.Proxy
             Invoke<object>(request);
         }
 
-        public virtual object GetId()
-        {
-            return objectName;
-        }
-
         public virtual string GetPartitionKey()
         {
             return StringPartitioningStrategy.GetPartitionKey(GetName());
@@ -43,17 +38,14 @@ namespace Hazelcast.Client.Proxy
 
         public abstract string GetServiceName();
 
-        internal T Invoke<T>(object request)
+        public virtual object GetId()
         {
-            var clusterService = (ClientClusterService) proxy.GetClient().GetClientClusterService();
-            try
-            {
-                return clusterService.SendAndReceiveFixedConnection<T>(proxy.GetConnection(), request);
-            }
-            catch (IOException e)
-            {
-                throw ExceptionUtil.Rethrow(new HazelcastException(e));
-            }
+            return objectName;
+        }
+
+        protected virtual T Invoke<T>(ClientRequest request)
+        {
+            return proxy.transaction.Invoke<T>(request);
         }
 
         internal abstract void OnDestroy();
@@ -63,9 +55,9 @@ namespace Hazelcast.Client.Proxy
             return proxy.GetClient().GetSerializationService().ToData(obj);
         }
 
-        internal virtual object ToObject(Data data)
+        internal virtual E ToObject<E>(Data data)
         {
-            return proxy.GetClient().GetSerializationService().ToObject(data);
+            return proxy.GetClient().GetSerializationService().ToObject<E>(data);
         }
     }
 }

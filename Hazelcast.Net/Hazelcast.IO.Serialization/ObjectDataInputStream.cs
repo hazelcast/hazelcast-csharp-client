@@ -27,7 +27,7 @@ namespace Hazelcast.IO.Serialization
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _binaryReader.Dispose();
         }
 
         /// <exception cref="System.IO.IOException"></exception>

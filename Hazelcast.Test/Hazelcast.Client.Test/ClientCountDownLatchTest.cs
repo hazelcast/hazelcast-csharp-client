@@ -9,21 +9,22 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientCountDownLatchTest:HazelcastBaseTest
 	{
-        internal const string name = "ClientCountDownLatchTest";
+        //internal const string name = "ClientCountDownLatchTest";
 
-		internal static ICountDownLatch l;
+		internal ICountDownLatch l;
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            l = client.GetCountDownLatch(name);
+            l = client.GetCountDownLatch(Name);
             
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
+            l.Destroy();
+            Console.WriteLine("destroy");
         }
 
 
@@ -54,6 +55,8 @@ namespace Hazelcast.Client.Test
             
             Assert.IsFalse(l.Await(1, TimeUnit.SECONDS));
 			Assert.IsTrue(l.Await(5, TimeUnit.SECONDS));
+
+		    t1.Join();
 		}
 
 	}

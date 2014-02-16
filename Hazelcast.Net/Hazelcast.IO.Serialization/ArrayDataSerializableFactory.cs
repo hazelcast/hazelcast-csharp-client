@@ -8,6 +8,10 @@ namespace Hazelcast.IO.Serialization
 
         private readonly int len;
 
+
+        public ArrayDataSerializableFactory():this(null)
+        { }
+
         public ArrayDataSerializableFactory(Func<int, IIdentifiedDataSerializable>[] ctorArray)
         {
             if (ctorArray != null && ctorArray.Length > 0)

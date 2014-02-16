@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hazelcast.Client.Request.Map;
 using Hazelcast.Client.Request.Multimap;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
@@ -79,8 +80,8 @@ namespace Hazelcast.Client.Proxy
             ICollection<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
             foreach (var entry in dataEntrySet)
             {
-                var key = (K) GetSerializationService().ToObject(entry.Key);
-                var val = (V) GetSerializationService().ToObject(entry.Value);
+                var key = GetSerializationService().ToObject<K>(entry.Key);
+                var val = GetSerializationService().ToObject<V>(entry.Value);
                 entrySet.Add(new KeyValuePair<K, V>(key, val));
             }
             return entrySet;
@@ -140,20 +141,22 @@ namespace Hazelcast.Client.Proxy
         public virtual string AddEntryListener(IEntryListener<K, V> listener, bool includeValue)
         {
             var request = new AddEntryListenerRequest(name, null, includeValue);
-            EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
+            DistributedEventHandler handler = (_event) => OnEntryEvent((PortableEntryEvent)_event, includeValue, listener);
+
             return Listen(request, handler);
         }
 
         public virtual bool RemoveEntryListener(string registrationId)
         {
-            return StopListening(registrationId);
+            var request = new RemoveEntryListenerRequest();
+            return StopListening(request,registrationId);
         }
 
         public virtual string AddEntryListener(IEntryListener<K, V> listener, K key, bool includeValue)
         {
             Data keyData = GetSerializationService().ToData(key);
             var request = new AddEntryListenerRequest(name, keyData, includeValue);
-            EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
+            DistributedEventHandler handler = (_event) => OnEntryEvent((PortableEntryEvent)_event, includeValue, listener);
             return Listen(request, keyData, handler);
         }
 
@@ -216,36 +219,10 @@ namespace Hazelcast.Client.Proxy
             Invoke<bool>(request, keyData);
         }
 
-        //    public LocalMultiMapStats getLocalMultiMapStats() {
-        //        throw new UnsupportedOperationException("Locality is ambiguous for client!!!");
-        //    }
-        protected internal override void OnDestroy()
+        protected override void OnDestroy()
         {
         }
 
-        private T Invoke<T>(object req, Data key)
-        {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<T>(req, key);
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
-
-        private T Invoke<T>(object req)
-        {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnRandomTarget<T>(req);
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
 
         private ICollection<T> ToObjectCollection<T>(PortableCollection result, bool list)
         {
@@ -265,7 +242,7 @@ namespace Hazelcast.Client.Proxy
             }
             foreach (Data data in coll)
             {
-                var item = (T) GetSerializationService().ToObject(data);
+                var item = GetSerializationService().ToObject<T>(data);
                 collection.Add(item);
             }
             return collection;
@@ -287,10 +264,10 @@ namespace Hazelcast.Client.Proxy
             V oldValue = default(V);
             if (includeValue)
             {
-                value = (V) GetSerializationService().ToObject(_event.GetValue());
-                oldValue = (V) GetSerializationService().ToObject(_event.GetOldValue());
+                value = GetSerializationService().ToObject<V>(_event.GetValue());
+                oldValue = GetSerializationService().ToObject<V>(_event.GetOldValue());
             }
-            var key = (K) GetSerializationService().ToObject(_event.GetKey());
+            var key = GetSerializationService().ToObject<K>(_event.GetKey());
             IMember member = GetContext().GetClusterService().GetMember(_event.GetUuid());
             var entryEvent = new EntryEvent<K, V>(name, member, _event.GetEventType(), key, oldValue, value);
             switch (_event.GetEventType())

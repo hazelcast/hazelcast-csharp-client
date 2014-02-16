@@ -9,7 +9,7 @@ using Hazelcast.Util;
 namespace Hazelcast.IO
 {
     [Serializable]
-    public sealed class Address : IIdentifiedDataSerializable
+    public sealed class Address : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         public const int Id = 1;
 
@@ -93,11 +93,6 @@ namespace Hazelcast.IO
                 input.ReadFully(address);
                 host = Encoding.UTF8.GetString(address);
             }
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
         }
 
         public int GetFactoryId()

@@ -42,12 +42,12 @@ namespace Hazelcast.Core
             return eventType;
         }
 
-        /// <summary>Returns identifier of related IDistributedObject</summary>
-        /// <returns>identifier of IDistributedObject</returns>
-        public virtual object GetObjectId()
-        {
-            return distributedObject.GetId();
-        }
+        ///// <summary>Returns identifier of related IDistributedObject</summary>
+        ///// <returns>identifier of IDistributedObject</returns>
+        //public virtual object GetObjectId()
+        //{
+        //    return distributedObject.;
+        //}
 
         /// <summary>Returns IDistributedObject instance</summary>
         /// <returns>IDistributedObject</returns>

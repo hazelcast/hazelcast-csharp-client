@@ -1,12 +1,16 @@
-namespace Hazelcast.Net.Ext
+using Hazelcast.Core;
+
+namespace Hazelcast.Core
 {
+    /// <summary>
+    /// Represent Time units
+    /// </summary>
     public enum TimeUnit : long
     {
         MILLISECONDS = 1,
         SECONDS = 1000,
         MINUTES = 60*1000
     }
-
     internal static class TimeUnitExtensions
     {
         public static long Convert(this TimeUnit thisUnit, long duration, TimeUnit targetUnit)
@@ -20,3 +24,4 @@ namespace Hazelcast.Net.Ext
         }
     }
 }
+

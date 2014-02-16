@@ -1,7 +1,7 @@
 namespace Hazelcast.Client.Request.Executor
 {
     //[System.Serializable]
-    //public abstract class LocalTargetCallableRequest : IIdentifiedDataSerializable
+    //public abstract class LocalTargetCallableRequest : IdentifiedDataSerializable,IIdentifiedDataSerializable
     //{
     //private string name;
 

@@ -13,7 +13,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public sealed class ClientMapProxy<K, V> : ClientProxy, IHazelcastMap<K, V> //, IMap<K, V>
+    public sealed class ClientMapProxy<K, V> : ClientProxy, IMap<K, V>
     {
         private readonly string name;
         private readonly AtomicBoolean nearCacheInitialized = new AtomicBoolean();
@@ -104,7 +104,34 @@ namespace Hazelcast.Client.Proxy
 
         public Task<V> GetAsync(K key)
         {
-            return GetContext().GetExecutionService().Submit(v => Get(key));
+            InitNearCache();
+            Data keyData = ToData(key);
+            if (nearCache != null)
+            {
+                object cached = nearCache.Get(keyData);
+                if (cached != null)
+                {
+                    Task<V> task = Task.Factory.StartNew(() =>
+                    {
+                        if (cached.Equals(ClientNearCache.NullObject))
+                        {
+                            return default(V);
+                        }
+                        return (V)cached;
+                    });
+                    return task;
+                }
+            }
+
+            var request = new MapGetRequest(name, keyData);
+            try
+            {
+                return GetContext().GetInvocationService().InvokeOnKeyOwner<V>(request, key);
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }  
         }
 
         public Task<V> PutAsync(K key, V value)
@@ -114,14 +141,30 @@ namespace Hazelcast.Client.Proxy
 
         public Task<V> PutAsync(K key, V value, long ttl, TimeUnit timeunit)
         {
-            Task<V> f = GetContext().GetExecutionService().Submit(v => Put(key, value, ttl, timeunit));
-            return f;
+            Data keyData = ToData(key);
+            Data valueData = ToData(value);
+            var request = new MapPutRequest(name, keyData, valueData, ThreadUtil.GetThreadId(),GetTimeInMillis(ttl, timeunit));
+            try {
+                var task = GetContext().GetInvocationService().InvokeOnKeyOwner<V>(request, keyData);
+                return task;
+            } catch (Exception e) {
+                throw ExceptionUtil.Rethrow(e);
+            }
         }
 
         public Task<V> RemoveAsync(K key)
         {
-            Task<V> f = GetContext().GetExecutionService().Submit(v => Remove(key));
-            return f;
+            Data keyData = ToData(key);
+            var request = new MapRemoveRequest(name, keyData, ThreadUtil.GetThreadId());
+            try
+            {
+                var task = GetContext().GetInvocationService().InvokeOnKeyOwner<V>(request, keyData);
+                return task;
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
         }
 
         public bool TryRemove(K key, long timeout, TimeUnit timeunit)
@@ -281,20 +324,21 @@ namespace Hazelcast.Client.Proxy
         public string AddEntryListener(IEntryListener<K, V> listener, bool includeValue)
         {
             var request = new MapAddEntryListenerRequest<K, V>(name, includeValue);
-            EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
+            DistributedEventHandler handler = (_event) => OnEntryEvent((PortableEntryEvent) _event, includeValue, listener);
             return Listen(request, handler);
         }
 
         public bool RemoveEntryListener(string id)
         {
-            return StopListening(id);
+            var request = new MapRemoveEntryListenerRequest(name, id);
+            return StopListening(request,id);
         }
 
         public string AddEntryListener(IEntryListener<K, V> listener, K key, bool includeValue)
         {
             Data keyData = ToData(key);
             var request = new MapAddEntryListenerRequest<K, V>(name, keyData, includeValue);
-            EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
+            DistributedEventHandler handler = (_event) => OnEntryEvent((PortableEntryEvent)_event, includeValue, listener);
             return Listen(request, keyData, handler);
         }
 
@@ -322,12 +366,12 @@ namespace Hazelcast.Client.Proxy
             return result;
         }
 
-        public ICollection<K> Keys()
+        public ISet<K> KeySet()
         {
             var request = new MapKeySetRequest(name);
             var mapKeySet = Invoke<MapKeySet>(request);
             ICollection<Data> keySetData = mapKeySet.GetKeySet();
-            ICollection<K> keySet = new HashSet<K>();
+            ISet<K> keySet = new HashSet<K>();
             foreach (Data data in keySetData)
             {
                 var key = ToObject<K>(data);
@@ -370,25 +414,19 @@ namespace Hazelcast.Client.Proxy
 
         public ICollection<KeyValuePair<K, V>> EntrySet()
         {
-            throw new NotSupportedException("");
-            //MapEntrySetRequest request = new MapEntrySetRequest(name);
-            //MapEntrySet result = Invoke<MapEntrySet>(request);
-            //ICollection<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
-            //ICollection<KeyValuePair<Data, Data>> entries = result.GetEntrySet();
-            //foreach (KeyValuePair<Data, Data> dataEntry in entries)
-            //{
-            //    Data keyData = dataEntry.Key;
-            //    Data valueData = dataEntry.Value;
-            //    K key = ToObject<K>(keyData);
-            //    V value = ToObject<V>(valueData);
-            //    entrySet.Add(new KeyValuePair<K, V>(key, value));
-            //}
-            //return entrySet;
-        }
-
-        public ICollection<K> LocalKeySet()
-        {
-            throw new NotSupportedException("Locality is ambiguous for client!!!");
+            var request = new MapEntrySetRequest(name);
+            var result = Invoke<MapEntrySet>(request);
+            ICollection<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
+            ICollection<KeyValuePair<Data, Data>> entries = result.GetEntrySet();
+            foreach (KeyValuePair<Data, Data> dataEntry in entries)
+            {
+                Data keyData = dataEntry.Key;
+                Data valueData = dataEntry.Value;
+                K key = ToObject<K>(keyData);
+                V value = ToObject<V>(valueData);
+                entrySet.Add(new KeyValuePair<K, V>(key, value));
+            }
+            return entrySet;
         }
 
         public void AddIndex(string attribute, bool ordered)
@@ -397,21 +435,7 @@ namespace Hazelcast.Client.Proxy
             Invoke<object>(request);
         }
 
-        //    public LocalMapStats getLocalMapStats() {
-        //        throw new UnsupportedOperationException("Locality is ambiguous for client!!!");
-        //    }
-
-        //        MapExecuteWithPredicateRequest request = new MapExecuteWithPredicateRequest(name, entryProcessor, predicate);
-        //        MapEntrySet entrySet = invoke(request);
-        //        Map<K, Object> result = new HashMap<K, Object>();
-        //        for (Entry<Data, Data> dataEntry : entrySet.getEntrySet()) {
-        //            final Data keyData = dataEntry.getKey();
-        //            final Data valueData = dataEntry.getValue();
-        //            K key = toObject(keyData);
-        //            result.put(key, toObject(valueData));
-        //        }
-        //        return result;
-        public void Set(K key, V value)
+         public void Set(K key, V value)
         {
             Set(key, value, -1, TimeUnit.SECONDS);
         }
@@ -450,14 +474,14 @@ namespace Hazelcast.Client.Proxy
         {
             Data keyData = ToData(key);
             MapAddEntryListenerRequest<K, V> request = new MapAddEntryListenerRequest<K, V>(name, keyData, includeValue, predicate);
-            EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
+            DistributedEventHandler handler = (_event) => OnEntryEvent((PortableEntryEvent)_event, includeValue, listener);
             return Listen(request, keyData, handler);
         }
 
         public string AddEntryListener(IEntryListener<K, V> listener, IPredicate<K, V> predicate, bool includeValue)
         {
             MapAddEntryListenerRequest<K, V> request = new MapAddEntryListenerRequest<K, V>(name, null, includeValue, predicate);
-            EventHandler<PortableEntryEvent> handler = (sender, _event) => OnEntryEvent(_event, includeValue, listener);
+            DistributedEventHandler handler = (_event) => OnEntryEvent((PortableEntryEvent)_event, includeValue, listener); 
             return Listen(request, null, handler);
         }
 
@@ -479,11 +503,10 @@ namespace Hazelcast.Client.Proxy
             var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Entry);
             var result = Invoke<QueryResultSet>(request);
             ICollection<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
-            foreach (object data in result)
+            foreach (IQueryResultEntry dataEntry in result.entries)
             {
-                KeyValuePair<Data, Data> dataEntry = (KeyValuePair<Data, Data>)data;
-                K key = ToObject<K>(dataEntry.Key);
-                V value = ToObject<V>(dataEntry.Value);
+                K key = ToObject<K>(dataEntry.GetKeyData());
+                V value = ToObject<V>(dataEntry.GetValueData());
                 entrySet.Add(new KeyValuePair<K, V>(key, value));
             }
             return entrySet;
@@ -502,77 +525,11 @@ namespace Hazelcast.Client.Proxy
             return values;
         }
 
-        public object ExecuteOnKey(K key, EntryProcessor<K, V> entryProcessor)
+        protected  override void OnDestroy()
         {
-            throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT");
-        }
-
-        //        final Data keyData = toData(key);
-        //        MapExecuteOnKeyRequest request = new MapExecuteOnKeyRequest(name, entryProcessor, keyData);
-        //        return invoke(request, keyData);
-        public IDictionary<K, object> ExecuteOnEntries(EntryProcessor<K, V> entryProcessor)
-        {
-            throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT");
-        }
-
-        //        MapExecuteOnAllKeysRequest request = new MapExecuteOnAllKeysRequest(name, entryProcessor);
-        //        MapEntrySet entrySet = invoke(request);
-        //        Map<K, Object> result = new HashMap<K, Object>();
-        //        for (Entry<Data, Data> dataEntry : entrySet.getEntrySet()) {
-        //            final Data keyData = dataEntry.getKey();
-        //            final Data valueData = dataEntry.getValue();
-        //            K key = toObject(keyData);
-        //            result.put(key, toObject(valueData));
-        //        }
-        //        return result;
-        public IDictionary<K, object> ExecuteOnEntries(EntryProcessor<K, V> entryProcessor, IPredicate<K, V> predicate)
-        {
-            throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT");
-        }
-
-        protected internal override void OnDestroy()
-        {
-            if (nearCacheListenerId != null)
-            {
-                RemoveEntryListener(nearCacheListenerId);
-            }
             if (nearCache != null)
             {
-                nearCache.Clear();
-            }
-        }
-
-        private Data ToData(object o)
-        {
-            return GetContext().GetSerializationService().ToData(o);
-        }
-
-        private T ToObject<T>(Data data)
-        {
-            return (T) GetContext().GetSerializationService().ToObject(data);
-        }
-
-        private T Invoke<T>(object req, Data keyData)
-        {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<T>(req, keyData);
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
-
-        private T Invoke<T>(object req)
-        {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnRandomTarget<T>(req);
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
+                nearCache.Destroy();
             }
         }
 
@@ -630,59 +587,11 @@ namespace Hazelcast.Client.Proxy
                 {
                     return;
                 }
-                var _nearCache = new ClientNearCache(name, GetContext(), nearCacheConfig);
-                if (nearCacheConfig.IsInvalidateOnChange())
-                {
-                    try
-                    {
-                        nearCacheListenerId = AddEntryListener(new _NearCacheEntryListener(this), false);
-                    }
-                    catch (Exception e)
-                    {
-                        _nearCache = null;
-                        //                    nearCacheInitialized.set(false);
-                        Logger.GetLogger(typeof (ClientMapProxy<,>))
-                            .Severe("-----------------\n Near Cache is not initialized!!! \n-----------------", e);
-                    }
-                }
+                var _nearCache = new ClientNearCache(name,ClientNearCacheType.Map, GetContext(), nearCacheConfig);
                 nearCache = _nearCache;
             }
         }
 
-        private sealed class _NearCacheEntryListener : IEntryListener<K, V>
-        {
-            private readonly ClientMapProxy<K, V> _enclosing;
 
-            public _NearCacheEntryListener(ClientMapProxy<K, V> _enclosing)
-            {
-                this._enclosing = _enclosing;
-            }
-
-            public void EntryAdded(EntryEvent<K, V> _event)
-            {
-                Invalidate(_event);
-            }
-
-            public void EntryRemoved(EntryEvent<K, V> _event)
-            {
-                Invalidate(_event);
-            }
-
-            public void EntryUpdated(EntryEvent<K, V> _event)
-            {
-                Invalidate(_event);
-            }
-
-            public void EntryEvicted(EntryEvent<K, V> _event)
-            {
-                Invalidate(_event);
-            }
-
-            internal void Invalidate(EntryEvent<K, V> _event)
-            {
-                Data key = _enclosing.ToData(_event.GetKey());
-                _enclosing.nearCache.Invalidate(key);
-            }
-        }
     }
 }

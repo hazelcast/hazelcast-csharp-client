@@ -1,9 +1,10 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
 {
-    public sealed class SetCountRequest : IPortable
+    public sealed class SetCountRequest : ClientRequest
     {
         private int count;
         private string name;
@@ -18,28 +19,23 @@ namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
             this.count = count;
         }
 
-        public int GetFactoryId()
+        public override int GetFactoryId()
         {
             return CountDownLatchPortableHook.FId;
         }
 
-        public int GetClassId()
+        public override int GetClassId()
         {
             return CountDownLatchPortableHook.SetCount;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("name", name);
             writer.WriteInt("count", count);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("name");
-            count = reader.ReadInt("count");
-        }
+
     }
 }

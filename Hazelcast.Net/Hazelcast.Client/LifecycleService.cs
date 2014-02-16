@@ -10,6 +10,8 @@ namespace Hazelcast.Client
 {
     public sealed class LifecycleService : ILifecycleService
     {
+        private readonly ILogger logger = Logger.GetLogger(typeof(ILifecycleService));
+
         private readonly AtomicBoolean active = new AtomicBoolean(false);
         private readonly HazelcastClient client;
 
@@ -56,6 +58,7 @@ namespace Hazelcast.Client
 
         public void Shutdown()
         {
+
             active.Set(false);
             lock (lifecycleLock)
             {
@@ -70,18 +73,13 @@ namespace Hazelcast.Client
             Shutdown();
         }
 
-        private ILogger GetLogger()
-        {
-            return Logger.GetLogger(typeof (ILifecycleService));
-        }
-
         public void FireLifecycleEvent(LifecycleEvent.LifecycleState lifecycleState)
         {
             var lifecycleEvent = new LifecycleEvent(lifecycleState);
-            GetLogger().Info("HazelcastClient[" + client.GetName() + "] is " + lifecycleEvent.GetState());
-            foreach (ILifecycleListener lifecycleListener in lifecycleListeners.Values)
+            logger.Info("HazelcastClient[" + client.GetName() + "] is " + lifecycleEvent.GetState());
+            foreach (var entry in lifecycleListeners)
             {
-                lifecycleListener.StateChanged(lifecycleEvent);
+                entry.Value.StateChanged(lifecycleEvent);
             }
         }
 

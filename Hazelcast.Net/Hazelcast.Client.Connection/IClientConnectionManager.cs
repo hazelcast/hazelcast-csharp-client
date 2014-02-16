@@ -1,24 +1,49 @@
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Client.Request.Base;
+using Hazelcast.Core;
 using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Connection
 {
-    public interface IClientConnectionManager
+    public interface IClientConnectionManager:IRemotingService
     {
-        void Shutdown();
+        void Start();
+        bool Shutdown();
+
+        bool Live { get; }
+
+        void FireConnectionEvent(bool disconnected);
+
+        ///// <exception cref="System.IO.IOException"></exception>
+        //bool WriteToOwner(Data data);
 
         /// <exception cref="System.IO.IOException"></exception>
-        IConnection GetRandomConnection();
+        Data ReadFromOwner();
 
         /// <exception cref="System.IO.IOException"></exception>
-        IConnection GetConnection(Address address);
+        object SendAndReceiveFromOwner(ClientRequest clientRequest);
 
-        void RemoveConnectionPool(Address address);
+        Address BindToRandomAddress();
 
-        /// <exception cref="System.IO.IOException"></exception>
-        IConnection NewConnection(Address address, Authenticator authenticator);
+        void HandleMembershipEvent(MembershipEvent membershipEvent);
 
-        /// <exception cref="System.IO.IOException"></exception>
-        IConnection FirstConnection(Address address, Authenticator authenticator);
+        Address OwnerAddress();
+
+        //void RemoveConnectionCalls(ClientConnection connection);
+
+        ///// <exception cref="System.IO.IOException"></exception>
+        //ClientConnection GetRandomConnection();
+
+        ///// <exception cref="System.IO.IOException"></exception>
+        //ClientConnection GetOrConnect(Address address);
+
+        ///// <exception cref="System.IO.IOException"></exception>
+        //ClientConnection OwnerConnection(Address address, Authenticator authenticator);
+
+        ///// <exception cref="System.IO.IOException"></exception>
+        //void DestroyConnection(ClientConnection clientConnection);
     }
 }

@@ -17,82 +17,22 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientMapTest:HazelcastBaseTest
 	{
-		internal const string name = "test";
+        //internal const string name = "test";
 
-		internal static IHazelcastMap<object,object> map;
+		internal static IMap<object,object> map;
 
 		//
 		[SetUp]
-		public static void Init()
+		public void Init()
 		{
-		    InitClient();
-            map = client.GetMap<object, object>(name);
+            map = client.GetMap<object, object>(Name);
 		}
 
 		[TearDown]
 		public static void Destroy()
 		{
 			map.Clear();
-            //client.GetLifecycleService().Shutdown();
 		}
-
-
-        ///// <exception cref="System.Exception"></exception>
-        //[Test]
-        //public virtual void TestIssue537()
-        //{
-        //    CountdownEvent latch = new CountdownEvent(2);
-        //    CountdownEvent nullLatch = new CountdownEvent(2);
-        //    EntryListener listener = new _EntryListener_81(latch, nullLatch);
-        //    string id = map.AddEntryListener(listener, true);
-        //    map.Put("key1", new GenericEvent("value1"), 2, TimeUnit.Seconds);
-        //    Assert.IsTrue(latch.Await(10, TimeUnit.Seconds));
-        //    Assert.IsTrue(nullLatch.Await(1, TimeUnit.Seconds));
-        //    map.RemoveEntryListener(id);
-        //    map.Put("key2", new GenericEvent("value2"));
-        //    Assert.AreEqual(1, map.Size());
-        //}
-
-        //private sealed class _EntryListener_81 : EntryListener
-        //{
-        //    public _EntryListener_81(CountdownEvent latch, CountdownEvent nullLatch)
-        //    {
-        //        this.latch = latch;
-        //        this.nullLatch = nullLatch;
-        //    }
-
-        //    public void EntryAdded(EntryEvent @event)
-        //    {
-        //        latch.Signal();
-        //    }
-
-        //    public void EntryRemoved(EntryEvent @event)
-        //    {
-        //    }
-
-        //    public void EntryUpdated(EntryEvent @event)
-        //    {
-        //    }
-
-        //    public void EntryEvicted(EntryEvent @event)
-        //    {
-        //        object value = @event.GetValue();
-        //        object oldValue = @event.GetOldValue();
-        //        if (value != null)
-        //        {
-        //            nullLatch.Signal();
-        //        }
-        //        if (oldValue != null)
-        //        {
-        //            nullLatch.Signal();
-        //        }
-        //        latch.Signal();
-        //    }
-
-        //    private readonly CountdownEvent latch;
-
-        //    private readonly CountdownEvent nullLatch;
-        //}
 
 		/// <exception cref="System.Exception"></exception>
 		[Test]
@@ -322,12 +262,6 @@ namespace Hazelcast.Client.Test
 			Assert.IsNull(map.Get("key1"));
 		}
 
-		/// <exception cref="System.Exception"></exception>
-		[Test]
-		public virtual void TestPutTransient()
-		{
-		}
-
 		//TODO mapstore
 		/// <exception cref="System.Exception"></exception>
 		[Test]
@@ -346,6 +280,31 @@ namespace Hazelcast.Client.Test
             t1.Start();
 			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
 			Assert.AreEqual("value1", map.Get("key1"));
+			map.ForceUnlock("key1");
+		}
+        
+        [Test]
+		public virtual void TestUnlock()
+		{
+			map.Put("key1", "value1");
+			Assert.AreEqual("value1", map.Get("key1"));
+			map.Lock("key1");
+            CountdownEvent latch = new CountdownEvent(1);
+
+            var t1 = new Thread(delegate(object o)
+            {
+                map.Unlock("key1");
+                if (map.IsLocked("key1"))
+                {
+                    latch.Signal();
+                }
+            });
+            t1.Start();
+			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
+
+            map.Unlock("key1");
+            Assert.IsFalse(map.IsLocked("key1"));
+
 			map.ForceUnlock("key1");
 		}
 
@@ -369,8 +328,6 @@ namespace Hazelcast.Client.Test
 			Assert.AreEqual("value2", map.Get("key1"));
 			map.ForceUnlock("key1");
 		}
-
-		
 
 		/// <exception cref="System.Exception"></exception>
 		[Test]
@@ -402,103 +359,6 @@ namespace Hazelcast.Client.Test
 			map.ForceUnlock("key1");
 		}
 
-        ///// <exception cref="System.Exception"></exception>
-        //[Test]
-        //public virtual void TestTryLock()
-        //{
-        //    //        final IMap tempMap = server.getMap(name);
-        //    IHazelcastMap<> tempMap = map;
-        //    Assert.IsTrue(tempMap.TryLock("key1", 2, TimeUnit.SECONDS));
-        //    CountdownEvent latch = new CountdownEvent(1);
-
-        //    var t1 = new Thread(delegate(object o)
-        //    {
-        //       try
-        //        {
-        //            if (!tempMap.TryLock("key1", 2, TimeUnit.SECONDS))
-        //            {
-        //                latch.Signal();
-        //            }
-        //        }
-        //        catch (Exception e)
-        //        {
-					
-        //        } 
-
-        //    });
-
-        //    t1.Start();
-
-        //    Assert.IsTrue(latch.Await(100, TimeUnit.Seconds));
-        //    Assert.IsTrue(tempMap.IsLocked("key1"));
-        //    CountdownEvent latch2 = new CountdownEvent(1);
-
-        //    new _Thread_414(tempMap, latch2).Start();
-			
-        //    Thread.Sleep(1000);
-			
-        //    tempMap.Unlock("key1");
-        //    Assert.IsTrue(latch2.Await(100, TimeUnit.Seconds));
-        //    Assert.IsTrue(tempMap.IsLocked("key1"));
-        //    tempMap.ForceUnlock("key1");
-        //}
-
-        //private sealed class _Thread_398 : Hazelcast.Net.Ext.Thread
-        //{
-        //    public _Thread_398(IMap tempMap, CountdownEvent latch)
-        //    {
-        //        this.tempMap = tempMap;
-        //        this.latch = latch;
-        //    }
-
-        //    public override void Run()
-        //    {
-        //        try
-        //        {
-        //            if (!tempMap.TryLock("key1", 2, TimeUnit.Seconds))
-        //            {
-        //                latch.Signal();
-        //            }
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            Sharpen.Runtime.PrintStackTrace(e);
-        //        }
-        //    }
-
-        //    private readonly IMap tempMap;
-
-        //    private readonly CountdownEvent latch;
-        //}
-
-        //private sealed class _Thread_414 : Hazelcast.Net.Ext.Thread
-        //{
-        //    public _Thread_414(IMap tempMap, CountdownEvent latch2)
-        //    {
-        //        this.tempMap = tempMap;
-        //        this.latch2 = latch2;
-        //    }
-
-        //    public override void Run()
-        //    {
-        //        try
-        //        {
-        //            if (tempMap.TryLock("key1", 20, TimeUnit.Seconds))
-        //            {
-        //                latch2.Signal();
-        //            }
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            Sharpen.Runtime.PrintStackTrace(e);
-        //        }
-        //    }
-
-        //    private readonly IMap tempMap;
-
-        //    private readonly CountdownEvent latch2;
-        //}
-
 		/// <exception cref="System.Exception"></exception>
 		[Test]
 		public virtual void TestForceUnlock()
@@ -520,7 +380,7 @@ namespace Hazelcast.Client.Test
 
 
         [Test]
-		public void TestValues() 
+		public void TestValuesPredicate() 
         {
 		    FillMap();
 		
@@ -529,6 +389,18 @@ namespace Hazelcast.Client.Test
             IEnumerator<object> enumerator = values.GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("value1", enumerator.Current);
+		}
+
+        [Test]
+		public void TestKeySetPredicate() 
+        {
+		    FillMap();
+		
+		    var values = map.KeySet(new SqlPredicate("this == value1"));
+		    Assert.AreEqual(1, values.Count);
+            IEnumerator<object> enumerator = values.GetEnumerator();
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("key1", enumerator.Current);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -545,6 +417,104 @@ namespace Hazelcast.Client.Test
 			Assert.AreEqual("value3", map.Get("key1"));
 		}
 
+		/// <exception cref="System.Exception"></exception>
+		[Test]
+		public virtual void TestIsEmpty()
+		{
+            Assert.IsTrue(map.IsEmpty());
+            map.Put("key1", "value1");
+            Assert.IsFalse(map.IsEmpty());
+		}
+
+        [Test]
+        public virtual void TestEntrySet()
+        {
+            map.Put("key1", "value1");
+            map.Put("key2", "value2");
+            map.Put("key3", "value3");
+
+            var keyValuePairs = map.EntrySet();
+            var enumerator = keyValuePairs.GetEnumerator();
+
+            enumerator.MoveNext();
+            Assert.AreEqual("key3", enumerator.Current.Key);
+            Assert.AreEqual("value3", enumerator.Current.Value);
+
+            enumerator.MoveNext();
+            Assert.AreEqual("key2", enumerator.Current.Key);
+            Assert.AreEqual("value2", enumerator.Current.Value);
+
+            enumerator.MoveNext();
+            Assert.AreEqual("key1", enumerator.Current.Key);
+            Assert.AreEqual("value1", enumerator.Current.Value);
+        }
+
+        [Test]
+        public virtual void TestKeySet()
+        {
+            map.Put("key1", "value1");
+
+            var keySet = map.KeySet();
+
+            var enumerator = keySet.GetEnumerator();
+
+            enumerator.MoveNext();
+            Assert.AreEqual("key1", enumerator.Current);
+
+        }
+                
+        [Test]
+        public virtual void TestValues()
+        {
+            map.Put("key1", "value1");
+            var values = map.Values();
+            var enumerator = values.GetEnumerator();
+            enumerator.MoveNext();
+            Assert.AreEqual("value1", enumerator.Current);
+        }
+        
+        [Test]
+        public virtual void TestEntrySetPredicate()
+        {
+            map.Put("key1", "value1");
+            map.Put("key2", "value2");
+            map.Put("key3", "value3");
+
+            var keyValuePairs = map.EntrySet(new SqlPredicate("this == value1"));
+            Assert.AreEqual(1, keyValuePairs.Count);
+
+            var enumerator = keyValuePairs.GetEnumerator();
+            enumerator.MoveNext();
+            Assert.AreEqual("key1", enumerator.Current.Key);
+            Assert.AreEqual("value1", enumerator.Current.Value);
+        }
+
+        [Test]
+        public virtual void TestPutTransient()
+        {
+            map.PutTransient("key1", "value1", 5, TimeUnit.SECONDS);
+            Assert.AreEqual("value1", map.Get("key1"));
+
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+
+            Assert.AreEqual(0,map.Size());
+            Assert.AreNotEqual("value1", map.Get("key1"));
+
+        }
+
+       [Test]
+        public virtual void TestEvict()
+        {
+            map.Put("key1", "value1");
+            Assert.AreEqual("value1", map.Get("key1"));
+
+           map.Evict("key1");
+
+            Assert.AreEqual(0,map.Size());
+            Assert.AreNotEqual("value1", map.Get("key1"));
+
+        }
+        
 		//    @Test
 		//    public void testSubmitToKey() throws Exception {
 		//        map.put(1,1);
@@ -810,43 +780,6 @@ namespace Hazelcast.Client.Test
 			}
 		}
 
-        //[System.Serializable]
-        //private class IncrementorEntryProcessor : IDataSerializable
-        //{
-        //    //        IncrementorEntryProcessor() {
-        //    //            super(true);
-        //    //        }
-        //    public virtual object Process(DictionaryEntry entry)
-        //    {
-        //        int value = (int)entry.Value;
-        //        if (value == null)
-        //        {
-        //            value = 0;
-        //        }
-        //        if (value == -1)
-        //        {
-        //            entry.SetValue(null);
-        //            return null;
-        //        }
-        //        value++;
-        //        entry.SetValue(value);
-        //        return value;
-        //    }
 
-        //    /// <exception cref="System.IO.IOException"></exception>
-        //    public virtual void WriteData(ObjectDataOutput @out)
-        //    {
-        //    }
-
-        //    /// <exception cref="System.IO.IOException"></exception>
-        //    public virtual void ReadData(ObjectDataInput @in)
-        //    {
-        //    }
-
-        //    public virtual void ProcessBackup(DictionaryEntry entry)
-        //    {
-        //        entry.SetValue((int)entry.Value + 1);
-        //    }
-        //}
 	}
 }

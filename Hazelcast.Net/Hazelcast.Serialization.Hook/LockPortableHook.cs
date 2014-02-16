@@ -21,13 +21,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[GetRemainingLease + 1];
-            constructors[Lock] = arg => new LockRequest();
-            constructors[Unlock] = arg => new UnlockRequest();
-            constructors[IsLocked] = arg => new IsLockedRequest();
-            constructors[GetLockCount] = arg => new GetLockCountRequest();
-            constructors[GetRemainingLease] = arg => new GetRemainingLeaseRequest();
-            return new ArrayPortableFactory(constructors);
+            return new ArrayPortableFactory();
         }
 
         public virtual ICollection<IClassDefinition> GetBuiltinDefinitions()

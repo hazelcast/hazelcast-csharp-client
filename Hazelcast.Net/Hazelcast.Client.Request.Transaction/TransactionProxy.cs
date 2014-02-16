@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using Hazelcast.Client.Connection;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Spi;
 using Hazelcast.IO;
 using Hazelcast.Transaction;
@@ -11,23 +12,25 @@ namespace Hazelcast.Client.Request.Transaction
 {
     internal sealed class TransactionProxy
     {
-        private static readonly ThreadLocal<bool> threadFlag = new ThreadLocal<bool>();
+        [ThreadStatic]
+        private static bool? _threadFlag ;
 
-        private readonly ClientClusterService clusterService;
-
-        private readonly IConnection connection;
         private readonly TransactionOptions options;
-        private readonly long threadId = Thread.CurrentThread.ManagedThreadId;
+        private readonly long threadId = ThreadUtil.GetThreadId();
+
+        private readonly HazelcastClient client;
+
+        private Address txOwner;
 
         private long startTime;
         private TransactionState state = TransactionState.NoTxn;
         private string txnId;
 
-        internal TransactionProxy(HazelcastClient client, TransactionOptions options, IConnection connection)
+        internal TransactionProxy(HazelcastClient client, TransactionOptions options, Address txOwner)
         {
             this.options = options;
-            clusterService = (ClientClusterService) client.GetClientClusterService();
-            this.connection = connection;
+            this.client =  client;
+            this.txOwner = txOwner;
         }
 
         public string GetTxnId()
@@ -54,18 +57,18 @@ namespace Hazelcast.Client.Request.Transaction
                     throw new InvalidOperationException("Transaction is already active");
                 }
                 CheckThread();
-                if (threadFlag.IsValueCreated)
+                if (_threadFlag != null)
                 {
                     throw new InvalidOperationException("Nested transactions are not allowed!");
                 }
-                threadFlag.Value = true;
+                _threadFlag = true;
                 startTime = Clock.CurrentTimeMillis();
-                txnId = SendAndReceive<string>(new CreateTransactionRequest(options));
+                txnId = Invoke<string>(new CreateTransactionRequest(options));
                 state = TransactionState.Active;
             }
             catch (Exception e)
             {
-                CloseConnection();
+                _threadFlag = null;
                 throw ExceptionUtil.Rethrow(e);
             }
         }
@@ -80,7 +83,7 @@ namespace Hazelcast.Client.Request.Transaction
                 }
                 CheckThread();
                 CheckTimeout();
-                SendAndReceive<object>(new CommitTransactionRequest());
+                Invoke<object>(new CommitTransactionRequest());
                 state = TransactionState.Committed;
             }
             catch (Exception e)
@@ -90,7 +93,7 @@ namespace Hazelcast.Client.Request.Transaction
             }
             finally
             {
-                CloseConnection();
+                _threadFlag = null;
             }
         }
 
@@ -110,7 +113,7 @@ namespace Hazelcast.Client.Request.Transaction
                 CheckThread();
                 try
                 {
-                    SendAndReceive<object>(new RollbackTransactionRequest());
+                    Invoke<object>(new RollbackTransactionRequest());
                 }
                 catch (Exception)
                 {
@@ -119,20 +122,29 @@ namespace Hazelcast.Client.Request.Transaction
             }
             finally
             {
-                CloseConnection();
+                _threadFlag = null;
             }
         }
 
-        private void CloseConnection()
+        internal T Invoke<T>(ClientRequest request)
         {
-            threadFlag.Dispose();
+            var btr = request as BaseTransactionRequest;
+            if (btr != null)
+            {
+                btr.TxnId = txnId;
+                btr.ClientThreadId = threadId;
+            }
+            var ss = client.GetSerializationService();
+            var rpc = client.GetRemotingService();
             try
             {
-                connection.Release();
+                var task = rpc.Send<T>(request, txOwner);
+                var result = task.Result;
+                return ss.ToObject<T>(result);
             }
-            catch (IOException)
+            catch (Exception e)
             {
-                IOUtil.CloseResource(connection);
+                throw ExceptionUtil.Rethrow(e);
             }
         }
 
@@ -152,16 +164,6 @@ namespace Hazelcast.Client.Request.Transaction
             }
         }
 
-        private T SendAndReceive<T>(object request)
-        {
-            try
-            {
-                return clusterService.SendAndReceiveFixedConnection<T>(connection, request);
-            }
-            catch (IOException e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
+
     }
 }

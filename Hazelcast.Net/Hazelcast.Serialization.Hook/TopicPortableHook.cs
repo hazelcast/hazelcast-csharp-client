@@ -9,6 +9,7 @@ namespace Hazelcast.Serialization.Hook
     {
         public const int Publish = 1;
         public const int AddListener = 2;
+        public const int RemoveListener = 3;
         public const int PortableMessage = 4;
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.TopicPortableFactory, -18);
 
@@ -19,9 +20,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[PortableMessage + 1];
-            constructors[Publish] = arg => new PublishRequest();
-            constructors[AddListener] = arg => new AddMessageListenerRequest();
+            var constructors = new Func<int, IPortable>[PortableMessage+1];
             constructors[PortableMessage] = arg => new PortableMessage();
             return new ArrayPortableFactory(constructors);
         }

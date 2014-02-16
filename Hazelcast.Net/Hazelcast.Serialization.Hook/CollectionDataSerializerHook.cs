@@ -51,63 +51,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IDataSerializableFactory CreateFactory()
         {
-            var constructors = new Func<int, IIdentifiedDataSerializable>[SetReplication + 1];
-            constructors[CollectionAdd] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionAddBackup] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ListAdd] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ListGet] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionRemove] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionRemoveBackup] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionSize] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionClear] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionClearBackup] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ListSet] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ListSetBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ListRemove] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ListIndexOf] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionContains] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionAddAll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionAddAllBackup] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ListAddAll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ListSub] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionCompareAndRemove] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionGetAll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionEventFilter] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //                return new CollectionEventFilter();
-            constructors[CollectionEvent] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //                return new CollectionEvent();
-            constructors[CollectionItem] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //                return new CollectionItem();
-            constructors[CollectionReserveAdd] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionReserveRemove] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionTxnAdd] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionTxnAddBackup] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionTxnRemove] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionTxnRemoveBackup] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionPrepare] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionPrepareBackup] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionRollback] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CollectionRollbackBackup] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxCollectionItem] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxRollback] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ListReplication] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[SetReplication] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            return new ArrayDataSerializableFactory(constructors);
+            return null;
         }
     }
 }

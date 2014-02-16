@@ -1,4 +1,5 @@
 using System;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Concurrent.Atomiclong;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
@@ -10,7 +11,6 @@ namespace Hazelcast.Client.Proxy
     public class ClientAtomicLongProxy : ClientProxy, IAtomicLong
     {
         private readonly string name;
-
         private volatile Data key;
 
         public ClientAtomicLongProxy(string serviceName, string objectId) : base(serviceName, objectId)
@@ -72,27 +72,40 @@ namespace Hazelcast.Client.Proxy
             Invoke<object>(request);
         }
 
-        protected internal override void OnDestroy()
+        //public void Alter(Func<long, long> function)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public long AlterAndGet(Func<long, long> function)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public long GetAndAlter(Func<long, long> function)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public R Apply<R>(Func<long, R> function)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        protected override void OnDestroy()
         {
         }
 
-        private T Invoke<T>(object req)
+        protected override T Invoke<T>(ClientRequest req)
         {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<T>(req, GetKey());
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
+            return Invoke<T>(req, GetKey());
         }
 
         private Data GetKey()
         {
             if (key == null)
             {
-                key = GetContext().GetSerializationService().ToData(name);
+                key = ToData(name);
             }
             return key;
         }

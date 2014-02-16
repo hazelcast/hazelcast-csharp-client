@@ -7,7 +7,7 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Map
 {
     [Serializable]
-    public class SimpleEntryView<K, V> : IEntryView<K, V>, IIdentifiedDataSerializable
+    public class SimpleEntryView<K, V> : IdentifiedDataSerializable, IEntryView<K, V>, IIdentifiedDataSerializable
     {
         private long cost;
 
@@ -120,11 +120,6 @@ namespace Hazelcast.Map
             lastStoredTime = input.ReadLong();
             lastUpdateTime = input.ReadLong();
             version = input.ReadLong();
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
         }
 
         public virtual int GetFactoryId()

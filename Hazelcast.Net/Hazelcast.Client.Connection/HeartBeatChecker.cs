@@ -11,6 +11,7 @@ namespace Hazelcast.Client.Connection
 {
     public class HeartBeatChecker
     {
+        /*
         private static readonly ILogger logger = Logger.GetLogger(typeof (HeartBeatChecker));
 
         private readonly int _connectionTimeout;
@@ -27,7 +28,7 @@ namespace Hazelcast.Client.Connection
             ping = serializationService.ToData(new ClientPingRequest());
         }
 
-        public virtual bool CheckHeartBeat(IConnection connection)
+        public virtual bool CheckHeartBeat(ClientConnection connection)
         {
             if ((Clock.CurrentTimeMillis() - connection.GetLastReadTime()) > _connectionTimeout/2)
             {
@@ -57,5 +58,6 @@ namespace Hazelcast.Client.Connection
             }
             return true;
         }
+         */
     }
 }

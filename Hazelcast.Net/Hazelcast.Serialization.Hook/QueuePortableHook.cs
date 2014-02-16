@@ -24,6 +24,9 @@ namespace Hazelcast.Serialization.Hook
         public const int TxnPoll = 15;
         public const int TxnSize = 16;
         public const int TxnPeek = 17;
+        public const int RemoveListener = 18;
+
+        public const int TotalSize = RemoveListener + 1;
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.QueuePortableFactory, -11);
 
         public virtual int GetFactoryId()
@@ -33,25 +36,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[TxnPeek + 1];
-            constructors[Offer] = arg => new OfferRequest();
-            constructors[Size] = arg => new SizeRequest();
-            constructors[Remove] = arg => new RemoveRequest();
-            constructors[Poll] = arg => new PollRequest();
-            constructors[Peek] = arg => new PeekRequest();
-            constructors[Iterator] = arg => new IteratorRequest();
-            constructors[Drain] = arg => new DrainRequest();
-            constructors[Contains] = arg => new ContainsRequest();
-            constructors[CompareAndRemove] = arg => new CompareAndRemoveRequest();
-            constructors[Clear] = arg => new ClearRequest();
-            constructors[AddAll] = arg => new AddAllRequest();
-            constructors[AddListener] = arg => new AddListenerRequest();
-            constructors[RemainingCapacity] = arg => new RemainingCapacityRequest();
-            constructors[TxnOffer] = arg => new TxnOfferRequest();
-            constructors[TxnPoll] = arg => new TxnPollRequest();
-            constructors[TxnSize] = arg => new TxnSizeRequest();
-            constructors[TxnPeek] = arg => new TxnPeekRequest();
-            return new ArrayPortableFactory(constructors);
+            return new ArrayPortableFactory();
         }
 
         public virtual ICollection<IClassDefinition> GetBuiltinDefinitions()

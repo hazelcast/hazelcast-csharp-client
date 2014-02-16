@@ -8,7 +8,7 @@ using Hazelcast.Util;
 namespace Hazelcast.Core
 {
     [Serializable]
-    public sealed class RunnableAdapter<V> : IIdentifiedDataSerializable
+    public sealed class RunnableAdapter<V> : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         private Runnable task;
 
@@ -31,11 +31,6 @@ namespace Hazelcast.Core
         public void ReadData(IObjectDataInput input)
         {
             task = input.ReadObject<Runnable>();
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
         }
 
         public int GetFactoryId()

@@ -27,12 +27,5 @@ namespace Hazelcast.Client.Request.Concurrent.Atomiclong
             base.WritePortable(writer);
             writer.WriteLong("e", expect);
         }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            expect = reader.ReadLong("e");
-        }
     }
 }

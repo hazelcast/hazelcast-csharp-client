@@ -7,7 +7,7 @@ using Hazelcast.IO.Serialization;
 namespace Hazelcast.Client.Proxy
 {
     //.NET reviewed
-    public class ClientListProxy<E> : AbstractClientCollectionProxy<E>, IHazelcastList<E>
+    public class ClientListProxy<E> : AbstractClientCollectionProxy<E>, IHList<E>
     {
         public ClientListProxy(string serviceName, string objectName) : base(serviceName, objectName)
         {
@@ -81,16 +81,6 @@ namespace Hazelcast.Client.Proxy
             return result;
         }
 
-        //public virtual Hazelcast.Net.Ext.ListIterator<E> ListIterator()
-        //{
-        //    return ListIterator(0);
-        //}
-
-        //public virtual Hazelcast.Net.Ext.ListIterator<E> ListIterator(int index)
-        //{
-        //    return SubList(-1, -1).ListIterator(index);
-        //}
-
         public virtual IList<E> SubList(int fromIndex, int toIndex)
         {
             var request = new ListSubRequest(GetName(), fromIndex, toIndex);
@@ -99,7 +89,7 @@ namespace Hazelcast.Client.Proxy
             IList<E> list = new List<E>(collection.Count);
             foreach (Data value in collection)
             {
-                list.Add((E) ToObject(value));
+                list.Add(ToObject<E>(value));
             }
             return list;
         }

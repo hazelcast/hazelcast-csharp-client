@@ -1,4 +1,9 @@
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Client.Connection;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
@@ -11,25 +16,28 @@ namespace Hazelcast.Client.Spi
             this.client = client;
         }
 
-        /// <exception cref="System.Exception"></exception>
-        public T InvokeOnRandomTarget<T>(object request)
+        private IRemotingService GetRemotingService()
         {
-            ClientClusterService clusterService = GetClusterService();
-            return clusterService.SendAndReceive<T>(null, request);
+            return client.GetRemotingService();
         }
 
-        /// <exception cref="System.Exception"></exception>
-        public T InvokeOnTarget<T>(object request, Address target)
+        public Task<T> InvokeOnRandomTarget<T>(ClientRequest request)
         {
-            ClientClusterService clusterService = GetClusterService();
-            return clusterService.SendAndReceive<T>(target, request);
+            var remotingService = GetRemotingService();
+            return remotingService.Send<T>(request);
         }
 
-        /// <exception cref="System.Exception"></exception>
-        public T InvokeOnKeyOwner<T>(object request, object key)
+        public Task<T> InvokeOnTarget<T>(ClientRequest request, Address target)
         {
-            var partitionService = (ClientPartitionService) client.GetClientPartitionService();
-            Address owner = partitionService.GetPartitionOwner(partitionService.GetPartitionId(key));
+            var remotingService = GetRemotingService();
+            return remotingService.Send<T>(request, target);
+        }
+
+        public Task<T> InvokeOnKeyOwner<T>(ClientRequest request, object key)
+        {
+            var partitionService = (ClientPartitionService)client.GetClientPartitionService();
+            var partitionId = partitionService.GetPartitionId(key);
+            Address owner = partitionService.GetPartitionOwner(partitionId);
             if (owner != null)
             {
                 return InvokeOnTarget<T>(request, owner);
@@ -37,35 +45,30 @@ namespace Hazelcast.Client.Spi
             return InvokeOnRandomTarget<T>(request);
         }
 
-        /// <exception cref="System.Exception"></exception>
-        public void InvokeOnRandomTarget(object request, ResponseHandler handler)
+        public Task<T> InvokeOnRandomTarget<T>(ClientRequest request, DistributedEventHandler handler)
         {
-            ClientClusterService clusterService = GetClusterService();
-            clusterService.SendAndHandle(null, request, handler);
+            var remotingService = GetRemotingService();
+            return remotingService.SendAndHandle<T>(request, handler);
+
         }
 
-        /// <exception cref="System.Exception"></exception>
-        public void InvokeOnTarget(object request, Address target, ResponseHandler handler)
+        public Task<T> InvokeOnTarget<T>(ClientRequest request, Address target, DistributedEventHandler handler)
         {
-            ClientClusterService clusterService = GetClusterService();
-            clusterService.SendAndHandle(target, request, handler);
+            var remotingService = GetRemotingService();
+            return remotingService.SendAndHandle<T>(request, target, handler);
         }
 
-        /// <exception cref="System.Exception"></exception>
-        public void InvokeOnKeyOwner(object request, object key, ResponseHandler handler)
+        public Task<T> InvokeOnKeyOwner<T>(ClientRequest request, object key, DistributedEventHandler handler)
         {
-            var partitionService = (ClientPartitionService) client.GetClientPartitionService();
+            var partitionService = (ClientPartitionService)client.GetClientPartitionService();
             Address owner = partitionService.GetPartitionOwner(partitionService.GetPartitionId(key));
             if (owner != null)
             {
-                InvokeOnTarget(request, owner, handler);
+                return InvokeOnTarget<T>(request, owner, handler);
             }
-            InvokeOnRandomTarget(request, handler);
+            return InvokeOnRandomTarget<T>(request, handler);
         }
 
-        private ClientClusterService GetClusterService()
-        {
-            return (ClientClusterService) client.GetClientClusterService();
-        }
+
     }
 }

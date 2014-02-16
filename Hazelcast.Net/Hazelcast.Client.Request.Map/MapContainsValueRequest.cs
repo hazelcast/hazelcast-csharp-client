@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapContainsValueRequest : IPortable, IRetryableRequest
+    public class MapContainsValueRequest : ClientRequest, IRetryableRequest
     {
         private string name;
 
@@ -21,31 +21,23 @@ namespace Hazelcast.Client.Request.Map
             this.value = value;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return MapPortableHook.ContainsValue;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             IObjectDataOutput output = writer.GetRawDataOutput();
             value.WriteData(output);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            IObjectDataInput input = reader.GetRawDataInput();
-            value = new Data();
-            value.ReadData(input);
-        }
     }
 }

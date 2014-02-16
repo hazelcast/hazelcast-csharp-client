@@ -9,20 +9,20 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientLockTest:HazelcastBaseTest
 	{
-        internal const string name = "ClientLockTest";
+        internal const string name = "testlock";
 
 		internal static ILock l;
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
             l = client.GetLock(name);
         }
 
         [TearDown]
         public static void Destroy()
         {
+            l.ForceUnlock();
         }
 
 		/// <exception cref="System.Exception"></exception>
@@ -34,7 +34,7 @@ namespace Hazelcast.Client.Test
 
 		    var t1 = new Thread(delegate(object o)
 		    {
-                if (!ClientLockTest.l.TryLock())
+                if (!l.TryLock())
                 {
                     latch.Signal();
                 }
@@ -79,58 +79,72 @@ namespace Hazelcast.Client.Test
 		}
 
 
+	    [Test]
+	    public virtual void TestIsLock()
+	    {
+	        Assert.IsTrue(l.TryLock(2, TimeUnit.SECONDS));
 
-		/// <exception cref="System.Exception"></exception>
-		[Test]
+	        var isLocked = l.IsLocked();
+	        Assert.IsTrue(isLocked);
+	    }
+
+	    [Test]
 		public virtual void TestTryLock()
 		{
 			Assert.IsTrue(l.TryLock(2, TimeUnit.SECONDS));
 
-            CountdownEvent latch = new CountdownEvent(1);
-
+            var manualReset= new ManualResetEvent(false);
+            //CountdownEvent latch = new CountdownEvent(1);
             var t1 = new Thread(delegate(object o)
             {
                 try
                 {
-                    if (!l.TryLock(2, TimeUnit.SECONDS))
+                    var tryLock = l.TryLock(2, TimeUnit.SECONDS);
+                    if (!tryLock)
                     {
-                        latch.Signal();
+                        manualReset.Set();
+                        //latch.Signal();
                     }
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(e.StackTrace);
                 }
             });
             t1.Start();
 
+			Assert.IsTrue(manualReset.WaitOne(TimeSpan.FromSeconds(100)));
+            //var isLocked = l.IsLocked();
+            //Assert.IsTrue(isLocked);
 
-			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(100)));
-			Assert.IsTrue(l.IsLocked());
 
-
-            CountdownEvent latch2 = new CountdownEvent(1);
+            var manualReset2 = new ManualResetEvent(false);
 
             var t2 = new Thread(delegate(object o)
             {
                 try
                 {
-                    if (ClientLockTest.l.TryLock(20, TimeUnit.SECONDS))
+                    if (l.TryLock(20, TimeUnit.SECONDS))
                     {
-                        latch2.Signal();
+                        manualReset2.Set();
+                        //latch2.Signal();
                     }
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine(e.StackTrace);
                 }
             });
             t2.Start();
 
-			Thread.Sleep(1000);
-			l.Unlock();
+            Thread.Sleep(1000);
 
-            Assert.IsTrue(latch2.Wait(TimeSpan.FromSeconds(100)));
-			Assert.IsTrue(l.IsLocked());
-			l.ForceUnlock();
+            l.Unlock();
+
+            Assert.IsTrue(manualReset2.WaitOne(TimeSpan.FromSeconds(10)));
+
+            //Assert.IsTrue(l.IsLocked());
+            l.ForceUnlock();
 		}
 
 		/// <exception cref="System.Exception"></exception>

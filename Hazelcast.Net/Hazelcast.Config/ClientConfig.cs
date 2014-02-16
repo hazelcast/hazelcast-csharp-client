@@ -1,5 +1,3 @@
-//using Hazelcast.Core;
-
 using System.Collections.Generic;
 using Hazelcast.Client;
 using Hazelcast.Core;
@@ -10,123 +8,78 @@ namespace Hazelcast.Config
 {
     public class ClientConfig
     {
-        /// <summary>List of the initial set of addresses.</summary>
-        /// <remarks>
-        ///     List of the initial set of addresses.
-        ///     IClient will use this list to find a running IMember, connect to it.
-        /// </remarks>
-        private readonly List<string> addressList = new List<string>(10);
-
         /// <summary>
-        ///     While client is trying to connect initially to one of the members in the
-        ///     <see cref="addressList">addressList</see>
-        ///     ,
-        ///     all might be not available. Instead of giving up, throwing Exception and stopping client, it will
-        ///     attempt to retry as much as
-        ///     <see cref="connectionAttemptLimit">connectionAttemptLimit</see>
-        ///     times.
+        /// The Group Configuration properties like:
+        /// Name and Password that is used to connect to the cluster.
         /// </summary>
-        private int connectionAttemptLimit = 2;
-
-        /// <summary>Period for the next attempt to find a member to connect.</summary>
         /// <remarks>
-        ///     Period for the next attempt to find a member to connect. (see
-        ///     <see cref="connectionAttemptLimit">connectionAttemptLimit</see>
-        ///     ).
+        /// The Group Configuration properties like:
+        /// Name and Password that is used to connect to the cluster.
         /// </remarks>
-        private int connectionAttemptPeriod = 3000;
-
-        /// <summary>limit for the Pool size that is used to pool the connections to the members.</summary>
-        /// <remarks>limit for the Pool size that is used to pool the connections to the members.</remarks>
-        private int connectionPoolSize = 100;
-
-        /// <summary>IClient will be sending heartbeat messages to members and this is the timeout.</summary>
-        /// <remarks>
-        ///     IClient will be sending heartbeat messages to members and this is the timeout. If there is no any message
-        ///     passing between client and member within the
-        ///     <see cref="connectionTimeout">connectionTimeout</see>
-        ///     milliseconds the connection
-        ///     will be closed.
-        /// </remarks>
-        private int connectionTimeout = 60000;
+        private GroupConfig groupConfig = new GroupConfig();
 
         /// <summary>
+        /// The Security Configuration for custom Credentials:
+        /// Name and Password that is used to connect to the cluster.
         ///     Can be used instead of
         ///     <see cref="GroupConfig">GroupConfig</see>
         ///     in Hazelcast EE.
         /// </summary>
         private ICredentials credentials;
 
-        /// <summary>Period for the next attempt to find a member to connect.</summary>
-        /// <remarks>
-        ///     Period for the next attempt to find a member to connect. (see
-        ///     <see cref="connectionAttemptLimit">connectionAttemptLimit</see>
-        ///     ).
-        /// </remarks>
-        private int executorPoolSize = -1;
-
         /// <summary>
-        ///     The Group Configuration properties like:
-        ///     Name and Password that is used to connect to the cluster.
+        /// The Network Configuration properties like:
+        /// addresses to connect, smart-routing, socket-options...
         /// </summary>
         /// <remarks>
-        ///     The Group Configuration properties like:
-        ///     Name and Password that is used to connect to the cluster.
+        /// The Network Configuration properties like:
+        /// addresses to connect, smart-routing, socket-options...
         /// </remarks>
-        private GroupConfig groupConfig = new GroupConfig();
+        private ClientNetworkConfig networkConfig = new ClientNetworkConfig();
+
+        /// <summary>Used to distribute the operations to multiple Endpoints.</summary>
+        private LoadBalancer loadBalancer = new RoundRobinLB();
 
         /// <summary>List of listeners that Hazelcast will automatically add as a part of initialization process.</summary>
         /// <remarks>
-        ///     List of listeners that Hazelcast will automatically add as a part of initialization process.
-        ///     Currently only supports
-        ///     <see cref="Hazelcast.Core.LifecycleListener">Hazelcast.Core.ILifecycleListener</see>
-        ///     .
+        /// List of listeners that Hazelcast will automatically add as a part of initialization process.
+        /// Currently only supports
+        /// <see cref="Hazelcast.Core.LifecycleListener">Hazelcast.Core.LifecycleListener</see>
+        /// .
         /// </remarks>
-        private List<ListenerConfig> listenerConfigs = new List<ListenerConfig>();
+        private IList<ListenerConfig> listenerConfigs = new List<ListenerConfig>();
 
-        /// <summary>Used to distribute the operations to multiple Endpoints.</summary>
-        /// <remarks>Used to distribute the operations to multiple Endpoints.</remarks>
-        private LoadBalancer loadBalancer = new RoundRobinLB();
-
-        private IManagedContext managedContext;
-
-        private IDictionary<string, NearCacheConfig> nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
-
-        private IList<ProxyFactoryConfig> proxyFactoryConfigs =
-            new List<ProxyFactoryConfig>();
-
-        /// <summary>If true, client will redo the operations that were executing on the server and client lost the connection.</summary>
-        /// <remarks>
-        ///     If true, client will redo the operations that were executing on the server and client lost the connection.
-        ///     This can be because of network, or simply because the member died. However it is not clear whether the
-        ///     application is performed or not. For idempotent operations this is harmless, but for non idempotent ones
-        ///     retrying can cause to undesirable effects. Note that the redo can perform on any member.
-        ///     <p />
-        ///     If false, the operation will throw
-        ///     <see cref="Hazelcast.Net.Ext.RuntimeException">Hazelcast.Net.Ext.RuntimeException</see>
-        ///     that is wrapping
-        ///     <see cref="System.IO.IOException">System.IO.IOException</see>
-        ///     .
-        /// </remarks>
-        private bool redoOperation;
+        /// <summary>pool-size for internal ExecutorService which handles responses etc.</summary>
+        private int executorPoolSize = -1;
 
         private SerializationConfig serializationConfig = new SerializationConfig();
 
-        /// <summary>If true, client will route the key based operations to owner of the key at the best effort.</summary>
-        /// <remarks>
-        ///     If true, client will route the key based operations to owner of the key at the best effort.
-        ///     Note that it uses a cached version of PartitionService.Partitions() and doesn't
-        ///     guarantee that the operation will always be executed on the owner. The cached table is updated every second.
-        /// </remarks>
-        private bool smartRouting = true;
+        private IList<ProxyFactoryConfig> proxyFactoryConfigs = new List<ProxyFactoryConfig>();
 
-        /// <summary>Will be called with the Socket, each time client creates a connection to any IMember.</summary>
-        /// <remarks>Will be called with the Socket, each time client creates a connection to any IMember.</remarks>
-        private SocketInterceptorConfig socketInterceptorConfig;
+        private IManagedContext managedContext = null;
 
-        private SocketOptions socketOptions = new SocketOptions();
+        private IDictionary<string, NearCacheConfig> nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
 
-        //    private ClassLoader classLoader = null;
+        //public virtual ClientSecurityConfig GetSecurityConfig()
+        //{
+        //    return securityConfig;
+        //}
+
+        //public virtual void SetSecurityConfig(ClientSecurityConfig securityConfig)
+        //{
+        //    this.securityConfig = securityConfig;
+        //}
+
+        public virtual ClientNetworkConfig GetNetworkConfig()
+        {
+            return networkConfig;
+        }
+
+        public virtual void SetNetworkConfig(ClientNetworkConfig networkConfig)
+        {
+            this.networkConfig = networkConfig;
+        }
+
         public virtual ClientConfig AddNearCacheConfig(string mapName, NearCacheConfig nearCacheConfig)
         {
             nearCacheConfigMap.Add(mapName, nearCacheConfig);
@@ -141,7 +94,7 @@ namespace Hazelcast.Config
 
         public virtual ClientConfig AddProxyFactoryConfig(ProxyFactoryConfig proxyFactoryConfig)
         {
-            proxyFactoryConfigs.Add(proxyFactoryConfig);
+            this.proxyFactoryConfigs.Add(proxyFactoryConfig);
             return this;
         }
 
@@ -161,72 +114,6 @@ namespace Hazelcast.Config
             return this;
         }
 
-        public virtual bool IsSmartRouting()
-        {
-            return smartRouting;
-        }
-
-        public virtual ClientConfig SetSmartRouting(bool smartRouting)
-        {
-            this.smartRouting = smartRouting;
-            return this;
-        }
-
-        public virtual int GetConnectionPoolSize()
-        {
-            return connectionPoolSize;
-        }
-
-        public virtual ClientConfig SetConnectionPoolSize(int connectionPoolSize)
-        {
-            this.connectionPoolSize = connectionPoolSize;
-            return this;
-        }
-
-        public virtual SocketInterceptorConfig GetSocketInterceptorConfig()
-        {
-            return socketInterceptorConfig;
-        }
-
-        public virtual ClientConfig SetSocketInterceptorConfig(SocketInterceptorConfig socketInterceptorConfig)
-        {
-            this.socketInterceptorConfig = socketInterceptorConfig;
-            return this;
-        }
-
-        public virtual int GetConnectionAttemptPeriod()
-        {
-            return connectionAttemptPeriod;
-        }
-
-        public virtual ClientConfig SetConnectionAttemptPeriod(int connectionAttemptPeriod)
-        {
-            this.connectionAttemptPeriod = connectionAttemptPeriod;
-            return this;
-        }
-
-        public virtual int GetConnectionAttemptLimit()
-        {
-            return connectionAttemptLimit;
-        }
-
-        public virtual ClientConfig SetConnectionAttemptLimit(int connectionAttemptLimit)
-        {
-            this.connectionAttemptLimit = connectionAttemptLimit;
-            return this;
-        }
-
-        public virtual int GetConnectionTimeout()
-        {
-            return connectionTimeout;
-        }
-
-        public virtual ClientConfig SetConnectionTimeout(int connectionTimeout)
-        {
-            this.connectionTimeout = connectionTimeout;
-            return this;
-        }
-
         public virtual ICredentials GetCredentials()
         {
             if (credentials == null)
@@ -241,29 +128,6 @@ namespace Hazelcast.Config
         {
             this.credentials = credentials;
             return this;
-        }
-
-        public virtual ClientConfig AddAddress(params string[] addresses)
-        {
-            addressList.AddRange(addresses);
-            return this;
-        }
-
-        // required for spring module
-        public virtual ClientConfig SetAddresses(IList<string> addresses)
-        {
-            addressList.Clear();
-            addressList.AddRange(addresses);
-            return this;
-        }
-
-        public virtual IList<string> GetAddresses()
-        {
-            if (addressList.Count == 0)
-            {
-                AddAddress("localhost");
-            }
-            return addressList;
         }
 
         public virtual GroupConfig GetGroupConfig()
@@ -284,7 +148,7 @@ namespace Hazelcast.Config
 
         public virtual ClientConfig SetListenerConfigs(IList<ListenerConfig> listenerConfigs)
         {
-            this.listenerConfigs = new List<ListenerConfig>(listenerConfigs);
+            this.listenerConfigs = listenerConfigs;
             return this;
         }
 
@@ -298,29 +162,6 @@ namespace Hazelcast.Config
             this.loadBalancer = loadBalancer;
             return this;
         }
-
-        public virtual bool IsRedoOperation()
-        {
-            return redoOperation;
-        }
-
-        public virtual ClientConfig SetRedoOperation(bool redoOperation)
-        {
-            this.redoOperation = redoOperation;
-            return this;
-        }
-
-        public virtual SocketOptions GetSocketOptions()
-        {
-            return socketOptions;
-        }
-
-        public virtual ClientConfig SetSocketOptions(SocketOptions socketOptions)
-        {
-            this.socketOptions = socketOptions;
-            return this;
-        }
-
         public virtual IManagedContext GetManagedContext()
         {
             return managedContext;
@@ -348,8 +189,7 @@ namespace Hazelcast.Config
             return proxyFactoryConfigs;
         }
 
-        public virtual ClientConfig SetProxyFactoryConfigs(
-            IList<ProxyFactoryConfig> proxyFactoryConfigs)
+        public virtual ClientConfig SetProxyFactoryConfigs(IList<ProxyFactoryConfig> proxyFactoryConfigs)
         {
             this.proxyFactoryConfigs = proxyFactoryConfigs;
             return this;
@@ -369,16 +209,14 @@ namespace Hazelcast.Config
         private static T LookupByPattern<T>(IDictionary<string, T> map, string name)
         {
             T t;
-            map.TryGetValue(name, out t);
-            if (t == null)
+            if (!map.TryGetValue(name, out t))
             {
-                ICollection<string> tNames = map.Keys;
-                foreach (string pattern in tNames)
+                foreach (KeyValuePair<string, T> entry in map)
                 {
+                    string pattern = entry.Key;
+                    T value = entry.Value;
                     if (NameMatches(name, pattern))
                     {
-                        T value;
-                        map.TryGetValue(pattern, out value);
                         return value;
                     }
                 }

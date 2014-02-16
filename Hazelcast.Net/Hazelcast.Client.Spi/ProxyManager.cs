@@ -18,9 +18,6 @@ namespace Hazelcast.Client.Spi
 
         private readonly HazelcastClient client;
 
-        private readonly ConcurrentDictionary<string, ListenerSupport<EventData>> listeners =
-            new ConcurrentDictionary<string, ListenerSupport<EventData>>();
-
         private readonly ConcurrentDictionary<ObjectNamespace, ClientProxy> proxies =
             new ConcurrentDictionary<ObjectNamespace, ClientProxy>();
 
@@ -191,37 +188,34 @@ namespace Hazelcast.Client.Spi
                 ExceptionUtil.Rethrow(e);
             }
             clientProxy.SetContext(new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
-                client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(),
+                client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(), client.GetRemotingService(),
                 this, client.GetClientConfig()));
         }
 
         public ICollection<T> GetDistributedObjects<T>() where T : IDistributedObject
         {
             var lst = new ReadOnlyCollection<ClientProxy>(proxies.Values.ToList());
-
             return lst as ICollection<T>;
         }
 
         public void Destroy()
         {
             proxies.Clear();
-            listeners.Clear();
         }
 
         public string AddDistributedObjectListener(IDistributedObjectListener listener)
         {
             var request = new DistributedObjectListenerRequest();
             var context = new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
-                client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(),
+                client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(), client.GetRemotingService(),
                 this, client.GetClientConfig());
             //EventHandler<PortableDistributedObjectEvent> eventHandler = new _EventHandler_211(this, listener);
 
-            EventHandler<EventData> eventHandler = delegate(object eventSource, EventData eventArgs)
+            DistributedEventHandler eventHandler = delegate(object eventArgs)
             {
-                if (eventArgs != null)
+                var e = eventArgs as PortableDistributedObjectEvent;
+                if (e != null)
                 {
-                    object _event = eventArgs.Data;
-                    var e = (PortableDistributedObjectEvent) _event;
                     var ns = new ObjectNamespace(e.GetServiceName(), e.GetName());
                     ClientProxy proxy = null;
                     proxies.TryGetValue(ns, out proxy);
@@ -229,37 +223,34 @@ namespace Hazelcast.Client.Spi
                     {
                         proxy = GetProxy(e.GetServiceName(), e.GetName());
                     }
-                    _event = new DistributedObjectEvent(e.GetEventType(), e.GetServiceName(), proxy);
+                    var _event = new DistributedObjectEvent(e.GetEventType(), e.GetServiceName(), proxy);
                     if (DistributedObjectEvent.EventType.Created.Equals(e.GetEventType()))
                     {
-                        listener.DistributedObjectCreated((DistributedObjectEvent) _event);
+                        listener.DistributedObjectCreated(_event);
                     }
                     else
                     {
                         if (DistributedObjectEvent.EventType.Destroyed.Equals(e.GetEventType()))
                         {
-                            listener.DistributedObjectDestroyed((DistributedObjectEvent) _event);
+                            listener.DistributedObjectDestroyed(_event);
                         }
                     }
+                    
                 }
+
             };
-            var listenerSupport = new ListenerSupport<EventData>(context, request, eventHandler, null);
-            string registrationId = listenerSupport.Listen();
-            listeners.TryAdd(registrationId, listenerSupport);
-            return registrationId;
+            //PortableDistributedObjectEvent
+            return ListenerUtil.Listen(context, request, null, eventHandler);
         }
 
 
         public bool RemoveDistributedObjectListener(string id)
         {
-            ListenerSupport<EventData> listenerSupport;
-            listeners.TryRemove(id, out listenerSupport);
-            if (listenerSupport != null)
-            {
-                listenerSupport.Stop();
-                return true;
-            }
-            return false;
+            var request = new RemoveDistributedObjectListenerRequest(id);
+            var context = new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
+                client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(),
+                client.GetRemotingService(), this, client.GetClientConfig());
+            return ListenerUtil.StopListening(context, request, id);
         }
     }
 }

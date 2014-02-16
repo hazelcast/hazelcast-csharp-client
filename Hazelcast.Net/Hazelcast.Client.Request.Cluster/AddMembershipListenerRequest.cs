@@ -1,4 +1,5 @@
 using System;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
@@ -6,31 +7,22 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Client.Request.Cluster
 {
     [Serializable]
-    public sealed class AddMembershipListenerRequest : IIdentifiedDataSerializable
+    public sealed class AddMembershipListenerRequest : ClientRequest, IRetryableRequest
     {
-        public int GetFactoryId()
+
+        public override int GetFactoryId()
         {
-            return ClusterDataSerializerHook.FId;
+            return ClientPortableHook.Id;
         }
 
-        public int GetId()
+        public override int GetClassId()
         {
-            return ClusterDataSerializerHook.AddMsListener;
+            return ClientPortableHook.MembershipListener;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public void WriteData(IObjectDataOutput output)
-        {
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadData(IObjectDataInput input)
+        public override void WritePortable(IPortableWriter writer)
         {
         }
 
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

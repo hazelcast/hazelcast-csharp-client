@@ -12,12 +12,14 @@ namespace Hazelcast.Client.Request.Multimap
         {
         }
 
-        public MultiMapUnlockRequest(Data key, int threadId, string name) : base(key, threadId)
+        public MultiMapUnlockRequest(Data key, long threadId, string name)
+            : base(key, threadId)
         {
             this.name = name;
         }
 
-        public MultiMapUnlockRequest(Data key, int threadId, bool force, string name) : base(key, threadId, force)
+        public MultiMapUnlockRequest(Data key, long threadId, bool force, string name)
+            : base(key, threadId, force)
         {
             this.name = name;
         }
@@ -27,13 +29,6 @@ namespace Hazelcast.Client.Request.Multimap
         {
             writer.WriteUTF("n", name);
             base.WritePortable(writer);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            base.ReadPortable(reader);
         }
 
         public override int GetFactoryId()

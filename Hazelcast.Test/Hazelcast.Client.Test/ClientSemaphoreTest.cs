@@ -14,10 +14,9 @@ namespace Hazelcast.Client.Test
 
 		internal static ISemaphore s;
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            s = client.GetSemaphore(name);
+            s = client.GetSemaphore(Name);
 
             s.ReducePermits(100);
             s.Release(10);

@@ -107,21 +107,10 @@ namespace Hazelcast.Client.Proxy
             return result;
         }
 
-        protected internal override void OnDestroy()
+        protected override void OnDestroy()
         {
         }
 
-        private T Invoke<T>(object req)
-        {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<T>(req, GetKey());
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
 
         public virtual Data GetKey()
         {

@@ -1,3 +1,4 @@
+using Hazelcast.Client.Connection;
 using Hazelcast.Config;
 using Hazelcast.IO.Serialization;
 
@@ -14,16 +15,18 @@ namespace Hazelcast.Client.Spi
 
         private readonly ProxyManager proxyManager;
         private readonly ISerializationService serializationService;
+        private IRemotingService _remotingService;
 
         internal ClientContext(ISerializationService serializationService, IClientClusterService clusterService,
             IClientPartitionService partitionService, IClientInvocationService invocationService,
-            IClientExecutionService executionService, ProxyManager proxyManager, ClientConfig clientConfig)
+            IClientExecutionService executionService, IRemotingService remotingService,ProxyManager proxyManager, ClientConfig clientConfig)
         {
             this.serializationService = serializationService;
             this.clusterService = clusterService;
             this.partitionService = partitionService;
             this.invocationService = invocationService;
             this.executionService = executionService;
+            this._remotingService = remotingService;
             this.proxyManager = proxyManager;
             this.clientConfig = clientConfig;
         }
@@ -51,6 +54,11 @@ namespace Hazelcast.Client.Spi
         public IClientExecutionService GetExecutionService()
         {
             return executionService;
+        }
+
+        public IRemotingService GetRemotingService()
+        {
+            return _remotingService;
         }
 
         public void RemoveProxy(ClientProxy proxy)

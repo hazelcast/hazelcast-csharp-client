@@ -9,165 +9,15 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Util
 {
-    //[System.Serializable]
-    //public class QueryResultSet : ICollection, IIdentifiedDataSerializable
-    //{
-    //    [System.NonSerialized]
-    //    private readonly ISerializationService serializationService;
-
-    //    private readonly ConcurrentBag<QueryResultEntry> entries = new ConcurrentBag<QueryResultEntry>();
-
-    //    private IterationType iterationType;
-
-    //    private bool data;
-    //    private object _syncRoot;
-    //    private bool _isSynchronized;
-
-    //    public QueryResultSet()
-    //    {
-    //        serializationService = null;
-    //    }
-
-    //    public QueryResultSet(ISerializationService serializationService, IterationType iterationType, bool data)
-    //    {
-    //        this.serializationService = serializationService;
-    //        this.data = data;
-    //        this.iterationType = iterationType;
-    //    }
-
-    //    public virtual bool Add(QueryResultEntry entry)
-    //    {
-    //        return entries.Add(entry);
-    //    }
-
-    //    public override IEnumerator GetEnumerator()
-    //    {
-    //        return new QueryResultSet.QueryResultIterator(this);
-    //    }
-
-    //    private class QueryResultIterator : IEnumerator
-    //    {
-    //        internal readonly IEnumerator<QueryResultEntry> iter = this._enclosing.entries.GetEnumerator();
-
-    //        public bool HasNext()
-    //        {
-    //            return this.iter.HasNext();
-    //        }
-
-    //        public override object Next()
-    //        {
-    //            QueryResultEntry entry = this.iter.Next();
-    //            if (this._enclosing.iterationType == IterationType.Value)
-    //            {
-    //                Data valueData = entry.GetValueData();
-    //                return (this._enclosing.data) ? valueData : this._enclosing.serializationService.ToObject(valueData);
-    //            }
-    //            else
-    //            {
-    //                if (this._enclosing.iterationType == IterationType.Key)
-    //                {
-    //                    Data keyData = entry.GetKeyData();
-    //                    return (this._enclosing.data) ? keyData : this._enclosing.serializationService.ToObject(keyData);
-    //                }
-    //                else
-    //                {
-    //                    Data keyData = entry.GetKeyData();
-    //                    Data valueData = entry.GetValueData();
-    //                    var keyValuePair = new KeyValuePair<object, object>(this._enclosing.serializationService.ToObject(keyData), this._enclosing.serializationService.ToObject(valueData));
-
-    //                    var valuePair = new KeyValuePair<Data, Data>(keyData, valueData);
-
-    //                    return (this._enclosing.data) ? valuePair : keyValuePair;
-    //                }
-    //            }
-    //        }
-
-    //        public override void Remove()
-    //        {
-    //            throw new NotSupportedException();
-    //        }
-
-    //        internal QueryResultIterator(QueryResultSet _enclosing)
-    //        {
-    //            this._enclosing = _enclosing;
-    //        }
-
-    //        private readonly QueryResultSet _enclosing;
-    //    }
-
-    //    public void CopyTo(Array array, int index)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public override int Count
-    //    {
-    //        get
-    //        {
-    //            return entries.Count;
-    //        }
-    //    }
-
-    //    public object SyncRoot
-    //    {
-    //        get { return _syncRoot; }
-    //    }
-
-    //    public bool IsSynchronized
-    //    {
-    //        get { return _isSynchronized; }
-    //    }
-
-    //    public virtual int GetFactoryId()
-    //    {
-    //        return MapDataSerializerHook.FId;
-    //    }
-
-    //    public virtual int GetId()
-    //    {
-    //        return MapDataSerializerHook.QueryResultSet;
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public virtual void WriteData(IObjectDataOutput output)
-    //    {
-    //        output.WriteBoolean(data);
-    //        output.WriteUTF(iterationType.ToString());
-    //        output.WriteInt(entries.Count);
-    //        foreach (QueryResultEntry queryResultEntry in entries)
-    //        {
-    //            output.WriteObject(queryResultEntry);
-    //        }
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public virtual void ReadData(IObjectDataInput input)
-    //    {
-    //        data = input.ReadBoolean();
-    //        iterationType = IterationType.ValueOf(input.ReadUTF());
-    //        int size = input.ReadInt();
-    //        for (int i = 0; i < size; i++)
-    //        {
-    //            entries.Add((QueryResultEntry)input.ReadObject());
-    //        }
-    //    }
-
-    //    public override string ToString()
-    //    {
-    //        StringBuilder sb = new StringBuilder("QueryResultSet{");
-    //        sb.Append("entries=").Append(entries);
-    //        sb.Append(", iterationType=").Append(iterationType);
-    //        sb.Append(", data=").Append(data);
-    //        sb.Append('}');
-    //        return sb.ToString();
-    //    }
-    //}
-
+ 
     [Serializable]
-    internal class QueryResultSet : ICollection, IIdentifiedDataSerializable
+    internal class QueryResultSet : IdentifiedDataSerializable,ICollection, IIdentifiedDataSerializable
     {
         internal readonly ConcurrentBag<IQueryResultEntry> entries = new ConcurrentBag<IQueryResultEntry>();
-        [NonSerialized] internal readonly ISerializationService serializationService;
+        
+        [NonSerialized] 
+        internal readonly ISerializationService serializationService;
+        
         private bool _isSynchronized;
         private object _syncRoot;
         internal bool data;
@@ -185,7 +35,13 @@ namespace Hazelcast.Util
 
         public void CopyTo(Array array, int index)
         {
-            throw new NotImplementedException();
+            int i = index;
+            var enumerator = GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+
+                array.SetValue(enumerator.Current,i);
+            }
         }
 
         public int Count
@@ -224,11 +80,6 @@ namespace Hazelcast.Util
             {
                 entries.Add(input.ReadObject<IQueryResultEntry>());
             }
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
         }
 
         public int GetFactoryId()
@@ -273,13 +124,13 @@ namespace Hazelcast.Util
                 if (_enclosing.iterationType == IterationType.Value)
                 {
                     Data valueData = entry.GetValueData();
-                    _Current = (_enclosing.data) ? valueData : _enclosing.serializationService.ToObject(valueData);
+                    _Current = (_enclosing.data) ? valueData : _enclosing.serializationService.ToObject<object>(valueData);
                     return true;
                 }
                 if (_enclosing.iterationType == IterationType.Key)
                 {
                     Data keyData = entry.GetKeyData();
-                    _Current = (_enclosing.data) ? keyData : _enclosing.serializationService.ToObject(keyData);
+                    _Current = (_enclosing.data) ? keyData : _enclosing.serializationService.ToObject<object>(keyData);
                     return true;
                 }
                 else
@@ -287,8 +138,8 @@ namespace Hazelcast.Util
                     Data keyData = entry.GetKeyData();
                     Data valueData = entry.GetValueData();
                     var keyValuePair =
-                        new KeyValuePair<object, object>(_enclosing.serializationService.ToObject(keyData),
-                            _enclosing.serializationService.ToObject(valueData));
+                        new KeyValuePair<object, object>(_enclosing.serializationService.ToObject<object>(keyData),
+                            _enclosing.serializationService.ToObject<object>(valueData));
                     var valuePair = new KeyValuePair<object, object>(keyData, valueData);
                     _Current = (_enclosing.data) ? valuePair : keyValuePair;
                     return true;

@@ -1,9 +1,10 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
 {
-    public sealed class AwaitRequest : IPortable
+    public sealed class AwaitRequest : ClientRequest
     {
         private string name;
 
@@ -19,28 +20,22 @@ namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
             this.timeout = timeout;
         }
 
-        public int GetFactoryId()
+        public override int GetFactoryId()
         {
             return CountDownLatchPortableHook.FId;
         }
 
-        public int GetClassId()
+        public override int GetClassId()
         {
             return CountDownLatchPortableHook.Await;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("name", name);
             writer.WriteLong("timeout", timeout);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("name");
-            timeout = reader.ReadLong("timeout");
-        }
     }
 }

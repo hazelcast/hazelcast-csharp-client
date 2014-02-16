@@ -27,7 +27,7 @@ namespace Hazelcast.Client
             {
                 try
                 {
-                    _currentE = (E) serializationService.ToObject(iter.Current);
+                    _currentE = serializationService.ToObject<E>(iter.Current);
                     return true;
                 }
                 catch (Exception)

@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class RemainingCapacityRequest : IPortable, IRetryableRequest
+    public class RemainingCapacityRequest : ClientRequest, IRetryableRequest
     {
         protected internal string name;
 
@@ -17,26 +17,22 @@ namespace Hazelcast.Client.Request.Queue
             this.name = name;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return QueuePortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return QueuePortableHook.RemainingCapacity;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-        }
+
     }
 }

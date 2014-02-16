@@ -7,7 +7,7 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Map
 {
     [Serializable]
-    public sealed class MapEntrySet : IIdentifiedDataSerializable
+    public sealed class MapEntrySet : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         private readonly ICollection<KeyValuePair<Data, Data>> entrySet;
 
@@ -42,11 +42,6 @@ namespace Hazelcast.Map
                 var entry = new KeyValuePair<Data, Data>(IOUtil.ReadData(input), IOUtil.ReadData(input));
                 entrySet.Add(entry);
             }
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
         }
 
         public int GetFactoryId()

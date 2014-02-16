@@ -8,28 +8,27 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientTxnListTest:HazelcastBaseTest
 	{
-        internal const string name = "ClientTxnListTest";
+        //internal const string name2 = "ClientTxnListTest";
 
-        internal static IHazelcastList<object> list;
+        internal static IHList<object> list;
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            list = client.GetList<object>(name);
         }
 
         [TearDown]
         public static void Destroy()
         {
             list.Clear();
-            //client.GetLifecycleService().Shutdown();
         }
 
 		/// <exception cref="System.Exception"></exception>
 		[NUnit.Framework.Test]
 		public virtual void TestAddRemove()
 		{
+		    var name = Name;
+            list = client.GetList<object>(name);
 			list.Add("item1");
 			ITransactionContext context = client.NewTransactionContext();
 			context.BeginTransaction();

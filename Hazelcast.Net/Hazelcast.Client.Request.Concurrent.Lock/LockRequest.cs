@@ -9,11 +9,12 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
         {
         }
 
-        public LockRequest(Data key, int threadId) : base(key, threadId)
+        public LockRequest(Data key, long threadId) : base(key, threadId)
         {
         }
 
-        public LockRequest(Data key, int threadId, long ttl, long timeout) : base(key, threadId, ttl, timeout)
+        public LockRequest(Data key, long threadId, long ttl, long timeout)
+            : base(key, threadId, ttl, timeout)
         {
         }
 

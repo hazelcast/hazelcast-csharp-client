@@ -9,11 +9,11 @@ namespace Hazelcast.Client.Request.Map
         {
         }
 
-        public MapReplaceRequest(string name, Data key, Data value, int threadId) : base(name, key, value, threadId)
+        public MapReplaceRequest(string name, Data key, Data value, long threadId) : base(name, key, value, threadId)
         {
         }
 
-        public MapReplaceRequest(string name, Data key, Data value, int threadId, long ttl)
+        public MapReplaceRequest(string name, Data key, Data value, long threadId, long ttl)
             : base(name, key, value, threadId, ttl)
         {
         }

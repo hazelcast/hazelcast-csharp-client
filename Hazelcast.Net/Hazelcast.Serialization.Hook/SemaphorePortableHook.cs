@@ -22,14 +22,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[Release + 1];
-            constructors[Acquire] = arg => new AcquireRequest();
-            constructors[Available] = arg => new AvailableRequest();
-            constructors[Drain] = arg => new DrainRequest();
-            constructors[Init] = arg => new InitRequest();
-            constructors[Reduce] = arg => new ReduceRequest();
-            constructors[Release] = arg => new ReleaseRequest();
-            return new ArrayPortableFactory(constructors);
+            return new ArrayPortableFactory();
         }
 
         public virtual ICollection<IClassDefinition> GetBuiltinDefinitions()

@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Net.Ext;
 using Hazelcast.Util;
 

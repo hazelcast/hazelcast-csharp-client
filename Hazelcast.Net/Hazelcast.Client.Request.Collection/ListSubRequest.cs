@@ -32,12 +32,5 @@ namespace Hazelcast.Client.Request.Collection
             writer.WriteInt("t", to);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            from = reader.ReadInt("f");
-            to = reader.ReadInt("t");
-        }
     }
 }

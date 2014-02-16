@@ -13,10 +13,9 @@ namespace Hazelcast.Client.Test
 		internal static ITopic<object> t;
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            t = client.GetTopic<object>(name);
+            t = client.GetTopic<object>(Name);
         }
 
         [TearDown]

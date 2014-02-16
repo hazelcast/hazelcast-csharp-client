@@ -25,13 +25,6 @@ namespace Hazelcast.Client.Request.Multimap
             base.WritePortable(writer);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            base.ReadPortable(reader);
-        }
-
         public override int GetFactoryId()
         {
             return MultiMapPortableHook.FId;

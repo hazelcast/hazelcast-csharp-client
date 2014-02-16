@@ -28,17 +28,17 @@ namespace Hazelcast.Logging
 
             public virtual void Finest(string message)
             {
-                Trace.Write(message);
+                Trace.TraceInformation(message);
             }
 
             public virtual void Finest(string message, Exception thrown)
             {
-                Trace.TraceError(thrown.Message);
+                Trace.TraceInformation(thrown.Message);
             }
 
             public virtual void Finest(Exception thrown)
             {
-                Trace.TraceError(thrown.Message);
+                Trace.TraceInformation(thrown.Message);
             }
 
             public virtual bool IsFinestEnabled()
@@ -64,6 +64,7 @@ namespace Hazelcast.Logging
             public virtual void Severe(string message, Exception thrown)
             {
                 Trace.TraceError(message);
+                Trace.TraceError(thrown.StackTrace);
             }
 
             public virtual void Warning(string message)
@@ -83,12 +84,12 @@ namespace Hazelcast.Logging
 
             public void Log(LogLevel level, string message)
             {
-                Trace.Write(message);
+                Trace.WriteLine(message);
             }
 
             public void Log(LogLevel level, string message, Exception thrown)
             {
-                Trace.Write(message);
+                Trace.WriteLine(message);
             }
 
             public virtual void Log(TraceEventType logEvent)
@@ -107,12 +108,12 @@ namespace Hazelcast.Logging
 
             public virtual void Log(TraceLevel level, string message)
             {
-                Trace.Write(message);
+                Trace.WriteLine(message);
             }
 
             public virtual void Log(TraceLevel level, string message, Exception thrown)
             {
-                Trace.Write(message);
+                Trace.WriteLine(message);
             }
 
             public virtual bool IsLoggable(TraceLevel level)

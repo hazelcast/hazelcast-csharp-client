@@ -16,10 +16,9 @@ namespace Hazelcast.Client.Test
 		internal static IMultiMap<object,object> mm;
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            mm = client.GetMultiMap<object,object>(name);
+            mm = client.GetMultiMap<object, object>(Name);
         }
 
         [TearDown]

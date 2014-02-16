@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Hazelcast.Core;
+using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -9,22 +10,18 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientListTest:HazelcastBaseTest
 	{
-        internal const string name = "ClientListTest";
-
-		internal static IHazelcastList<object> list;
+		internal static IHList<object> list;
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            list = client.GetList<object>(name);
+
+            list = client.GetList<object>(Name);
         }
 
         [TearDown]
         public static void Destroy()
         {
-            list.Clear();
-            //client.GetLifecycleService().Shutdown();
         }
 
 		[Test]

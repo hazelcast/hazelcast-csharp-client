@@ -1,15 +1,16 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapTryRemoveRequest : IPortable
+    public class MapTryRemoveRequest : ClientRequest
     {
         protected internal Data key;
         protected internal string name;
 
-        protected internal int threadId;
+        protected internal long threadId;
 
         protected internal long timeout;
 
@@ -17,7 +18,7 @@ namespace Hazelcast.Client.Request.Map
         {
         }
 
-        public MapTryRemoveRequest(string name, Data key, int threadId, long timeout)
+        public MapTryRemoveRequest(string name, Data key, long threadId, long timeout)
         {
             this.name = name;
             this.key = key;
@@ -25,35 +26,25 @@ namespace Hazelcast.Client.Request.Map
             this.timeout = timeout;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return MapPortableHook.TryRemove;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            writer.WriteInt("t", threadId);
+            writer.WriteLong("t", threadId);
             writer.WriteLong("timeout", timeout);
             IObjectDataOutput output = writer.GetRawDataOutput();
             key.WriteData(output);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            threadId = reader.ReadInt("t");
-            timeout = reader.ReadLong("timeout");
-            IObjectDataInput input = reader.GetRawDataInput();
-            key = new Data();
-            key.ReadData(input);
-        }
     }
 }

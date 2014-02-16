@@ -48,35 +48,6 @@ namespace Hazelcast.Serialization.Hook
         public const int TxnRollbackBackup = 40;
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.MultimapDsFactory, -12);
 
-        //import com.hazelcast.multimap.operations.ClearBackupOperation;
-        //import com.hazelcast.multimap.operations.ClearOperation;
-        //import com.hazelcast.multimap.operations.ContainsEntryOperation;
-        //import com.hazelcast.multimap.operations.CountOperation;
-        //import com.hazelcast.multimap.operations.EntrySetOperation;
-        //import com.hazelcast.multimap.operations.GetAllOperation;
-        //import com.hazelcast.multimap.operations.KeySetOperation;
-        //import com.hazelcast.multimap.operations.PutBackupOperation;
-        //import com.hazelcast.multimap.operations.PutOperation;
-        //import com.hazelcast.multimap.operations.RemoveAllBackupOperation;
-        //import com.hazelcast.multimap.operations.RemoveAllOperation;
-        //import com.hazelcast.multimap.operations.RemoveBackupOperation;
-        //import com.hazelcast.multimap.operations.RemoveOperation;
-        //import com.hazelcast.multimap.operations.SizeOperation;
-        //import com.hazelcast.multimap.operations.ValuesOperation;
-        //import com.hazelcast.multimap.transaction.TxnCommitBackupOperation;
-        //import com.hazelcast.multimap.transaction.TxnCommitOperation;
-        //import com.hazelcast.multimap.transaction.TxnGenerateRecordIdOperation;
-        //import com.hazelcast.multimap.transaction.TxnLockAndGetOperation;
-        //import com.hazelcast.multimap.transaction.TxnPrepareBackupOperation;
-        //import com.hazelcast.multimap.transaction.TxnPrepareOperation;
-        //import com.hazelcast.multimap.transaction.TxnPutBackupOperation;
-        //import com.hazelcast.multimap.transaction.TxnPutOperation;
-        //import com.hazelcast.multimap.transaction.TxnRemoveAllBackupOperation;
-        //import com.hazelcast.multimap.transaction.TxnRemoveAllOperation;
-        //import com.hazelcast.multimap.transaction.TxnRemoveBackupOperation;
-        //import com.hazelcast.multimap.transaction.TxnRemoveOperation;
-        //import com.hazelcast.multimap.transaction.TxnRollbackBackupOperation;
-        //import com.hazelcast.multimap.transaction.TxnRollbackOperation;
         public virtual int GetFactoryId()
         {
             return FId;
@@ -84,38 +55,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IDataSerializableFactory CreateFactory()
         {
-            var constructors = new Func<int, IIdentifiedDataSerializable>[TxnRollbackBackup + 1];
-            constructors[ClearBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Clear] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ContainsEntry] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Count] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[EntrySet] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[GetAll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[KeySet] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[PutBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Put] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[RemoveAllBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[RemoveAll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[RemoveBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Remove] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Size] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Values] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnCommitBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnCommit] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnGenerateRecordId] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnLockAndGet] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnPrepareBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnPrepare] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnPut] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnPutBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnRemove] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnRemoveBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnRemoveAll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnRemoveAll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnRollbackBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnRollback] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            return new ArrayDataSerializableFactory(constructors);
+            return null;
         }
     }
 }

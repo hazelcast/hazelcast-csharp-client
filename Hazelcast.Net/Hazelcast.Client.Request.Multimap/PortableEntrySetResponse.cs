@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -31,15 +32,8 @@ namespace Hazelcast.Client.Request.Multimap
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WritePortable(IPortableWriter writer)
         {
-            writer.WriteInt("s", entrySet.Count);
-            IObjectDataOutput output = writer.GetRawDataOutput();
-            foreach (var entry in entrySet)
-            {
-                Data key = entry.Key;
-                Data value = entry.Value;
-                key.WriteData(output);
-                value.WriteData(output);
-            }
+            throw new NotSupportedException();
+
         }
 
         /// <exception cref="System.IO.IOException"></exception>

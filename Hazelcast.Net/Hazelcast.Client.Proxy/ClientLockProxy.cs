@@ -1,4 +1,5 @@
 using System;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Concurrent.Lock;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
@@ -55,11 +56,6 @@ namespace Hazelcast.Client.Proxy
             Invoke<object>(request);
         }
 
-        public virtual ICondition NewCondition(string name)
-        {
-            throw new NotSupportedException();
-        }
-
         public virtual void Lock()
         {
             Lock(-1, null);
@@ -92,24 +88,14 @@ namespace Hazelcast.Client.Proxy
             Invoke<object>(request);
         }
 
-        public virtual ICondition NewCondition()
-        {
-            throw new NotSupportedException();
-        }
-
         /// <exception cref="System.Exception"></exception>
         public virtual void LockInterruptibly()
         {
             Lock();
         }
 
-        protected internal override void OnDestroy()
+        protected override void OnDestroy()
         {
-        }
-
-        private Data ToData(object o)
-        {
-            return GetContext().GetSerializationService().ToData(o);
         }
 
         private Data GetKeyData()
@@ -126,16 +112,9 @@ namespace Hazelcast.Client.Proxy
             return timeunit.HasValue ? timeunit.Value.ToMillis(time) : time;
         }
 
-        private T Invoke<T>(object req)
+        protected override T Invoke<T>(ClientRequest req)
         {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<T>(req, GetKeyData());
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
+            return base.Invoke<T>(req, GetKeyData());
         }
     }
 }

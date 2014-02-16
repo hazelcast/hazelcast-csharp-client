@@ -13,12 +13,11 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientTxnMultiMapTest:HazelcastBaseTest
 	{
-        internal const string name = "ClientTxnMultiMapTest";
+        //internal const string name = "ClientTxnMultiMapTest";
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
         }
 
         [TearDown]
@@ -27,10 +26,51 @@ namespace Hazelcast.Client.Test
         }
 
 
+	    [Test]
+	    public virtual void TestRemove()
+	    {
+            const string key = "key";
+            const string value = "value";
+	        var name = Name;
+	        var multiMap = client.GetMultiMap<string, string>(name);
+
+	        multiMap.Put(key, value);
+            ITransactionContext tx = client.NewTransactionContext();
+
+            tx.BeginTransaction();
+            tx.GetMultiMap<string,string>(name).Remove(key,value);
+            tx.CommitTransaction();
+
+            Assert.AreEqual(new List<string>(), multiMap.Get(key));
+	    }
+
+	    [Test]
+	    public virtual void TestRemoveAll()
+	    {
+            const string key = "key";
+            const string value = "value";
+	        var name = Name;
+            var multiMap = client.GetMultiMap<string, string>(name);
+	        for (int i = 0; i < 10; i++)
+	        {
+	            multiMap.Put(key, value+i);
+	        }
+                
+
+            ITransactionContext tx = client.NewTransactionContext();
+
+            tx.BeginTransaction();
+            tx.GetMultiMap<string,string>(name).Remove(key);
+            tx.CommitTransaction();
+
+            Assert.AreEqual(new List<string>(), multiMap.Get(key));
+	    }
+
         /// <exception cref="System.Exception"></exception>
-        [Test,Ignore]
+        [Test]
         public virtual void TestPutGetRemove()
         {
+            var name = Name;
             var mm = client.GetMultiMap<object, object>(name);
 
             for (int i = 0; i < 10; i++)
@@ -54,6 +94,7 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void TestPutGetRemove2()
 		{
+            var name = Name;
 			var mm = client.GetMultiMap<object,object>(name);
             string key = "key";
             client.GetMultiMap<object, object>(name).Put(key, "value");
@@ -73,6 +114,7 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(3, mm.Get(key).Count);
 
 		}
+
 
 
 	}

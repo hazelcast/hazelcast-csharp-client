@@ -1,4 +1,5 @@
 using System;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Concurrent.Countdownlatch;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
@@ -44,13 +45,8 @@ namespace Hazelcast.Client.Proxy
             return result;
         }
 
-        protected internal override void OnDestroy()
+        protected override void OnDestroy()
         {
-        }
-
-        private Data ToData(object o)
-        {
-            return GetContext().GetSerializationService().ToData(o);
         }
 
         private Data GetKey()
@@ -67,16 +63,9 @@ namespace Hazelcast.Client.Proxy
             return timeunit != null ? timeunit.ToMillis(time) : time;
         }
 
-        private T Invoke<T>(object req)
+        protected override T Invoke<T>(ClientRequest req)
         {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<T>(req, GetKey());
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
+            return Invoke<T>(req, GetKey());
         }
     }
 }

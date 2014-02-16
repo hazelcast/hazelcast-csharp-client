@@ -11,22 +11,20 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientSetTest:HazelcastBaseTest
 	{
-		internal const string name = "test";
+        //internal const string name = "test";
 
-		internal static IHazelcastSet<object> set;
+		internal static IHSet<object> set;
 
        [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            set = client.GetSet<object>(name);
+            set = client.GetSet<object>(Name);
         }
 
         [TearDown]
         public static void Destroy()
         {
             set.Clear();
-            //client.GetLifecycleService().Shutdown();
         }
 
 		[Test]

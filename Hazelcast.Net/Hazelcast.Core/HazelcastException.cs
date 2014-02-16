@@ -21,4 +21,17 @@ namespace Hazelcast.Core
         {
         }
     }
+
+    public class QueryException : HazelcastException 
+    {
+
+        public QueryException() {
+        }
+
+        public QueryException(String message) :base(message){}
+
+        public QueryException(string message, Exception cause): base(message, cause){}
+
+        public QueryException(Exception cause) : base(cause.Message) { }
+    }
 }

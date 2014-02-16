@@ -50,38 +50,6 @@ namespace Hazelcast.Core
         /// </remarks>
         void ForceUnlock();
 
-        /// <summary>
-        ///     This method is not implemented! Use
-        ///     <see cref="NewCondition(string)">NewCondition(string)</see>
-        ///     instead.
-        /// </summary>
-        /// <exception cref="System.NotSupportedException">System.NotSupportedException</exception>
-        ICondition NewCondition();
-
-        /// <summary>
-        ///     Returns a new
-        ///     <see cref="ICondition">ICondition</see>
-        ///     instance that is bound to this
-        ///     <code>ILock</code>
-        ///     instance with given name.
-        ///     <p>
-        ///         Before waiting on the condition the lock must be held by the
-        ///         current thread.
-        ///         A call to
-        ///         <see cref="ICondition.Await()">ICondition.Await()</see>
-        ///         will atomically release the lock
-        ///         before waiting and re-acquire the lock before the wait returns.
-        /// </summary>
-        /// <param name="name">identifier of the new condition instance</param>
-        /// <returns>
-        ///     A new
-        ///     <see cref="ICondition">ICondition</see>
-        ///     instance for this
-        ///     <code>ILock</code>
-        ///     instance
-        /// </returns>
-        ICondition NewCondition(string name);
-
         /// <summary>Returns whether this lock is locked or not.</summary>
         /// <remarks>Returns whether this lock is locked or not.</remarks>
         /// <returns>

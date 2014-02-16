@@ -4,6 +4,7 @@ using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Map;
+using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -50,6 +51,13 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new TxnMapRequest<K, V>(GetName(), AbstractTxnMapRequest.TxnMapRequestType.Put, ToData(key),
                 ToData(value));
+            return Invoke<V>(request);
+        }
+
+        public V Put(K key, V value, long ttl, TimeUnit timeunit)
+        {
+            var request = new TxnMapRequest<K, V>(GetName(), AbstractTxnMapRequest.TxnMapRequestType.PuttWithTTL, ToData(key),
+                ToData(value),ttl,timeunit);
             return Invoke<V>(request);
         }
 
@@ -110,7 +118,7 @@ namespace Hazelcast.Client.Proxy
             var keySet = new HashSet<K>();
             foreach (Data data in dataKeySet)
             {
-                keySet.Add((K) ToObject(data));
+                keySet.Add( ToObject<K>(data));
             }
             return keySet;
         }
@@ -140,7 +148,7 @@ namespace Hazelcast.Client.Proxy
             var values = new HashSet<V>();
             foreach (Data value in dataValues)
             {
-                values.Add((V) ToObject(value));
+                values.Add( ToObject<V>(value));
             }
             return values;
         }

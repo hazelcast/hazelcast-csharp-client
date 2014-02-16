@@ -11,10 +11,9 @@ namespace Hazelcast.Client.Test
 		internal static IAtomicLong l;
         //
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            l = client.GetAtomicLong(name);
+            l = client.GetAtomicLong(Name);
             l.Set(0);
         }
 

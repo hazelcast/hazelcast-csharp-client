@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Xml;
 using Hazelcast.Logging;
 using Hazelcast.Security;
@@ -188,6 +187,7 @@ namespace Hazelcast.Config
 
         private void HandleNetwork(XmlNode node)
         {
+            var clientNetworkConfig = clientConfig.GetNetworkConfig();
             foreach (XmlNode child in node.ChildNodes)
             {
                 string nodeName = CleanNodeName(child);
@@ -198,25 +198,22 @@ namespace Hazelcast.Config
                         break;
 
                     case "smart-routing":
-                        clientConfig.SetSmartRouting(Boolean.Parse(GetTextContent(child)));
+                        clientNetworkConfig.SetSmartRouting(Boolean.Parse(GetTextContent(child)));
                         break;
                     case "redo-operation":
-                        clientConfig.SetRedoOperation(Boolean.Parse(GetTextContent(child)));
-                        break;
-                    case "connection-pool-size":
-                        clientConfig.SetConnectionPoolSize(Convert.ToInt32(GetTextContent(child)));
+                        clientNetworkConfig.SetRedoOperation(Boolean.Parse(GetTextContent(child)));
                         break;
                     case "connection-timeout":
-                        clientConfig.SetConnectionTimeout(Convert.ToInt32(GetTextContent(child)));
+                        clientNetworkConfig.SetConnectionTimeout(Convert.ToInt32(GetTextContent(child)));
                         break;
                     case "connection-attempt-period":
-                        clientConfig.SetConnectionAttemptPeriod(Convert.ToInt32(GetTextContent(child)));
+                        clientNetworkConfig.SetConnectionAttemptPeriod(Convert.ToInt32(GetTextContent(child)));
                         break;
                     case "connection-attempt-limit":
-                        clientConfig.SetConnectionAttemptLimit(Convert.ToInt32(GetTextContent(child)));
+                        clientNetworkConfig.SetConnectionAttemptLimit(Convert.ToInt32(GetTextContent(child)));
                         break;
                     case "socket-options":
-                        HandleSocketOptions(child);
+                        HandleSocketOptions(child, clientNetworkConfig);
                         break;
                     case "socket-interceptor":
                         HandleSocketInterceptorConfig(node);
@@ -225,9 +222,9 @@ namespace Hazelcast.Config
             }
         }
 
-        private void HandleSocketOptions(XmlNode node)
+        private void HandleSocketOptions(XmlNode node, ClientNetworkConfig clientNetworkConfig)
         {
-            SocketOptions socketOptions = clientConfig.GetSocketOptions();
+            SocketOptions socketOptions = clientNetworkConfig.GetSocketOptions();
             foreach (XmlNode child in node.ChildNodes)
             {
                 string nodeName = CleanNodeName(child);
@@ -261,7 +258,7 @@ namespace Hazelcast.Config
             {
                 if ("address".Equals(CleanNodeName(child)))
                 {
-                    clientConfig.AddAddress(GetTextContent(child));
+                    clientConfig.GetNetworkConfig().AddAddress(GetTextContent(child));
                 }
             }
         }
@@ -330,7 +327,7 @@ namespace Hazelcast.Config
         private void HandleSocketInterceptorConfig(XmlNode node)
         {
             SocketInterceptorConfig socketInterceptorConfig = ParseSocketInterceptorConfig(node);
-            clientConfig.SetSocketInterceptorConfig(socketInterceptorConfig);
+            clientConfig.GetNetworkConfig().SetSocketInterceptorConfig(socketInterceptorConfig);
         }
 
         /// <exception cref="System.Exception"></exception>

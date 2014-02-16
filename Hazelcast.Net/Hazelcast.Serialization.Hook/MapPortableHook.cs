@@ -45,13 +45,14 @@ namespace Hazelcast.Serialization.Hook
         public const int PutAll = 40;
         public const int TxnRequest = 41;
         public const int TxnRequestWithSqlQuery = 42;
-
         public const int ExecuteWithPredicate = 43;
+        public const int RemoveEntryListener = 44;
+        public const int ExecuteOnKeys = 45;
+
+        public const int TotalSize = ExecuteOnKeys + 1;
+
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.MapPortableFactory, -10);
 
-        //import com.hazelcast.map.client.MapExecuteOnAllKeysRequest;
-        //import com.hazelcast.map.client.MapExecuteOnKeyRequest;
-        //import com.hazelcast.map.client.MapExecuteWithPredicateRequest;
         public virtual int GetFactoryId()
         {
             return FId;
@@ -59,52 +60,9 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[ExecuteWithPredicate + 1];
-            constructors[Get] = arg => new MapGetRequest();
-            constructors[Put] = arg => new MapPutRequest();
-            constructors[PutIfAbsent] = arg => new MapPutIfAbsentRequest();
-            constructors[TryPut] = arg => new MapTryPutRequest();
-            constructors[PutTransient] = arg => new MapPutTransientRequest();
-            constructors[Set] = arg => new MapSetRequest();
-            constructors[ContainsKey] = arg => new MapContainsKeyRequest();
-            constructors[ContainsValue] = arg => new MapContainsValueRequest();
-            constructors[Remove] = arg => new MapRemoveRequest();
-            constructors[RemoveIfSame] = arg => new MapRemoveIfSameRequest();
-            constructors[Delete] = arg => new MapDeleteRequest();
-            constructors[Flush] = arg => new MapFlushRequest();
-            constructors[GetAll] = arg => new MapGetAllRequest();
-            constructors[TryRemove] = arg => new MapTryRemoveRequest();
-            constructors[Replace] = arg => new MapReplaceRequest();
-            constructors[ReplaceIfSame] = arg => new MapReplaceIfSameRequest();
-            constructors[Lock] = arg => new MapLockRequest();
-            constructors[IsLocked] = arg => new MapIsLockedRequest();
-            constructors[Unlock] = arg => new MapUnlockRequest();
-            constructors[Evict] = arg => new MapEvictRequest();
-            constructors[AddInterceptor] = arg => new MapAddInterceptorRequest();
-            constructors[RemoveInterceptor] = arg => new MapRemoveInterceptorRequest();
-            constructors[AddEntryListener] = arg => new MapAddEntryListenerRequest<object,object>();
-            constructors[GetEntryView] = arg => new MapGetEntryViewRequest();
-            constructors[AddIndex] = arg => new MapAddIndexRequest();
-            constructors[KeySet] = arg => new MapKeySetRequest();
-            constructors[Values] = arg => new MapValuesRequest();
-            constructors[EntrySet] = arg => new MapEntrySetRequest();
-            constructors[Size] = arg => new MapSizeRequest();
-            constructors[Clear] = arg => new MapClearRequest();
-            constructors[Query] = arg => new MapQueryRequest<object, object>();
-            //constructors[SqlQuery] = arg => new MapSQLQueryRequest();
-            constructors[ExecuteOnKey] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //arg => new MapExecuteOnKeyRequest(); 
-            constructors[ExecuteOnAllKeys] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //arg => new MapExecuteOnAllKeysRequest(); 
-            constructors[PutAll] = arg => new MapPutAllRequest();
-            constructors[TxnRequest] = arg => new TxnMapRequest<object, object>();
-            constructors[TxnRequestWithSqlQuery] = arg => new TxnMapWithSQLQueryRequest();
-            constructors[ExecuteWithPredicate] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //arg => new MapExecuteWithPredicateRequest(); 
-
-            return new ArrayPortableFactory(constructors);
+            return new ArrayPortableFactory();
         }
+
 
         public virtual ICollection<IClassDefinition> GetBuiltinDefinitions()
         {
