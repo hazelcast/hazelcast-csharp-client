@@ -19,11 +19,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[Rollback + 1];
-            constructors[Create] = arg => new CreateTransactionRequest();
-            constructors[Commit] = arg => new CommitTransactionRequest();
-            constructors[Rollback] = arg => new RollbackTransactionRequest();
-            return new ArrayPortableFactory(constructors);
+            return new ArrayPortableFactory();
         }
 
         public virtual ICollection<IClassDefinition> GetBuiltinDefinitions()

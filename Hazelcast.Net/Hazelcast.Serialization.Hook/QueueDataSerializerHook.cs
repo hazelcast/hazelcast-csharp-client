@@ -44,19 +44,6 @@ namespace Hazelcast.Serialization.Hook
         public const int TxnPeek = 37;
         internal static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.QueueDsFactory, -11);
 
-        //import com.hazelcast.queue.tx.QueueTransactionRollbackOperation;
-        //import com.hazelcast.queue.tx.TxnOfferBackupOperation;
-        //import com.hazelcast.queue.tx.TxnOfferOperation;
-        //import com.hazelcast.queue.tx.TxnPeekOperation;
-        //import com.hazelcast.queue.tx.TxnPollBackupOperation;
-        //import com.hazelcast.queue.tx.TxnPollOperation;
-        //import com.hazelcast.queue.tx.TxnPrepareBackupOperation;
-        //import com.hazelcast.queue.tx.TxnPrepareOperation;
-        //import com.hazelcast.queue.tx.TxnReserveOfferOperation;
-        //import com.hazelcast.queue.tx.TxnReservePollOperation;
-        //import com.hazelcast.queue.tx.TxnRollbackBackupOperation;
-        //import com.hazelcast.queue.tx.TxnRollbackOperation;
-        //    static final int EMPTY_ID = 21;
         public int GetFactoryId()
         {
             return FId;
@@ -64,52 +51,7 @@ namespace Hazelcast.Serialization.Hook
 
         public IDataSerializableFactory CreateFactory()
         {
-            var constructors = new Func<int, IIdentifiedDataSerializable>[TxnPeek + 1];
-            constructors[Offer] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[OfferBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Poll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[PollBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Peek] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[AddAllBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[AddAll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[ClearBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Clear] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CompareAndRemoveBackup] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CompareAndRemove] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Contains] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[DrainBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Drain] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Iterator] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[QueueEvent] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //                return new QueueEvent();
-            constructors[QueueEventFilter] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //                return new QueueEventFilter();
-            constructors[QueueItem] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //                return new QueueItem();
-            constructors[QueueReplication] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[RemoveBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Remove] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Size] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnOfferBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnOffer] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnPollBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnPoll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnPrepareBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnPrepare] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnReserveOffer] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnReservePoll] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnRollbackBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxnRollback] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[CheckEvict] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[QueueContainer] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //                return new QueueContainer(null);
-            constructors[TransactionRollback] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TxQueueItem] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            //                return new TxQueueItem();
-            constructors[TxnPeek] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            return new ArrayDataSerializableFactory(constructors);
+            return null;
         }
     }
 }

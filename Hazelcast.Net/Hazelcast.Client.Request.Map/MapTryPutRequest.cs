@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Request.Map
         {
         }
 
-        public MapTryPutRequest(string name, Data key, Data value, int threadId, long timeout)
+        public MapTryPutRequest(string name, Data key, Data value, long threadId, long timeout)
             : base(name, key, value, threadId, -1)
         {
             this.timeout = timeout;
@@ -29,11 +29,5 @@ namespace Hazelcast.Client.Request.Map
             base.WritePortable(writer);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            timeout = reader.ReadLong("timeout");
-            base.ReadPortable(reader);
-        }
     }
 }

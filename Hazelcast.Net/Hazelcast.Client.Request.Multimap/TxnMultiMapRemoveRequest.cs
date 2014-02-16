@@ -26,7 +26,7 @@ namespace Hazelcast.Client.Request.Multimap
 
         public override int GetClassId()
         {
-            return MultiMapPortableHook.TxnMmGet;
+            return MultiMapPortableHook.TxnMmRemove;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -38,14 +38,6 @@ namespace Hazelcast.Client.Request.Multimap
             IOUtil.WriteNullableData(output, value);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            IObjectDataInput input = reader.GetRawDataInput();
-            key = new Data();
-            key.ReadData(input);
-            value = IOUtil.ReadNullableData(input);
-        }
+
     }
 }

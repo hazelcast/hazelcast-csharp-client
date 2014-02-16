@@ -1,6 +1,7 @@
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Net.Ext;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
@@ -40,6 +41,11 @@ namespace Hazelcast.Client.Request.Map
             this.predicate = predicate;
         }
 
+        public TxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, long ttl, TimeUnit timeUnit)
+            : base(name,requestType,key,value,ttl,timeUnit)
+        {
+        }
+
         public override int GetClassId()
         {
             return MapPortableHook.TxnRequest;
@@ -51,10 +57,5 @@ namespace Hazelcast.Client.Request.Map
             writer.WriteObject(predicate);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        protected internal override void ReadDataInner(IObjectDataInput reader)
-        {
-            predicate = reader.ReadObject<IPredicate<K, V>>();
-        }
     }
 }

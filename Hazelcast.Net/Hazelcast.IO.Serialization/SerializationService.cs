@@ -153,15 +153,20 @@ namespace Hazelcast.IO.Serialization
             return null;
         }
 
-        public object ToObject(Data data)
+        public T ToObject<T>(object input)
         {
+            if (input == null)
+            {
+                return default (T);
+            }
+            Data data = input as Data;
             if (data == null)
             {
-                return null;
+                return (T)input;
             }
             if (data.BufferSize() == 0 && data.IsDataSerializable())
             {
-                return null;
+                return default(T);
             }
             try
             {
@@ -185,13 +190,13 @@ namespace Hazelcast.IO.Serialization
                 {
                     obj = managedContext.Initialize(obj);
                 }
-                return obj;
+                return (T)obj;
             }
             catch (Exception e)
             {
                 HandleException(e);
             }
-            return null;
+            return default(T);
         }
 
         public void WriteObject(IObjectDataOutput output, object obj)
@@ -603,25 +608,6 @@ namespace Hazelcast.IO.Serialization
         private int IndexForDefaultType(int typeId)
         {
             return -typeId - 1;
-        }
-
-        public void Destroy()
-        {
-            throw new NotImplementedException("no destroy");
-            //active = false;
-            //foreach (ISerializerAdapter serializer in typeMap.Values)
-            //{
-            //    serializer.Destroy();
-            //}
-            //typeMap.Clear();
-            //idMap.Clear();
-            //global.Set(null);
-            //constantTypesMap.Clear();
-            //foreach (IBufferObjectDataOutput output in outputPool)
-            //{
-            //    IOUtil.CloseResource(output);
-            //}
-            //outputPool.Clear();
         }
 
         public IManagedContext GetManagedContext()

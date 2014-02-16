@@ -20,17 +20,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IDataSerializableFactory CreateFactory()
         {
-            var constructors = new Func<int, IIdentifiedDataSerializable>[IsShutdownRequest + 1];
-            constructors[CallableTask] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[MemberCallableTask] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[RunnableAdapter] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[TargetCallableRequest] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[LocalTargetCallableRequest] =
-                delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[IsShutdownRequest] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            return new ArrayDataSerializableFactory(constructors);
+            return null;
         }
     }
 }

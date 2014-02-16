@@ -36,19 +36,5 @@ namespace Hazelcast.Client.Request.Queue
             }
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            int size = reader.ReadInt("s");
-            IObjectDataInput input = reader.GetRawDataInput();
-            dataList = new List<Data>(size);
-            for (int i = 0; i < size; i++)
-            {
-                var data = new Data();
-                data.ReadData(input);
-                dataList.Add(data);
-            }
-        }
     }
 }

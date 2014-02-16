@@ -8,9 +8,6 @@ namespace Hazelcast.Client.Request.Queue
         {
         }
 
-        public PollRequest(string name) : base(name)
-        {
-        }
 
         public PollRequest(string name, long timeoutMillis) : base(name, timeoutMillis)
         {

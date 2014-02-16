@@ -32,13 +32,5 @@ namespace Hazelcast.Client.Request.Collection
             value.WriteData(writer.GetRawDataOutput());
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            index = reader.ReadInt("i");
-            value = new Data();
-            value.ReadData(reader.GetRawDataInput());
-        }
     }
 }

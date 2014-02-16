@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Test
         public static void Main111(string[] args)
         {
             var config = new ClientConfig();
-            config.AddAddress("127.0.0.1");
+            config.GetNetworkConfig().AddAddress("127.0.0.1");
             var client = HazelcastClient.NewHazelcastClient(config);
 
             q = client.GetQueue<object>("test");

@@ -1,9 +1,11 @@
+using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Request.Transaction;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class TxnPollRequest : IPortable
+    public class TxnPollRequest : BaseTransactionRequest
     {
         internal string name;
 
@@ -19,28 +21,22 @@ namespace Hazelcast.Client.Request.Queue
             this.timeout = timeout;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return QueuePortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return QueuePortableHook.TxnPoll;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteLong("t", timeout);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            timeout = reader.ReadLong("t");
-        }
     }
 }

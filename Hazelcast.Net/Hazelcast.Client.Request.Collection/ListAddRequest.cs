@@ -28,11 +28,5 @@ namespace Hazelcast.Client.Request.Collection
             base.WritePortable(writer);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            index = reader.ReadInt("i");
-            base.ReadPortable(reader);
-        }
     }
 }

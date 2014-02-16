@@ -35,13 +35,5 @@ namespace Hazelcast.Client.Request.Multimap
             IOUtil.WriteNullableData(output, value);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            IObjectDataInput input = reader.GetRawDataInput();
-            key = IOUtil.ReadNullableData(input);
-            value = IOUtil.ReadNullableData(input);
-        }
     }
 }

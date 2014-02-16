@@ -6,7 +6,8 @@ namespace Hazelcast.IO.Serialization
     [Serializable]
     public abstract class BinaryClassDefinition : IClassDefinition
     {
-        [NonSerialized] private byte[] binary;
+        [NonSerialized] 
+        private byte[] binary;
         protected internal int classId;
         protected internal int factoryId;
         protected internal int version = -1;
@@ -31,7 +32,7 @@ namespace Hazelcast.IO.Serialization
         public abstract void ReadData(IObjectDataInput input);
         public string GetJavaClassName()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public abstract IFieldDefinition Get(string name);

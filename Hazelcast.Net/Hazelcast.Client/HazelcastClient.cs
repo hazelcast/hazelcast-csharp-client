@@ -99,16 +99,9 @@ namespace Hazelcast.Client
             {
                 loadBalancer = new RoundRobinLB();
             }
-            if (config.IsSmartRouting())
-            {
-                connectionManager = new SmartClientConnectionManager(this, clusterService.GetAuthenticator(),
-                    loadBalancer);
-            }
-            else
-            {
-                connectionManager = new DummyClientConnectionManager(this, clusterService.GetAuthenticator(),
-                    loadBalancer);
-            }
+
+            connectionManager = new ClientConnectionManager(this, loadBalancer, config.GetNetworkConfig().IsSmartRouting());
+
             invocationService = new ClientInvocationService(this);
             userContext = new ConcurrentDictionary<string, object>();
             loadBalancer.Init(GetCluster(), config);
@@ -116,6 +109,7 @@ namespace Hazelcast.Client
             partitionService = new ClientPartitionService(this);
         }
 
+        #region HazelcastInstance
         public string GetName()
         {
             return instanceName;
@@ -131,19 +125,19 @@ namespace Hazelcast.Client
             return GetDistributedObject<ITopic<E>>(ServiceNames.Topic, name);
         }
 
-        public IHazelcastSet<E> GetSet<E>(string name)
+        public IHSet<E> GetSet<E>(string name)
         {
-            return GetDistributedObject<IHazelcastSet<E>>(ServiceNames.Set, name);
+            return GetDistributedObject<IHSet<E>>(ServiceNames.Set, name);
         }
 
-        public IHazelcastList<E> GetList<E>(string name)
+        public IHList<E> GetList<E>(string name)
         {
-            return GetDistributedObject<IHazelcastList<E>>(ServiceNames.List, name);
+            return GetDistributedObject<IHList<E>>(ServiceNames.List, name);
         }
 
-        public IHazelcastMap<K, V> GetMap<K, V>(string name)
+        public IMap<K, V> GetMap<K, V>(string name)
         {
-            return GetDistributedObject<IHazelcastMap<K, V>>(ServiceNames.Map, name);
+            return GetDistributedObject<IMap<K, V>>(ServiceNames.Map, name);
         }
 
         public IMultiMap<K, V> GetMultiMap<K, V>(string name)
@@ -156,69 +150,59 @@ namespace Hazelcast.Client
             return GetDistributedObject<ILock>(ServiceNames.Lock, key);
         }
 
-        //[Obsolete]
-        //public ILock GetLock(object key)
-        //{
-        //    IPartitioningStrategy IPartitioningStrategy = new StringPartitioningStrategy();
-        //    // will be removed when IHazelcastInstance.getLock(Object key) is removed from API
-        //    string lockName = (key is string) ? key.ToString() : Arrays.ToString(serializationService.ToData(key, IPartitioningStrategy).GetBuffer());
-        //    //
-        //    return GetDistributedObject<ClientLockProxy>(ServiceNames.Lock, lockName);
-        //}
-
         public ICluster GetCluster()
         {
             return new ClientClusterProxy(clusterService);
         }
 
-        public IClient GetLocalEndpoint()
+        public IEndpoint GetLocalEndpoint()
         {
             return clusterService.GetLocalClient();
         }
 
-        public IExecutorService GetExecutorService(string name)
-        {
-            //TODO FIXME
-            throw new NotSupportedException("Not implemented yet");
-            //return GetDistributedObject<ClientE>(ServiceNames.DistributedExecutor, name);
-        }
+        //public IExecutorService GetExecutorService(string name)
+        //{
+        //    //TODO FIXME
+        //    throw new NotSupportedException("Not implemented yet");
+        //    //return GetDistributedObject<ClientE>(ServiceNames.DistributedExecutor, name);
+        //}
 
-        /// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
-        public T ExecuteTransaction<T>(ITransactionalTask<T> task)
-        {
-            return ExecuteTransaction(TransactionOptions.GetDefault(), task);
-        }
+        ///// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
+        //public T ExecuteTransaction<T>(ITransactionalTask<T> task)
+        //{
+        //    return ExecuteTransaction(TransactionOptions.GetDefault(), task);
+        //}
 
-        /// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
-        public T ExecuteTransaction<T>(TransactionOptions options, ITransactionalTask<T> task)
-        {
-            ITransactionContext context = NewTransactionContext(options);
-            context.BeginTransaction();
-            try
-            {
-                T value = task.Execute(context);
-                context.CommitTransaction();
-                return value;
-            }
-            catch (Exception e)
-            {
-                context.RollbackTransaction();
-                //TODO FIX EXEPTION
-                if (e is TransactionException)
-                {
-                    throw e;
-                }
-                if (e.InnerException is TransactionException)
-                {
-                    throw e.InnerException;
-                }
-                if (e is SystemException)
-                {
-                    throw e;
-                }
-                throw new TransactionException(e);
-            }
-        }
+        ///// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
+        //public T ExecuteTransaction<T>(TransactionOptions options, ITransactionalTask<T> task)
+        //{
+        //    ITransactionContext context = NewTransactionContext(options);
+        //    context.BeginTransaction();
+        //    try
+        //    {
+        //        T value = task.Execute(context);
+        //        context.CommitTransaction();
+        //        return value;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        context.RollbackTransaction();
+        //        //TODO FIX EXEPTION
+        //        if (e is TransactionException)
+        //        {
+        //            throw e;
+        //        }
+        //        if (e.InnerException is TransactionException)
+        //        {
+        //            throw e.InnerException;
+        //        }
+        //        if (e is SystemException)
+        //        {
+        //            throw e;
+        //        }
+        //        throw new TransactionException(e);
+        //    }
+        //}
 
         public ITransactionContext NewTransactionContext()
         {
@@ -255,10 +239,11 @@ namespace Hazelcast.Client
             try
             {
                 var request = new GetDistributedObjectsRequest();
-                var serializableCollection = invocationService.InvokeOnRandomTarget<SerializableCollection>(request);
-                foreach (Data data in serializableCollection)
+                var task = invocationService.InvokeOnRandomTarget<SerializableCollection>(request);
+                var serializableCollection = serializationService.ToObject<SerializableCollection>(task.Result);
+                foreach (var data in serializableCollection)
                 {
-                    var o = (DistributedObjectInfo) serializationService.ToObject(data);
+                    var o = serializationService.ToObject<DistributedObjectInfo>(data);
                     GetDistributedObject<IDistributedObject>(o.GetServiceName(), o.GetName());
                 }
                 return proxyManager.GetDistributedObjects<IDistributedObject>();
@@ -280,32 +265,21 @@ namespace Hazelcast.Client
         }
 
         //    @Override
-        //    public PartitionService getPartitionService() {
-        //        return new PartitionServiceProxy(partitionService);
-        //    }
+        public IClientPartitionService GetPartitionService()
+        {
+            throw new NotSupportedException("not supported yet");
+            //return new PartitionServiceProxy(partitionService);
+        }
+
         public IClientService GetClientService()
         {
             throw new NotSupportedException();
         }
 
-        //    @Override
-        //    public LoggingService getLoggingService() {
-        //        throw new UnsupportedOperationException();
-        //    }
         public ILifecycleService GetLifecycleService()
         {
             return lifecycleService;
         }
-
-        //[Obsolete]
-        //public T GetDistributedObject<T>(string serviceName, object id) where T : IDistributedObject
-        //{
-        //    if (id is string)
-        //    {
-        //        return (T)proxyManager.GetProxy(serviceName, (string)id);
-        //    }
-        //    throw new ArgumentException("'id' must be type of String!");
-        //}
 
         public T GetDistributedObject<T>(string serviceName, string name) where T : IDistributedObject
         {
@@ -313,11 +287,6 @@ namespace Hazelcast.Client
 
             return (T) (clientProxy as IDistributedObject);
         }
-
-        //public IDistributedObject GetDistributedObject(string serviceName, string name)
-        //{
-        //    return proxyManager.GetProxy(serviceName, name);
-        //}
 
         public ConcurrentDictionary<string, object> GetUserContext()
         {
@@ -328,6 +297,9 @@ namespace Hazelcast.Client
         {
             GetLifecycleService().Shutdown();
         }
+
+        #endregion
+
 
         public static IHazelcastInstance NewHazelcastClient()
         {
@@ -420,11 +392,11 @@ namespace Hazelcast.Client
             return invocationService;
         }
 
-        //public ThreadGroup GetThreadGroup()
-        //{
-        //    return threadGroup;
-        //}
-
+        public IRemotingService GetRemotingService()
+        {
+            return connectionManager;
+        }
+ 
         internal void DoShutdown()
         {
             HazelcastClientProxy _out;

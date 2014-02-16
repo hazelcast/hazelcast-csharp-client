@@ -1,20 +1,22 @@
+using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Request.Transaction;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public abstract class TxnCollectionRequest : IPortable
+    public abstract class TxnCollectionRequest : BaseTransactionRequest
     {
         internal string name;
 
         internal Data value;
 
-        public TxnCollectionRequest()
+        protected TxnCollectionRequest()
         {
         }
 
-        public TxnCollectionRequest(string name)
+        protected TxnCollectionRequest(string name)
         {
             ///*
             this.name = name;
@@ -25,25 +27,18 @@ namespace Hazelcast.Client.Request.Collection
             this.value = value;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return CollectionPortableHook.FId;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             IOUtil.WriteNullableData(writer.GetRawDataOutput(), value);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            value = IOUtil.ReadNullableData(reader.GetRawDataInput());
-        }
 
-        public abstract int GetClassId();
     }
 }

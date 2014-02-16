@@ -28,27 +28,25 @@ namespace Hazelcast.Client.Proxy
         public virtual string AddMessageListener(IMessageListener<E> listener)
         {
             var request = new AddMessageListenerRequest(name);
-            return Listen<PortableMessage>(request, GetKey(), (sender, args) => HandleMessageListener(args, listener));
+            return Listen(request, GetKey(), ( args) => HandleMessageListener((PortableMessage)args, listener));
         }
 
 
         public virtual bool RemoveMessageListener(string registrationId)
         {
-            return StopListening(registrationId);
+            var req = new RemoveMessageListenerRequest(name, registrationId);
+            return StopListening(req,registrationId);
         }
 
         private void HandleMessageListener(PortableMessage _event, IMessageListener<E> listener)
         {
-            var messageObject = (E) GetContext().GetSerializationService().ToObject(_event.GetMessage());
+            var messageObject = (E) GetContext().GetSerializationService().ToObject<E>(_event.GetMessage());
             IMember member = GetContext().GetClusterService().GetMember(_event.GetUuid());
             var message = new Message<E>(name, messageObject, _event.GetPublishTime(), member);
             listener.OnMessage(message);
         }
 
-        //    public LocalTopicStats getLocalTopicStats() {
-        //        throw new UnsupportedOperationException("Locality is ambiguous for client!!!");
-        //    }
-        protected internal override void OnDestroy()
+        protected override void OnDestroy()
         {
         }
 
@@ -57,16 +55,5 @@ namespace Hazelcast.Client.Proxy
             return key ?? (key = GetContext().GetSerializationService().ToData(name));
         }
 
-        private T Invoke<T>(object req)
-        {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<T>(req, GetKey());
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
     }
 }

@@ -12,7 +12,7 @@ namespace Hazelcast.Client.Request.Map
         {
         }
 
-        public MapReplaceIfSameRequest(string name, Data key, Data testValue, Data value, int threadId)
+        public MapReplaceIfSameRequest(string name, Data key, Data testValue, Data value, long threadId)
             : base(name, key, value, threadId)
         {
             this.testValue = testValue;
@@ -31,13 +31,5 @@ namespace Hazelcast.Client.Request.Map
             testValue.WriteData(output);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            IObjectDataInput input = reader.GetRawDataInput();
-            testValue = new Data();
-            testValue.ReadData(input);
-        }
     }
 }

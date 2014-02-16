@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Proxy
                 if (init)
                 {
                     local.Set(step);
-                    residue.Set((int) (id%BlockSize) + 1);
+                    residue.Set((int) (id % BlockSize) + 1);
                 }
                 return init;
             }
@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Proxy
             return local.Get()*BlockSize + value;
         }
 
-        protected internal override void OnDestroy()
+        protected override void OnDestroy()
         {
             atomicLong.Destroy();
             residue = null;

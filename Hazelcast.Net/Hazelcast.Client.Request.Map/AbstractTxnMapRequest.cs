@@ -1,10 +1,15 @@
+using System;
+using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Request.Transaction;
+using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Net.Ext;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public abstract class AbstractTxnMapRequest : IPortable
+    public abstract class AbstractTxnMapRequest : BaseTransactionRequest
     {
         public enum TxnMapRequestType
         {
@@ -23,17 +28,16 @@ namespace Hazelcast.Client.Request.Map
             KeysetByPredicate = 13,
             Values = 14,
             ValuesByPredicate = 15,
-            GetForUpdate = 16
+            GetForUpdate = 16,
+            PuttWithTTL = 17
         }
 
-        internal Data key;
-
         internal string name;
-        internal Data newValue;
-
         internal TxnMapRequestType requestType;
-
+        internal Data key;
         internal Data value;
+        internal Data newValue;
+        internal long ttl = -1;
 
         protected AbstractTxnMapRequest()
         {
@@ -62,13 +66,19 @@ namespace Hazelcast.Client.Request.Map
             this.newValue = newValue;
         }
 
-        public virtual int GetFactoryId()
+        public AbstractTxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, long ttl, TimeUnit timeUnit)
+            : this(name, requestType, key, value)
+        {
+            this.ttl = timeUnit.ToMillis(ttl);
+        }
+
+        public override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteInt("t", (int) requestType);
@@ -77,26 +87,12 @@ namespace Hazelcast.Client.Request.Map
             IOUtil.WriteNullableData(output, value);
             IOUtil.WriteNullableData(output, newValue);
             WriteDataInner(output);
+            output.WriteLong(ttl);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            requestType = (TxnMapRequestType) reader.ReadInt("t");
-            IObjectDataInput input = reader.GetRawDataInput();
-            key = IOUtil.ReadNullableData(input);
-            value = IOUtil.ReadNullableData(input);
-            newValue = IOUtil.ReadNullableData(input);
-            ReadDataInner(input);
-        }
-
-        public abstract int GetClassId();
 
         /// <exception cref="System.IO.IOException"></exception>
         protected internal abstract void WriteDataInner(IObjectDataOutput writer);
 
-        /// <exception cref="System.IO.IOException"></exception>
-        protected internal abstract void ReadDataInner(IObjectDataInput reader);
     }
 }

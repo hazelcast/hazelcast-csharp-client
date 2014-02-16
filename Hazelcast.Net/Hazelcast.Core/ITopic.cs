@@ -44,11 +44,5 @@ namespace Hazelcast.Core
         /// <returns>true if registration is removed, false otherwise</returns>
         bool RemoveMessageListener(string registrationId);
 
-        //    /**
-        //     * Returns statistics of this topic,like total number of publishes/receives
-        //     *
-        //     * @return statistics
-        //     */
-        //    LocalTopicStats getLocalTopicStats();
     }
 }

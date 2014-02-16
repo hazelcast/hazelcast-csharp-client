@@ -1,9 +1,10 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Semaphore
 {
-    public abstract class SemaphoreRequest : IPortable
+    public abstract class SemaphoreRequest : ClientRequest
     {
         internal string name;
 
@@ -19,25 +20,17 @@ namespace Hazelcast.Client.Request.Concurrent.Semaphore
             this.permitCount = permitCount;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return SemaphorePortableHook.FId;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteInt("p", permitCount);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            permitCount = reader.ReadInt("p");
-        }
-
-        public abstract int GetClassId();
     }
 }

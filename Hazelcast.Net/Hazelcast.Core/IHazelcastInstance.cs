@@ -32,7 +32,7 @@ namespace Hazelcast.Core
         /// <remarks>Returns the distributed set instance with the specified name.</remarks>
         /// <param name="name">name of the distributed set</param>
         /// <returns>distributed set instance with the specified name</returns>
-        IHazelcastSet<E> GetSet<E>(string name);
+        IHSet<E> GetSet<E>(string name);
 
         /// <summary>Returns the distributed list instance with the specified name.</summary>
         /// <remarks>
@@ -41,13 +41,13 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="name">name of the distributed list</param>
         /// <returns>distributed list instance with the specified name</returns>
-        IHazelcastList<E> GetList<E>(string name);
+        IHList<E> GetList<E>(string name);
 
         /// <summary>Returns the distributed map instance with the specified name.</summary>
         /// <remarks>Returns the distributed map instance with the specified name.</remarks>
         /// <param name="name">name of the distributed map</param>
         /// <returns>distributed map instance with the specified name</returns>
-        IHazelcastMap<K, V> GetMap<K, V>(string name);
+        IMap<K, V> GetMap<K, V>(string name);
 
         /// <summary>Returns the distributed multimap instance with the specified name.</summary>
         /// <remarks>Returns the distributed multimap instance with the specified name.</remarks>
@@ -69,7 +69,7 @@ namespace Hazelcast.Core
         ///     by this dead member will be removed so that these locks can be
         ///     available for live members immediately.
         ///     <pre>
-        ///         Lock lock = hazelcastInstance.getLock("PROCESS_LOCK");
+        ///         Lock lock = hazelcastInstance.GetLock("PROCESS_LOCK");
         ///         lock.lock();
         ///         try {
         ///         // process
@@ -82,9 +82,6 @@ namespace Hazelcast.Core
         /// <returns>distributed lock instance for the specified key.</returns>
         ILock GetLock(string key);
 
-        //[Obsolete(@"will be removed in Hazelcast 3.2. Use GetLock(string) instead.")]
-        //ILock GetLock(object key);
-
         /// <summary>Returns the ICluster that this Hazelcast instance is part of.</summary>
         /// <remarks>
         ///     Returns the ICluster that this Hazelcast instance is part of.
@@ -96,70 +93,56 @@ namespace Hazelcast.Core
         ICluster GetCluster();
 
         /// <summary>Returns the local Endpoint which this IHazelcastInstance is belongs to.</summary>
-        /// <remarks>
-        ///     Returns the local Endpoint which this IHazelcastInstance is belongs to.
-        ///     <p />
-        ///     Returned endpoint will be a
-        ///     <see cref="IMember">IMember</see>
-        ///     instance for cluster nodes
-        ///     and a
-        ///     <see cref="IClient">IClient</see>
-        ///     instance for clients.
-        /// </remarks>
-        /// <seealso cref="IMember">IMember</seealso>
-        /// <seealso cref="IClient">IClient</seealso>
         /// <returns>local endpoint</returns>
-        IClient GetLocalEndpoint();
+        IEndpoint GetLocalEndpoint();
 
-        /// <summary>
-        ///     Returns the distributed executor service for the given
-        ///     name.
-        /// </summary>
-        /// <remarks>
-        ///     Returns the distributed executor service for the given
-        ///     name.
-        ///     Executor service enables you to run your <tt>Runnable</tt>s and <tt>Callable</tt>s
-        ///     on the Hazelcast cluster.
-        ///     <p />
-        ///     <p>
-        ///         <b>Note:</b> Note that it don't support invokeAll/Any
-        ///         and don't have standard shutdown behavior
-        ///     </p>
-        /// </remarks>
-        /// <param name="name">name of the executor service</param>
-        /// <returns>executor service for the given name</returns>
-        IExecutorService GetExecutorService(string name);
+        ///// <summary>
+        /////     Returns the distributed executor service for the given
+        /////     name.
+        ///// </summary>
+        ///// <remarks>
+        /////     Returns the distributed executor service for the given
+        /////     name.
+        /////     Executor service enables you to run your <tt>Runnable</tt>s and <tt>Callable</tt>s
+        /////     on the Hazelcast cluster.
+        /////     <p />
+        /////     <p>
+        /////         <b>Note:</b> Note that it don't support invokeAll/Any
+        /////         and don't have standard shutdown behavior
+        /////     </p>
+        ///// </remarks>
+        ///// <param name="name">name of the executor service</param>
+        ///// <returns>executor service for the given name</returns>
+        //IExecutorService GetExecutorService(string name);
 
-        /// <summary>
-        ///     Executes given transactional task in current thread using default options
-        ///     and returns the result of the task.
-        /// </summary>
-        /// <remarks>
-        ///     Executes given transactional task in current thread using default options
-        ///     and returns the result of the task.
-        /// </remarks>
-        /// <param name="task">task to be executed</param>
-        /// <?></?>
-        /// 
-        /// <returns>returns result of transactional task</returns>
-        /// <exception cref="Hazelcast.Transaction.TransactionException">if an error occurs during transaction.</exception>
-        T ExecuteTransaction<T>(ITransactionalTask<T> task);
+        ///// <summary>
+        /////     Executes given transactional task in current thread using default options
+        /////     and returns the result of the task.
+        ///// </summary>
+        ///// <remarks>
+        /////     Executes given transactional task in current thread using default options
+        /////     and returns the result of the task.
+        ///// </remarks>
+        ///// <param name="task">task to be executed</param>
+        ///// 
+        ///// <returns>returns result of transactional task</returns>
+        ///// <exception cref="Hazelcast.Transaction.TransactionException">if an error occurs during transaction.</exception>
+        //T ExecuteTransaction<T>(ITransactionalTask<T> task);
 
-        /// <summary>
-        ///     Executes given transactional task in current thread using given options
-        ///     and returns the result of the task.
-        /// </summary>
-        /// <remarks>
-        ///     Executes given transactional task in current thread using given options
-        ///     and returns the result of the task.
-        /// </remarks>
-        /// <param name="options">options for this transactional task</param>
-        /// <param name="task">task to be executed</param>
-        /// <?></?>
-        /// 
-        /// <returns>returns result of transactional task</returns>
-        /// <exception cref="Hazelcast.Transaction.TransactionException">if an error occurs during transaction.</exception>
-        T ExecuteTransaction<T>(TransactionOptions options, ITransactionalTask<T> task);
+        ///// <summary>
+        /////     Executes given transactional task in current thread using given options
+        /////     and returns the result of the task.
+        ///// </summary>
+        ///// <remarks>
+        /////     Executes given transactional task in current thread using given options
+        /////     and returns the result of the task.
+        ///// </remarks>
+        ///// <param name="options">options for this transactional task</param>
+        ///// <param name="task">task to be executed</param>
+        ///// 
+        ///// <returns>returns result of transactional task</returns>
+        ///// <exception cref="Hazelcast.Transaction.TransactionException">if an error occurs during transaction.</exception>
+        //T ExecuteTransaction<T>(TransactionOptions options, ITransactionalTask<T> task);
 
         /// <summary>Creates a new ITransactionContext associated with the current thread using default options.</summary>
         /// <remarks>Creates a new ITransactionContext associated with the current thread using default options.</remarks>
@@ -287,7 +270,6 @@ namespace Hazelcast.Core
 
         /// <param name="serviceName">name of the service</param>
         /// <param name="name">name of the object</param>
-        /// <?></?>
         /// 
         /// <returns>IDistributedObject created by the service</returns>
         T GetDistributedObject<T>(string serviceName, string name) where T : IDistributedObject;

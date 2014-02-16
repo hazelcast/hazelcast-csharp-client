@@ -11,12 +11,11 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientTxnQueueTest:HazelcastBaseTest
 	{
-        internal const string name = "ClientTxnQueueTest";
+        //internal const string name = "ClientTxnQueueTest";
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
             //map = client.GetMap<object, object>(name);
         }
 
@@ -30,8 +29,8 @@ namespace Hazelcast.Client.Test
         /// <exception cref="System.Exception"></exception>
 		[Test]
 		public virtual void TestTransactionalOfferPoll1()
-		{
-			string name = "testTransactionalOfferPoll1";
+        {
+            string name = Name;//"testTransactionalOfferPoll1";
 			ITransactionContext context = client.NewTransactionContext();
 			context.BeginTransaction();
             ITransactionalQueue<string> q = context.GetQueue<string>(name);
@@ -46,50 +45,65 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void TestTransactionalOfferPoll2()
 		{
-			string name0 = "defQueue0";
-			string name1 = "defQueue1";
-            CountdownEvent latch = new CountdownEvent(1);
+		    ITransactionContext context=null;
+            try
+            {
+                //string name0 = "qqq";
+                string name0 = Name;//"defQueue0";
+                string name1 = Name;//"defQueue1";
+                
+                var latch = new ManualResetEvent(false);
+                var queue = client.GetQueue<string>(name0);
+                var t = new Thread(delegate()
+                {
+                    try
+                    {
+                        latch.WaitOne();
+                        //Thread.Sleep(3000);
+                        queue.Offer("item0");
+                        
+                    }
+                    catch (Exception e)
+                    {
+                        Assert.Fail();
+                    }
+                });
+                t.Start();
 
-		    var t = new Thread(delegate(object o)
-		    {
+                context = client.NewTransactionContext();
+                context.BeginTransaction();
+                ITransactionalQueue<string> q0 = context.GetQueue<string>(name0);
+                string s = null;
+                latch.Set();
+                t.Join();
                 try
                 {
-                    latch.Wait(TimeSpan.FromSeconds(5));
-                    Thread.Sleep(3000);
-                    client.GetQueue<string>(name0).Offer("item0");
+                    s = q0.Poll(20, TimeUnit.SECONDS);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Assert.Fail(e.Message);
                 }
-		    });
-            t.Start();
+                Assert.AreEqual("item0", s);
+                context.CommitTransaction();
+                context = null;
+                Assert.AreEqual(0, queue.Count);
+            }
+            finally
+            {
+                if (context != null)
+                {
+                    context.RollbackTransaction();
+                }
 
-			ITransactionContext context = client.NewTransactionContext();
-			context.BeginTransaction();
-            ITransactionalQueue<string> q0 = context.GetQueue<string>(name0);
-            ITransactionalQueue<string> q1 = context.GetQueue<string>(name1);
-			string s = null;
-			latch.Signal();
-			try
-			{
-				s = q0.Poll(10, TimeUnit.SECONDS);
-			}
-			catch (Exception e)
-			{
-				Assert.Fail(e.Message);
-			}
-			Assert.AreEqual("item0", s);
-			q1.Offer(s);
-			context.CommitTransaction();
-            Assert.AreEqual(0, client.GetQueue<string>(name0).Count);
-            Assert.AreEqual("item0", client.GetQueue<string>(name1).Poll());
+            }
 		}
 
 		/// <exception cref="System.Exception"></exception>
 		[Test]
 		public virtual void TestTransactionalPeek()
 		{
-			string name = "defQueue";
+            string name = Name;//"defQueue";
 			ITransactionContext context = client.NewTransactionContext();
 			context.BeginTransaction();
             ITransactionalQueue<string> q = context.GetQueue<string>(name);

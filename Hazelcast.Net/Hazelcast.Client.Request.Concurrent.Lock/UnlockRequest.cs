@@ -9,11 +9,13 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
         {
         }
 
-        public UnlockRequest(Data key, int threadId) : base(key, threadId)
+        public UnlockRequest(Data key, long threadId)
+            : base(key, threadId, default(bool))
         {
         }
 
-        public UnlockRequest(Data key, int threadId, bool force) : base(key, threadId, force)
+        public UnlockRequest(Data key, long threadId, bool force)
+            : base(key, threadId, force)
         {
         }
 

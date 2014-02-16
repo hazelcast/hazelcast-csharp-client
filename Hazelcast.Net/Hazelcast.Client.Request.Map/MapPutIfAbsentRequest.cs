@@ -9,7 +9,7 @@ namespace Hazelcast.Client.Request.Map
         {
         }
 
-        public MapPutIfAbsentRequest(string name, Data key, Data value, int threadId, long ttl)
+        public MapPutIfAbsentRequest(string name, Data key, Data value, long threadId, long ttl)
             : base(name, key, value, threadId, ttl)
         {
         }

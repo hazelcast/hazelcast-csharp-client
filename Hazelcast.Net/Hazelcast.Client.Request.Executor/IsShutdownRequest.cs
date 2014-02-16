@@ -6,8 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Executor
 {
-    [Serializable]
-    public class IsShutdownRequest : IIdentifiedDataSerializable, IRetryableRequest
+    public class IsShutdownRequest : ClientRequest, IRetryableRequest
     {
         internal string name;
 
@@ -20,31 +19,21 @@ namespace Hazelcast.Client.Request.Executor
             this.name = name;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return ExecutorDataSerializerHook.FId;
         }
 
-        public virtual int GetId()
+        public override int GetClassId()
         {
             return ExecutorDataSerializerHook.IsShutdownRequest;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WriteData(IObjectDataOutput output)
+        public override void WritePortable(IPortableWriter writer)
         {
-            output.WriteUTF(name);
+            writer.WriteUTF("n", name);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadData(IObjectDataInput input)
-        {
-            name = input.ReadUTF();
-        }
 
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

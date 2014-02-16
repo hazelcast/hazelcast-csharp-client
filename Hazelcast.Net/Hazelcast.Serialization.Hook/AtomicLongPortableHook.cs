@@ -12,6 +12,11 @@ namespace Hazelcast.Serialization.Hook
         public const int GetAndAdd = 3;
         public const int GetAndSet = 4;
         public const int Set = 5;
+        public const int Apply = 6;
+        public const int Alter = 7;
+        public const int AlterAndGet = 8;
+        public const int GetAndAlter = 9;
+        public const int Size = GetAndAlter +1;
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.AtomicLongPortableFactory, -17);
 
         public virtual int GetFactoryId()
@@ -21,13 +26,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[Set + 1];
-            constructors[AddAndGet] = arg => new AddAndGetRequest();
-            constructors[CompareAndSet] = arg => new CompareAndSetRequest();
-            constructors[GetAndAdd] = arg => new GetAndAddRequest();
-            constructors[GetAndSet] = arg => new GetAndSetRequest();
-            constructors[Set] = arg => new SetRequest();
-            return new ArrayPortableFactory(constructors);
+            return new ArrayPortableFactory();
         }
 
         public virtual ICollection<IClassDefinition> GetBuiltinDefinitions()

@@ -30,16 +30,10 @@ namespace Hazelcast.Serialization.Hook
         public IDataSerializableFactory CreateFactory()
         {
             var constructors = new Func<int, IIdentifiedDataSerializable>[Len];
-            constructors[Put] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Get] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[Remove] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[PutBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
-            constructors[RemoveBackup] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
             constructors[KeySet] = delegate { return new MapKeySet(); };
             constructors[Values] = delegate { return new MapValueCollection(); };
             constructors[EntrySet] = delegate { return new MapEntrySet(); };
             constructors[EntryView] = delegate { return new SimpleEntryView<object, object>(); };
-            constructors[MapStats] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };
             constructors[QueryResultEntry] = delegate { return new QueryResultEntry();};
             constructors[QueryResultSet] = delegate { return new QueryResultSet(); };
             return new ArrayDataSerializableFactory(constructors);

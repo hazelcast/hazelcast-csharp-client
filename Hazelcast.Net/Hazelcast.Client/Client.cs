@@ -26,7 +26,7 @@ namespace Hazelcast.Client
 
         public virtual ClientType GetClientType()
         {
-            return ClientType.Java;
+            return ClientType.Csharp;
         }
     }
 }

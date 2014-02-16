@@ -15,7 +15,10 @@ namespace Hazelcast.Util
 
 
     /// <exception cref="System.IO.IOException"></exception>
-    internal delegate Connection NewConnection(Address address);
+    internal delegate ClientConnection NewConnection(Address address);
 
-    public delegate void Authenticator(IConnection connection);
+    internal delegate void Authenticator(ClientConnection connection);
+
+    public delegate void DistributedEventHandler(object _event);
+    
 }

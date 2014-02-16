@@ -1,10 +1,11 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 using Hazelcast.Transaction;
 
 namespace Hazelcast.Client.Request.Transaction
 {
-    public class CreateTransactionRequest : IPortable
+    public class CreateTransactionRequest : BaseTransactionRequest
     {
         internal TransactionOptions options;
 
@@ -17,27 +18,21 @@ namespace Hazelcast.Client.Request.Transaction
             this.options = options;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return ClientTxnPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return ClientTxnPortableHook.Create;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             options.WriteData(writer.GetRawDataOutput());
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            options = new TransactionOptions();
-            options.ReadData(reader.GetRawDataInput());
-        }
     }
 }

@@ -35,11 +35,5 @@ namespace Hazelcast.Client.Request.Map
             base.WritePortable(writer);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            base.ReadPortable(reader);
-        }
     }
 }

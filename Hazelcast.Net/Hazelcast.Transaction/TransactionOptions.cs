@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;

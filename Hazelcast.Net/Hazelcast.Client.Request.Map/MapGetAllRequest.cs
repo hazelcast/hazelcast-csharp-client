@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapGetAllRequest : IPortable, IRetryableRequest
+    public class MapGetAllRequest : ClientRequest, IRetryableRequest
     {
         private readonly ICollection<Data> keys = new HashSet<Data>();
         protected internal string name;
@@ -21,18 +21,18 @@ namespace Hazelcast.Client.Request.Map
             this.keys = keys;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return MapPortableHook.GetAll;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteInt("size", keys.Count);
@@ -46,21 +46,5 @@ namespace Hazelcast.Client.Request.Map
             }
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            int size = reader.ReadInt("size");
-            if (size > 0)
-            {
-                IObjectDataInput input = reader.GetRawDataInput();
-                for (int i = 0; i < size; i++)
-                {
-                    var key = new Data();
-                    key.ReadData(input);
-                    keys.Add(key);
-                }
-            }
-        }
     }
 }

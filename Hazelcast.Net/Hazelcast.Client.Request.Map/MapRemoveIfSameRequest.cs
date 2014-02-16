@@ -1,22 +1,23 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapRemoveIfSameRequest : IPortable
+    public class MapRemoveIfSameRequest : ClientRequest
     {
         protected internal Data key;
         protected internal string name;
 
-        protected internal int threadId;
+        protected internal long threadId;
         protected internal Data value;
 
         public MapRemoveIfSameRequest()
         {
         }
 
-        public MapRemoveIfSameRequest(string name, Data key, Data value, int threadId)
+        public MapRemoveIfSameRequest(string name, Data key, Data value, long threadId)
         {
             this.name = name;
             this.key = key;
@@ -24,41 +25,24 @@ namespace Hazelcast.Client.Request.Map
             this.threadId = threadId;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return MapPortableHook.RemoveIfSame;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            writer.WriteInt("t", threadId);
+            writer.WriteLong("t", threadId);
             IObjectDataOutput output = writer.GetRawDataOutput();
             key.WriteData(output);
             value.WriteData(output);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            threadId = reader.ReadInt("t");
-            IObjectDataInput input = reader.GetRawDataInput();
-            key = new Data();
-            key.ReadData(input);
-            value = new Data();
-            value.ReadData(input);
-        }
-
-        public virtual object GetKey()
-        {
-            return key;
         }
     }
 }

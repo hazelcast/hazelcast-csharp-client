@@ -1,28 +1,22 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Transaction
 {
-    public class CommitTransactionRequest : IPortable
+    public class CommitTransactionRequest : BaseTransactionRequest
     {
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return ClientTxnPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return ClientTxnPortableHook.Commit;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
-        {
-        }
+        public override void WritePortable(IPortableWriter writer){}
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-        }
     }
 }

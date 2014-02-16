@@ -53,7 +53,7 @@ namespace Hazelcast.IO.Serialization
 
         public string GetJavaClassName()
         {
-            throw new NotImplementedException();
+            return "com.hazelcast.nio.serialization.FieldDefinitionImpl";
         }
 
         public virtual FieldType GetFieldType()

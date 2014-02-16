@@ -4,7 +4,7 @@ namespace Hazelcast.Core
 {
     /// <summary>Base interface for all distributed objects.</summary>
     /// <remarks>Base interface for all distributed objects.</remarks>
-    /// <seealso cref="IHazelcastMap{K, V}">IMap&lt;K, V&gt;</seealso>
+    /// <seealso cref="IMapMap{K,V}">IMap&lt;K, V&gt;</seealso>
     /// <seealso cref="IQueue{E}">IQueue&lt;E&gt;</seealso>
     /// <seealso cref="IMultiMap{K,V}">IMultiMap&lt;K, V&gt;</seealso>
     /// <seealso cref="ITopic{E}">ITopic&lt;E&gt;</seealso>
@@ -15,11 +15,6 @@ namespace Hazelcast.Core
     /// <seealso cref="ITransactionalMultiMap{K,V}">ITransactionalMultiMap&lt;K, V&gt;</seealso>
     public interface IDistributedObject
     {
-        /// <summary>Returns the unique id for this object.</summary>
-        /// <remarks>Returns the unique id for this object.</remarks>
-        /// <returns>id the of this instance</returns>
-        [Obsolete(@"use GetName() instead")]
-        object GetId();
 
         /// <summary>Returns the key of partition this IDistributedObject is assigned to.</summary>
         /// <remarks>

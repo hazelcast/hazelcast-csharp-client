@@ -4,9 +4,9 @@ namespace Hazelcast.Core
     ///     Item listener for
     ///     <see cref="IQueue{E}">IQueue&lt;E&gt;</see>
     ///     ,
-    ///     <see cref="IHazelcastSet{E}">IHazelcastSet&lt;E&gt;</see>
+    ///     <see cref="IHSet{E}">IHSet&lt;E&gt;</see>
     ///     and
-    ///     <see cref="IHazelcastList{E}">IHazelcastList&lt;E&gt;</see>
+    ///     <see cref="IHList{E}">IHList&lt;E&gt;</see>
     /// </summary>
     public interface IItemListener<E> : IEventListener
     {

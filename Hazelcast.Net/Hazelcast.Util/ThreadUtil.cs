@@ -4,7 +4,7 @@ namespace Hazelcast.Util
 {
     public sealed class ThreadUtil
     {
-        public static int GetThreadId()
+        public static long GetThreadId()
         {
             return Thread.CurrentThread.ManagedThreadId;
         }

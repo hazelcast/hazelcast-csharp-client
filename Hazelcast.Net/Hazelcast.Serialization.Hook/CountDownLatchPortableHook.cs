@@ -20,12 +20,7 @@ namespace Hazelcast.Serialization.Hook
 
         public IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[GetCount + 1];
-            constructors[CountDown] = arg => new CountDownRequest();
-            constructors[Await] = arg => new AwaitRequest();
-            constructors[SetCount] = arg => new SetCountRequest();
-            constructors[GetCount] = arg => new GetCountRequest();
-            return new ArrayPortableFactory(constructors);
+            return new ArrayPortableFactory();
         }
 
         public ICollection<IClassDefinition> GetBuiltinDefinitions()

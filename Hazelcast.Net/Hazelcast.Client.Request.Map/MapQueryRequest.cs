@@ -32,11 +32,5 @@ namespace Hazelcast.Client.Request.Map
             output.WriteObject(predicate);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        protected internal override void ReadPortableInner(IPortableReader reader)
-        {
-            IObjectDataInput input = reader.GetRawDataInput();
-            predicate = input.ReadObject<IPredicate<K, V>>();
-        }
     }
 }

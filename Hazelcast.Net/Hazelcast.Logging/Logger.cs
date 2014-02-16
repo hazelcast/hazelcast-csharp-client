@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 namespace Hazelcast.Logging
 {
@@ -33,15 +34,19 @@ namespace Hazelcast.Logging
 
         public static ILoggerFactory NewLoggerFactory(string loggerType)
         {
-            ILoggerFactory loggerFactory = null;
+            ILoggerFactory _loggerFactory = null;
             string loggerClass = Environment.GetEnvironmentVariable("hazelcast.logging.class");
-            //TODO FIX DIFFERENT LOGGERS
-
-            if (loggerFactory == null)
+            if ("console".Equals(loggerClass))
             {
-                loggerFactory = new TraceLogFactory();
+                _loggerFactory = new ConsoleLogFactory();
             }
-            return loggerFactory;
+
+            if (_loggerFactory == null)
+            {
+                _loggerFactory = (Debugger.IsAttached ? (ILoggerFactory) new TraceLogFactory() : new NoLogFactory());
+            }
+
+            return _loggerFactory;
         }
     }
 }

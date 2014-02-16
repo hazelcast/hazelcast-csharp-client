@@ -1,28 +1,44 @@
+using System;
 using System.Text;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client
 {
-    public sealed class GenericError : IPortable
+    public sealed class GenericError :Exception, IPortable
     {
-        private string details;
+        private string name;
         private string message;
-
+        private string details;
         private int type;
+
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public string Message
+        {
+            get { return message; }
+        }
+
+        public string Details
+        {
+            get { return details; }
+        }
+
+        public int Type
+        {
+            get { return type; }
+        }
 
         public GenericError()
         {
         }
 
-        public GenericError(string message, int type)
+        public GenericError(string name, string message, string details, int type)
         {
-            this.message = message;
-            this.type = type;
-        }
-
-        public GenericError(string message, string details, int type)
-        {
+            this.name = name;
             this.message = message;
             this.details = details;
             this.type = type;
@@ -41,6 +57,7 @@ namespace Hazelcast.Client
         /// <exception cref="System.IO.IOException"></exception>
         public void WritePortable(IPortableWriter writer)
         {
+            writer.WriteUTF("n", name);
             writer.WriteUTF("m", message);
             writer.WriteUTF("d", details);
             writer.WriteInt("t", type);
@@ -49,25 +66,17 @@ namespace Hazelcast.Client
         /// <exception cref="System.IO.IOException"></exception>
         public void ReadPortable(IPortableReader reader)
         {
+            name = reader.ReadUTF("n");
             message = reader.ReadUTF("m");
             details = reader.ReadUTF("d");
             type = reader.ReadInt("t");
         }
 
-        public string GetMessage()
-        {
-            return message;
-        }
-
-        public string GetDetails()
-        {
-            return details;
-        }
-
         public override string ToString()
         {
             var sb = new StringBuilder("GenericError{");
-            sb.Append("message='").Append(message).Append('\'');
+            sb.Append("name='").Append(name).Append('\'');
+            sb.Append(", message='").Append(message).Append('\'');
             sb.Append(", type=").Append(type);
             sb.Append('}');
             return sb.ToString();

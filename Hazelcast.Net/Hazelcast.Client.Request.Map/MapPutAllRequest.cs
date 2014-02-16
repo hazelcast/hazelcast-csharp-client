@@ -1,3 +1,4 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Map;
@@ -5,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapPutAllRequest : IPortable
+    public class MapPutAllRequest : ClientRequest
     {
         private MapEntrySet entrySet;
         protected internal string name;
@@ -20,31 +21,23 @@ namespace Hazelcast.Client.Request.Map
             this.entrySet = entrySet;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return MapPortableHook.PutAll;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             IObjectDataOutput output = writer.GetRawDataOutput();
             entrySet.WriteData(output);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            IObjectDataInput input = reader.GetRawDataInput();
-            entrySet = new MapEntrySet();
-            entrySet.ReadData(input);
-        }
     }
 }

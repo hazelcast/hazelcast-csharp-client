@@ -28,12 +28,5 @@ namespace Hazelcast.Client.Request.Multimap
             key.WriteData(writer.GetRawDataOutput());
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            key = new Data();
-            key.ReadData(reader.GetRawDataInput());
-        }
     }
 }

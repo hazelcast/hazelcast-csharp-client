@@ -4,7 +4,7 @@ namespace Hazelcast.Core
 {
     /// <summary>
     ///     Transactional implementation of
-    ///     <see cref="IHazelcastSet{E}">IHazelcastSet&lt;E&gt;</see>
+    ///     <see cref="IHSet{E}">IHSet&lt;E&gt;</see>
     ///     .
     /// </summary>
     public interface ITransactionalSet<E> : ITransactionalObject

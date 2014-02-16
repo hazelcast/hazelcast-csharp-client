@@ -11,10 +11,9 @@ namespace Hazelcast.Client.Test
 		internal static IIdGenerator i;
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            i = client.GetIdGenerator(name);
+            i = client.GetIdGenerator(Name);
         }
 
         [TearDown]

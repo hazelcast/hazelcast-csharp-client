@@ -1,3 +1,4 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -5,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapAddEntryListenerRequest<K, V> : IPortable
+    public class MapAddEntryListenerRequest<K, V> : ClientRequest
     {
         private IPredicate<K, V> predicate;
 
@@ -34,18 +35,18 @@ namespace Hazelcast.Client.Request.Map
             this.predicate = predicate;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return MapPortableHook.AddEntryListener;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("name", name);
             writer.WriteBoolean("i", includeValue);
@@ -72,30 +73,6 @@ namespace Hazelcast.Client.Request.Map
             }
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("name");
-            includeValue = reader.ReadBoolean("i");
-            bool hasKey = reader.ReadBoolean("key");
-            if (reader.ReadBoolean("pre"))
-            {
-                //TODO PREDICATE
-                IObjectDataInput input = reader.GetRawDataInput();
-                predicate = input.ReadObject<IPredicate<K, V>>();
-                if (hasKey)
-                {
-                    key = input.ReadObject<Data>();
-                }
-            }
-            else
-            {
-                if (hasKey)
-                {
-                    IObjectDataInput input = reader.GetRawDataInput();
-                    key = input.ReadObject<Data>();
-                }
-            }
-        }
+   
     }
 }

@@ -39,20 +39,5 @@ namespace Hazelcast.Client.Request.Collection
                 value.WriteData(output);
             }
         }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            IObjectDataInput input = reader.GetRawDataInput();
-            int size = input.ReadInt();
-            valueSet = new HashSet<Data>();
-            for (int i = 0; i < size; i++)
-            {
-                var value = new Data();
-                value.ReadData(input);
-                valueSet.Add(value);
-            }
-        }
     }
 }

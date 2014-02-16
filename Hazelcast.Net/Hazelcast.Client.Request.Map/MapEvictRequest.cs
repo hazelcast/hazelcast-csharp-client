@@ -1,54 +1,46 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapEvictRequest : IPortable
+    public class MapEvictRequest : ClientRequest
     {
         private Data key;
         private string name;
 
-        private int threadId;
+        private long threadId;
 
         public MapEvictRequest()
         {
         }
 
-        public MapEvictRequest(string name, Data key, int threadId)
+        public MapEvictRequest(string name, Data key, long threadId)
         {
             this.name = name;
             this.key = key;
             this.threadId = threadId;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return MapPortableHook.Evict;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            writer.WriteInt("t", threadId);
+            writer.WriteLong("t", threadId);
             IObjectDataOutput output = writer.GetRawDataOutput();
             key.WriteData(output);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            threadId = reader.ReadInt("t");
-            IObjectDataInput input = reader.GetRawDataInput();
-            key = new Data();
-            key.ReadData(input);
-        }
     }
 }

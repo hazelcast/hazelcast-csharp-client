@@ -7,7 +7,7 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Map
 {
     [Serializable]
-    public class MapValueCollection : IIdentifiedDataSerializable
+    public class MapValueCollection : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         internal ICollection<Data> values;
 
@@ -44,10 +44,6 @@ namespace Hazelcast.Map
             }
         }
 
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
-        }
 
         public virtual int GetFactoryId()
         {

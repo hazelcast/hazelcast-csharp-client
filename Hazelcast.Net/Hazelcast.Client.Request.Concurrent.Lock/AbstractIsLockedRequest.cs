@@ -1,60 +1,34 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Request.Concurrent.Lock
 {
-    public abstract class AbstractIsLockedRequest : IPortable
+    public abstract class AbstractIsLockedRequest : ClientRequest
     {
         protected internal Data key;
 
-        private int threadId;
+        private long threadId;
 
-        public AbstractIsLockedRequest()
+        protected AbstractIsLockedRequest()
         {
         }
 
-        public AbstractIsLockedRequest(Data key)
-        {
-            this.key = key;
-            threadId = -1;
-        }
-
-        protected internal AbstractIsLockedRequest(Data key, int threadId)
+        protected AbstractIsLockedRequest(Data key, long threadId = 0)
         {
             this.key = key;
             this.threadId = threadId;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
-            writer.WriteInt("tid", threadId);
+            writer.WriteLong("tid", threadId);
             IObjectDataOutput output = writer.GetRawDataOutput();
             key.WriteData(output);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            threadId = reader.ReadInt("tid");
-            IObjectDataInput input = reader.GetRawDataInput();
-            key = new Data();
-            key.ReadData(input);
-        }
 
-        public abstract int GetClassId();
-
-        public abstract int GetFactoryId();
-
-        protected internal object GetKey()
-        {
-            return key;
-        }
-
-        public string GetServiceName()
-        {
-            return ServiceNames.Lock;
-        }
     }
 }

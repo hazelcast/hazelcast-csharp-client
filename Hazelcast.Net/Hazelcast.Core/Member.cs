@@ -1,32 +1,29 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using Hazelcast.Client.Request.Cluster;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 using Hazelcast.Serialization.Hook;
+using Hazelcast.Util;
 
 namespace Hazelcast.Core
 {
     [Serializable]
-    public sealed class Member : IMember, IIdentifiedDataSerializable
+    public sealed class Member :IdentifiedDataSerializable, IMember, IIdentifiedDataSerializable
     {
         private readonly bool localMember;
 
         private Address address;
 
-        //[NonSerialized] 
-        //private volatile long lastPing = 0;
-
-        //[NonSerialized] 
-        //private volatile long lastRead;
-
-        //[NonSerialized] 
-        //private volatile long lastWrite = 0;
-
-        [NonSerialized] private volatile ILogger logger;
+        private volatile ILogger logger;
+        
         private string uuid;
 
+        private readonly ConcurrentDictionary<string,object> _attributes= new ConcurrentDictionary<string, object>(); 
         public Member()
         {
         }
@@ -84,25 +81,19 @@ namespace Hazelcast.Core
             return uuid;
         }
 
-        //FIXME REFACTOR
-        //    public void setHazelcastInstance(IHazelcastInstance hazelcastInstance) {
-        ////        if (hazelcastInstance instanceof HazelcastInstanceImpl) {
-        ////            HazelcastInstanceImpl instance = (HazelcastInstanceImpl) hazelcastInstance;
-        ////            localMember = instance.node.address.equals(address);
-        ////            logger = instance.node.getLogger(this.getClass().getName());
-        ////        }
-        //    }
         /// <exception cref="System.IO.IOException"></exception>
         public void ReadData(IObjectDataInput input)
         {
             address = new Address();
             address.ReadData(input);
             uuid = input.ReadUTF();
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
+            int size = input.ReadInt();
+            for (int i = 0; i < size; i++)
+            {
+                string key = input.ReadUTF();
+                object value = IOUtil.ReadAttributeValue(input);
+                _attributes.TryAdd(key, value);
+            }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -110,37 +101,13 @@ namespace Hazelcast.Core
         {
             address.WriteData(output);
             output.WriteUTF(uuid);
-        }
-
-        public int GetPort()
-        {
-            return address.GetPort();
-        }
-
-        public IPAddress GetInetAddress()
-        {
-            try
+            output.WriteInt(_attributes.Count);
+            foreach (var entry in _attributes)
             {
-                return address.GetInetAddress();
+                output.WriteUTF(entry.Key);
+                IOUtil.WriteAttributeValue(entry.Value,output);
             }
-            catch (Exception e)
-            {
-                if (logger != null)
-                {
-                    logger.Warning(e);
-                }
-                return null;
-            }
-        }
 
-        public IPEndPoint GetInetSocketAddress()
-        {
-            return GetSocketAddress();
-        }
-
-        internal void SetUuid(string uuid)
-        {
-            this.uuid = uuid;
         }
 
         public override string ToString()
@@ -196,5 +163,70 @@ namespace Hazelcast.Core
             }
             return true;
         }
+
+
+        public void UpdateAttribute(MapOperationType operationType, String key, Object value)
+        {
+            switch (operationType)
+            {
+                case MapOperationType.PUT:
+                    _attributes.TryAdd(key, value);
+                    break;
+                case MapOperationType.REMOVE:
+                    object _out;
+                    _attributes.TryRemove(key,out _out);
+                    break;
+            }
+        }
+        public IDictionary<string, object> GetAttributes()
+        {
+            return _attributes;
+        }
+
+        public object GetAttribute(string key)
+        {
+            object _out;
+            _attributes.TryGetValue(key,out _out);
+            return _out;
+        }
+
+        public T GetAttribute<T>(string key)
+        {
+            object _out;
+            _attributes.TryGetValue(key,out _out);
+            return (T)_out;
+        }
+
+        public void SetAttribute<T>(string key, T value)
+        {
+            if (!localMember)
+            {
+                throw new NotSupportedException("Attributes on remote members must not be changed");
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException("key");
+            }
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+            (_attributes as IDictionary<string,object>).Add(key,value);
+        }
+
+        public void RemoveAttribute(string key)
+        {
+            if (!localMember)
+            {
+                throw new NotSupportedException("Attributes on remote members must not be changed");
+            }
+            if (key == null)
+            {
+                throw new ArgumentNullException("key");
+            }
+            object removed;
+            _attributes.TryRemove(key, out removed);
+        }
+
     }
 }

@@ -1,0 +1,663 @@
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Spi;
+using Hazelcast.Config;
+using Hazelcast.Core;
+using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
+using Hazelcast.Logging;
+using Hazelcast.Util;
+using ICredentials = Hazelcast.Security.ICredentials;
+
+namespace Hazelcast.Client.Connection
+{
+    public class ClientConnectionManager : IClientConnectionManager
+    {
+        #region fields
+
+        public const int RetryCount = 20;
+        public const int ProcessThreadCount = 4;//must be even
+        private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
+
+        private readonly ConcurrentDictionary<Address, LinkedListNode<ClientConnection>> _addresses = new ConcurrentDictionary<Address, LinkedListNode<ClientConnection>>();
+        private readonly ConcurrentDictionary<string, int> _registrationMap = new ConcurrentDictionary<string, int>();
+        private readonly ConcurrentDictionary<string, string> _registrationAliasMap = new ConcurrentDictionary<string, string>();
+
+        private readonly LinkedList<ClientConnection> _clientConnections =new LinkedList<ClientConnection>();
+
+        private readonly ICredentials _credentials;
+
+        private readonly bool _redoOperation;
+        private readonly bool _smartRouting;
+
+        private readonly Authenticator authenticator;
+        private readonly HazelcastClient client;
+        private readonly Router router;
+
+        private readonly SocketInterceptor socketInterceptor;
+        private readonly SocketOptions socketOptions;
+        private readonly List<Thread> threads = new List<Thread>();
+        private volatile bool _live;
+
+        private volatile int _nextConnectionId;
+        LinkedListNode<ClientConnection> nextConnectionNode = null;
+        //private volatile int _whoisnextId;
+
+        private ClientConnection _ownerConnection;
+        private volatile ClientPrincipal principal;
+
+        #endregion
+
+        public ClientConnectionManager(HazelcastClient client, LoadBalancer loadBalancer, bool smartRouting = true)
+        {
+            this.client = client;
+            authenticator = ClusterAuthenticator;
+            router = new Router(loadBalancer);
+            _smartRouting = smartRouting;
+
+            ClientConfig config = client.GetClientConfig();
+            _redoOperation = config.GetNetworkConfig().IsRedoOperation();
+            _credentials = config.GetCredentials();
+
+            //init socketInterceptor
+            SocketInterceptorConfig sic = config.GetNetworkConfig().GetSocketInterceptorConfig();
+            if (sic != null && sic.IsEnabled())
+            {
+                //TODO SOCKET INTERCEPTOR
+                throw new NotImplementedException("Socket Interceptor not Implemented!!!");
+            }
+            socketInterceptor = null;
+
+            //        int connectionTimeout = config.getConnectionTimeout(); //TODO
+            socketOptions = config.GetNetworkConfig().GetSocketOptions();
+        }
+
+        #region IConnectionManager
+
+        public void Start()
+        {
+            if (_live)
+            {
+                return;
+            }
+            _live = true;
+            InitOwnerConnection();
+            StartProcessThreads();
+        }
+
+        public bool Shutdown()
+        {
+            if (!_live)
+            {
+                return _live;
+            }
+            _live = false;
+            try
+            {
+                foreach (Thread thread in threads)
+                {
+                    try
+                    {
+                        thread.Abort();
+                    }
+                    catch (Exception){}
+                }
+                threads.Clear();
+
+                var _itrNode = _clientConnections.Last;
+                if (_itrNode != null)
+                {
+                    while (_itrNode != null)
+                    {
+                        try
+                        {
+                            var nxt=_itrNode.Previous;
+                            _itrNode.Value.Close();
+                            _itrNode = nxt;
+                        }
+                        catch (Exception) { }
+                    }
+                }
+
+                _clientConnections.Clear();
+                //foreach (ClientConnection clientConnection in _clientConnections)
+                //{
+                //    try
+                //    {
+                //        clientConnection.Close();
+                //    }
+                //    catch (Exception) { }
+                //}
+
+                //Console.WriteLine("");
+                try
+                {
+                    _ownerConnection.Close();
+                }
+                catch (Exception) { }
+                //_ownerConnection = null;
+            }
+            catch (Exception e)
+            {
+                logger.Warning(e.Message);
+            }
+            _live = _ownerConnection != null && _ownerConnection.Live;
+            return _live;
+        }
+
+        public bool Live
+        {
+            get { return _live; }
+        }
+        public bool OwnerLive
+        {
+            get { return _ownerConnection != null && _ownerConnection.Live; }
+        }
+
+        public Address BindToRandomAddress()
+        {
+            CheckLive();
+            Address address = router.Next();
+            return _GetOrConnectWithRetry(address).GetRemoteEndpoint();
+        }
+
+        public object SendAndReceiveFromOwner(ClientRequest clientRequest)
+        {
+            if (_ownerConnection != null)
+            {
+                return _ownerConnection.SendAndReceive(clientRequest);
+            }
+            throw new HazelcastException("Cannot connect to Cluster");
+        }
+
+        public Data ReadFromOwner()
+        {
+            if (_ownerConnection != null)
+            {
+                return _ownerConnection.Read();
+            }
+            throw new HazelcastException("Cannot connect to Cluster");
+        }
+
+        public void FireConnectionEvent(bool disconnected)
+        {
+            var lifecycleService = (LifecycleService) client.GetLifecycleService();
+            LifecycleEvent.LifecycleState state = disconnected
+                ? LifecycleEvent.LifecycleState.ClientDisconnected
+                : LifecycleEvent.LifecycleState.ClientConnected;
+            lifecycleService.FireLifecycleEvent(state);
+
+            if (disconnected && _ownerConnection != null)
+            {
+                _ownerConnection.Close();
+            }
+        }
+
+        public void HandleMembershipEvent(MembershipEvent membershipEvent)
+        {
+            if (membershipEvent.GetEventType() == MembershipEvent.MemberRemoved)
+            {
+                Address address = membershipEvent.GetMember().GetAddress();
+                DestroyConnection(address);
+            }
+        }
+
+        public Address OwnerAddress()
+        {
+           return _ownerConnection != null ? _ownerConnection.GetRemoteEndpoint():null;
+        }
+
+        private void StartProcessThreads()
+        {
+            try
+            {
+                for (int i = 0; i < ProcessThreadCount; i++)
+                {
+                    var t = new Thread(ProcessClientConnections)
+                    {
+                        Name = "ProcessClientConnection" + i//,Priority = ThreadPriority.BelowNormal
+                    };
+                    threads.Add(t);
+                    t.Start();
+                }
+            }
+            catch (Exception e)
+            {
+                logger.Warning("COULD not start Read Write threads", e);
+            }
+        }
+
+        /// <summary>
+        ///     used by in & out threads the process the next connection
+        /// </summary>
+        /// <returns>next ClientConnection</returns>
+        internal ClientConnection NextProcessConnection()
+        {
+            try
+            {
+                if (nextConnectionNode == null)
+                {
+                   nextConnectionNode = _clientConnections.First;
+                }
+                for (;;)
+                {
+                    if (nextConnectionNode == null)
+                    {
+                        return null;
+                    }
+                    var current = nextConnectionNode;
+                    var newVal = nextConnectionNode.Next ?? nextConnectionNode.List.First;
+                    if (Interlocked.CompareExchange(ref nextConnectionNode, newVal, current) == current)
+                    {
+                        return current.Value;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                logger.Finest("NextProcessConnection problem...");
+            }
+            return null;
+        }
+
+        public Client GetLocalClient()
+        {
+            ClientPrincipal cp = principal;
+            IPEndPoint socketAddress = _ownerConnection != null ? _ownerConnection.GetLocalSocketAddress() : null;
+            string uuid = cp != null ? cp.GetUuid() : null;
+            return new Client(uuid, socketAddress);
+        }
+
+        internal void DestroyConnection(ClientConnection clientConnection)
+        {
+            if (clientConnection != null && !clientConnection.Live)
+            {
+                logger.Finest("ClientManager is Destroying Connection con:" + clientConnection);
+                DestroyConnection(clientConnection.GetRemoteEndpoint());
+            }
+        }
+
+        #endregion
+
+        #region ClientConnectionManager Privates
+        private void DestroyConnection(Address address)
+        {
+            if (address != null)
+            {
+                LinkedListNode<ClientConnection> linkedListNode=null;
+                lock ((_addresses))
+                {
+                    if (_addresses.TryRemove(address, out linkedListNode))
+                    {
+                        _clientConnections.Remove(linkedListNode);
+                    }
+                }
+
+                if (linkedListNode != null)
+                {
+                    DestroyConnection(linkedListNode.Value);
+                }
+
+            }
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        /// <exception cref="HazelcastException"></exception>
+        private ClientConnection TryGetNewConnection(Address address, Authenticator _authenticator, bool blocking)
+        {
+            CheckLive();
+            return GetNewConnection(address, _authenticator, blocking);
+        }
+
+        private ClientConnection GetNewConnection(Address address, Authenticator _authenticator, bool blocking)
+        {
+            lock (this)
+            {
+                int id = blocking ? -1 : _nextConnectionId;
+                var connection = new ClientConnection(this, id, address, socketOptions, client.GetSerializationService(),
+                    _redoOperation);
+                if (socketInterceptor != null)
+                {
+                    socketInterceptor.OnConnect(connection.GetSocket());
+                }
+                _authenticator(connection);
+                if (!blocking)
+                {
+                    connection.SwitchToNonBlockingMode();
+                    Interlocked.Increment(ref _nextConnectionId);
+                }
+                return connection;
+            }
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        private ClientConnection _GetOrConnectWithRetry(Address target)
+        {
+            int count = 0;
+            IOException lastError = null;
+            while (count < RetryCount)
+            {
+                try
+                {
+                    var theTarget = target;
+                    if (target == null || !isMember(target))
+                    {
+                        theTarget = router.Next();
+                    }
+                    if (theTarget == null)
+                    {
+                        logger.Severe("Address cannot be null here...");
+                    }
+                    return _GetOrConnect(theTarget, authenticator);
+                }
+                catch (IOException e)
+                {
+                    lastError = e;
+                }
+                target = null;
+                count++;
+            }
+            throw lastError;
+        }
+
+            
+        private bool isMember(Address target) 
+        {
+            var clientClusterService = client.GetClientClusterService();
+            return clientClusterService.GetMember(target) != null;
+        }
+
+
+        /// <exception cref="System.IO.IOException"></exception>
+        private ClientConnection _GetOrConnect(Address address, Authenticator _authenticator)
+        {
+            if (address == null)
+            {
+                throw new ArgumentException("address");
+            }
+            if (!_smartRouting)
+            {
+                address = _ownerConnection.GetRemoteEndpoint();
+            }
+            ClientConnection clientConnection = null;
+            if (!_addresses.ContainsKey(address))
+            {
+                lock (_addresses)
+                {
+                    if (!_addresses.ContainsKey(address))
+                    {
+                        clientConnection = TryGetNewConnection(address, _authenticator, false);
+                        var linkedListNode = _clientConnections.AddLast(clientConnection);
+                        _addresses.TryAdd(address, linkedListNode);
+                    }
+                }
+            }
+            LinkedListNode<ClientConnection> clientConnectionNode = null;
+            if (_addresses.TryGetValue(address, out clientConnectionNode))
+            {
+                clientConnection=clientConnectionNode.Value;
+            }
+            if (clientConnection == null)
+            {
+            }
+            return clientConnection;
+        }
+
+        public bool InitOwnerConnection()
+        {
+            if (_live)
+            {
+                ICollection<IPEndPoint> ipEndPoints = GetEndPoints();
+                _ownerConnection = ConnectToOwner(ipEndPoints);
+                Trace.WriteLine("Owner connection established: " + _ownerConnection);
+            }
+            return _ownerConnection != null;
+        }
+
+        private ClientConnection ConnectToOwner(ICollection<IPEndPoint> socketAddresses)
+        {
+            int connectionAttemptLimit = client.GetClientConfig().GetNetworkConfig().GetConnectionAttemptLimit();
+            int attempt = 0;
+            Exception lastError = null;
+            while (true)
+            {
+                long nextTry = Clock.CurrentTimeMillis() + client.GetClientConfig().GetNetworkConfig().GetConnectionAttemptPeriod();
+                foreach (IPEndPoint isa in socketAddresses)
+                {
+                    var address = new Address(isa);
+                    try
+                    {
+                        ClientConnection connection = GetNewConnection(address, ManagerAuthenticator, true);
+                        _live = true;
+                        FireConnectionEvent(false);
+                        return connection;
+                    }
+                    catch (IOException e)
+                    {
+                        lastError = e;
+                        logger.Finest("IO error during initial connection...", e);
+                    }
+                    catch (AuthenticationException e)
+                    {
+                        lastError = e;
+                        logger.Warning("Authentication error on " + address, e);
+                    }
+                }
+                if (attempt++ >= connectionAttemptLimit)
+                {
+                    break;
+                }
+                var remainingTime = (int) (nextTry - Clock.CurrentTimeMillis());
+                logger.Warning(
+                    string.Format("Unable to get alive cluster connection," + " try in %d ms later, attempt %d of %d.",
+                        Math.Max(0, remainingTime), attempt, connectionAttemptLimit));
+                if (remainingTime > 0)
+                {
+                    try
+                    {
+                        Thread.Sleep(remainingTime);
+                    }
+                    catch (Exception)
+                    {
+                        break;
+                    }
+                }
+            }
+            throw new InvalidOperationException("Unable to connect to any address in the config!", lastError);
+        }
+
+
+        /// <exception cref="System.Exception"></exception>
+        private ICollection<IPEndPoint> GetEndPoints()
+        {
+            ICollection<IMember> memberList = client.GetClientClusterService().GetMemberList();
+
+            List<IPEndPoint> socketAddresses = memberList.Select(member => member.GetSocketAddress()).ToList();
+            var r = new Random();
+            IOrderedEnumerable<IPEndPoint> shuffled = socketAddresses.OrderBy(x => r.Next());
+
+            var ipEndPoints = new List<IPEndPoint>(shuffled);
+
+            var addresses = new HashSet<IPEndPoint>();
+            if (memberList.Count > 0)
+            {
+                addresses.UnionWith(ipEndPoints);
+            }
+            addresses.UnionWith(GetConfigAddresses());
+
+            return addresses;
+        }
+
+        private ICollection<IPEndPoint> GetConfigAddresses()
+        {
+            var socketAddresses = new List<IPEndPoint>();
+            foreach (string address in client.GetClientConfig().GetNetworkConfig().GetAddresses())
+            {
+                ICollection<IPEndPoint> endPoints = AddressHelper.GetSocketAddresses(address);
+                socketAddresses = socketAddresses.Union(endPoints).ToList();
+            }
+
+            var r = new Random();
+            IOrderedEnumerable<IPEndPoint> shuffled = socketAddresses.OrderBy(x => r.Next());
+            return new List<IPEndPoint>(shuffled);
+        }
+
+        /// <exception cref="HazelcastException"></exception>
+        private void CheckLive()
+        {
+            if (!_live)
+            {
+                throw new HazelcastException("ConnectionManager is not active!!!");
+            }
+        }
+
+
+        private void ProcessClientConnections()
+        {
+            while (_live)
+            {
+                try
+                {
+                    ClientConnection nextReadConn = NextProcessConnection();
+                    if (nextReadConn != null)
+                    {
+                        nextReadConn.ProcessConnection();
+                    }
+                    else
+                    {
+                        logger.Finest("Process Thread is sleeping...");
+                        Thread.Sleep(1000);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.Warning(e);
+                }
+            }
+            logger.Finest("Process Thread is terminating now..."+Thread.CurrentThread.Name);
+        }
+
+        private bool RemoveEventHandler(int callId)
+        {
+            return _clientConnections.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
+        }
+
+        #endregion
+
+        #region Authenticators
+        private void ClusterAuthenticator(ClientConnection connection)
+        {
+            _Authenticate<object>(connection, _credentials, principal, false, false);
+        }
+
+        private void ManagerAuthenticator(ClientConnection connection)
+        {
+            principal = _Authenticate<ClientPrincipal>(connection, _credentials, principal, true, true);
+        }
+
+
+        private T _Authenticate<T>(ClientConnection connection, ICredentials credentials, ClientPrincipal principal,
+            bool reAuth, bool firstConnection)
+        {
+            ISerializationService ss = client.GetSerializationService();
+            var auth = new AuthenticationRequest(credentials, principal);
+            connection.Init();
+            auth.SetReAuth(reAuth);
+            auth.SetFirstConnection(firstConnection);
+            SerializableCollection coll;
+            try
+            {
+                coll = (SerializableCollection)connection.SendAndReceive(auth);
+            }
+            catch (Exception e)
+            {
+                throw new IOException("Retry this");
+            }
+
+            IEnumerator<Data> enumerator = coll.GetEnumerator();
+            enumerator.MoveNext();
+            if (enumerator.Current != null)
+            {
+                Data addressData = enumerator.Current;
+                var address = ss.ToObject<Address>(addressData);
+                connection.SetRemoteEndpoint(address);
+                enumerator.MoveNext();
+                if (enumerator.Current != null)
+                {
+                    Data principalData = enumerator.Current;
+                    return ss.ToObject<T>(principalData);
+                }
+            }
+            throw new AuthenticationException(); //TODO
+        }
+
+        #endregion
+
+        #region IRemotingService
+
+        public Task<TResult> Send<TResult>(ClientRequest request)
+        {
+            return Send<TResult>(request, null);
+        }
+
+        public Task<TResult> Send<TResult>(ClientRequest request, Address target)
+        {
+            ClientConnection clientConnection = _GetOrConnectWithRetry(target);
+            return clientConnection.Send<TResult>(request);
+        }
+
+        public Task<TResult> SendAndHandle<TResult>(ClientRequest request, DistributedEventHandler handler)
+        {
+            return SendAndHandle<TResult>(request, null, handler);
+        }
+
+        public Task<TResult> SendAndHandle<TResult>(ClientRequest request, Address target,
+            DistributedEventHandler handler)
+        {
+            ClientConnection clientConnection = _GetOrConnectWithRetry(target);
+            return clientConnection.Send<TResult>(request, handler);
+        }
+
+        public void RegisterListener(string registrationId, int callId)
+        {
+            _registrationAliasMap.TryAdd(registrationId, registrationId);
+            _registrationMap.TryAdd(registrationId, callId);
+        }
+
+        public bool UnregisterListener(string registrationId)
+        {
+            string uuid;
+            if (_registrationAliasMap.TryRemove(registrationId, out uuid))
+            {
+                int callId ;
+                if (_registrationMap.TryRemove(registrationId, out callId))
+                {
+                    return RemoveEventHandler(callId);
+                }
+            }
+            return false;
+        }
+
+        public void ReRegisterListener(string uuidregistrationId, string alias, int callId)
+        {
+            string oldAlias = null;
+            if (_registrationAliasMap.TryRemove(uuidregistrationId, out oldAlias))
+            {
+                int removed;
+                _registrationMap.TryRemove(oldAlias,out removed);
+                _registrationMap.TryAdd(alias, callId);
+            }
+            _registrationAliasMap.TryAdd(uuidregistrationId, alias);
+        }
+
+        #endregion
+    }
+}

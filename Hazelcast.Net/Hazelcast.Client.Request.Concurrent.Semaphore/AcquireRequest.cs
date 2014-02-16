@@ -28,11 +28,5 @@ namespace Hazelcast.Client.Request.Concurrent.Semaphore
             writer.WriteLong("t", timeout);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            base.ReadPortable(reader);
-            timeout = reader.ReadLong("t");
-        }
     }
 }

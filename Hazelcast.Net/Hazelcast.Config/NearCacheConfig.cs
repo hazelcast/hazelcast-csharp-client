@@ -11,22 +11,29 @@ namespace Hazelcast.Config
 
         public const int DefaultMaxSize = int.MaxValue;
 
-        public const string DefaultEvictionPolicy = "LRU";
+        public const string DefaultEvictionPolicy = "Lru";
 
         public static readonly InMemoryFormat DefaultMemoryFormat = InMemoryFormat.Binary;
 
-        private string evictionPolicy = DefaultEvictionPolicy;
-
-        private InMemoryFormat inMemoryFormat = DefaultMemoryFormat;
-        private bool invalidateOnChange = true;
-        private int maxIdleSeconds = DefaultMaxIdleSeconds;
-        private int maxSize = DefaultMaxSize;
-
-        private string name = "default";
         private int timeToLiveSeconds = DefaultTtlSeconds;
 
-        public NearCacheConfig(int timeToLiveSeconds, int maxSize, string evictionPolicy, int maxIdleSeconds,
-            bool invalidateOnChange, InMemoryFormat inMemoryFormat)
+        private int maxSize = DefaultMaxSize;
+
+        private string evictionPolicy = DefaultEvictionPolicy;
+
+        private int maxIdleSeconds = DefaultMaxIdleSeconds;
+
+        private bool invalidateOnChange = true;
+
+        private InMemoryFormat inMemoryFormat = DefaultMemoryFormat;
+
+        private string name = "default";
+
+        private NearCacheConfigReadOnly readOnly;
+
+        private bool cacheLocalEntries = false;
+
+        public NearCacheConfig(int timeToLiveSeconds, int maxSize, string evictionPolicy, int maxIdleSeconds, bool invalidateOnChange, InMemoryFormat inMemoryFormat)
         {
             this.timeToLiveSeconds = timeToLiveSeconds;
             this.maxSize = maxSize;
@@ -34,6 +41,27 @@ namespace Hazelcast.Config
             this.maxIdleSeconds = maxIdleSeconds;
             this.invalidateOnChange = invalidateOnChange;
             this.inMemoryFormat = inMemoryFormat;
+        }
+
+        public NearCacheConfig(Hazelcast.Config.NearCacheConfig config)
+        {
+            name = config.GetName();
+            evictionPolicy = config.GetEvictionPolicy();
+            inMemoryFormat = config.GetInMemoryFormat();
+            invalidateOnChange = config.IsInvalidateOnChange();
+            maxIdleSeconds = config.GetMaxIdleSeconds();
+            maxSize = config.GetMaxSize();
+            timeToLiveSeconds = config.GetTimeToLiveSeconds();
+            cacheLocalEntries = config.IsCacheLocalEntries();
+        }
+
+        public virtual NearCacheConfigReadOnly GetAsReadOnly()
+        {
+            if (readOnly == null)
+            {
+                readOnly = new NearCacheConfigReadOnly(this);
+            }
+            return readOnly;
         }
 
         public NearCacheConfig()
@@ -116,6 +144,17 @@ namespace Hazelcast.Config
             return this;
         }
 
+        public virtual bool IsCacheLocalEntries()
+        {
+            return cacheLocalEntries;
+        }
+
+        public virtual Hazelcast.Config.NearCacheConfig SetCacheLocalEntries(bool cacheLocalEntries)
+        {
+            this.cacheLocalEntries = cacheLocalEntries;
+            return this;
+        }
+
         // this setter is for reflection based configuration building
         public virtual NearCacheConfig SetInMemoryFormat(string inMemoryFormat)
         {
@@ -132,6 +171,7 @@ namespace Hazelcast.Config
             sb.Append(", maxIdleSeconds=").Append(maxIdleSeconds);
             sb.Append(", invalidateOnChange=").Append(invalidateOnChange);
             sb.Append(", inMemoryFormat=").Append(inMemoryFormat);
+            sb.Append(", cacheLocalEntries=").Append(cacheLocalEntries);
             sb.Append('}');
             return sb.ToString();
         }

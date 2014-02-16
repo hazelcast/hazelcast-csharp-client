@@ -6,14 +6,14 @@ namespace Hazelcast.Client.Request.Multimap
 {
     public class RemoveRequest : MultiMapKeyBasedRequest
     {
-        internal int threadId;
+        internal long threadId;
         internal Data value;
 
         public RemoveRequest()
         {
         }
 
-        public RemoveRequest(string name, Data key, Data value, int threadId) : base(name, key)
+        public RemoveRequest(string name, Data key, Data value, long threadId) : base(name, key)
         {
             this.value = value;
             this.threadId = threadId;
@@ -27,20 +27,11 @@ namespace Hazelcast.Client.Request.Multimap
         /// <exception cref="System.IO.IOException"></exception>
         public override void WritePortable(IPortableWriter writer)
         {
-            writer.WriteInt("t", threadId);
+            writer.WriteLong("t", threadId);
             base.WritePortable(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
             value.WriteData(output);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadPortable(IPortableReader reader)
-        {
-            threadId = reader.ReadInt("t");
-            base.ReadPortable(reader);
-            IObjectDataInput input = reader.GetRawDataInput();
-            value = new Data();
-            value.ReadData(input);
-        }
     }
 }

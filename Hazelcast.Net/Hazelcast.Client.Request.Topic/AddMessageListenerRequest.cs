@@ -1,9 +1,10 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Topic
 {
-    public class AddMessageListenerRequest : IPortable
+    public class AddMessageListenerRequest : ClientRequest
     {
         private string name;
 
@@ -16,26 +17,21 @@ namespace Hazelcast.Client.Request.Topic
             this.name = name;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return TopicPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return TopicPortableHook.AddListener;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-        }
     }
 }

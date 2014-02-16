@@ -1,9 +1,10 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapAddIndexRequest : IPortable
+    public class MapAddIndexRequest : ClientRequest
     {
         private string attribute;
         private string name;
@@ -21,30 +22,23 @@ namespace Hazelcast.Client.Request.Map
             this.ordered = ordered;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return MapPortableHook.AddIndex;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteUTF("a", attribute);
             writer.WriteBoolean("o", ordered);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            attribute = reader.ReadUTF("a");
-            ordered = reader.ReadBoolean("o");
-        }
     }
 }

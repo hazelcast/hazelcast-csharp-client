@@ -5,8 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Partition
 {
-    [Serializable]
-    public sealed class PartitionsResponse : IIdentifiedDataSerializable
+    public sealed class PartitionsResponse : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         private Address[] members;
 
@@ -14,12 +13,6 @@ namespace Hazelcast.Client.Request.Partition
 
         public PartitionsResponse()
         {
-        }
-
-        public PartitionsResponse(Address[] members, int[] ownerIndexes)
-        {
-            this.members = members;
-            this.ownerIndexes = ownerIndexes;
         }
 
         public int GetFactoryId()
@@ -35,16 +28,6 @@ namespace Hazelcast.Client.Request.Partition
         /// <exception cref="System.IO.IOException"></exception>
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteInt(members.Length);
-            foreach (Address member in members)
-            {
-                member.WriteData(output);
-            }
-            output.WriteInt(ownerIndexes.Length);
-            foreach (int index in ownerIndexes)
-            {
-                output.WriteInt(index);
-            }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -64,11 +47,6 @@ namespace Hazelcast.Client.Request.Partition
             {
                 ownerIndexes[i_1] = input.ReadInt();
             }
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
         }
 
         public Address[] GetMembers()

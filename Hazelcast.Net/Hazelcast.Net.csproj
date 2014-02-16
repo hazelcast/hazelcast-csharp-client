@@ -60,29 +60,44 @@
   </PropertyGroup>
   <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
   <ItemGroup>
+    <Compile Include="Hazelcast.Client.Connection\ClientConnectionManager.cs" />
+    <Compile Include="Hazelcast.Client.Connection\IRemotingService.cs" />
+    <Compile Include="Hazelcast.Client.Request.Base\ClientRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Base\ClientResponse.cs" />
+    <Compile Include="Hazelcast.Client.Request.Base\RemoveDistributedObjectListenerRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Cluster\MemberAttributeChange.cs" />
+    <Compile Include="Hazelcast.Client.Request.Collection\CollectionRemoveListenerRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Map\MapRemoveEntryListenerRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Multimap\RemoveEntryListenerRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Multimap\TxnMultiMapRemoveAllRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Queue\RemoveListenerRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Topic\RemoveMessageListenerRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Transaction\BaseTransactionRequest.cs" />
+    <Compile Include="Hazelcast.Client.Spi\PacketManager.cs" />
+    <Compile Include="Hazelcast.Client.Spi\Exception.cs" />
+    <Compile Include="Hazelcast.Client.Proxy\PartitionServiceProxy.cs" />
+    <Compile Include="Hazelcast.Config\ClientNetworkConfig.cs" />
+    <Compile Include="Hazelcast.Config\NearCacheConfigReadOnly.cs" />
     <Compile Include="Hazelcast.Core\EntryAdapter.cs" />
     <Compile Include="Hazelcast.Core\IAtomicLong.cs" />
     <Compile Include="Hazelcast.Core\IIdGenerator.cs" />
-    <Compile Include="Hazelcast.Core\IHazelcastList.cs" />
+    <Compile Include="Hazelcast.Core\IHList.cs" />
     <Compile Include="Hazelcast.Core\IMap.cs" />
     <Compile Include="Hazelcast.Core\IMultiMap.cs" />
     <Compile Include="Hazelcast.Core\IQueue.cs" />
-    <Compile Include="Hazelcast.Core\IHazelcastSet.cs" />
+    <Compile Include="Hazelcast.Core\IHSet.cs" />
     <Compile Include="Hazelcast.Core\ITopic.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalList.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalMap.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalMultiMap.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalQueue.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalSet.cs" />
-    <Compile Include="Hazelcast.Client.Connection\IAuthenticator.cs" />
     <Compile Include="Hazelcast.Client.Connection\IClientConnectionManager.cs" />
-    <Compile Include="Hazelcast.Client.Connection\Connection.cs" />
+    <Compile Include="Hazelcast.Client.Connection\ClientConnection.cs" />
     <Compile Include="Hazelcast.Client.Connection\DefaultSocketFactory.cs" />
-    <Compile Include="Hazelcast.Client.Connection\DummyClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Connection\HeartBeatChecker.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnection.cs" />
     <Compile Include="Hazelcast.Client.Connection\Router.cs" />
-    <Compile Include="Hazelcast.Client.Connection\SmartClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Connection\SocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Connection\SSLSocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Proxy\AbstractClientCollectionProxy.cs" />
@@ -262,35 +277,34 @@
     <Compile Include="Hazelcast.Client.Spi\ClientInvocationService.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientPartitionService.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientProxy.cs" />
-    <Compile Include="Hazelcast.Client.Spi\ClusterListener.cs" />
-    <Compile Include="Hazelcast.Client.Spi\EventHandler.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientClusterService.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientExecutionService.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientInvocationService.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientPartitionService.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientProxyFactory.cs" />
-    <Compile Include="Hazelcast.Client.Spi\IResponseStream.cs" />
-    <Compile Include="Hazelcast.Client.Spi\ListenerSupport.cs" />
     <Compile Include="Hazelcast.Client.Spi\ObjectNamespace.cs" />
     <Compile Include="Hazelcast.Client.Spi\PortableCollection.cs" />
     <Compile Include="Hazelcast.Client.Spi\PortableDistributedObjectEvent.cs" />
     <Compile Include="Hazelcast.Client.Spi\PortableEntryEvent.cs" />
     <Compile Include="Hazelcast.Client.Spi\PortableItemEvent.cs" />
     <Compile Include="Hazelcast.Client.Spi\ProxyManager.cs" />
-    <Compile Include="Hazelcast.Client.Spi\ResponseHandler.cs" />
-    <Compile Include="Hazelcast.Client.Spi\ResponseStream.cs" />
     <Compile Include="Hazelcast.Client.Spi\SerializableCollection.cs" />
     <Compile Include="Hazelcast.Client\AuthenticationException.cs" />
-    <Compile Include="Hazelcast.Core\IBlockingQueue.cs" />
+    <Compile Include="Hazelcast.Core\MemberAttributeEvent.cs" />
     <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\BinaryClassDefinitionProxy.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\DataAdaptor.cs" />
+    <Compile Include="Hazelcast.IO\SocketReadable.cs" />
+    <Compile Include="Hazelcast.IO\SocketWritable.cs" />
     <Compile Include="Hazelcast.Logging\LogLevel.cs" />
+    <Compile Include="Hazelcast.Logging\ConsoleLogFactory.cs" />
     <Compile Include="Hazelcast.Logging\TraceLogFactory.cs" />
-    <Compile Include="Hazelcast.Net.Ext\CountDownLatch.cs" />
+    <Compile Include="Hazelcast.Net.Ext\ByteBuffer.cs" />
     <Compile Include="Hazelcast.Net.Ext\Extensions.cs" />
     <Compile Include="Hazelcast.Net.Ext\IDataOutput.cs" />
     <Compile Include="Hazelcast.Net.Ext\IDataInput.cs" />
     <Compile Include="Hazelcast.Net.Ext\InputOutputStreams.cs" />
-    <Compile Include="Hazelcast.Net.Ext\TimeUnit.cs" />
+    <Compile Include="Hazelcast.Core\TimeUnit.cs" />
     <Compile Include="Hazelcast.Serialization.Hook\ClientDataSerializerHook.cs" />
     <Compile Include="Hazelcast.Client\Client.cs" />
     <Compile Include="Hazelcast.Client\ClientNearCache.cs" />
@@ -318,9 +332,6 @@
     <Compile Include="Hazelcast.Config\SocketInterceptorConfig.cs" />
     <Compile Include="Hazelcast.Config\SocketOptions.cs" />
     <Compile Include="Hazelcast.Config\XmlClientConfigBuilder.cs" />
-    <Compile Include="Hazelcast.Core\IBaseMap.cs" />
-    <Compile Include="Hazelcast.Core\IBaseMultiMap.cs" />
-    <Compile Include="Hazelcast.Core\IBaseQueue.cs" />
     <Compile Include="Hazelcast.Core\IClient.cs" />
     <Compile Include="Hazelcast.Core\IClientListener.cs" />
     <Compile Include="Hazelcast.Core\IClientService.cs" />
@@ -339,8 +350,7 @@
     <Compile Include="Hazelcast.Core\IHazelcastInstance.cs" />
     <Compile Include="Hazelcast.Core\IHazelcastInstanceAware.cs" />
     <Compile Include="Hazelcast.Core\HazelcastInstanceNotActiveException.cs" />
-    <Compile Include="Hazelcast.Core\IHazelcastCollection.cs" />
-    <Compile Include="Hazelcast.Core\ICondition.cs" />
+    <Compile Include="Hazelcast.Core\IHCollection.cs" />
     <Compile Include="Hazelcast.Core\ICountDownLatch.cs" />
     <Compile Include="Hazelcast.Core\IExecutorService.cs" />
     <Compile Include="Hazelcast.Core\ILock.cs" />
@@ -505,6 +515,7 @@
     <Compile Include="Hazelcast.Util\ErrorHandler.cs" />
     <Compile Include="Hazelcast.Util\ExceptionUtil.cs" />
     <Compile Include="Hazelcast.Util\IterationType.cs" />
+    <Compile Include="Hazelcast.Util\ListenerUtil.cs" />
     <Compile Include="Hazelcast.Util\ObjectPool.cs" />
     <Compile Include="Hazelcast.Util\QueryResultEntry.cs" />
     <Compile Include="Hazelcast.Util\QueryResultSet.cs" />
@@ -566,7 +577,7 @@
       <Output TaskParameter="Day" PropertyName="Day" />
       <Output TaskParameter="Year" PropertyName="Year" />
     </Time>
-    <AssemblyInfo CodeLanguage="CS" OutputFile="Properties\AssemblyInfo.cs" GenerateClass="false" AssemblyTitle="Hazelcast .Net Client" AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" AssemblyCompany="Hazelcast Inc." AssemblyProduct="Hazelcast Enterprise Edition" AssemblyCopyright="Copyright (c) 2008-2013, Hazelcast, Inc" AssemblyConfiguration="Commit $(CommitHash)" ComVisible="false" CLSCompliant="false" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" />
+    <AssemblyInfo CodeLanguage="CS" OutputFile="Properties\AssemblyInfo.cs" GenerateClass="false" AssemblyTitle="Hazelcast .Net Client" AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" AssemblyCompany="Hazelcast Inc." AssemblyProduct="Hazelcast Enterprise Edition" AssemblyCopyright="Copyright (c) 2008-2014, Hazelcast, Inc" AssemblyConfiguration="Commit $(CommitHash)" ComVisible="false" CLSCompliant="false" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" />
   </Target>
   <Target Name="Merge" DependsOnTargets="Build">
     <!-- Merge together files -->

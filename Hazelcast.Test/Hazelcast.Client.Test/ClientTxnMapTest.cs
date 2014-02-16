@@ -11,21 +11,23 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientTxnMapTest:HazelcastBaseTest
 	{
-        internal const string name = "ClientTxnMapTest";
+        //internal const string name = "ClientTxnMapTest";
 
-        //internal static IHazelcastMap<object, object> map;
+        internal static IMap<object, object> map;
+	    internal string name="test";
 
         [SetUp]
-        public static void Init()
+        public void Init()
         {
-            InitClient();
-            //map = client.GetMap<object, object>(name);
+            //name = Name;
+            map = client.GetMap<object, object>(name);
         }
 
         [TearDown]
         public static void Destroy()
         {
-            //map.Clear();
+            map.Clear();
+            map.Destroy();
             //client.GetLifecycleService().Shutdown();
         }
 
@@ -34,84 +36,91 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void TestPutGet()
 		{
-			string name = "defMap";
 			ITransactionContext context = client.NewTransactionContext();
 			context.BeginTransaction();
-            ITransactionalMap<object, object> map = context.GetMap<object, object>(name);
-			Assert.IsNull(map.Put("key1", "value1"));
-			Assert.AreEqual("value1", map.Get("key1"));
-            Assert.IsNull(client.GetMap<object, object>(name).Get("key1"));
+            ITransactionalMap<object, object> txnMap = context.GetMap<object, object>(name);
+			Assert.IsNull(txnMap.Put("key1", "value1"));
+			Assert.AreEqual("value1", txnMap.Get("key1"));
+            Assert.IsNull(map.Get("key1"));
 			context.CommitTransaction();
-            Assert.AreEqual("value1", client.GetMap<object, object>(name).Get("key1"));
+            Assert.AreEqual("value1", map.Get("key1"));
 		}
 
-		/// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
+
 		[Test]
-		public virtual void TestGetForUpdate()
-		{
-            var map = client.GetMap<string, int>("testTxnGetForUpdate");
-            CountdownEvent latch1 = new CountdownEvent(1);
-            CountdownEvent latch2 = new CountdownEvent(1);
-			map.Put("var", 0);
-			AtomicBoolean pass = new AtomicBoolean(true);
+        public void testPutWithTTL()
+        {
+            ITransactionContext context = client.NewTransactionContext();
+			context.BeginTransaction();
+            ITransactionalMap<object, object> txnMap = context.GetMap<object, object>(name);
+			Assert.IsNull(txnMap.Put("key1", "value1",5,TimeUnit.SECONDS));
+			Assert.AreEqual("value1", txnMap.Get("key1"));
+			context.CommitTransaction();
+        
+			Assert.AreEqual("value1", map.Get("key1"));
+            Thread.Sleep(10000);
+		    Assert.AreEqual(0,map.Size());
+            Assert.IsNull(map.Get("key1"));
+        }
 
 
-		    var t1 = new Thread(delegate(object o)
-		    {
-                try
-                {
-                    latch1.Wait(TimeSpan.FromSeconds(100));
-                    pass.Set(map.TryPut("var", 1, 0, TimeUnit.SECONDS) == false);
-                    latch2.Signal();
-                }
-                catch (Exception)
-                {
-                }
-            });
-            t1.Start();
+	    [Test]
+	    public void testGetForUpdate()
+	    {
 
-            bool b = client.ExecuteTransaction(new _TransactionalTask(latch1, latch2));
-			Assert.IsTrue(b);
-			Assert.IsTrue(pass.Get());
-			Assert.IsTrue(map.TryPut("var", 1, 0, TimeUnit.SECONDS));
-		}
+            ITransactionContext context = client.NewTransactionContext();
+            context.BeginTransaction();
+            ITransactionalMap<object, object> txnMap = context.GetMap<object, object>(name);
+            txnMap.Put("key1", "value1");
+            Assert.AreEqual("value1", txnMap.Get("key1"));
+	        Assert.AreEqual("value1", txnMap.GetForUpdate("key1"));
+
+	        Assert.IsTrue(map.IsLocked("key1"));
+
+            context.CommitTransaction();
+
+            Assert.IsFalse(map.IsLocked("key1"));
+            Assert.AreEqual("value1", map.Get("key1"));
+
+	    }
+
+        ///// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
+        //[Test]
+        //public virtual void TestGetForUpdate()
+        //{
+        //    //var map = client.GetMap<string, int>(name);
+        //    CountdownEvent latch1 = new CountdownEvent(1);
+        //    CountdownEvent latch2 = new CountdownEvent(1);
+        //    map.Put("var", 0);
+        //    AtomicBoolean pass = new AtomicBoolean(true);
 
 
-		private sealed class _TransactionalTask : ITransactionalTask<bool>
-		{
-            public _TransactionalTask(CountdownEvent latch1, CountdownEvent latch2)
-			{
-				this.latch1 = latch1;
-				this.latch2 = latch2;
-			}
+        //    var t1 = new Thread(delegate(object o)
+        //    {
+        //        try
+        //        {
+        //            latch1.Wait(TimeSpan.FromSeconds(100));
+        //            pass.Set(map.TryPut("var", 1, 0, TimeUnit.SECONDS) == false);
+        //            latch2.Signal();
+        //        }
+        //        catch (Exception)
+        //        {
+        //        }
+        //    });
+        //    t1.Start();
 
-			/// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
-			public bool Execute(ITransactionalTaskContext context)
-			{
-				try
-				{
-                    ITransactionalMap<string, int> txMap = context.GetMap<string, int>("testTxnGetForUpdate");
-					txMap.GetForUpdate("var");
-					latch1.Signal();
-                    latch2.Wait(TimeSpan.FromSeconds(100));
-				}
-				catch (Exception)
-				{
-				}
-				return true;
-			}
+        //    bool b = client.ExecuteTransaction(new _TransactionalTask(latch1, latch2,name));
+        //    Assert.IsTrue(b);
+        //    Assert.IsTrue(pass.Get());
+        //    Assert.IsTrue(map.TryPut("var", 1, 0, TimeUnit.SECONDS));
+        //}
 
-            private readonly CountdownEvent latch1;
-
-            private readonly CountdownEvent latch2;
-		}
 
 		/// <exception cref="System.Exception"></exception>
 		[Test]
 		public virtual void TestKeySetValues()
 		{
-			string name = "testKeySetValues";
-            var map = client.GetMap<object, object>(name);
+            //var map = client.GetMap<object, object>(name);
 			map.Put("key1", "value1");
 			map.Put("key2", "value2");
             ITransactionContext context = client.NewTransactionContext();
@@ -123,7 +132,7 @@ namespace Hazelcast.Client.Test
 			Assert.AreEqual(3, txMap.Values().Count);
 			context.CommitTransaction();
 			Assert.AreEqual(3, map.Size());
-			Assert.AreEqual(3, map.Keys().Count);
+			Assert.AreEqual(3, map.KeySet().Count);
 			Assert.AreEqual(3, map.Values().Count);
 		}
 	}

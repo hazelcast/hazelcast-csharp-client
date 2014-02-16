@@ -24,13 +24,13 @@ namespace Hazelcast.Client.Proxy
         public string AddItemListener(IItemListener<E> listener, bool includeValue)
         {
             var request = new AddListenerRequest(GetName(), includeValue);
-            return Listen<PortableItemEvent>(request, GetPartitionKey(),
-                (sender, args) => HandleItemListener(args, listener, includeValue));
+            return Listen(request, GetPartitionKey(),(args) => HandleItemListener((PortableItemEvent) args, listener, includeValue));
         }
 
         public bool RemoveItemListener(string registrationId)
         {
-            return StopListening(registrationId);
+            var request = new RemoveListenerRequest(name, registrationId);
+            return StopListening(request,registrationId);
         }
 
         public bool Add(E e)
@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Proxy
             ICollection<Data> coll = result.GetCollection();
             foreach (Data data in coll)
             {
-                var e = (E) GetContext().GetSerializationService().ToObject(data);
+                var e = GetContext().GetSerializationService().ToObject<E>(data);
                 c.Add((T) e);
             }
             return coll.Count;
@@ -161,7 +161,7 @@ namespace Hazelcast.Client.Proxy
 
         public bool Remove(E item)
         {
-            throw new NotImplementedException();
+            return Remove((object)item);
         }
 
         public int Count
@@ -200,7 +200,7 @@ namespace Hazelcast.Client.Proxy
             var array = new E[coll.Count];
             foreach (Data data in coll)
             {
-                array[i++] = (E) GetContext().GetSerializationService().ToObject(data);
+                array[i++] = GetContext().GetSerializationService().ToObject<E>(data);
             }
             return array;
         }
@@ -284,7 +284,7 @@ namespace Hazelcast.Client.Proxy
             bool includeValue)
         {
             E item = includeValue
-                ? (E) GetContext().GetSerializationService().ToObject(portableItemEvent.GetItem())
+                ? GetContext().GetSerializationService().ToObject<E>(portableItemEvent.GetItem())
                 : default(E);
             IMember member = GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
             var itemEvent = new ItemEvent<E>(GetName(), portableItemEvent.GetEventType(), item, member);
@@ -306,21 +306,8 @@ namespace Hazelcast.Client.Proxy
             return coll;
         }
 
-        protected internal override void OnDestroy()
+        protected override void OnDestroy()
         {
-            throw new NotImplementedException();
-        }
-
-        private T Invoke<T>(object req)
-        {
-            try
-            {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<T>(req, GetPartitionKey());
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
         }
 
         private IList<Data> GetDataList<T>(ICollection<T> objects)
@@ -334,306 +321,5 @@ namespace Hazelcast.Client.Proxy
         }
     }
 
-    //public sealed class ClientQueueProxy<E> : ClientProxy, IQueue<E>
-    //{
-    //    private readonly string name;
-
-    //    public ClientQueueProxy(string serviceName, string name) : base(serviceName, name)
-    //    {
-    //        this.name = name;
-    //    }
-
-    //    //public string AddItemListener(IItemListener<E> listener, bool includeValue)
-    //    //{
-    //    //    AddListenerRequest request = new AddListenerRequest(name, includeValue);
-    //    //    EventHandler<PortableItemEvent> eventHandler = new _EventHandler_66(this, includeValue, listener);
-    //    //    return Listen(request, GetPartitionKey(), eventHandler);
-    //    //}
-
-    //    //private sealed class _EventHandler_66 : EventHandler<PortableItemEvent>
-    //    //{
-    //    //    public _EventHandler_66(ClientQueueProxy<E> _enclosing, bool includeValue, IItemListener<E> listener)
-    //    //    {
-    //    //        this._enclosing = _enclosing;
-    //    //        this.includeValue = includeValue;
-    //    //        this.listener = listener;
-    //    //    }
-
-    //    //    public void Handle(PortableItemEvent portableItemEvent)
-    //    //    {
-    //    //        E item = includeValue ? (E)this._enclosing.GetContext().GetSerializationService().ToObject(portableItemEvent.GetItem()) : null;
-    //    //        IMember member = this._enclosing.GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
-    //    //        ItemEvent<E> itemEvent = new ItemEvent<E>(this._enclosing.name, portableItemEvent.GetEventType(), item, member);
-    //    //        if (portableItemEvent.GetEventType() == ItemEventType.Added)
-    //    //        {
-    //    //            listener.ItemAdded(itemEvent);
-    //    //        }
-    //    //        else
-    //    //        {
-    //    //            listener.ItemRemoved(itemEvent);
-    //    //        }
-    //    //    }
-
-    //    //    private readonly ClientQueueProxy<E> _enclosing;
-
-    //    //    private readonly bool includeValue;
-
-    //    //    private readonly IItemListener<E> listener;
-    //    //}
-
-    //    //public bool RemoveItemListener(string registrationId)
-    //    //{
-    //    //    return StopListening(registrationId);
-    //    //}
-
-    //    //    public LocalQueueStats getLocalQueueStats() {
-    //    //        throw new UnsupportedOperationException("Locality is ambiguous for client!!!");
-    //    //    }
-    //    //public bool AddItem(E e)
-    //    //{
-    //    //    if (Offer(e))
-    //    //    {
-    //    //        return true;
-    //    //    }
-    //    //    throw new InvalidOperationException("Queue is full!");
-    //    //}
-
-    //    //public bool Offer(E e)
-    //    //{
-    //    //    try
-    //    //    {
-    //    //        return Offer(e, 0, TimeUnit.Seconds);
-    //    //    }
-    //    //    catch (Exception)
-    //    //    {
-    //    //        return false;
-    //    //    }
-    //    //}
-
-    //    /// <exception cref="System.Exception"></exception>
-    //    //public void Put(E e)
-    //    //{
-    //    //    Offer(e, -1, TimeUnit.Milliseconds);
-    //    //}
-
-    //    /// <exception cref="System.Exception"></exception>
-    //    //public bool Offer(E e, long timeout, TimeUnit unit)
-    //    //{
-    //    //    Data data = GetContext().GetSerializationService().ToData(e);
-    //    //    OfferRequest request = new OfferRequest(name, unit.ToMillis(timeout), data);
-    //    //    bool result = Invoke(request);
-    //    //    return result;
-    //    //}
-
-    //    /// <exception cref="System.Exception"></exception>
-    //    //public E Take()
-    //    //{
-    //    //    return Poll(-1, TimeUnit.Milliseconds);
-    //    //}
-
-    //    /// <exception cref="System.Exception"></exception>
-    //    //public E Poll(long timeout, TimeUnit unit)
-    //    //{
-    //    //    PollRequest request = new PollRequest(name, unit.ToMillis(timeout));
-    //    //    return Invoke(request);
-    //    //}
-
-    //    //public int RemainingCapacity()
-    //    //{
-    //    //    RemainingCapacityRequest request = new RemainingCapacityRequest(name);
-    //    //    int result = Invoke(request);
-    //    //    return result;
-    //    //}
-
-    //    //public bool Remove(object o)
-    //    //{
-    //    //    Data data = GetContext().GetSerializationService().ToData(o);
-    //    //    RemoveRequest request = new RemoveRequest(name, data);
-    //    //    bool result = Invoke(request);
-    //    //    return result;
-    //    //}
-
-    //    //public bool Contains(object o)
-    //    //{
-    //    //    ICollection<Data> list = new List<Data>(1);
-    //    //    list.Add(GetContext().GetSerializationService().ToData(o));
-    //    //    ContainsRequest request = new ContainsRequest(name, list);
-    //    //    bool result = Invoke(request);
-    //    //    return result;
-    //    //}
-
-    //    //public int DrainTo<_T0>(ICollection<_T0> objects)
-    //    //{
-    //    //    return DrainTo(objects, -1);
-    //    //}
-
-    //    //public int DrainTo<_T0>(ICollection<_T0> c, int maxElements)
-    //    //{
-    //    //    DrainRequest request = new DrainRequest(name, maxElements);
-    //    //    PortableCollection result = Invoke(request);
-    //    //    ICollection<Data> coll = result.GetCollection();
-    //    //    foreach (Data data in coll)
-    //    //    {
-    //    //        E e = (E)GetContext().GetSerializationService().ToObject(data);
-    //    //        c.Add(e);
-    //    //    }
-    //    //    return coll.Count;
-    //    //}
-
-    //    //public E Remove()
-    //    //{
-    //    //    E res = Poll();
-    //    //    if (res == null)
-    //    //    {
-    //    //        throw new NoSuchElementException("Queue is empty!");
-    //    //    }
-    //    //    return res;
-    //    //}
-
-    //    //public E Poll()
-    //    //{
-    //    //    try
-    //    //    {
-    //    //        return Poll(0, TimeUnit.Seconds);
-    //    //    }
-    //    //    catch (Exception)
-    //    //    {
-    //    //        return null;
-    //    //    }
-    //    //}
-
-    //    //public E Element()
-    //    //{
-    //    //    E res = Peek();
-    //    //    if (res == null)
-    //    //    {
-    //    //        throw new NoSuchElementException("Queue is empty!");
-    //    //    }
-    //    //    return res;
-    //    //}
-
-    //    //public E Peek()
-    //    //{
-    //    //    PeekRequest request = new PeekRequest(name);
-    //    //    return Invoke(request);
-    //    //}
-
-    //    //public int Count
-    //    //{
-    //    //    get
-    //    //    {
-    //    //        SizeRequest request = new SizeRequest(name);
-    //    //        int result = Invoke(request);
-    //    //        return result;
-    //    //    }
-    //    //}
-
-    //    //public bool IsEmpty()
-    //    //{
-    //    //    return Count == 0;
-    //    //}
-
-    //    //public IEnumerator<E> GetEnumerator()
-    //    //{
-    //    //    //TODO FIXME
-    //    //    throw new NotImplementedException();
-    //    //    //IteratorRequest request = new IteratorRequest(name);
-    //    //    //PortableCollection result = Invoke(request);
-    //    //    //ICollection<Data> coll = result.GetCollection();
-    //    //    //return new QueueIterator<E>(coll.GetEnumerator(), GetContext().GetSerializationService(), false);
-    //    //}
-
-    //    //public object[] ToArray()
-    //    //{
-    //    //    IteratorRequest request = new IteratorRequest(name);
-    //    //    PortableCollection result = Invoke(request);
-    //    //    ICollection<Data> coll = result.GetCollection();
-    //    //    int i = 0;
-    //    //    object[] array = new object[coll.Count];
-    //    //    foreach (Data data in coll)
-    //    //    {
-    //    //        array[i++] = GetContext().GetSerializationService().ToObject(data);
-    //    //    }
-    //    //    return array;
-    //    //}
-
-    //    //public T[] ToArray<T>(T[] ts)
-    //    //{
-    //    //    IteratorRequest request = new IteratorRequest(name);
-    //    //    PortableCollection result = Invoke(request);
-    //    //    ICollection<Data> coll = result.GetCollection();
-    //    //    int size = coll.Count;
-    //    //    if (ts.Length < size)
-    //    //    {
-    //    //        ts = (T[])System.Array.CreateInstance(ts.GetFieldType().GetElementType(), size);
-    //    //    }
-    //    //    int i = 0;
-    //    //    foreach (Data data in coll)
-    //    //    {
-    //    //        ts[i++] = (T)GetContext().GetSerializationService().ToObject(data);
-    //    //    }
-    //    //    return ts;
-    //    //}
-
-    //    //public bool ContainsAll<_T0>(ICollection<_T0> c)
-    //    //{
-    //    //    IList<Data> list = GetDataList(c);
-    //    //    ContainsRequest request = new ContainsRequest(name, list);
-    //    //    bool result = Invoke(request);
-    //    //    return result;
-    //    //}
-
-    //    //public bool AddAll<_T0>(ICollection<_T0> c) where _T0:E
-    //    //{
-    //    //    AddAllRequest request = new AddAllRequest(name, GetDataList(c));
-    //    //    bool result = Invoke(request);
-    //    //    return result;
-    //    //}
-
-    //    //public bool RemoveAll<_T0>(ICollection<_T0> c)
-    //    //{
-    //    //    CompareAndRemoveRequest request = new CompareAndRemoveRequest(name, GetDataList(c), false);
-    //    //    bool result = Invoke(request);
-    //    //    return result;
-    //    //}
-
-    //    //public bool RetainAll<_T0>(ICollection<_T0> c)
-    //    //{
-    //    //    CompareAndRemoveRequest request = new CompareAndRemoveRequest(name, GetDataList(c), true);
-    //    //    bool result = Invoke(request);
-    //    //    return result;
-    //    //}
-
-    //    //public void Clear()
-    //    //{
-    //    //    ClearRequest request = new ClearRequest(name);
-    //    //    Invoke(request);
-    //    //}
-
-    //    //protected internal override void OnDestroy()
-    //    //{
-    //    //}
-
-    //    //private T Invoke<T>(object req)
-    //    //{
-    //    //    try
-    //    //    {
-    //    //        return GetContext().GetInvocationService().InvokeOnKeyOwner(req, GetPartitionKey());
-    //    //    }
-    //    //    catch (Exception e)
-    //    //    {
-    //    //        throw ExceptionUtil.Rethrow(e);
-    //    //    }
-    //    //}
-
-    //    //private IList<Data> GetDataList<_T0>(ICollection<_T0> objects)
-    //    //{
-    //    //    IList<Data> dataList = new List<Data>(objects.Count);
-    //    //    foreach (object o in objects)
-    //    //    {
-    //    //        dataList.Add(GetContext().GetSerializationService().ToData(o));
-    //    //    }
-    //    //    return dataList;
-    //    //}
-    //}
+  
 }

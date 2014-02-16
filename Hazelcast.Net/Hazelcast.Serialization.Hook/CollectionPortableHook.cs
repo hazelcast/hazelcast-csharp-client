@@ -29,6 +29,9 @@ namespace Hazelcast.Serialization.Hook
         public const int TxnSetAdd = 20;
         public const int TxnSetRemove = 21;
         public const int TxnSetSize = 22;
+        public const int CollectionRemoveListener = 23;
+
+        private const int Size = CollectionRemoveListener + 1;
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.CollectionPortableFactory, -20);
 
         public virtual int GetFactoryId()
@@ -38,30 +41,7 @@ namespace Hazelcast.Serialization.Hook
 
         public virtual IPortableFactory CreateFactory()
         {
-            var constructors = new Func<int, IPortable>[TxnSetSize + 1];
-            constructors[CollectionSize] = arg => new CollectionSizeRequest();
-            constructors[CollectionContains] = arg => new CollectionContainsRequest();
-            constructors[CollectionAdd] = arg => new CollectionAddRequest();
-            constructors[CollectionRemove] = arg => new CollectionRemoveRequest();
-            constructors[CollectionAddAll] = arg => new CollectionAddAllRequest();
-            constructors[CollectionCompareAndRemove] = arg => new CollectionCompareAndRemoveRequest();
-            constructors[CollectionClear] = arg => new CollectionClearRequest();
-            constructors[CollectionGetAll] = arg => new CollectionGetAllRequest();
-            constructors[CollectionAddListener] = arg => new CollectionAddListenerRequest();
-            constructors[ListAddAll] = arg => new ListAddAllRequest();
-            constructors[ListGet] = arg => new ListGetRequest();
-            constructors[ListSet] = arg => new ListSetRequest();
-            constructors[ListAdd] = arg => new ListAddRequest();
-            constructors[ListRemove] = arg => new ListRemoveRequest();
-            constructors[ListIndexOf] = arg => new ListIndexOfRequest();
-            constructors[ListSub] = arg => new ListSubRequest();
-            constructors[TxnListAdd] = arg => new TxnListAddRequest();
-            constructors[TxnListRemove] = arg => new TxnListRemoveRequest();
-            constructors[TxnListSize] = arg => new TxnListSizeRequest();
-            constructors[TxnSetAdd] = arg => new TxnSetAddRequest();
-            constructors[TxnSetRemove] = arg => new TxnSetRemoveRequest();
-            constructors[TxnSetSize] = arg => new TxnSetSizeRequest();
-            return new ArrayPortableFactory(constructors);
+            return new ArrayPortableFactory();
         }
 
         public virtual ICollection<IClassDefinition> GetBuiltinDefinitions()

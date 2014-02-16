@@ -4,17 +4,18 @@ using System.IO;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Proxy;
 using Hazelcast.Core;
+using Hazelcast.IO;
 using Hazelcast.Transaction;
 
 namespace Hazelcast.Client.Request.Transaction
 {
     public class TransactionContextProxy : ITransactionContext
     {
-        internal const int ConnectionTryCount = 5;
+        internal const int txOwnerNodeTryCount = 5;
 
         internal readonly HazelcastClient client;
 
-        internal readonly IConnection connection;
+        internal Address _txnOwnerNode;
         internal readonly TransactionProxy transaction;
 
         private readonly IDictionary<TransactionalObjectKey, ITransactionalObject> txnObjectMap =
@@ -23,12 +24,13 @@ namespace Hazelcast.Client.Request.Transaction
         public TransactionContextProxy(HazelcastClient client, TransactionOptions options)
         {
             this.client = client;
-            connection = Connect();
-            if (connection == null)
+            _txnOwnerNode = client.GetConnectionManager().BindToRandomAddress();
+
+            if (_txnOwnerNode == null)
             {
                 throw new HazelcastException("Could not obtain Connection!!!");
             }
-            transaction = new TransactionProxy(client, options, connection);
+            transaction = new TransactionProxy(client, options, _txnOwnerNode);
         }
 
         public virtual string GetTxnId()
@@ -131,36 +133,11 @@ namespace Hazelcast.Client.Request.Transaction
             return null;
         }
 
-        public virtual IConnection GetConnection()
-        {
-            return connection;
-        }
-
         public virtual HazelcastClient GetClient()
         {
             return client;
         }
 
-        private IConnection Connect()
-        {
-            IConnection conn = null;
-            for (int i = 0; i < ConnectionTryCount; i++)
-            {
-                try
-                {
-                    conn = client.GetConnectionManager().GetRandomConnection();
-                }
-                catch (IOException)
-                {
-                    continue;
-                }
-                if (conn != null)
-                {
-                    break;
-                }
-            }
-            return conn;
-        }
     }
 
     internal class TransactionalObjectKey

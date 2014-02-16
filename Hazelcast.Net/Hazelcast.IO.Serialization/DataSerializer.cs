@@ -28,11 +28,19 @@ namespace Hazelcast.IO.Serialization
             {
                 DataSerializerHook[] hooks =
                 {
-                    new ClusterDataSerializerHook(), new SpiDataSerializerHook(),
-                    new PartitionDataSerializerHook(), new ClientDataSerializerHook(), new MapDataSerializerHook(),
-                    new QueueDataSerializerHook(), new MultiMapDataSerializerHook(), new CollectionDataSerializerHook(),
-                    new ExecutorDataSerializerHook(), new TopicDataSerializerHook(), new LockDataSerializerHook(),
-                    new SemaphoreDataSerializerHook(), new AtomicLongDataSerializerHook(),
+                    new ClusterDataSerializerHook(),
+                    new SpiDataSerializerHook(),
+                    new PartitionDataSerializerHook(),
+                    new ClientDataSerializerHook(),
+                    new MapDataSerializerHook(),
+                    new QueueDataSerializerHook(),
+                    new MultiMapDataSerializerHook(),
+                    new CollectionDataSerializerHook(),
+                    new ExecutorDataSerializerHook(),
+                    new TopicDataSerializerHook(),
+                    new LockDataSerializerHook(),
+                    new SemaphoreDataSerializerHook(),
+                    new AtomicLongDataSerializerHook(),
                     new CountDownLatchDataSerializerHook()
                 };
                 foreach (DataSerializerHook hook in hooks)

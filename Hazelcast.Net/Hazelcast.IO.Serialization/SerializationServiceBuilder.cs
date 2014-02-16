@@ -246,8 +246,7 @@ namespace Hazelcast.IO.Serialization
             {
                 return new ByteArrayInputOutputFactory();
             }
-            throw new NotImplementedException("LITTLE ENDIAN SUPPORT NOT IMPLEMENTED");
-            //return new ByteBufferInputOutputFactory(byteOrder);
+            throw new NotSupportedException("LITTLE ENDIAN SUPPORT NOT IMPLEMENTED");
         }
 
         private void AddConfigDataSerializableFactories(

@@ -6,24 +6,28 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Cluster
 {
-    [Serializable]
-    public sealed class ClientMembershipEvent : IIdentifiedDataSerializable
+    public sealed class ClientMembershipEvent : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         public const int MemberAdded = MembershipEvent.MemberAdded;
 
         public const int MemberRemoved = MembershipEvent.MemberRemoved;
+        
+        public const int MemberAttributeChanged = MembershipEvent.MemberAttributeChanged;
+
 
         private int eventType;
         private IMember member;
+        private MemberAttributeChange memberAttributeChange;
 
-        public ClientMembershipEvent()
-        {
-        }
+        public ClientMembershipEvent(){}
 
-        public ClientMembershipEvent(IMember member, int eventType)
+        public ClientMembershipEvent(IMember member, int eventType):this(member,null,eventType) {}
+
+        public ClientMembershipEvent(IMember member, MemberAttributeChange memberAttributeChange,int eventType)
         {
-            this.member = member;
             this.eventType = eventType;
+            this.member = member;
+            this.memberAttributeChange = memberAttributeChange;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -31,6 +35,11 @@ namespace Hazelcast.Client.Request.Cluster
         {
             member.WriteData(output);
             output.WriteInt(eventType);
+            output.WriteBoolean(memberAttributeChange != null);
+            if (memberAttributeChange != null)
+            {
+                memberAttributeChange.WriteData(output);
+            }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -39,11 +48,11 @@ namespace Hazelcast.Client.Request.Cluster
             member = new Member();
             member.ReadData(input);
             eventType = input.ReadInt();
-        }
-
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
+            if (input.ReadBoolean())
+            {
+                memberAttributeChange = new MemberAttributeChange();
+                memberAttributeChange.ReadData(input);
+            }
         }
 
         public int GetFactoryId()
@@ -70,5 +79,18 @@ namespace Hazelcast.Client.Request.Cluster
         {
             return member;
         }
+
+
+        /// <summary>
+        /// Returns the member attribute chance operation to execute 
+        /// if event type is #MEMBER_ATTRIBUTE_CHANGED.
+        /// </summary>
+        /// <returns>MemberAttributeChange to execute</returns>
+        public MemberAttributeChange GetMemberAttributeChange()
+        {
+            return memberAttributeChange;
+        }
+
+
     }
 }

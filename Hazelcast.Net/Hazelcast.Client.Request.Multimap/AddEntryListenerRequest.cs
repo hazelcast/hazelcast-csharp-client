@@ -1,10 +1,11 @@
+using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class AddEntryListenerRequest : IPortable
+    public class AddEntryListenerRequest : ClientRequest
     {
         internal bool includeValue;
         internal Data key;
@@ -21,18 +22,18 @@ namespace Hazelcast.Client.Request.Multimap
             this.includeValue = includeValue;
         }
 
-        public virtual int GetFactoryId()
+        public override int GetFactoryId()
         {
             return MultiMapPortableHook.FId;
         }
 
-        public virtual int GetClassId()
+        public override int GetClassId()
         {
             return MultiMapPortableHook.AddEntryListener;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
+        public override void WritePortable(IPortableWriter writer)
         {
             writer.WriteBoolean("i", includeValue);
             writer.WriteUTF("n", name);
@@ -40,13 +41,5 @@ namespace Hazelcast.Client.Request.Multimap
             IOUtil.WriteNullableData(output, key);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            includeValue = reader.ReadBoolean("i");
-            name = reader.ReadUTF("n");
-            IObjectDataInput input = reader.GetRawDataInput();
-            key = IOUtil.ReadNullableData(input);
-        }
     }
 }

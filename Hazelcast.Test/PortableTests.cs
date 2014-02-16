@@ -26,23 +26,23 @@ namespace Hazelcast.Test
 
             NamedPortable np = nn[0];
             data = serializationService.ToData(np);
-            Assert.AreEqual(np, serializationService.ToObject(data));
-            Assert.AreEqual(np, serializationService2.ToObject(data));
+            Assert.AreEqual(np, serializationService.ToObject<NamedPortable>(data));
+            Assert.AreEqual(np, serializationService2.ToObject<NamedPortable>(data));
 
             var inner = new InnerPortable(new byte[] {0, 1, 2}, new[] {'c', 'h', 'a', 'r'},
                 new short[] {3, 4, 5}, new[] {9, 8, 7, 6}, new long[] {0, 1, 5, 7, 9, 11},
                 new[] {0.6543f, -3.56f, 45.67f}, new[] {456.456, 789.789, 321.321}, nn);
 
             data = serializationService.ToData(inner);
-            Assert.AreEqual(inner, serializationService.ToObject(data));
-            Assert.AreEqual(inner, serializationService2.ToObject(data));
+            Assert.AreEqual(inner, serializationService.ToObject<NamedPortable>(data));
+            Assert.AreEqual(inner, serializationService2.ToObject<NamedPortable>(data));
 
             var main = new MainPortable(113, true, 'x', -500, 56789, -50992225L, 900.5678f,
                 -897543.3678909d, "this is main portable object created for testing!", inner);
 
             data = serializationService.ToData(main);
-            Assert.AreEqual(main, serializationService.ToObject(data));
-            Assert.AreEqual(main, serializationService2.ToObject(data));
+            Assert.AreEqual(main, serializationService.ToObject<NamedPortable>(data));
+            Assert.AreEqual(main, serializationService2.ToObject<NamedPortable>(data));
         }
 
         private ISerializationService createSerializationService(int version)
@@ -161,7 +161,7 @@ namespace Hazelcast.Test
             serializationService.GetSerializationContext().RegisterClassDefinition(builder.Build());
 
                 Data data = serializationService.ToData(p);
-            Assert.AreEqual(p, serializationService.ToObject(data));
+                Assert.AreEqual(p, serializationService.ToObject<RawDataPortable>(data));
         }
 
     [Test]
@@ -172,7 +172,7 @@ namespace Hazelcast.Test
                 9876, "Testing raw portable", new SimpleDataSerializable(Encoding.UTF8.GetBytes("test bytes")));
 
           Data data = serializationService.ToData(p);
-        Assert.AreEqual(p, serializationService.ToObject(data));
+          Assert.AreEqual(p, serializationService.ToObject<RawDataPortable>(data));
     }
 
     //[Test](expected = HazelcastSerializationException.class)

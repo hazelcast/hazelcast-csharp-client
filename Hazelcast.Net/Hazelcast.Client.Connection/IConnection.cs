@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Connection
 {
-    public interface IConnection : IDisposable
+    public interface IConnection2 : IDisposable
     {
         /// <exception cref="System.IO.IOException"></exception>
         bool Write(Data data);

@@ -10,7 +10,7 @@ namespace Hazelcast.Util
     public abstract class AbstractLoadBalancer : LoadBalancer, IMembershipListener
     {
         private volatile ICluster _clusterRef;
-        private IMember[] _members;
+        private volatile IMember[] _members;
 
         public IMember[] Members
         {
@@ -27,6 +27,8 @@ namespace Hazelcast.Util
         {
             SetMembersFromCluster();
         }
+
+        public void MemberAttributeChanged(MemberAttributeEvent memberAttributeEvent){}
 
         public void Init(ICluster cluster, ClientConfig config)
         {
