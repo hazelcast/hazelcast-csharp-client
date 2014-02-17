@@ -8,7 +8,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class ClientPortableHook : IPortableHook
+    internal class ClientPortableHook : IPortableHook
     {
         public const int GenericError = 1;
         public const int Auth = 2;

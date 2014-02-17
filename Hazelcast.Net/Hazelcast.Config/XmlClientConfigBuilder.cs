@@ -10,29 +10,23 @@ namespace Hazelcast.Config
     public class XmlClientConfigBuilder : AbstractXmlConfigHelper
     {
         private static readonly ILogger logger = Logger.GetLogger(typeof (XmlClientConfigBuilder));
-        private readonly StreamReader input;
 
         private ClientConfig clientConfig;
-        private XmlReader reader;
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public XmlClientConfigBuilder(string configFileUri)
+        private readonly XmlDocument document = new XmlDocument();
+
+        private XmlClientConfigBuilder(string configFile=null)
         {
-            reader = XmlReader.Create(configFileUri);
-            if (reader == null)
+            if (configFile == null)
             {
-                throw new ArgumentNullException("configFileUri", "Could not load " + configFileUri);
+                configFile = Environment.GetEnvironmentVariable("hazelcast.client.config");
             }
-        }
-
-        public XmlClientConfigBuilder()
-        {
-            string configFile = Environment.GetEnvironmentVariable("hazelcast.client.config");
             try
             {
+                TextReader input = null;
                 if (configFile != null)
                 {
-                    if (!File.Exists(configFile))
+                    if (File.Exists(configFile))
                     {
                         input = File.OpenText(configFile);
                     }
@@ -46,12 +40,26 @@ namespace Hazelcast.Config
                 }
                 if (input == null)
                 {
-                    input = new StreamReader(Properties.Resources.hazelcast_client_default);
-                    logger.Info("Using Default configuration file at ");
+                    configFile="hazelcast-client.xml";
+                    if (File.Exists(configFile))
+                    {
+                        input = File.OpenText(configFile);
+                        logger.Info("Using configuration file at working dir.");
+                    }
+                    else
+                    {
+                         input = new StringReader(Properties.Resources.hazelcast_client_default);
+                        logger.Info("Using Default configuration file");
+                    }
                 }
-                if (input == null)
+
+                try
                 {
-                    throw new InvalidOperationException("Cannot read configuration file, giving up.");
+                    document.Load(input);
+                }
+                catch (Exception)
+                {
+                    throw new InvalidOperationException("Could not parse configuration file, giving up.");
                 }
             }
             catch (Exception e)
@@ -60,23 +68,19 @@ namespace Hazelcast.Config
             }
         }
         
-        public XmlClientConfigBuilder(StreamReader input)
+        public static ClientConfig Build(string configFile = null)
         {
-            if (input == null)
-            {
-                throw new ArgumentNullException("input");
-            }
-            this.input = input;
+            return new XmlClientConfigBuilder(configFile)._Build();
         }
 
-        public virtual ClientConfig Build()
+        protected ClientConfig _Build()
         {
             this.clientConfig = new ClientConfig();
             try
             {
                 lock (this.clientConfig)
                 {
-                    Parse();
+                    HandleConfig(document.DocumentElement);//PARSE
                 }
                 return clientConfig;
             }
@@ -84,22 +88,6 @@ namespace Hazelcast.Config
             {
                 throw ExceptionUtil.Rethrow(e);
             }
-        }
-
-        /// <exception cref="System.Exception"></exception>
-        private void Parse()
-        {
-            var document = new XmlDocument();
-            try
-            {
-                document.Load(input);
-            }
-            catch (Exception)
-            {
-                throw new InvalidOperationException("Could not parse configuration file, giving up.");
-            }
-            XmlElement rootNode = document.DocumentElement;
-            HandleConfig(rootNode);
         }
 
         /// <exception cref="System.Exception"></exception>

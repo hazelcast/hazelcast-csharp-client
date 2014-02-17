@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapAddEntryListenerRequest<K, V> : ClientRequest
+    internal class MapAddEntryListenerRequest<K, V> : ClientRequest
     {
         private IPredicate<K, V> predicate;
 

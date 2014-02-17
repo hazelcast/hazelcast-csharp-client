@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class ClearRequest : QueueRequest, IRetryableRequest
+    internal class ClearRequest : QueueRequest, IRetryableRequest
     {
         public ClearRequest()
         {

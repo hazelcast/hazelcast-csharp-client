@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Base
 {
-    public class ClientCreateRequest : ClientRequest, IRetryableRequest
+    internal class ClientCreateRequest : ClientRequest, IRetryableRequest
     {
         private string name;
 

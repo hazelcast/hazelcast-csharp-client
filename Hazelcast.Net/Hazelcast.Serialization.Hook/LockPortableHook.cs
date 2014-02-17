@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class LockPortableHook : IPortableHook
+    internal class LockPortableHook : IPortableHook
     {
         public const int Lock = 1;
         public const int Unlock = 2;

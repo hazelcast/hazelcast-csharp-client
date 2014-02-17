@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class ListRemoveRequest : CollectionRequest
+    internal class ListRemoveRequest : CollectionRequest
     {
         internal int index;
 

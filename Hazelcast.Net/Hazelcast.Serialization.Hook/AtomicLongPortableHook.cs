@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class AtomicLongPortableHook : IPortableHook
+    internal class AtomicLongPortableHook : IPortableHook
     {
         public const int AddAndGet = 1;
         public const int CompareAndSet = 2;

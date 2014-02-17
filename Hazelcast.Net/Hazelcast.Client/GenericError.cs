@@ -5,7 +5,8 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client
 {
-    public sealed class GenericError :Exception, IPortable
+    [Serializable]
+    internal sealed class GenericError :Exception, IPortable
     {
         private string name;
         private string message;

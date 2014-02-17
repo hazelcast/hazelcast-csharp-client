@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class TxnSetRemoveRequest : TxnCollectionRequest
+    internal class TxnSetRemoveRequest : TxnCollectionRequest
     {
         public TxnSetRemoveRequest()
         {

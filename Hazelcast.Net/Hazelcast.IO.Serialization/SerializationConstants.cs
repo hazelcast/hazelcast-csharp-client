@@ -1,6 +1,6 @@
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class SerializationConstants
+    internal sealed class SerializationConstants
     {
         public const int ConstantTypePortable = -1;
 

@@ -8,7 +8,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientTxnMultiMapProxy<K, V> : ClientTxnProxy, ITransactionalMultiMap<K, V>
+    internal class ClientTxnMultiMapProxy<K, V> : ClientTxnProxy, ITransactionalMultiMap<K, V>
     {
         public ClientTxnMultiMapProxy(string name, TransactionContextProxy proxy) : base(name, proxy)
         {

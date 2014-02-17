@@ -7,7 +7,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    public sealed class ClientInvocationService : IClientInvocationService
+    internal sealed class ClientInvocationService : IClientInvocationService
     {
         private readonly HazelcastClient client;
 

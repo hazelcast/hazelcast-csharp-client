@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class CountDownLatchPortableHook : IPortableHook
+    internal sealed class CountDownLatchPortableHook : IPortableHook
     {
         public const int CountDown = 1;
         public const int Await = 2;

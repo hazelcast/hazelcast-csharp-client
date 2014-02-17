@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class OfferRequest : QueueRequest
+    internal class OfferRequest : QueueRequest
     {
         internal Data data;
 

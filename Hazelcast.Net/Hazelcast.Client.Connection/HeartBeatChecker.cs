@@ -9,7 +9,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Connection
 {
-    public class HeartBeatChecker
+    internal class HeartBeatChecker
     {
         /*
         private static readonly ILogger logger = Logger.GetLogger(typeof (HeartBeatChecker));

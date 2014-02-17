@@ -4,7 +4,7 @@ using Hazelcast.IO;
 
 namespace Hazelcast.Client.Spi
 {
-    public class RetryableHazelcastException : HazelcastException
+    internal class RetryableHazelcastException : HazelcastException
     {
         public RetryableHazelcastException()
         {
@@ -15,7 +15,7 @@ namespace Hazelcast.Client.Spi
         }
     }
 
-    public class TargetNotMemberException : RetryableHazelcastException
+    internal class TargetNotMemberException : RetryableHazelcastException
     {
         public TargetNotMemberException(String message) : base(message)
         {
@@ -29,7 +29,7 @@ namespace Hazelcast.Client.Spi
         }
     }
 
-    public class TargetDisconnectedException : RetryableHazelcastException
+    internal class TargetDisconnectedException : RetryableHazelcastException
     {
         public TargetDisconnectedException()
         {

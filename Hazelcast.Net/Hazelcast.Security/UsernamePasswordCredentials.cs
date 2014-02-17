@@ -12,7 +12,7 @@ namespace Hazelcast.Security
     ///     username and password as security attributes.
     /// </summary>
     [Serializable]
-    public class UsernamePasswordCredentials : AbstractCredentials
+    internal class UsernamePasswordCredentials : AbstractCredentials
     {
         private byte[] password;
 

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Hazelcast.IO.Serialization
 {
-    public class DefaultPortableWriter : IPortableWriter
+    internal class DefaultPortableWriter : IPortableWriter
     {
         private readonly int begin;
         private readonly IClassDefinition cd;

@@ -2,7 +2,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class PollRequest : QueueRequest
+    internal class PollRequest : QueueRequest
     {
         public PollRequest()
         {

@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Semaphore
 {
-    public class AcquireRequest : SemaphoreRequest
+    internal class AcquireRequest : SemaphoreRequest
     {
         internal long timeout;
 

@@ -22,7 +22,7 @@ using Hazelcast.Util;
 namespace Hazelcast.Client.Spi
 {
     /// <summary></summary>
-    public class ClientClusterService : IClientClusterService
+    internal class ClientClusterService : IClientClusterService
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientClusterService));
 
@@ -198,7 +198,7 @@ namespace Hazelcast.Client.Spi
             return Clock.CurrentTimeMillis();
         }
 
-        public Client GetLocalClient()
+        public IClient GetLocalClient()
         {
             var clientConnectionManager = _client.GetConnectionManager() as ClientConnectionManager;
             return clientConnectionManager != null? clientConnectionManager.GetLocalClient():null;

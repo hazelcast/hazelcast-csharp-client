@@ -6,7 +6,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    public sealed class ClientExecutionService : IClientExecutionService
+    internal sealed class ClientExecutionService : IClientExecutionService
     {
         //private ExecutorService executor;
 

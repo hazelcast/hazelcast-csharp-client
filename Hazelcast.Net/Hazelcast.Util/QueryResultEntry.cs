@@ -7,7 +7,7 @@ namespace Hazelcast.Util
     /// <summary>
     /// 
     /// </summary>
-    public interface IQueryResultEntry
+    internal interface IQueryResultEntry
     {
         Data GetKeyData();
 
@@ -18,7 +18,7 @@ namespace Hazelcast.Util
 
 
     [System.Serializable]
-    public class QueryResultEntry : IdentifiedDataSerializable,IIdentifiedDataSerializable, IQueryResultEntry
+    internal class QueryResultEntry : IdentifiedDataSerializable,IIdentifiedDataSerializable, IQueryResultEntry
     {
         private Data indexKey;
 

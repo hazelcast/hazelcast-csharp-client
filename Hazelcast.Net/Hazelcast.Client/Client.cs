@@ -3,7 +3,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Client
 {
-    public class Client : IClient
+    internal class Client : IClient
     {
         private readonly IPEndPoint socketAddress;
         private readonly string uuid;

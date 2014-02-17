@@ -1,7 +1,7 @@
 namespace Hazelcast.Map
 {
     //[System.Serializable]
-    //public class RecordStatistics : IDataSerializable
+    //internal class RecordStatistics : IDataSerializable
     //{
     //    protected internal volatile int hits = 0;
 

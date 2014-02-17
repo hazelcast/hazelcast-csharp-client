@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Topic
 {
-    public class PortableMessage : EventArgs, IPortable
+    internal class PortableMessage : EventArgs, IPortable
     {
         private Data message;
 

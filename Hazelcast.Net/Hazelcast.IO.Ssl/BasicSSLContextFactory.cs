@@ -1,6 +1,6 @@
 namespace Hazelcast.IO.Ssl
 {
-    public class BasicSSLContextFactory : SSLContextFactory
+    internal class BasicSSLContextFactory : SSLContextFactory
     {
         //private const string JavaNetSslPrefix = "javax.net.ssl.";
 

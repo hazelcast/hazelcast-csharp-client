@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class ContainsRequest : QueueRequest, IRetryableRequest
+    internal class ContainsRequest : QueueRequest, IRetryableRequest
     {
         internal ICollection<Data> dataList;
 

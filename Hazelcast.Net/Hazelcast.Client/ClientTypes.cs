@@ -1,6 +1,6 @@
 namespace Hazelcast.Client
 {
-    public sealed class ClientTypes
+    internal sealed class ClientTypes
     {
         public const string Java = "JVM";
 

@@ -4,7 +4,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class ClientDataSerializerHook : DataSerializerHook
+    internal sealed class ClientDataSerializerHook : DataSerializerHook
     {
         public static readonly int Id = FactoryIdHelper.GetFactoryId(FactoryIdHelper.ClientDsFactory, -3);
 

@@ -8,7 +8,7 @@ namespace Hazelcast.Util
     /// <summary>
     ///     Lister add remove util
     /// </summary>
-    public class ListenerUtil
+    internal class ListenerUtil
     {
         public static String Listen(ClientContext context, ClientRequest request, Object key,DistributedEventHandler handler)
         {

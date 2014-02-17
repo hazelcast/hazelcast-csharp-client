@@ -5,7 +5,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientClusterProxy : ICluster
+    internal class ClientClusterProxy : ICluster
     {
         private readonly ClientClusterService clusterService;
 

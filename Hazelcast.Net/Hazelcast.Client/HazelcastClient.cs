@@ -303,14 +303,19 @@ namespace Hazelcast.Client
 
         public static IHazelcastInstance NewHazelcastClient()
         {
-            return NewHazelcastClient(new XmlClientConfigBuilder().Build());
+            return NewHazelcastClient(XmlClientConfigBuilder.Build());
+        }
+
+        public static IHazelcastInstance NewHazelcastClient(string configFile)
+        {
+            return NewHazelcastClient(XmlClientConfigBuilder.Build(configFile));
         }
 
         public static IHazelcastInstance NewHazelcastClient(ClientConfig config)
         {
             if (config == null)
             {
-                config = new XmlClientConfigBuilder().Build();
+                config = XmlClientConfigBuilder.Build();
             }
             var client = new HazelcastClient(config);
             client.Start();
@@ -362,12 +367,12 @@ namespace Hazelcast.Client
             return config;
         }
 
-        public ISerializationService GetSerializationService()
+        internal ISerializationService GetSerializationService()
         {
             return serializationService;
         }
 
-        public IClientConnectionManager GetConnectionManager()
+        internal IClientConnectionManager GetConnectionManager()
         {
             return connectionManager;
         }

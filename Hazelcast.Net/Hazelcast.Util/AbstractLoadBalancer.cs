@@ -7,7 +7,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Util
 {
-    public abstract class AbstractLoadBalancer : LoadBalancer, IMembershipListener
+    internal abstract class AbstractLoadBalancer : LoadBalancer, IMembershipListener
     {
         private volatile ICluster _clusterRef;
         private volatile IMember[] _members;

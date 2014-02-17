@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class CollectionCompareAndRemoveRequest : CollectionRequest
+    internal class CollectionCompareAndRemoveRequest : CollectionRequest
     {
         private bool retain;
         private ICollection<Data> valueSet;

@@ -2,7 +2,7 @@ using System.Threading;
 
 namespace Hazelcast.Util
 {
-    public sealed class ThreadUtil
+    internal sealed class ThreadUtil
     {
         public static long GetThreadId()
         {

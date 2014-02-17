@@ -6,7 +6,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class ClusterDataSerializerHook : DataSerializerHook
+    internal sealed class ClusterDataSerializerHook : DataSerializerHook
     {
         public const int FId = 0;
         public const int Data = 0;

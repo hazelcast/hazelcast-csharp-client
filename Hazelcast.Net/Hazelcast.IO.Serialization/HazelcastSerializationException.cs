@@ -6,7 +6,7 @@ namespace Hazelcast.IO.Serialization
     /// <summary>This is an exception thrown when an exception occurs while serializing/deserializing objects.</summary>
     /// <remarks>This is an exception thrown when an exception occurs while serializing/deserializing objects.</remarks>
     [Serializable]
-    public class HazelcastSerializationException : HazelcastException
+    internal class HazelcastSerializationException : HazelcastException
     {
         public HazelcastSerializationException(string message) : base(message)
         {

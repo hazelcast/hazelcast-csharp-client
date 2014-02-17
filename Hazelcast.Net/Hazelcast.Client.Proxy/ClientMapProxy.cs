@@ -13,7 +13,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public sealed class ClientMapProxy<K, V> : ClientProxy, IMap<K, V>
+    internal sealed class ClientMapProxy<K, V> : ClientProxy, IMap<K, V>
     {
         private readonly string name;
         private readonly AtomicBoolean nearCacheInitialized = new AtomicBoolean();

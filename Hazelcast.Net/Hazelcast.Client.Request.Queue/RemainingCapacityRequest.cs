@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class RemainingCapacityRequest : ClientRequest, IRetryableRequest
+    internal class RemainingCapacityRequest : ClientRequest, IRetryableRequest
     {
         protected internal string name;
 

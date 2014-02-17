@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class MapPortableHook : IPortableHook
+    internal class MapPortableHook : IPortableHook
     {
         public const int Get = 1;
         public const int Put = 2;

@@ -1,6 +1,6 @@
 namespace Hazelcast.IO
 {
-    public sealed class Protocols
+    internal sealed class Protocols
     {
         public const string Cluster = "HZC";
 

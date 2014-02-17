@@ -1,6 +1,6 @@
 namespace Hazelcast.Core
 {
-    public class ServiceNames
+    internal class ServiceNames
     {
         public const string Map = "hz:impl:mapService";
 

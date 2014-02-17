@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Lock
 {
-    public sealed class GetLockCountRequest : ClientRequest
+    internal sealed class GetLockCountRequest : ClientRequest
     {
         private Data key;
 

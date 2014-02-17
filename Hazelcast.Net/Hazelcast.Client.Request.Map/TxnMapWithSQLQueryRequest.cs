@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class TxnMapWithSQLQueryRequest : AbstractTxnMapRequest
+    internal class TxnMapWithSQLQueryRequest : AbstractTxnMapRequest
     {
         internal string predicate;
 

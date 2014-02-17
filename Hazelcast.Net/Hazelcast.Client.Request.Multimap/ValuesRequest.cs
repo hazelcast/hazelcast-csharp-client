@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class ValuesRequest : MultiMapAllPartitionRequest, IRetryableRequest
+    internal class ValuesRequest : MultiMapAllPartitionRequest, IRetryableRequest
     {
         public ValuesRequest()
         {

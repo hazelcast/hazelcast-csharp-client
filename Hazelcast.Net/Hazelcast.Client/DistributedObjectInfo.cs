@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client
 {
-    public class DistributedObjectInfo : IPortable
+    internal class DistributedObjectInfo : IPortable
     {
         private string name;
         private string serviceName;

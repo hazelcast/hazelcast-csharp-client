@@ -5,7 +5,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class PortableSerializer : IStreamSerializer<IPortable>
+    internal sealed class PortableSerializer : IStreamSerializer<IPortable>
     {
         private readonly ISerializationContext context;
 

@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Base
 {
-    public class GetDistributedObjectsRequest : ClientRequest
+    internal class GetDistributedObjectsRequest : ClientRequest
     {
         public override int GetFactoryId()
         {

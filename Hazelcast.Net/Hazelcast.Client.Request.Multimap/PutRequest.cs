@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class PutRequest : MultiMapKeyBasedRequest
+    internal class PutRequest : MultiMapKeyBasedRequest
     {
         internal int index = -1;
 

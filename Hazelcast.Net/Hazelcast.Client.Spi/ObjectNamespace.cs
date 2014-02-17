@@ -6,7 +6,7 @@ using Hazelcast.IO.Serialization;
 namespace Hazelcast.Client.Spi
 {
     [Serializable]
-    public class ObjectNamespace //: IDataSerializable
+    internal class ObjectNamespace //: IDataSerializable
     {
         private string objectName;
         private string service;

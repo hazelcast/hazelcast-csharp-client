@@ -2,7 +2,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Semaphore
 {
-    public class ReduceRequest : SemaphoreRequest
+    internal class ReduceRequest : SemaphoreRequest
     {
         public ReduceRequest()
         {

@@ -3,7 +3,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class QueueDataSerializerHook : DataSerializerHook
+    internal sealed class QueueDataSerializerHook : DataSerializerHook
     {
         internal const int Offer = 0;
         internal const int Poll = 1;

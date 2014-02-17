@@ -1,49 +1,52 @@
 ﻿using System;
 
-namespace Hazelcast.Net.Ext
+namespace Hazelcast.IO
 {
-    public interface IDataOutput
+    public interface IDataInput
     {
         /// <exception cref="System.IO.IOException"></exception>
-        void Write(int b);
+        void ReadFully(byte[] b);
 
         /// <exception cref="System.IO.IOException"></exception>
-        void Write(byte[] b);
+        void ReadFully(byte[] b, int off, int len);
 
         /// <exception cref="System.IO.IOException"></exception>
-        void Write(byte[] b, int off, int len);
+        int SkipBytes(int n);
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteBoolean(bool v);
+        bool ReadBoolean();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteByte(byte v);
+        byte ReadByte();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteShort(int v);
+        int ReadUnsignedByte();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteChar(int v);
+        short ReadShort();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteInt(int v);
+        int ReadUnsignedShort();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteLong(long v);
+        char ReadChar();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteFloat(float v);
+        int ReadInt();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteDouble(double v);
+        long ReadLong();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteBytes(String s);
+        float ReadFloat();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteChars(String s);
+        double ReadDouble();
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteUTF(String s);
+        String ReadLine();
+
+        /// <exception cref="System.IO.IOException"></exception>
+        String ReadUTF();
     }
 }

@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Cluster
 {
-    public sealed class ClientMembershipEvent : IdentifiedDataSerializable,IIdentifiedDataSerializable
+    internal sealed class ClientMembershipEvent : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         public const int MemberAdded = MembershipEvent.MemberAdded;
 

@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
 {
-    public sealed class GetCountRequest : ClientRequest, IRetryableRequest
+    internal sealed class GetCountRequest : ClientRequest, IRetryableRequest
     {
         private string name;
 

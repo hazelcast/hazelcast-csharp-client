@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Request.Base
     }
 
 
-    public interface IRemoveRequest
+    internal interface IRemoveRequest
     {
         string RegistrationId
         {

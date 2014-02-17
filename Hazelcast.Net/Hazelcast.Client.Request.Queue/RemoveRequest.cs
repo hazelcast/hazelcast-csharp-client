@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class RemoveRequest : QueueRequest
+    internal class RemoveRequest : QueueRequest
     {
         internal Data data;
 

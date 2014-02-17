@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Hazelcast.IO.Serialization
 {
-    public class BinaryClassDefinitionProxy : BinaryClassDefinition, IClassDefinition
+    internal class BinaryClassDefinitionProxy : BinaryClassDefinition, IClassDefinition
     {
         public BinaryClassDefinitionProxy(int factoryId, int classId, int version, byte[] binary)
         {

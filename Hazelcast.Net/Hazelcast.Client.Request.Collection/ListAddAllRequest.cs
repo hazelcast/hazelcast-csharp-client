@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class ListAddAllRequest : CollectionAddAllRequest
+    internal class ListAddAllRequest : CollectionAddAllRequest
     {
         private int index;
 

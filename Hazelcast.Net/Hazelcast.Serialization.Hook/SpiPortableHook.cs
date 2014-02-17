@@ -6,7 +6,7 @@ using Hazelcast.Security;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class SpiPortableHook : IPortableHook
+    internal sealed class SpiPortableHook : IPortableHook
     {
         public const int UsernamePwdCred = 1;
         public const int Collection = 2;

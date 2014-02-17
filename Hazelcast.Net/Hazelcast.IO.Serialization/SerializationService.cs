@@ -8,7 +8,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class SerializationService : ISerializationService
+    internal sealed class SerializationService : ISerializationService
     {
         private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersLength;
 

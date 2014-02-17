@@ -2,7 +2,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class CollectionGetAllRequest : CollectionRequest
+    internal class CollectionGetAllRequest : CollectionRequest
     {
         public CollectionGetAllRequest()
         {

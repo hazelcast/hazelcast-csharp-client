@@ -41,7 +41,7 @@ UTFDataFormatException
 WrongTargetException
 */
     /// </summary>
-    public sealed class ExceptionUtil
+    internal sealed class ExceptionUtil
     {
         private const string ExceptionSeparator = "------ End remote and begin local stack-trace ------";
 

@@ -4,7 +4,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientIdGeneratorProxy : ClientProxy, IIdGenerator
+    internal class ClientIdGeneratorProxy : ClientProxy, IIdGenerator
     {
         private const int BlockSize = 10000;
 

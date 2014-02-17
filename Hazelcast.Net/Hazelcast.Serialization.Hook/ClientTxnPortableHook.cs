@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class ClientTxnPortableHook : IPortableHook
+    internal class ClientTxnPortableHook : IPortableHook
     {
         public const int Create = 1;
         public const int Commit = 2;

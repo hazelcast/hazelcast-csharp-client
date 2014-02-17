@@ -13,7 +13,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client.Spi
 {
-    public sealed class ClientPartitionService : IClientPartitionService
+    internal sealed class ClientPartitionService : IClientPartitionService
     {
         private static readonly ILogger logger = Logger.GetLogger(typeof (IClientPartitionService));
 
@@ -41,7 +41,7 @@ namespace Hazelcast.Client.Spi
             return rtn;
         }
 
-        public int GetPartitionId(Data key)
+        internal int GetPartitionId(Data key)
         {
             int pc = partitionCount;
             if (pc <= 0)

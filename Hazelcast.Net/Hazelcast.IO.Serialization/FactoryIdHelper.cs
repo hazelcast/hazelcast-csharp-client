@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class FactoryIdHelper
+    internal sealed class FactoryIdHelper
     {
         public const string SpiDsFactory = "hazelcast.serialization.ds.spi";
 

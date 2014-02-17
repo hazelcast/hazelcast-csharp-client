@@ -4,7 +4,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Request.Map
 {
-    //public sealed class MapSQLQueryRequest : AbstractMapQueryRequest
+    //internal sealed class MapSQLQueryRequest : AbstractMapQueryRequest
     //{
     //    private string sql;
 

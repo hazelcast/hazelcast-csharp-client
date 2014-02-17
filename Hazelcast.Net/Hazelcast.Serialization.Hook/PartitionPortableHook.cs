@@ -3,7 +3,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class PartitionPortableHook : IPortableHook
+    internal sealed class PartitionPortableHook : IPortableHook
     {
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.PartitionPortableFactory, -2);
 

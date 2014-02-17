@@ -5,7 +5,7 @@ namespace Hazelcast.Util
 {
     /// <summary>The RandomLB randomly selects a member to route to.</summary>
     /// <remarks>The RandomLB randomly selects a member to route to.</remarks>
-    public class RandomLB : AbstractLoadBalancer
+    internal class RandomLB : AbstractLoadBalancer
     {
         private readonly Random random = new Random((int) new DateTime().Ticks);
 

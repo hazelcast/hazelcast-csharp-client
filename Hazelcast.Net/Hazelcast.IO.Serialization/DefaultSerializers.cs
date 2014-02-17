@@ -5,7 +5,7 @@ using Hazelcast.Net.Ext;
 namespace Hazelcast.IO.Serialization.DefaultSerializers
 {
     //TODO FIXME
-    //public sealed class BigDecimalSerializer : SingletonSerializer<Decimal>
+    //internal sealed class BigDecimalSerializer : SingletonSerializer<Decimal>
     //{
     //    internal readonly BigIntegerSerializer bigIntegerSerializer = new BigIntegerSerializer();
 
@@ -53,7 +53,7 @@ namespace Hazelcast.IO.Serialization.DefaultSerializers
     //    }
     //}
 
-    public sealed class BigIntegerSerializer : SingletonSerializer<BigInteger>
+    internal sealed class BigIntegerSerializer : SingletonSerializer<BigInteger>
     {
         public override int GetTypeId()
         {
@@ -77,7 +77,7 @@ namespace Hazelcast.IO.Serialization.DefaultSerializers
         }
     }
 
-    public sealed class ClassSerializer : SingletonSerializer<Type>
+    internal sealed class ClassSerializer : SingletonSerializer<Type>
     {
         public override int GetTypeId()
         {
@@ -103,7 +103,7 @@ namespace Hazelcast.IO.Serialization.DefaultSerializers
         }
     }
 
-    public sealed class DateSerializer : SingletonSerializer<DateTime>
+    internal sealed class DateSerializer : SingletonSerializer<DateTime>
     {
         public override int GetTypeId()
         {
@@ -123,7 +123,7 @@ namespace Hazelcast.IO.Serialization.DefaultSerializers
         }
     }
 
-    public sealed class EnumSerializer : SingletonSerializer<Enum>
+    internal sealed class EnumSerializer : SingletonSerializer<Enum>
     {
         public override int GetTypeId()
         {
@@ -156,7 +156,7 @@ namespace Hazelcast.IO.Serialization.DefaultSerializers
         }
     }
 
-    //public sealed class Externalizer : SingletonSerializer<Externalizable>
+    //internal sealed class Externalizer : SingletonSerializer<Externalizable>
     //{
     //    private readonly bool gzipEnabled;
 
@@ -213,7 +213,7 @@ namespace Hazelcast.IO.Serialization.DefaultSerializers
     //    }
     //}
 
-    //public sealed class ObjectSerializer : SingletonSerializer<object>
+    //internal sealed class ObjectSerializer : SingletonSerializer<object>
     //{
     //    private readonly bool gzipEnabled;
     //    private readonly bool shared;
@@ -281,7 +281,7 @@ namespace Hazelcast.IO.Serialization.DefaultSerializers
     //    }
     //}
 
-    public abstract class SingletonSerializer<T> : IStreamSerializer<T>
+    internal abstract class SingletonSerializer<T> : IStreamSerializer<T>
     {
         public virtual void Destroy()
         {

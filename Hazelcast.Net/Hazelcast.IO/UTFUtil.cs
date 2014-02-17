@@ -4,7 +4,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO
 {
-    public sealed class UTFUtil
+    internal sealed class UTFUtil
     {
         private const int StringChunkSize = 16*1024;
 

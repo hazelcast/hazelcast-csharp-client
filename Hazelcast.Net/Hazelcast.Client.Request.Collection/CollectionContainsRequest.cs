@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class CollectionContainsRequest : CollectionRequest
+    internal class CollectionContainsRequest : CollectionRequest
     {
         private ICollection<Data> valueSet;
 

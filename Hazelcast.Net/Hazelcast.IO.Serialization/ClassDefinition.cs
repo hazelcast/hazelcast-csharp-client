@@ -5,7 +5,7 @@ using System.Text;
 namespace Hazelcast.IO.Serialization
 {
     [Serializable]
-    public class ClassDefinition : BinaryClassDefinition
+    internal class ClassDefinition : BinaryClassDefinition
     {
         private readonly IList<IFieldDefinition> fieldDefinitions = new List<IFieldDefinition>();
 

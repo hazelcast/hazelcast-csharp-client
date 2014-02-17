@@ -4,7 +4,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class PartitionDataSerializerHook : DataSerializerHook
+    internal sealed class PartitionDataSerializerHook : DataSerializerHook
     {
         public const int Partitions = 2;
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.PartitionDsFactory, -2);

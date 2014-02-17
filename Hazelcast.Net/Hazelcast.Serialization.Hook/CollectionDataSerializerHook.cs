@@ -3,7 +3,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class CollectionDataSerializerHook : DataSerializerHook
+    internal class CollectionDataSerializerHook : DataSerializerHook
     {
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.CollectionDsFactory, -20);
         public static readonly int CollectionAdd = 1;

@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class CollectionPortableHook : IPortableHook
+    internal class CollectionPortableHook : IPortableHook
     {
         public const int CollectionSize = 1;
         public const int CollectionContains = 2;

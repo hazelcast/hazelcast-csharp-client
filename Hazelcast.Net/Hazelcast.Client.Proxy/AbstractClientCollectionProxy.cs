@@ -12,7 +12,7 @@ using Hazelcast.Util;
 namespace Hazelcast.Client.Proxy
 {
     //.Net reviewed
-    public class AbstractClientCollectionProxy<E> : ClientProxy, IHCollection<E>
+    internal class AbstractClientCollectionProxy<E> : ClientProxy, IHCollection<E>
     {
         protected internal readonly string partitionKey;
 

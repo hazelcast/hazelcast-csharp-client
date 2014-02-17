@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class CollectionRemoveListenerRequest : ClientRequest, IRemoveRequest
+    internal class CollectionRemoveListenerRequest : ClientRequest, IRemoveRequest
     {
         private string name;
         private string serviceName;

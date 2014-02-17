@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapRemoveInterceptorRequest : ClientRequest
+    internal class MapRemoveInterceptorRequest : ClientRequest
     {
         private string id;
         private string name;

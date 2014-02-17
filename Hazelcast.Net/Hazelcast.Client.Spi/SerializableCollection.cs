@@ -8,7 +8,7 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Client.Spi
 {
     [Serializable]
-    public sealed class SerializableCollection : IdentifiedDataSerializable,IIdentifiedDataSerializable, IEnumerable<Data>
+    internal sealed class SerializableCollection : IdentifiedDataSerializable,IIdentifiedDataSerializable, IEnumerable<Data>
     {
         private ICollection<Data> collection;
 

@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class PeekRequest : QueueRequest, IRetryableRequest
+    internal class PeekRequest : QueueRequest, IRetryableRequest
     {
         public PeekRequest()
         {

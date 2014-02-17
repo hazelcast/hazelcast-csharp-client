@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class AddAllRequest : QueueRequest
+    internal class AddAllRequest : QueueRequest
     {
         private ICollection<Data> dataList;
 

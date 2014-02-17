@@ -2,7 +2,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Atomiclong
 {
-    public class GetAndSetRequest : AtomicLongRequest
+    internal class GetAndSetRequest : AtomicLongRequest
     {
         public GetAndSetRequest()
         {

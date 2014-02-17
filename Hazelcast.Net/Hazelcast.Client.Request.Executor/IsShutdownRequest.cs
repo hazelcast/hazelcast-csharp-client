@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Executor
 {
-    public class IsShutdownRequest : ClientRequest, IRetryableRequest
+    internal class IsShutdownRequest : ClientRequest, IRetryableRequest
     {
         internal string name;
 

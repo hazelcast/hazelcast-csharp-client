@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class MultiMapLockRequest : AbstractLockRequest
+    internal class MultiMapLockRequest : AbstractLockRequest
     {
         internal string name;
 

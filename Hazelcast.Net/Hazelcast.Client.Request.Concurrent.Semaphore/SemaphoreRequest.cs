@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Semaphore
 {
-    public abstract class SemaphoreRequest : ClientRequest
+    internal abstract class SemaphoreRequest : ClientRequest
     {
         internal string name;
 

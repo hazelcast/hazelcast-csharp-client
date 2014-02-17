@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Topic
 {
-    public class PublishRequest : ClientRequest
+    internal class PublishRequest : ClientRequest
     {
         private Data message;
         internal string name;

@@ -5,7 +5,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class MapDataSerializerHook : DataSerializerHook
+    internal sealed class MapDataSerializerHook : DataSerializerHook
     {
         public const int Put = 0;
         public const int Get = 1;

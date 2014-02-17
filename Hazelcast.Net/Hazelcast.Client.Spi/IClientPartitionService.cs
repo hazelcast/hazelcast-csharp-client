@@ -7,7 +7,7 @@ namespace Hazelcast.Client.Spi
     {
         Address GetPartitionOwner(int partitionId);
 
-        int GetPartitionId(Data key);
+        //int GetPartitionId(Data key);
 
         int GetPartitionId(object key);
 

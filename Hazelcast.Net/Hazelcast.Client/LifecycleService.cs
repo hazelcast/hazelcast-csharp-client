@@ -8,7 +8,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client
 {
-    public sealed class LifecycleService : ILifecycleService
+    internal sealed class LifecycleService : ILifecycleService
     {
         private readonly ILogger logger = Logger.GetLogger(typeof(ILifecycleService));
 

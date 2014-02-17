@@ -7,7 +7,7 @@ using Hazelcast.IO.Serialization;
 namespace Hazelcast.Client.Proxy
 {
     //.NET reviewed
-    public class ClientListProxy<E> : AbstractClientCollectionProxy<E>, IHList<E>
+    internal class ClientListProxy<E> : AbstractClientCollectionProxy<E>, IHList<E>
     {
         public ClientListProxy(string serviceName, string objectName) : base(serviceName, objectName)
         {

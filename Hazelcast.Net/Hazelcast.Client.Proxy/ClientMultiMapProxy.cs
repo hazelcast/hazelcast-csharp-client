@@ -10,7 +10,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientMultiMapProxy<K, V> : ClientProxy, IMultiMap<K, V>
+    internal class ClientMultiMapProxy<K, V> : ClientProxy, IMultiMap<K, V>
     {
         private readonly string name;
 

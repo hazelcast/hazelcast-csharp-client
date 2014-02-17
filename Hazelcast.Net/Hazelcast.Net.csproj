@@ -61,7 +61,6 @@
   <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
   <ItemGroup>
     <Compile Include="Hazelcast.Client.Connection\ClientConnectionManager.cs" />
-    <Compile Include="Hazelcast.Client.Connection\IRemotingService.cs" />
     <Compile Include="Hazelcast.Client.Request.Base\ClientRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Base\ClientResponse.cs" />
     <Compile Include="Hazelcast.Client.Request.Base\RemoveDistributedObjectListenerRequest.cs" />
@@ -73,6 +72,7 @@
     <Compile Include="Hazelcast.Client.Request.Queue\RemoveListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Topic\RemoveMessageListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Transaction\BaseTransactionRequest.cs" />
+    <Compile Include="Hazelcast.Client.Spi\IRemotingService.cs" />
     <Compile Include="Hazelcast.Client.Spi\PacketManager.cs" />
     <Compile Include="Hazelcast.Client.Spi\Exception.cs" />
     <Compile Include="Hazelcast.Client.Proxy\PartitionServiceProxy.cs" />
@@ -96,9 +96,8 @@
     <Compile Include="Hazelcast.Client.Connection\ClientConnection.cs" />
     <Compile Include="Hazelcast.Client.Connection\DefaultSocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Connection\HeartBeatChecker.cs" />
-    <Compile Include="Hazelcast.Client.Connection\IConnection.cs" />
     <Compile Include="Hazelcast.Client.Connection\Router.cs" />
-    <Compile Include="Hazelcast.Client.Connection\SocketFactory.cs" />
+    <Compile Include="Hazelcast.Client.Connection\ISocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Connection\SSLSocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Proxy\AbstractClientCollectionProxy.cs" />
     <Compile Include="Hazelcast.Client.Proxy\AbstractClientTxnCollectionProxy.cs" />
@@ -290,10 +289,13 @@
     <Compile Include="Hazelcast.Client.Spi\ProxyManager.cs" />
     <Compile Include="Hazelcast.Client.Spi\SerializableCollection.cs" />
     <Compile Include="Hazelcast.Client\AuthenticationException.cs" />
+    <Compile Include="Hazelcast.Core\MapOperationType.cs" />
     <Compile Include="Hazelcast.Core\MemberAttributeEvent.cs" />
     <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
     <Compile Include="Hazelcast.IO.Serialization\BinaryClassDefinitionProxy.cs" />
     <Compile Include="Hazelcast.IO.Serialization\DataAdaptor.cs" />
+    <Compile Include="Hazelcast.IO\IDataInput.cs" />
+    <Compile Include="Hazelcast.IO\IDataOutput.cs" />
     <Compile Include="Hazelcast.IO\SocketReadable.cs" />
     <Compile Include="Hazelcast.IO\SocketWritable.cs" />
     <Compile Include="Hazelcast.Logging\LogLevel.cs" />
@@ -301,8 +303,6 @@
     <Compile Include="Hazelcast.Logging\TraceLogFactory.cs" />
     <Compile Include="Hazelcast.Net.Ext\ByteBuffer.cs" />
     <Compile Include="Hazelcast.Net.Ext\Extensions.cs" />
-    <Compile Include="Hazelcast.Net.Ext\IDataOutput.cs" />
-    <Compile Include="Hazelcast.Net.Ext\IDataInput.cs" />
     <Compile Include="Hazelcast.Net.Ext\InputOutputStreams.cs" />
     <Compile Include="Hazelcast.Core\TimeUnit.cs" />
     <Compile Include="Hazelcast.Serialization.Hook\ClientDataSerializerHook.cs" />
@@ -511,18 +511,13 @@
     <Compile Include="Hazelcast.Util\ByteFlipperUtil.cs" />
     <Compile Include="Hazelcast.Util\Delegates.cs" />
     <Compile Include="Hazelcast.Util\Clock.cs" />
-    <Compile Include="Hazelcast.Util\ConcurrencyUtil.cs" />
-    <Compile Include="Hazelcast.Util\ErrorHandler.cs" />
     <Compile Include="Hazelcast.Util\ExceptionUtil.cs" />
     <Compile Include="Hazelcast.Util\IterationType.cs" />
     <Compile Include="Hazelcast.Util\ListenerUtil.cs" />
-    <Compile Include="Hazelcast.Util\ObjectPool.cs" />
     <Compile Include="Hazelcast.Util\QueryResultEntry.cs" />
     <Compile Include="Hazelcast.Util\QueryResultSet.cs" />
-    <Compile Include="Hazelcast.Util\QueueBasedObjectPool.cs" />
     <Compile Include="Hazelcast.Util\RandomLB.cs" />
     <Compile Include="Hazelcast.Util\RoundRobinLB.cs" />
-    <Compile Include="Hazelcast.Util\ServiceLoader.cs" />
     <Compile Include="Hazelcast.Util\StaticLB.cs" />
     <Compile Include="Hazelcast.Util\ThreadUtil.cs" />
     <Compile Include="Hazelcast.Util\ValidationUtil.cs" />
@@ -548,6 +543,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -556,7 +552,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\hazelcast-config-full.xml" />
+    <None Include="Resources\hazelcast-client-full.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="Version">
@@ -577,7 +573,7 @@
       <Output TaskParameter="Day" PropertyName="Day" />
       <Output TaskParameter="Year" PropertyName="Year" />
     </Time>
-    <AssemblyInfo CodeLanguage="CS" OutputFile="Properties\AssemblyInfo.cs" GenerateClass="false" AssemblyTitle="Hazelcast .Net Client" AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" AssemblyCompany="Hazelcast Inc." AssemblyProduct="Hazelcast Enterprise Edition" AssemblyCopyright="Copyright (c) 2008-2014, Hazelcast, Inc" AssemblyConfiguration="Commit $(CommitHash)" ComVisible="false" CLSCompliant="false" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" />
+    <AssemblyInfo CodeLanguage="CS" OutputFile="Properties\AssemblyInfo.cs" GenerateClass="false" AssemblyTitle="Hazelcast .Net Client" AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" AssemblyCompany="Hazelcast Inc." AssemblyProduct="Hazelcast Enterprise Edition" AssemblyCopyright="Copyright (c) 2008-2014, Hazelcast, Inc" AssemblyConfiguration="Commit $(CommitHash)" ComVisible="false" CLSCompliant="false" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" InternalsVisibleTo="Hazelcast.Test"/>
   </Target>
   <Target Name="Merge" DependsOnTargets="Build">
     <!-- Merge together files -->

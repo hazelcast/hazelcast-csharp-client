@@ -63,7 +63,7 @@ namespace Hazelcast.Client.Spi
         ///     local client
         /// </summary>
         /// <returns></returns>
-        Client GetLocalClient();
+        IClient GetLocalClient();
 
         /// <summary>
         ///     member string

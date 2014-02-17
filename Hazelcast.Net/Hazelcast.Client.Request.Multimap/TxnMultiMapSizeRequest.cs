@@ -2,7 +2,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class TxnMultiMapSizeRequest : TxnMultiMapRequest
+    internal class TxnMultiMapSizeRequest : TxnMultiMapRequest
     {
         public TxnMultiMapSizeRequest()
         {

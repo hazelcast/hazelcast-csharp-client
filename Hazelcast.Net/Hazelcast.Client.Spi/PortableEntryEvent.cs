@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Spi
 {
-    public class PortableEntryEvent : EventArgs, IPortable
+    internal class PortableEntryEvent : EventArgs, IPortable
     {
         private EntryEventType eventType;
         private Data key;

@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapFlushRequest : ClientRequest
+    internal class MapFlushRequest : ClientRequest
     {
         protected internal string name;
 

@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Partition
 {
-    public sealed class PartitionsResponse : IdentifiedDataSerializable,IIdentifiedDataSerializable
+    internal sealed class PartitionsResponse : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         private Address[] members;
 

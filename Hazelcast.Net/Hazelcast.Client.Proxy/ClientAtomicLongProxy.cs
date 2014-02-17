@@ -8,7 +8,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientAtomicLongProxy : ClientProxy, IAtomicLong
+    internal class ClientAtomicLongProxy : ClientProxy, IAtomicLong
     {
         private readonly string name;
         private volatile Data key;

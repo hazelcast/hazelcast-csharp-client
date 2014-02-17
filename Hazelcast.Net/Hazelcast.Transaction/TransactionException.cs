@@ -10,7 +10,7 @@ namespace Hazelcast.Transaction
     ///     data-structures.
     /// </summary>
     [Serializable]
-    public class TransactionException : HazelcastException
+    internal class TransactionException : HazelcastException
     {
         public TransactionException()
         {

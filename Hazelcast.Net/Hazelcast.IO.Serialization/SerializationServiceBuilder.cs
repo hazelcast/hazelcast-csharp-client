@@ -7,7 +7,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class SerializationServiceBuilder
+    internal sealed class SerializationServiceBuilder
     {
         private readonly IDictionary<int, IDataSerializableFactory> dataSerializableFactories =
             new Dictionary<int, IDataSerializableFactory>();

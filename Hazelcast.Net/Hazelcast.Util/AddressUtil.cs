@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace Hazelcast.Util
 {
-    public class AddressHolder
+    internal class AddressHolder
     {
         public readonly string address;
 
@@ -33,7 +33,7 @@ namespace Hazelcast.Util
         }
     }
 
-    public sealed class AddressUtil
+    internal sealed class AddressUtil
     {
         private AddressUtil()
         {
@@ -317,7 +317,7 @@ namespace Hazelcast.Util
         }
 
         /// <summary>http://docs.oracle.com/javase/1.5.0/docs/guide/net/ipv6_guide/index.html</summary>
-        public abstract class AddressMatcher
+        internal abstract class AddressMatcher
         {
             protected internal readonly string[] address;
 
@@ -404,7 +404,7 @@ namespace Hazelcast.Util
         }
 
         [Serializable]
-        public class InvalidAddressException : ArgumentException
+        internal class InvalidAddressException : ArgumentException
         {
             public InvalidAddressException(string s) : base("Illegal IP address format: " + s)
             {

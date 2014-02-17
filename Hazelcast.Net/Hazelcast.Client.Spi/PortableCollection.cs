@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Spi
 {
-    public sealed class PortableCollection : IPortable
+    internal sealed class PortableCollection : IPortable
     {
         private ICollection<Data> collection;
 

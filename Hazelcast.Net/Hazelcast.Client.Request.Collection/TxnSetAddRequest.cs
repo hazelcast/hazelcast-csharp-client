@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class TxnSetAddRequest : TxnCollectionRequest
+    internal class TxnSetAddRequest : TxnCollectionRequest
     {
         public TxnSetAddRequest()
         {

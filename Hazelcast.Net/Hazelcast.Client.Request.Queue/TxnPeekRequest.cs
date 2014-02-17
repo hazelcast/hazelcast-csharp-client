@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class TxnPeekRequest : BaseTransactionRequest
+    internal class TxnPeekRequest : BaseTransactionRequest
     {
         private string name;
 

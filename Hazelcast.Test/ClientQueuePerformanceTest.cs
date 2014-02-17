@@ -14,7 +14,7 @@ namespace Hazelcast.Client.Test
 
         internal static readonly AtomicLong totalPeek = new AtomicLong();
 
-        internal const int ThreadCount = 40;
+        internal const int ThreadCount = 400;
 
         internal static readonly byte[] Value = new byte[1000];
 
@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Test
 
         //    static HazelcastInstance second;
         /// <exception cref="System.Exception"></exception>
-        public static void Main111(string[] args)
+        public static void Mainwq(string[] args)
         {
             var config = new ClientConfig();
             config.GetNetworkConfig().AddAddress("127.0.0.1");
@@ -40,6 +40,8 @@ namespace Hazelcast.Client.Test
                 Thread t = new Thread(Run1);
                 t.Start();
             }
+            
+            new Thread(Run2).Start();
 
             while (true)
             {

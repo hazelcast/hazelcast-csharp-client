@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class PartitionServiceProxy : IClientPartitionService
+    internal class PartitionServiceProxy : IClientPartitionService
     {
         public PartitionServiceProxy(ClientPartitionService partitionService)
         {

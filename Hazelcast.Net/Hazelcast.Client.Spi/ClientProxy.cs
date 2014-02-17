@@ -10,7 +10,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    public abstract class ClientProxy : IDistributedObject
+    internal abstract class ClientProxy : IDistributedObject
     {
         private readonly string objectName;
         private readonly string serviceName;

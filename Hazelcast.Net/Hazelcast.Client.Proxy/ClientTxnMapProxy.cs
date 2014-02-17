@@ -8,7 +8,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientTxnMapProxy<K, V> : ClientTxnProxy, ITransactionalMap<K, V>
+    internal class ClientTxnMapProxy<K, V> : ClientTxnProxy, ITransactionalMap<K, V>
     {
         public ClientTxnMapProxy(string name, TransactionContextProxy proxy) : base(name, proxy)
         {

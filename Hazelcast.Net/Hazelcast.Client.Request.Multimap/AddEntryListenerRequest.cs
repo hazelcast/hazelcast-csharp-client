@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class AddEntryListenerRequest : ClientRequest
+    internal class AddEntryListenerRequest : ClientRequest
     {
         internal bool includeValue;
         internal Data key;

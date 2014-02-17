@@ -6,7 +6,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public sealed class MapQueryRequest<K, V> : AbstractMapQueryRequest
+    internal sealed class MapQueryRequest<K, V> : AbstractMapQueryRequest
     {
         private IPredicate<K, V> predicate;
 

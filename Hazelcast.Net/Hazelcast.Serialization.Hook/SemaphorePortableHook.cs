@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class SemaphorePortableHook : IPortableHook
+    internal class SemaphorePortableHook : IPortableHook
     {
         public const int Acquire = 1;
         public const int Available = 2;

@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Request.Concurrent.Lock
 {
-    public abstract class AbstractUnlockRequest : ClientRequest
+    internal abstract class AbstractUnlockRequest : ClientRequest
     {
         private bool force;
         protected internal Data key;
