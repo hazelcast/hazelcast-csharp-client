@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class CountRequest : MultiMapKeyBasedRequest, IRetryableRequest
+    internal class CountRequest : MultiMapKeyBasedRequest, IRetryableRequest
     {
         public CountRequest()
         {

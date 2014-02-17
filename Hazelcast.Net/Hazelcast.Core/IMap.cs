@@ -47,6 +47,8 @@ namespace Hazelcast.Core
     ///         </ul>
     ///     </p>
     /// </remarks>
+    /// <typeparam name="K">type of the Key</typeparam>
+    /// <typeparam name="V">type of the Value</typeparam>
     public interface IMap<K, V> : IDistributedObject
     {
 

@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Lock
 {
-    public sealed class IsLockedRequest : AbstractIsLockedRequest, IRetryableRequest
+    internal sealed class IsLockedRequest : AbstractIsLockedRequest, IRetryableRequest
     {
         public IsLockedRequest()
         {

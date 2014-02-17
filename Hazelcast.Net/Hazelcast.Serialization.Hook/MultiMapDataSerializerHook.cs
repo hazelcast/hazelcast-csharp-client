@@ -3,7 +3,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class MultiMapDataSerializerHook : DataSerializerHook
+    internal class MultiMapDataSerializerHook : DataSerializerHook
     {
         public const int AddAllBackup = 0;
         public const int AddAll = 1;

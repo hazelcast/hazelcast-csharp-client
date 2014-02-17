@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace Hazelcast.Logging
 {
-    public abstract class LoggerFactorySupport : ILoggerFactory
+    internal abstract class LoggerFactorySupport : ILoggerFactory
     {
         internal readonly ConcurrentDictionary<string, ILogger> mapLoggers = new ConcurrentDictionary<string, ILogger>();
 

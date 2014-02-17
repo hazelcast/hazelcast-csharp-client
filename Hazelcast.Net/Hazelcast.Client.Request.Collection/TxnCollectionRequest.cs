@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public abstract class TxnCollectionRequest : BaseTransactionRequest
+    internal abstract class TxnCollectionRequest : BaseTransactionRequest
     {
         internal string name;
 

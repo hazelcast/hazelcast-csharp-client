@@ -2,7 +2,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class CountDownLatchDataSerializerHook : DataSerializerHook
+    internal sealed class CountDownLatchDataSerializerHook : DataSerializerHook
     {
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.CdlPortableFactory, -14);
 

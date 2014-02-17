@@ -20,7 +20,7 @@ namespace Hazelcast.Client
         ReplicatedMap
     }
 
-    public class ClientNearCache
+    internal class ClientNearCache
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientNearCache));
 

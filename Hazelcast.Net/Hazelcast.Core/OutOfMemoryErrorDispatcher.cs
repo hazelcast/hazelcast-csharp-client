@@ -2,7 +2,7 @@ using System;
 
 namespace Hazelcast.Core
 {
-    public sealed class OutOfMemoryErrorDispatcher
+    internal sealed class OutOfMemoryErrorDispatcher
     {
         private static readonly IHazelcastInstance[] instances = new IHazelcastInstance[50];
 
@@ -109,7 +109,7 @@ namespace Hazelcast.Core
             }
         }
 
-        public sealed class Helper
+        internal sealed class Helper
         {
             public static void TryCloseConnections(IHazelcastInstance hazelcastInstance)
             {

@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public abstract class QueueRequest : ClientRequest
+    internal abstract class QueueRequest : ClientRequest
     {
         protected internal string name;
 

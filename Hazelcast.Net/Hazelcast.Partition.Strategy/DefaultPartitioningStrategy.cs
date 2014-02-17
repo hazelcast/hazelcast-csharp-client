@@ -2,7 +2,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Partition.Strategy
 {
-    public class DefaultPartitioningStrategy : IPartitioningStrategy
+    internal class DefaultPartitioningStrategy : IPartitioningStrategy
     {
         public virtual object GetPartitionKey(object key)
         {

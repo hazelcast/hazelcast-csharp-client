@@ -1,52 +1,49 @@
 ﻿using System;
 
-namespace Hazelcast.Net.Ext
+namespace Hazelcast.IO
 {
-    public interface IDataInput
+    public interface IDataOutput
     {
         /// <exception cref="System.IO.IOException"></exception>
-        void ReadFully(byte[] b);
+        void Write(int b);
 
         /// <exception cref="System.IO.IOException"></exception>
-        void ReadFully(byte[] b, int off, int len);
+        void Write(byte[] b);
 
         /// <exception cref="System.IO.IOException"></exception>
-        int SkipBytes(int n);
+        void Write(byte[] b, int off, int len);
 
         /// <exception cref="System.IO.IOException"></exception>
-        bool ReadBoolean();
+        void WriteBoolean(bool v);
 
         /// <exception cref="System.IO.IOException"></exception>
-        byte ReadByte();
+        void WriteByte(byte v);
 
         /// <exception cref="System.IO.IOException"></exception>
-        int ReadUnsignedByte();
+        void WriteShort(int v);
 
         /// <exception cref="System.IO.IOException"></exception>
-        short ReadShort();
+        void WriteChar(int v);
 
         /// <exception cref="System.IO.IOException"></exception>
-        int ReadUnsignedShort();
+        void WriteInt(int v);
 
         /// <exception cref="System.IO.IOException"></exception>
-        char ReadChar();
+        void WriteLong(long v);
 
         /// <exception cref="System.IO.IOException"></exception>
-        int ReadInt();
+        void WriteFloat(float v);
 
         /// <exception cref="System.IO.IOException"></exception>
-        long ReadLong();
+        void WriteDouble(double v);
 
         /// <exception cref="System.IO.IOException"></exception>
-        float ReadFloat();
+        void WriteBytes(String s);
 
         /// <exception cref="System.IO.IOException"></exception>
-        double ReadDouble();
+        void WriteChars(String s);
 
         /// <exception cref="System.IO.IOException"></exception>
-        String ReadLine();
-
-        /// <exception cref="System.IO.IOException"></exception>
-        String ReadUTF();
+        void WriteUTF(String s);
     }
 }

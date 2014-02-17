@@ -8,7 +8,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientSemaphoreProxy : ClientProxy, ISemaphore
+    internal class ClientSemaphoreProxy : ClientProxy, ISemaphore
     {
         private readonly string name;
 

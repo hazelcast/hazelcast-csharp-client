@@ -1,8 +1,9 @@
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Hazelcast.Net.Ext
 {
-    public class AtomicLong
+    internal class AtomicLong
     {
         private long val;
 

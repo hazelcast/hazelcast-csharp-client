@@ -1,6 +1,6 @@
 namespace Hazelcast.Core
 {
-    public sealed class TerminatedLifecycleService : ILifecycleService
+    internal sealed class TerminatedLifecycleService : ILifecycleService
     {
         public bool IsRunning()
         {

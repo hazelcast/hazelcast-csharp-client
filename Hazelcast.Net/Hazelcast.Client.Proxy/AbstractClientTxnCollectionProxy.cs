@@ -3,7 +3,7 @@ using Hazelcast.Client.Request.Transaction;
 
 namespace Hazelcast.Client.Proxy
 {
-    public abstract class AbstractClientTxnCollectionProxy<E> : ClientTxnProxy
+    internal abstract class AbstractClientTxnCollectionProxy<E> : ClientTxnProxy
     {
         protected internal AbstractClientTxnCollectionProxy(string name, TransactionContextProxy proxy)
             : base(name, proxy)

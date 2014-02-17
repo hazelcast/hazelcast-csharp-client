@@ -3,7 +3,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class ExecutorDataSerializerHook : DataSerializerHook
+    internal class ExecutorDataSerializerHook : DataSerializerHook
     {
         public const int CallableTask = 0;
         public const int MemberCallableTask = 1;

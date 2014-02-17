@@ -3,11 +3,8 @@ using System;
 namespace Hazelcast.Core
 {
     /// <summary>
-    ///     Message for
-    ///     <see cref="ITopic{E}">ITopic&lt;E&gt;</see>
-    ///     .
+    ///     Message for <see cref="ITopic{E}">ITopic&lt;E&gt;</see>.
     /// </summary>
-    /// <?></?>
     [Serializable]
     public class Message<E> : EventObject
     {

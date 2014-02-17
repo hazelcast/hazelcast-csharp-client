@@ -9,7 +9,7 @@ using Hazelcast.Transaction;
 
 namespace Hazelcast.Client
 {
-    public sealed class HazelcastClientProxy : IHazelcastInstance
+    internal sealed class HazelcastClientProxy : IHazelcastInstance
     {
         internal volatile HazelcastClient client;
 

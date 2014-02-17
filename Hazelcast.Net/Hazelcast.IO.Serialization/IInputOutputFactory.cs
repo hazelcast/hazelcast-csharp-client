@@ -1,6 +1,6 @@
 namespace Hazelcast.IO.Serialization
 {
-    public interface IInputOutputFactory
+    internal interface IInputOutputFactory
     {
         IBufferObjectDataInput CreateInput(Data data, ISerializationService service);
 

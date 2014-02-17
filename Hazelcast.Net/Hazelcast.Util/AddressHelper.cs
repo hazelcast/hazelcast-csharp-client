@@ -6,7 +6,7 @@ using Hazelcast.IO;
 
 namespace Hazelcast.Util
 {
-    public sealed class AddressHelper
+    internal sealed class AddressHelper
     {
         private const int MaxPortTries = 3;
 

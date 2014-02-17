@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class IteratorRequest : QueueRequest, IRetryableRequest
+    internal class IteratorRequest : QueueRequest, IRetryableRequest
     {
         public IteratorRequest()
         {

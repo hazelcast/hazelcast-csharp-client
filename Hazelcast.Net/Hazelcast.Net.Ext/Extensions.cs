@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Hazelcast.Net.Ext
 {
-    public static class Extensions
+    internal static class Extensions
     {
         public static bool IsInterrupted(this Thread thread)
         {

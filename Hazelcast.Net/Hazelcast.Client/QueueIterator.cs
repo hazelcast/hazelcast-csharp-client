@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client
 {
-    public class QueueIterator<E> : IEnumerator<E>
+    internal class QueueIterator<E> : IEnumerator<E>
     {
         private readonly IEnumerator<Data> iter;
         private readonly ISerializationService serializationService;

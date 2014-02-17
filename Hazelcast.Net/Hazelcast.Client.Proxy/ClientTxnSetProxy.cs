@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientTxnSetProxy<E> : AbstractClientTxnCollectionProxy<E>, ITransactionalSet<E>
+    internal class ClientTxnSetProxy<E> : AbstractClientTxnCollectionProxy<E>, ITransactionalSet<E>
     {
         public ClientTxnSetProxy(string name, TransactionContextProxy proxy)
             : base(name, proxy)

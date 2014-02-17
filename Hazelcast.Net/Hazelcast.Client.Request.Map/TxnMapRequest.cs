@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class TxnMapRequest<K, V> : AbstractTxnMapRequest
+    internal class TxnMapRequest<K, V> : AbstractTxnMapRequest
     {
         internal IPredicate<K, V> predicate;
 

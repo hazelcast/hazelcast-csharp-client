@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class DrainRequest : QueueRequest
+    internal class DrainRequest : QueueRequest
     {
         internal int maxSize;
 

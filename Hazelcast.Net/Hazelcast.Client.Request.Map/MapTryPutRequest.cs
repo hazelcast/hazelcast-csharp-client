@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapTryPutRequest : MapPutRequest
+    internal class MapTryPutRequest : MapPutRequest
     {
         private long timeout;
 

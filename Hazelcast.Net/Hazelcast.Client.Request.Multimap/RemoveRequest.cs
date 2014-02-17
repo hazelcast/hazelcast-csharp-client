@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class RemoveRequest : MultiMapKeyBasedRequest
+    internal class RemoveRequest : MultiMapKeyBasedRequest
     {
         internal long threadId;
         internal Data value;

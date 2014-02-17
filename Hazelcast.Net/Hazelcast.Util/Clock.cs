@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Hazelcast.Util
 {
-    public sealed class Clock
+    internal sealed class Clock
     {
         private static readonly ClockImpl _clock;
         private static readonly DateTime Jan1st1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);

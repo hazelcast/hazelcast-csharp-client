@@ -2,7 +2,7 @@ using System.Threading;
 
 namespace Hazelcast.Net.Ext
 {
-    public class AtomicReference<T> where T : class
+    internal class AtomicReference<T> where T : class
     {
         private T val;
 

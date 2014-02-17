@@ -10,7 +10,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public abstract class ClientTxnProxy : ITransactionalObject
+    internal abstract class ClientTxnProxy : ITransactionalObject
     {
         internal readonly string objectName;
 

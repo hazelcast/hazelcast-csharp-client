@@ -13,7 +13,7 @@ using Hazelcast.Util;
 namespace Hazelcast.Core
 {
     [Serializable]
-    public sealed class Member :IdentifiedDataSerializable, IMember, IIdentifiedDataSerializable
+    internal sealed class Member :IdentifiedDataSerializable, IMember, IIdentifiedDataSerializable
     {
         private readonly bool localMember;
 

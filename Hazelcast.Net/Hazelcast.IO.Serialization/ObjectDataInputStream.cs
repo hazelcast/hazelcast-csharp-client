@@ -5,7 +5,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    public class ObjectDataInputStream : InputStream, IObjectDataInput, IDisposable, ISerializationContextAware
+    internal class ObjectDataInputStream : InputStream, IObjectDataInput, IDisposable, ISerializationContextAware
     {
         private readonly BinaryReader _binaryReader;
 

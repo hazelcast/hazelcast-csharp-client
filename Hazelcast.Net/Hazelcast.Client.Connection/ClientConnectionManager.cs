@@ -19,7 +19,7 @@ using ICredentials = Hazelcast.Security.ICredentials;
 
 namespace Hazelcast.Client.Connection
 {
-    public class ClientConnectionManager : IClientConnectionManager
+    internal class ClientConnectionManager : IClientConnectionManager
     {
         #region fields
 
@@ -457,7 +457,7 @@ namespace Hazelcast.Client.Connection
                 }
                 var remainingTime = (int) (nextTry - Clock.CurrentTimeMillis());
                 logger.Warning(
-                    string.Format("Unable to get alive cluster connection," + " try in %d ms later, attempt %d of %d.",
+                    string.Format("Unable to get alive cluster connection, try in {0} ms later, attempt {1} of{2}.",
                         Math.Max(0, remainingTime), attempt, connectionAttemptLimit));
                 if (remainingTime > 0)
                 {

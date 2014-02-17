@@ -9,7 +9,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientLockProxy : ClientProxy, ILock
+    internal class ClientLockProxy : ClientProxy, ILock
     {
         private volatile Data key;
 

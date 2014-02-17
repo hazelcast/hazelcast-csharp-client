@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Connection
+namespace Hazelcast.Client.Spi
 {
     public interface IRemotingService
     {

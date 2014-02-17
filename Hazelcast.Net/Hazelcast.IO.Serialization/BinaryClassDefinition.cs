@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Hazelcast.IO.Serialization
 {
     [Serializable]
-    public abstract class BinaryClassDefinition : IClassDefinition
+    internal abstract class BinaryClassDefinition : IClassDefinition
     {
         [NonSerialized] 
         private byte[] binary;

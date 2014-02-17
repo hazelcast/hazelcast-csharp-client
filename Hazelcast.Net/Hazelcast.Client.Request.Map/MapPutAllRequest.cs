@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapPutAllRequest : ClientRequest
+    internal class MapPutAllRequest : ClientRequest
     {
         private MapEntrySet entrySet;
         protected internal string name;

@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public abstract class CollectionRequest : ClientRequest
+    internal abstract class CollectionRequest : ClientRequest
     {
         protected internal string name;
         protected internal string serviceName;

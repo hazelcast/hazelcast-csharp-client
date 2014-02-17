@@ -8,7 +8,7 @@ namespace Hazelcast.Client.Request.Base
     /// <summary>
     ///     Server response wrapper
     /// </summary>
-    public class ClientResponse : IdentifiedDataSerializable,IIdentifiedDataSerializable
+    internal class ClientResponse : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         private int _callId;
         private bool _event;

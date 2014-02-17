@@ -2,7 +2,7 @@ using System;
 
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class ArrayDataSerializableFactory : IDataSerializableFactory
+    internal sealed class ArrayDataSerializableFactory : IDataSerializableFactory
     {
         private readonly Func<int, IIdentifiedDataSerializable>[] constructors;
 

@@ -6,16 +6,23 @@ using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
-    class ClientXmlTest
+    [TestFixture]
+    public class ClientXmlTest
     {
 
 
         [Test]
-        public virtual void Test()
+        public virtual void TestXmlParserWithConfigFile()
         {
-            var streamReader = new StreamReader(@"..\..\..\Hazelcast.Net\Resources\hazelcast-config-full.xml");
+            ClientConfig clientConfig = XmlClientConfigBuilder.Build(@"..\..\..\Hazelcast.Net\Resources\hazelcast-client-full.xml");
 
-            ClientConfig clientConfig = new XmlClientConfigBuilder(streamReader).Build();
+            Assert.NotNull(clientConfig);
+        }
+
+        [Test]
+        public virtual void TestXmlParserDefault()
+        {
+            ClientConfig clientConfig = XmlClientConfigBuilder.Build();
 
             Assert.NotNull(clientConfig);
         }

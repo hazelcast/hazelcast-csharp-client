@@ -25,7 +25,7 @@ namespace Hazelcast.Core
     /// </remarks>
     /// <seealso cref="System.OutOfMemoryException">System.OutOfMemoryException</seealso>
     /// <seealso cref="Hazelcast#setOutOfMemoryHandler(com.hazelcast.core.OutOfMemoryHandler)">Hazelcast#setOutOfMemoryHandler(com.hazelcast.core.OutOfMemoryHandler)</seealso>
-    public abstract class OutOfMemoryHandler
+    internal abstract class OutOfMemoryHandler
     {
         /// <summary>
         ///     When an <code>OutOfMemoryError</code> is caught by Hazelcast threads,

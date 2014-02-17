@@ -2,7 +2,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class TxnSetSizeRequest : TxnCollectionRequest
+    internal class TxnSetSizeRequest : TxnCollectionRequest
     {
         public TxnSetSizeRequest()
         {

@@ -9,7 +9,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public abstract class AbstractTxnMapRequest : BaseTransactionRequest
+    internal abstract class AbstractTxnMapRequest : BaseTransactionRequest
     {
         public enum TxnMapRequestType
         {

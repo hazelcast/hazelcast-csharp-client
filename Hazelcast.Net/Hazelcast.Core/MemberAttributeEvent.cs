@@ -17,9 +17,10 @@ namespace Hazelcast.Core
 
         public MemberAttributeEvent():base(null, null, MemberAttributeChanged, null){ }
 
-        public MemberAttributeEvent(ICluster cluster, Member member, MapOperationType operationType, String key, Object value)
+        public MemberAttributeEvent(ICluster cluster, IMember member, MapOperationType operationType, String key, Object value)
             : base(cluster, member, MemberAttributeChanged, null)
         {
+            this.member = (Member) member;
             this.operationType = operationType;
             this.key = key;
             this.value = value;

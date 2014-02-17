@@ -116,11 +116,11 @@ namespace Hazelcast.IO.Serialization
             {
                 if (e is IOException)
                 {
-                    throw e;
+                    throw;
                 }
                 if (e is HazelcastSerializationException)
                 {
-                    throw e;
+                    throw;
                 }
                 throw new HazelcastSerializationException(
                     "Problem while reading IDataSerializable, namespace: " + factoryId + ", id: " + id + ", class: " +

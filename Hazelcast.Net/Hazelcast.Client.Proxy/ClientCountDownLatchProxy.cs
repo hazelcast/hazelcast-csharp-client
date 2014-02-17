@@ -9,7 +9,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientCountDownLatchProxy : ClientProxy, ICountDownLatch
+    internal class ClientCountDownLatchProxy : ClientProxy, ICountDownLatch
     {
         private volatile Data key;
 

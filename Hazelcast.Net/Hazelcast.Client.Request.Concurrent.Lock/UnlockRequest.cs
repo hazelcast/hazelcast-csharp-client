@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Lock
 {
-    public sealed class UnlockRequest : AbstractUnlockRequest
+    internal sealed class UnlockRequest : AbstractUnlockRequest
     {
         public UnlockRequest()
         {

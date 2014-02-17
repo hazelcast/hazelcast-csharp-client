@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Base
 {
-    public class RemoveDistributedObjectListenerRequest : ClientRequest, IRemoveRequest
+    internal class RemoveDistributedObjectListenerRequest : ClientRequest, IRemoveRequest
     {
         private string registrationId;
 

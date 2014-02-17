@@ -7,7 +7,7 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Client.Request.Cluster
 {
     [Serializable]
-    public sealed class ClientPingRequest : ClientRequest
+    internal sealed class ClientPingRequest : ClientRequest
     {
         public override int GetFactoryId()
         {

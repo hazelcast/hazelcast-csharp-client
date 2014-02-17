@@ -7,7 +7,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientTopicProxy<E> : ClientProxy, ITopic<E>
+    internal class ClientTopicProxy<E> : ClientProxy, ITopic<E>
     {
         private readonly string name;
 

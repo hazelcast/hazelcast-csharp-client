@@ -7,7 +7,7 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Map
 {
     [Serializable]
-    public class SimpleEntryView<K, V> : IdentifiedDataSerializable, IEntryView<K, V>, IIdentifiedDataSerializable
+    internal class SimpleEntryView<K, V> : IdentifiedDataSerializable, IEntryView<K, V>, IIdentifiedDataSerializable
     {
         private long cost;
 

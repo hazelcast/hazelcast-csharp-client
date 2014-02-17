@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Partition
 {
-    public sealed class GetPartitionsRequest : ClientRequest, IRetryableRequest
+    internal sealed class GetPartitionsRequest : ClientRequest, IRetryableRequest
     {
         public override int GetFactoryId()
         {

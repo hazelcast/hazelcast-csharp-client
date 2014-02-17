@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class TxnMultiMapRemoveRequest : TxnMultiMapRequest
+    internal class TxnMultiMapRemoveRequest : TxnMultiMapRequest
     {
         internal Data key;
 

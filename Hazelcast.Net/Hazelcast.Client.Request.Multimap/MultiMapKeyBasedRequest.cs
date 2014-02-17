@@ -3,7 +3,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public abstract class MultiMapKeyBasedRequest : MultiMapRequest
+    internal abstract class MultiMapKeyBasedRequest : MultiMapRequest
     {
         internal Data key;
 

@@ -1,14 +1,12 @@
-using System;
-using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Util;
 
 namespace Hazelcast.Client.Connection
 {
-    public interface IClientConnectionManager:IRemotingService
+    internal interface IClientConnectionManager:IRemotingService
     {
         void Start();
         bool Shutdown();

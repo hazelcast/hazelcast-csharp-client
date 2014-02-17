@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class RemoveAllRequest : MultiMapKeyBasedRequest
+    internal class RemoveAllRequest : MultiMapKeyBasedRequest
     {
         internal long threadId = -1;
 

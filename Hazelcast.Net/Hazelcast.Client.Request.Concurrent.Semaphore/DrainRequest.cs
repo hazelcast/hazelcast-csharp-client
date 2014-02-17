@@ -2,7 +2,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Semaphore
 {
-    public class DrainRequest : SemaphoreRequest
+    internal class DrainRequest : SemaphoreRequest
     {
         public DrainRequest()
         {

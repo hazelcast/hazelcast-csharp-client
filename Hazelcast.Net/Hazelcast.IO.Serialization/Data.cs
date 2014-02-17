@@ -5,7 +5,7 @@ using System.Text;
 namespace Hazelcast.IO.Serialization
 {
     [Serializable]
-    public sealed class Data : IdentifiedDataSerializable,IIdentifiedDataSerializable
+    internal sealed class Data : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         public const int FactoryId = 0;
         public const int Id = 0;

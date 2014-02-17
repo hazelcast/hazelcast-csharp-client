@@ -6,7 +6,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class MultiMapPortableHook : IPortableHook
+    internal class MultiMapPortableHook : IPortableHook
     {
         public const int Clear = 1;
         public const int ContainsEntry = 2;

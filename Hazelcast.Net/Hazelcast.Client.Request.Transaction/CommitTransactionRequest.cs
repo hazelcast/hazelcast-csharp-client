@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Transaction
 {
-    public class CommitTransactionRequest : BaseTransactionRequest
+    internal class CommitTransactionRequest : BaseTransactionRequest
     {
         public override int GetFactoryId()
         {

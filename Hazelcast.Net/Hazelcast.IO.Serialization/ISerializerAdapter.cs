@@ -1,6 +1,6 @@
 namespace Hazelcast.IO.Serialization
 {
-    public interface ISerializerAdapter
+    internal interface ISerializerAdapter
     {
         /// <exception cref="System.IO.IOException"></exception>
         void Write(IObjectDataOutput output, object obj);

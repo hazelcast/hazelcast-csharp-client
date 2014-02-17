@@ -2,7 +2,7 @@ using System.Threading;
 
 namespace Hazelcast.Net.Ext
 {
-    public class AtomicBoolean
+    internal class AtomicBoolean
     {
         private volatile int value;
 

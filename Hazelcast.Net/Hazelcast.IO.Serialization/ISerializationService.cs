@@ -3,7 +3,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.IO.Serialization
 {
-    public interface ISerializationService
+    internal interface ISerializationService
     {
         Data ToData(object obj);
 

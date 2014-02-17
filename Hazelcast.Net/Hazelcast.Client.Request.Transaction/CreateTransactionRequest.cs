@@ -5,7 +5,7 @@ using Hazelcast.Transaction;
 
 namespace Hazelcast.Client.Request.Transaction
 {
-    public class CreateTransactionRequest : BaseTransactionRequest
+    internal class CreateTransactionRequest : BaseTransactionRequest
     {
         internal TransactionOptions options;
 

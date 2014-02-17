@@ -9,7 +9,7 @@ using Hazelcast.Transaction;
 
 namespace Hazelcast.Client.Request.Transaction
 {
-    public class TransactionContextProxy : ITransactionContext
+    internal class TransactionContextProxy : ITransactionContext
     {
         internal const int txOwnerNodeTryCount = 5;
 

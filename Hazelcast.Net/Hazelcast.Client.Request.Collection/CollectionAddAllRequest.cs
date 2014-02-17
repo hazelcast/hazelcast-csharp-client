@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class CollectionAddAllRequest : CollectionRequest
+    internal class CollectionAddAllRequest : CollectionRequest
     {
         protected internal IList<Data> valueList;
 

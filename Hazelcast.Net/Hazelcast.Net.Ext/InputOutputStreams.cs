@@ -1,6 +1,6 @@
 ﻿namespace Hazelcast.Net.Ext
 {
-    public interface InputStream
+    internal interface InputStream
     {
         int Read();
 
@@ -21,7 +21,7 @@
         bool MarkSupported();
     }
 
-    public interface OutputStream
+    internal interface OutputStream
     {
         void Write(int b);
 

@@ -4,7 +4,7 @@ namespace Hazelcast.Util
 {
     /// <summary>A utility class for validating arguments and state.</summary>
     /// <remarks>A utility class for validating arguments and state.</remarks>
-    public class ValidationUtil
+    internal class ValidationUtil
     {
         private ValidationUtil()
         {
@@ -15,7 +15,7 @@ namespace Hazelcast.Util
             IsNotNull(argument, argName);
             if (argument.Length == 0)
             {
-                throw new ArgumentException(string.Format("argument '%s' can't be an empty string", argName));
+                throw new ArgumentException(string.Format("argument {0} can't be an empty string", argName));
             }
             return argument;
         }
@@ -24,7 +24,7 @@ namespace Hazelcast.Util
         {
             if (argument == null)
             {
-                throw new ArgumentException(string.Format("argument '%s' can't be null", argName));
+                throw new ArgumentException(string.Format("argument {0} can't be null", argName));
             }
             return argument;
         }

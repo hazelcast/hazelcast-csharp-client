@@ -4,7 +4,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class SpiDataSerializerHook : DataSerializerHook
+    internal sealed class SpiDataSerializerHook : DataSerializerHook
     {
         internal const int Response = 0;
         internal const int Backup = 1;

@@ -9,7 +9,7 @@ namespace Hazelcast.Transaction
     ///     thrown when an a transactional operation is executed without an active transaction.
     /// </summary>
     [Serializable]
-    public class TransactionNotActiveException : HazelcastException
+    internal class TransactionNotActiveException : HazelcastException
     {
         public TransactionNotActiveException()
         {

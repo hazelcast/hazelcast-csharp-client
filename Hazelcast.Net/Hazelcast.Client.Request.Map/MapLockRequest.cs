@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapLockRequest : AbstractLockRequest
+    internal class MapLockRequest : AbstractLockRequest
     {
         private string name;
 

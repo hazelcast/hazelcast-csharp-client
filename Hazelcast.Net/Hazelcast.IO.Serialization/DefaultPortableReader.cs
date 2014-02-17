@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Hazelcast.IO.Serialization
 {
-    public class DefaultPortableReader : IPortableReader
+    internal class DefaultPortableReader : IPortableReader
     {
         protected internal readonly IClassDefinition cd;
 

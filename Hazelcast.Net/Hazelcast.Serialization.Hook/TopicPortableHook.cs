@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class TopicPortableHook : IPortableHook
+    internal class TopicPortableHook : IPortableHook
     {
         public const int Publish = 1;
         public const int AddListener = 2;

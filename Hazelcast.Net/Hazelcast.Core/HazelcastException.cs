@@ -22,6 +22,7 @@ namespace Hazelcast.Core
         }
     }
 
+    [Serializable]
     public class QueryException : HazelcastException 
     {
 

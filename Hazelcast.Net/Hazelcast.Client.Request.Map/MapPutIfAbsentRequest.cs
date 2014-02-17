@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapPutIfAbsentRequest : MapPutRequest
+    internal class MapPutIfAbsentRequest : MapPutRequest
     {
         public MapPutIfAbsentRequest()
         {

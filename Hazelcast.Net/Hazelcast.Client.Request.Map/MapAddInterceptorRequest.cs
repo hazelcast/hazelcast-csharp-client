@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapAddInterceptorRequest : ClientRequest
+    internal class MapAddInterceptorRequest : ClientRequest
     {
         private MapInterceptor mapInterceptor;
         private string name;

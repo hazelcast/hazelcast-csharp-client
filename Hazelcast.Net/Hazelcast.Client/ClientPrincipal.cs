@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client
 {
-    public sealed class ClientPrincipal : IPortable
+    internal sealed class ClientPrincipal : IPortable
     {
         private string ownerUuid;
         private string uuid;

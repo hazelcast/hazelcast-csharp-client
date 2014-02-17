@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class ClassDefinitionBuilder
+    internal sealed class ClassDefinitionBuilder
     {
         private readonly int classId;
         private readonly int factoryId;

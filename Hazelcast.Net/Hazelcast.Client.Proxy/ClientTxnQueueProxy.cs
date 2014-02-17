@@ -7,7 +7,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client.Proxy
 {
-    public class ClientTxnQueueProxy<E> : ClientTxnProxy, ITransactionalQueue<E>
+    internal class ClientTxnQueueProxy<E> : ClientTxnProxy, ITransactionalQueue<E>
     {
         public ClientTxnQueueProxy(string name, TransactionContextProxy proxy) : base(name, proxy)
         {

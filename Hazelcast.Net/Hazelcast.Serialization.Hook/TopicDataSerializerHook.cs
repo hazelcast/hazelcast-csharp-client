@@ -2,7 +2,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class TopicDataSerializerHook : DataSerializerHook
+    internal sealed class TopicDataSerializerHook : DataSerializerHook
     {
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.TopicDsFactory, -18);
 

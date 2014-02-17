@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class CollectionRemoveRequest : CollectionRequest
+    internal class CollectionRemoveRequest : CollectionRequest
     {
         private Data value;
 

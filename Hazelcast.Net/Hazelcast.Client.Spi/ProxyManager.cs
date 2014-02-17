@@ -12,7 +12,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    public sealed class ProxyManager
+    internal sealed class ProxyManager
     {
         private static readonly ILogger logger = Logger.GetLogger(typeof (ProxyManager));
 

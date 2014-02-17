@@ -5,7 +5,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
-    public class ObjectDataOutputStream : OutputStream, IObjectDataOutput, IDisposable, ISerializationContextAware
+    internal class ObjectDataOutputStream : OutputStream, IObjectDataOutput, IDisposable, ISerializationContextAware
     {
         //private readonly DataOutputStream dataOut;
 

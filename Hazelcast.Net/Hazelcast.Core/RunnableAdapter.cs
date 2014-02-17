@@ -8,7 +8,7 @@ using Hazelcast.Util;
 namespace Hazelcast.Core
 {
     [Serializable]
-    public sealed class RunnableAdapter<V> : IdentifiedDataSerializable,IIdentifiedDataSerializable
+    internal sealed class RunnableAdapter<V> : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         private Runnable task;
 

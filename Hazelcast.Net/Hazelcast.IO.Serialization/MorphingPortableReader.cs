@@ -6,7 +6,7 @@ namespace Hazelcast.IO.Serialization
     {
     }
 
-    public class MorphingPortableReader : DefaultPortableReader
+    internal class MorphingPortableReader : DefaultPortableReader
     {
         public MorphingPortableReader(PortableSerializer serializer, IBufferObjectDataInput input, IClassDefinition cd)
             : base(serializer, input, cd)

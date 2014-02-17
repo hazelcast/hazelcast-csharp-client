@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class ContainsEntryRequest : MultiMapAllPartitionRequest, IRetryableRequest
+    internal class ContainsEntryRequest : MultiMapAllPartitionRequest, IRetryableRequest
     {
         internal Data key;
 

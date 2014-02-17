@@ -1,19 +1,12 @@
 ﻿using System;
+using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Request.Cluster
 {
-    public enum MapOperationType
-    {
-        GET = 1,
-        PUT = 2,
-        EVICT = 3,
-        REMOVE = 4
-    }
-
     /// <summary></summary>
-    public class MemberAttributeChange : IDataSerializable
+    internal class MemberAttributeChange : IDataSerializable
     {
         internal const int DELTA_MEMBER_PROPERTIES_OP_PUT = 2;
         internal const int DELTA_MEMBER_PROPERTIES_OP_REMOVE = 3;

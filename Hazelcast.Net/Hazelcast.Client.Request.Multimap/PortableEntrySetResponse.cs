@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public class PortableEntrySetResponse : IPortable
+    internal class PortableEntrySetResponse : IPortable
     {
         internal ICollection<KeyValuePair<Data, Data>> entrySet = null;
 

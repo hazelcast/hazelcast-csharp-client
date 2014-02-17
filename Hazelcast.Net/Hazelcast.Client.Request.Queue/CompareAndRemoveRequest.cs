@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    public class CompareAndRemoveRequest : QueueRequest
+    internal class CompareAndRemoveRequest : QueueRequest
     {
         private ICollection<Data> dataList;
 

@@ -2,7 +2,7 @@ using System;
 
 namespace Hazelcast.IO.Serialization
 {
-    public class ArrayPortableFactory : IPortableFactory
+    internal class ArrayPortableFactory : IPortableFactory
     {
         private readonly Func<int, IPortable>[] _constructors;
 

@@ -5,7 +5,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class QueuePortableHook : IPortableHook
+    internal class QueuePortableHook : IPortableHook
     {
         public const int Offer = 1;
         public const int Size = 2;

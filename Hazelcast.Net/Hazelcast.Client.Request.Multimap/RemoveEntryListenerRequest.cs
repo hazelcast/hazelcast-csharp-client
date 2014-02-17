@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class RemoveEntryListenerRequest : ClientRequest, IRemoveRequest
+    internal class RemoveEntryListenerRequest : ClientRequest, IRemoveRequest
     {
         private string name;
         private string registrationId;

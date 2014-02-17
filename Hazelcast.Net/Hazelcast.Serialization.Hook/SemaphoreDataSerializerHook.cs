@@ -2,7 +2,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public class SemaphoreDataSerializerHook : DataSerializerHook
+    internal class SemaphoreDataSerializerHook : DataSerializerHook
     {
         internal static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.SemaphoreDsFactory, -16);
 

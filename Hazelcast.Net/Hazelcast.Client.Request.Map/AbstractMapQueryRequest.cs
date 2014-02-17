@@ -6,7 +6,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public abstract class AbstractMapQueryRequest : ClientRequest, IRetryableRequest
+    internal abstract class AbstractMapQueryRequest : ClientRequest, IRetryableRequest
     {
         private IterationType iterationType;
         private string name;

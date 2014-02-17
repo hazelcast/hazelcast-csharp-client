@@ -9,7 +9,7 @@ namespace Hazelcast.Logging
     ///     implementation that provides implementations for the convenience methods like
     ///     finest,info,warning and severe.
     /// </summary>
-    public abstract class AbstractLogger : ILogger
+    internal abstract class AbstractLogger : ILogger
     {
         public virtual void Finest(string message)
         {

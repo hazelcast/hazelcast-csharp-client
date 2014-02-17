@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Atomiclong
 {
-    public abstract class AtomicLongRequest : ClientRequest
+    internal abstract class AtomicLongRequest : ClientRequest
     {
         internal long delta;
         internal string name;

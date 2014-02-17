@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapReplaceIfSameRequest : MapPutRequest
+    internal class MapReplaceIfSameRequest : MapPutRequest
     {
         private Data testValue;
 

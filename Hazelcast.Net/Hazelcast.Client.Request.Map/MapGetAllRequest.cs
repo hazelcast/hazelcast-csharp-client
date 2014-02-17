@@ -6,7 +6,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapGetAllRequest : ClientRequest, IRetryableRequest
+    internal class MapGetAllRequest : ClientRequest, IRetryableRequest
     {
         private readonly ICollection<Data> keys = new HashSet<Data>();
         protected internal string name;

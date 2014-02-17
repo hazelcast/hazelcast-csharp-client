@@ -1,12 +1,12 @@
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class ConstantSerializers
+    internal sealed class ConstantSerializers
     {
         private ConstantSerializers()
         {
         }
 
-        public sealed class BooleanSerializer : SingletonSerializer<bool>
+        internal sealed class BooleanSerializer : SingletonSerializer<bool>
         {
             public override int GetTypeId()
             {
@@ -26,7 +26,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class ByteSerializer : SingletonSerializer<byte>
+        internal sealed class ByteSerializer : SingletonSerializer<byte>
         {
             public override int GetTypeId()
             {
@@ -46,7 +46,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class CharArraySerializer : SingletonSerializer<char[]>
+        internal sealed class CharArraySerializer : SingletonSerializer<char[]>
         {
             public override int GetTypeId()
             {
@@ -66,7 +66,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class CharSerializer : SingletonSerializer<char>
+        internal sealed class CharSerializer : SingletonSerializer<char>
         {
             public override int GetTypeId()
             {
@@ -86,7 +86,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class DoubleArraySerializer : SingletonSerializer<double[]>
+        internal sealed class DoubleArraySerializer : SingletonSerializer<double[]>
         {
             public override int GetTypeId()
             {
@@ -106,7 +106,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class DoubleSerializer : SingletonSerializer<double>
+        internal sealed class DoubleSerializer : SingletonSerializer<double>
         {
             public override int GetTypeId()
             {
@@ -126,7 +126,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class FloatArraySerializer : SingletonSerializer<float[]>
+        internal sealed class FloatArraySerializer : SingletonSerializer<float[]>
         {
             public override int GetTypeId()
             {
@@ -146,7 +146,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class FloatSerializer : SingletonSerializer<float>
+        internal sealed class FloatSerializer : SingletonSerializer<float>
         {
             public override int GetTypeId()
             {
@@ -166,7 +166,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class IntegerArraySerializer : SingletonSerializer<int[]>
+        internal sealed class IntegerArraySerializer : SingletonSerializer<int[]>
         {
             public override int GetTypeId()
             {
@@ -186,7 +186,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class IntegerSerializer : SingletonSerializer<int>
+        internal sealed class IntegerSerializer : SingletonSerializer<int>
         {
             public override int GetTypeId()
             {
@@ -206,7 +206,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class LongArraySerializer : SingletonSerializer<long[]>
+        internal sealed class LongArraySerializer : SingletonSerializer<long[]>
         {
             public override int GetTypeId()
             {
@@ -226,7 +226,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class LongSerializer : SingletonSerializer<long>
+        internal sealed class LongSerializer : SingletonSerializer<long>
         {
             public override int GetTypeId()
             {
@@ -246,7 +246,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class ShortArraySerializer : SingletonSerializer<short[]>
+        internal sealed class ShortArraySerializer : SingletonSerializer<short[]>
         {
             public override int GetTypeId()
             {
@@ -266,7 +266,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class ShortSerializer : SingletonSerializer<short>
+        internal sealed class ShortSerializer : SingletonSerializer<short>
         {
             public override int GetTypeId()
             {
@@ -286,7 +286,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public abstract class SingletonSerializer<T> : IStreamSerializer<T>
+        internal abstract class SingletonSerializer<T> : IStreamSerializer<T>
         {
             public virtual void Destroy()
             {
@@ -299,7 +299,7 @@ namespace Hazelcast.IO.Serialization
             public abstract void Write(IObjectDataOutput arg1, T arg2);
         }
 
-        public sealed class StringSerializer : SingletonSerializer<string>
+        internal sealed class StringSerializer : SingletonSerializer<string>
         {
             public override int GetTypeId()
             {
@@ -319,7 +319,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public sealed class TheByteArraySerializer : IByteArraySerializer<byte[]>
+        internal sealed class TheByteArraySerializer : IByteArraySerializer<byte[]>
         {
             public int GetTypeId()
             {

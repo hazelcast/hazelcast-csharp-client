@@ -4,7 +4,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Spi
 {
-    public sealed class ClientContext
+    internal sealed class ClientContext
     {
         private readonly ClientConfig clientConfig;
         private readonly IClientClusterService clusterService;

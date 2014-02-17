@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    public class MapContainsValueRequest : ClientRequest, IRetryableRequest
+    internal class MapContainsValueRequest : ClientRequest, IRetryableRequest
     {
         private string name;
 

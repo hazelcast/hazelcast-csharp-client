@@ -8,7 +8,7 @@ using Hazelcast.IO.Serialization;
 namespace Hazelcast.Client.Request.Transaction
 {
 
-    public abstract class BaseTransactionRequest : ClientRequest
+    internal abstract class BaseTransactionRequest : ClientRequest
     {
 
         protected String txnId;

@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Lock
 {
-    public sealed class GetRemainingLeaseRequest : ClientRequest
+    internal sealed class GetRemainingLeaseRequest : ClientRequest
     {
         private Data key;
 

@@ -5,7 +5,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    public abstract class TxnMultiMapRequest : BaseTransactionRequest
+    internal abstract class TxnMultiMapRequest : BaseTransactionRequest
     {
         internal string name;
 

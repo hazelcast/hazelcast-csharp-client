@@ -3,7 +3,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Util
 {
-    public class RoundRobinLB : AbstractLoadBalancer
+    internal class RoundRobinLB : AbstractLoadBalancer
     {
         private readonly AtomicInteger index = new AtomicInteger(0);
 

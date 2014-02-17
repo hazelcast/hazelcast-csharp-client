@@ -2,7 +2,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
 {
-    public sealed class AtomicLongDataSerializerHook : DataSerializerHook
+    internal sealed class AtomicLongDataSerializerHook : DataSerializerHook
     {
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.AtomicLongDsFactory, -17);
 

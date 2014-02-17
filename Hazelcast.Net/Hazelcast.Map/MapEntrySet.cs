@@ -7,7 +7,7 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Map
 {
     [Serializable]
-    public sealed class MapEntrySet : IdentifiedDataSerializable,IIdentifiedDataSerializable
+    internal sealed class MapEntrySet : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         private readonly ICollection<KeyValuePair<Data, Data>> entrySet;
 

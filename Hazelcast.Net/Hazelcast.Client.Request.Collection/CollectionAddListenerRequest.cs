@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    public class CollectionAddListenerRequest : ClientRequest
+    internal class CollectionAddListenerRequest : ClientRequest
     {
         private bool includeValue;
         private string name;

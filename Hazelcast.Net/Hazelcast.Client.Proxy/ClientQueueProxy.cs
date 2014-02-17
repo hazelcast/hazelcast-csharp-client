@@ -11,7 +11,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    public sealed class ClientQueueProxy<E> : ClientProxy, IQueue<E>
+    internal sealed class ClientQueueProxy<E> : ClientProxy, IQueue<E>
     {
         private readonly string name;
 

@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Base
 {
-    public sealed class AuthenticationRequest : ClientRequest
+    internal sealed class AuthenticationRequest : ClientRequest
     {
         private ICredentials credentials;
         private bool firstConnection;

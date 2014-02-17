@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Hazelcast.Logging
 {
-    public class TraceLogFactory : ILoggerFactory
+    internal class TraceLogFactory : ILoggerFactory
     {
         internal readonly ILogger logger;
 
