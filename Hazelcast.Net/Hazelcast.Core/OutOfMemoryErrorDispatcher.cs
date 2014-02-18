@@ -2,7 +2,7 @@ using System;
 
 namespace Hazelcast.Core
 {
-    internal sealed class OutOfMemoryErrorDispatcher
+    internal static class OutOfMemoryErrorDispatcher
     {
         private static readonly IHazelcastInstance[] instances = new IHazelcastInstance[50];
 
@@ -10,9 +10,9 @@ namespace Hazelcast.Core
 
         private static OutOfMemoryHandler handler = new DefaultOutOfMemoryHandler();
 
-        private OutOfMemoryErrorDispatcher()
-        {
-        }
+        //private OutOfMemoryErrorDispatcher()
+        //{
+        //}
 
         public static void SetHandler(OutOfMemoryHandler outOfMemoryHandler)
         {

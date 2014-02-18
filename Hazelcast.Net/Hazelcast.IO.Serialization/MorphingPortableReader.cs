@@ -2,6 +2,7 @@ using System;
 
 namespace Hazelcast.IO.Serialization
 {
+    [Serializable]
     internal class IncompatibleClassChangeError : SystemException
     {
     }

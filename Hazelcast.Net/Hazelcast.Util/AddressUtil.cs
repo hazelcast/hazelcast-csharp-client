@@ -95,7 +95,7 @@ namespace Hazelcast.Util
 
                 return (ipAddress != null);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }
@@ -272,7 +272,7 @@ namespace Hazelcast.Util
             {
                 string part = parts1[i];
                 string nextPart = i < parts1.Length - 1 ? parts1[i + 1] : null;
-                if (string.Empty.Equals(part))
+                if (string.IsNullOrEmpty(part))
                 {
                     continue;
                 }

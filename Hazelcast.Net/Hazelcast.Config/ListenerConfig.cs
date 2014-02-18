@@ -58,7 +58,7 @@ namespace Hazelcast.Config
         /// <exception cref="System.ArgumentException">if className is null or an empty String.</exception>
         /// <seealso cref="SetImplementation(Hazelcast.Net.Ext.EventListener)">SetImplementation(Hazelcast.Net.Ext.IEventListener)</seealso>
         /// <seealso cref="GetClassName()">GetClassName()</seealso>
-        public virtual ListenerConfig SetClassName(string className)
+        public ListenerConfig SetClassName(string className)
         {
             this.className = ValidationUtil.HasText(className, "className");
             implementation = null;

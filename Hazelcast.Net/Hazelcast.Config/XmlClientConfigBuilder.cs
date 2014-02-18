@@ -40,7 +40,7 @@ namespace Hazelcast.Config
                 }
                 if (input == null)
                 {
-                    configFile="hazelcast-client.xml";
+                    configFile = Directory.GetCurrentDirectory()+"\\hazelcast-client.xml";
                     if (File.Exists(configFile))
                     {
                         input = File.OpenText(configFile);
@@ -56,6 +56,7 @@ namespace Hazelcast.Config
                 try
                 {
                     document.Load(input);
+                    input.Dispose();
                 }
                 catch (Exception)
                 {

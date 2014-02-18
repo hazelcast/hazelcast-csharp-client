@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{20F910E8-C1BC-4D44-8460-351FDF0DD54D}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>
     </RootNamespace>
@@ -51,8 +51,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>
-    </StartupObject>
+    <StartupObject>Hazelcast.Test.SimpleMapTestFromClient</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <MSBuildCommunityTasksPath>..\.build</MSBuildCommunityTasksPath>
@@ -77,9 +76,9 @@
     <Compile Include="Hazelcast.Client.Test\ClientListTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientLockTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientMapTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientMultiMapTest.cs"/>
+    <Compile Include="Hazelcast.Client.Test\ClientMultiMapTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientNearCacheTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientQueueTest.cs"/>
+    <Compile Include="Hazelcast.Client.Test\ClientQueueTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSemaphoreTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSetTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTopicTest.cs" />
@@ -106,7 +105,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="hazelcast-client.xml" />
+    <None Include="hazelcast-client.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <PropertyGroup>
     <NUnitResultsFile>$(OutputPath)nunit-result.xml</NUnitResultsFile>
