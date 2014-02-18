@@ -16,7 +16,11 @@ namespace Hazelcast.Client.Request.Transaction
             return ClientTxnPortableHook.Commit;
         }
 
-        public override void WritePortable(IPortableWriter writer){}
-
+        public override void WritePortable(IPortableWriter writer)
+        {
+            //TODO below is xid dependent fix it if implemented
+            //bool prepareAndCommit;
+            writer.WriteBoolean("pc", true);
+        }
     }
 }

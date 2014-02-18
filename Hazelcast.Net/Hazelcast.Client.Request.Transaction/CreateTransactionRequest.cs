@@ -31,7 +31,10 @@ namespace Hazelcast.Client.Request.Transaction
         /// <exception cref="System.IO.IOException"></exception>
         public override void WritePortable(IPortableWriter writer)
         {
-            options.WriteData(writer.GetRawDataOutput());
+            var objectDataOutput = writer.GetRawDataOutput();
+            options.WriteData(objectDataOutput);
+            //TODO if xid is implemented below permanent false should be replaced
+            objectDataOutput.WriteBoolean(false);//(sXid != null);
         }
 
     }
