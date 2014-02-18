@@ -37,7 +37,7 @@ namespace Hazelcast.Core
     ///                 the actual value in the map. One should put modified value back to make changes visible to all
     ///                 nodes.
     ///                 For additional info see
-    ///                 <see cref="IMapMap{K,V}.Get(object)">IMap&lt;K, V&gt;.Get(object)</see>
+    ///                 <see cref="IMap{K,V}.Get(object)">IMap&lt;K, V&gt;.Get(object)</see>
     ///             </li>
     ///             <li>
     ///                 Methods, including but not limited to <tt>keySet</tt>, <tt>values</tt>, <tt>entrySet</tt>,
@@ -49,6 +49,8 @@ namespace Hazelcast.Core
     /// </remarks>
     /// <typeparam name="K">type of the Key</typeparam>
     /// <typeparam name="V">type of the Value</typeparam>
+    /// <example>
+    /// </example>
     public interface IMap<K, V> : IDistributedObject
     {
 

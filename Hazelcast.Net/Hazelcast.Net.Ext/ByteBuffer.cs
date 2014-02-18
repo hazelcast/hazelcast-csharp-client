@@ -13,11 +13,11 @@ namespace Hazelcast.Net.Ext
         private int index;
         private int limit;
         private int mark;
-        private bool _bigEndian=true;
+        //private bool _bigEndian=true;
 
         public ByteBuffer()
         {
-            this._bigEndian=true;
+            //this._bigEndian=true;
         }
 
         private ByteBuffer(byte[] buf, int start, int len)
@@ -27,7 +27,7 @@ namespace Hazelcast.Net.Ext
             this.index = start;
             this.mark = start;
             this.capacity = buf.Length;
-            this._bigEndian = true;
+            //this._bigEndian = true;
         }
         private ByteBuffer(byte[] buf, int len)
         {
@@ -36,7 +36,7 @@ namespace Hazelcast.Net.Ext
             this.index = 0;
             this.mark = 0;
             this.capacity = buf.Length;
-            this._bigEndian = true;
+            //this._bigEndian = true;
         }
 
         public static ByteBuffer Allocate(int size)

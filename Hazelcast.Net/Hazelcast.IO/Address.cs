@@ -136,11 +136,11 @@ namespace Hazelcast.IO
             {
                 return true;
             }
-            if (!(o is Address))
+            var address = o as Address;
+            if (address == null)
             {
                 return false;
             }
-            var address = (Address) o;
             return port == address.port && type == address.type && host.Equals(address.host);
         }
 
@@ -149,14 +149,9 @@ namespace Hazelcast.IO
             return Hash(Encoding.UTF8.GetBytes(host))*29 + port;
         }
 
-        private int Hash(byte[] bytes)
+        private static int Hash(byte[] bytes)
         {
-            int hash = 0;
-            foreach (byte b in bytes)
-            {
-                hash = (hash*29) + b;
-            }
-            return hash;
+            return bytes.Aggregate(0, (current, b) => (current*29) + b);
         }
 
         public bool IsIPv4()

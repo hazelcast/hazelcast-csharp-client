@@ -59,7 +59,7 @@ namespace Hazelcast.Client.Connection
         private ByteBuffer receiveBuffer=null;
 
         private DataAdapter receiveDataAdapter;
-        private DataAdapter sendDataAdapter;
+        //private DataAdapter sendDataAdapter;
 
         private SocketWritable lastWritable;
 
@@ -405,7 +405,7 @@ namespace Hazelcast.Client.Connection
             return _task;
         }
 
-        private void UpdateResponse(Task task, object response,GenericError error)
+        private static void UpdateResponse(Task task, object response,GenericError error)
         {
             var taskData = task.AsyncState as TaskData;
             if (taskData != null)

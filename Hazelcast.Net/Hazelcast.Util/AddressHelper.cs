@@ -25,7 +25,7 @@ namespace Hazelcast.Util
             {
                 inetAddress = Address.GetAddressByName(scopedAddress);
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
             return GetPossibleSocketAddresses(inetAddress, addressHolder.port, scopedAddress);
