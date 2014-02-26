@@ -84,6 +84,8 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void Flush()
 		{
+            map.Flush();
+            Assert.Pass();
 		}
 
 		//TODO map store
@@ -512,6 +514,24 @@ namespace Hazelcast.Client.Test
 
             Assert.AreEqual(0,map.Size());
             Assert.AreNotEqual("value1", map.Get("key1"));
+
+        }
+        
+        [Test]
+        public virtual void TestGetEntryView()
+        {
+
+            map.Put("item0", "value0");
+            map.Put("item1", "value1");
+            map.Put("item2", "value2");
+
+            var entryView = map.GetEntryView("item1");
+
+            Assert.AreEqual(0, entryView.GetHits());
+
+            Assert.AreEqual("item1", entryView.GetKey());
+            Assert.AreEqual("value1", entryView.GetValue());
+            Assert.AreNotEqual(0, entryView.GetLastUpdateTime());
 
         }
         

@@ -38,10 +38,6 @@ namespace Hazelcast.Core
         /// </returns>
         ICollection<V> Remove(object key);
 
-        /// <summary>Returns the locally owned set of keys.</summary>
-        /// <returns>locally owned keys.</returns>
-        ICollection<K> LocalKeySet();
-
         /// <summary>Returns the set of keys in the multimap.</summary>
         /// <returns>
         ///     the set of keys in the multimap. Returned set might be modifiable
@@ -91,12 +87,6 @@ namespace Hazelcast.Core
         /// <param name="key">the key whose values count are to be returned</param>
         /// <returns>number of values matching to given key in the multimap.</returns>
         int ValueCount(K key);
-
-        /// <summary>Adds a local entry listener for this multimap.</summary>
-        /// <param name="listener">entry listener</param>
-        /// <seealso cref="IMultiMap{K,V}.LocalKeySet()">IMultiMap&lt;K, V&gt;.LocalKeySet()</seealso>
-        /// <returns>returns registration id.</returns>
-        string AddLocalEntryListener(IEntryListener<K, V> listener);
 
         /// <summary>Adds an entry listener for this multimap.</summary>
         /// <param name="listener">entry listener</param>

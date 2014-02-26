@@ -344,10 +344,15 @@ namespace Hazelcast.IO.Serialization
                 {
                     //TODO CLASSLOAD
                     factory = null;
+                    //ClassLoaderUtil.newInstance(cl, factoryClassName);
+                    Type type = Type.GetType(factoryClassName);
+                    if (type != null)
+                    {
+                        factory = Activator.CreateInstance(type) as IPortableFactory;
+                    }
                 }
                 catch (Exception e)
                 {
-                    //ClassLoaderUtil.newInstance(cl, factoryClassName);
                     throw new HazelcastSerializationException(e);
                 }
                 portableFactories.Add(factoryId, factory);

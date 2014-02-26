@@ -53,9 +53,7 @@ namespace Hazelcast.Core
     /// </example>
     public interface IMap<K, V> : IDistributedObject
     {
-
-        string AddLocalEntryListener(IEntryListener<K, V> listener);
-        string AddInterceptor(MapInterceptor interceptor);
+        string AddInterceptor(IMapInterceptor interceptor);
         void RemoveInterceptor(string id);
         string AddEntryListener(IEntryListener<K, V> listener, bool includeValue);
         bool RemoveEntryListener(string id);

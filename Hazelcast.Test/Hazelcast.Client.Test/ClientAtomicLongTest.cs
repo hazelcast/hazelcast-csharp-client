@@ -20,6 +20,7 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public static void Destroy()
         {
+            l.Destroy();
         }
 
 		/// <exception cref="System.Exception"></exception>

@@ -21,10 +21,11 @@ namespace Hazelcast.Client.Test
         public static void Destroy()
         {
             list.Clear();
+            list.Destroy();
         }
 
 		/// <exception cref="System.Exception"></exception>
-		[NUnit.Framework.Test]
+		[Test]
 		public virtual void TestAddRemove()
 		{
 		    var name = Name;
@@ -33,13 +34,14 @@ namespace Hazelcast.Client.Test
 			ITransactionContext context = client.NewTransactionContext();
 			context.BeginTransaction();
 			ITransactionalList<object> listTx = context.GetList<object>(name);
-            NUnit.Framework.Assert.IsTrue(listTx.Add("item2"));
-            NUnit.Framework.Assert.AreEqual(2, listTx.Size());
-            NUnit.Framework.Assert.AreEqual(1, list.Count);
-            NUnit.Framework.Assert.IsFalse(listTx.Remove("item3"));
-            NUnit.Framework.Assert.IsTrue(listTx.Remove("item1"));
+            Assert.IsTrue(listTx.Add("item2"));
+            Assert.AreEqual(2, listTx.Size());
+            Assert.AreEqual(1, list.Count);
+            Assert.IsFalse(listTx.Remove("item3"));
+            Assert.IsTrue(listTx.Remove("item1"));
 			context.CommitTransaction();
-            NUnit.Framework.Assert.AreEqual(1, list.Count);
+            Assert.AreEqual(1, list.Count);
+            listTx.Destroy();
 		}
 	}
 }

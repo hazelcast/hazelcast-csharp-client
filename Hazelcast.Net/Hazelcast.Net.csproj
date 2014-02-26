@@ -456,7 +456,7 @@
     <Compile Include="Hazelcast.Map\EntryBackupProcessor.cs" />
     <Compile Include="Hazelcast.Map\EntryProcessor.cs" />
     <Compile Include="Hazelcast.Map\MapEntrySet.cs" />
-    <Compile Include="Hazelcast.Map\MapInterceptor.cs" />
+    <Compile Include="Hazelcast.Map\IMapInterceptor.cs" />
     <Compile Include="Hazelcast.Map\MapKeySet.cs" />
     <Compile Include="Hazelcast.Map\MapValueCollection.cs" />
     <Compile Include="Hazelcast.Map\RecordStatistics.cs" />

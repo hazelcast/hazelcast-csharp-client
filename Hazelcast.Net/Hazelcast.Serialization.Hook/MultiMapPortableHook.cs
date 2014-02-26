@@ -31,7 +31,7 @@ namespace Hazelcast.Serialization.Hook
         public const int TxnMmRemove = 21;
         public const int TxnMmValueCount = 22;
         public const int TxnMmSize = 23;
-        public const int RemoveEntryListener = 23;
+        public const int RemoveEntryListener = 24;
         public const int TxnMmRemoveAll = 25;
 
         public const int TotalSize = TxnMmRemoveAll+1;

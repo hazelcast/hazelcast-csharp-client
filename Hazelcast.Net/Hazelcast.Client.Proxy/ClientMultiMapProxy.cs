@@ -53,11 +53,6 @@ namespace Hazelcast.Client.Proxy
             return ToObjectCollection<V>(result, true);
         }
 
-        public virtual ICollection<K> LocalKeySet()
-        {
-            throw new NotSupportedException("Locality for client is ambiguous");
-        }
-
         public virtual ICollection<K> KeySet()
         {
             var request = new KeySetRequest(name);
@@ -133,11 +128,6 @@ namespace Hazelcast.Client.Proxy
             return result;
         }
 
-        public virtual string AddLocalEntryListener(IEntryListener<K, V> listener)
-        {
-            throw new NotSupportedException("Locality for client is ambiguous");
-        }
-
         public virtual string AddEntryListener(IEntryListener<K, V> listener, bool includeValue)
         {
             var request = new AddEntryListenerRequest(name, null, includeValue);
@@ -148,7 +138,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool RemoveEntryListener(string registrationId)
         {
-            var request = new RemoveEntryListenerRequest();
+            var request = new RemoveEntryListenerRequest(name,registrationId);
             return StopListening(request,registrationId);
         }
 

@@ -24,7 +24,18 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public static void Destroy()
         {
+            mm.Destroy();
         }
+
+        [Test]
+        public virtual void TestClear()
+        {
+            mm.Put("a", "b");
+            mm.Put("a", "c");
+            mm.Clear();
+            Assert.AreEqual(0, mm.Size());
+        }
+
 
 		[Test]
 		public virtual void TestPutGetRemove()
@@ -124,6 +135,29 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(20)));
             Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(20)));
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(20)));
+		}
+
+		[Test]
+		public virtual void TestRemoveListener()
+		{
+			CountdownEvent latch1Add = new CountdownEvent(1);
+			CountdownEvent latch1Remove = new CountdownEvent(1);
+            EntryAdapter<object,object> listener1=new EntryAdapter<object, object>(
+                delegate(EntryEvent<object, object> @event) { latch1Add.Signal(); },
+                delegate(EntryEvent<object, object> @event) { latch1Remove.Signal(); }, 
+                delegate(EntryEvent<object, object> @event) {  },
+                delegate(EntryEvent<object, object> @event) {  }  );
+
+		    var listenerId = mm.AddEntryListener(listener1, true);
+		    Thread.Sleep(1000);
+
+			mm.Put("key1", "value1");
+			Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(10)));
+
+		    mm.RemoveEntryListener(listenerId);
+		    Thread.Sleep(1000);
+			mm.Remove("key1");
+            Assert.IsFalse(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
 		}
 
 		/// <exception cref="System.Exception"></exception>

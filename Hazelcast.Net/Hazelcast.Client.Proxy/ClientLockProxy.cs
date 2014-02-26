@@ -88,12 +88,6 @@ namespace Hazelcast.Client.Proxy
             Invoke<object>(request);
         }
 
-        /// <exception cref="System.Exception"></exception>
-        public virtual void LockInterruptibly()
-        {
-            Lock();
-        }
-
         protected override void OnDestroy()
         {
         }

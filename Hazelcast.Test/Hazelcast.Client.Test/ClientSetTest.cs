@@ -144,5 +144,22 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(20)));
 		}
 
+		[Test]
+		public virtual void TestRemoveListener()
+		{
+            var tempSet = set;
+            CountdownEvent latch = new CountdownEvent(1);
+
+            var listener = new ClientListTest._ItemListener<object>(latch);
+            string registrationId = tempSet.AddItemListener(listener, true);
+
+		    tempSet.RemoveItemListener(registrationId);
+
+            var t = new Thread(o => tempSet.Add("item"));
+            t.Start();
+            
+            Assert.IsFalse(latch.Wait(TimeSpan.FromSeconds(10)));
+		}
+
 	}
 }

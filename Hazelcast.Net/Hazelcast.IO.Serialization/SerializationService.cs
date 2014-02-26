@@ -88,6 +88,7 @@ namespace Hazelcast.IO.Serialization
             RegisterConstant<double[]>(new ConstantSerializers.DoubleArraySerializer());
             RegisterConstant<string>(new ConstantSerializers.StringSerializer());
 
+            //FIXME SERIALIZER REGISTERSS
             //SafeRegister<DateTime>( new DefaultSerializers.DateSerializer());
             //SafeRegister<BigInteger>( new DefaultSerializers.BigIntegerSerializer());
             //SafeRegister<BigDecimal>( new DefaultSerializers.BigDecimalSerializer());
