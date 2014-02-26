@@ -126,7 +126,15 @@ namespace Hazelcast.Client.Proxy
             var request = new MapGetRequest(name, keyData);
             try
             {
-                return GetContext().GetInvocationService().InvokeOnKeyOwner<V>(request, key);
+                Task<V> task = GetContext().GetInvocationService().InvokeOnKeyOwner<V>(request, key);
+                task.ContinueWith((continueTask) =>
+                {
+                    if (nearCache != null)
+                    {
+                        nearCache.Put(keyData, continueTask.Result);
+                    }
+                });
+                return task;
             }
             catch (Exception e)
             {
@@ -304,12 +312,7 @@ namespace Hazelcast.Client.Proxy
             Invoke<object>(request, keyData);
         }
 
-        public string AddLocalEntryListener(IEntryListener<K, V> listener)
-        {
-            throw new NotSupportedException("Locality is ambiguous for client!!!");
-        }
-
-        public string AddInterceptor(MapInterceptor interceptor)
+        public string AddInterceptor(IMapInterceptor interceptor)
         {
             var request = new MapAddInterceptorRequest(name, interceptor);
             return Invoke<string>(request);
@@ -344,18 +347,17 @@ namespace Hazelcast.Client.Proxy
 
         public IEntryView<K, V> GetEntryView(K key)
         {
-            throw new NotSupportedException("EntryView not implemented");
-            //Data keyData = ToData(key);
-            //MapGetEntryViewRequest request = new MapGetEntryViewRequest(name, keyData);
-            //SimpleEntryView<K,V> entryView = Invoke<SimpleEntryView<K,V>>(request, keyData);
-            //if (entryView == null)
-            //{
-            //    return null;
-            //}
-            //Data value = (Data)entryView.GetValue();
-            //entryView.SetKey(key);
-            //entryView.SetValue(ToObject<V>(value));
-            //return entryView;
+            var keyData = ToData(key);
+            var request = new MapGetEntryViewRequest(name, keyData);
+            var entryView = Invoke<SimpleEntryView>(request, keyData);
+            if (entryView == null)
+            {
+                return null;
+            }
+            var value = (Data)entryView.GetValue();
+            entryView.SetKey(key);
+            entryView.SetValue(ToObject<V>(value));
+            return (IEntryView<K, V>) entryView;
         }
 
         public bool Evict(K key)
@@ -382,18 +384,46 @@ namespace Hazelcast.Client.Proxy
 
         public IDictionary<K, V> GetAll(ICollection<K> keys)
         {
+            InitNearCache();
             var keySet = new HashSet<Data>();
+            IDictionary<K, V> result = new Dictionary<K, V>();
             foreach (object key in keys)
             {
                 keySet.Add(ToData(key));
             }
+
+            if (nearCache != null)
+            {
+                foreach (var keyData in keySet)
+                {
+                    var cached = nearCache.Get(keyData);
+                    if (cached != null)
+                    {
+                        if (!cached.Equals(ClientNearCache.NullObject))
+                        {
+                            result.Add(ToObject<K>(keyData), (V)cached);
+                            keySet.Remove(keyData);
+                        }
+                    }
+                }
+            }
+            if (keySet.Count == 0)
+            {
+                return result;
+            }
+            
             var request = new MapGetAllRequest(name, keySet);
             var mapEntrySet = Invoke<MapEntrySet>(request);
-            IDictionary<K, V> result = new Dictionary<K, V>();
             ICollection<KeyValuePair<Data, Data>> entrySet = mapEntrySet.GetEntrySet();
             foreach (var dataEntry in entrySet)
             {
-                result.Add(ToObject<K>(dataEntry.Key), ToObject<V>(dataEntry.Value));
+                var key = ToObject<K>(dataEntry.Key);
+                var value = ToObject<V>(dataEntry.Value);
+                result.Add(key, value);
+                if (nearCache != null)
+                {
+                    nearCache.Put(dataEntry.Key, result);
+                }
             }
             return result;
         }
@@ -525,6 +555,14 @@ namespace Hazelcast.Client.Proxy
             return values;
         }
 
+        internal ClientNearCache NearCache
+        {
+            get
+            {
+                return nearCache;
+            }
+        }
+        
         protected  override void OnDestroy()
         {
             if (nearCache != null)

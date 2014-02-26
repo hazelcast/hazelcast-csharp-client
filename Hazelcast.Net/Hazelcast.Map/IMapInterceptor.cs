@@ -1,6 +1,6 @@
 namespace Hazelcast.Map
 {
-    public interface MapInterceptor
+    public interface IMapInterceptor
     {
         /// <summary>Intercept get operation before returning value.</summary>
         /// <remarks>

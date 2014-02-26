@@ -6,8 +6,21 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Map
 {
+
+    internal class SimpleEntryView<K, V> : SimpleEntryView,IEntryView<K, V>
+    {
+        public K GetKey()
+        {
+            return (K)base.GetKey();
+        }
+
+        public V GetValue()
+        {
+            return (V)base.GetValue();
+        }
+    }
     [Serializable]
-    internal class SimpleEntryView<K, V> : IdentifiedDataSerializable, IEntryView<K, V>, IIdentifiedDataSerializable
+    internal class SimpleEntryView : IdentifiedDataSerializable, IIdentifiedDataSerializable
     {
         private long cost;
 
@@ -16,38 +29,44 @@ namespace Hazelcast.Map
         private long expirationTime;
 
         private long hits;
-        private K key;
+
+        private object key;
+        private object value;
 
         private long lastAccessTime;
 
         private long lastStoredTime;
 
         private long lastUpdateTime;
-        private V value;
 
         private long version;
 
-        //public SimpleEntryView(K key, V value, RecordStatistics statistics, long recordVersion)
-        //{
-        //    //import com.hazelcast.map.record.RecordStatistics;
-        //    this.key = key;
-        //    this.value = value;
-        //    cost = statistics == null ? -1 : statistics.GetCost();
-        //    creationTime = statistics == null ? -1 : statistics.GetCreationTime();
-        //    expirationTime = statistics == null ? -1 : statistics.GetExpirationTime();
-        //    hits = statistics == null ? -1 : statistics.GetHits();
-        //    lastAccessTime = statistics == null ? -1 : statistics.GetLastAccessTime();
-        //    lastStoredTime = statistics == null ? -1 : statistics.GetLastStoredTime();
-        //    lastUpdateTime = statistics == null ? -1 : statistics.GetLastUpdateTime();
-        //    version = recordVersion;
-        //}
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteData(IObjectDataOutput output)
+        {
+        }
 
-        public virtual K GetKey()
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void ReadData(IObjectDataInput input)
+        {
+            key = input.ReadObject<object>();
+            value = input.ReadObject<object>();
+            cost = input.ReadLong();
+            creationTime = input.ReadLong();
+            expirationTime = input.ReadLong();
+            hits = input.ReadLong();
+            lastAccessTime = input.ReadLong();
+            lastStoredTime = input.ReadLong();
+            lastUpdateTime = input.ReadLong();
+            version = input.ReadLong();
+        }
+
+        public virtual object GetKey()
         {
             return key;
         }
 
-        public virtual V GetValue()
+        public virtual object GetValue()
         {
             return value;
         }
@@ -92,36 +111,6 @@ namespace Hazelcast.Map
             return version;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WriteData(IObjectDataOutput output)
-        {
-            output.WriteObject(key);
-            output.WriteObject(value);
-            output.WriteLong(cost);
-            output.WriteLong(creationTime);
-            output.WriteLong(expirationTime);
-            output.WriteLong(hits);
-            output.WriteLong(lastAccessTime);
-            output.WriteLong(lastStoredTime);
-            output.WriteLong(lastUpdateTime);
-            output.WriteLong(version);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadData(IObjectDataInput input)
-        {
-            key = input.ReadObject<K>();
-            value = input.ReadObject<V>();
-            cost = input.ReadLong();
-            creationTime = input.ReadLong();
-            expirationTime = input.ReadLong();
-            hits = input.ReadLong();
-            lastAccessTime = input.ReadLong();
-            lastStoredTime = input.ReadLong();
-            lastUpdateTime = input.ReadLong();
-            version = input.ReadLong();
-        }
-
         public virtual int GetFactoryId()
         {
             return MapDataSerializerHook.FId;
@@ -132,12 +121,12 @@ namespace Hazelcast.Map
             return MapDataSerializerHook.EntryView;
         }
 
-        public virtual void SetKey(K key)
+        public virtual void SetKey(object key)
         {
             this.key = key;
         }
 
-        public virtual void SetValue(V value)
+        public virtual void SetValue(object value)
         {
             this.value = value;
         }
@@ -181,5 +170,6 @@ namespace Hazelcast.Map
         {
             this.version = version;
         }
+
     }
 }

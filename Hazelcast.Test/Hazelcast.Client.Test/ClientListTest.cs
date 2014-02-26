@@ -22,6 +22,7 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public static void Destroy()
         {
+            list.Destroy();
         }
 
 		[Test]
@@ -60,6 +61,21 @@ namespace Hazelcast.Client.Test
 			Assert.AreEqual("item4", o);
 			Assert.AreEqual(1, list.Count);
 			Assert.AreEqual("item1", list[0]);
+
+		    list[0] = "itemMod";
+            Assert.AreEqual("itemMod", list.Get(0));
+		}
+		[Test]
+		public virtual void TestInsert()
+		{
+		    list.Add("item0");
+		    list.Add("item1");
+		    list.Add("item2");
+            list.Insert(1,"item1Mod");
+            Assert.AreEqual("item1Mod", list[1]);
+            list.RemoveAt(0);
+            Assert.AreEqual("item1Mod", list[0]);
+            Assert.AreEqual("item1", list[1]);
 		}
 
 		[Test]

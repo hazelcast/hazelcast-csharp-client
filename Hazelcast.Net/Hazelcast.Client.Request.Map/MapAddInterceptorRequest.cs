@@ -8,14 +8,14 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapAddInterceptorRequest : ClientRequest
     {
-        private MapInterceptor mapInterceptor;
+        private IMapInterceptor mapInterceptor;
         private string name;
 
         public MapAddInterceptorRequest()
         {
         }
 
-        public MapAddInterceptorRequest(string name, MapInterceptor mapInterceptor)
+        public MapAddInterceptorRequest(string name, IMapInterceptor mapInterceptor)
         {
             this.name = name;
             this.mapInterceptor = mapInterceptor;
@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Request.Map
         {
             writer.WriteUTF("n", name);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            output.WriteObject(output);
+            output.WriteObject(mapInterceptor);
         }
 
     }

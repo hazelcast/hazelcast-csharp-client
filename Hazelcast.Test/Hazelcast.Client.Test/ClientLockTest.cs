@@ -23,6 +23,7 @@ namespace Hazelcast.Client.Test
         public static void Destroy()
         {
             l.ForceUnlock();
+            l.Destroy();
         }
 
 		/// <exception cref="System.Exception"></exception>
