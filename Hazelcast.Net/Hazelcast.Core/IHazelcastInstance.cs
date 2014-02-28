@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using Hazelcast.Transaction;
 
 namespace Hazelcast.Core
@@ -7,7 +8,7 @@ namespace Hazelcast.Core
     /// <summary>Hazelcast instance.</summary>
     /// <remarks>
     ///     Hazelcast instance. Each Hazelcast instance is a member (node) in a cluster.
-    ///     Multiple Hazelcast instances can be created on a JVM.
+    ///     Multiple Hazelcast instances can be created.
     ///     Each Hazelcast instance has its own socket, threads.
     /// </remarks>
     public interface IHazelcastInstance
@@ -16,20 +17,25 @@ namespace Hazelcast.Core
         /// <returns>name of this Hazelcast instance</returns>
         string GetName();
 
-        /// <summary>Returns the distributed queue instance with the specified name.</summary>
-        /// <remarks>Returns the distributed queue instance with the specified name.</remarks>
+        /// <summary>
+        /// Returns the distributed queue instance with the specified name.
+        /// </summary>
+        /// <typeparam name="E">The type of elements in the queue.</typeparam>
         /// <param name="name">name of the distributed queue</param>
         /// <returns>distributed queue instance with the specified name</returns>
+        /// <remarks>Returns the distributed queue instance with the specified name.</remarks>
         IQueue<E> GetQueue<E>(string name);
 
         /// <summary>Returns the distributed topic instance with the specified name.</summary>
         /// <remarks>Returns the distributed topic instance with the specified name.</remarks>
+        /// <typeparam name="E">The type of elements in the Topic</typeparam>
         /// <param name="name">name of the distributed topic</param>
         /// <returns>distributed topic instance with the specified name</returns>
         ITopic<E> GetTopic<E>(string name);
 
         /// <summary>Returns the distributed set instance with the specified name.</summary>
         /// <remarks>Returns the distributed set instance with the specified name.</remarks>
+        /// <typeparam name="E">The type of elements in the set</typeparam>
         /// <param name="name">name of the distributed set</param>
         /// <returns>distributed set instance with the specified name</returns>
         IHSet<E> GetSet<E>(string name);
@@ -39,18 +45,33 @@ namespace Hazelcast.Core
         ///     Returns the distributed list instance with the specified name.
         ///     Index based operations on the list are not supported.
         /// </remarks>
+        /// <typeparam name="E">The type of elements in the list</typeparam>
         /// <param name="name">name of the distributed list</param>
         /// <returns>distributed list instance with the specified name</returns>
         IHList<E> GetList<E>(string name);
 
-        /// <summary>Returns the distributed map instance with the specified name.</summary>
-        /// <remarks>Returns the distributed map instance with the specified name.</remarks>
+        /// <summary>
+        /// Returns the distributed map instance with the specified name.
+        /// </summary>
+        /// <typeparam name="K">The type of the keys in the map</typeparam>
+        /// <typeparam name="V">The type of the values in the map</typeparam>
         /// <param name="name">name of the distributed map</param>
         /// <returns>distributed map instance with the specified name</returns>
+        /// <remarks>Returns the distributed map instance with the specified name.</remarks>
+        /// <example>
+        /// <code>
+        ///     var myMap = hazelcastInstance.GetMap&lt;string,int&gt;("theMap");
+        ///     myMap.Put("item1",10);
+        ///     int value=myMap.Get("item1");
+        ///     //value==10
+        /// </code>
+        /// </example>
         IMap<K, V> GetMap<K, V>(string name);
 
         /// <summary>Returns the distributed multimap instance with the specified name.</summary>
         /// <remarks>Returns the distributed multimap instance with the specified name.</remarks>
+        /// <typeparam name="K">The type of the keys in the multimap</typeparam>
+        /// <typeparam name="V">The type of the values in the multimap</typeparam>
         /// <param name="name">name of the distributed multimap</param>
         /// <returns>distributed multimap instance with the specified name</returns>
         IMultiMap<K, V> GetMultiMap<K, V>(string name);
@@ -68,18 +89,24 @@ namespace Hazelcast.Core
         ///     Moreover, when a member leaves the cluster, all the locks acquired
         ///     by this dead member will be removed so that these locks can be
         ///     available for live members immediately.
-        ///     <pre>
-        ///         Lock lock = hazelcastInstance.GetLock("PROCESS_LOCK");
-        ///         lock.lock();
-        ///         try {
-        ///         // process
-        ///         } finally {
-        ///         lock.unlock();
-        ///         }
-        ///     </pre>
         /// </remarks>
         /// <param name="key">key of the lock instance</param>
         /// <returns>distributed lock instance for the specified key.</returns>
+        /// <example>
+        /// 
+        /// <code >
+        ///Lock lock = hazelcastInstance.GetLock("PROCESS_LOCK");
+        ///lock.lock();
+        ///try
+        ///{
+        /// // process
+        ///} 
+        ///finally
+        ///{
+        ///    lock.unlock();
+        ///}
+        /// </code>
+        /// </example>
         ILock GetLock(string key);
 
         /// <summary>Returns the ICluster that this Hazelcast instance is part of.</summary>
@@ -115,35 +142,6 @@ namespace Hazelcast.Core
         ///// <returns>executor service for the given name</returns>
         //IExecutorService GetExecutorService(string name);
 
-        ///// <summary>
-        /////     Executes given transactional task in current thread using default options
-        /////     and returns the result of the task.
-        ///// </summary>
-        ///// <remarks>
-        /////     Executes given transactional task in current thread using default options
-        /////     and returns the result of the task.
-        ///// </remarks>
-        ///// <param name="task">task to be executed</param>
-        ///// 
-        ///// <returns>returns result of transactional task</returns>
-        ///// <exception cref="Hazelcast.Transaction.TransactionException">if an error occurs during transaction.</exception>
-        //T ExecuteTransaction<T>(ITransactionalTask<T> task);
-
-        ///// <summary>
-        /////     Executes given transactional task in current thread using given options
-        /////     and returns the result of the task.
-        ///// </summary>
-        ///// <remarks>
-        /////     Executes given transactional task in current thread using given options
-        /////     and returns the result of the task.
-        ///// </remarks>
-        ///// <param name="options">options for this transactional task</param>
-        ///// <param name="task">task to be executed</param>
-        ///// 
-        ///// <returns>returns result of transactional task</returns>
-        ///// <exception cref="Hazelcast.Transaction.TransactionException">if an error occurs during transaction.</exception>
-        //T ExecuteTransaction<T>(TransactionOptions options, ITransactionalTask<T> task);
-
         /// <summary>Creates a new ITransactionContext associated with the current thread using default options.</summary>
         /// <remarks>Creates a new ITransactionContext associated with the current thread using default options.</remarks>
         /// <returns>new ITransactionContext</returns>
@@ -158,9 +156,9 @@ namespace Hazelcast.Core
         /// <summary>Creates cluster-wide unique IDs.</summary>
         /// <remarks>
         ///     Creates cluster-wide unique IDs. Generated IDs are long type primitive values
-        ///     between <tt>0</tt> and <tt>Long.MAX_VALUE</tt> . Id generation occurs almost at the speed of
-        ///     <tt>AtomicLong.incrementAndGet()</tt> . Generated IDs are unique during the life
-        ///     cycle of the cluster. If the entire cluster is restarted, IDs start from <tt>0</tt> again.
+        ///     between <c>0</c> and <c>Int64.MaxValue</c> . Id generation occurs almost at the speed of
+        ///     <c>Interlocked.Increment(long)</c> . Generated IDs are unique during the life
+        ///     cycle of the cluster. If the entire cluster is restarted, IDs start from <c>0</c> again.
         /// </remarks>
         /// <param name="name">name of the IIdGenerator</param>
         /// <returns>IIdGenerator for the given name</returns>
@@ -169,7 +167,7 @@ namespace Hazelcast.Core
         /// <summary>Creates cluster-wide atomic long.</summary>
         /// <remarks>
         ///     Creates cluster-wide atomic long. Hazelcast IAtomicLong is distributed
-        ///     implementation of <tt>java.util.concurrent.atomic.AtomicLong</tt>.
+        ///     implementation of <c>Interlocked</c>.
         /// </remarks>
         /// <param name="name">name of the IAtomicLong proxy</param>
         /// <returns>IAtomicLong proxy for the given name</returns>
@@ -178,7 +176,7 @@ namespace Hazelcast.Core
         /// <summary>Creates cluster-wide CountDownLatch.</summary>
         /// <remarks>
         ///     Creates cluster-wide CountDownLatch. Hazelcast ICountDownLatch is distributed
-        ///     implementation of <tt>java.util.concurrent.CountDownLatch</tt>.
+        ///     implementation of <see cref="System.Threading.CountdownEvent"/>.
         /// </remarks>
         /// <param name="name">name of the ICountDownLatch proxy</param>
         /// <returns>ICountDownLatch proxy for the given name</returns>
@@ -187,7 +185,7 @@ namespace Hazelcast.Core
         /// <summary>Creates cluster-wide semaphore.</summary>
         /// <remarks>
         ///     Creates cluster-wide semaphore. Hazelcast ISemaphore is distributed
-        ///     implementation of <tt>java.util.concurrent.Semaphore</tt>.
+        ///     implementation of <see cref="Semaphore"/>.
         /// </remarks>
         /// <param name="name">name of the ISemaphore proxy</param>
         /// <returns>ISemaphore proxy for the given name</returns>
@@ -220,20 +218,6 @@ namespace Hazelcast.Core
         /// <returns>true if registration is removed, false otherwise</returns>
         bool RemoveDistributedObjectListener(string registrationId);
 
-        //    /**
-        //     * Returns the configuration of this Hazelcast instance.
-        //     *
-        //     * @return configuration of this Hazelcast instance
-        //     */
-        //    Config getConfig();
-        //    /**
-        //     * Returns the partition service of this Hazelcast instance.
-        //     * PartitionService allows you to introspect current partitions in the
-        //     * cluster, partition owner members and listen for partition migration events.
-        //     *
-        //     * @return partition service
-        //     */
-        //    PartitionService getPartitionService();
         /// <summary>Returns the client service of this Hazelcast instance.</summary>
         /// <remarks>
         ///     Returns the client service of this Hazelcast instance.
@@ -242,15 +226,6 @@ namespace Hazelcast.Core
         /// <returns>the IClientService.</returns>
         IClientService GetClientService();
 
-        //    /**
-        //     * Returns the logging service of this Hazelcast instance.
-        //     * LoggingService allows you to listen for LogEvents
-        //     * generated by Hazelcast runtime. You can log the events somewhere
-        //     * or take action base on the message.
-        //     *
-        //     * @return logging service
-        //     */
-        //    LoggingService getLoggingService();
         /// <summary>Returns the lifecycle service for this instance.</summary>
         /// <remarks>
         ///     Returns the lifecycle service for this instance. ILifecycleService allows you
@@ -260,17 +235,8 @@ namespace Hazelcast.Core
         /// <returns>lifecycle service</returns>
         ILifecycleService GetLifecycleService();
 
-        ///// <param name="serviceName">name of the service</param>
-        ///// <param name="id">identifier of the object</param>
-        ///// <?></?>
-        ///// 
-        ///// <returns>IDistributedObject created by the service</returns>
-        //[Obsolete(@"use GetDistributedObject{T}(string, string) instead.")]
-        //T GetDistributedObject<T>(string serviceName, object id) where T : IDistributedObject;
-
         /// <param name="serviceName">name of the service</param>
         /// <param name="name">name of the object</param>
-        /// 
         /// <returns>IDistributedObject created by the service</returns>
         T GetDistributedObject<T>(string serviceName, string name) where T : IDistributedObject;
 
@@ -290,8 +256,7 @@ namespace Hazelcast.Core
         /// <summary>Shuts down this IHazelcastInstance.</summary>
         /// <remarks>
         ///     Shuts down this IHazelcastInstance. For more information see
-        ///     <see cref="ILifecycleService.Shutdown()">ILifecycleService.Shutdown()</see>
-        ///     .
+        ///     <see cref="Hazelcast.Core.ILifecycleService"/>.
         /// </remarks>
         void Shutdown();
     }

@@ -3,7 +3,7 @@ namespace Hazelcast.Core
     /// <summary>
     ///     IPartitionAware allows implementing keys to be located on the same member
     ///     or implementing tasks to be executed on
-    ///     <see cref="IIPartitionAware{T}.GetPartitionKey()">IPartitionAware&lt;T&gt;.GetPartitionKey()</see>
+    ///     <see cref="IPartitionAware{T}.GetPartitionKey()">IPartitionAware&lt;T&gt;.GetPartitionKey()</see>
     ///     's owner member.
     ///     This makes related data to be stored in the same location. (See data-affinity.)
     /// </summary>

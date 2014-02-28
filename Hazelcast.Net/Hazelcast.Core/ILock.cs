@@ -8,19 +8,31 @@ namespace Hazelcast.Core
     public interface ILock : IDistributedObject
     {
         /// <summary>
-        ///     <inheritDoc></inheritDoc>
+        ///Acquires the lock.
         /// </summary>
+        /// <remarks>
+        ///     Acquires the lock.
+        ///     <p>
+        ///        If the lock is not available then
+        ///        the current thread becomes disabled for thread scheduling
+        ///        purposes and lies dormant until the lock has been acquired.
+        ///     </p>
+        /// </remarks>
         void Lock();
 
         /// <summary>
-        ///     <inheritDoc></inheritDoc>
+        /// Tries to acquires the lock and returns immediately.
         /// </summary>
+        /// <returns><c>true</c> if acquires the lock, <c>false</c> otherwise.</returns>
         bool TryLock();
 
-        /// <summary>
-        ///     <inheritDoc></inheritDoc>
-        /// </summary>
-        /// <exception cref="System.Exception"></exception>
+        /// <summary>Tries to acquires the lock for the specified lease time.</summary>
+        /// <remarks>
+        ///     Tries to acquires the lock for the specified lease time.
+        ///     <p>After lease time, lock will be released.</p>
+        /// </remarks>
+        /// <param name="leaseTime">time to wait before releasing the lock.</param>
+        /// <param name="timeUnit">unit of time to specify lease time.</param>
         bool TryLock(long time, TimeUnit? unit);
 
         /// <summary>Releases the lock.</summary>
@@ -30,14 +42,12 @@ namespace Hazelcast.Core
         /// <summary>Acquires the lock for the specified lease time.</summary>
         /// <remarks>
         ///     Acquires the lock for the specified lease time.
+        ///     <p>After lease time, lock will be released.</p>
         ///     <p>
-        ///         After lease time, lock will be released..
-        ///         <p />
-        ///         <p>
-        ///             If the lock is not available then
-        ///             the current thread becomes disabled for thread scheduling
-        ///             purposes and lies dormant until the lock has been acquired.
-        ///             <p />
+        ///        If the lock is not available then
+        ///        the current thread becomes disabled for thread scheduling
+        ///        purposes and lies dormant until the lock has been acquired.
+        ///     </p>
         /// </remarks>
         /// <param name="leaseTime">time to wait before releasing the lock.</param>
         /// <param name="timeUnit">unit of time to specify lease time.</param>

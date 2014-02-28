@@ -442,11 +442,11 @@ namespace Hazelcast.Client.Proxy
             return collection;
         }
 
-        public ICollection<KeyValuePair<K, V>> EntrySet()
+        public ISet<KeyValuePair<K, V>> EntrySet()
         {
             var request = new MapEntrySetRequest(name);
             var result = Invoke<MapEntrySet>(request);
-            ICollection<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
+            ISet<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
             ICollection<KeyValuePair<Data, Data>> entries = result.GetEntrySet();
             foreach (KeyValuePair<Data, Data> dataEntry in entries)
             {
@@ -482,7 +482,7 @@ namespace Hazelcast.Client.Proxy
             return Size() == 0;
         }
 
-        public void PutAll<K>(IDictionary<K, V> m)
+        public void PutAll(IDictionary<K, V> m)
         {
             var entrySet = new MapEntrySet();
             foreach (var entry in m)
@@ -515,11 +515,11 @@ namespace Hazelcast.Client.Proxy
             return Listen(request, null, handler);
         }
 
-        public ICollection<K> KeySet(IPredicate<K, V> predicate)
+        public ISet<K> KeySet(IPredicate<K, V> predicate)
         {
             var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Key);
             var result = Invoke<QueryResultSet>(request);
-            ICollection<K> keySet = new HashSet<K>();
+            ISet<K> keySet = new HashSet<K>();
             foreach (object data in result)
             {
                 K key = ToObject<K>((Data)data);
@@ -528,11 +528,11 @@ namespace Hazelcast.Client.Proxy
             return keySet;
         }
 
-        public ICollection<KeyValuePair<K, V>> EntrySet(IPredicate<K, V> predicate)
+        public ISet<KeyValuePair<K, V>> EntrySet(IPredicate<K, V> predicate)
         {
             var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Entry);
             var result = Invoke<QueryResultSet>(request);
-            ICollection<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
+            ISet<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
             foreach (IQueryResultEntry dataEntry in result.entries)
             {
                 K key = ToObject<K>(dataEntry.GetKeyData());

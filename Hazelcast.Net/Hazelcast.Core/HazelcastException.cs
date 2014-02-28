@@ -2,6 +2,9 @@ using System;
 
 namespace Hazelcast.Core
 {
+    /// <summary>
+    /// Base Hazelcast exception.
+    /// </summary>
     [Serializable]
     public class HazelcastException : SystemException
     {

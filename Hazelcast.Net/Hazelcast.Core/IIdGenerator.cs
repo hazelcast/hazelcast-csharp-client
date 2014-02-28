@@ -1,10 +1,10 @@
 namespace Hazelcast.Core
 {
-    /// <summary>ICluster-wide unique id generator.</summary>
-    /// <remarks>ICluster-wide unique id generator.</remarks>
+    /// <summary>Cluster-wide unique id generator.</summary>
+    /// <remarks>Cluster-wide unique id generator.</remarks>
     public interface IIdGenerator : IDistributedObject
     {
-        /// <summary>Try to initialize this IIdGenerator instance with given id</summary>
+        /// <summary>Try to initialize this <c>IIdGenerator</c> instance with given id</summary>
         /// <returns>true if initialization success</returns>
         bool Init(long id);
 

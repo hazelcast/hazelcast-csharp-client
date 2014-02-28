@@ -3,13 +3,10 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Core
 {
-    /// <summary>A specialized map whose keys can be associated with multiple values.</summary>
+    /// <summary>A specialized Concurrent, distributed map whose keys can be associated with multiple values.</summary>
     public interface IMultiMap<K, V> : IDistributedObject
     {
-        //string GetName();
-        /// <summary>Returns the name of this multimap.</summary>
-        /// <remarks>Returns the name of this multimap.</remarks>
-        /// <returns>the name of this multimap</returns>
+
         /// <summary>Stores a key-value pair in the multimap.</summary>
         /// <param name="key">the key to be stored</param>
         /// <param name="value">the value to be stored</param>
@@ -43,7 +40,7 @@ namespace Hazelcast.Core
         ///     the set of keys in the multimap. Returned set might be modifiable
         ///     but it has no effect on the multimap
         /// </returns>
-        ICollection<K> KeySet();
+        ISet<K> KeySet();
 
         /// <summary>Returns the collection of values in the multimap.</summary>
         /// <returns>
@@ -57,7 +54,7 @@ namespace Hazelcast.Core
         ///     the set of key-value pairs in the multimap. Returned set might be modifiable
         ///     but it has no effect on the multimap
         /// </returns>
-        ICollection<KeyValuePair<K, V>> EntrySet();
+        ISet<KeyValuePair<K, V>> EntrySet();
 
         /// <summary>Returns whether the multimap contains an entry with the key.</summary>
         /// <param name="key">the key whose existence is checked.</param>
@@ -91,7 +88,7 @@ namespace Hazelcast.Core
         /// <summary>Adds an entry listener for this multimap.</summary>
         /// <param name="listener">entry listener</param>
         /// <param name="includeValue">
-        ///     <tt>true</tt> if <tt>EntryEvent</tt> should
+        ///     <c>true</c> if <c>EntryEvent</c> should
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id.</returns>
@@ -109,7 +106,7 @@ namespace Hazelcast.Core
         /// <param name="listener">entry listener</param>
         /// <param name="key">the key to listen</param>
         /// <param name="includeValue">
-        ///     <tt>true</tt> if <tt>EntryEvent</tt> should
+        ///     <c>true</c> if <c>EntryEvent</c> should
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id.</returns>
@@ -127,19 +124,19 @@ namespace Hazelcast.Core
 
         /// <summary>Checks the lock for the specified key.</summary>
         /// <param name="key">key to lock to be checked.</param>
-        /// <returns><tt>true</tt> if lock is acquired, <tt>false</tt> otherwise.</returns>
+        /// <returns><c>true</c> if lock is acquired, <c>false</c> otherwise.</returns>
         bool IsLocked(K key);
 
         /// <summary>Tries to acquire the lock for the specified key.</summary>
         /// <param name="key">key to lock.</param>
-        /// <returns><tt>true</tt> if lock is acquired, <tt>false</tt> otherwise.</returns>
+        /// <returns><c>true</c> if lock is acquired, <c>false</c> otherwise.</returns>
         bool TryLock(K key);
 
         /// <summary>Tries to acquire the lock for the specified key.</summary>
         /// <param name="time">the maximum time to wait for the lock</param>
-        /// <param name="timeunit">the time unit of the <tt>time</tt> argument.</param>
+        /// <param name="timeunit">the time unit of the <c>time</c> argument.</param>
         /// <returns>
-        ///     <tt>true</tt> if the lock was acquired and <tt>false</tt>
+        ///     <c>true</c> if the lock was acquired and <c>false</c>
         ///     if the waiting time elapsed before the lock was acquired.
         /// </returns>
         /// <exception cref="System.Exception"></exception>

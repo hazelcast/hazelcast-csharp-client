@@ -9,9 +9,7 @@ namespace Hazelcast.Core
 
     /// <summary>Cluster member interface.</summary>
     /// <remarks>
-    /// Cluster member interface. The default implementation
-    /// <see cref="com.hazelcast.instance.MemberImpl">com.hazelcast.instance.MemberImpl</see>
-    /// violates the Java Serialization contract.
+    /// Cluster member interface. The default implementation violates the Serialization contract.
     /// It should be serialized/deserialized by Hazelcast.
     /// </remarks>
     /// <seealso cref="ICluster">Cluster</seealso>

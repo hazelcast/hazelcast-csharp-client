@@ -1,4 +1,3 @@
-using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Core
 {
@@ -6,6 +5,8 @@ namespace Hazelcast.Core
     ///     ISemaphore is a backed-up distributed alternative to the
     ///     <see cref="System.Threading.Semaphore">System.Threading.Semaphore</see>
     ///     .
+    /// </summary>
+    /// <remarks>
     ///     <p />
     ///     ISemaphore is a cluster-wide counting semaphore.  Conceptually,
     ///     it maintains a set of permits.  Each
@@ -16,7 +17,7 @@ namespace Hazelcast.Core
     ///     adds a permit,
     ///     potentially releasing a blocking acquirer. However, no actual permit objects are
     ///     used; the semaphore just keeps a count of the number available and acts accordingly.
-    ///     <p />The Hazelcast distributed semaphore implementation guarantees that
+    ///     <p/>The Hazelcast distributed semaphore implementation guarantees that
     ///     threads invoking any of the
     ///     <see cref="Acquire()">acquire</see>
     ///     methods are selected
@@ -24,7 +25,7 @@ namespace Hazelcast.Core
     ///     was processed(first-in-first-out; FIFO).  Note that FIFO ordering necessarily
     ///     applies to specific internal points of execution within the cluster.  So,
     ///     it is possible for one member to invoke
-    ///     <code>acquire</code>
+    ///     <c>acquire</c>
     ///     before another, but reach
     ///     the ordering point after the other, and similarly upon return from the method.
     ///     <p />This class also provides convenience methods to
@@ -39,64 +40,44 @@ namespace Hazelcast.Core
     ///     permits regardless of the call order.
     ///     <p />
     ///     <ul>
-    ///         <li>Correct usage of a semaphore is established by programming convention in the application.
+    ///         <li>Correct usage of a semaphore is established by programming convention in the application.</li>
     ///     </ul>
-    /// </summary>
+    /// </remarks>
     public interface ISemaphore : IDistributedObject
     {
-        /// <summary>Returns the name of this ISemaphore instance.</summary>
-        /// <remarks>Returns the name of this ISemaphore instance.</remarks>
-        /// <returns>name of this instance</returns>
-        string GetName();
+        ///// <summary>Returns the name of this ISemaphore instance.</summary>
+        ///// <remarks>Returns the name of this ISemaphore instance.</remarks>
+        ///// <returns>name of this instance</returns>
+        //string GetName();
 
         /// <summary>Try to initialize this ISemaphore instance with given permit count</summary>
         /// <returns>true if initialization success</returns>
         bool Init(int permits);
 
         /// <summary>
-        ///     <p>
         ///         Acquires a permit, if one is available and returns immediately,
         ///         reducing the number of available permits by one.
         /// </summary>
         /// <remarks>
-        ///     <p>
         ///         Acquires a permit, if one is available and returns immediately,
         ///         reducing the number of available permits by one.
         ///         <p />
-        ///         <p>
         ///             If no permit is available then the current thread becomes
         ///             disabled for thread scheduling purposes and lies dormant until
-        ///             one of three things happens:
+        ///             one of two things happens:
         ///             <ul>
         ///                 <li>
         ///                     Some other thread invokes one of the
         ///                     <see cref="Release()">Release()</see>
         ///                     methods for this
         ///                     semaphore and the current thread is next to be assigned a permit;
-        ///                     <li>
-        ///                         This ISemaphore instance is destroyed; or
-        ///                         <li>
-        ///                             Some other thread
-        ///                             <see cref="Hazelcast.Net.Ext.Thread.Interrupt()">interrupts</see>
-        ///                             the current thread.
+        /// 
+        ///                 </li>
+        ///                 <li>
+        ///                     This ISemaphore instance is destroyed; or
+        ///                 </li>
         ///             </ul>
-        ///             <p>
-        ///                 If the current thread:
-        ///                 <ul>
-        ///                     <li>
-        ///                         has its interrupted status set on entry to this method; or
-        ///                         <li>
-        ///                             is
-        ///                             <see cref="Hazelcast.Net.Ext.Thread.Interrupt()">interrupted</see>
-        ///                             while waiting
-        ///                             for a permit,
-        ///                 </ul>
-        ///                 then
-        ///                 <see cref="System.Exception">System.Exception</see>
-        ///                 is thrown and the current thread's
-        ///                 interrupted status is cleared.
         /// </remarks>
-        /// <exception cref="System.Exception">if the current thread is interrupted</exception>
         /// <exception cref="System.InvalidOperationException">if hazelcast instance is shutdown while waiting</exception>
         void Acquire();
 
@@ -115,39 +96,20 @@ namespace Hazelcast.Core
         ///         <p>
         ///             If insufficient permits are available then the current thread becomes
         ///             disabled for thread scheduling purposes and lies dormant until
-        ///             one of three things happens:
+        ///             one of two things happens:
         ///             <ul>
         ///                 <li>
         ///                     Some other thread invokes one of the
         ///                     <see cref="Release()">release</see>
         ///                     methods for this semaphore, the current thread is next to be assigned
         ///                     permits and the number of available permits satisfies this request;
-        ///                     <li>
-        ///                         This ISemaphore instance is destroyed; or
-        ///                         <li>
-        ///                             Some other thread
-        ///                             <see cref="Hazelcast.Net.Ext.Thread.Interrupt()">interrupts</see>
-        ///                             the current thread.
-        ///             </ul>
-        ///             <p />
-        ///             <p>
-        ///                 If the current thread:
-        ///                 <ul>
-        ///                     <li>
-        ///                         has its interrupted status set on entry to this method; or
-        ///                         <li>
-        ///                             is
-        ///                             <see cref="Hazelcast.Net.Ext.Thread.Interrupt()">interrupted</see>
-        ///                             while waiting
-        ///                             for a permit,
-        ///                 </ul>
-        ///                 then
-        ///                 <see cref="System.Exception">System.Exception</see>
-        ///                 is thrown and the current thread's
-        ///                 interrupted status is cleared.
+        ///                 </li>
+        ///                 <li>
+        ///                     This ISemaphore instance is destroyed; 
+        ///                 </li>
+        ///            </ul>
         /// </remarks>
         /// <param name="permits">the number of permits to acquire</param>
-        /// <exception cref="System.Exception">if the current thread is interrupted</exception>
         /// <exception cref="System.ArgumentException">
         ///     if
         ///     <code>permits</code>
@@ -161,7 +123,7 @@ namespace Hazelcast.Core
         ///     Returns the current number of permits currently available in this semaphore.
         ///     <p />
         ///     <ul>
-        ///         <li>This method is typically used for debugging and testing purposes.
+        ///         <li>This method is typically used for debugging and testing purposes.</li>
         ///     </ul>
         /// </remarks>
         /// <returns>the number of permits available in this semaphore</returns>

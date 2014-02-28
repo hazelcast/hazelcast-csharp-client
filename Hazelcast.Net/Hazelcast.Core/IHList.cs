@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Hazelcast.Core
 {
     /// <summary>
-    ///     Concurrent, distributed implementation of
+    ///     Concurrent, distributed implementation of <see cref="IList{T}"/>IList 
     /// </summary>
     public interface IHList<E> : IList<E>, IHCollection<E>
     {
