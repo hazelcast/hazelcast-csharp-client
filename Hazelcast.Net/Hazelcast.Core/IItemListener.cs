@@ -2,11 +2,11 @@ namespace Hazelcast.Core
 {
     /// <summary>
     ///     Item listener for
-    ///     <see cref="IQueue{E}">IQueue&lt;E&gt;</see>
+    ///     <see cref="IQueue{E}"/>
     ///     ,
-    ///     <see cref="IHSet{E}">IHSet&lt;E&gt;</see>
+    ///     <see cref="IHSet{E}"/>
     ///     and
-    ///     <see cref="IHList{E}">IHList&lt;E&gt;</see>
+    ///     <see cref="IHList{E}"/>
     /// </summary>
     public interface IItemListener<E> : IEventListener
     {

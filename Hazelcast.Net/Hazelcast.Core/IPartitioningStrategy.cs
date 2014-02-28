@@ -17,6 +17,6 @@ namespace Hazelcast.Core
         /// <remarks>Returns the key object that will be used by Hazelcast to specify the partition.</remarks>
         /// <param name="key">actual key object</param>
         /// <returns>partition key object or null to fallback to default partition calculation</returns>
-        object GetPartitionKey(Object key);
+        object GetPartitionKey(object key);
     }
 }

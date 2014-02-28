@@ -17,11 +17,11 @@ using Hazelcast.Util;
 namespace Hazelcast.Client
 {
     /// <summary>
-    ///     Hazelcast IClient enables you to do all Hazelcast operations without
+    ///     Hazelcast Client enables you to do all Hazelcast operations without
     ///     being a member of the cluster.
     /// </summary>
     /// <remarks>
-    ///     Hazelcast IClient enables you to do all Hazelcast operations without
+    ///     Hazelcast Client enables you to do all Hazelcast operations without
     ///     being a member of the cluster. It connects to one of the
     ///     cluster members and delegates all cluster wide operations to it.
     ///     When the connected cluster member dies, client will
@@ -301,50 +301,8 @@ namespace Hazelcast.Client
         #endregion
 
 
-        public static IHazelcastInstance NewHazelcastClient()
-        {
-            return NewHazelcastClient(XmlClientConfigBuilder.Build());
-        }
 
-        public static IHazelcastInstance NewHazelcastClient(string configFile)
-        {
-            return NewHazelcastClient(XmlClientConfigBuilder.Build(configFile));
-        }
-
-        public static IHazelcastInstance NewHazelcastClient(ClientConfig config)
-        {
-            if (config == null)
-            {
-                config = XmlClientConfigBuilder.Build();
-            }
-            var client = new HazelcastClient(config);
-            client.Start();
-            var proxy = new HazelcastClientProxy(client);
-            Clients.TryAdd(client.id, proxy);
-            return proxy;
-        }
-
-        public static ICollection<IHazelcastInstance> GetAllHazelcastClients()
-        {
-            return (ICollection<IHazelcastInstance>) Clients.Values;
-        }
-
-        public static void ShutdownAll()
-        {
-            foreach (HazelcastClientProxy proxy in Clients.Values)
-            {
-                try
-                {
-                    proxy.client.GetLifecycleService().Shutdown();
-                }
-                catch (Exception)
-                {
-                }
-                proxy.client = null;
-            }
-            Clients.Clear();
-        }
-
+        #region HC
         private void Start()
         {
             lifecycleService.SetStarted();
@@ -362,7 +320,7 @@ namespace Hazelcast.Client
             partitionService.Start();
         }
 
-        public ClientConfig GetClientConfig()
+        internal ClientConfig GetClientConfig()
         {
             return config;
         }
@@ -377,27 +335,27 @@ namespace Hazelcast.Client
             return connectionManager;
         }
 
-        public IClientClusterService GetClientClusterService()
+        internal IClientClusterService GetClientClusterService()
         {
             return clusterService;
         }
 
-        public IClientExecutionService GetClientExecutionService()
+        internal IClientExecutionService GetClientExecutionService()
         {
             return executionService;
         }
 
-        public IClientPartitionService GetClientPartitionService()
+        internal IClientPartitionService GetClientPartitionService()
         {
             return partitionService;
         }
 
-        public IClientInvocationService GetInvocationService()
+        internal IClientInvocationService GetInvocationService()
         {
             return invocationService;
         }
 
-        public IRemotingService GetRemotingService()
+        internal IRemotingService GetRemotingService()
         {
             return connectionManager;
         }
@@ -412,5 +370,99 @@ namespace Hazelcast.Client
             connectionManager.Shutdown();
             proxyManager.Destroy();
         }
+#endregion
+
+        #region statics
+        /// <summary>
+        /// Creates a new hazelcast client using default configuration.
+        /// </summary>
+        /// <remarks>
+        /// Creates a new hazelcast client using default configuration.
+        /// </remarks>
+        /// <returns>IHazelcastInstance.</returns>
+        /// <example>
+        /// <code>
+        ///     var hazelcastInstance = Hazelcast.NewHazelcastClient();
+        ///     var myMap = hazelcastInstance.GetMap("myMap");
+        /// </code>
+        /// </example>
+        public static IHazelcastInstance NewHazelcastClient()
+        {
+            return NewHazelcastClient(XmlClientConfigBuilder.Build());
+        }
+
+        /// <summary>
+        /// Creates a new hazelcast client using the given configuration xml file 
+        /// </summary>
+        /// <param name="configFile">The configuration file with full or relative path.</param>
+        /// <returns>IHazelcastInstance.</returns>
+        /// <example>
+        /// <code>
+        ///     //Full path
+        ///     var hazelcastInstance = Hazelcast.NewHazelcastClient(@"C:\Users\user\Hazelcast.Net\hazelcast-client.xml");
+        ///     var myMap = hazelcastInstance.GetMap("myMap");
+        ///     
+        ///     //relative path
+        ///     var hazelcastInstance = Hazelcast.NewHazelcastClient(@"..\Hazelcast.Net\Resources\hazelcast-client.xml");
+        ///     var myMap = hazelcastInstance.GetMap("myMap");
+        /// </code>
+        /// </example>
+        public static IHazelcastInstance NewHazelcastClient(string configFile)
+        {
+            return NewHazelcastClient(XmlClientConfigBuilder.Build(configFile));
+        }
+
+        /// <summary>
+        /// Creates a new hazelcast client using the given configuration object created programmaticly.
+        /// </summary>
+        /// <param name="config">The configuration.</param>
+        /// <returns>IHazelcastInstance.</returns>
+        /// <code>
+        ///     var clientConfig = new ClientConfig();
+        ///     //configure clientConfig ...
+        ///     var hazelcastInstance = Hazelcast.NewHazelcastClient(clientConfig);
+        ///     var myMap = hazelcastInstance.GetMap("myMap");
+        /// </code>
+        public static IHazelcastInstance NewHazelcastClient(ClientConfig config)
+        {
+            if (config == null)
+            {
+                config = XmlClientConfigBuilder.Build();
+            }
+            var client = new HazelcastClient(config);
+            client.Start();
+            var proxy = new HazelcastClientProxy(client);
+            Clients.TryAdd(client.id, proxy);
+            return proxy;
+        }
+
+        /// <summary>
+        /// Gets all Hazelcast clients.
+        /// </summary>
+        /// <returns>ICollection&lt;IHazelcastInstance&gt;</returns>
+        public static ICollection<IHazelcastInstance> GetAllHazelcastClients()
+        {
+            return (ICollection<IHazelcastInstance>)Clients.Values;
+        }
+
+        /// <summary>
+        /// Shutdowns all Hazelcast Clients .
+        /// </summary>
+        public static void ShutdownAll()
+        {
+            foreach (HazelcastClientProxy proxy in Clients.Values)
+            {
+                try
+                {
+                    proxy.client.GetLifecycleService().Shutdown();
+                }
+                catch (Exception)
+                {
+                }
+                proxy.client = null;
+            }
+            Clients.Clear();
+        }
+        #endregion
     }
 }

@@ -4,14 +4,10 @@ namespace Hazelcast.Core
 {
     /// <summary>Map Entry event.</summary>
     /// <remarks>Map Entry event.</remarks>
-    /// <?></?>
-    /// <?></?>
-    /// 
-    /// <seealso cref="IEntryListener{K,V}">IEntryListener&lt;K, V&gt;</seealso>
-    /// <seealso cref="IMapMap{K,V}.AddEntryListener(IEntryListener{K,V}, bool)">
-    ///     IMap&lt;K, V&gt;.AddEntryListener(IEntryListener
-    ///     &lt;K, V&gt;, bool)
-    /// </seealso>
+    /// <typeparam name="K">type of key</typeparam>
+    /// <typeparam name="V">type of value</typeparam>
+    /// <seealso cref="IEntryListener{K,V}" />
+    /// <seealso cref="IMap{K,V}.AddEntryListener(IEntryListener{K,V}, bool)" />
     [Serializable]
     public class EntryEvent<K, V> : EventObject
     {
@@ -42,7 +38,6 @@ namespace Hazelcast.Core
             entryEventType = eventType;
         }
 
-        //.getByType(eventType);
         public override object GetSource()
         {
             return name;
@@ -111,6 +106,10 @@ namespace Hazelcast.Core
             Source = source;
         }
 
+        /// <summary>
+        /// The object on which the Event initially occurred.
+        /// </summary>
+        /// <returns>The object on which the Event initially occurred.</returns>
         public virtual Object GetSource()
         {
             return Source;
