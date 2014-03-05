@@ -12,8 +12,7 @@ namespace Hazelcast.Logging
     public interface ILogger
     {
         /// <summary>
-        ///     Logs a message at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Info">Hazelcast.Net.Ext.Logging.Level.Info</see>
+        ///     Logs a message at <see cref="LogLevel.Info">LogLevel.Info</see>
         ///     .
         /// </summary>
         /// <param name="message">the message to log.</param>
@@ -21,7 +20,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Logs a message at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Finest">Hazelcast.Net.Ext.Logging.Level.Finest</see>
+        ///     <see cref="LogLevel.Finest">LogLevel.Finest</see>
         ///     .
         /// </summary>
         /// <param name="message">the message to log.</param>
@@ -29,7 +28,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Logs a throwable at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Finest">Hazelcast.Net.Ext.Logging.Level.Finest</see>
+        ///     <see cref="LogLevel.Finest">LogLevel.Finest</see>
         ///     .  The message of the Throwable will be the message.
         /// </summary>
         /// <param name="thrown">the Throwable to log.</param>
@@ -37,7 +36,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Logs message with associated throwable information at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Finest">Hazelcast.Net.Ext.Logging.Level.Finest</see>
+        ///     <see cref="LogLevel.Finest">LogLevel.Finest</see>
         ///     .
         /// </summary>
         /// <param name="message">the message to log</param>
@@ -46,7 +45,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Checks if the
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Finest">Hazelcast.Net.Ext.Logging.Level.Finest</see>
+        ///     <see cref="LogLevel.Finest">LogLevel.Finest</see>
         ///     is enabled.
         /// </summary>
         /// <returns>true if enabled, false otherwise.</returns>
@@ -54,7 +53,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Logs a message at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Severe">Hazelcast.Net.Ext.Logging.Level.Severe</see>
+        ///     <see cref="LogLevel.Severe">LogLevel.Severe</see>
         ///     .
         /// </summary>
         /// <param name="message">the message to log.</param>
@@ -62,7 +61,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Logs a throwable at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Severe">Hazelcast.Net.Ext.Logging.Level.Severe</see>
+        ///     <see cref="LogLevel.Severe">LogLevel.Severe</see>
         ///     .  The message of the Throwable will be the message.
         /// </summary>
         /// <param name="thrown">the Throwable to log.</param>
@@ -70,7 +69,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Logs message with associated throwable information at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Severe">Hazelcast.Net.Ext.Logging.Level.Severe</see>
+        ///     <see cref="LogLevel.Severe">LogLevel.Severe</see>
         ///     .
         /// </summary>
         /// <param name="message">the message to log</param>
@@ -79,7 +78,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Logs a message at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Warning">Hazelcast.Net.Ext.Logging.Level.Warning</see>
+        ///     <see cref="LogLevel.Warning">LogLevel.Warning</see>
         ///     .
         /// </summary>
         /// <param name="message">the message to log.</param>
@@ -87,7 +86,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Logs a throwable at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Warning">Hazelcast.Net.Ext.Logging.Level.Warning</see>
+        ///     <see cref="LogLevel.Warning">LogLevel.Warning</see>
         ///     .  The message of the Throwable will be the message.
         /// </summary>
         /// <param name="thrown">the Throwable to log.</param>
@@ -95,7 +94,7 @@ namespace Hazelcast.Logging
 
         /// <summary>
         ///     Logs message with associated throwable information at
-        ///     <see cref="Hazelcast.Net.Ext.Logging.Level.Warning">Hazelcast.Net.Ext.Logging.Level.Warning</see>
+        ///     <see cref="LogLevel.Warning">LogLevel.Warning</see>
         ///     .
         /// </summary>
         /// <param name="message">the message to log</param>

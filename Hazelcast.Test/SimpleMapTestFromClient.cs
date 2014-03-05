@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Hazelcast.Client;
 using Hazelcast.Config;
 using Hazelcast.Core;
-using NUnit.Framework;
 
 namespace Hazelcast.Test
 {
@@ -47,7 +46,7 @@ namespace Hazelcast.Test
 
     internal class SimpleMapTestFromClient
     {
-        public static int THREAD_COUNT = 400;
+        public static int THREAD_COUNT = 1;
         public static int ENTRY_COUNT = 10*1000;
         public static int VALUE_SIZE = 1000;
         public static int STATS_SECONDS = 4;
@@ -62,6 +61,8 @@ namespace Hazelcast.Test
 
         static void Main(string[] args)
         {
+            Environment.SetEnvironmentVariable("hazelcast.logging.class","console");
+
             var clientConfig = new ClientConfig();
             clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
             hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);

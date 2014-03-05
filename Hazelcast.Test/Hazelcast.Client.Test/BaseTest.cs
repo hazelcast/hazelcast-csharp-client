@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
             return client;
         }
 
-        protected IHazelcastInstance NewHazelcastClient()
+        protected virtual IHazelcastInstance NewHazelcastClient()
         {
             var config = new ClientConfig();
             config.GetNetworkConfig().AddAddress("127.0.0.1");

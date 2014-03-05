@@ -28,7 +28,6 @@ namespace Hazelcast.IO
         {
         }
 
-        /// <exception cref="Hazelcast.Net.Ext.UnknownHostException"></exception>
         public Address(string host, int port) : this(host, GetAddressByName(host), port)
         {
             hostSet = !AddressUtil.IsIpAddress(host);

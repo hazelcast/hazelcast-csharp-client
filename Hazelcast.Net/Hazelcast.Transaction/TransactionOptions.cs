@@ -3,7 +3,6 @@ using System.Text;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Transaction
 {
@@ -90,7 +89,7 @@ namespace Hazelcast.Transaction
         /// <summary>Gets the timeout in milliseconds.</summary>
         /// <remarks>Gets the timeout in milliseconds.</remarks>
         /// <returns>the timeout in milliseconds.</returns>
-        /// <seealso cref="SetTimeout(long, TimeUnit)">SetTimeout(long, Hazelcast.Net.Ext.TimeUnit)</seealso>
+        /// <seealso cref="SetTimeout(long, TimeUnit)">SetTimeout(long, TimeUnit)</seealso>
         public long GetTimeoutMillis()
         {
             return timeoutMillis;
