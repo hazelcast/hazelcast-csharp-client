@@ -425,6 +425,7 @@ namespace Hazelcast.Client
         /// </code>
         public static IHazelcastInstance NewHazelcastClient(ClientConfig config)
         {
+            Console.WriteLine("STARTING");
             if (config == null)
             {
                 config = XmlClientConfigBuilder.Build();

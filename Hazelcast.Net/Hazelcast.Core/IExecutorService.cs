@@ -5,14 +5,11 @@ using Hazelcast.Util;
 namespace Hazelcast.Core
 {
     /// <summary>
-    ///     Distributed implementation of
-    ///     <see cref="Hazelcast.Net.Ext.ExecutorService">Hazelcast.Net.Ext.ExecutorService</see>
-    ///     .
+    ///     Distributed implementation of ExecutorService.
     ///     IExecutorService provides additional methods like executing tasks
     ///     on a specific member, on a member who is owner of a specific key,
     ///     executing a tasks on multiple members and listening execution result using a callback.
     /// </summary>
-    /// <seealso cref="Hazelcast.Net.Ext.ExecutorService">Hazelcast.Net.Ext.ExecutorService</seealso>
     /// <seealso cref="IIExecutionCallback{V}">IExecutionCallback&lt;V&gt;</seealso>
     /// <seealso cref="IMultiExecutionCallback">IMultiExecutionCallback</seealso>
     public interface IExecutorService : /*ExecutorService,*/ IDistributedObject

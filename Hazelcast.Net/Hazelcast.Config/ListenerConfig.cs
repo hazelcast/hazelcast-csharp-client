@@ -56,7 +56,7 @@ namespace Hazelcast.Config
         /// <param name="className">the name of the class of the IEventListener.</param>
         /// <returns>the updated ListenerConfig.</returns>
         /// <exception cref="System.ArgumentException">if className is null or an empty String.</exception>
-        /// <seealso cref="SetImplementation(Hazelcast.Net.Ext.EventListener)">SetImplementation(Hazelcast.Net.Ext.IEventListener)</seealso>
+        /// <seealso cref="SetImplementation(IEventListener)"/>
         /// <seealso cref="GetClassName()">GetClassName()</seealso>
         public ListenerConfig SetClassName(string className)
         {
@@ -68,7 +68,7 @@ namespace Hazelcast.Config
         /// <summary>Returns the IEventListener implementation.</summary>
         /// <remarks>Returns the IEventListener implementation. If none has been specified, null is returned.</remarks>
         /// <returns>the IEventListener implementation.</returns>
-        /// <seealso cref="SetImplementation(Hazelcast.Net.Ext.EventListener)">SetImplementation(Hazelcast.Net.Ext.IEventListener)</seealso>
+        /// <seealso cref="SetImplementation(IEventListener)"/>
         public virtual IEventListener GetImplementation()
         {
             return implementation;

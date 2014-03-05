@@ -417,7 +417,7 @@ namespace Hazelcast.Client.Connection
             {
                 ICollection<IPEndPoint> ipEndPoints = GetEndPoints();
                 _ownerConnection = ConnectToOwner(ipEndPoints);
-                Trace.WriteLine("Owner connection established: " + _ownerConnection);
+                logger.Finest("Owner connection established: " + _ownerConnection);
             }
             return _ownerConnection != null;
         }

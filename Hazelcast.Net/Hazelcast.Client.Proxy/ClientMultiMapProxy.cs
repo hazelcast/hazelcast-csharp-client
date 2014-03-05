@@ -53,11 +53,11 @@ namespace Hazelcast.Client.Proxy
             return ToObjectCollection<V>(result, true);
         }
 
-        public virtual ICollection<K> KeySet()
+        public virtual ISet<K> KeySet()
         {
             var request = new KeySetRequest(name);
             var result = Invoke<PortableCollection>(request);
-            return ToObjectCollection<K>(result, false);
+            return (ISet<K>)ToObjectCollection<K>(result, false);
         }
 
         public virtual ICollection<V> Values()
@@ -67,12 +67,12 @@ namespace Hazelcast.Client.Proxy
             return ToObjectCollection<V>(result, true);
         }
 
-        public virtual ICollection<KeyValuePair<K, V>> EntrySet()
+        public virtual ISet<KeyValuePair<K, V>> EntrySet()
         {
             var request = new EntrySetRequest(name);
             var result = Invoke<PortableEntrySetResponse>(request);
             ICollection<KeyValuePair<Data, Data>> dataEntrySet = result.GetEntrySet();
-            ICollection<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
+            ISet<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
             foreach (var entry in dataEntrySet)
             {
                 var key = GetSerializationService().ToObject<K>(entry.Key);

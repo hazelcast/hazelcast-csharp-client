@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Map;
-using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Core
 {
     /// <summary>
     /// Concurrent, distributed, observable and queryable map.
     /// </summary>
-    /// <typeparam name="K">type of the Key</typeparam>
-    /// <typeparam name="V">type of the Value</typeparam>
     /// <remarks>Concurrent, distributed, observable and queryable map.
     /// <p />
     /// <p>
@@ -47,6 +44,9 @@ namespace Hazelcast.Core
     /// </li>
     /// </ul>
     /// </p></remarks>
+    /// <typeparam name="K">type of the Key</typeparam>
+    /// <typeparam name="V">type of the Value</typeparam>
+
     public interface IMap<K, V> : IDistributedObject
     {
         /// <summary>Adds an interceptor for this map.</summary>

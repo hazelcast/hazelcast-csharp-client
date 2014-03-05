@@ -1,4 +1,6 @@
 
+using System.Threading;
+
 namespace Hazelcast.Core
 {
     /// <summary>
@@ -71,7 +73,6 @@ namespace Hazelcast.Core
         ///                     <see cref="Release()">Release()</see>
         ///                     methods for this
         ///                     semaphore and the current thread is next to be assigned a permit;
-        /// 
         ///                 </li>
         ///                 <li>
         ///                     This ISemaphore instance is destroyed; or
@@ -82,18 +83,15 @@ namespace Hazelcast.Core
         void Acquire();
 
         /// <summary>
-        ///     <p>
         ///         Acquires the given number of permits, if they are available,
         ///         and returns immediately, reducing the number of available permits
         ///         by the given amount.
         /// </summary>
         /// <remarks>
-        ///     <p>
         ///         Acquires the given number of permits, if they are available,
         ///         and returns immediately, reducing the number of available permits
         ///         by the given amount.
         ///         <p />
-        ///         <p>
         ///             If insufficient permits are available then the current thread becomes
         ///             disabled for thread scheduling purposes and lies dormant until
         ///             one of two things happens:
@@ -112,7 +110,7 @@ namespace Hazelcast.Core
         /// <param name="permits">the number of permits to acquire</param>
         /// <exception cref="System.ArgumentException">
         ///     if
-        ///     <code>permits</code>
+        ///     <c>permits</c>
         ///     is negative
         /// </exception>
         /// <exception cref="System.InvalidOperationException">if hazelcast instance is shutdown while waiting</exception>
@@ -141,14 +139,14 @@ namespace Hazelcast.Core
         /// <remarks>
         ///     Shrinks the number of available permits by the indicated
         ///     reduction. This method differs from
-        ///     <code>acquire</code>
+        ///     <c>acquire</c>
         ///     in that it does not
         ///     block waiting for permits to become available.
         /// </remarks>
         /// <param name="reduction">the number of permits to remove</param>
         /// <exception cref="System.ArgumentException">
         ///     if
-        ///     <code>reduction</code>
+        ///     <c>reduction</c>
         ///     is negative
         /// </exception>
         void ReducePermits(int reduction);
@@ -189,55 +187,56 @@ namespace Hazelcast.Core
         /// <param name="permits">the number of permits to release</param>
         /// <exception cref="System.ArgumentException">
         ///     if
-        ///     <code>permits</code>
+        ///     <c>permits</c>
         ///     is negative
         /// </exception>
         void Release(int permits);
 
         /// <summary>
         ///     Acquires a permit, if one is available and returns immediately,
-        ///     with the value
-        ///     <code>true</code>
-        ///     ,
-        ///     reducing the number of available permits by one.
+        ///     with the value  <c>true</c>, reducing the number of available permits by one.
+        /// </summary>
+        /// <remarks>
+        ///     Acquires a permit, if one is available and returns immediately,
+        ///     with the value  <c>true</c>, reducing the number of available permits by one.
         ///     <p />
         ///     If no permit is available then this method will return
-        ///     immediately with the value
-        ///     <code>false</code>
-        ///     .
-        /// </summary>
+        ///     immediately with the value <c>false</c>.
+        /// </remarks>
         /// <returns>
-        ///     <code>true</code>
+        ///     <c>true</c>
         ///     if a permit was acquired and
-        ///     <code>false</code>
+        ///     <c>false</c>
         ///     otherwise
         /// </returns>
         bool TryAcquire();
 
         /// <summary>
         ///     Acquires the given number of permits, if they are available, and
-        ///     returns immediately, with the value
-        ///     <code>true</code>
-        ///     ,
+        ///     returns immediately, with the value <c>true</c>,
         ///     reducing the number of available permits by the given amount.
-        ///     <p />
-        ///     <p>
-        ///         If insufficient permits are available then this method will return
-        ///         immediately with the value
-        ///         <code>false</code>
-        ///         and the number of available
-        ///         permits is unchanged.
         /// </summary>
+        /// <remarks>
+        ///     Acquires the given number of permits, if they are available, and
+        ///     returns immediately, with the value <c>true</c>,
+        ///     reducing the number of available permits by the given amount.
+        /// <p/>
+        ///        If insufficient permits are available then this method will return
+        ///        immediately with the value
+        ///        <c>false</c>
+        ///        and the number of available
+        ///        permits is unchanged.
+        /// </remarks>
         /// <param name="permits">the number of permits to acquire</param>
         /// <returns>
-        ///     <code>true</code>
+        ///     <c>true</c>
         ///     if the permits were acquired and
-        ///     <code>false</code>
+        ///     <c>false</c>
         ///     otherwise
         /// </returns>
         /// <exception cref="System.ArgumentException">
         ///     if
-        ///     <code>permits</code>
+        ///     <c>permits</c>
         ///     is negative
         /// </exception>
         bool TryAcquire(int permits);
@@ -245,15 +244,15 @@ namespace Hazelcast.Core
         /// <summary>
         ///     Acquires a permit from this semaphore, if one becomes available
         ///     within the given waiting time and the current thread has not
-        ///     been
-        ///     <see cref="Hazelcast.Net.Ext.Thread.Interrupt()">interrupted</see>
-        ///     .
+        ///     been <see cref="Thread.Interrupt()">interrupted</see>.
+        /// </summary>
+        /// <remarks>
+        ///     Acquires a permit from this semaphore, if one becomes available
+        ///     within the given waiting time and the current thread has not
+        ///     been <see cref="Thread.Interrupt()">interrupted</see>.
         ///     <p />
         ///     Acquires a permit, if one is available and returns immediately,
-        ///     with the value
-        ///     <code>true</code>
-        ///     ,
-        ///     reducing the number of available permits by one.
+        ///     with the value <c>true</c>, reducing the number of available permits by one.
         ///     <p />
         ///     If no permit is available then the current thread becomes
         ///     disabled for thread scheduling purposes and lies dormant until
@@ -264,48 +263,38 @@ namespace Hazelcast.Core
         ///             <see cref="Release()">Release()</see>
         ///             method for this
         ///             semaphore and the current thread is next to be assigned a permit; or
-        ///             <li>
-        ///                 Some other thread
-        ///                 <see cref="Hazelcast.Net.Ext.Thread.Interrupt()">interrupts</see>
-        ///                 the current thread; or
-        ///                 <li>The specified waiting time elapses.
+        ///         </li>
+        ///         <li>
+        ///             Some other thread
+        ///             <see cref="Thread.Interrupt()">interrupts</see>
+        ///             the current thread; or
+        ///         </li>
+        ///         <li>The specified waiting time elapses.</li>
         ///     </ul>
         ///     <p />
-        ///     If a permit is acquired then the value
-        ///     <code>true</code>
-        ///     is returned.
+        ///     If a permit is acquired then the value <c>true</c> is returned.
         ///     <p />
         ///     If the specified waiting time elapses then the value
-        ///     <code>false</code>
+        ///     <c>false</c>
         ///     is returned.  If the time is less than or equal to zero, the method
         ///     will not wait at all.
         ///     <p />
-        ///     <p>
-        ///         If the current thread:
-        ///         <ul>
-        ///             <li>
-        ///                 has its interrupted status set on entry to this method; or
-        ///                 <li>
-        ///                     is
-        ///                     <see cref="Hazelcast.Net.Ext.Thread.Interrupt()">interrupted</see>
-        ///                     while waiting
-        ///                     for a permit,
-        ///         </ul>
-        ///         then
-        ///         <see cref="System.Exception">System.Exception</see>
+        ///         If the current thread is <see cref="Thread.Interrupt()">interrupted</see>
+        ///         while waiting for a permit,
+        ///         then <see cref="System.Exception">System.Exception</see>
         ///         is thrown and the current thread's
         ///         interrupted status is cleared.
-        /// </summary>
+        /// </remarks>
         /// <param name="timeout">the maximum time to wait for a permit</param>
         /// <param name="unit">
         ///     the time unit of the
-        ///     <code>timeout</code>
+        ///     <c>timeout</c>
         ///     argument
         /// </param>
         /// <returns>
-        ///     <code>true</code>
+        ///     <c>true</c>
         ///     if a permit was acquired and
-        ///     <code>false</code>
+        ///     <c>false</c>
         ///     if the waiting time elapsed before a permit was acquired
         /// </returns>
         /// <exception cref="System.Exception">if the current thread is interrupted</exception>
@@ -315,68 +304,66 @@ namespace Hazelcast.Core
         /// <summary>
         ///     Acquires the given number of permits, if they are available and
         ///     returns immediately, with the value
-        ///     <code>true</code>
+        ///     <c>true</c>
         ///     ,
         ///     reducing the number of available permits by the given amount.
+        /// </summary>
+        /// <remarks>
+        ///     Acquires the given number of permits, if they are available and
+        ///     returns immediately, with the value
+        ///     <c>true</c> , reducing the number of available permits by the given amount.
         ///     <p />
         ///     If insufficient permits are available then
         ///     the current thread becomes disabled for thread scheduling
         ///     purposes and lies dormant until one of three things happens:
         ///     <ul>
         ///         <li>
-        ///             Some other thread invokes one of the
-        ///             <see cref="Release()">release</see>
-        ///             methods for this semaphore, the current thread is next to be assigned
-        ///             permits and the number of available permits satisfies this request; or
-        ///             <li>
-        ///                 Some other thread
-        ///                 <see cref="Hazelcast.Net.Ext.Thread.Interrupt()">interrupts</see>
-        ///                 the current thread; or
-        ///                 <li>The specified waiting time elapses.
+        ///             Some other thread invokes the
+        ///             <see cref="Release()">Release()</see>
+        ///             method for this
+        ///             semaphore and the current thread is next to be assigned a permit; or
+        ///         </li>
+        ///         <li>
+        ///             Some other thread
+        ///             <see cref="Thread.Interrupt()">interrupts</see>
+        ///             the current thread; or
+        ///         </li>
+        ///         <li>The specified waiting time elapses.</li>
         ///     </ul>
         ///     <p />
         ///     If the permits are acquired then the value
-        ///     <code>true</code>
+        ///     <c>true</c>
         ///     is returned.
         ///     <p />
         ///     If the specified waiting time elapses then the value
-        ///     <code>false</code>
+        ///     <c>false</c>
         ///     is returned.  If the time is less than or equal to zero, the method
         ///     will not wait at all.
         ///     <p />
         ///     <p>
-        ///         If the current thread:
-        ///         <ul>
-        ///             <li>
-        ///                 has its interrupted status set on entry to this method; or
-        ///                 <li>
-        ///                     is
-        ///                     <see cref="Hazelcast.Net.Ext.Thread.Interrupt()">interrupted</see>
-        ///                     while waiting
-        ///                     for a permit,
-        ///         </ul>
-        ///         then
-        ///         <see cref="System.Exception">System.Exception</see>
+        ///         If the current thread is <see cref="Thread.Interrupt()">interrupted</see>
+        ///         while waiting for a permit,
+        ///         then <see cref="System.Exception">System.Exception</see>
         ///         is thrown and the current thread's
         ///         interrupted status is cleared.
-        /// </summary>
+        /// </remarks>
         /// <param name="permits">the number of permits to acquire</param>
         /// <param name="timeout">the maximum time to wait for the permits</param>
         /// <param name="unit">
         ///     the time unit of the
-        ///     <code>timeout</code>
+        ///     <c>timeout</c>
         ///     argument
         /// </param>
         /// <returns>
-        ///     <code>true</code>
+        ///     <c>true</c>
         ///     if all permits were acquired and
-        ///     <code>false</code>
+        ///     <c>false</c>
         ///     if the waiting time elapsed before all permits could be acquired
         /// </returns>
         /// <exception cref="System.Exception">if the current thread is interrupted</exception>
         /// <exception cref="System.ArgumentException">
         ///     if
-        ///     <code>permits</code>
+        ///     <c>permits</c>
         ///     is negative
         /// </exception>
         /// <exception cref="System.InvalidOperationException">if hazelcast instance is shutdown while waiting</exception>
