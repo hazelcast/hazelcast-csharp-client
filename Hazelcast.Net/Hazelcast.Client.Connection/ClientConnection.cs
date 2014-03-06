@@ -189,31 +189,30 @@ namespace Hazelcast.Client.Connection
                 logger.Finest("Closing socket, id:"+ this.id);
             }
 
+
+            bool lockTaken = false;
+            spinLock.Enter(ref lockTaken);
+            try
+            {
+                clientSocket.Shutdown(SocketShutdown.Both);
+                clientSocket.Close();
+
+                _out.Close();
+                _in.Close();
+
+                clientSocket = null;
+
+                if (id > -1)
+                {
+                   _clientConnectionManager.DestroyConnection(this);
+                }
+            }
+            finally
+            {
+                if (lockTaken) spinLock.Exit();
+            }
             //GetSocket().Close();
 
-            live = false;
-            clientSocket.Shutdown(SocketShutdown.Both);
-            clientSocket.Close();
-
-            _out.Close();
-            _in.Close();
-
-            clientSocket = null;
-
-            //while (clientSocket.Connected)
-            //{
-            //    clientSocket.Send(new byte[0]);
-            //}
-            //clientSocket.Send(new byte[0]);
-
-            //_in.Dispose();
-            //_out.Dispose();
-            //clientSocket.Dispose();
-
-            if (id > -1)
-            {
-               _clientConnectionManager.DestroyConnection(this);
-            }
         }
 
         /// <exception cref="System.IO.IOException"></exception>

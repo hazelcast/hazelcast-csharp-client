@@ -65,6 +65,7 @@ namespace Hazelcast.Test
 
             var clientConfig = new ClientConfig();
             clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
+            clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
             hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
             //hazelcast = HazelcastClient.NewHazelcastClient();
 

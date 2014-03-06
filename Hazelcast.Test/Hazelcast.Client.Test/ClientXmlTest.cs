@@ -26,5 +26,21 @@ namespace Hazelcast.Client.Test
 
             Assert.NotNull(clientConfig);
         }
+
+        //[Test]
+        public virtual void TestConfig()
+        {
+            var config = new ClientConfig();
+            var networkConfig = new ClientNetworkConfig();
+            networkConfig.SetAddresses(new[] { "127.0.0.1:5701" });
+            config.SetNetworkConfig(networkConfig);
+            config.SetGroupConfig(new GroupConfig("mike-local", "password"));
+            var _client = HazelcastClient.NewHazelcastClient(config);
+
+
+            Assert.NotNull(_client);
+
+            _client.Shutdown();
+        }
     }
 }

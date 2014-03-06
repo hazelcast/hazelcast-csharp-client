@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Connection
         #region fields
 
         public const int RetryCount = 20;
-        public const int ProcessThreadCount = 4;//must be even
+        public const int ProcessThreadCount = 1;//must be even
         private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
 
         private readonly ConcurrentDictionary<Address, LinkedListNode<ClientConnection>> _addresses = new ConcurrentDictionary<Address, LinkedListNode<ClientConnection>>();
@@ -243,21 +243,17 @@ namespace Hazelcast.Client.Connection
         {
             try
             {
-                if (nextConnectionNode == null)
-                {
-                   nextConnectionNode = _clientConnections.First;
-                }
+                //if (nextConnectionNode == null)
+                //{
+                //   nextConnectionNode = _clientConnections.First;
+                //}
                 for (;;)
                 {
-                    if (nextConnectionNode == null)
-                    {
-                        return null;
-                    }
-                    var current = nextConnectionNode;
-                    var newVal = nextConnectionNode.Next ?? nextConnectionNode.List.First;
+                    var current = nextConnectionNode;// ?? _clientConnections.First;
+                    var newVal = (current == null) ? _clientConnections.First : current.Next ?? _clientConnections.First;
                     if (Interlocked.CompareExchange(ref nextConnectionNode, newVal, current) == current)
                     {
-                        return current.Value;
+                        return current!=null?current.Value:null;
                     }
                 }
             }
