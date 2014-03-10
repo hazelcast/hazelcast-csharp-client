@@ -19,7 +19,8 @@ namespace Hazelcast.Client.Test
             s = client.GetSemaphore(Name);
 
             s.ReducePermits(100);
-            s.Release(10);
+            s.Release(9);
+            s.Release();
 
         }
 
@@ -86,6 +87,24 @@ namespace Hazelcast.Client.Test
 			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
 			Assert.AreEqual(0, s.AvailablePermits());
 		}
+
+	    [Test]
+	    public void TestInit()
+	    {
+	        var semInit = client.GetSemaphore(Name);
+	        semInit.Init(2);
+	        Assert.AreEqual(2, semInit.AvailablePermits());
+	        semInit.Destroy();
+	    }
+
+	    [Test]
+        [ExpectedException(typeof(ArgumentException))]
+	    public void TestInitNeg()
+        {
+            var semInit = client.GetSemaphore(Name);
+            semInit.Init(-2);
+            semInit.Destroy();
+        }
 
 	}
 }

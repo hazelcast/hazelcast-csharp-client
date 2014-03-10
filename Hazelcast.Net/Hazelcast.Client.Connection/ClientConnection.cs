@@ -26,7 +26,7 @@ namespace Hazelcast.Client.Connection
     internal sealed class ClientConnection
     {
         #region fields
-        private static readonly ILogger logger = Logging.Logger.GetLogger(typeof(ClientConnection));
+        private static readonly ILogger logger = Logger.GetLogger(typeof(ClientConnection));
 
         public const int BufferSize = 1 << 15; //32k
         public const int socketReceiveBufferSize = 1 << 15; //32k
@@ -202,6 +202,7 @@ namespace Hazelcast.Client.Connection
 
                 clientSocket = null;
 
+                RemoveConnectionCalls();
                 if (id > -1)
                 {
                    _clientConnectionManager.DestroyConnection(this);
@@ -219,7 +220,6 @@ namespace Hazelcast.Client.Connection
         public void Close()
         {
             logger.Finest("Closing socket"+id);
-            
             Release();
         }
 
@@ -482,20 +482,20 @@ namespace Hazelcast.Client.Connection
                     }
                     Task.Factory.StartNew(Close);
                 }
-                if (this.clientSocket.Poll(0, SelectMode.SelectWrite))
-                {
+                //if (this.clientSocket.Poll(0, SelectMode.SelectWrite))
+                //{
                     ProcessWrite();
-                }
-                if (this.clientSocket.Poll(0, SelectMode.SelectRead))
-                {
+                //}
+                //if (this.clientSocket.Poll(0, SelectMode.SelectRead))
+                //{
                     ProcessRead();
-                }
+                //}
 
 
-                if (this.clientSocket.Poll(0, SelectMode.SelectError))
-                {
-                    ProcessError();
-                }
+                //if (this.clientSocket.Poll(0, SelectMode.SelectError))
+                //{
+                //    ProcessError();
+                //}
             }
             finally
             {

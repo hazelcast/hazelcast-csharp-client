@@ -9,6 +9,7 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
+using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -82,9 +83,16 @@ namespace Hazelcast.Client.Test
 		}
 
 		[Test]
-		public virtual void Flush()
+		public virtual void TestFlush()
 		{
             map.Flush();
+            Assert.Pass();
+		}
+
+		[Test]
+		public virtual void TestAddIndex()
+		{
+            map.AddIndex("name",true);
             Assert.Pass();
 		}
 
@@ -452,6 +460,25 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        public virtual void TestEntryView()
+        {
+            map.Put("key1", "value1");
+            map.Get("key1");
+            map.Get("key1");
+
+
+            var entryview = map.GetEntryView("key1");
+
+            Assert.AreEqual(2,entryview.GetHits());
+            Assert.AreEqual("key1",entryview.GetKey());
+            Assert.AreEqual("value1",entryview.GetValue());
+            Assert.True(entryview.GetCreationTime() > 0 );
+            Assert.True(entryview.GetLastAccessTime() > 0 );
+            Assert.True(entryview.GetLastUpdateTime() > 0 );
+
+        }
+
+        [Test]
         public virtual void TestKeySet()
         {
             map.Put("key1", "value1");
@@ -593,10 +620,10 @@ namespace Hazelcast.Client.Test
                     latch2Remove.Signal();
                 }, 
                 delegate(EntryEvent<object, object> @event) {  },
-                delegate(EntryEvent<object, object> @event) {  }  ); 
-            
-			map.AddEntryListener(listener1, false);
-			map.AddEntryListener(listener2, "key3", true);
+                delegate(EntryEvent<object, object> @event) {  }  );
+
+            string reg1 = map.AddEntryListener(listener1, false);
+            string reg2 = map.AddEntryListener(listener2, "key3", true);
 
             Thread.Sleep(1000);
 
@@ -612,6 +639,77 @@ namespace Hazelcast.Client.Test
 			map.Remove("key3");
 
 			Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(1000)));
+            Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
+            Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
+            Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
+        }		
+        
+        [Test]
+        public void testListenerRemove()
+        {
+			CountdownEvent latch1Add = new CountdownEvent(1);
+            EntryAdapter<object,object> listener1=new EntryAdapter<object, object>(
+                delegate(EntryEvent<object, object> @event) { latch1Add.Signal(); },
+                delegate(EntryEvent<object, object> @event) { }, 
+                delegate(EntryEvent<object, object> @event) {  },
+                delegate(EntryEvent<object, object> @event) {  }  ); 
+
+            string reg1 = map.AddEntryListener(listener1, false);
+
+            Thread.Sleep(1000);
+            map.RemoveEntryListener(reg1);
+
+            Thread.Sleep(1000);
+
+			map.Put("key1", "value1");
+
+            Thread.Sleep(1000);
+
+			Assert.IsFalse(latch1Add.Wait(TimeSpan.FromSeconds(5)));
+
+        }
+		[Test]
+        public void testListenerPredicate()
+        {
+			CountdownEvent latch1Add = new CountdownEvent(1);
+			CountdownEvent latch1Remove = new CountdownEvent(1);
+			CountdownEvent latch2Add = new CountdownEvent(1);
+			CountdownEvent latch2Remove = new CountdownEvent(1);
+            EntryAdapter<object,object> listener1=new EntryAdapter<object, object>(
+                delegate(EntryEvent<object, object> @event) { latch1Add.Signal(); },
+                delegate(EntryEvent<object, object> @event) { latch1Remove.Signal(); }, 
+                delegate(EntryEvent<object, object> @event) {  },
+                delegate(EntryEvent<object, object> @event) {  }  ); 
+
+            EntryAdapter<object,object> listener2=new EntryAdapter<object, object>(
+                delegate(EntryEvent<object, object> @event)
+                {
+                    latch2Add.Signal();
+                },
+                delegate(EntryEvent<object, object> @event)
+                {
+                    latch2Remove.Signal();
+                }, 
+                delegate(EntryEvent<object, object> @event) {  },
+                delegate(EntryEvent<object, object> @event) {  }  );
+
+            map.AddEntryListener(listener1, new SqlPredicate("this == value1"), false);
+            map.AddEntryListener(listener2, new SqlPredicate("this == value3"), "key3", true);
+
+            Thread.Sleep(1000);
+
+			map.Put("key1", "value1");
+			map.Put("key2", "value2");
+			map.Put("key3", "value3");
+			map.Put("key4", "value4");
+			map.Put("key5", "value5");
+
+            Thread.Sleep(1000);
+
+			map.Remove("key1");
+			map.Remove("key3");
+
+			Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));

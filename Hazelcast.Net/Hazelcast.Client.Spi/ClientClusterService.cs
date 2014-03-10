@@ -367,8 +367,7 @@ namespace Hazelcast.Client.Spi
             }
             foreach (IMember member in prevMembers.Values)
             {
-                events.Add(new MembershipEvent(_client.GetCluster(), member,
-                    MembershipEvent.MemberRemoved, eventMembers));
+                events.Add(new MembershipEvent(_client.GetCluster(), member,MembershipEvent.MemberRemoved, eventMembers));
             }
             foreach (MembershipEvent evnt in events)
             {
@@ -467,7 +466,7 @@ namespace Hazelcast.Client.Spi
                 }
             }
             //delegate every event to connection manager
-            _client.GetConnectionManager().HandleMembershipEvent(membershipEvent);
+            //_client.GetConnectionManager().HandleMembershipEvent(membershipEvent);
         }
         private void _FireMemberAttributeEvent(MemberAttributeEvent memberAttributeEvent)
         {
