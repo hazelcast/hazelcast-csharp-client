@@ -1,4 +1,5 @@
 using System;
+using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Concurrent.Semaphore;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
@@ -111,8 +112,12 @@ namespace Hazelcast.Client.Proxy
         {
         }
 
+        protected override T Invoke<T>(ClientRequest request)
+        {
+            return base.Invoke<T>(request, GetPartitionKey());
+        }
 
-        public virtual Data GetKey()
+        public virtual Data GetPartitionKey()
         {
             if (key == null)
             {

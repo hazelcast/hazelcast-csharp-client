@@ -26,7 +26,7 @@ namespace Hazelcast.Client.Connection
 
         Address BindToRandomAddress();
 
-        void HandleMembershipEvent(MembershipEvent membershipEvent);
+        //void HandleMembershipEvent(MembershipEvent membershipEvent);
 
         Address OwnerAddress();
 

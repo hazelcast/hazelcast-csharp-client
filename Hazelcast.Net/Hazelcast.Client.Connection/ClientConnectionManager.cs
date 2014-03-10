@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -24,7 +23,7 @@ namespace Hazelcast.Client.Connection
         #region fields
 
         public const int RetryCount = 20;
-        public const int ProcessThreadCount = 1;//must be even
+        public const int ProcessThreadCount = 4;//must be even
         private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
 
         private readonly ConcurrentDictionary<Address, LinkedListNode<ClientConnection>> _addresses = new ConcurrentDictionary<Address, LinkedListNode<ClientConnection>>();
@@ -201,14 +200,14 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        public void HandleMembershipEvent(MembershipEvent membershipEvent)
-        {
-            if (membershipEvent.GetEventType() == MembershipEvent.MemberRemoved)
-            {
-                Address address = membershipEvent.GetMember().GetAddress();
-                DestroyConnection(address);
-            }
-        }
+        //public void HandleMembershipEvent(MembershipEvent membershipEvent)
+        //{
+        //    if (membershipEvent.GetEventType() == MembershipEvent.MemberRemoved)
+        //    {
+        //        Address address = membershipEvent.GetMember().GetAddress();
+        //        DestroyConnection(address);
+        //    }
+        //}
 
         public Address OwnerAddress()
         {
@@ -243,10 +242,6 @@ namespace Hazelcast.Client.Connection
         {
             try
             {
-                //if (nextConnectionNode == null)
-                //{
-                //   nextConnectionNode = _clientConnections.First;
-                //}
                 for (;;)
                 {
                     var current = nextConnectionNode;// ?? _clientConnections.First;
@@ -288,19 +283,19 @@ namespace Hazelcast.Client.Connection
         {
             if (address != null)
             {
-                LinkedListNode<ClientConnection> linkedListNode=null;
                 lock ((_addresses))
                 {
+                    LinkedListNode<ClientConnection> linkedListNode=null;
                     if (_addresses.TryRemove(address, out linkedListNode))
                     {
                         _clientConnections.Remove(linkedListNode);
                     }
                 }
 
-                if (linkedListNode != null)
-                {
-                    DestroyConnection(linkedListNode.Value);
-                }
+                //if (linkedListNode != null)
+                //{
+                //    DestroyConnection(linkedListNode.Value);
+                //}
 
             }
         }
@@ -403,6 +398,7 @@ namespace Hazelcast.Client.Connection
             }
             if (clientConnection == null)
             {
+                logger.Severe("CONNECTION NULL");
             }
             return clientConnection;
         }
