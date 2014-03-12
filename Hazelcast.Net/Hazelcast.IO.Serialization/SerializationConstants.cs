@@ -54,10 +54,6 @@ namespace Hazelcast.IO.Serialization
 
         public const int DefaultTypeEnum = -25;
 
-        private SerializationConstants()
-        {
-        }
-
         // WARNING: DON'T CHANGE VALUES!
         // WARNING: DON'T ADD ANY NEW CONSTANT SERIALIZER!
         // NUMBER OF CONSTANT SERIALIZERS...

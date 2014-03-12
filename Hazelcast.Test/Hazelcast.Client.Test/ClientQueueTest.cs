@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using Hazelcast.Core;
 using Hazelcast.Net.Ext;
@@ -13,7 +14,7 @@ namespace Hazelcast.Client.Test
 	{
         internal const string queueName = "ClientQueueTest";
 
-        internal static IQueue<string> q;
+        internal static IQueue<object> q;
 
         [SetUp]
         public void Init()
@@ -23,7 +24,7 @@ namespace Hazelcast.Client.Test
             //QueueConfig queueConfig = config.getQueueConfig(queueName);
             //queueConfig.setMaxSize(6);
             //
-            q = client.GetQueue<string>(queueName + Name);
+            q = client.GetQueue<object>(queueName + Name);
         }
 
         [TearDown]
@@ -48,7 +49,7 @@ namespace Hazelcast.Client.Test
 		{
 			Assert.AreEqual(0, q.Count);
 			CountdownEvent latch = new CountdownEvent(5);
-            var listener = new ClientListTest._ItemListener<string>(latch);
+            var listener = new ClientListTest._ItemListener<object>(latch);
 			string id = q.AddItemListener(listener, true);
 
             Thread.Sleep(500);
@@ -67,6 +68,60 @@ namespace Hazelcast.Client.Test
 
 			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
 			q.RemoveItemListener(id);
+		}
+
+		[Test]
+		public virtual void TestListenerExtreme()
+		{
+		    var qX = client.GetQueue<object>(Name);
+
+		    const int TestItemCount = 1 * 1000;
+
+            Assert.AreEqual(0, qX.Count);
+
+		    for (int i = 0; i < TestItemCount; i++)
+		    {
+                qX.Offer("ali");
+
+		    }
+
+            Thread.Sleep(1000);
+
+            Assert.AreEqual(TestItemCount, qX.Count);
+
+
+            var latch = new CountdownEvent(TestItemCount * TestItemCount);
+            
+            for (var j = 0; j < TestItemCount; j++)
+		    {
+                var listener = new ItemListener<object>(null, latch);
+
+                string id = qX.AddItemListener(listener, true);
+                Assert.NotNull(id);		        
+		    }
+
+
+
+            //var t1 = new Thread(delegate(object o)
+            //{
+            //    for (int i = 0; i < TestItemCount; i++)
+            //    {
+            //        qX.Poll();
+            //    }
+            //});
+            //t1.Start();
+
+            //for (int i = 0; i < TestItemCount; i++)
+            //{
+            //    qX.Remove();
+
+            //}
+            
+            qX.Clear();
+
+            Assert.AreEqual(0, qX.Count);
+
+			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(100)));
 		}
 
 		[Test]
@@ -415,4 +470,27 @@ namespace Hazelcast.Client.Test
 
 
 	}
+
+    class ItemListener<T> : IItemListener<T>
+    {
+        private readonly CountdownEvent latchAdd;
+        private readonly CountdownEvent latchRemove;
+
+        public ItemListener(CountdownEvent latchAdd, CountdownEvent latchRemove)
+		    {
+                this.latchAdd = latchAdd;
+                this.latchRemove = latchRemove;
+		    }
+
+		    public void ItemAdded(ItemEvent<T> item)
+		    {
+                if(latchAdd!=null) latchAdd.Signal();
+		    }
+
+		    public void ItemRemoved(ItemEvent<T> item)
+		    {
+                if (latchRemove != null) latchRemove.Signal();
+		    }
+    }
+
 }

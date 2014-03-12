@@ -43,6 +43,56 @@ namespace Hazelcast.Client.Test
 
 
         [Test]
+        public virtual void TestDataTypes()
+        {
+            ISerializationService service = ((HazelcastClientProxy) client).GetSerializationService();
+
+            int d1 = Int32.MaxValue;
+            long d2 = Int64.MaxValue;
+            float d3 = Single.MaxValue;
+            double d4 = Double.MaxValue;
+            char d5 = 'a';
+            string d6 = "abc";
+            byte d7 = Byte.MaxValue;
+            short d8 = Int16.MaxValue;
+            bool d9 = true;
+
+            Assert.AreEqual(d1,service.ToObject<int>(service.ToData(d1)));
+            Assert.AreEqual(d2,service.ToObject<long>(service.ToData(d2)));
+            Assert.AreEqual(d3,service.ToObject<float>(service.ToData(d3)));
+            Assert.AreEqual(d4,service.ToObject<double>(service.ToData(d4)));
+            Assert.AreEqual(d5,service.ToObject<char>(service.ToData(d5)));
+            Assert.AreEqual(d6,service.ToObject<string>(service.ToData(d6)));
+            Assert.AreEqual(d7,service.ToObject<byte>(service.ToData(d7)));
+            Assert.AreEqual(d8,service.ToObject<short>(service.ToData(d8)));
+            Assert.AreEqual(d9,service.ToObject<bool>(service.ToData(d9)));
+
+        }
+
+        [Test]
+        public virtual void TestDataTypes2()
+        {
+            ISerializationService service = ((HazelcastClientProxy) client).GetSerializationService();
+
+            int[] d1 = new[] {Int32.MaxValue};
+            long[] d2 = new[] {Int64.MaxValue};
+            float[] d3 = new[] {Single.MaxValue};
+            double[] d4 = new[] {Double.MaxValue};
+            char[] d5 = new[] {'a'};
+            byte[] d7 = new[] {Byte.MaxValue};
+            short[] d8 = new[] {Int16.MaxValue};
+
+            Assert.AreEqual(d1, service.ToObject<int[]>(service.ToData(d1)));
+            Assert.AreEqual(d2, service.ToObject<long[]>(service.ToData(d2)));
+            Assert.AreEqual(d3, service.ToObject<float[]>(service.ToData(d3)));
+            Assert.AreEqual(d4, service.ToObject<double[]>(service.ToData(d4)));
+            Assert.AreEqual(d5, service.ToObject<char[]>(service.ToData(d5)));
+            Assert.AreEqual(d7, service.ToObject<byte[]>(service.ToData(d7)));
+            Assert.AreEqual(d8, service.ToObject<short[]>(service.ToData(d8)));
+
+        }
+
+        [Test]
         public virtual void TestIPortable()
         {
             var foo1 = new Foo("FOO1");

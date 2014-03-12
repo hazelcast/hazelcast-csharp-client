@@ -20,8 +20,6 @@ namespace Hazelcast.Core
 
         public ItemEvent(string name, ItemEventType itemEventType, E item, IMember member) : base(name)
         {
-            //FIXME ENUM HATASI
-            //this(name, ItemEventType.getByType(eventType), item, member);
             this.item = item;
             eventType = itemEventType;
             this.member = member;

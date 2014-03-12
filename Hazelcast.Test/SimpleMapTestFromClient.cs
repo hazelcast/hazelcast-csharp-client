@@ -46,7 +46,7 @@ namespace Hazelcast.Test
 
     internal class SimpleMapTestFromClient
     {
-        public static int THREAD_COUNT = 400;
+        public static int THREAD_COUNT = 200;
         public static int ENTRY_COUNT = 10*1000;
         public static int VALUE_SIZE = 1000;
         public static int STATS_SECONDS = 4;
@@ -67,7 +67,6 @@ namespace Hazelcast.Test
             clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
             clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
             hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
-            //hazelcast = HazelcastClient.NewHazelcastClient();
 
             Console.WriteLine("Client Ready to go");
 
@@ -109,13 +108,11 @@ namespace Hazelcast.Test
             var tasks = new List<Task>();
             for (int i = 0; i < THREAD_COUNT; i++)
             {
-                var t = new Task(HzTask,TaskCreationOptions.LongRunning);
+                var t = new Task(()=> HzTask(hazelcast),TaskCreationOptions.LongRunning);
                 
                 t.Start();
 
                 tasks.Add(t);
-                //Task.Factory.StartNew(HzTask);
-                
             }
 
             var tm = new Thread(StatDisplayTask);
@@ -135,12 +132,12 @@ namespace Hazelcast.Test
             Console.ReadKey();
         }
 
-        public static void HzTask()
+        public static void HzTask(IHazelcastInstance hz)
         {
             try
             {
                 var random = new Random();
-                IMap<string, byte[]> map = hazelcast.GetMap<String, byte[]>("default");
+                IMap<string, byte[]> map = hz.GetMap<String, byte[]>("default");
                 while (true)
                 {
                     try

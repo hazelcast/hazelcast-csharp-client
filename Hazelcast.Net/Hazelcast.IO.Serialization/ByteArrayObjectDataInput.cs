@@ -245,25 +245,6 @@ namespace Hazelcast.IO.Serialization
             return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
         }
 
-        /// <summary>
-        ///     See the general contract of the <code>readLine</code> method of
-        ///     <code>DataInput</code>.
-        /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readLine</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>the next line of text from this input stream.</returns>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        [Obsolete(
-            @"This method does not properly convert bytes to characters. As of JDK&nbsp;1.1, the preferred way to read lines of text is via the <code>BufferedReader.readLine()</code> method. Programs that use the <code>DataInputStream</code> class to read lines can be converted to use the <code>BufferedReader</code> class."
-            )]
-        public virtual string ReadLine()
-        {
-            throw new NotSupportedException();
-        }
 
         /// <summary>
         ///     See the general contract of the <code>readLong</code> method of
