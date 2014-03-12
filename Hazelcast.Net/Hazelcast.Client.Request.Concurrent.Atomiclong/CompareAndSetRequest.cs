@@ -7,9 +7,6 @@ namespace Hazelcast.Client.Request.Concurrent.Atomiclong
     {
         private long expect;
 
-        public CompareAndSetRequest()
-        {
-        }
 
         public CompareAndSetRequest(string name, long expect, long value) : base(name, value)
         {

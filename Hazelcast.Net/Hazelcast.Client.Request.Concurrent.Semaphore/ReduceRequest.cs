@@ -4,9 +4,6 @@ namespace Hazelcast.Client.Request.Concurrent.Semaphore
 {
     internal class ReduceRequest : SemaphoreRequest
     {
-        public ReduceRequest()
-        {
-        }
 
         public ReduceRequest(string name, int permitCount) : base(name, permitCount)
         {

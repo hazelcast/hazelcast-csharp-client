@@ -10,9 +10,6 @@ namespace Hazelcast.Client.Request.Map
     {
         private IPredicate<K, V> predicate;
 
-        public MapQueryRequest()
-        {
-        }
 
         public MapQueryRequest(string name, IPredicate<K, V> predicate, IterationType iterationType)
             : base(name, iterationType)

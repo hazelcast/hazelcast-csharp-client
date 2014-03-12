@@ -7,10 +7,6 @@ namespace Hazelcast.Client.Request.Queue
     {
         internal int maxSize;
 
-        public DrainRequest()
-        {
-        }
-
         public DrainRequest(string name, int maxSize) : base(name)
         {
             this.maxSize = maxSize;

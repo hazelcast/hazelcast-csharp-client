@@ -14,10 +14,6 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
         private long timeout = -1;
         private long ttl = -1;
 
-        protected AbstractLockRequest()
-        {
-        }
-
         protected AbstractLockRequest(Data key, long threadId, long ttl=-1, long timeout=-1)
         {
             this.key = key;

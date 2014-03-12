@@ -223,15 +223,15 @@ namespace Hazelcast.Client.Connection
             Release();
         }
 
-        public int GetId()
-        {
-            return id;
-        }
+        //public int GetId()
+        //{
+        //    return id;
+        //}
 
-        public long GetLastReadTime()
-        {
-            return lastRead;
-        }
+        //public long GetLastReadTime()
+        //{
+        //    return lastRead;
+        //}
 
         //public void Dispose()
         //{

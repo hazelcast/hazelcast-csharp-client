@@ -10,10 +10,6 @@ namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
 
         private long timeout;
 
-        public AwaitRequest()
-        {
-        }
-
         public AwaitRequest(string name, long timeout)
         {
             this.name = name;

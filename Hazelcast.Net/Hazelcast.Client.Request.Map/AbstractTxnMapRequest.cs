@@ -39,9 +39,6 @@ namespace Hazelcast.Client.Request.Map
         internal Data newValue;
         internal long ttl = -1;
 
-        protected AbstractTxnMapRequest()
-        {
-        }
 
         protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType)
         {
@@ -60,13 +57,13 @@ namespace Hazelcast.Client.Request.Map
             this.value = value;
         }
 
-        protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, Data newValue)
-            : this(name, requestType, key, value)
-        {
-            this.newValue = newValue;
-        }
+        //protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, Data newValue)
+        //    : this(name, requestType, key, value)
+        //{
+        //    this.newValue = newValue;
+        //}
 
-        public AbstractTxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, long ttl, TimeUnit timeUnit)
+        protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, long ttl, TimeUnit timeUnit)
             : this(name, requestType, key, value)
         {
             this.ttl = timeUnit.ToMillis(ttl);

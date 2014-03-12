@@ -5,10 +5,6 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class EntrySetRequest : MultiMapAllPartitionRequest, IRetryableRequest
     {
-        public EntrySetRequest()
-        {
-        }
-
         public EntrySetRequest(string name) : base(name)
         {
         }

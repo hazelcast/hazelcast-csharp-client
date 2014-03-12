@@ -10,10 +10,6 @@ namespace Hazelcast.Client.Request.Queue
     {
         internal ICollection<Data> dataList;
 
-        public ContainsRequest()
-        {
-        }
-
         public ContainsRequest(string name, ICollection<Data> dataList) : base(name)
         {
             this.dataList = dataList;

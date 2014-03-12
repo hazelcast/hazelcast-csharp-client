@@ -5,10 +5,6 @@ namespace Hazelcast.Client.Request.Collection
 {
     internal class TxnSetAddRequest : TxnCollectionRequest
     {
-        public TxnSetAddRequest()
-        {
-        }
-
         public TxnSetAddRequest(string name, Data value) : base(name, value)
         {
         }

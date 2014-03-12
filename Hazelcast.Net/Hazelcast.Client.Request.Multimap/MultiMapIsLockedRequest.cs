@@ -9,10 +9,6 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal string name;
 
-        public MultiMapIsLockedRequest()
-        {
-        }
-
         public MultiMapIsLockedRequest(Data key, string name) : base(key)
         {
             this.name = name;

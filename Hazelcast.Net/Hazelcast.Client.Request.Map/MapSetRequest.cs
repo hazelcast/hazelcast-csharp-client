@@ -5,13 +5,6 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapSetRequest : MapPutRequest
     {
-        public MapSetRequest()
-        {
-        }
-
-        public MapSetRequest(string name, Data key, Data value, long threadId) : base(name, key, value, threadId)
-        {
-        }
 
         public MapSetRequest(string name, Data key, Data value, long threadId, long ttl)
             : base(name, key, value, threadId, ttl)

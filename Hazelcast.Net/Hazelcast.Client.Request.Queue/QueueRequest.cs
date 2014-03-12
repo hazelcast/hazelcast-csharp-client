@@ -10,10 +10,6 @@ namespace Hazelcast.Client.Request.Queue
 
         protected internal long timeoutMillis;
 
-        protected internal QueueRequest()
-        {
-        }
-
         protected internal QueueRequest(string name)
         {
             this.name = name;

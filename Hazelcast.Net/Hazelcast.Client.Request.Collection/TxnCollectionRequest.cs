@@ -12,9 +12,6 @@ namespace Hazelcast.Client.Request.Collection
 
         internal Data value;
 
-        protected TxnCollectionRequest()
-        {
-        }
 
         protected TxnCollectionRequest(string name)
         {

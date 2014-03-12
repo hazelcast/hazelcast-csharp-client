@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
     {
         private Data key;
 
-        public GetRemainingLeaseRequest()
-        {
-        }
 
         public GetRemainingLeaseRequest(Data key)
         {

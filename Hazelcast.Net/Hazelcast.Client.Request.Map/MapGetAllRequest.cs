@@ -8,12 +8,8 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapGetAllRequest : ClientRequest, IRetryableRequest
     {
-        private readonly ICollection<Data> keys = new HashSet<Data>();
+        private readonly ICollection<Data> keys;// = new HashSet<Data>();
         protected internal string name;
-
-        public MapGetAllRequest()
-        {
-        }
 
         public MapGetAllRequest(string name, ICollection<Data> keys)
         {

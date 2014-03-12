@@ -8,14 +8,6 @@ namespace Hazelcast.Client.Request.Map
     {
         private string name;
 
-        public MapUnlockRequest()
-        {
-        }
-
-        public MapUnlockRequest(string name, Data key, long threadId) : base(key, threadId, false)
-        {
-            this.name = name;
-        }
 
         public MapUnlockRequest(string name, Data key, long threadId, bool force)
             : base(key, threadId, force)

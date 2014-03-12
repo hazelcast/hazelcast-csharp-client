@@ -4,10 +4,6 @@ namespace Hazelcast.Client.Request.Collection
 {
     internal class TxnListSizeRequest : TxnCollectionRequest
     {
-        public TxnListSizeRequest()
-        {
-        }
-
         public TxnListSizeRequest(string name) : base(name)
         {
         }

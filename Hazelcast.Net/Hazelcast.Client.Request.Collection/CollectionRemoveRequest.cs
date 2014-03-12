@@ -7,9 +7,6 @@ namespace Hazelcast.Client.Request.Collection
     {
         private Data value;
 
-        public CollectionRemoveRequest()
-        {
-        }
 
         public CollectionRemoveRequest(string name, Data value) : base(name)
         {

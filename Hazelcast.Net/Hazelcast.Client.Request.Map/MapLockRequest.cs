@@ -8,10 +8,6 @@ namespace Hazelcast.Client.Request.Map
     {
         private string name;
 
-        public MapLockRequest()
-        {
-        }
-
         public MapLockRequest(string name, Data key, long threadId)
             : base(key, threadId)
         {

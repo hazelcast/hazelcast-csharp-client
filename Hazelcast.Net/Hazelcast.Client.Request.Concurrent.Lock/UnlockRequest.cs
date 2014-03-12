@@ -5,10 +5,6 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
 {
     internal sealed class UnlockRequest : AbstractUnlockRequest
     {
-        public UnlockRequest()
-        {
-        }
-
         public UnlockRequest(Data key, long threadId)
             : base(key, threadId, default(bool))
         {

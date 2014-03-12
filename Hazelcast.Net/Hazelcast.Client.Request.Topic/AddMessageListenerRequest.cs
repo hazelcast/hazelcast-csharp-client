@@ -8,9 +8,6 @@ namespace Hazelcast.Client.Request.Topic
     {
         private string name;
 
-        public AddMessageListenerRequest()
-        {
-        }
 
         public AddMessageListenerRequest(string name)
         {

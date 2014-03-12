@@ -10,9 +10,6 @@ namespace Hazelcast.Client.Request.Topic
         private Data message;
         internal string name;
 
-        public PublishRequest()
-        {
-        }
 
         public PublishRequest(string name, Data message)
         {

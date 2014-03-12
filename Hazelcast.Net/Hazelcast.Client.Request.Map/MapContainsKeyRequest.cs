@@ -10,10 +10,6 @@ namespace Hazelcast.Client.Request.Map
         private Data key;
         private string name;
 
-        public MapContainsKeyRequest()
-        {
-        }
-
         public MapContainsKeyRequest(string name, Data key)
         {
             this.name = name;

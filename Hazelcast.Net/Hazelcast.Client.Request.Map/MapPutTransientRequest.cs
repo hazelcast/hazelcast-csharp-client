@@ -5,10 +5,6 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapPutTransientRequest : MapPutRequest
     {
-        public MapPutTransientRequest()
-        {
-        }
-
         public MapPutTransientRequest(string name, Data key, Data value, long threadId, long ttl)
             : base(name, key, value, threadId, ttl)
         {

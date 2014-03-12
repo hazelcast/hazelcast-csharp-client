@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Concurrent.Atomiclong
         internal long delta;
         internal string name;
 
-        protected internal AtomicLongRequest()
-        {
-        }
 
         protected internal AtomicLongRequest(string name, long delta)
         {

@@ -16,10 +16,6 @@ namespace Hazelcast.Client.Request.Map
         protected internal long ttl;
         protected internal Data value;
 
-        public MapPutRequest()
-        {
-        }
-
         public MapPutRequest(string name, Data key, Data value, long threadId, long ttl)
         {
             this.name = name;

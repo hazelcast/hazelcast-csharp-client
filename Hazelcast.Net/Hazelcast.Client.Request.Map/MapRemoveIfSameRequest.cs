@@ -13,9 +13,6 @@ namespace Hazelcast.Client.Request.Map
         protected internal long threadId;
         protected internal Data value;
 
-        public MapRemoveIfSameRequest()
-        {
-        }
 
         public MapRemoveIfSameRequest(string name, Data key, Data value, long threadId)
         {

@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Collection
 
         private string serviceName;
 
-        public CollectionAddListenerRequest()
-        {
-        }
-
         public CollectionAddListenerRequest(string name, bool includeValue)
         {
             this.name = name;

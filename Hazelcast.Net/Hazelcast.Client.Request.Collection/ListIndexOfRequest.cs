@@ -8,9 +8,6 @@ namespace Hazelcast.Client.Request.Collection
         internal bool last;
         internal Data value;
 
-        public ListIndexOfRequest()
-        {
-        }
 
         public ListIndexOfRequest(string name, Data value, bool last) : base(name)
         {

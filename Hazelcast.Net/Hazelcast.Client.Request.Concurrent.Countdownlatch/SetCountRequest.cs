@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
         private int count;
         private string name;
 
-        public SetCountRequest()
-        {
-        }
 
         public SetCountRequest(string name, int count)
         {

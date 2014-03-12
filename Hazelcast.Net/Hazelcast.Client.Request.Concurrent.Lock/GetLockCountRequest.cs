@@ -9,10 +9,6 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
     {
         private Data key;
 
-        public GetLockCountRequest()
-        {
-        }
-
         public GetLockCountRequest(Data key)
         {
             this.key = key;

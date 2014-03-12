@@ -131,8 +131,6 @@ namespace Hazelcast.Client.Test
 			FillMap();
 			var f = map.GetAsync("key1");
 		
-            Assert.False(f.IsCompleted);
-
 			object o = f.Result;
 			Assert.AreEqual("value1", o);
 		}

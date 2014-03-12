@@ -21,21 +21,35 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public static void Destroy()
         {
+            t.Destroy();
         }
 
 
-		/// <exception cref="System.Exception"></exception>
 		[Test]
 		public virtual void TestListener()
 		{
             CountdownEvent latch = new CountdownEvent(10);
 			var listener = new _MessageListener(latch);
-			t.AddMessageListener(listener);
-			for (int i = 0; i < 10; i++)
+		    string id = t.AddMessageListener(listener);
+		    for (int i = 0; i < 10; i++)
 			{
 				t.Publish("naber" + i);
 			}
 		    Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(20)));
+		}
+        
+        [Test]
+		public virtual void TestListenerRemove()
+		{
+            var latch = new CountdownEvent(1);
+			var listener = new _MessageListener(latch);
+		    string id = t.AddMessageListener(listener);
+            Thread.Sleep(1000);
+		    t.RemoveMessageListener(id);
+            Thread.Sleep(1000);
+
+            t.Publish("naber");
+		    Assert.IsFalse(latch.Wait(TimeSpan.FromSeconds(5)));
 		}
 
 		private sealed class _MessageListener : IMessageListener<object>

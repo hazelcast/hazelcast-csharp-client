@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Queue
 
         internal bool retain;
 
-        public CompareAndRemoveRequest()
-        {
-        }
-
         public CompareAndRemoveRequest(string name, ICollection<Data> dataList, bool retain) : base(name)
         {
             this.dataList = dataList;

@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Base
 
         private string serviceName;
 
-        public ClientCreateRequest()
-        {
-        }
 
         public ClientCreateRequest(string name, string serviceName)
         {

@@ -5,10 +5,6 @@ namespace Hazelcast.Client.Request.Queue
 {
     internal class IteratorRequest : QueueRequest, IRetryableRequest
     {
-        public IteratorRequest()
-        {
-        }
-
         public IteratorRequest(string name) : base(name)
         {
         }

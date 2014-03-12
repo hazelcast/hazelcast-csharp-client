@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Map
 
         private bool ordered;
 
-        public MapAddIndexRequest()
-        {
-        }
-
         public MapAddIndexRequest(string name, string attribute, bool ordered)
         {
             this.name = name;

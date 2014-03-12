@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Request.Base
     {
         string RegistrationId
         {
-            get;
+            //get;
             set;
         }
     }

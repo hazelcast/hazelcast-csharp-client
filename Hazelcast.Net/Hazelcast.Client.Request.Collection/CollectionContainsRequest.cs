@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Collection
     {
         private ICollection<Data> valueSet;
 
-        public CollectionContainsRequest()
-        {
-        }
 
         public CollectionContainsRequest(string name, ICollection<Data> valueSet) : base(name)
         {

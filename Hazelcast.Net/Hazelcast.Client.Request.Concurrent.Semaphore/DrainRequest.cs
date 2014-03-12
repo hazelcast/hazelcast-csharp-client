@@ -4,10 +4,6 @@ namespace Hazelcast.Client.Request.Concurrent.Semaphore
 {
     internal class DrainRequest : SemaphoreRequest
     {
-        public DrainRequest()
-        {
-        }
-
         public DrainRequest(string name) : base(name, -1)
         {
         }

@@ -7,9 +7,6 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal long threadId = -1;
 
-        public RemoveAllRequest()
-        {
-        }
 
         public RemoveAllRequest(string name, Data key, long threadId) : base(name, key)
         {

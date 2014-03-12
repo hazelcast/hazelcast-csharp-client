@@ -8,10 +8,6 @@ namespace Hazelcast.Client.Request.Map
     {
         private string name;
 
-        public MapEntrySetRequest()
-        {
-        }
-
         public MapEntrySetRequest(string name)
         {
             this.name = name;

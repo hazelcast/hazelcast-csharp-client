@@ -5,9 +5,6 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class KeySetRequest : MultiMapAllPartitionRequest, IRetryableRequest
     {
-        public KeySetRequest()
-        {
-        }
 
         public KeySetRequest(string name) : base(name)
         {

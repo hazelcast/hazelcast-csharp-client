@@ -6,9 +6,6 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class CountRequest : MultiMapKeyBasedRequest, IRetryableRequest
     {
-        public CountRequest()
-        {
-        }
 
         public CountRequest(string name, Data key) : base(name, key)
         {

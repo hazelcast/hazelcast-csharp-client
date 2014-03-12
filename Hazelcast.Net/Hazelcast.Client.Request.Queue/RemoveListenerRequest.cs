@@ -9,10 +9,6 @@ namespace Hazelcast.Client.Request.Queue
         private string registrationId;
         private string name;
 
-        public RemoveListenerRequest()
-        {
-        }
-
         public RemoveListenerRequest(string name, string registrationId)
         {
             this.name = name;

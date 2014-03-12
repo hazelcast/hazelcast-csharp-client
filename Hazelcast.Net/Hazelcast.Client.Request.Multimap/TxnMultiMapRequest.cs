@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal string name;
 
-        protected internal TxnMultiMapRequest()
-        {
-        }
 
         protected internal TxnMultiMapRequest(string name)
         {

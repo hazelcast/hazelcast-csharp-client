@@ -7,9 +7,6 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal Data key;
 
-        protected internal MultiMapKeyBasedRequest()
-        {
-        }
 
         protected internal MultiMapKeyBasedRequest(string name, Data key) : base(name)
         {

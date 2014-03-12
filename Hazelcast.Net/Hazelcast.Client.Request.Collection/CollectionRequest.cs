@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Collection
         protected internal string name;
         protected internal string serviceName;
 
-        protected CollectionRequest()
-        {
-        }
 
         protected CollectionRequest(string name)
         {
