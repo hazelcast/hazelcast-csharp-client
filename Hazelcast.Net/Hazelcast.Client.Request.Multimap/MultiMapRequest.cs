@@ -8,9 +8,6 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal string name;
 
-        protected internal MultiMapRequest()
-        {
-        }
 
         protected internal MultiMapRequest(string name)
         {

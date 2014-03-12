@@ -4,9 +4,6 @@ namespace Hazelcast.Client.Request.Concurrent.Atomiclong
 {
     internal class GetAndSetRequest : AtomicLongRequest
     {
-        public GetAndSetRequest()
-        {
-        }
 
         public GetAndSetRequest(string name, long value) : base(name, value)
         {

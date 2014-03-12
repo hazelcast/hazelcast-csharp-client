@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Queue
 
         internal long timeout;
 
-        public TxnPollRequest()
-        {
-        }
-
         public TxnPollRequest(string name, long timeout)
         {
             this.name = name;

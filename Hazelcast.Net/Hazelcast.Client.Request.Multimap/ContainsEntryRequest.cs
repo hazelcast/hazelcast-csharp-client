@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Multimap
 
         internal Data value;
 
-        public ContainsEntryRequest()
-        {
-        }
-
         public ContainsEntryRequest(string name, Data key, Data value) : base(name)
         {
             this.key = key;

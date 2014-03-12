@@ -8,10 +8,6 @@ namespace Hazelcast.Client.Request.Queue
     {
         internal Data data;
 
-        public RemoveRequest()
-        {
-        }
-
         public RemoveRequest(string name, Data data) : base(name)
         {
             this.data = data;

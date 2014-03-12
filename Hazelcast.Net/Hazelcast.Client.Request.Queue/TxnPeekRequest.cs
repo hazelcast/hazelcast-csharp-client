@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Queue
 
         private long timeout;
 
-        public TxnPeekRequest()
-        {
-        }
-
         public TxnPeekRequest(string name, long timeout)
         {
             this.name = name;

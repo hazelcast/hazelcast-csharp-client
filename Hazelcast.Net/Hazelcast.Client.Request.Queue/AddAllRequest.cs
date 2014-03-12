@@ -9,10 +9,6 @@ namespace Hazelcast.Client.Request.Queue
     {
         private ICollection<Data> dataList;
 
-        public AddAllRequest()
-        {
-        }
-
         public AddAllRequest(string name, ICollection<Data> dataList) : base(name)
         {
             this.dataList = dataList;

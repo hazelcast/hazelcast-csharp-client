@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Map
 
         private Data value;
 
-        public MapContainsValueRequest()
-        {
-        }
-
         public MapContainsValueRequest(string name, Data value)
         {
             this.name = name;

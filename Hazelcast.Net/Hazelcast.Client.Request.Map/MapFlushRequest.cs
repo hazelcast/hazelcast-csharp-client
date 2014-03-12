@@ -8,10 +8,6 @@ namespace Hazelcast.Client.Request.Map
     {
         protected internal string name;
 
-        public MapFlushRequest()
-        {
-        }
-
         public MapFlushRequest(string name)
         {
             this.name = name;

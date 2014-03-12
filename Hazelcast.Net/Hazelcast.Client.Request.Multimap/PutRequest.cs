@@ -11,9 +11,6 @@ namespace Hazelcast.Client.Request.Multimap
         internal long threadId = -1;
         internal Data value;
 
-        public PutRequest()
-        {
-        }
 
         public PutRequest(string name, Data key, Data value, int index, long threadId) : base(name, key)
         {

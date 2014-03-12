@@ -5,9 +5,6 @@ namespace Hazelcast.Client.Request.Queue
 {
     internal class SizeRequest : QueueRequest, IRetryableRequest
     {
-        public SizeRequest()
-        {
-        }
 
         public SizeRequest(string name) : base(name)
         {

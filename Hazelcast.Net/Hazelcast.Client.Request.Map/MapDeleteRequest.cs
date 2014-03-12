@@ -12,10 +12,6 @@ namespace Hazelcast.Client.Request.Map
 
         protected internal long threadId;
 
-        public MapDeleteRequest()
-        {
-        }
-
         public MapDeleteRequest(string name, Data key, long threadId)
         {
             this.name = name;

@@ -4,10 +4,6 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class TxnMultiMapSizeRequest : TxnMultiMapRequest
     {
-        public TxnMultiMapSizeRequest()
-        {
-        }
-
         public TxnMultiMapSizeRequest(string name) : base(name)
         {
         }

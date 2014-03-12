@@ -8,9 +8,6 @@ namespace Hazelcast.Client.Request.Collection
     {
         private int index;
 
-        public ListAddAllRequest()
-        {
-        }
 
         public ListAddAllRequest(string name, IList<Data> valueList, int index) : base(name, valueList)
         {

@@ -14,10 +14,6 @@ namespace Hazelcast.Client.Request.Map
         private Data key;
         private string name;
 
-        public MapAddEntryListenerRequest()
-        {
-        }
-
         public MapAddEntryListenerRequest(string name, bool includeValue)
         {
             this.name = name;

@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
 
         private long threadId;
 
-        protected AbstractIsLockedRequest()
-        {
-        }
-
         protected AbstractIsLockedRequest(Data key, long threadId = 0)
         {
             this.key = key;

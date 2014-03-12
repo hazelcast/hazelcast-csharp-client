@@ -13,15 +13,6 @@ namespace Hazelcast.Client.Request.Base
 
         private bool reAuth;
 
-        public AuthenticationRequest()
-        {
-        }
-
-        public AuthenticationRequest(ICredentials credentials)
-        {
-            this.credentials = credentials;
-        }
-
         public AuthenticationRequest(ICredentials credentials, ClientPrincipal principal)
         {
             this.credentials = credentials;

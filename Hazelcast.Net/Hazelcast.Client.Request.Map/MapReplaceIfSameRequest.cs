@@ -8,9 +8,6 @@ namespace Hazelcast.Client.Request.Map
     {
         private Data testValue;
 
-        public MapReplaceIfSameRequest()
-        {
-        }
 
         public MapReplaceIfSameRequest(string name, Data key, Data testValue, Data value, long threadId)
             : base(name, key, value, threadId)

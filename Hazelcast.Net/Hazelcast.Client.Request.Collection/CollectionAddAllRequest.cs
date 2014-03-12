@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Collection
     {
         protected internal IList<Data> valueList;
 
-        public CollectionAddAllRequest()
-        {
-        }
 
         public CollectionAddAllRequest(string name, IList<Data> valueList) : base(name)
         {

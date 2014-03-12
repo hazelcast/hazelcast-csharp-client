@@ -12,10 +12,6 @@ namespace Hazelcast.Client.Request.Map
 
         private long threadId;
 
-        public MapEvictRequest()
-        {
-        }
-
         public MapEvictRequest(string name, Data key, long threadId)
         {
             this.name = name;

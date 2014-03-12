@@ -10,9 +10,6 @@ namespace Hazelcast.Client.Request.Collection
         private string serviceName;
         private string registrationId;
 
-        public CollectionRemoveListenerRequest()
-        {
-        }
 
         public CollectionRemoveListenerRequest(string name, string serviceName, string registrationId)
         {
@@ -42,7 +39,7 @@ namespace Hazelcast.Client.Request.Collection
 
         public string RegistrationId
         {
-            get { return registrationId; }
+            //get { return registrationId; }
             set { registrationId = value; }
         }
 

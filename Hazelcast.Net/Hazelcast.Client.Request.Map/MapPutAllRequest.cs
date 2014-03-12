@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Map
         private MapEntrySet entrySet;
         protected internal string name;
 
-        public MapPutAllRequest()
-        {
-        }
-
         public MapPutAllRequest(string name, MapEntrySet entrySet)
         {
             this.name = name;

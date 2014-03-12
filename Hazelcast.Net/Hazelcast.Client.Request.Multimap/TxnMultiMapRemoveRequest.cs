@@ -10,10 +10,6 @@ namespace Hazelcast.Client.Request.Multimap
 
         internal Data value;
 
-        public TxnMultiMapRemoveRequest()
-        {
-        }
-
         public TxnMultiMapRemoveRequest(string name, Data key) : base(name)
         {
             this.key = key;

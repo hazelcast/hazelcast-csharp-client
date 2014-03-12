@@ -7,9 +7,6 @@ namespace Hazelcast.Client.Request.Map
     {
         private long timeout;
 
-        public MapTryPutRequest()
-        {
-        }
 
         public MapTryPutRequest(string name, Data key, Data value, long threadId, long timeout)
             : base(name, key, value, threadId, -1)

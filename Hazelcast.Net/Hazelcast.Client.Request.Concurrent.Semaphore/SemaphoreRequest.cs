@@ -10,9 +10,6 @@ namespace Hazelcast.Client.Request.Concurrent.Semaphore
 
         internal int permitCount;
 
-        protected internal SemaphoreRequest()
-        {
-        }
 
         protected internal SemaphoreRequest(string name, int permitCount)
         {

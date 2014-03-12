@@ -8,10 +8,6 @@ namespace Hazelcast.Client.Request.Queue
     {
         internal Data data;
 
-        public OfferRequest()
-        {
-        }
-
 
         public OfferRequest(string name, long timeoutMillis, Data data) : base(name, timeoutMillis)
         {

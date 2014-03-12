@@ -8,10 +8,6 @@ namespace Hazelcast.Client.Request.Queue
     {
         protected internal string name;
 
-        public RemainingCapacityRequest()
-        {
-        }
-
         public RemainingCapacityRequest(string name)
         {
             this.name = name;

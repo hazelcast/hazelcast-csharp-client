@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Multimap
         internal Data key;
         internal string name;
 
-        public AddEntryListenerRequest()
-        {
-        }
-
         public AddEntryListenerRequest(string name, Data key, bool includeValue)
         {
             this.name = name;

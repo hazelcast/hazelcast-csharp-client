@@ -10,9 +10,6 @@ namespace Hazelcast.Client.Request.Collection
         private bool retain;
         private ICollection<Data> valueSet;
 
-        public CollectionCompareAndRemoveRequest()
-        {
-        }
 
         public CollectionCompareAndRemoveRequest(string name, ICollection<Data> valueSet, bool retain) : base(name)
         {

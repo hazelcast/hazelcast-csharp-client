@@ -7,9 +7,6 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal Data key;
 
-        public TxnMultiMapValueCountRequest()
-        {
-        }
 
         public TxnMultiMapValueCountRequest(string name, Data key) : base(name)
         {

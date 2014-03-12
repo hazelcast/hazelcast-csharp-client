@@ -9,10 +9,6 @@ namespace Hazelcast.Client.Request.Map
     {
         private string name;
 
-        public MapIsLockedRequest()
-        {
-        }
-
         public MapIsLockedRequest(string name, Data key) : base(key)
         {
             this.name = name;

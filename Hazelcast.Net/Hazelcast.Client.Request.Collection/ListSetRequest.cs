@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Collection
 
         private Data value;
 
-        public ListSetRequest()
-        {
-        }
 
         public ListSetRequest(string name, int index, Data value) : base(name)
         {

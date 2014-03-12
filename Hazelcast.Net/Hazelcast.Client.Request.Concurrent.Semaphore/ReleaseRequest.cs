@@ -4,9 +4,6 @@ namespace Hazelcast.Client.Request.Concurrent.Semaphore
 {
     internal class ReleaseRequest : SemaphoreRequest
     {
-        public ReleaseRequest()
-        {
-        }
 
         public ReleaseRequest(string name, int permitCount) : base(name, permitCount)
         {

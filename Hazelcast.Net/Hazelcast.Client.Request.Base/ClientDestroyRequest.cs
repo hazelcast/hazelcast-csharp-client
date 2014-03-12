@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Base
 
         private string serviceName;
 
-        public ClientDestroyRequest()
-        {
-        }
 
         public ClientDestroyRequest(string name, string serviceName)
         {

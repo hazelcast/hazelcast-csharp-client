@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Test
         {
         }
 		/// <exception cref="System.Exception"></exception>
-		[Test,Ignore]
+		[Test]
 		public virtual void TestTxnRollback()
 		{
 		    var name = Name;

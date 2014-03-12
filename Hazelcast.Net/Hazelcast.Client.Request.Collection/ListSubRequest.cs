@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Collection
 
         private int to;
 
-        public ListSubRequest()
-        {
-        }
 
         public ListSubRequest(string name, int from, int to) : base(name)
         {

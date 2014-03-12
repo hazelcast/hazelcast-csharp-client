@@ -7,9 +7,6 @@ namespace Hazelcast.Client.Request.Collection
     {
         protected internal Data value;
 
-        public CollectionAddRequest()
-        {
-        }
 
         public CollectionAddRequest(string name, Data value) : base(name)
         {

@@ -10,10 +10,6 @@ namespace Hazelcast.Client.Request.Map
         private Data key;
         private string name;
 
-        public MapGetEntryViewRequest()
-        {
-        }
-
         public MapGetEntryViewRequest(string name, Data key)
         {
             this.name = name;

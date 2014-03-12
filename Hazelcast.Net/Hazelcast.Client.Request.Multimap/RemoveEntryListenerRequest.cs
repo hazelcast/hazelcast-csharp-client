@@ -9,10 +9,6 @@ namespace Hazelcast.Client.Request.Map
         private string name;
         private string registrationId;
 
-        public RemoveEntryListenerRequest()
-        {
-        }
-
         public RemoveEntryListenerRequest(string name, string registrationId)
         {
             this.name = name;

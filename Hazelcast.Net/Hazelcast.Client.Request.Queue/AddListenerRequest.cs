@@ -9,10 +9,6 @@ namespace Hazelcast.Client.Request.Queue
         private bool includeValue;
         private string name;
 
-        public AddListenerRequest()
-        {
-        }
-
         public AddListenerRequest(string name, bool includeValue)
         {
             this.name = name;

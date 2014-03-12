@@ -8,9 +8,6 @@ namespace Hazelcast.Client.Request.Map
     {
         private string name;
 
-        public MapClearRequest()
-        {
-        }
 
         public MapClearRequest(string name)
         {

@@ -10,10 +10,6 @@ namespace Hazelcast.Client.Request.Map
     {
         internal IPredicate<K, V> predicate;
 
-        public TxnMapRequest()
-        {
-        }
-
         public TxnMapRequest(string name, TxnMapRequestType requestType) : base(name, requestType)
         {
         }
@@ -35,11 +31,11 @@ namespace Hazelcast.Client.Request.Map
             this.newValue = newValue;
         }
 
-        public TxnMapRequest(string name, TxnMapRequestType requestType, IPredicate<K, V> predicate)
-            : this(name, requestType, null, null, null)
-        {
-            this.predicate = predicate;
-        }
+        //public TxnMapRequest(string name, TxnMapRequestType requestType, IPredicate<K, V> predicate)
+        //    : this(name, requestType, null, null, null)
+        //{
+        //    this.predicate = predicate;
+        //}
 
         public TxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, long ttl, TimeUnit timeUnit)
             : base(name,requestType,key,value,ttl,timeUnit)

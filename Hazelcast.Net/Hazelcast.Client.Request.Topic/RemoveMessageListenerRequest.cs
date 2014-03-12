@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Topic
         private string registrationId;
         private string name;
 
-        public RemoveMessageListenerRequest()
-        {
-        }
 
         public RemoveMessageListenerRequest(string name, string registrationId)
         {
@@ -38,7 +35,6 @@ namespace Hazelcast.Client.Request.Topic
 
         public string RegistrationId
         {
-            get { return registrationId; }
             set { registrationId = value; }
         }
     }

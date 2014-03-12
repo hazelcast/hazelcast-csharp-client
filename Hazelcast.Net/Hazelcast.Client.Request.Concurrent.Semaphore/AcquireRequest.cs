@@ -7,9 +7,6 @@ namespace Hazelcast.Client.Request.Concurrent.Semaphore
     {
         internal long timeout;
 
-        public AcquireRequest()
-        {
-        }
 
         public AcquireRequest(string name, int permitCount, long timeout) : base(name, permitCount)
         {

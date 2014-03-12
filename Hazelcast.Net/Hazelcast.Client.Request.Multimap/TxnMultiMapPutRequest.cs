@@ -10,9 +10,6 @@ namespace Hazelcast.Client.Request.Multimap
 
         internal Data value;
 
-        public TxnMultiMapPutRequest()
-        {
-        }
 
         public TxnMultiMapPutRequest(string name, Data key, Data value) : base(name)
         {

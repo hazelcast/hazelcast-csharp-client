@@ -36,9 +36,9 @@ namespace Hazelcast.Client.Request.Topic
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WritePortable(IPortableWriter writer)
         {
-            writer.WriteLong("pt", publishTime);
-            writer.WriteUTF("u", uuid);
-            message.WriteData(writer.GetRawDataOutput());
+            //writer.WriteLong("pt", publishTime);
+            //writer.WriteUTF("u", uuid);
+            //message.WriteData(writer.GetRawDataOutput());
         }
 
         /// <exception cref="System.IO.IOException"></exception>

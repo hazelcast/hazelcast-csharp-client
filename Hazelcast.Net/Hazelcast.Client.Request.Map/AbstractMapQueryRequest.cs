@@ -11,10 +11,6 @@ namespace Hazelcast.Client.Request.Map
         private IterationType iterationType;
         private string name;
 
-        protected AbstractMapQueryRequest()
-        {
-        }
-
         protected AbstractMapQueryRequest(string name, IterationType iterationType)
         {
             this.name = name;

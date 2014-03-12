@@ -20,13 +20,6 @@ namespace Hazelcast.Client.Request.Base
         {
         }
 
-        public ClientResponse(Data response, int callId, bool _event = false)
-        {
-            _response = response;
-            _callId = callId;
-            this._event = _event;
-        }
-
         public int GetFactoryId()
         {
             return ClientDataSerializerHook.Id;

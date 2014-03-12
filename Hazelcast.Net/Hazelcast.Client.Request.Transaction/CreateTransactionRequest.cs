@@ -9,9 +9,6 @@ namespace Hazelcast.Client.Request.Transaction
     {
         internal TransactionOptions options;
 
-        public CreateTransactionRequest()
-        {
-        }
 
         public CreateTransactionRequest(TransactionOptions options)
         {

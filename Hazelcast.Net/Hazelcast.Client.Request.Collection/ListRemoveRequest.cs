@@ -7,9 +7,6 @@ namespace Hazelcast.Client.Request.Collection
     {
         internal int index;
 
-        public ListRemoveRequest()
-        {
-        }
 
         public ListRemoveRequest(string name, int index) : base(name)
         {
