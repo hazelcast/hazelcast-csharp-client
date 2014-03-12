@@ -359,7 +359,6 @@ namespace Hazelcast.IO.Serialization
 
         public void Flush()
         {
-            throw new NotImplementedException();
         }
 
         public void Close()

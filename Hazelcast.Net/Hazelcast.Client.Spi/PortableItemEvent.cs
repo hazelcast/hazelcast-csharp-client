@@ -37,9 +37,7 @@ namespace Hazelcast.Client.Spi
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WritePortable(IPortableWriter writer)
         {
-            //FIXME ENUM HATASI
-            //writer.writeInt("e", eventType.getType());
-            writer.WriteInt("e", 1);
+            writer.WriteInt("e", (int) eventType);
             writer.WriteUTF("u", uuid);
             IOUtil.WriteNullableData(writer.GetRawDataOutput(), item);
         }
@@ -47,9 +45,7 @@ namespace Hazelcast.Client.Spi
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void ReadPortable(IPortableReader reader)
         {
-            //FIXME ENUM HATASI
-            eventType = ItemEventType.Added;
-            //ItemEventType.getByType(reader.readInt("e"));
+            eventType = (ItemEventType)reader.ReadInt("e");
             uuid = reader.ReadUTF("u");
             item = IOUtil.ReadNullableData(reader.GetRawDataInput());
         }

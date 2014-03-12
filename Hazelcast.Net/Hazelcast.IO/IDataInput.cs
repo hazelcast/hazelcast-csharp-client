@@ -43,8 +43,8 @@ namespace Hazelcast.IO
         /// <exception cref="System.IO.IOException"></exception>
         double ReadDouble();
 
-        /// <exception cref="System.IO.IOException"></exception>
-        String ReadLine();
+        ///// <exception cref="System.IO.IOException"></exception>
+        //String ReadLine();
 
         /// <exception cref="System.IO.IOException"></exception>
         String ReadUTF();

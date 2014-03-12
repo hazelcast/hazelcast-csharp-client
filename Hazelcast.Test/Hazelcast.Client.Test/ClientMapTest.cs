@@ -594,7 +594,6 @@ namespace Hazelcast.Client.Test
 		//        Assert.assertEquals(2,map.get(1));
 		//    }
 		   
-        /// <exception cref="System.Exception"></exception>
 		[Test]
         public void testListener()
         {
@@ -640,9 +639,72 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
-        }		
-        
-        [Test]
+        }
+
+	    [Test,Ignore]
+	    public void testListenerExtreme()
+	    {
+	        const int TestItemCount = 100*1000;
+            //CountdownEvent latch1 = new CountdownEvent(TestItemCount);
+            var latch = new CountdownEvent(TestItemCount);
+            //CountdownEvent latch3 = new CountdownEvent(1);
+            //CountdownEvent latch4 = new CountdownEvent(1);
+            EntryAdapter<object, object> listener = new EntryAdapter<object, object>(
+                delegate(EntryEvent<object, object> @event)
+                {
+                    //latch1.Signal();
+                },
+                delegate(EntryEvent<object, object> @event)
+                {
+                    latch.Signal();
+                },
+                delegate(EntryEvent<object, object> @event)
+                {
+                    //latch3.Signal();
+                },
+                delegate(EntryEvent<object, object> @event)
+                {
+                    //latch4.Signal();
+                });
+
+            for (int i = 0; i < TestItemCount; i++)
+            {
+                map.Put("key" + i, new byte[]{Byte.MaxValue});
+            }
+
+	        while (map.Size() < TestItemCount)
+	        {
+                Thread.Sleep(1000);
+	        }
+
+	        for (int i = 0; i < TestItemCount; i++)
+	        {
+                map.AddEntryListener(listener, "key"+i, false);
+	        }
+
+            map.Remove("key0");
+	        
+            map.Clear();//kneel down :)
+
+	        latch.Wait(TimeSpan.FromSeconds(10));
+            Console.WriteLine(latch.CurrentCount);
+	        latch.Wait(TimeSpan.FromSeconds(10));
+            Console.WriteLine(latch.CurrentCount);
+	        latch.Wait(TimeSpan.FromSeconds(10));
+            Console.WriteLine(latch.CurrentCount);
+	        latch.Wait(TimeSpan.FromSeconds(10));
+            Console.WriteLine(latch.CurrentCount);
+	        latch.Wait(TimeSpan.FromSeconds(10));
+            Console.WriteLine(latch.CurrentCount);
+	        latch.Wait(TimeSpan.FromSeconds(10));
+            Console.WriteLine(latch.CurrentCount);
+	        latch.Wait(TimeSpan.FromSeconds(10));
+            Console.WriteLine(latch.CurrentCount);
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(100)));
+	    }
+
+
+	    [Test]
         public void testListenerRemove()
         {
 			CountdownEvent latch1Add = new CountdownEvent(1);

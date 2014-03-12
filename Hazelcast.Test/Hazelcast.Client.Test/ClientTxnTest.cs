@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Test
         {
         }
 		/// <exception cref="System.Exception"></exception>
-		[Test]
+		[Test,Ignore]
 		public virtual void TestTxnRollback()
 		{
 		    var name = Name;
@@ -34,6 +34,8 @@ namespace Hazelcast.Client.Test
 				Assert.IsNotNull(context.GetTxnId());
                 var queue = context.GetQueue<object>(name);
 				queue.Offer("item");
+
+                //FIXME At this point server should get shut down
 				//server.getLifecycleService().shutdown();
 				context.CommitTransaction();
 				Assert.Fail("commit should throw exception!!!");

@@ -4,7 +4,7 @@ namespace Hazelcast.Core
     /// <remarks>Type of item event.</remarks>
     public enum ItemEventType
     {
-        Added,
-        Removed
+        Added=1,
+        Removed=2
     }
 }
