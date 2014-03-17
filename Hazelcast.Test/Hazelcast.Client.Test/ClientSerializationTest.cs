@@ -37,16 +37,14 @@ namespace Hazelcast.Client.Test
         {
             var config = new ClientConfig();
             config.GetNetworkConfig().AddAddress("127.0.0.1");
+            config.GetSerializationConfig().SetPortableVersion(99);
             config.GetSerializationConfig().AddPortableFactory(1, new MyPortableFactory());
             return HazelcastClient.NewHazelcastClient(config);
         }
 
 
-        [Test]
-        public virtual void TestDataTypes()
+        private void TestDataTypes(ISerializationService serviceIn, ISerializationService serviceOut)
         {
-            ISerializationService service = ((HazelcastClientProxy) client).GetSerializationService();
-
             int d1 = Int32.MaxValue;
             long d2 = Int64.MaxValue;
             float d3 = Single.MaxValue;
@@ -57,39 +55,57 @@ namespace Hazelcast.Client.Test
             short d8 = Int16.MaxValue;
             bool d9 = true;
 
-            Assert.AreEqual(d1,service.ToObject<int>(service.ToData(d1)));
-            Assert.AreEqual(d2,service.ToObject<long>(service.ToData(d2)));
-            Assert.AreEqual(d3,service.ToObject<float>(service.ToData(d3)));
-            Assert.AreEqual(d4,service.ToObject<double>(service.ToData(d4)));
-            Assert.AreEqual(d5,service.ToObject<char>(service.ToData(d5)));
-            Assert.AreEqual(d6,service.ToObject<string>(service.ToData(d6)));
-            Assert.AreEqual(d7,service.ToObject<byte>(service.ToData(d7)));
-            Assert.AreEqual(d8,service.ToObject<short>(service.ToData(d8)));
-            Assert.AreEqual(d9,service.ToObject<bool>(service.ToData(d9)));
+            int[] d11 = new[] { Int32.MaxValue };
+            long[] d21 = new[] { Int64.MaxValue };
+            float[] d31 = new[] { Single.MaxValue };
+            double[] d41 = new[] { Double.MaxValue };
+            char[] d51 = new[] { 'a' };
+            byte[] d71 = new[] { Byte.MaxValue };
+            short[] d81 = new[] { Int16.MaxValue };
+
+            Assert.AreEqual(d11, serviceOut.ToObject<int[]>(serviceIn.ToData(d11)));
+            Assert.AreEqual(d21, serviceOut.ToObject<long[]>(serviceIn.ToData(d21)));
+            Assert.AreEqual(d31, serviceOut.ToObject<float[]>(serviceIn.ToData(d31)));
+            Assert.AreEqual(d41, serviceOut.ToObject<double[]>(serviceIn.ToData(d41)));
+            Assert.AreEqual(d51, serviceOut.ToObject<char[]>(serviceIn.ToData(d51)));
+            Assert.AreEqual(d71, serviceOut.ToObject<byte[]>(serviceIn.ToData(d71)));
+            Assert.AreEqual(d81, serviceOut.ToObject<short[]>(serviceIn.ToData(d81)));
+
+            Assert.AreEqual(d1, serviceOut.ToObject<int>(serviceIn.ToData(d1)));
+            Assert.AreEqual(d2, serviceOut.ToObject<long>(serviceIn.ToData(d2)));
+            Assert.AreEqual(d3, serviceOut.ToObject<float>(serviceIn.ToData(d3)));
+            Assert.AreEqual(d4, serviceOut.ToObject<double>(serviceIn.ToData(d4)));
+            Assert.AreEqual(d5, serviceOut.ToObject<char>(serviceIn.ToData(d5)));
+            Assert.AreEqual(d6, serviceOut.ToObject<string>(serviceIn.ToData(d6)));
+            Assert.AreEqual(d7, serviceOut.ToObject<byte>(serviceIn.ToData(d7)));
+            Assert.AreEqual(d8, serviceOut.ToObject<short>(serviceIn.ToData(d8)));
+            Assert.AreEqual(d9, serviceOut.ToObject<bool>(serviceIn.ToData(d9)));
 
         }
 
         [Test]
-        public virtual void TestDataTypes2()
+        public virtual void TestDataTypesSerialization()
         {
             ISerializationService service = ((HazelcastClientProxy) client).GetSerializationService();
 
-            int[] d1 = new[] {Int32.MaxValue};
-            long[] d2 = new[] {Int64.MaxValue};
-            float[] d3 = new[] {Single.MaxValue};
-            double[] d4 = new[] {Double.MaxValue};
-            char[] d5 = new[] {'a'};
-            byte[] d7 = new[] {Byte.MaxValue};
-            short[] d8 = new[] {Int16.MaxValue};
+            TestDataTypes(service, service);
+        }
 
-            Assert.AreEqual(d1, service.ToObject<int[]>(service.ToData(d1)));
-            Assert.AreEqual(d2, service.ToObject<long[]>(service.ToData(d2)));
-            Assert.AreEqual(d3, service.ToObject<float[]>(service.ToData(d3)));
-            Assert.AreEqual(d4, service.ToObject<double[]>(service.ToData(d4)));
-            Assert.AreEqual(d5, service.ToObject<char[]>(service.ToData(d5)));
-            Assert.AreEqual(d7, service.ToObject<byte[]>(service.ToData(d7)));
-            Assert.AreEqual(d8, service.ToObject<short[]>(service.ToData(d8)));
+        [Test]
+        public virtual void TestPortableVersion()
+        {
+            var cc = new ClientConfig();
+            cc.GetNetworkConfig().AddAddress("127.0.0.1");
+            cc.GetSerializationConfig().SetPortableVersion(10);
+            IHazelcastInstance instance = HazelcastClient.NewHazelcastClient(cc);
+            ISerializationService serviceV10 = ((HazelcastClientProxy)instance).GetSerializationService();
 
+            ISerializationService service = ((HazelcastClientProxy)client).GetSerializationService();
+
+            TestDataTypes(service, serviceV10);
+            TestDataTypes(serviceV10, service);
+
+            instance.Shutdown();
         }
 
         [Test]
