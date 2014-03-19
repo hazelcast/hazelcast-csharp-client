@@ -630,7 +630,8 @@ namespace Hazelcast.Client.Test
 			map.Put("key4", "value4");
 			map.Put("key5", "value5");
 
-            Thread.Sleep(1000);
+            Thread.Sleep(10000);
+            Console.WriteLine("Please");
 
 			map.Remove("key1");
 			map.Remove("key3");
