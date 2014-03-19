@@ -595,6 +595,12 @@ namespace Hazelcast.Client.Connection
 
         #region IRemotingService
 
+        internal void ReSend(Task task)
+        {
+            ClientConnection clientConnection = _GetOrConnectWithRetry(null);
+            clientConnection.Send(task);
+        }
+
         public Task<TResult> Send<TResult>(ClientRequest request)
         {
             return Send<TResult>(request, null);
