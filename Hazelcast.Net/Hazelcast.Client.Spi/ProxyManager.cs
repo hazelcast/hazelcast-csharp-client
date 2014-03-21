@@ -190,6 +190,7 @@ namespace Hazelcast.Client.Spi
             clientProxy.SetContext(new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
                 client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(), client.GetRemotingService(),
                 this, client.GetClientConfig()));
+            clientProxy.PostInit();
         }
 
         public ICollection<T> GetDistributedObjects<T>() where T : IDistributedObject

@@ -45,7 +45,6 @@ namespace Hazelcast.Client.Proxy
 
         public V Get(object key)
         {
-            InitNearCache();
             Data keyData = ToData(key);
             if (nearCache != null)
             {
@@ -77,6 +76,7 @@ namespace Hazelcast.Client.Proxy
         {
             Data keyData = ToData(key);
             var request = new MapRemoveRequest(name, keyData, ThreadUtil.GetThreadId());
+            InvalidateNearCacheEntry(keyData);
             return Invoke<V>(request, keyData);
         }
 
@@ -85,14 +85,15 @@ namespace Hazelcast.Client.Proxy
             Data keyData = ToData(key);
             Data valueData = ToData(value);
             var request = new MapRemoveIfSameRequest(name, keyData, valueData, ThreadUtil.GetThreadId());
-            var result = Invoke<bool>(request, keyData);
-            return result;
+            InvalidateNearCacheEntry(keyData);
+            return Invoke<bool>(request, keyData);
         }
 
         public void Delete(object key)
         {
             Data keyData = ToData(key);
             var request = new MapDeleteRequest(name, keyData, ThreadUtil.GetThreadId());
+            InvalidateNearCacheEntry(keyData);
             Invoke<object>(request, keyData);
         }
 
@@ -104,7 +105,6 @@ namespace Hazelcast.Client.Proxy
 
         public Task<V> GetAsync(K key)
         {
-            InitNearCache();
             Data keyData = ToData(key);
             if (nearCache != null)
             {
@@ -154,6 +154,7 @@ namespace Hazelcast.Client.Proxy
             var request = new MapPutRequest(name, keyData, valueData, ThreadUtil.GetThreadId(),GetTimeInMillis(ttl, timeunit));
             try {
                 var task = GetContext().GetInvocationService().InvokeOnKeyOwner<V>(request, keyData);
+                task.ContinueWith((continueTask) => InvalidateNearCacheEntry(keyData));
                 return task;
             } catch (Exception e) {
                 throw ExceptionUtil.Rethrow(e);
@@ -167,6 +168,7 @@ namespace Hazelcast.Client.Proxy
             try
             {
                 var task = GetContext().GetInvocationService().InvokeOnKeyOwner<V>(request, keyData);
+                task.ContinueWith((continueTask) => InvalidateNearCacheEntry(keyData));
                 return task;
             }
             catch (Exception e)
@@ -180,6 +182,7 @@ namespace Hazelcast.Client.Proxy
             Data keyData = ToData(key);
             var request = new MapTryRemoveRequest(name, keyData, ThreadUtil.GetThreadId(), timeunit.ToMillis(timeout));
             var result = Invoke<bool>(request, keyData);
+            if (result) InvalidateNearCacheEntry(keyData);
             return result;
         }
 
@@ -190,6 +193,7 @@ namespace Hazelcast.Client.Proxy
             var request = new MapTryPutRequest(name, keyData, valueData, ThreadUtil.GetThreadId(),
                 timeunit.ToMillis(timeout));
             var result = Invoke<bool>(request, keyData);
+            if(result) InvalidateNearCacheEntry(keyData);
             return result;
         }
 
@@ -199,6 +203,7 @@ namespace Hazelcast.Client.Proxy
             Data valueData = ToData(value);
             var request = new MapPutRequest(name, keyData, valueData, ThreadUtil.GetThreadId(),
                 GetTimeInMillis(ttl, timeunit));
+            InvalidateNearCacheEntry(keyData);
             return Invoke<V>(request, keyData);
         }
 
@@ -208,6 +213,7 @@ namespace Hazelcast.Client.Proxy
             Data valueData = ToData(value);
             var request = new MapPutTransientRequest(name, keyData, valueData, ThreadUtil.GetThreadId(),
                 GetTimeInMillis(ttl, timeunit));
+            InvalidateNearCacheEntry(keyData);
             Invoke<object>(request);
         }
 
@@ -232,8 +238,8 @@ namespace Hazelcast.Client.Proxy
             Data newValueData = ToData(newValue);
             var request = new MapReplaceIfSameRequest(name, keyData, oldValueData, newValueData,
                 ThreadUtil.GetThreadId());
-            var result = Invoke<bool>(request, keyData);
-            return result;
+            InvalidateNearCacheEntry(keyData);
+            return Invoke<bool>(request, keyData);
         }
 
         public V Replace(K key, V value)
@@ -241,6 +247,7 @@ namespace Hazelcast.Client.Proxy
             Data keyData = ToData(key);
             Data valueData = ToData(value);
             var request = new MapReplaceRequest(name, keyData, valueData, ThreadUtil.GetThreadId());
+            InvalidateNearCacheEntry(keyData);
             return Invoke<V>(request, keyData);
         }
 
@@ -250,6 +257,7 @@ namespace Hazelcast.Client.Proxy
             Data valueData = ToData(value);
             var request = new MapSetRequest(name, keyData, valueData, ThreadUtil.GetThreadId(),
                 GetTimeInMillis(ttl, timeunit));
+            InvalidateNearCacheEntry(keyData);
             Invoke<object>(request, keyData);
         }
 
@@ -384,7 +392,6 @@ namespace Hazelcast.Client.Proxy
 
         public IDictionary<K, V> GetAll(ICollection<K> keys)
         {
-            InitNearCache();
             var keySet = new HashSet<Data>();
             IDictionary<K, V> result = new Dictionary<K, V>();
             foreach (object key in keys)
@@ -465,7 +472,7 @@ namespace Hazelcast.Client.Proxy
             Invoke<object>(request);
         }
 
-         public void Set(K key, V value)
+        public void Set(K key, V value)
         {
             Set(key, value, -1, TimeUnit.SECONDS);
         }
@@ -487,7 +494,9 @@ namespace Hazelcast.Client.Proxy
             var entrySet = new MapEntrySet();
             foreach (var entry in m)
             {
-                entrySet.Add(new KeyValuePair<Data, Data>(ToData(entry.Key), ToData(entry.Value)));
+                Data key = ToData(entry.Key);
+                entrySet.Add(new KeyValuePair<Data, Data>(key, ToData(entry.Value)));
+                InvalidateNearCacheEntry(key);
             }
             var request = new MapPutAllRequest(name, entrySet);
             Invoke<object>(request);
@@ -497,6 +506,10 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new MapClearRequest(name);
             Invoke<object>(request);
+            if (nearCache != null)
+            {
+                nearCache.InvalidateAll();
+            }
         }
 
         public string AddEntryListener(IEntryListener<K, V> listener, IPredicate<K, V> predicate, K key,
@@ -616,7 +629,8 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        private void InitNearCache()
+
+        internal override void PostInit()
         {
             if (nearCacheInitialized.CompareAndSet(false, true))
             {
@@ -627,6 +641,14 @@ namespace Hazelcast.Client.Proxy
                 }
                 var _nearCache = new ClientNearCache(name,ClientNearCacheType.Map, GetContext(), nearCacheConfig);
                 nearCache = _nearCache;
+            }
+        }
+
+        private void InvalidateNearCacheEntry(Data key)
+        {
+            if (nearCache != null && nearCache.invalidateOnChange)
+            {
+                nearCache.Invalidate(key);
             }
         }
 

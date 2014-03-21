@@ -126,6 +126,8 @@ namespace Hazelcast.Client.Spi
             }
         }
 
+        internal virtual void PostInit(){}
+
     }
 
 }

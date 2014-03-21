@@ -95,5 +95,27 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(1, cacheRecord.hit.Get());
         }
 
+        [Test]
+        public void testNearCacheLocalInvalidations() 
+        {
+             
+            map.Put("key", "value");
+
+            var val = map.Get("key");
+            Assert.AreEqual("value",val);
+
+
+            var mapImpl = map as ClientMapProxy<object, object>;
+            var clientNearCache = mapImpl.NearCache;
+
+            Assert.AreEqual(1, clientNearCache.cache.Count);
+
+            map.Remove("key");
+            Assert.Null(map.Get("key"));
+
+            //ClientNearCache.CacheRecord cacheRecord = clientNearCache.cache.Values.ToArray()[0];
+            //Assert.AreEqual(0, cacheRecord.hit.Get());
+        }
+
     }
 }

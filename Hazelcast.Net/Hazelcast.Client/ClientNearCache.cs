@@ -13,8 +13,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client
 {
-
-    public enum ClientNearCacheType 
+    public enum ClientNearCacheType
     {
         Map,
         ReplicatedMap
@@ -22,13 +21,13 @@ namespace Hazelcast.Client
 
     internal class ClientNearCache
     {
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientNearCache));
-
         internal const int evictionPercentage = 20;
 
         internal const int cleanupInterval = 5000;
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientNearCache));
         public static readonly object NullObject = new object();
         internal readonly ConcurrentDictionary<Data, CacheRecord> cache;
+        internal readonly ClientNearCacheType cacheType;
         internal readonly AtomicBoolean canCleanUp;
 
         internal readonly AtomicBoolean canEvict;
@@ -46,9 +45,8 @@ namespace Hazelcast.Client
         internal long lastCleanup;
         internal string registrationId = null;
 
-        internal readonly ClientNearCacheType cacheType;
-
-        public ClientNearCache(string mapName,ClientNearCacheType cacheType, ClientContext context, NearCacheConfig nearCacheConfig)
+        public ClientNearCache(string mapName, ClientNearCacheType cacheType, ClientContext context,
+            NearCacheConfig nearCacheConfig)
         {
             this.mapName = mapName;
             this.cacheType = cacheType;
@@ -69,43 +67,46 @@ namespace Hazelcast.Client
             }
         }
 
-        
-    private void AddInvalidateListener(){
-        try {
-            ClientRequest request = null;
-            DistributedEventHandler handler = null;
-            if (cacheType == ClientNearCacheType.Map) 
-            {
-                request = new MapAddEntryListenerRequest<object,object>(mapName, false);
 
-                handler = _event =>
+        private void AddInvalidateListener()
+        {
+            try
+            {
+                ClientRequest request = null;
+                DistributedEventHandler handler = null;
+                if (cacheType == ClientNearCacheType.Map)
                 {
-                    var e = _event as PortableEntryEvent;
-                    CacheRecord removed;
-                    cache.TryRemove(e.GetKey(),out removed);
-                };
-                
+                    request = new MapAddEntryListenerRequest<object, object>(mapName, false);
 
-            } 
-            else if (cacheType == ClientNearCacheType.ReplicatedMap) 
-            {
-                //TODO REPLICATED NEARCACHE
+                    handler = _event =>
+                    {
+                        var e = _event as PortableEntryEvent;
+                        CacheRecord removed;
+                        cache.TryRemove(e.GetKey(), out removed);
+                    };
+                }
+                else if (cacheType == ClientNearCacheType.ReplicatedMap)
+                {
+                    //TODO REPLICATED NEARCACHE
 
-                //request = new ClientReplicatedMapAddEntryListenerRequest(mapName, null, null);
-                //handler = new EventHandler<PortableEntryEvent>() {
-                //    public void handle(PortableEntryEvent event) {
-                //        cache.remove(event.getKey());
-                //    }
-                //};
-            } else {
-                throw new NotImplementedException("Near cache is not available for this type of data structure");
+                    //request = new ClientReplicatedMapAddEntryListenerRequest(mapName, null, null);
+                    //handler = new EventHandler<PortableEntryEvent>() {
+                    //    public void handle(PortableEntryEvent event) {
+                    //        cache.remove(event.getKey());
+                    //    }
+                    //};
+                }
+                else
+                {
+                    throw new NotImplementedException("Near cache is not available for this type of data structure");
+                }
+                registrationId = ListenerUtil.Listen(context, request, null, handler);
             }
-            registrationId = ListenerUtil.Listen(context, request, null, handler);
-        } catch (Exception e) {
-            Logger.Severe("-----------------\n Near Cache is not initialized!!! \n-----------------", e);
+            catch (Exception e)
+            {
+                Logger.Severe("-----------------\n Near Cache is not initialized!!! \n-----------------", e);
+            }
         }
-
-    }
 
 
         public virtual void Put(Data key, object @object)
@@ -154,9 +155,9 @@ namespace Hazelcast.Client
             try
             {
                 var records = new SortedSet<CacheRecord>();
-                var evictSize = cache.Count * evictionPercentage / 100;
-                int i=0;
-                foreach (var record in records)
+                int evictSize = cache.Count*evictionPercentage/100;
+                int i = 0;
+                foreach (CacheRecord record in records)
                 {
                     CacheRecord removed;
                     cache.TryRemove(record.key, out removed);
@@ -168,9 +169,8 @@ namespace Hazelcast.Client
             }
             finally
             {
-              canEvict.Set(true);  
+                canEvict.Set(true);
             }
-           
         }
 
         private void FireTtlCleanup()
@@ -195,18 +195,22 @@ namespace Hazelcast.Client
 
         private void FireTtlCleanupFunc()
         {
-           try {
+            try
+            {
                 lastCleanup = Clock.CurrentTimeMillis();
-                foreach (var entry in cache) {
+                foreach (var entry in cache)
+                {
                     if (entry.Value.Expired())
                     {
                         CacheRecord removed;
-                        cache.TryRemove(entry.Key,out removed);
+                        cache.TryRemove(entry.Key, out removed);
                     }
                 }
-            } finally {
+            }
+            finally
+            {
                 canCleanUp.Set(true);
-            } 
+            }
         }
 
         public virtual object Get(Data key)
@@ -235,14 +239,18 @@ namespace Hazelcast.Client
 
         public virtual void Invalidate(Data key)
         {
-            CacheRecord record = null;
             try
             {
+                CacheRecord record = null;
                 cache.TryRemove(key, out record);
             }
             catch (ArgumentNullException e)
             {
             }
+        }
+        public virtual void InvalidateAll()
+        {
+            cache.Clear();
         }
 
         public virtual void Destroy()
@@ -268,8 +276,6 @@ namespace Hazelcast.Client
             }
             cache.Clear();
         }
-
-
 
 
         internal class CacheRecord : IComparable<CacheRecord>

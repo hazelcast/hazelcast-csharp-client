@@ -19,6 +19,11 @@ namespace Hazelcast.Client.Request.Base
             set { callId = value; }
         }
 
+        public virtual bool Sticky
+        {
+            get { return false; }
+        }
+
         public abstract int GetFactoryId();
         public abstract int GetClassId();
 
