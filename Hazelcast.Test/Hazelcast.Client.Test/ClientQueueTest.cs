@@ -217,7 +217,7 @@ namespace Hazelcast.Client.Test
 
 		    Assert.IsFalse(q.Remove("itemX"));
             Assert.IsTrue(q.Offer("itemX"));
-		    Assert.IsTrue(((ICollection<string>)q).Remove("itemX"));
+		    Assert.IsTrue(((ICollection<object>)q).Remove("itemX"));
 
             Assert.IsTrue(q.Offer("itemY"));
             Assert.AreEqual("itemY", q.Remove());
@@ -452,12 +452,12 @@ namespace Hazelcast.Client.Test
         [Test]
 	    public void TestWrapperMethods()
         {
-            var qc=(ICollection<string>) q;
+            var qc=(ICollection<object>) q;
 
             qc.Add("asd");
             Assert.IsTrue(qc.Contains("asd"));
 
-            IEnumerator<string> enumerator = qc.GetEnumerator();
+            IEnumerator<object> enumerator = qc.GetEnumerator();
 
             enumerator.MoveNext();
             Assert.AreEqual("asd", enumerator.Current);

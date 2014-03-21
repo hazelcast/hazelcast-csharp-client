@@ -14,6 +14,10 @@ namespace Hazelcast.Client.Request.Transaction
         protected String txnId;
         protected long clientThreadId;
 
+        public override bool Sticky
+        {
+            get { return true; }
+        }
 
         protected BaseTransactionRequest() {
         }

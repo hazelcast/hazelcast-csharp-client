@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Config;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -395,7 +396,7 @@ namespace Hazelcast.Client.Connection
 
             var taskData = task.AsyncState as TaskData;
             taskData.RetryCount ++;
-            if (taskData.RetryCount > ClientConnectionManager.RetryCount)
+            if (taskData.RetryCount > ClientConnectionManager.RetryCount || taskData.Request.Sticky)
             {
                 return false;
             }

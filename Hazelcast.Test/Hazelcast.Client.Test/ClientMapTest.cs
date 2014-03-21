@@ -442,19 +442,26 @@ namespace Hazelcast.Client.Test
             map.Put("key3", "value3");
 
             var keyValuePairs = map.EntrySet();
-            var enumerator = keyValuePairs.GetEnumerator();
 
-            enumerator.MoveNext();
-            Assert.AreEqual("key3", enumerator.Current.Key);
-            Assert.AreEqual("value3", enumerator.Current.Value);
+            IDictionary<object, object> tempDict= new Dictionary<object, object>();
+            foreach (var keyValuePair in keyValuePairs)
+            {
+                tempDict.Add(keyValuePair);
+            }
 
-            enumerator.MoveNext();
-            Assert.AreEqual("key2", enumerator.Current.Key);
-            Assert.AreEqual("value2", enumerator.Current.Value);
+            Assert.True(tempDict.ContainsKey("key1"));
+            Assert.True(tempDict.ContainsKey("key2"));
+            Assert.True(tempDict.ContainsKey("key3"));
 
-            enumerator.MoveNext();
-            Assert.AreEqual("key1", enumerator.Current.Key);
-            Assert.AreEqual("value1", enumerator.Current.Value);
+            object value;
+            tempDict.TryGetValue("key1",out value);
+            Assert.AreEqual("value1", value);
+
+            tempDict.TryGetValue("key2",out value);
+            Assert.AreEqual("value2", value);
+
+            tempDict.TryGetValue("key3",out value);
+            Assert.AreEqual("value3", value);
         }
 
         [Test]
