@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Hazelcast.Config;
 using Hazelcast.Client;
 using Hazelcast.Core;
@@ -9,11 +10,11 @@ namespace Hazelcast.Client.Example
     public class SimpleExample1
     {
 
-        public static void Test()
+        static void Main111(string[] args)
         {
             var clientConfig = new ClientConfig();
-            clientConfig.GetNetworkConfig().AddAddress("10.0.0.1");
-            clientConfig.GetNetworkConfig().AddAddress("10.0.0.2:5702");
+            clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
+            //clientConfig.GetNetworkConfig().AddAddress("10.0.0.2:5702");
 
             //Portable Serialization setup up for Customer CLass
             clientConfig.GetSerializationConfig().AddPortableFactory(MyPortableFactory.FactoryId, new MyPortableFactory());
@@ -26,11 +27,15 @@ namespace Hazelcast.Client.Example
             mapCustomers.Put("2", new Customer("Ali", "Selam"));
             mapCustomers.Put("3", new Customer("Avi", "Noyan"));
 
-            ICollection<Customer> customers = mapCustomers.Values();
-            foreach (var customer in customers)
-            {
-                //customer
-            }
+
+            Customer customer1 = mapCustomers.Get("1");
+            Console.WriteLine(customer1);
+
+            //ICollection<Customer> customers = mapCustomers.Values();
+            //foreach (var customer in customers)
+            //{
+            //    //customer
+            //}
 
         }
     }
