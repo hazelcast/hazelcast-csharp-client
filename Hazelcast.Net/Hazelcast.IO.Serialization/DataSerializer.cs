@@ -141,7 +141,12 @@ namespace Hazelcast.IO.Serialization
             }
             else
             {
-                output.WriteUTF(obj.GetJavaClassName());
+                string javaClassName = obj.GetJavaClassName();
+                if (!class2Type.ContainsKey(javaClassName))
+                {
+                    class2Type.Add(javaClassName, obj.GetType());
+                }
+                output.WriteUTF(javaClassName);
             }
             obj.WriteData(output);
         }

@@ -59,7 +59,7 @@ namespace Hazelcast.Test
 
         
 
-        static void Main(string[] args)
+        static void Main0000(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.class","console");
 
