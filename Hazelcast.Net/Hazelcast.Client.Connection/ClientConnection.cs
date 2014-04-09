@@ -460,14 +460,14 @@ namespace Hazelcast.Client.Connection
                     }
                     Task.Factory.StartNew(Close);
                 }
-                //if (this.clientSocket.Poll(0, SelectMode.SelectWrite))
-                //{
-                ProcessWrite();
-                //}
-                //if (this.clientSocket.Poll(0, SelectMode.SelectRead))
-                //{
-                ProcessRead();
-                //}
+                if (this.clientSocket.Poll(0, SelectMode.SelectWrite))
+                {
+                    ProcessWrite();
+                }
+                if (this.clientSocket.Poll(0, SelectMode.SelectRead))
+                {
+                    ProcessRead();
+                }
 
 
                 //if (this.clientSocket.Poll(0, SelectMode.SelectError))

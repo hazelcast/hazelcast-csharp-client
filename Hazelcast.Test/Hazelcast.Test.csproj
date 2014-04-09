@@ -96,6 +96,7 @@
     <Compile Include="Hazelcast.Client.Test\GenericEvent.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueueTest.cs" />
     <Compile Include="SimpleExample1.cs" />
     <Compile Include="SimpleMapTestFromClient.cs" />
     <Compile Include="WindowsApp.cs" />
