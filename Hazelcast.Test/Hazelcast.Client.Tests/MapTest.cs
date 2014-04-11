@@ -11,6 +11,45 @@ using Hazelcast.Query;
 
 namespace Hazelcast.Client.Tests
 {
+
+    public class EntryAdapter<K, V> : EntryListener<K, V>
+    {
+        private readonly Action<EntryEvent<K, V>> fAdded;
+        private readonly Action<EntryEvent<K, V>> fEvicted;
+        private readonly Action<EntryEvent<K, V>> fRemoved;
+        private readonly Action<EntryEvent<K, V>> fUpdated;
+
+        public EntryAdapter(Action<EntryEvent<K, V>> fAdded, Action<EntryEvent<K, V>> fRemoved,
+            Action<EntryEvent<K, V>> fUpdated, Action<EntryEvent<K, V>> fEvicted)
+        {
+            this.fAdded = fAdded;
+            this.fRemoved = fRemoved;
+            this.fUpdated = fUpdated;
+            this.fEvicted = fEvicted;
+        }
+
+
+        public void entryAdded(EntryEvent<K, V> @event)
+        {
+            fAdded(@event);
+        }
+
+        public void entryRemoved(EntryEvent<K, V> @event)
+        {
+            fRemoved(@event);
+        }
+
+        public void entryUpdated(EntryEvent<K, V> @event)
+        {
+            fUpdated(@event);
+        }
+
+        public void entryEvicted(EntryEvent<K, V> @event)
+        {
+            fEvicted(@event);
+        }
+    }
+
 	[TestFixture()]
 	public class MapTest : HazelcastTest
 	{
@@ -401,8 +440,59 @@ namespace Hazelcast.Client.Tests
 	        entryRemoved(e);
 	    }
 	}
-	
-	/*	
+
+
+    [Test]
+    public void testListener()
+    {
+        HazelcastClient hClient = getHazelcastClient();
+        IMap<object, object> map = hClient.getMap<object, object>("addListener");
+
+        CountdownEvent latch1Add = new CountdownEvent(5);
+        CountdownEvent latch1Remove = new CountdownEvent(2);
+        CountdownEvent latch2Add = new CountdownEvent(1);
+        CountdownEvent latch2Remove = new CountdownEvent(1);
+        EntryAdapter<object, object> listener1 = new EntryAdapter<object, object>(
+            delegate(EntryEvent<object, object> @event) { latch1Add.Signal(); },
+            delegate(EntryEvent<object, object> @event) { latch1Remove.Signal(); },
+            delegate(EntryEvent<object, object> @event) { },
+            delegate(EntryEvent<object, object> @event) { });
+
+        EntryAdapter<object, object> listener2 = new EntryAdapter<object, object>(
+            delegate(EntryEvent<object, object> @event)
+            {
+                latch2Add.Signal();
+            },
+            delegate(EntryEvent<object, object> @event)
+            {
+                latch2Remove.Signal();
+            },
+            delegate(EntryEvent<object, object> @event) { },
+            delegate(EntryEvent<object, object> @event) { });
+
+        map.addEntryListener(listener1, false);
+        map.addEntryListener(listener2, "key3", true);
+
+        Thread.Sleep(1000);
+
+        map.put("key1", "value1");
+        map.put("key2", "value2");
+        map.put("key3", "value3");
+        map.put("key4", "value4");
+        map.put("key5", "value5");
+
+        Thread.Sleep(1000);
+
+        map.remove("key1");
+        map.remove("key3");
+
+        Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(1000)));
+        Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
+        Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
+        Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
+    }
+
+
 		
     [Test]
     public void addListener(){
@@ -425,7 +515,7 @@ namespace Hazelcast.Client.Tests
         Assert.IsTrue(entryRemovedLatch.Wait(10000));
     }
 		
-
+/*
     [Test]
     public void addListenerForKey(){
         HazelcastClient hClient = getHazelcastClient();
