@@ -12,7 +12,7 @@ namespace HazelcastTest
 
     internal class Program
     {
-        private static void Main(string[] args)
+        private static void Main11(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.class", "console");
 
@@ -56,5 +56,24 @@ namespace HazelcastTest
 
             client.Shutdown();
         }
+
+        static void Main111(string[] args)
+        {
+            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+
+            ClientConfig clientConfig = new ClientConfig();
+            clientConfig.SetNetworkConfig(new ClientNetworkConfig().AddAddress(("127.0.0.1:5701")));
+            IHazelcastInstance instance = HazelcastClient.NewHazelcastClient(clientConfig);
+
+            var locker = instance.GetLock("processLock");
+            Console.WriteLine("Waiting for lock");
+            locker.Lock();
+            Console.WriteLine("Locked");
+            Console.ReadLine();
+            locker.Unlock();
+
+            instance.Shutdown();
+        }
+
     }
 }

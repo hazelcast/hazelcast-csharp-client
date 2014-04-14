@@ -8,11 +8,11 @@ namespace Hazelcast.Net.Ext
 {
     internal class ByteBuffer
     {
-        private byte[] buffer;
-        private int capacity;
-        private int index;
-        private int limit;
-        private int mark;
+        private volatile byte[] buffer;
+        private volatile int capacity;
+        private volatile int index;
+        private volatile int limit;
+        private volatile int mark;
         //private bool _bigEndian=true;
 
         public ByteBuffer()

@@ -35,15 +35,16 @@ namespace Hazelcast.Logging
         public static ILoggerFactory NewLoggerFactory(string loggerType)
         {
             ILoggerFactory _loggerFactory = null;
-            string loggerClass = Environment.GetEnvironmentVariable("hazelcast.logging.class");
-            if ("console".Equals(loggerClass))
+            //string loggerClass = Environment.GetEnvironmentVariable("hazelcast.logging.class");
+            if ("console".Equals(loggerType))
             {
                 _loggerFactory = new ConsoleLogFactory();
             }
 
             if (_loggerFactory == null)
             {
-                _loggerFactory = (Debugger.IsAttached ? (ILoggerFactory) new TraceLogFactory() : new NoLogFactory());
+                _loggerFactory = (Debugger.IsAttached ? (ILoggerFactory)new TraceLogFactory() : new NoLogFactory());
+                //_loggerFactory = new TraceLogFactory();
             }
 
             return _loggerFactory;
