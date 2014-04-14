@@ -23,7 +23,6 @@ namespace Hazelcast.Client.Connection
         #region fields
 
         public const int RetryCount = 20;
-        public const int ProcessThreadCount = 4;//must be even
         private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
 
         private readonly ConcurrentDictionary<Address, LinkedListNode<ClientConnection>> _addresses = new ConcurrentDictionary<Address, LinkedListNode<ClientConnection>>();
@@ -43,7 +42,6 @@ namespace Hazelcast.Client.Connection
 
         private readonly SocketInterceptor socketInterceptor;
         private readonly SocketOptions socketOptions;
-        private readonly List<Thread> threads = new List<Thread>();
         private volatile bool _live;
 
         private volatile int _nextConnectionId;
@@ -89,7 +87,6 @@ namespace Hazelcast.Client.Connection
             }
             _live = true;
             InitOwnerConnection();
-            StartProcessThreads();
         }
 
         public bool Shutdown()
@@ -101,16 +98,6 @@ namespace Hazelcast.Client.Connection
             _live = false;
             try
             {
-                foreach (Thread thread in threads)
-                {
-                    try
-                    {
-                        thread.Abort();
-                    }
-                    catch (Exception){}
-                }
-                threads.Clear();
-
                 var _itrNode = _clientConnections.Last;
                 if (_itrNode != null)
                 {
@@ -127,16 +114,6 @@ namespace Hazelcast.Client.Connection
                 }
 
                 _clientConnections.Clear();
-                //foreach (ClientConnection clientConnection in _clientConnections)
-                //{
-                //    try
-                //    {
-                //        clientConnection.Close();
-                //    }
-                //    catch (Exception) { }
-                //}
-
-                //Console.WriteLine("");
                 try
                 {
                     _ownerConnection.Close();
@@ -200,38 +177,9 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        //public void HandleMembershipEvent(MembershipEvent membershipEvent)
-        //{
-        //    if (membershipEvent.GetEventType() == MembershipEvent.MemberRemoved)
-        //    {
-        //        Address address = membershipEvent.GetMember().GetAddress();
-        //        DestroyConnection(address);
-        //    }
-        //}
-
         public Address OwnerAddress()
         {
            return _ownerConnection != null ? _ownerConnection.GetRemoteEndpoint():null;
-        }
-
-        private void StartProcessThreads()
-        {
-            try
-            {
-                for (int i = 0; i < ProcessThreadCount; i++)
-                {
-                    var t = new Thread(ProcessClientConnections)
-                    {
-                        Name = "ProcessClientConnection" + i//,Priority = ThreadPriority.BelowNormal
-                    };
-                    threads.Add(t);
-                    t.Start();
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Warning("COULD not start Read Write threads", e);
-            }
         }
 
         /// <summary>
@@ -511,32 +459,6 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-
-        private void ProcessClientConnections()
-        {
-            while (_live)
-            {
-                try
-                {
-                    ClientConnection nextReadConn = NextProcessConnection();
-                    if (nextReadConn != null)
-                    {
-                        nextReadConn.ProcessConnection();
-                    }
-                    else
-                    {
-                        logger.Finest("Process Thread is sleeping...");
-                        Thread.Sleep(1000);
-                    }
-                }
-                catch (Exception e)
-                {
-                    logger.Warning(e);
-                }
-            }
-            logger.Finest("Process Thread is terminating now..."+Thread.CurrentThread.Name);
-        }
-
         private bool RemoveEventHandler(int callId)
         {
             return _clientConnections.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
@@ -561,7 +483,7 @@ namespace Hazelcast.Client.Connection
         {
             ISerializationService ss = client.GetSerializationService();
             var auth = new AuthenticationRequest(credentials, principal);
-            connection.Init();
+            connection.InitProtocalData();
             auth.SetReAuth(reAuth);
             auth.SetFirstConnection(firstConnection);
             SerializableCollection coll;
