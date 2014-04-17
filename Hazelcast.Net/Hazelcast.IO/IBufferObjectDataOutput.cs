@@ -30,6 +30,8 @@ namespace Hazelcast.IO
         /// <exception cref="System.IO.IOException"></exception>
         void WriteShort(int position, int v);
 
+        void WriteZeroBytes(int count);
+
         int Position();
 
         void Position(int newPos);

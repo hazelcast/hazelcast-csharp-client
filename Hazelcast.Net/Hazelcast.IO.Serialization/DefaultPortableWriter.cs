@@ -22,12 +22,12 @@ namespace Hazelcast.IO.Serialization
             this.cd = cd;
             writtenFields = new HashSet<string>(new string[cd.GetFieldCount()]);
             begin = output.Position();
-            output.Position(begin + 4);
-            // room for final offset
+
+            output.WriteZeroBytes(4);  // room for final offset
+
             offset = output.Position();
-            int fieldIndexesLength = (cd.GetFieldCount() + 1)*4;
-            // one additional for raw data
-            output.Position(offset + fieldIndexesLength);
+            int fieldIndexesLength = (cd.GetFieldCount() + 1)*4;// one additional for raw data
+            output.WriteZeroBytes(fieldIndexesLength);  // room for final offset
         }
 
         public virtual int GetVersion()
@@ -176,7 +176,7 @@ namespace Hazelcast.IO.Serialization
             if (len > 0)
             {
                 int offset = output.Position();
-                output.Position(offset + len*4);
+                output.WriteZeroBytes(len * 4);
                 for (int i = 0; i < portables.Length; i++)
                 {
                     output.WriteInt(offset + i*4, output.Position());

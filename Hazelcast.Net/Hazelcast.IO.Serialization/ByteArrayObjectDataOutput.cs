@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text;
 using Hazelcast.Net.Ext;
 
@@ -281,11 +282,20 @@ namespace Hazelcast.IO.Serialization
             return pos;
         }
 
+        public void WriteZeroBytes(int count)
+        {
+            for (int k = 0; k < count; k++)
+            {
+                Write(0);
+            }
+        }
+
+
         public virtual void Position(int newPos)
         {
             if ((newPos > buffer.Length) || (newPos < 0))
             {
-                throw new ArgumentException();
+                throw new InternalBufferOverflowException("Buffer overflow. Max size is "+buffer.Length +" but new position is "+ newPos);
             }
             pos = newPos;
         }
