@@ -78,7 +78,7 @@ namespace Hazelcast.Client.Spi
             {
                 throw new HazelcastInstanceNotActiveException();
             }
-            return context;
+            return ctx;
         }
 
         internal virtual void SetContext(ClientContext context)
