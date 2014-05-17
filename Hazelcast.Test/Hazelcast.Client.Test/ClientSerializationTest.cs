@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Formatters.Soap;
@@ -14,99 +15,99 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientSerializationTest:HazelcastBaseTest
+    public class ClientSerializationTest//:HazelcastBaseTest
     {
 
         internal static IMap<object, object> map;
 
-        //
-        [SetUp]
-        public void Init()
-        {
-            map = client.GetMap<object, object>(Name);
-        }
+        ////
+        //[SetUp]
+        //public void Init()
+        //{
+        //    map = client.GetMap<object, object>(Name);
+        //}
 
-        [TearDown]
-        public static void Destroy()
-        {
-            map.Clear();
-        }
-
-
-        protected override IHazelcastInstance NewHazelcastClient()
-        {
-            var config = new ClientConfig();
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
-            config.GetSerializationConfig().SetPortableVersion(99);
-            config.GetSerializationConfig().AddPortableFactory(1, new MyPortableFactory());
-            return HazelcastClient.NewHazelcastClient(config);
-        }
+        //[TearDown]
+        //public static void Destroy()
+        //{
+        //    map.Clear();
+        //}
 
 
-        private void TestDataTypes(ISerializationService serviceIn, ISerializationService serviceOut)
-        {
-            int d1 = Int32.MaxValue;
-            long d2 = Int64.MaxValue;
-            float d3 = Single.MaxValue;
-            double d4 = Double.MaxValue;
-            char d5 = 'a';
-            string d6 = "abc";
-            byte d7 = Byte.MaxValue;
-            short d8 = Int16.MaxValue;
-            bool d9 = true;
+        //protected override IHazelcastInstance NewHazelcastClient()
+        //{
+        //    var config = new ClientConfig();
+        //    config.GetNetworkConfig().AddAddress("127.0.0.1");
+        //    config.GetSerializationConfig().SetPortableVersion(99);
+        //    config.GetSerializationConfig().AddPortableFactory(1, new MyPortableFactory());
+        //    return HazelcastClient.NewHazelcastClient(config);
+        //}
 
-            int[] d11 = new[] { Int32.MaxValue };
-            long[] d21 = new[] { Int64.MaxValue };
-            float[] d31 = new[] { Single.MaxValue };
-            double[] d41 = new[] { Double.MaxValue };
-            char[] d51 = new[] { 'a' };
-            byte[] d71 = new[] { Byte.MaxValue };
-            short[] d81 = new[] { Int16.MaxValue };
 
-            Assert.AreEqual(d11, serviceOut.ToObject<int[]>(serviceIn.ToData(d11)));
-            Assert.AreEqual(d21, serviceOut.ToObject<long[]>(serviceIn.ToData(d21)));
-            Assert.AreEqual(d31, serviceOut.ToObject<float[]>(serviceIn.ToData(d31)));
-            Assert.AreEqual(d41, serviceOut.ToObject<double[]>(serviceIn.ToData(d41)));
-            Assert.AreEqual(d51, serviceOut.ToObject<char[]>(serviceIn.ToData(d51)));
-            Assert.AreEqual(d71, serviceOut.ToObject<byte[]>(serviceIn.ToData(d71)));
-            Assert.AreEqual(d81, serviceOut.ToObject<short[]>(serviceIn.ToData(d81)));
+        //private void TestDataTypes(ISerializationService serviceIn, ISerializationService serviceOut)
+        //{
+        //    int d1 = Int32.MaxValue;
+        //    long d2 = Int64.MaxValue;
+        //    float d3 = Single.MaxValue;
+        //    double d4 = Double.MaxValue;
+        //    char d5 = 'a';
+        //    string d6 = "abc";
+        //    byte d7 = Byte.MaxValue;
+        //    short d8 = Int16.MaxValue;
+        //    bool d9 = true;
 
-            Assert.AreEqual(d1, serviceOut.ToObject<int>(serviceIn.ToData(d1)));
-            Assert.AreEqual(d2, serviceOut.ToObject<long>(serviceIn.ToData(d2)));
-            Assert.AreEqual(d3, serviceOut.ToObject<float>(serviceIn.ToData(d3)));
-            Assert.AreEqual(d4, serviceOut.ToObject<double>(serviceIn.ToData(d4)));
-            Assert.AreEqual(d5, serviceOut.ToObject<char>(serviceIn.ToData(d5)));
-            Assert.AreEqual(d6, serviceOut.ToObject<string>(serviceIn.ToData(d6)));
-            Assert.AreEqual(d7, serviceOut.ToObject<byte>(serviceIn.ToData(d7)));
-            Assert.AreEqual(d8, serviceOut.ToObject<short>(serviceIn.ToData(d8)));
-            Assert.AreEqual(d9, serviceOut.ToObject<bool>(serviceIn.ToData(d9)));
+        //    int[] d11 = new[] { Int32.MaxValue };
+        //    long[] d21 = new[] { Int64.MaxValue };
+        //    float[] d31 = new[] { Single.MaxValue };
+        //    double[] d41 = new[] { Double.MaxValue };
+        //    char[] d51 = new[] { 'a' };
+        //    byte[] d71 = new[] { Byte.MaxValue };
+        //    short[] d81 = new[] { Int16.MaxValue };
 
-        }
+        //    Assert.AreEqual(d11, serviceOut.ToObject<int[]>(serviceIn.ToData(d11)));
+        //    Assert.AreEqual(d21, serviceOut.ToObject<long[]>(serviceIn.ToData(d21)));
+        //    Assert.AreEqual(d31, serviceOut.ToObject<float[]>(serviceIn.ToData(d31)));
+        //    Assert.AreEqual(d41, serviceOut.ToObject<double[]>(serviceIn.ToData(d41)));
+        //    Assert.AreEqual(d51, serviceOut.ToObject<char[]>(serviceIn.ToData(d51)));
+        //    Assert.AreEqual(d71, serviceOut.ToObject<byte[]>(serviceIn.ToData(d71)));
+        //    Assert.AreEqual(d81, serviceOut.ToObject<short[]>(serviceIn.ToData(d81)));
 
-        [Test]
-        public virtual void TestDataTypesSerialization()
-        {
-            ISerializationService service = ((HazelcastClientProxy) client).GetSerializationService();
+        //    Assert.AreEqual(d1, serviceOut.ToObject<int>(serviceIn.ToData(d1)));
+        //    Assert.AreEqual(d2, serviceOut.ToObject<long>(serviceIn.ToData(d2)));
+        //    Assert.AreEqual(d3, serviceOut.ToObject<float>(serviceIn.ToData(d3)));
+        //    Assert.AreEqual(d4, serviceOut.ToObject<double>(serviceIn.ToData(d4)));
+        //    Assert.AreEqual(d5, serviceOut.ToObject<char>(serviceIn.ToData(d5)));
+        //    Assert.AreEqual(d6, serviceOut.ToObject<string>(serviceIn.ToData(d6)));
+        //    Assert.AreEqual(d7, serviceOut.ToObject<byte>(serviceIn.ToData(d7)));
+        //    Assert.AreEqual(d8, serviceOut.ToObject<short>(serviceIn.ToData(d8)));
+        //    Assert.AreEqual(d9, serviceOut.ToObject<bool>(serviceIn.ToData(d9)));
 
-            TestDataTypes(service, service);
-        }
+        //}
 
-        [Test]
-        public virtual void TestPortableVersion()
-        {
-            var cc = new ClientConfig();
-            cc.GetNetworkConfig().AddAddress("127.0.0.1");
-            cc.GetSerializationConfig().SetPortableVersion(10);
-            IHazelcastInstance instance = HazelcastClient.NewHazelcastClient(cc);
-            ISerializationService serviceV10 = ((HazelcastClientProxy)instance).GetSerializationService();
+        //[Test]
+        //public virtual void TestDataTypesSerialization()
+        //{
+        //    ISerializationService service = ((HazelcastClientProxy) client).GetSerializationService();
 
-            ISerializationService service = ((HazelcastClientProxy)client).GetSerializationService();
+        //    TestDataTypes(service, service);
+        //}
 
-            TestDataTypes(service, serviceV10);
-            TestDataTypes(serviceV10, service);
+        //[Test]
+        //public virtual void TestPortableVersion()
+        //{
+        //    var cc = new ClientConfig();
+        //    cc.GetNetworkConfig().AddAddress("127.0.0.1");
+        //    cc.GetSerializationConfig().SetPortableVersion(10);
+        //    IHazelcastInstance instance = HazelcastClient.NewHazelcastClient(cc);
+        //    ISerializationService serviceV10 = ((HazelcastClientProxy)instance).GetSerializationService();
 
-            instance.Shutdown();
-        }
+        //    ISerializationService service = ((HazelcastClientProxy)client).GetSerializationService();
+
+        //    TestDataTypes(service, serviceV10);
+        //    TestDataTypes(serviceV10, service);
+
+        //    instance.Shutdown();
+        //}
 
         [Test]
         public virtual void TestIPortable()
@@ -143,6 +144,23 @@ namespace Hazelcast.Client.Test
 
             Assert.AreEqual(foo2, enumerator.Current.Value);
         }
+
+        [Test]
+        public virtual void TestTypeName()
+        {
+            var foo1 = new Foo("FOO1");
+
+            Console.WriteLine(foo1.GetType().Name);
+            string fullName = foo1.GetType().FullName;
+            Console.WriteLine(fullName);
+            
+            ObjectHandle instanceFrom = Activator.CreateInstance(null, fullName);
+
+            object unwrap = instanceFrom.Unwrap();
+
+            Console.WriteLine(unwrap.GetType().FullName);
+        }
+
 
         ///// <exception cref="System.Exception"></exception>
         //[Test]
@@ -204,6 +222,8 @@ namespace Hazelcast.Client.Test
     {
         public static int ID = 5;
         private String _foo;
+
+        public Foo() { }
 
         public Foo(string foo=null)
         {

@@ -49,7 +49,7 @@ namespace Hazelcast.Test
         public static int THREAD_COUNT = 400;
         public static int ENTRY_COUNT = 10*1000;
         public static int VALUE_SIZE = 1000;
-        public static int STATS_SECONDS = 4;
+        public static int STATS_SECONDS = 10;
         public static int GET_PERCENTAGE = 40;
         public static int PUT_PERCENTAGE = 40;
 
@@ -59,13 +59,13 @@ namespace Hazelcast.Test
 
         
 
-        static void Main(string[] args)
+        static void Main11(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
             var clientConfig = new ClientConfig();
             clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
-            clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
+            //clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
             hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
 
             Console.WriteLine("Client Ready to go");
