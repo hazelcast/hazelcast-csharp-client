@@ -95,7 +95,7 @@ namespace Hazelcast.IO.Serialization
             //SafeRegister<Externalizable>( new DefaultSerializers.Externalizer(enableCompression));
             //SafeRegister<ISerializable>(new DefaultSerializers.ObjectSerializer(enableSharedObject, enableCompression));
             //SafeRegister<Type>( new DefaultSerializers.ClassSerializer());
-            SafeRegister<Enum>(new EnumSerializer());
+            //SafeRegister<Enum>(new EnumSerializer());
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
         }
 

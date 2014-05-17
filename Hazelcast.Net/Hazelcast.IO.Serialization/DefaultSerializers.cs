@@ -1,5 +1,9 @@
 using System;
+using System.ComponentModel;
 using System.Numerics;
+using System.Runtime.InteropServices;
+using System.Runtime.Remoting;
+using System.Runtime.Serialization.Formatters.Binary;
 using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization.DefaultSerializers
@@ -123,38 +127,40 @@ namespace Hazelcast.IO.Serialization.DefaultSerializers
         }
     }
 
-    internal sealed class EnumSerializer : SingletonSerializer<Enum>
-    {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.DefaultTypeEnum;
-        }
+    //internal sealed class EnumSerializer : SingletonSerializer<Enum>
+    //{
+    //    public override int GetTypeId()
+    //    {
+    //        return SerializationConstants.DefaultTypeEnum;
+    //    }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void Write(IObjectDataOutput output, Enum obj)
-        {
-            output.WriteUTF(obj.GetType().FullName);
-            //TODO BURASI DOGRU MU??????
-            output.WriteUTF(Enum.GetName(obj.GetType(), obj));
-        }
+    //    /// <exception cref="System.IO.IOException"></exception>
+    //    public override void Write(IObjectDataOutput output, Enum obj)
+    //    {
+    //        output.WriteUTF(obj.GetType().FullName);
+    //        //TODO BURASI DOGRU MU??????
+    //        output.WriteUTF(Enum.GetName(obj.GetType(), obj));
+    //    }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override Enum Read(IObjectDataInput input)
-        {
-            //            String clazzName = in.readUTF();
-            //            Class clazz;
-            //            try {
-            //                clazz = ClassLoaderUtil.loadClass(in.getClassLoader(), clazzName);
-            //            } catch (ClassNotFoundException e) {
-            //                throw new HazelcastSerializationException("Failed to deserialize enum: " + clazzName, e);
-            //            }
-            //
-            //            String name = in.readUTF();
-            //            return Enum.valueOf(clazz, name);
-            //TODO CLASSLOAD
-            return null;
-        }
-    }
+    //    /// <exception cref="System.IO.IOException"></exception>
+    //    public override Enum Read(IObjectDataInput input)
+    //    {
+    //        string clazzName = input.ReadUTF();
+
+    //        //            String clazzName = in.readUTF();
+    //        //            Class clazz;
+    //        //            try {
+    //        //                clazz = ClassLoaderUtil.loadClass(in.getClassLoader(), clazzName);
+    //        //            } catch (ClassNotFoundException e) {
+    //        //                throw new HazelcastSerializationException("Failed to deserialize enum: " + clazzName, e);
+    //        //            }
+    //        //
+    //        //            String name = in.readUTF();
+    //        //            return Enum.valueOf(clazz, name);
+    //        //TODO CLASSLOAD
+    //        return null;
+    //    }
+    //}
 
     //internal sealed class Externalizer : SingletonSerializer<Externalizable>
     //{
@@ -278,6 +284,44 @@ namespace Hazelcast.IO.Serialization.DefaultSerializers
     //        }
     //        // Force flush if not yet written due to internal behavior if pos < 1024
     //        objectOutputStream.Flush();
+    //    }
+    //}
+
+    //internal sealed class ObjectSerializer : SingletonSerializer<object>
+    //{
+    //    public override int GetTypeId()
+    //    {
+    //        return SerializationConstants.DefaultTypeObject;
+    //    }
+
+    //    public override object Read(IObjectDataInput input)
+    //    {
+           
+    //        var typeFullName = input.ReadUTF();
+    //        Type type = Type.GetType(typeFullName);
+
+
+    //        var bytes = new byte[size];
+            
+    //        input.ReadFully(bytes);
+
+
+    //        var ptr = Marshal.AllocHGlobal(size);
+    //        Marshal.Copy(bytes, 0, ptr, size);
+    //        var your_object = Marshal.PtrToStructure(ptr, type);
+    //        Marshal.FreeHGlobal(ptr);
+
+    //    }
+
+    //    public override void Write(IObjectDataOutput output, object obj)
+    //    {
+    //        var typeFullName = obj.GetType().FullName;
+    //        output.WriteUTF(typeFullName);
+
+
+
+    //        output.Write(bytes);
+
     //    }
     //}
 

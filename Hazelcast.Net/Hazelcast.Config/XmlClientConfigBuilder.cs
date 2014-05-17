@@ -71,10 +71,10 @@ namespace Hazelcast.Config
         
         public static ClientConfig Build(string configFile = null)
         {
-            return new XmlClientConfigBuilder(configFile)._Build();
+            return new XmlClientConfigBuilder(configFile).Init();
         }
 
-        protected ClientConfig _Build()
+        protected ClientConfig Init()
         {
             this.clientConfig = new ClientConfig();
             try

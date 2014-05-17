@@ -529,7 +529,7 @@ namespace Hazelcast.Client.Test
             map.PutTransient("key1", "value1", 5, TimeUnit.SECONDS);
             Assert.AreEqual("value1", map.Get("key1"));
 
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            Thread.Sleep(TimeSpan.FromSeconds(6));
 
             Assert.AreEqual(0,map.Size());
             Assert.AreNotEqual("value1", map.Get("key1"));

@@ -93,7 +93,9 @@
     <Compile Include="Hazelcast.Client.Test\ClientTxnSetTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTxnTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientXmlTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\DataSerializableType.cs" />
     <Compile Include="Hazelcast.Client.Test\GenericEvent.cs" />
+    <Compile Include="Hazelcast.Client.Test\SerializationTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueueTest.cs" />

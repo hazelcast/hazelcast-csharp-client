@@ -574,7 +574,7 @@
       <Output TaskParameter="Day" PropertyName="Day" />
       <Output TaskParameter="Year" PropertyName="Year" />
     </Time>
-    <AssemblyInfo CodeLanguage="CS" OutputFile="Properties\AssemblyInfo.cs" GenerateClass="false" AssemblyTitle="Hazelcast .Net Client" AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" AssemblyCompany="Hazelcast Inc." AssemblyProduct="Hazelcast Enterprise Edition" AssemblyCopyright="Copyright (c) 2008-2014, Hazelcast, Inc" AssemblyConfiguration="Commit $(CommitHash)" ComVisible="false" CLSCompliant="false" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" InternalsVisibleTo="Hazelcast.Test" />
+    <AssemblyInfo CodeLanguage="CS" OutputFile="Properties\AssemblyInfo.cs" GenerateClass="false" AssemblyTitle="Hazelcast .Net Client" AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" AssemblyCompany="Hazelcast Inc." AssemblyProduct="Hazelcast Enterprise Edition" AssemblyCopyright="Copyright (c) 2008-2014, Hazelcast, Inc" AssemblyConfiguration="Commit $(CommitHash)" ComVisible="false" CLSCompliant="true" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" InternalsVisibleTo="Hazelcast.Test" />
   </Target>
   <Target Name="Merge" DependsOnTargets="Build">
     <!-- Merge together files -->

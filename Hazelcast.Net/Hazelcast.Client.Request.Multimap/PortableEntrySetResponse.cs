@@ -32,7 +32,18 @@ namespace Hazelcast.Client.Request.Multimap
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WritePortable(IPortableWriter writer)
         {
-            throw new NotSupportedException();
+            //throw new NotSupportedException();
+
+                    
+            writer.WriteInt("s", entrySet.Count);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            foreach (KeyValuePair<Data, Data> entry in entrySet)
+            {
+                Data key = entry.Key;
+                Data value = entry.Value;
+                key.WriteData(output);
+                value.WriteData(output);
+            }
 
         }
 
