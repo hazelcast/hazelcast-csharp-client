@@ -39,6 +39,7 @@ namespace Hazelcast.IO.Serialization
             output.WriteByte((byte) ((int) type));
             output.WriteInt(factoryId);
             output.WriteInt(classId);
+            output.WriteInt(-1);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -49,6 +50,7 @@ namespace Hazelcast.IO.Serialization
             type = (FieldType) input.ReadByte();
             factoryId = input.ReadInt();
             classId = input.ReadInt();
+            input.ReadInt();
         }
 
         public string GetJavaClassName()
