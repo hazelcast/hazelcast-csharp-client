@@ -249,6 +249,7 @@ namespace Hazelcast.Client.Test
 		public virtual void TestPutIfAbsentTtl()
 		{
 			Assert.IsNull(map.PutIfAbsent("key1", "value1", 1, TimeUnit.SECONDS));
+			Thread.Sleep(2000);
 			Assert.AreEqual("value1", map.PutIfAbsent("key1", "value3", 1, TimeUnit.SECONDS));
 			Thread.Sleep(2000);
 			Assert.IsNull(map.PutIfAbsent("key1", "value3", 1, TimeUnit.SECONDS));
