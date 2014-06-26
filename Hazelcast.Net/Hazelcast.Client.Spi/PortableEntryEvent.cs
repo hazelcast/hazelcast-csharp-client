@@ -14,6 +14,8 @@ namespace Hazelcast.Client.Spi
         private Data oldValue;
 
         private string uuid;
+        private int numberOfAffectedEntries = 1;
+
         private Data value;
 
         public PortableEntryEvent()
@@ -44,6 +46,7 @@ namespace Hazelcast.Client.Spi
         {
             writer.WriteInt("e", (int) eventType);
             writer.WriteUTF("u", uuid);
+            writer.WriteInt("n", numberOfAffectedEntries);
             IObjectDataOutput output = writer.GetRawDataOutput();
             key.WriteData(output);
             IOUtil.WriteNullableData(output, value);
@@ -55,9 +58,9 @@ namespace Hazelcast.Client.Spi
         {
             eventType = (EntryEventType)reader.ReadInt("e");
             uuid = reader.ReadUTF("u");
+            numberOfAffectedEntries = reader.ReadInt("n");
             IObjectDataInput input = reader.GetRawDataInput();
-            key = new Data();
-            key.ReadData(input);
+            key = IOUtil.ReadNullableData(input);
             value = IOUtil.ReadNullableData(input);
             oldValue = IOUtil.ReadNullableData(input);
         }
@@ -85,6 +88,10 @@ namespace Hazelcast.Client.Spi
         public virtual string GetUuid()
         {
             return uuid;
+        }
+        public int GetNumberOfAffectedEntries()
+        {
+            return numberOfAffectedEntries;
         }
     }
 }
