@@ -228,7 +228,7 @@ namespace Hazelcast.IO.Serialization
                     //call by reflaction
                     MethodInfo method = typeof (ISerializationService).GetMethod("Register");
                     MethodInfo generic = method.MakeGenericMethod(typeClass);
-                    generic.Invoke(null, new object[] {serializer});
+                    generic.Invoke(ss, new object[] {serializer});
                     //mimics: ss.Register<typeClass>(serializer);"
                     //
                 }
