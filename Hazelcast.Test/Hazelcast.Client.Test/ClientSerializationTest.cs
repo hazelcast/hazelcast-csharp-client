@@ -109,7 +109,7 @@ namespace Hazelcast.Client.Test
         //    instance.Shutdown();
         //}
 
-        [Test]
+        //[Test]
         public virtual void TestIPortable()
         {
             var foo1 = new Foo("FOO1");
@@ -125,7 +125,7 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(foo3,map.Get("k3"));
         }
 
-        [Test]
+        //[Test]
         public virtual void TestIPortablePredicate()
         {
             var foo1 = new Foo("FOO1");
@@ -145,7 +145,7 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(foo2, enumerator.Current.Value);
         }
 
-        [Test]
+        //[Test]
         public virtual void TestTypeName()
         {
             var foo1 = new Foo("FOO1");

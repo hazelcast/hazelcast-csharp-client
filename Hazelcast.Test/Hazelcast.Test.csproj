@@ -83,6 +83,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientNearCacheTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientQueueTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSemaphoreTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientCustomSerializationTest .cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSetTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTopicTest.cs" />
