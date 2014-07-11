@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text;
 using Hazelcast.Net.Ext;
 
@@ -19,12 +20,17 @@ namespace Hazelcast.IO
             }
             int length = str.Length;
             output.WriteInt(length);
-            int chunkSize = (length/StringChunkSize) + 1;
-            for (int i = 0; i < chunkSize; i++)
+            output.WriteInt(length);
+            if (length > 0)
             {
-                int beginIndex = Math.Max(0, i*StringChunkSize - 1);
-                WriteShortUTF(output, str.Substring(beginIndex, length));
+                int chunkSize = (length/StringChunkSize) + 1;
+                for (int i = 0; i < chunkSize; i++)
+                {
+                    int beginIndex = Math.Max(0, i * StringChunkSize - 1);
+                    WriteShortUTF(output, str.Substring(beginIndex, length));
+                }                
             }
+
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -55,7 +61,7 @@ namespace Hazelcast.IO
             }
             if (utfLength > 65535)
             {
-                throw new UriFormatException("encoded string too long:" + utfLength + " bytes");
+                throw new InvalidDataException("encoded string too long:" + utfLength + " bytes");
             }
             output.WriteShort(utfLength);
             int i_1;
@@ -103,6 +109,11 @@ namespace Hazelcast.IO
                 return null;
             }
             int length = input.ReadInt();
+            int lengthCheck = input.ReadInt();
+            if (length != lengthCheck)
+            {
+                throw new InvalidDataException("Length check failed, maybe broken bytestream or wrong stream position");
+            }
             var result = new StringBuilder(length);
             int chunkSize = length/StringChunkSize + 1;
             while (chunkSize > 0)
