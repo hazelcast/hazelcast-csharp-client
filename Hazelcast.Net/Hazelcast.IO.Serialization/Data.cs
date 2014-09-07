@@ -41,7 +41,7 @@ namespace Hazelcast.IO.Serialization
             {
                 int factoryId = input.ReadInt();
                 int version = input.ReadInt();
-                ISerializationContext context = ((ISerializationContextAware) input).GetSerializationContext();
+                IPortableContext context = ((IPortableContextAware) input).GetSerializationContext();
                 classDefinition = context.Lookup(factoryId, classId, version);
                 int classDefSize = input.ReadInt();
                 if (classDefinition != null)
@@ -287,7 +287,7 @@ namespace Hazelcast.IO.Serialization
         /// </summary>
         /// <param name="context"></param>
         /// <exception cref="HazelcastSerializationException"></exception>
-        public void PostConstruct(ISerializationContext context)
+        public void PostConstruct(IPortableContext context)
         {
             if (classDefinition != null && classDefinition is BinaryClassDefinitionProxy) {
             try {

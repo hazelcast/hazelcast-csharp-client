@@ -5,7 +5,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ObjectDataInputStream : InputStream, IObjectDataInput, IDisposable, ISerializationContextAware
+    internal class ObjectDataInputStream : InputStream, IObjectDataInput, IDisposable, IPortableContextAware
     {
         private readonly BinaryReader _binaryReader;
 
@@ -320,9 +320,9 @@ namespace Hazelcast.IO.Serialization
             return isBigEndian;
         }
 
-        public virtual ISerializationContext GetSerializationContext()
+        public virtual IPortableContext GetSerializationContext()
         {
-            return serializationService.GetSerializationContext();
+            return serializationService.GetPortableContext();
         }
     }
 }

@@ -5,7 +5,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ByteArrayObjectDataOutput : OutputStream, IBufferObjectDataOutput, ISerializationContextAware
+    internal class ByteArrayObjectDataOutput : OutputStream, IBufferObjectDataOutput, IPortableContextAware
     {
         internal readonly int initialSize;
         internal readonly ISerializationService service;
@@ -336,9 +336,9 @@ namespace Hazelcast.IO.Serialization
             Close();
         }
 
-        public virtual ISerializationContext GetSerializationContext()
+        public virtual IPortableContext GetSerializationContext()
         {
-            return service.GetSerializationContext();
+            return service.GetPortableContext();
         }
 
         public void Write(int b)

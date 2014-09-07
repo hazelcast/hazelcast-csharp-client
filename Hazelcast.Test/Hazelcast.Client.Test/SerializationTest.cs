@@ -13,7 +13,7 @@ namespace Hazelcast.Client.Test
     class SerializationTest
     {
 
-        static void Main(string[] args)
+        static void Mainzz(string[] args)
         {
             var clientConfig = new ClientConfig();
             clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");

@@ -114,6 +114,10 @@ namespace Hazelcast.Net.Ext
         {
             return ReadInt();
         }
+        public short GetShort()
+        {
+            return ReadShort();
+        }
 
         public bool HasArray()
         {
@@ -178,6 +182,10 @@ namespace Hazelcast.Net.Ext
         {
             WriteInt(i);
         }
+        public void PutShort(short i)
+        {
+            WriteShort(i);
+        }
 
         public int Remaining()
         {
@@ -219,6 +227,20 @@ namespace Hazelcast.Net.Ext
             CheckPutLimit(4);
             buffer[index++] = unchecked((byte)(((int)(((uint)v) >> 24)) & unchecked(0xFF)));
             buffer[index++] = unchecked((byte)(((int)(((uint)v) >> 16)) & unchecked(0xFF)));
+            buffer[index++] = unchecked((byte)(((int)(((uint)v) >> 8)) & unchecked(0xFF)));
+            buffer[index++] = unchecked((byte)((v) & unchecked(0xFF)));
+        }
+        protected virtual short ReadShort()
+        {
+            CheckGetLimit(2);
+            short ch3 = buffer[index++];
+            short ch4 = buffer[index++];
+            return (short) ((ch3 << 8) + (ch4 << 0));
+        }
+
+        protected virtual void WriteShort(short v)
+        {
+            CheckPutLimit(2);
             buffer[index++] = unchecked((byte)(((int)(((uint)v) >> 8)) & unchecked(0xFF)));
             buffer[index++] = unchecked((byte)((v) & unchecked(0xFF)));
         }

@@ -7,11 +7,11 @@ namespace Hazelcast.IO.Serialization
 {
     internal sealed class PortableSerializer : IStreamSerializer<IPortable>
     {
-        private readonly ISerializationContext context;
+        private readonly IPortableContext context;
 
         private readonly IDictionary<int, IPortableFactory> factories = new Dictionary<int, IPortableFactory>();
 
-        internal PortableSerializer(ISerializationContext context, IDictionary<int, IPortableFactory> portableFactories)
+        internal PortableSerializer(IPortableContext context, IDictionary<int, IPortableFactory> portableFactories)
         {
             this.context = context;
             factories = factories.Union(portableFactories).ToDictionary(x => x.Key, x => x.Value);

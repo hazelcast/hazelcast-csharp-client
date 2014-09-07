@@ -5,7 +5,7 @@ using System.Text;
 namespace Hazelcast.IO.Serialization
 {
     internal class ByteArrayObjectDataInput : PortableContextAwareInputStream, IBufferObjectDataInput,
-        ISerializationContextAware
+        IPortableContextAware
     {
         internal readonly ISerializationService service;
         internal readonly int size;
@@ -550,9 +550,9 @@ namespace Hazelcast.IO.Serialization
             Close();
         }
 
-        public virtual ISerializationContext GetSerializationContext()
+        public virtual IPortableContext GetSerializationContext()
         {
-            return service.GetSerializationContext();
+            return service.GetPortableContext();
         }
 
         /// <exception cref="System.IO.IOException"></exception>

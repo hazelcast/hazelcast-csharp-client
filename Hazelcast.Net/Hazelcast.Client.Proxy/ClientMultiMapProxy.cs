@@ -85,7 +85,7 @@ namespace Hazelcast.Client.Proxy
         public virtual bool ContainsKey(K key)
         {
             Data keyData = GetSerializationService().ToData(key);
-            var request = new ContainsEntryRequest(name, keyData, null);
+            var request = new KeyBasedContainsRequest(name, keyData, null);
             var result = Invoke<bool>(request, keyData);
             return result;
         }
@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Proxy
         public virtual bool ContainsValue(object value)
         {
             Data valueData = GetSerializationService().ToData(value);
-            var request = new ContainsEntryRequest(name, null, valueData);
+            var request = new ContainsEntryRequest(name, valueData);
             var result = Invoke<bool>(request);
             return result;
         }
@@ -102,7 +102,7 @@ namespace Hazelcast.Client.Proxy
         {
             Data keyData = GetSerializationService().ToData(key);
             Data valueData = GetSerializationService().ToData(value);
-            var request = new ContainsEntryRequest(name, keyData, valueData);
+            var request = new KeyBasedContainsRequest(name, keyData, valueData);
             var result = Invoke<bool>(request, keyData);
             return result;
         }

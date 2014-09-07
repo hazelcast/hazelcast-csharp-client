@@ -6,22 +6,22 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal sealed class SerializationContext : ISerializationContext
+    internal sealed class PortableContext : IPortableContext
     {
-        internal readonly IDictionary<int, PortableContext> portableContextMap;
+        internal readonly IDictionary<int, ClassDefinitionContext> portableContextMap;
 
         internal readonly SerializationService serializationService;
         internal readonly int version;
 
-        internal SerializationContext(SerializationService serializationService,
+        internal PortableContext(SerializationService serializationService,
             ICollection<int> portableFactories, int version)
         {
             this.serializationService = serializationService;
             this.version = version;
-            IDictionary<int, PortableContext> portableMap = new Dictionary<int, PortableContext>();
+            IDictionary<int, ClassDefinitionContext> portableMap = new Dictionary<int, ClassDefinitionContext>();
             foreach (int factoryId in portableFactories)
             {
-                portableMap.Add(factoryId, new PortableContext(this));
+                portableMap.Add(factoryId, new ClassDefinitionContext(this));
             }
             portableContextMap = portableMap;
         }
@@ -82,9 +82,9 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        private PortableContext GetPortableContext(int factoryId)
+        private ClassDefinitionContext GetPortableContext(int factoryId)
         {
-            PortableContext ctx = null;
+            ClassDefinitionContext ctx = null;
             portableContextMap.TryGetValue(factoryId, out ctx);
             if (ctx == null)
             {
@@ -186,14 +186,14 @@ namespace Hazelcast.IO.Serialization
             return (lowerBits) ? (int) value : (int) (value >> 32);
         }
 
-        internal class PortableContext
+        internal class ClassDefinitionContext
         {
-            private readonly SerializationContext _enclosing;
+            private readonly PortableContext _enclosing;
 
             internal readonly ConcurrentDictionary<long, ClassDefinition> versionedDefinitions =
                 new ConcurrentDictionary<long, ClassDefinition>();
 
-            internal PortableContext(SerializationContext _enclosing)
+            internal ClassDefinitionContext(PortableContext _enclosing)
             {
                 this._enclosing = _enclosing;
             }

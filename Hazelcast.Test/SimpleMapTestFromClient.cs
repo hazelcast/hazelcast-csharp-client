@@ -46,7 +46,7 @@ namespace Hazelcast.Test
 
     internal class SimpleMapTestFromClient
     {
-        public static int THREAD_COUNT = 400;
+        public static int THREAD_COUNT = 100;
         public static int ENTRY_COUNT = 10*1000;
         public static int VALUE_SIZE = 1000;
         public static int STATS_SECONDS = 10;
@@ -57,9 +57,7 @@ namespace Hazelcast.Test
 
         private static Stats stats;
 
-        
-
-        static void Main11(string[] args)
+        static void Main(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 

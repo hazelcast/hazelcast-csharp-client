@@ -5,15 +5,15 @@ namespace Hazelcast.IO.Serialization
     internal sealed class ClassDefinitionWriter : IPortableWriter
     {
         private readonly ClassDefinitionBuilder builder;
-        private readonly ISerializationContext context;
+        private readonly IPortableContext context;
 
-        internal ClassDefinitionWriter(ISerializationContext context, int factoryId, int classId)
+        internal ClassDefinitionWriter(IPortableContext context, int factoryId, int classId)
         {
             this.context = context;
             builder = new ClassDefinitionBuilder(factoryId, classId);
         }
 
-        internal ClassDefinitionWriter(ISerializationContext context, ClassDefinitionBuilder builder)
+        internal ClassDefinitionWriter(IPortableContext context, ClassDefinitionBuilder builder)
         {
             this.context = context;
             this.builder = builder;

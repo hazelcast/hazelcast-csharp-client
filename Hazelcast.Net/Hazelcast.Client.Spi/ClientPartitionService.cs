@@ -144,6 +144,10 @@ namespace Hazelcast.Client.Spi
             foreach (IMember member in memberList)
             {
                 Address target = member.GetAddress();
+                if (target == null)
+                {
+                    logger.Severe("Address cannot be null");
+                }
                 PartitionsResponse response = GetPartitionsFrom((ClientClusterService) clusterService, target);
                 if (response != null)
                 {
