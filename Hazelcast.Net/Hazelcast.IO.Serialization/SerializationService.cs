@@ -38,7 +38,7 @@ namespace Hazelcast.IO.Serialization
 
         private readonly ISerializerAdapter portableSerializerAdapter;
 
-        private readonly SerializationContext serializationContext;
+        private readonly PortableContext _portableContext;
 
         private readonly ConcurrentDictionary<Type, ISerializerAdapter> typeMap =
             new ConcurrentDictionary<Type, ISerializerAdapter>();
@@ -58,14 +58,14 @@ namespace Hazelcast.IO.Serialization
             globalPartitioningStrategy = partitionStrategy;
             outputBufferSize = initialOutputBufferSize;
             var loader = new PortableHookLoader(portableFactories);
-            serializationContext = new SerializationContext(this, loader.GetFactories().Keys, version);
+            _portableContext = new PortableContext(this, loader.GetFactories().Keys, version);
             foreach (IClassDefinition cd in loader.GetDefinitions())
             {
-                serializationContext.RegisterClassDefinition(cd);
+                _portableContext.RegisterClassDefinition(cd);
             }
             dataSerializerAdapter = new StreamSerializerAdapter<IDataSerializable>(this,
                 new DataSerializer(dataSerializableFactories));
-            portableSerializer = new PortableSerializer(serializationContext, loader.GetFactories());
+            portableSerializer = new PortableSerializer(_portableContext, loader.GetFactories());
             portableSerializerAdapter = new StreamSerializerAdapter<IPortable>(this, portableSerializer);
 
             RegisterConstant<IDataSerializable>(dataSerializerAdapter);
@@ -130,7 +130,7 @@ namespace Hazelcast.IO.Serialization
                 if (obj is IPortable)
                 {
                     var portable = (IPortable) obj;
-                    data.classDefinition = serializationContext.Lookup(portable.GetFactoryId(), portable.GetClassId());
+                    data.classDefinition = _portableContext.Lookup(portable.GetFactoryId(), portable.GetClassId());
                 }
                 if (strategy == null)
                 {
@@ -184,7 +184,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 if (typeId == SerializationConstants.ConstantTypePortable)
                 {
-                    serializationContext.RegisterClassDefinition(data.classDefinition);
+                    _portableContext.RegisterClassDefinition(data.classDefinition);
                 }
                 object obj = serializer.Read(data);
                 if (managedContext != null)
@@ -223,7 +223,7 @@ namespace Hazelcast.IO.Serialization
                 if (obj is IPortable)
                 {
                     var portable = (IPortable) obj;
-                    IClassDefinition classDefinition = serializationContext.LookupOrRegisterClassDefinition(portable);
+                    IClassDefinition classDefinition = _portableContext.LookupOrRegisterClassDefinition(portable);
                     classDefinition.WriteData(output);
                 }
                 serializer.Write(output, obj);
@@ -258,7 +258,7 @@ namespace Hazelcast.IO.Serialization
                 {
                     IClassDefinition classDefinition = new ClassDefinition();
                     classDefinition.ReadData(input);
-                    classDefinition = serializationContext.RegisterClassDefinition(classDefinition);
+                    classDefinition = _portableContext.RegisterClassDefinition(classDefinition);
                     var ctxIn = (PortableContextAwareInputStream) input;
                     ctxIn.SetClassDefinition(classDefinition);
                 }
@@ -348,9 +348,9 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public ISerializationContext GetSerializationContext()
+        public IPortableContext GetPortableContext()
         {
-            return serializationContext;
+            return _portableContext;
         }
 
         public IPortableReader CreatePortableReader(Data data)
@@ -393,7 +393,7 @@ namespace Hazelcast.IO.Serialization
                     {
                         ((ClassDefinition) cd).AddClassDef(nestedCd);
                         RegisterClassDefinition(nestedCd, classDefMap, checkClassDefErrors);
-                        serializationContext.RegisterClassDefinition(nestedCd);
+                        _portableContext.RegisterClassDefinition(nestedCd);
                     }
                     else
                     {
@@ -405,7 +405,7 @@ namespace Hazelcast.IO.Serialization
                     }
                 }
             }
-            serializationContext.RegisterClassDefinition(cd);
+            _portableContext.RegisterClassDefinition(cd);
         }
 
         private void HandleException(Exception e)

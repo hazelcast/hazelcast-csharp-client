@@ -40,7 +40,8 @@ namespace Hazelcast.Client.Spi
             Address owner = partitionService.GetPartitionOwner(partitionId);
             if (owner != null)
             {
-                return InvokeOnTarget<T>(request, owner);
+                var remotingService = GetRemotingService();
+                return remotingService.Send<T>(request, owner, partitionId);
             }
             return InvokeOnRandomTarget<T>(request);
         }

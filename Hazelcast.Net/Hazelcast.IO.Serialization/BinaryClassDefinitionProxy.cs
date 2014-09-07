@@ -22,7 +22,7 @@ namespace Hazelcast.IO.Serialization
         /// <param name="context"></param>
         /// <returns></returns>
         /// <exception cref="IOException"></exception>
-        public IClassDefinition ToReal(ISerializationContext context) 
+        public IClassDefinition ToReal(IPortableContext context) 
         {
             IClassDefinition cd = context.Lookup(factoryId, classId, version);
             return cd ?? context.CreateClassDefinition(factoryId, GetBinary());

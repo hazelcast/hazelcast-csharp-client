@@ -11,7 +11,6 @@ namespace Hazelcast.Client.Request.Base
     internal class ClientResponse : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         private int _callId;
-        private bool _event;
         private Data _response;
 
         private GenericError _error;
@@ -38,7 +37,6 @@ namespace Hazelcast.Client.Request.Base
         public void ReadData(IObjectDataInput input)
         {
             _callId = input.ReadInt();
-            _event = input.ReadBoolean();
             var isError = input.ReadBoolean();
             if (isError)
             {
@@ -60,11 +58,6 @@ namespace Hazelcast.Client.Request.Base
         public Data Response
         {
             get { return _response; }
-        }
-
-        public bool IsEvent
-        {
-            get { return _event; }
         }
 
         public int CallId

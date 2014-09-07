@@ -33,8 +33,9 @@ namespace Hazelcast.Serialization.Hook
         public const int TxnMmSize = 23;
         public const int RemoveEntryListener = 24;
         public const int TxnMmRemoveAll = 25;
+        public const int KeyBasedContains = 26;
 
-        public const int TotalSize = TxnMmRemoveAll+1;
+        public const int TotalSize = KeyBasedContains + 1;
 
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.MultimapPortableFactory, -12);
 

@@ -2,7 +2,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.IO.Serialization
 {
-    public interface ISerializationContext
+    public interface IPortableContext
     {
         int GetVersion();
 

@@ -525,13 +525,18 @@ namespace Hazelcast.Client.Connection
 
         public Task<TResult> Send<TResult>(ClientRequest request)
         {
-            return Send<TResult>(request, null);
+            return Send<TResult>(request, null, -1);
         }
 
         public Task<TResult> Send<TResult>(ClientRequest request, Address target)
         {
+            return Send<TResult>(request, target, -1);
+        }
+
+        public Task<TResult> Send<TResult>(ClientRequest request, Address target, int partitionId)
+        {
             ClientConnection clientConnection = _GetOrConnectWithRetry(target);
-            return clientConnection.Send<TResult>(request);
+            return clientConnection.Send<TResult>(request, partitionId);
         }
 
         public Task<TResult> SendAndHandle<TResult>(ClientRequest request, DistributedEventHandler handler)
@@ -543,7 +548,7 @@ namespace Hazelcast.Client.Connection
             DistributedEventHandler handler)
         {
             ClientConnection clientConnection = _GetOrConnectWithRetry(target);
-            return clientConnection.Send<TResult>(request, handler);
+            return clientConnection.Send<TResult>(request, handler, -1);
         }
 
         public void RegisterListener(string registrationId, int callId)

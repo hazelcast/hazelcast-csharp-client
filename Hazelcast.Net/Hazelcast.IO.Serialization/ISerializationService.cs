@@ -33,7 +33,7 @@ namespace Hazelcast.IO.Serialization
 
         void RegisterGlobal(ISerializer serializer);
 
-        ISerializationContext GetSerializationContext();
+        IPortableContext GetPortableContext();
 
         IPortableReader CreatePortableReader(Data data);
     }

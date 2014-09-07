@@ -1,30 +1,28 @@
-using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    internal class ContainsEntryRequest : MultiMapAllPartitionRequest, IRetryableRequest
+    internal class KeyBasedContainsRequest : MultiMapKeyBasedRequest
     {
         internal Data value;
-
-        public ContainsEntryRequest(string name, Data value) : base(name)
+        public KeyBasedContainsRequest(string name, Data key, Data value)
+            : base(name, key)
         {
             this.value = value;
         }
 
         public override int GetClassId()
         {
-            return MultiMapPortableHook.ContainsEntry;
+            return MultiMapPortableHook.KeyBasedContains;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public override void WritePortable(IPortableWriter writer)
         {
             base.WritePortable(writer);
-            IObjectDataOutput output = writer.GetRawDataOutput();
-            IOUtil.WriteNullableData(output, value);
+            IOUtil.WriteNullableData(writer.GetRawDataOutput(), value);
         }
 
     }

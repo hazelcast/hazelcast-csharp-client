@@ -24,6 +24,16 @@ namespace Hazelcast.Client.Spi
         Task<TResult> Send<TResult>(ClientRequest request, Address target);
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="request"></param>
+        /// <param name="target"></param>
+        /// <param name="partitionId"></param>
+        /// <returns></returns>
+        Task<TResult> Send<TResult>(ClientRequest request, Address target, int partitionId);
+
+        /// <summary>
         /// </summary>
         /// <param name="request"></param>
         /// <param name="handler"></param>

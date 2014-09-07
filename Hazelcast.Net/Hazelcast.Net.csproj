@@ -68,6 +68,7 @@
     <Compile Include="Hazelcast.Client.Request.Cluster\MemberAttributeChange.cs" />
     <Compile Include="Hazelcast.Client.Request.Collection\CollectionRemoveListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Map\MapRemoveEntryListenerRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Multimap\KeyBasedContainsRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\RemoveEntryListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\TxnMultiMapRemoveAllRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Queue\RemoveListenerRequest.cs" />
@@ -295,6 +296,7 @@
     <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
     <Compile Include="Hazelcast.IO.Serialization\BinaryClassDefinitionProxy.cs" />
     <Compile Include="Hazelcast.IO.Serialization\DataAdaptor.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\Packet.cs" />
     <Compile Include="Hazelcast.IO\IDataInput.cs" />
     <Compile Include="Hazelcast.IO\IDataOutput.cs" />
     <Compile Include="Hazelcast.IO\SocketReadable.cs" />
@@ -423,9 +425,9 @@
     <Compile Include="Hazelcast.IO.Serialization\PortableSerializer.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IPortableWriter.cs" />
     <Compile Include="Hazelcast.IO.Serialization\SerializationConstants.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\ISerializationContext.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\ISerializationContextAware.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\SerializationContext.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\IPortableContext.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\IPortableContextAware.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\PortableContext.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializationService.cs" />
     <Compile Include="Hazelcast.IO.Serialization\SerializationServiceBuilder.cs" />
     <Compile Include="Hazelcast.IO.Serialization\SerializationService.cs" />
