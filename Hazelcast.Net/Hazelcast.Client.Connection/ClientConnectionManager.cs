@@ -7,6 +7,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Request.Cluster;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
@@ -51,6 +52,7 @@ namespace Hazelcast.Client.Connection
         private ClientConnection _ownerConnection;
         private volatile ClientPrincipal principal;
 
+        private Thread _heartBeatThread;
         #endregion
 
         public ClientConnectionManager(HazelcastClient client, LoadBalancer loadBalancer, bool smartRouting = true)
@@ -87,6 +89,12 @@ namespace Hazelcast.Client.Connection
             }
             _live = true;
             InitOwnerConnection();
+            //start HeartBeat
+            _heartBeatThread = new Thread(HearthBeatLoop)
+            {
+                //IsBackground = true,
+                Name = ("HearthBeat" + new Random().Next()).Substring(0, 15)
+            };
         }
 
         public bool Shutdown()
@@ -96,6 +104,13 @@ namespace Hazelcast.Client.Connection
                 return _live;
             }
             _live = false;
+
+            //Stop heartBeat
+            if (_heartBeatThread.IsAlive)
+            {
+                _heartBeatThread.Interrupt();
+                _heartBeatThread.Join();
+            }
             try
             {
                 var _itrNode = _clientConnections.Last;
@@ -462,6 +477,26 @@ namespace Hazelcast.Client.Connection
         private bool RemoveEventHandler(int callId)
         {
             return _clientConnections.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
+        }
+
+        private void HearthBeatLoop()
+        {
+            while (_heartBeatThread.IsAlive)
+            {
+                foreach (var clientConnection in _clientConnections)
+                {
+                    var request = new ClientPingRequest();
+                    clientConnection.Send<Object>(request, -1);
+                }
+                try
+                {
+                    Thread.Sleep(5000);
+                }
+                catch (Exception)
+                {
+                    break;
+                }
+            }
         }
 
         #endregion
