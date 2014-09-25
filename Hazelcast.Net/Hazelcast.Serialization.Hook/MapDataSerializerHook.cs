@@ -33,7 +33,7 @@ namespace Hazelcast.Serialization.Hook
             constructors[KeySet] = delegate { return new MapKeySet(); };
             constructors[Values] = delegate { return new MapValueCollection(); };
             constructors[EntrySet] = delegate { return new MapEntrySet(); };
-            constructors[EntryView] = delegate { return new SimpleEntryView<object, object>(); };
+            constructors[EntryView] = delegate { return new SimpleEntryView(); };
             constructors[QueryResultEntry] = delegate { return new QueryResultEntry();};
             constructors[QueryResultSet] = delegate { return new QueryResultSet(); };
             return new ArrayDataSerializableFactory(constructors);

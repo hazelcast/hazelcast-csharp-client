@@ -22,24 +22,24 @@ namespace Hazelcast.Map
     [Serializable]
     internal class SimpleEntryView : IdentifiedDataSerializable, IIdentifiedDataSerializable
     {
-        private long cost;
-
-        private long creationTime;
-
-        private long expirationTime;
-
-        private long hits;
-
         private object key;
         private object value;
 
+        private long cost;
+        private long creationTime;
+        private long expirationTime;
+        private long hits;
         private long lastAccessTime;
-
         private long lastStoredTime;
-
         private long lastUpdateTime;
-
         private long version;
+        private long evictionCriteriaNumber;
+        private long ttl;
+
+        public SimpleEntryView<K, V> CastEntryView<K, V>()
+        {
+            return (SimpleEntryView<K, V>) this;
+        }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteData(IObjectDataOutput output)
@@ -59,6 +59,8 @@ namespace Hazelcast.Map
             lastStoredTime = input.ReadLong();
             lastUpdateTime = input.ReadLong();
             version = input.ReadLong();
+            evictionCriteriaNumber = input.ReadLong();
+            ttl = input.ReadLong();
         }
 
         public virtual object GetKey()
@@ -169,6 +171,26 @@ namespace Hazelcast.Map
         public virtual void SetVersion(long version)
         {
             this.version = version;
+        }
+
+        public long GetEvictionCriteriaNumber()
+        {
+            return evictionCriteriaNumber;
+        }
+
+        public void SetEvictionCriteriaNumber(long evictionCriteriaNumber)
+        {
+            this.evictionCriteriaNumber = evictionCriteriaNumber;
+        }
+
+        public long GetTtl()
+        {
+            return ttl;
+        }
+
+        public void SetTtl(long ttl)
+        {
+            this.ttl = ttl;
         }
 
     }
