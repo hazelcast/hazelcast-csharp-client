@@ -5,7 +5,7 @@ namespace Hazelcast.IO.Serialization
 {
     internal sealed class Packet : DataAdapter
     {
-        public static readonly byte Version = 2;
+        public static readonly byte Version = 3;
         public static readonly int HeaderOp = 0;
         public static readonly int HeaderResponse = 1;
         public static readonly int HeaderEvent = 2;
