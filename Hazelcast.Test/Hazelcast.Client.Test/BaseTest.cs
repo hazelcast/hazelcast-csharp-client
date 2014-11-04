@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Client.Model;
 using Hazelcast.Config;
 using Hazelcast.Core;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 using NUnit.Framework;
 
@@ -29,6 +31,7 @@ namespace Hazelcast.Client.Test
             var config = new ClientConfig();
             config.GetNetworkConfig().AddAddress("127.0.0.1");
             config.AddNearCacheConfig("nearCachedMap*", new NearCacheConfig().SetInMemoryFormat(InMemoryFormat.Object));
+            config.GetSerializationConfig().AddPortableFactory(1, new PortableFactory());
             return HazelcastClient.NewHazelcastClient(config);
         }
 
