@@ -36,11 +36,6 @@ namespace Hazelcast.Map
         private long evictionCriteriaNumber;
         private long ttl;
 
-        public SimpleEntryView<K, V> CastEntryView<K, V>()
-        {
-            return (SimpleEntryView<K, V>) this;
-        }
-
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteData(IObjectDataOutput output)
         {
