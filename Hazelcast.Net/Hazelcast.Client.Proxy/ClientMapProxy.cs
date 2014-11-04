@@ -363,9 +363,10 @@ namespace Hazelcast.Client.Proxy
                 return null;
             }
             var value = entryView.GetValue() as Data;
-            entryView.SetKey(key);
-            entryView.SetValue(ToObject<V>(value));
-            return entryView.CastEntryView<K, V>();
+            var result = new SimpleEntryView<K, V>();
+            result.SetKey(key);
+            result.SetValue(ToObject<V>(value));
+            return result;
         }
 
         public bool Evict(K key)

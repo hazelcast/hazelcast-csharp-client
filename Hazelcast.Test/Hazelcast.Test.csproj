@@ -72,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientQueuePerformanceTest.cs" />
+    <Compile Include="Hazelcast.Client.Model\Item.cs" />
     <Compile Include="Hazelcast.Client.Test\BaseTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientAtomicLongTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientCountDownLatchTest.cs" />
@@ -119,9 +120,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Hazelcast.Client.Examples\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <NUnitResultsFile>$(OutputPath)nunit-result.xml</NUnitResultsFile>
   </PropertyGroup>
