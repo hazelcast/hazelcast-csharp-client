@@ -11,10 +11,11 @@ namespace Hazelcast.IO.Serialization
         public static readonly int HeaderEvent = 2;
         public static readonly int HeaderWanReplication = 3;
         public static readonly int HeaderUrgent = 4;
+        public static readonly int HeaderBind = 5;
 
-        private const int StVersion = 11;
-        private const int StHeader = 12;
-        private const int StPartition = 13;
+        private const int StVersion = 10;
+        private const int StHeader = 11;
+        private const int StPartition = 12;
 
         private short header;
         private int partitionId;
@@ -71,7 +72,6 @@ namespace Hazelcast.IO.Serialization
                 {
                     return false;
                 }
-                BitConverter.GetBytes(Version);
                 destination.Put(Version);
                 SetStatus(StVersion);
             }
