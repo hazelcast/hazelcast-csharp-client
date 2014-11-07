@@ -623,7 +623,6 @@ namespace Hazelcast.Client.Test
 
             Assert.AreEqual("item1", entryView.GetKey());
             Assert.AreEqual("value1", entryView.GetValue());
-            Assert.AreNotEqual(0, entryView.GetLastUpdateTime());
         }
 
         //    @Test
