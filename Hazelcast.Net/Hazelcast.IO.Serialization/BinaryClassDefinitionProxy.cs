@@ -16,6 +16,13 @@ namespace Hazelcast.IO.Serialization
             SetBinary(binary);
         }
 
+        public BinaryClassDefinitionProxy(int factoryId, int classId, int version)
+        {
+            this.classId = classId;
+            this.version = version;
+            this.factoryId = factoryId;
+        }
+
         /// <summary>
         /// 
         /// </summary>
