@@ -1,40 +1,55 @@
+using System;
 using System.IO;
 using Hazelcast.Core;
+using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
     internal interface ISerializationService
     {
-        Data ToData(object obj);
+        IData ToData(object obj);
 
-        Data ToData(object obj, IPartitioningStrategy strategy);
+		IData ToData(object obj, IPartitioningStrategy strategy);
 
-        T ToObject<T>(object input);
+		T ToObject<T>(object data);
 
-        void WriteObject(IObjectDataOutput objectDataOutput, object obj);
+        void WriteObject(IObjectDataOutput output, object obj);
 
-        object ReadObject(IObjectDataInput objectDataInput);
+        T ReadObject<T>(IObjectDataInput input);
 
-        IBufferObjectDataInput CreateObjectDataInput(byte[] data);
+		void WriteData(IObjectDataOutput output, IData data);
 
-        IBufferObjectDataInput CreateObjectDataInput(Data data);
+        IData ReadData(IObjectDataInput input);
 
-        IBufferObjectDataOutput CreateObjectDataOutput(int size);
+		void DisposeData(IData data);
+
+		IBufferObjectDataInput CreateObjectDataInput(byte[] data);
+
+		IBufferObjectDataInput CreateObjectDataInput(IData data);
+
+		IBufferObjectDataOutput CreateObjectDataOutput(int size);
 
         ObjectDataOutputStream CreateObjectDataOutputStream(BinaryWriter binaryWriter);
 
         ObjectDataInputStream CreateObjectDataInputStream(BinaryReader binaryReader);
 
-        ObjectDataOutputStream CreateObjectDataOutputStream(BinaryWriter binaryWriter, bool bigEndian);
+		void Register(Type type, ISerializer serializer);
 
-        ObjectDataInputStream CreateObjectDataInputStream(BinaryReader binaryReader, bool bigEndian);
+		void RegisterGlobal(ISerializer serializer);
 
-        void Register<T>(ISerializer serializer);
+		IPortableContext GetPortableContext();
 
-        void RegisterGlobal(ISerializer serializer);
+		/// <exception cref="System.IO.IOException"></exception>
+		IPortableReader CreatePortableReader(IData data);
 
-        IPortableContext GetPortableContext();
+		IManagedContext GetManagedContext();
 
-        IPortableReader CreatePortableReader(Data data);
-    }
+		ByteOrder GetByteOrder();
+
+		IBufferObjectDataOutput Pop();
+
+        void Push(IBufferObjectDataOutput output);
+
+		void Destroy();
+	}
 }

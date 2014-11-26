@@ -2,12 +2,12 @@ using System.Collections.Generic;
 
 namespace Hazelcast.IO.Serialization
 {
-    public interface IPortableHook
-    {
-        int GetFactoryId();
+	internal interface IPortableHook
+	{
+		int GetFactoryId();
 
-        IPortableFactory CreateFactory();
+		IPortableFactory CreateFactory();
 
-        ICollection<IClassDefinition> GetBuiltinDefinitions();
-    }
+		ICollection<IClassDefinition> GetBuiltinDefinitions();
+	}
 }

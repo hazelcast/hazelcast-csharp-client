@@ -4,46 +4,49 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Serialization.Hook;
 using Hazelcast.Util;
 
 namespace Hazelcast.IO
 {
-    [Serializable]
-    public sealed class Address : IdentifiedDataSerializable,IIdentifiedDataSerializable
+    /// <summary>Represents an address of a member in the cluster.</summary>
+    /// <remarks>Represents an address of a member in the cluster.</remarks>
+    public sealed class Address : IdentifiedDataSerializable, IIdentifiedDataSerializable
     {
         public const int Id = 1;
 
         private const byte IPv4 = 4;
-
         private const byte IPv6 = 6;
-        [NonSerialized] private readonly bool hostSet;
+        private readonly bool hostSet;
 
         private string host;
         private int port = -1;
 
-        [NonSerialized] private string scopeId;
+        private string scopeId;
         private byte type;
 
         public Address()
         {
         }
 
-        public Address(string host, int port) : this(host, GetAddressByName(host), port)
-        {
-            hostSet = !AddressUtil.IsIpAddress(host);
-        }
-
         public Address(IPAddress inetAddress, int port) : this(null, inetAddress, port)
         {
-            hostSet = false;
         }
 
-        public Address(IPEndPoint inetSocketAddress) : this(inetSocketAddress.Address, inetSocketAddress.Port)
+        /// <summary>Creates a new Address</summary>
+        /// <param name="inetSocketAddress">the InetSocketAddress to use</param>
+        /// <exception cref="System.ArgumentNullException">if inetSocketAddress is null</exception>
+        /// <exception cref="System.ArgumentException">if the address can't be resolved.</exception>
+        public Address(IPEndPoint inetSocketAddress) : this(Resolve(inetSocketAddress), inetSocketAddress.Port)
         {
         }
 
-        private Address(string hostname, IPAddress inetAddress, int port)
+        public Address(string hostname, IPAddress inetAddress, int port)
         {
+            if (inetAddress == null)
+            {
+                throw new ArgumentNullException("inetAddress");
+            }
             type = (inetAddress.AddressFamily == AddressFamily.InterNetwork) ? IPv4 : IPv6;
             string[] addressArgs = inetAddress.ToString().Split('%');
             host = hostname ?? addressArgs[0];
@@ -52,15 +55,17 @@ namespace Hazelcast.IO
                 scopeId = addressArgs[1];
             }
             this.port = port;
+            hostSet = !AddressUtil.IsIpAddress(host);
         }
 
-        public Address(Address address)
+        public int GetFactoryId()
         {
-            host = address.host;
-            port = address.port;
-            type = address.type;
-            scopeId = address.scopeId;
-            hostSet = address.hostSet;
+            return ClusterDataSerializerHook.FId;
+        }
+
+        public int GetId()
+        {
+            return Id;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -94,24 +99,9 @@ namespace Hazelcast.IO
             }
         }
 
-        public int GetFactoryId()
-        {
-            return Data.FactoryId;
-        }
-
-        public int GetId()
-        {
-            return Id;
-        }
-
         public string GetHost()
         {
             return host;
-        }
-
-        public override string ToString()
-        {
-            return "Address[" + GetHost() + "]:" + port;
         }
 
         public int GetPort()
@@ -119,38 +109,16 @@ namespace Hazelcast.IO
             return port;
         }
 
+        /// <exception cref="Hazelcast.Net.Ext.UnknownHostException"></exception>
         public IPAddress GetInetAddress()
         {
             return GetAddressByName(GetScopedHost());
         }
 
+        /// <exception cref="Hazelcast.Net.Ext.UnknownHostException"></exception>
         public IPEndPoint GetInetSocketAddress()
         {
             return new IPEndPoint(GetInetAddress(), port);
-        }
-
-        public override bool Equals(object o)
-        {
-            if (this == o)
-            {
-                return true;
-            }
-            var address = o as Address;
-            if (address == null)
-            {
-                return false;
-            }
-            return port == address.port && type == address.type && host.Equals(address.host);
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash(Encoding.UTF8.GetBytes(host))*29 + port;
-        }
-
-        private static int Hash(byte[] bytes)
-        {
-            return bytes.Aggregate(0, (current, b) => (current*29) + b);
         }
 
         public bool IsIPv4()
@@ -181,11 +149,49 @@ namespace Hazelcast.IO
             return (IsIPv4() || hostSet || scopeId == null) ? GetHost() : GetHost() + "%" + scopeId;
         }
 
-        public static IPAddress GetAddressByName(string name)
+        public override bool Equals(object o)
         {
-            if (name == "0.0.0.0")
-                return IPAddress.Any;
-            return Dns.GetHostAddresses(name).FirstOrDefault();
+            if (this == o)
+            {
+                return true;
+            }
+            if (!(o is Address))
+            {
+                return false;
+            }
+            var address = (Address) o;
+            return port == address.port && type == address.type && host.Equals(address.host);
+        }
+
+        public override int GetHashCode()
+        {
+            int result = port;
+            result = 31*result + host.GetHashCode();
+            return result;
+        }
+
+        public override string ToString()
+        {
+            return "Address[" + GetHost() + "]:" + port;
+        }
+
+        private static IPAddress Resolve(IPEndPoint inetSocketAddress)
+        {
+            if (inetSocketAddress == null)
+            {
+                throw new ArgumentNullException("inetSocketAddress");
+            }
+            IPAddress address = inetSocketAddress.Address;
+            if (address == null)
+            {
+                throw new ArgumentException("Can't resolve address: " + inetSocketAddress);
+            }
+            return address;
+        }
+
+        private static IPAddress GetAddressByName(string name)
+        {
+            return name == "0.0.0.0" ? IPAddress.Any : Dns.GetHostAddresses(name).FirstOrDefault();
         }
     }
 }

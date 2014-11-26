@@ -1,14 +1,24 @@
 using Hazelcast.Core;
+using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    public interface IPortableContext
+
+    internal interface IPortableContext
     {
         int GetVersion();
 
-        IClassDefinition Lookup(int factoryId, int classId);
+        int GetClassVersion(int factoryId, int classId);
 
-        IClassDefinition Lookup(int factoryId, int classId, int version);
+        void SetClassVersion(int factoryId, int classId, int version);
+
+        IClassDefinition LookupClassDefinition(int factoryId, int classId, int version);
+
+        IClassDefinition LookupClassDefinition(IData data);
+
+        bool HasClassDefinition(IData data);
+
+        IClassDefinition[] GetClassDefinitions(IData data);
 
         /// <exception cref="System.IO.IOException"></exception>
         IClassDefinition CreateClassDefinition(int factoryId, byte[] binary);
@@ -18,6 +28,10 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         IClassDefinition LookupOrRegisterClassDefinition(IPortable portable);
 
+        IFieldDefinition GetFieldDefinition(IClassDefinition cd, string name);
+
         IManagedContext GetManagedContext();
+
+        ByteOrder GetByteOrder();
     }
 }

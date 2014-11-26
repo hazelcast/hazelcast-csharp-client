@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class BinaryClassDefinitionProxy : BinaryClassDefinition, IClassDefinition
+    internal sealed class BinaryClassDefinitionProxy : BinaryClassDefinition, IClassDefinition
     {
+        public BinaryClassDefinitionProxy(int factoryId, int classId, int version)
+        {
+            this.classId = classId;
+            this.version = version;
+            this.factoryId = factoryId;
+        }
+
         public BinaryClassDefinitionProxy(int factoryId, int classId, int version, byte[] binary)
         {
             this.classId = classId;
@@ -16,41 +20,12 @@ namespace Hazelcast.IO.Serialization
             SetBinary(binary);
         }
 
-        public BinaryClassDefinitionProxy(int factoryId, int classId, int version)
-        {
-            this.classId = classId;
-            this.version = version;
-            this.factoryId = factoryId;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        /// <exception cref="IOException"></exception>
-        public IClassDefinition ToReal(IPortableContext context) 
-        {
-            IClassDefinition cd = context.Lookup(factoryId, classId, version);
-            return cd ?? context.CreateClassDefinition(factoryId, GetBinary());
-        }
-
-        public override void WriteData(IObjectDataOutput output)
+        public override IFieldDefinition GetField(string name)
         {
             throw new NotSupportedException();
         }
 
-        public override void ReadData(IObjectDataInput input)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override IFieldDefinition Get(string name)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override IFieldDefinition Get(int fieldIndex)
+        public override IFieldDefinition GetField(int fieldIndex)
         {
             throw new NotSupportedException();
         }
@@ -76,6 +51,11 @@ namespace Hazelcast.IO.Serialization
         }
 
         public override int GetFieldCount()
+        {
+            throw new NotSupportedException();
+        }
+
+        public int GetFieldVersion(string fieldName)
         {
             throw new NotSupportedException();
         }

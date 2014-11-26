@@ -5,24 +5,19 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ObjectDataInputStream : InputStream, IObjectDataInput, IDisposable, IPortableContextAware
+    internal class ObjectDataInputStream : InputStream, IObjectDataInput, IDisposable
     {
-        private readonly BinaryReader _binaryReader;
+        private const int UTFBufferSize = 1024;
 
-        private readonly bool isBigEndian;
+        private readonly BinaryReader _binaryReader;
+        private readonly ByteOrder byteOrder;
         private readonly ISerializationService serializationService;
+        private byte[] utfBuffer;
 
         public ObjectDataInputStream(BinaryReader binaryReader, ISerializationService serializationService)
-            : this(binaryReader, serializationService, true)
-        {
-        }
-
-        public ObjectDataInputStream(BinaryReader binaryReader, ISerializationService serializationService,
-            bool isBigEndian)
         {
             this.serializationService = serializationService;
-            _binaryReader = binaryReader;
-            this.isBigEndian = isBigEndian;
+            byteOrder = serializationService.GetByteOrder();
         }
 
         public void Dispose()
@@ -39,7 +34,6 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public long Skip(long n)
         {
-            //From JDK
             long remaining = n;
             int nr;
             if (n <= 0)
@@ -163,7 +157,8 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int ReadUnsignedShort()
         {
-            return ReadShort();
+            ushort v = _binaryReader.ReadUInt16();
+            return !IsBigEndian() ? v : BitConverter.ToUInt16(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -199,6 +194,19 @@ namespace Hazelcast.IO.Serialization
         {
             double v = _binaryReader.ReadSingle();
             return !IsBigEndian() ? v : BitConverter.ToDouble(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual byte[] ReadByteArray()
+        {
+            int len = ReadInt();
+            if (len > 0)
+            {
+                var b = new byte[len];
+                ReadFully(b);
+                return b;
+            }
+            return new byte[0];
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -297,32 +305,36 @@ namespace Hazelcast.IO.Serialization
             return new short[0];
         }
 
-        public T ReadObject<T>()
-        {
-            return (T) serializationService.ReadObject(this);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        [Obsolete]
-        public virtual string ReadLine()
-        {
-            throw new NotSupportedException();
-        }
-
         /// <exception cref="System.IO.IOException"></exception>
         public virtual string ReadUTF()
         {
-            return UTFUtil.ReadUTF(this);
+            if (utfBuffer == null)
+            {
+                utfBuffer = new byte[UTFBufferSize];
+            }
+            return UTFEncoderDecoder.ReadUTF(this, utfBuffer);
         }
 
-        public virtual bool IsBigEndian()
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual IData ReadData()
         {
-            return isBigEndian;
+            return serializationService.ReadData<IData>(this);
         }
 
-        public virtual IPortableContext GetSerializationContext()
+        public virtual ByteOrder GetByteOrder()
         {
-            return serializationService.GetPortableContext();
+            return byteOrder;
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public T ReadObject<T>()
+        {
+            return (T)serializationService.ReadObject(this);
+        }
+
+        private bool IsBigEndian()
+        {
+            return byteOrder == ByteOrder.BigEndian;
         }
     }
 }

@@ -1,36 +1,128 @@
 using System;
 using System.IO;
 using System.Text;
+using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ByteArrayObjectDataInput : PortableContextAwareInputStream, IBufferObjectDataInput,
-        IPortableContextAware
+    internal class ByteArrayObjectDataInput : InputStream, IPortableDataInput
     {
+        private static readonly ByteBuffer EMPTY_BUFFER = ByteBuffer.Allocate(0);
+        private readonly bool bigEndian;
         internal readonly ISerializationService service;
+
         internal readonly int size;
-        internal byte[] buffer;
+        internal byte[] data;
+        internal ByteBuffer header = null;
 
-        internal int mark = 0;
-        internal int pos = 0;
+        internal int mark;
+        internal int pos;
 
-        internal ByteArrayObjectDataInput(Data data, ISerializationService service) : this(data.buffer, service)
+        private byte[] utfBuffer;
+
+        internal ByteArrayObjectDataInput(IData data, ISerializationService service, ByteOrder byteOrder)
+            : this(data.GetData(), data.GetHeader(), service, byteOrder)
         {
-            IClassDefinition cd = data.classDefinition;
-            SetClassDefinition(cd);
         }
 
-        internal ByteArrayObjectDataInput(byte[] buffer, ISerializationService service)
+        internal ByteArrayObjectDataInput(byte[] data, ISerializationService service, ByteOrder byteOrder)
+            : this(data, null, service, byteOrder)
         {
-            this.buffer = buffer;
-            size = buffer != null ? buffer.Length : 0;
+        }
+
+        private ByteArrayObjectDataInput(byte[] data, byte[] header, ISerializationService service, ByteOrder byteOrder)
+        {
+            this.data = data;
+            size = data != null ? data.Length : 0;
             this.service = service;
+            bigEndian = byteOrder == ByteOrder.BigEndian;
+            if (header != null)
+            {
+                ByteBuffer asReadOnlyBuffer = ByteBuffer.Wrap(header).AsReadOnlyBuffer();
+                asReadOnlyBuffer.Order = byteOrder;
+                this.header = asReadOnlyBuffer;
+            }
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual int Read()
+        {
+            return (pos < size) ? (data[pos++] & unchecked(0xff)) : -1;
+        }
+
+        public virtual int Read(byte[] b)
+        {
+            return Read(b, 0, b.Length);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public int Read(byte[] b, int off, int len)
+        {
+            if (b == null)
+            {
+                throw new ArgumentNullException();
+            }
+            if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
+            {
+                throw new IndexOutOfRangeException();
+            }
+            if (len <= 0)
+            {
+                return 0;
+            }
+            if (pos >= size)
+            {
+                return -1;
+            }
+            if (pos + len > size)
+            {
+                len = size - pos;
+            }
+            Array.Copy(data, pos, b, off, len);
+            pos += len;
+            return len;
+        }
+
+        public long Skip(long n)
+        {
+            if (n <= 0 || n >= int.MaxValue)
+            {
+                return 0L;
+            }
+            return SkipBytes((int) n);
+        }
+
+        public int Available()
+        {
+            return size - pos;
+        }
+
+        public bool MarkSupported()
+        {
+            return true;
+        }
+
+        public void Mark(int readlimit)
+        {
+            mark = pos;
+        }
+
+        public void Reset()
+        {
+            pos = mark;
+        }
+
+        public void Close()
+        {
+            header = null;
+            data = null;
+            utfBuffer = null;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int Read(int position)
         {
-            return (position < size) ? (buffer[position] & unchecked(0xff)) : -1;
+            return (position < size) ? (data[position] & unchecked(0xff)) : -1;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -69,9 +161,10 @@ namespace Hazelcast.IO.Serialization
         ///     the next byte of this input stream as a signed 8-bit
         ///     <code>byte</code>.
         /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">if this input stream has reached the end.</exception>
+        /// <exception cref="System.IO.EndOfStreamException">
+        ///     if this input stream has reached the end.
+        /// </exception>
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        /// <seealso cref="java.io.FilterInputStream#in">java.io.FilterInputStream#in</seealso>
         public virtual byte ReadByte()
         {
             int ch = Read();
@@ -109,24 +202,18 @@ namespace Hazelcast.IO.Serialization
         ///     bytes.
         /// </exception>
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        /// <seealso cref="java.io.FilterInputStream#in">java.io.FilterInputStream#in</seealso>
         public virtual char ReadChar()
         {
             char c = ReadChar(pos);
-            pos += 2;
+            pos += Bits.CHAR_SIZE_IN_BYTES;
             return c;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual char ReadChar(int position)
         {
-            int ch1 = Read(position);
-            int ch2 = Read(position + 1);
-            if ((ch1 | ch2) < 0)
-            {
-                throw new EndOfStreamException();
-            }
-            return (char) ((ch1 << 8) + (ch2 << 0));
+            CheckAvailable(position, Bits.CHAR_SIZE_IN_BYTES);
+            return Bits.ReadChar(data, position, bigEndian);
         }
 
         /// <summary>
@@ -148,8 +235,6 @@ namespace Hazelcast.IO.Serialization
         ///     bytes.
         /// </exception>
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        /// <seealso cref="System.IO.DataInputStream.ReadLong()">System.IO.DataInputStream.ReadLong()</seealso>
-        /// <seealso cref="double.LongBitsToDouble(long)">double.LongBitsToDouble(long)</seealso>
         public virtual double ReadDouble()
         {
             return BitConverter.Int64BitsToDouble(ReadLong());
@@ -180,10 +265,14 @@ namespace Hazelcast.IO.Serialization
         ///     bytes.
         /// </exception>
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        /// <seealso cref="System.IO.DataInputStream.ReadInt()">System.IO.DataInputStream.ReadInt()</seealso>
+        /// <seealso cref="System.IO.DataInputStream.ReadInt()">
+        ///     System.IO.DataInputStream.ReadInt()
+        /// </seealso>
+        /// <seealso cref="Sharpen.Runtime.IntBitsToFloat(int)">
+        ///     Sharpen.Runtime.IntBitsToFloat(int)
+        /// </seealso>
         public virtual float ReadFloat()
         {
-            //TODO BURASI DOGRU MU? BILL GATES'E SORALIM :)
             return BitConverter.ToSingle(BitConverter.GetBytes(ReadInt()), 0);
         }
 
@@ -196,13 +285,19 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void ReadFully(byte[] b)
         {
-            Read(b, 0, b.Length);
+            if (Read(b, 0, b.Length) == -1)
+            {
+                throw new EndOfStreamException("End of stream reached");
+            }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void ReadFully(byte[] b, int off, int len)
         {
-            Read(b, off, len);
+            if (Read(b, off, len) == -1)
+            {
+                throw new EndOfStreamException("End of stream reached");
+            }
         }
 
         /// <summary>
@@ -224,27 +319,20 @@ namespace Hazelcast.IO.Serialization
         ///     bytes.
         /// </exception>
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
+        /// <seealso cref="java.io.FilterInputStream#in">java.io.FilterInputStream#in</seealso>
         public virtual int ReadInt()
         {
             int i = ReadInt(pos);
-            pos += 4;
+            pos += Bits.INT_SIZE_IN_BYTES;
             return i;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int ReadInt(int position)
         {
-            int ch1 = Read(position);
-            int ch2 = Read(position + 1);
-            int ch3 = Read(position + 2);
-            int ch4 = Read(position + 3);
-            if ((ch1 | ch2 | ch3 | ch4) < 0)
-            {
-                throw new EndOfStreamException();
-            }
-            return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+            CheckAvailable(position, Bits.INT_SIZE_IN_BYTES);
+            return Bits.ReadInt(data, position, bigEndian);
         }
-
 
         /// <summary>
         ///     See the general contract of the <code>readLong</code> method of
@@ -265,20 +353,19 @@ namespace Hazelcast.IO.Serialization
         ///     bytes.
         /// </exception>
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
+        /// <seealso cref="java.io.FilterInputStream#in">java.io.FilterInputStream#in</seealso>
         public virtual long ReadLong()
         {
             long l = ReadLong(pos);
-            pos += 8;
+            pos += Bits.LONG_SIZE_IN_BYTES;
             return l;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual long ReadLong(int position)
         {
-            return (((long) buffer[position] << 56) + ((long) (buffer[position + 1] & 255) << 48) +
-                    ((long) (buffer[position + 2] & 255) << 40) + ((long) (buffer[position + 3] & 255) << 32) +
-                    ((long) (buffer[position + 4] & 255) << 24) + ((buffer[position + 5] & 255) << 16) +
-                    ((buffer[position + 6] & 255) << 8) + ((buffer[position + 7] & 255) << 0));
+            CheckAvailable(position, Bits.LONG_SIZE_IN_BYTES);
+            return Bits.ReadLong(data, position, bigEndian);
         }
 
         /// <summary>
@@ -303,25 +390,29 @@ namespace Hazelcast.IO.Serialization
         /// <seealso cref="java.io.FilterInputStream#in">java.io.FilterInputStream#in</seealso>
         public virtual short ReadShort()
         {
-            int ch1 = Read();
-            int ch2 = Read();
-            if ((ch1 | ch2) < 0)
-            {
-                throw new EndOfStreamException();
-            }
-            return (short) ((ch1 << 8) + (ch2 << 0));
+            short s = ReadShort(pos);
+            pos += Bits.SHORT_SIZE_IN_BYTES;
+            return s;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual short ReadShort(int position)
         {
-            int ch1 = Read(position);
-            int ch2 = Read(position + 1);
-            if ((ch1 | ch2) < 0)
+            CheckAvailable(position, Bits.SHORT_SIZE_IN_BYTES);
+            return Bits.ReadShort(data, position, bigEndian);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual byte[] ReadByteArray()
+        {
+            int len = ReadInt();
+            if (len > 0)
             {
-                throw new EndOfStreamException();
+                var b = new byte[len];
+                ReadFully(b);
+                return b;
             }
-            return (short) ((ch1 << 8) + (ch2 << 0));
+            return new byte[0];
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -439,7 +530,9 @@ namespace Hazelcast.IO.Serialization
         ///     the next byte of this input stream, interpreted as an unsigned
         ///     8-bit number.
         /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">if this input stream has reached the end.</exception>
+        /// <exception cref="System.IO.EndOfStreamException">
+        ///     if this input stream has reached the end.
+        /// </exception>
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
         /// <seealso cref="java.io.FilterInputStream#in">java.io.FilterInputStream#in</seealso>
         public virtual int ReadUnsignedByte()
@@ -492,10 +585,22 @@ namespace Hazelcast.IO.Serialization
         ///     if the bytes do not represent a valid modified UTF-8
         ///     encoding of a string.
         /// </exception>
-        /// <seealso cref="System.IO.DataInputStream.ReadUTF(System.IO.DataInput)">System.IO.DataInputStream.ReadUTF(System.IO.DataInput)</seealso>
+        /// <seealso cref="System.IO.DataInputStream.ReadUTF(System.IO.IDataInput)">
+        ///     System.IO.DataInputStream.ReadUTF(System.IO.IDataInput)
+        /// </seealso>
         public virtual string ReadUTF()
         {
-            return UTFUtil.ReadUTF(this);
+            if (utfBuffer == null)
+            {
+                utfBuffer = new byte[UTFEncoderDecoder.UTF_BUFFER_SIZE];
+            }
+            return UTFEncoderDecoder.ReadUTF(this, utfBuffer);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public IData ReadData()
+        {
+            return service.ReadData<IData>(this);
         }
 
         public virtual int SkipBytes(int n)
@@ -534,15 +639,9 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public override void Reset()
+        public virtual ByteOrder GetByteOrder()
         {
-            pos = mark;
-        }
-
-        public virtual bool IsBigEndian()
-        {
-            //TODO FORCED BIG ENDIAN
-            return true;
+            return bigEndian ? ByteOrder.BigEndian : ByteOrder.LittleEndian;
         }
 
         public void Dispose()
@@ -550,91 +649,38 @@ namespace Hazelcast.IO.Serialization
             Close();
         }
 
-        public virtual IPortableContext GetSerializationContext()
+        public virtual ByteBuffer GetHeaderBuffer()
         {
-            return service.GetPortableContext();
+            return header != null ? header : EMPTY_BUFFER;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override int Read()
+        [Obsolete]
+        public string ReadLine()
         {
-            return (pos < size) ? (buffer[pos++] & unchecked(0xff)) : -1;
-        }
-
-        public override int Read(byte[] b)
-        {
-            return Read(b, 0, b.Length);
+            throw new NotSupportedException();
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override int Read(byte[] b, int off, int len)
-        {
-            if (b == null)
-            {
-                throw new ArgumentNullException();
-            }
-            if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
-            {
-                throw new IndexOutOfRangeException();
-            }
-            if (len <= 0)
-            {
-                return 0;
-            }
-            if (pos >= size)
-            {
-                return -1;
-            }
-            if (pos + len > size)
-            {
-                len = size - pos;
-            }
-            Array.Copy(buffer, pos, b, off, len);
-            pos += len;
-            return len;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual object ReadObject()
+        public object ReadObject()
         {
             return service.ReadObject(this);
         }
 
-        public override long Skip(long n)
+        /// <exception cref="System.IO.IOException"></exception>
+        internal void CheckAvailable(int pos, int k)
         {
-            if (n <= 0 || n >= int.MaxValue)
+            if (pos < 0)
             {
-                return 0L;
+                throw new ArgumentException("Negative pos! -> " + pos);
             }
-            return SkipBytes((int) n);
+            if ((size - pos) < k)
+            {
+                throw new EndOfStreamException("Cannot read " + k + " bytes!");
+            }
         }
 
-        public virtual byte[] GetBuffer()
-        {
-            return buffer;
-        }
-
-        public override int Available()
-        {
-            return size - pos;
-        }
-
-        public override bool MarkSupported()
-        {
-            return true;
-        }
-
-        public override void Mark(int readlimit)
-        {
-            mark = pos;
-        }
-
-        public override void Close()
-        {
-            buffer = null;
-        }
-
-        public override string ToString()
+        public virtual string ToString()
         {
             var sb = new StringBuilder();
             sb.Append("ByteArrayObjectDataInput");

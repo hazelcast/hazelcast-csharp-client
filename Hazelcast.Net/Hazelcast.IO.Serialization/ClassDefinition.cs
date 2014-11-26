@@ -4,52 +4,34 @@ using System.Text;
 
 namespace Hazelcast.IO.Serialization
 {
-    [Serializable]
     internal class ClassDefinition : BinaryClassDefinition
     {
         private readonly IList<IFieldDefinition> fieldDefinitions = new List<IFieldDefinition>();
 
-        private readonly IDictionary<string, IFieldDefinition> fieldDefinitionsMap =
-            new Dictionary<string, IFieldDefinition>();
-
-        private readonly ICollection<IClassDefinition> nestedClassDefinitions = new HashSet<IClassDefinition>();
+        private readonly IDictionary<string, IFieldDefinition> fieldDefinitionsMap = new
+            Dictionary<string, IFieldDefinition>();
 
         public ClassDefinition()
         {
         }
 
-        public ClassDefinition(int factoryId, int classId)
+        public ClassDefinition(int factoryId, int classId, int version)
         {
             this.factoryId = factoryId;
             this.classId = classId;
+            this.version = version;
         }
 
-        public virtual void AddFieldDef(IFieldDefinition fd)
+        public override IFieldDefinition GetField(string name)
         {
-            fieldDefinitions.Add(fd);
-            fieldDefinitionsMap.Add(fd.GetName(), fd);
+            IFieldDefinition returnedVal;
+            fieldDefinitionsMap.TryGetValue(name, out returnedVal);
+            return returnedVal;
         }
 
-        public virtual void AddClassDef(IClassDefinition cd)
-        {
-            nestedClassDefinitions.Add(cd);
-        }
-
-        public override IFieldDefinition Get(string name)
-        {
-            IFieldDefinition rtn;
-            fieldDefinitionsMap.TryGetValue(name, out rtn);
-            return rtn;
-        }
-
-        public override IFieldDefinition Get(int fieldIndex)
+        public override IFieldDefinition GetField(int fieldIndex)
         {
             return fieldDefinitions[fieldIndex];
-        }
-
-        public virtual ICollection<IClassDefinition> GetNestedClassDefinitions()
-        {
-            return nestedClassDefinitions;
         }
 
         public override bool HasField(string fieldName)
@@ -64,67 +46,46 @@ namespace Hazelcast.IO.Serialization
 
         public override FieldType GetFieldType(string fieldName)
         {
-            IFieldDefinition fd = Get(fieldName);
+            IFieldDefinition fd = GetField(fieldName);
             if (fd != null)
             {
                 return fd.GetFieldType();
             }
-            throw new ArgumentException();
+            throw new ArgumentException("Unknown field: " + fieldName);
         }
 
         public override int GetFieldClassId(string fieldName)
         {
-            IFieldDefinition fd = Get(fieldName);
+            IFieldDefinition fd = GetField(fieldName);
             if (fd != null)
             {
                 return fd.GetClassId();
             }
-            throw new ArgumentException();
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void WriteData(IObjectDataOutput dataOutput)
-        {
-            dataOutput.WriteInt(factoryId);
-            dataOutput.WriteInt(classId);
-            dataOutput.WriteInt(version);
-            dataOutput.WriteInt(fieldDefinitions.Count);
-            foreach (IFieldDefinition fieldDefinition in fieldDefinitions)
-            {
-                fieldDefinition.WriteData(dataOutput);
-            }
-            dataOutput.WriteInt(nestedClassDefinitions.Count);
-            foreach (IClassDefinition classDefinition in nestedClassDefinitions)
-            {
-                classDefinition.WriteData(dataOutput);
-            }
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void ReadData(IObjectDataInput input)
-        {
-            factoryId = input.ReadInt();
-            classId = input.ReadInt();
-            version = input.ReadInt();
-            int size = input.ReadInt();
-            for (int i = 0; i < size; i++)
-            {
-                var fieldDefinition = new FieldDefinition();
-                fieldDefinition.ReadData(input);
-                AddFieldDef(fieldDefinition);
-            }
-            size = input.ReadInt();
-            for (int i_1 = 0; i_1 < size; i_1++)
-            {
-                var classDefinition = new ClassDefinition();
-                classDefinition.ReadData(input);
-                AddClassDef(classDefinition);
-            }
+            throw new ArgumentException("Unknown field: " + fieldName);
         }
 
         public override int GetFieldCount()
         {
             return fieldDefinitions.Count;
+        }
+
+        internal virtual void AddFieldDef(FieldDefinition fd)
+        {
+            fieldDefinitions.Add(fd);
+            fieldDefinitionsMap.Add(fd.GetName(), fd);
+        }
+
+        internal virtual ICollection<IFieldDefinition> GetFieldDefinitions()
+        {
+            return fieldDefinitions;
+        }
+
+        internal virtual void SetVersionIfNotSet(int version)
+        {
+            if (GetVersion() < 0)
+            {
+                this.version = version;
+            }
         }
 
         public override bool Equals(object o)
@@ -146,6 +107,22 @@ namespace Hazelcast.IO.Serialization
             {
                 return false;
             }
+            if (GetFieldCount() != that.GetFieldCount())
+            {
+                return false;
+            }
+            foreach (IFieldDefinition fd in fieldDefinitions)
+            {
+                IFieldDefinition fd2 = that.GetField(fd.GetName());
+                if (fd2 == null)
+                {
+                    return false;
+                }
+                if (!fd.Equals(fd2))
+                {
+                    return false;
+                }
+            }
             return true;
         }
 
@@ -159,7 +136,7 @@ namespace Hazelcast.IO.Serialization
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("IClassDefinition");
+            sb.Append("ClassDefinition");
             sb.Append("{factoryId=").Append(factoryId);
             sb.Append(", classId=").Append(classId);
             sb.Append(", version=").Append(version);

@@ -4,20 +4,25 @@ using System.Linq;
 using System.Reflection;
 using Hazelcast.Config;
 using Hazelcast.Core;
+using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal sealed class SerializationServiceBuilder
+    internal sealed class SerializationServiceBuilder : ISerializationServiceBuilder
     {
-        private readonly IDictionary<int, IDataSerializableFactory> dataSerializableFactories =
-            new Dictionary<int, IDataSerializableFactory>();
-
-        private readonly IDictionary<int, IPortableFactory> portableFactories = new Dictionary<int, IPortableFactory>();
-
-        private bool checkClassDefErrors = true;
+        private const int DEFAULT_OUT_BUFFER_SIZE = 4*1024;
 
         private ICollection<IClassDefinition> classDefinitions =
             new HashSet<IClassDefinition>();
+
+        private readonly IDictionary<int, IDataSerializableFactory> dataSerializableFactories =
+            new Dictionary<int, IDataSerializableFactory>();
+
+        private readonly IDictionary<int, IPortableFactory> portableFactories =
+            new Dictionary<int, IPortableFactory>();
+
+        private ByteOrder byteOrder = ByteOrder.BigEndian;
+        private bool checkClassDefErrors = true;
 
         private SerializationConfig config;
 
@@ -26,15 +31,14 @@ namespace Hazelcast.IO.Serialization
         private bool enableSharedObject;
         private IHazelcastInstance hazelcastInstance;
 
-        private int initialOutputBufferSize = 4*1024;
-        private bool isBigEndian = true;
+        private int initialOutputBufferSize = DEFAULT_OUT_BUFFER_SIZE;
         private IManagedContext managedContext;
 
         private IPartitioningStrategy partitioningStrategy;
         private bool useNativeByteOrder;
         private int version = -1;
 
-        public SerializationServiceBuilder SetVersion(int version)
+        public ISerializationServiceBuilder SetVersion(int version)
         {
             if (version < 0)
             {
@@ -44,7 +48,7 @@ namespace Hazelcast.IO.Serialization
             return this;
         }
 
-        public SerializationServiceBuilder SetConfig(SerializationConfig config)
+        public ISerializationServiceBuilder SetConfig(SerializationConfig config)
         {
             this.config = config;
             if (version < 0)
@@ -52,80 +56,80 @@ namespace Hazelcast.IO.Serialization
                 version = config.GetPortableVersion();
             }
             checkClassDefErrors = config.IsCheckClassDefErrors();
-            useNativeByteOrder = config.IsUseNativebool();
-            isBigEndian = config.IsBigEndian();
+            useNativeByteOrder = config.IsUseNativeByteOrder();
+            byteOrder = config.GetByteOrder();
             enableCompression = config.IsEnableCompression();
             enableSharedObject = config.IsEnableSharedObject();
             return this;
         }
 
-        public SerializationServiceBuilder AddDataSerializableFactory(int id, IDataSerializableFactory factory)
+        public ISerializationServiceBuilder AddDataSerializableFactory(int id, IDataSerializableFactory factory)
         {
             dataSerializableFactories.Add(id, factory);
             return this;
         }
 
-        public SerializationServiceBuilder AddPortableFactory(int id, IPortableFactory factory)
+        public ISerializationServiceBuilder AddPortableFactory(int id, IPortableFactory factory)
         {
             portableFactories.Add(id, factory);
             return this;
         }
 
-        public SerializationServiceBuilder AddClassDefinition(IClassDefinition cd)
+        public ISerializationServiceBuilder AddClassDefinition(IClassDefinition cd)
         {
             classDefinitions.Add(cd);
             return this;
         }
 
-        public SerializationServiceBuilder SetCheckClassDefErrors(bool checkClassDefErrors)
+        public ISerializationServiceBuilder SetCheckClassDefErrors(bool checkClassDefErrors)
         {
             this.checkClassDefErrors = checkClassDefErrors;
             return this;
         }
 
-        public SerializationServiceBuilder SetManagedContext(IManagedContext managedContext)
+        public ISerializationServiceBuilder SetManagedContext(IManagedContext managedContext)
         {
             this.managedContext = managedContext;
             return this;
         }
 
-        public SerializationServiceBuilder SetUseNativeByteOrder(bool useNativeByteOrder)
+        public ISerializationServiceBuilder SetUseNativeByteOrder(bool useNativeByteOrder)
         {
             this.useNativeByteOrder = useNativeByteOrder;
             return this;
         }
 
-        public SerializationServiceBuilder SetBigEndian(bool isBigEndian)
+        public ISerializationServiceBuilder SetByteOrder(ByteOrder byteOrder)
         {
-            this.isBigEndian = isBigEndian;
+            this.byteOrder = byteOrder;
             return this;
         }
 
-        public SerializationServiceBuilder SetHazelcastInstance(IHazelcastInstance hazelcastInstance)
+        public ISerializationServiceBuilder SetHazelcastInstance(IHazelcastInstance hazelcastInstance)
         {
             this.hazelcastInstance = hazelcastInstance;
             return this;
         }
 
-        public SerializationServiceBuilder SetEnableCompression(bool enableCompression)
+        public ISerializationServiceBuilder SetEnableCompression(bool enableCompression)
         {
             this.enableCompression = enableCompression;
             return this;
         }
 
-        public SerializationServiceBuilder SetEnableSharedObject(bool enableSharedObject)
+        public ISerializationServiceBuilder SetEnableSharedObject(bool enableSharedObject)
         {
             this.enableSharedObject = enableSharedObject;
             return this;
         }
 
-        public SerializationServiceBuilder SetPartitioningStrategy(IPartitioningStrategy partitionStrategy)
+        public ISerializationServiceBuilder SetPartitioningStrategy(IPartitioningStrategy partitionStrategy)
         {
             partitioningStrategy = partitionStrategy;
             return this;
         }
 
-        public SerializationServiceBuilder SetInitialOutputBufferSize(int initialOutputBufferSize)
+        public ISerializationServiceBuilder SetInitialOutputBufferSize(int initialOutputBufferSize)
         {
             if (initialOutputBufferSize <= 0)
             {
@@ -210,7 +214,7 @@ namespace Hazelcast.IO.Serialization
                     }
                     if (serializer is IHazelcastInstanceAware)
                     {
-                        ((IHazelcastInstanceAware) serializer).SetHazelcastInstance(hazelcastInstance);
+                        ((IHazelcastInstanceAware)serializer).SetHazelcastInstance(hazelcastInstance);
                     }
                     Type typeClass = serializerConfig.GetTypeClass();
                     if (typeClass == null)
@@ -226,9 +230,9 @@ namespace Hazelcast.IO.Serialization
                         }
                     }
                     //call by reflaction
-                    MethodInfo method = typeof (ISerializationService).GetMethod("Register");
+                    MethodInfo method = typeof(ISerializationService).GetMethod("Register");
                     MethodInfo generic = method.MakeGenericMethod(typeClass);
-                    generic.Invoke(ss, new object[] {serializer});
+                    generic.Invoke(ss, new object[] { serializer });
                     //mimics: ss.Register<typeClass>(serializer);"
                     //
                 }
@@ -238,16 +242,17 @@ namespace Hazelcast.IO.Serialization
 
         private IInputOutputFactory CreateInputOutputFactory()
         {
-            if (useNativeByteOrder || isBigEndian == BitConverter.IsLittleEndian)
+            if (byteOrder == null)
             {
-                isBigEndian = BitConverter.IsLittleEndian;
+                byteOrder = ByteOrder.BigEndian;
             }
-            if (isBigEndian)
+            if (useNativeByteOrder || byteOrder == ByteOrder.NativeOrder())
             {
-                return new ByteArrayInputOutputFactory();
+                byteOrder = ByteOrder.NativeOrder();
             }
-            throw new NotSupportedException("LITTLE ENDIAN SUPPORT NOT IMPLEMENTED");
+            return new ByteArrayInputOutputFactory(byteOrder);
         }
+
 
         private void AddConfigDataSerializableFactories(
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories, SerializationConfig config)
@@ -361,7 +366,7 @@ namespace Hazelcast.IO.Serialization
             {
                 if (f is IHazelcastInstanceAware)
                 {
-                    ((IHazelcastInstanceAware) f).SetHazelcastInstance(hazelcastInstance);
+                    ((IHazelcastInstanceAware)f).SetHazelcastInstance(hazelcastInstance);
                 }
             }
         }

@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Net.Ext;
 using Hazelcast.Util;
 
 namespace Hazelcast.Config
 {
     public class SerializationConfig
     {
-        private bool allowUnsafe = false;
+        private ByteOrder byteOrder = ByteOrder.BigEndian;
         private bool checkClassDefErrors = true;
         private ICollection<IClassDefinition> classDefinitions;
         private IDictionary<int, IDataSerializableFactory> dataSerializableFactories;
@@ -18,18 +19,15 @@ namespace Hazelcast.Config
         private bool enableSharedObject = false;
 
         private GlobalSerializerConfig globalSerializerConfig;
-        private bool isBigEndian = true;
         private IDictionary<int, IPortableFactory> portableFactories;
         private IDictionary<int, string> portableFactoryClasses;
         private int portableVersion = 0;
 
         private ICollection<SerializerConfig> serializerConfigs;
 
-        private bool useNativebool = false;
+        private bool useNativeByteOrder = false;
 
-        public SerializationConfig() : base()
-        {
-        }
+        public SerializationConfig() : base(){}
 
         public virtual GlobalSerializerConfig GetGlobalSerializerConfig()
         {
@@ -220,25 +218,25 @@ namespace Hazelcast.Config
             return this;
         }
 
-        public virtual bool IsUseNativebool()
+        public virtual bool IsUseNativeByteOrder()
         {
-            return useNativebool;
+            return useNativeByteOrder;
         }
 
-        public virtual SerializationConfig SetUseNativebool(bool useNativebool)
+        public virtual SerializationConfig SetUseNativeByteOrder(bool useNativeByteOrder)
         {
-            this.useNativebool = useNativebool;
+            this.useNativeByteOrder = useNativeByteOrder;
             return this;
         }
 
-        public virtual bool IsBigEndian()
+        public virtual ByteOrder GetByteOrder()
         {
-            return isBigEndian;
+            return byteOrder;
         }
 
-        public virtual SerializationConfig SetBigEndian(bool isBigEndian)
+        public virtual SerializationConfig SetByteOrder(ByteOrder byteOrder)
         {
-            this.isBigEndian = isBigEndian;
+            this.byteOrder = byteOrder;
             return this;
         }
 
@@ -264,17 +262,6 @@ namespace Hazelcast.Config
             return this;
         }
 
-        public virtual bool IsAllowUnsafe()
-        {
-            return allowUnsafe;
-        }
-
-        public virtual SerializationConfig SetAllowUnsafe(bool allowUnsafe)
-        {
-            this.allowUnsafe = allowUnsafe;
-            return this;
-        }
-
         public override string ToString()
         {
             var sb = new StringBuilder("SerializationConfig{");
@@ -287,8 +274,8 @@ namespace Hazelcast.Config
             sb.Append(", serializerConfigs=").Append(serializerConfigs);
             sb.Append(", checkClassDefErrors=").Append(checkClassDefErrors);
             sb.Append(", classDefinitions=").Append(classDefinitions);
-            sb.Append(", isBigEndian=").Append(isBigEndian);
-            sb.Append(", useNativebool=").Append(useNativebool);
+            sb.Append(", byteOrder=").Append(byteOrder);
+            sb.Append(", useNativeByteOrder=").Append(useNativeByteOrder);
             sb.Append('}');
             return sb.ToString();
         }

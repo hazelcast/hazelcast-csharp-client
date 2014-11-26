@@ -1,15 +1,21 @@
 namespace Hazelcast.IO.Serialization
 {
-    public interface IFieldDefinition : IDataSerializable
-    {
-        FieldType GetFieldType();
+	/// <summary>FieldDefinition defines name, type, index of a field</summary>
+	public interface IFieldDefinition
+	{
+		/// <returns>field type</returns>
+		FieldType GetFieldType();
 
-        string GetName();
+		/// <returns>field name</returns>
+		string GetName();
 
-        int GetIndex();
+		/// <returns>field index</returns>
+		int GetIndex();
 
-        int GetClassId();
+		/// <returns>class id of this field's class</returns>
+		int GetClassId();
 
-        int GetFactoryId();
-    }
+		/// <returns>factory id of this field's class</returns>
+		int GetFactoryId();
+	}
 }

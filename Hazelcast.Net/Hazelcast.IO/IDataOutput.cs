@@ -17,7 +17,7 @@ namespace Hazelcast.IO
         void WriteBoolean(bool v);
 
         /// <exception cref="System.IO.IOException"></exception>
-        void WriteByte(byte v);
+        void WriteByte(int v);
 
         /// <exception cref="System.IO.IOException"></exception>
         void WriteShort(int v);

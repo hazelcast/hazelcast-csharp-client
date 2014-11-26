@@ -1,301 +1,210 @@
-using System;
-using System.IO;
 using System.Text;
+using Hazelcast.Net.Ext;
+using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
-    [Serializable]
-    internal sealed class Data : IdentifiedDataSerializable,IIdentifiedDataSerializable
-    {
-        public const int FactoryId = 0;
-        public const int Id = 0;
-        public const int NoClassId = 0;
-        internal byte[] buffer = null;
-        internal IClassDefinition classDefinition = null;
-        internal int partitionHash = 0;
-        internal int type = SerializationConstants.ConstantTypeData;
+	internal sealed class Data : IMutableData
+	{
+		private int type = SerializationConstants.ConstantTypeNull;
+		private byte[] header;
+		private byte[] data;
+		private int partitionHash;
 
-        public Data()
-        {
-        }
+		public Data(){}
 
-        public Data(int type, byte[] bytes)
-        {
-            // WARNING: IPortable class-id cannot be zero.
-            //    transient int hash;
-            this.type = type;
-            buffer = bytes;
-        }
+		public Data(int type, byte[] data)
+		{
+			this.data = data;
+			this.type = type;
+		}
 
-        /// <summary>
-        ///     WARNING:
-        ///     <p />
-        ///     Should be in sync with
-        /// </summary>
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadData(IObjectDataInput input)
-        {
-            type = input.ReadInt();
-            int classId = input.ReadInt();
-            if (classId != NoClassId)
-            {
-                int factoryId = input.ReadInt();
-                int version = input.ReadInt();
-                IPortableContext context = ((IPortableContextAware) input).GetSerializationContext();
-                classDefinition = context.Lookup(factoryId, classId, version);
-                int classDefSize = input.ReadInt();
-                if (classDefinition != null)
-                {
-                    input.SkipBytes(classDefSize);
-                }
-                else
-                {
-                    var classDefBytes = new byte[classDefSize];
-                    input.ReadFully(classDefBytes);
-                    classDefinition = context.CreateClassDefinition(factoryId, classDefBytes);
-                }
-            }
-            int size = input.ReadInt();
-            if (size > 0)
-            {
-                buffer = new byte[size];
-                input.ReadFully(buffer);
-            }
-            partitionHash = input.ReadInt();
-        }
+		public Data(int type, byte[] data, int partitionHash)
+		{
+			this.data = data;
+			this.partitionHash = partitionHash;
+			this.type = type;
+		}
 
-        /// <summary>
-        ///     WARNING:
-        ///     <p />
-        ///     Should be in sync with
-        ///     <p />
-        ///     <see cref="TotalSize()">TotalSize()</see>
-        ///     should be updated whenever writeData method is changed.
-        /// </summary>
-        /// <exception cref="System.IO.IOException"></exception>
-        public void WriteData(IObjectDataOutput output)
-        {
-            output.WriteInt(type);
-            if (classDefinition != null)
-            {
-                output.WriteInt(classDefinition.GetClassId());
-                output.WriteInt(classDefinition.GetFactoryId());
-                output.WriteInt(classDefinition.GetVersion());
-                byte[] classDefBytes = ((BinaryClassDefinition) classDefinition).GetBinary();
-                output.WriteInt(classDefBytes.Length);
-                output.Write(classDefBytes);
-            }
-            else
-            {
-                output.WriteInt(NoClassId);
-            }
-            int size = BufferSize();
-            output.WriteInt(size);
-            if (size > 0)
-            {
-                output.Write(buffer);
-            }
-            output.WriteInt(GetPartitionHash());
-        }
+		public Data(int type, byte[] data, int partitionHash, byte[] header)
+		{
+			this.type = type;
+			this.data = data;
+			this.partitionHash = partitionHash;
+			this.header = header;
+		}
 
-        public int GetFactoryId()
-        {
-            return FactoryId;
-        }
+		public int DataSize()
+		{
+			return data != null ? data.Length : 0;
+		}
 
-        public int GetId()
-        {
-            return Id;
-        }
+		public int GetPartitionHash()
+		{
+			return partitionHash != 0 ? partitionHash : GetHashCode();
+		}
 
-        public int BufferSize()
-        {
-            return (buffer == null) ? 0 : buffer.Length;
-        }
+		public bool HasPartitionHash()
+		{
+			return partitionHash != 0;
+		}
 
-        /// <summary>Calculates the size of the binary after the Data is serialized.</summary>
-        /// <remarks>
-        ///     Calculates the size of the binary after the Data is serialized.
-        ///     <p />
-        ///     WARNING:
-        ///     <p />
-        ///     Should be in sync with
-        /// </remarks>
-        public int TotalSize()
-        {
-            int total = 0;
-            total += 4;
-            // type
-            if (classDefinition != null)
-            {
-                total += 4;
-                // classDefinition-classId
-                total += 4;
-                // // classDefinition-factory-id
-                total += 4;
-                // classDefinition-version
-                total += 4;
-                // classDefinition-binary-length
-                byte[] binary = ((BinaryClassDefinition) classDefinition).GetBinary();
-                total += binary != null ? binary.Length : 0;
-            }
-            else
-            {
-                // classDefinition-binary
-                total += 4;
-            }
-            // no-classId
-            total += 4;
-            // buffer-size
-            total += BufferSize();
-            // buffer
-            total += 4;
-            // partition-hash
-            return total;
-        }
+		public int HeaderSize()
+		{
+			return header != null ? header.Length : 0;
+		}
 
-        public int GetHeapCost()
-        {
-            int total = 0;
-            total += 4;
-            // type
-            total += 4;
-            // cd
-            total += 16;
-            // buffer array ref (12: array header, 4: length)
-            total += BufferSize();
-            // buffer itself
-            total += 4;
-            // partition-hash
-            return total;
-        }
+		public byte[] GetHeader()
+		{
+			return header;
+		}
 
-        public override int GetHashCode()
-        {
-            //        int h = hash;
-            //        if (h == 0 && bufferSize() > 0) {
-            //            h = hash = calculateHash(buffer);
-            //        }
-            //        return h;
-            return CalculateHash(buffer);
-        }
+		public byte[] GetData()
+		{
+			return data;
+		}
 
-        private static int CalculateHash(byte[] buffer)
-        {
-            if (buffer == null)
-            {
-                return 0;
-            }
-            // FNV (Fowler/Noll/Vo) Hash "1a"
-            int prime = unchecked(0x01000193);
-            var hash = unchecked((int) (0x811c9dc5));
-            for (int i = buffer.Length - 1; i >= 0; i--)
-            {
-                hash = (hash ^ buffer[i])*prime;
-            }
-            return hash;
-        }
+		public void SetData(byte[] array)
+		{
+			this.data = array;
+		}
 
-        public int GetPartitionHash()
-        {
-            int ph = partitionHash;
-            if (ph == 0 && BufferSize() > 0)
-            {
-                ph = partitionHash = GetHashCode();
-            }
-            return ph;
-        }
+		public void SetPartitionHash(int partitionHash)
+		{
+			this.partitionHash = partitionHash;
+		}
 
-        //public int GetType()
-        //{
-        //    return type;
-        //}
+		public int GetType()
+		{
+			return type;
+		}
 
-        public IClassDefinition GetClassDefinition()
-        {
-            return classDefinition;
-        }
+		public void SetType(int type)
+		{
+			this.type = type;
+		}
 
-        public byte[] GetBuffer()
-        {
-            return buffer;
-        }
+		public void SetHeader(byte[] header)
+		{
+			this.header = header;
+		}
 
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Data))
-            {
-                return false;
-            }
-            if (this == obj)
-            {
-                return true;
-            }
-            var data = (Data) obj;
-            return type == data.type && BufferSize() == data.BufferSize() && Equals(buffer, data.buffer);
-        }
+		public int ReadIntHeader(int offset, ByteOrder order)
+		{
+			return Bits.ReadInt(header, offset, order == ByteOrder.BigEndian);
+		}
 
-        // Same as Arrays.equals(byte[] a, byte[] a2) but loop order is reversed.
-        private static bool Equals(byte[] data1, byte[] data2)
-        {
-            if (data1 == data2)
-            {
-                return true;
-            }
-            if (data1 == null || data2 == null)
-            {
-                return false;
-            }
-            int length = data1.Length;
-            if (data2.Length != length)
-            {
-                return false;
-            }
-            for (int i = length - 1; i >= 0; i--)
-            {
-                if (data1[i] != data2[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+		public int GetHeapCost()
+		{
+			int integerSizeInBytes = 4;
+			int arrayHeaderSizeInBytes = 16;
+			int total = 0;
+			// type
+			total += integerSizeInBytes;
+			if (header != null)
+			{
+				// metadata array ref (12: array header, 4: length)
+				total += arrayHeaderSizeInBytes;
+				total += header.Length;
+			}
+			else
+			{
+				total += integerSizeInBytes;
+			}
+			if (data != null)
+			{
+				// buffer array ref (12: array header, 4: length)
+				total += arrayHeaderSizeInBytes;
+				// data itself
+				total += data.Length;
+			}
+			else
+			{
+				total += integerSizeInBytes;
+			}
+			// partition-hash
+			total += integerSizeInBytes;
+			return total;
+		}
 
-        public bool IsPortable()
-        {
-            return SerializationConstants.ConstantTypePortable == type;
-        }
+		public override bool Equals(object o)
+		{
+			if (this == o)
+			{
+				return true;
+			}
+			if (o == null)
+			{
+				return false;
+			}
+			if (!(o is IData))
+			{
+				return false;
+			}
+			IData data = (IData)o;
+			if (GetType() != data.GetType())
+			{
+				return false;
+			}
+			int dataSize = DataSize();
+			if (dataSize != data.DataSize())
+			{
+				return false;
+			}
+			return dataSize == 0 || Equals(this.data, data.GetData());
+		}
 
-        public bool IsDataSerializable()
-        {
-            return SerializationConstants.ConstantTypeData == type;
-        }
+		// Same as Arrays.equals(byte[] a, byte[] a2) but loop order is reversed.
+		private static bool Equals(byte[] data1, byte[] data2)
+		{
+			if (data1 == data2)
+			{
+				return true;
+			}
+			if (data1 == null || data2 == null)
+			{
+				return false;
+			}
+			int length = data1.Length;
+			if (data2.Length != length)
+			{
+				return false;
+			}
+			for (int i = length - 1; i >= 0; i--)
+			{
+				if (data1[i] != data2[i])
+				{
+					return false;
+				}
+			}
+			return true;
+		}
 
-        public override string ToString()
-        {
-            var sb = new StringBuilder("Data{");
-            sb.Append("type=").Append(type);
-            sb.Append(", partitionHash=").Append(GetPartitionHash());
-            sb.Append(", bufferSize=").Append(BufferSize());
-            sb.Append(", totalSize=").Append(TotalSize());
-            sb.Append('}');
-            return sb.ToString();
-        }
+		public override int GetHashCode()
+		{
+			return HashUtil.MurmurHash3_x86_32(data, 0, DataSize());
+		}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="context"></param>
-        /// <exception cref="HazelcastSerializationException"></exception>
-        public void PostConstruct(IPortableContext context)
-        {
-            if (classDefinition != null && classDefinition is BinaryClassDefinitionProxy) {
-            try {
-                classDefinition = ((BinaryClassDefinitionProxy) classDefinition).ToReal(context);
-            } catch (IOException e) {
-                throw new HazelcastSerializationException(e);
-            }
-        }
-        }
-    }
+		public long Hash64()
+		{
+			return HashUtil.MurmurHash3_x64_64(data, 0, DataSize());
+		}
+
+		public bool IsPortable()
+		{
+			return SerializationConstants.ConstantTypePortable == type;
+		}
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder("HeapData{");
+			sb.Append("type=").Append(GetType());
+			sb.Append(", hashCode=").Append(GetHashCode());
+			sb.Append(", partitionHash=").Append(GetPartitionHash());
+			sb.Append(", dataSize=").Append(DataSize());
+			sb.Append(", heapCost=").Append(GetHeapCost());
+			sb.Append('}');
+			return sb.ToString();
+		}
+	}
 }

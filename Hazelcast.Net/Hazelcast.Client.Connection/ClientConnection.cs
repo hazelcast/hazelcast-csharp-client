@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Connection
 
         private readonly ConcurrentDictionary<int, Task> eventTasks = new ConcurrentDictionary<int, Task>();
 
-        private readonly ConcurrentQueue<SocketWritable> writeQueue = new ConcurrentQueue<SocketWritable>();
+        private readonly ConcurrentQueue<ISocketWritable> writeQueue = new ConcurrentQueue<ISocketWritable>();
 
         private int _callIdCounter = 1;
 
@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Connection
         private Packet packet;
         //private DataAdapter sendDataAdapter;
 
-        private SocketWritable lastWritable;
+        private ISocketWritable lastWritable;
 
         private bool live = false;
 
@@ -383,7 +383,7 @@ namespace Hazelcast.Client.Connection
 
         #region ASYNC SEND RESEND REGISTER ETC
 
-        public bool WriteAsync(SocketWritable packet)
+        public bool WriteAsync(ISocketWritable packet)
         {
             if (!live)
             {
@@ -951,7 +951,7 @@ namespace Hazelcast.Client.Connection
 
         #endregion
 
-        private SocketWritable Poll()
+        private ISocketWritable Poll()
         {
             lastWritable = null;
             writeQueue.TryDequeue(out lastWritable);

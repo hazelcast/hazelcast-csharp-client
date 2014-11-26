@@ -1,20 +1,39 @@
+using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
+using Hazelcast.Net.Ext;
+
 namespace Hazelcast.IO.Serialization
 {
-    internal sealed class ByteArrayInputOutputFactory : IInputOutputFactory
-    {
-        public IBufferObjectDataInput CreateInput(Data data, ISerializationService service)
-        {
-            return new ByteArrayObjectDataInput(data, service);
-        }
+	internal sealed class ByteArrayInputOutputFactory : IInputOutputFactory
+	{
+		private readonly ByteOrder byteOrder;
 
-        public IBufferObjectDataInput CreateInput(byte[] buffer, ISerializationService service)
-        {
-            return new ByteArrayObjectDataInput(buffer, service);
-        }
+		public ByteArrayInputOutputFactory(ByteOrder byteOrder)
+		{
+			this.byteOrder = byteOrder;
+		}
 
-        public IBufferObjectDataOutput CreateOutput(int size, ISerializationService service)
-        {
-            return new ByteArrayObjectDataOutput(size, service);
-        }
-    }
+		public IBufferObjectDataInput CreateInput(IData data, ISerializationService service
+			)
+		{
+			return new ByteArrayObjectDataInput(data, service, byteOrder);
+		}
+
+		public IBufferObjectDataInput CreateInput(byte[] buffer, ISerializationService service
+			)
+		{
+			return new ByteArrayObjectDataInput(buffer, service, byteOrder);
+		}
+
+		public IBufferObjectDataOutput CreateOutput(int size, ISerializationService service
+			)
+		{
+			return new ByteArrayObjectDataOutput(size, service, byteOrder);
+		}
+
+		public ByteOrder GetByteOrder()
+		{
+			return byteOrder;
+		}
+	}
 }

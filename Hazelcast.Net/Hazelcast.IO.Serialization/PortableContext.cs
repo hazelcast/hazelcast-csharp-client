@@ -1,64 +1,148 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using Hazelcast.Core;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using Hazelcast.Net.Ext;
+using ICSharpCode.SharpZipLib;
+using ICSharpCode.SharpZipLib.Zip.Compression;
 
 namespace Hazelcast.IO.Serialization
 {
     internal sealed class PortableContext : IPortableContext
     {
-        internal readonly IDictionary<int, ClassDefinitionContext> portableContextMap;
+        public const int HEADER_ENTRY_LENGTH = 12;
+        public const int HEADER_FACTORY_OFFSET = 0;
+        public const int HEADER_CLASS_OFFSET = 4;
+        public const int HEADER_VERSION_OFFSET = 8;
+        private const int COMPRESSION_BUFFER_LENGTH = 1024;
 
-        internal readonly SerializationService serializationService;
-        internal readonly int version;
 
-        internal PortableContext(SerializationService serializationService,
-            ICollection<int> portableFactories, int version)
+        private readonly ConcurrentDictionary<int, ClassDefinitionContext> classDefContextMap =
+            new ConcurrentDictionary<int, ClassDefinitionContext>();
+
+        private readonly ISerializationService serializationService;
+        private readonly int version;
+
+        internal PortableContext(ISerializationService serializationService, int version)
         {
             this.serializationService = serializationService;
             this.version = version;
-            IDictionary<int, ClassDefinitionContext> portableMap = new Dictionary<int, ClassDefinitionContext>();
-            foreach (int factoryId in portableFactories)
+        }
+
+        public int GetClassVersion(int factoryId, int classId)
+        {
+            return GetClassDefContext(factoryId).GetClassVersion(classId);
+        }
+
+        public void SetClassVersion(int factoryId, int classId, int version)
+        {
+            GetClassDefContext(factoryId).SetClassVersion(classId, version);
+        }
+
+        public IClassDefinition LookupClassDefinition(int factoryId, int classId, int version)
+        {
+            return GetClassDefContext(factoryId).Lookup(classId, version);
+        }
+
+        public IClassDefinition LookupClassDefinition(IData data)
+        {
+            if (!data.IsPortable())
             {
-                portableMap.Add(factoryId, new ClassDefinitionContext(this));
+                throw new ArgumentException("Data is not Portable!");
             }
-            portableContextMap = portableMap;
+            ByteOrder byteOrder = serializationService.GetByteOrder();
+            return ReadClassDefinition(data, 0, byteOrder);
         }
 
-        // do not modify!
-        public IClassDefinition Lookup(int factoryId, int classId)
+        public bool HasClassDefinition(IData data)
         {
-            return GetPortableContext(factoryId).Lookup(classId, version);
+            if (data.IsPortable())
+            {
+                return true;
+            }
+            return data.HeaderSize() > 0;
         }
 
-        public IClassDefinition Lookup(int factoryId, int classId, int version)
+        public IClassDefinition[] GetClassDefinitions(IData data)
         {
-            return GetPortableContext(factoryId).Lookup(classId, version);
+            if (data.HeaderSize() == 0)
+            {
+                return null;
+            }
+            int len = data.HeaderSize();
+            if (len%HEADER_ENTRY_LENGTH != 0)
+            {
+                throw new Exception("Header length should be factor of " + HEADER_ENTRY_LENGTH);
+            }
+            int k = len/HEADER_ENTRY_LENGTH;
+            ByteOrder byteOrder = serializationService.GetByteOrder();
+            var definitions = new IClassDefinition[k];
+            for (int i = 0; i < k; i++)
+            {
+                definitions[i] = ReadClassDefinition(data, i*HEADER_ENTRY_LENGTH, byteOrder);
+            }
+            return definitions;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public IClassDefinition CreateClassDefinition(int factoryId, byte[] compressedBinary)
         {
-            return GetPortableContext(factoryId).CreateClassDefinition(compressedBinary);
+            return GetClassDefContext(factoryId).Create(compressedBinary);
         }
 
         public IClassDefinition RegisterClassDefinition(IClassDefinition cd)
         {
-            return GetPortableContext(cd.GetFactoryId()).RegisterClassDefinition(cd);
+            return GetClassDefContext(cd.GetFactoryId()).Register(cd);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public IClassDefinition LookupOrRegisterClassDefinition(IPortable p)
         {
-            IClassDefinition cd = Lookup(p.GetFactoryId(), p.GetClassId());
+            int portableVersion = PortableVersionHelper.GetVersion(p, version);
+            IClassDefinition cd = LookupClassDefinition(p.GetFactoryId(), p.GetClassId(), portableVersion
+                );
             if (cd == null)
             {
-                var classDefinitionWriter = new ClassDefinitionWriter(this, p.GetFactoryId(), p.GetClassId());
-                p.WritePortable(classDefinitionWriter);
-                cd = classDefinitionWriter.RegisterAndGet();
+                var writer = new ClassDefinitionWriter(this, p.GetFactoryId(),
+                    p.GetClassId(), portableVersion);
+                p.WritePortable(writer);
+                cd = writer.RegisterAndGet();
             }
             return cd;
+        }
+
+        public IFieldDefinition GetFieldDefinition(IClassDefinition classDef, string name)
+        {
+            IFieldDefinition fd = classDef.GetField(name);
+            if (fd == null)
+            {
+                string[] fieldNames = name.Split('.');
+                if (fieldNames.Length > 1)
+                {
+                    IClassDefinition currentClassDef = classDef;
+                    for (int i = 0; i < fieldNames.Length; i++)
+                    {
+                        name = fieldNames[i];
+                        fd = currentClassDef.GetField(name);
+                        if (i == fieldNames.Length - 1)
+                        {
+                            break;
+                        }
+                        if (fd == null)
+                        {
+                            throw new ArgumentException("Unknown field: " + name);
+                        }
+                        currentClassDef = LookupClassDefinition(fd.GetFactoryId(), fd.GetClassId(), currentClassDef
+                            .GetVersion());
+                        if (currentClassDef == null)
+                        {
+                            throw new ArgumentException("Not a registered Portable field: " + fd);
+                        }
+                    }
+                }
+            }
+            return fd;
         }
 
         public int GetVersion()
@@ -71,109 +155,131 @@ namespace Hazelcast.IO.Serialization
             return serializationService.GetManagedContext();
         }
 
-        private void RegisterNestedDefinitions(ClassDefinition cd)
+        public ByteOrder GetByteOrder()
         {
-            ICollection<IClassDefinition> nestedDefinitions = cd.GetNestedClassDefinitions();
-            foreach (IClassDefinition classDefinition in nestedDefinitions)
+            return serializationService.GetByteOrder();
+        }
+
+        private IClassDefinition ReadClassDefinition(IData data, int start, ByteOrder order)
+        {
+            int factoryId = data.ReadIntHeader(start + HEADER_FACTORY_OFFSET, order);
+            int classId = data.ReadIntHeader(start + HEADER_CLASS_OFFSET, order);
+            int version = data.ReadIntHeader(start + HEADER_VERSION_OFFSET, order);
+            return LookupClassDefinition(factoryId, classId, version);
+        }
+
+        private ClassDefinitionContext GetClassDefContext(int factoryId)
+        {
+            return classDefContextMap.GetOrAdd(factoryId, theFactoryId => new ClassDefinitionContext(this, theFactoryId));
+        }
+
+        /// <summary>Writes a ClassDefinition to a stream.</summary>
+        /// <remarks>Writes a ClassDefinition to a stream.</remarks>
+        /// <param name="classDefinition">ClassDefinition</param>
+        /// <param name="output">stream to write ClassDefinition</param>
+        /// <exception cref="System.IO.IOException"></exception>
+        private static void WriteClassDefinition(IClassDefinition classDefinition, IObjectDataOutput output)
+        {
+            var cd = (ClassDefinition) classDefinition;
+            output.WriteInt(cd.GetFactoryId());
+            output.WriteInt(cd.GetClassId());
+            output.WriteInt(cd.GetVersion());
+            ICollection<IFieldDefinition> fieldDefinitions = cd.GetFieldDefinitions();
+            output.WriteShort(fieldDefinitions.Count);
+            foreach (IFieldDefinition fieldDefinition in fieldDefinitions)
             {
-                var nestedCD = (ClassDefinition) classDefinition;
-                RegisterClassDefinition(nestedCD);
-                RegisterNestedDefinitions(nestedCD);
+                WriteFieldDefinition((FieldDefinition) fieldDefinition, output);
             }
         }
 
-        private ClassDefinitionContext GetPortableContext(int factoryId)
+        /// <summary>Reads a ClassDefinition from a stream.</summary>
+        /// <remarks>Reads a ClassDefinition from a stream.</remarks>
+        /// <param name="input">stream to write ClassDefinition</param>
+        /// <returns>ClassDefinition</returns>
+        /// <exception cref="System.IO.IOException"></exception>
+        private static ClassDefinition ReadClassDefinition(IObjectDataInput input)
         {
-            ClassDefinitionContext ctx = null;
-            portableContextMap.TryGetValue(factoryId, out ctx);
-            if (ctx == null)
+            int factoryId = input.ReadInt();
+            int classId = input.ReadInt();
+            int version = input.ReadInt();
+            if (classId == 0)
             {
-                throw new HazelcastSerializationException("Could not find IPortableFactory for factoryId: " + factoryId);
+                throw new ArgumentException("Portable class id cannot be zero!");
             }
-            return ctx;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        //internal static void Compress(byte[] decompressedData, IBufferObjectDataOutput output)
-        //{
-        //    var compressedStream = new MemoryStream();
-        //    var compressionStream = new DeflateStream(compressedStream, CompressionMode.Compress);
-        //    compressionStream.Write(decompressedData,0,decompressedData.Length);
-        //    compressionStream.Close();
-        //    byte[] compressedData = compressedStream.ToArray();
-        //    output.Write(compressedData);
-        //    compressedStream.Close();
-        //}
-        internal static void CompressZip(byte[] decompressedData, IBufferObjectDataOutput output)
-        {
-            var compressedStream = new MemoryStream();
-            var compressionStream = new DeflaterOutputStream(compressedStream);
-
-            compressionStream.Write(decompressedData, 0, decompressedData.Length);
-            compressionStream.Close();
-
-            byte[] compressedData = compressedStream.ToArray();
-
-            output.Write(compressedData);
-            compressedStream.Close();
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        //internal static void Decompress(byte[] compressedData, IBufferObjectDataOutput output)
-        //{
-        //    var decompressedStream = new MemoryStream();
-        //    var decompressionStream = new DeflateStream(decompressedStream, CompressionMode.Decompress);
-        //    decompressionStream.Write(compressedData,0,compressedData.Length);
-        //    decompressionStream.Close();
-        //    byte[] decompressedData = decompressedStream.ToArray();
-        //    output.Write(decompressedData);
-        //    decompressedStream.Close();
-        //}
-        internal static void DecompressZip(byte[] compressedData, IBufferObjectDataOutput output)
-        {
-            //var decompressedStream = new MemoryStream();
-            //var decompressionStream =new InflaterInputStream(decompressedStream);
-            //decompressionStream.IsStreamOwner = false;
-
-            //decompressionStream.Read(compressedData,0,compressedData.Length);
-
-            //decompressionStream.Close();
-            //byte[] decompressedData = decompressedStream.ToArray();
-            //output.Write(decompressedData);
-            //decompressedStream.Close();
-
-
-            byte[] resBuffer = null;
-
-            var mInStream = new MemoryStream(compressedData);
-            var mOutStream = new MemoryStream(compressedData.Length);
-            var infStream = new InflaterInputStream(mInStream);
-
-            mInStream.Position = 0;
-
-            try
+            var cd = new ClassDefinition(factoryId, classId, version);
+            int len = input.ReadShort();
+            for (int i = 0; i < len; i++)
             {
-                var tmpBuffer = new byte[compressedData.Length];
-                int read = 0;
-                do
+                FieldDefinition fd = ReadFieldDefinition(input);
+                cd.AddFieldDef(fd);
+            }
+            return cd;
+        }
+
+        /// <summary>Writes a FieldDefinition to a stream.</summary>
+        /// <remarks>Writes a FieldDefinition to a stream.</remarks>
+        /// <param name="fd">FieldDefinition</param>
+        /// <param name="output">stream to write FieldDefinition</param>
+        /// <exception cref="System.IO.IOException"></exception>
+        private static void WriteFieldDefinition(FieldDefinition fd, IObjectDataOutput output)
+        {
+            output.WriteInt(fd.index);
+            output.WriteUTF(fd.fieldName);
+            //        out.writeByte(fd.type.getId());
+            output.WriteInt(fd.factoryId);
+            output.WriteInt(fd.classId);
+        }
+
+        /// <summary>Reads a FieldDefinition from a stream.</summary>
+        /// <remarks>Reads a FieldDefinition from a stream.</remarks>
+        /// <param name="input">stream to write FieldDefinition</param>
+        /// <returns>FieldDefinition</returns>
+        /// <exception cref="System.IO.IOException"></exception>
+        private static FieldDefinition ReadFieldDefinition(IObjectDataInput input)
+        {
+            int index = input.ReadInt();
+            string name = input.ReadUTF();
+            byte typeId = input.ReadByte();
+            int factoryId = input.ReadInt();
+            int classId = input.ReadInt();
+            return new FieldDefinition(index, name, FieldType.CHAR, factoryId, classId);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        private static void Compress(byte[] input, IDataOutput output)
+        {
+            var deflater = new Deflater();
+            deflater.SetLevel(Deflater.DEFAULT_COMPRESSION);
+            deflater.SetStrategy(DeflateStrategy.Filtered);
+            deflater.SetInput(input);
+            deflater.Finish();
+            var buf = new byte[COMPRESSION_BUFFER_LENGTH];
+            while (!deflater.IsFinished)
+            {
+                int count = deflater.Deflate(buf);
+                output.Write(buf, 0, count);
+            }
+            deflater.Finish();
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        private static void Decompress(byte[] compressedData, IDataOutput output)
+        {
+            var inflater = new Inflater();
+            inflater.SetInput(compressedData);
+            var buf = new byte[COMPRESSION_BUFFER_LENGTH];
+            while (!inflater.IsFinished)
+            {
+                try
                 {
-                    read = infStream.Read(tmpBuffer, 0, tmpBuffer.Length);
-                    if (read > 0)
-                    {
-                        mOutStream.Write(tmpBuffer, 0, read);
-                    }
-                } while (read > 0);
-
-                resBuffer = mOutStream.ToArray();
+                    int count = inflater.Inflate(buf);
+                    output.Write(buf, 0, count);
+                }
+                catch (SharpZipBaseException e)
+                {
+                    throw new IOException(e.Message);
+                }
             }
-            finally
-            {
-                infStream.Close();
-                mInStream.Close();
-                mOutStream.Close();
-            }
-
-            output.Write(resBuffer);
         }
 
         internal static long CombineToLong(int x, int y)
@@ -186,89 +292,158 @@ namespace Hazelcast.IO.Serialization
             return (lowerBits) ? (int) value : (int) (value >> 32);
         }
 
-        internal class ClassDefinitionContext
+        private sealed class ClassDefinitionContext
         {
-            private readonly PortableContext _enclosing;
+            private readonly ConcurrentDictionary<int, int> _currentClassVersions = new ConcurrentDictionary<int, int>();
 
-            internal readonly ConcurrentDictionary<long, ClassDefinition> versionedDefinitions =
-                new ConcurrentDictionary<long, ClassDefinition>();
+            private readonly int _factoryId;
+            private readonly PortableContext _portableContext;
 
-            internal ClassDefinitionContext(PortableContext _enclosing)
+            private readonly ConcurrentDictionary<long, IClassDefinition> _versionedDefinitions =
+                new ConcurrentDictionary<long, IClassDefinition>();
+
+            internal ClassDefinitionContext(PortableContext portableContext, int factoryId)
             {
-                this._enclosing = _enclosing;
+                _portableContext = portableContext;
+                _factoryId = factoryId;
             }
 
-            internal virtual IClassDefinition Lookup(int classId, int version)
+            internal int GetClassVersion(int classId)
             {
-                ClassDefinition retVal = null;
-                versionedDefinitions.TryGetValue(CombineToLong(classId, version), out retVal);
-                return retVal;
+                int version;
+                bool hasValue = _currentClassVersions.TryGetValue(classId, out version);
+                return hasValue ? version : -1;
             }
 
-            /// <exception cref="System.IO.IOException"></exception>
-            internal virtual IClassDefinition CreateClassDefinition(byte[] compressedBinary)
+            internal void SetClassVersion(int classId, int version)
             {
-                if (compressedBinary == null || compressedBinary.Length == 0)
+                bool hasAdded = _currentClassVersions.TryAdd(classId, version);
+                if (!hasAdded)
                 {
-                    throw new IOException("Illegal class-definition binary! ");
+                    throw new ArgumentException("Class-id: " + classId + " is already registered!");
                 }
-                IBufferObjectDataOutput output = _enclosing.serializationService.Pop();
-                byte[] binary;
-                try
-                {
-                    DecompressZip(compressedBinary, output);
-                    //Decompress(compressedBinary, output);
-                    binary = output.ToByteArray();
-                }
-                finally
-                {
-                    _enclosing.serializationService.Push(output);
-                }
-                var cd = new ClassDefinition();
-                cd.ReadData(_enclosing.serializationService.CreateObjectDataInput(binary));
-                cd.SetBinary(compressedBinary);
-                _enclosing.RegisterNestedDefinitions(cd);
-                ClassDefinition currentCd =
-                    versionedDefinitions.GetOrAdd(CombineToLong(cd.classId, _enclosing.GetVersion()), cd);
-                return currentCd ?? cd;
             }
 
-            internal virtual IClassDefinition RegisterClassDefinition(IClassDefinition cd)
+            internal IClassDefinition Lookup(int classId, int version)
             {
-                if (cd == null)
+                IClassDefinition cd = null;
+                _versionedDefinitions.TryGetValue(CombineToLong(classId, version), out cd);
+                if (cd is BinaryClassDefinitionProxy)
                 {
-                    return null;
-                }
-                var cdImpl = (ClassDefinition) cd;
-                if (cdImpl.GetVersion() < 0)
-                {
-                    cdImpl.version = _enclosing.GetVersion();
-                }
-                if (cdImpl.GetBinary() == null)
-                {
-                    IBufferObjectDataOutput output = _enclosing.serializationService.Pop();
                     try
                     {
-                        cdImpl.WriteData(output);
-                        byte[] binary = output.ToByteArray();
-                        output.Clear();
-                        CompressZip(binary, output);
-                        //Compress(binary, output);
-                        cdImpl.SetBinary(output.ToByteArray());
+                        cd = Create(((BinaryClassDefinitionProxy) cd).GetBinary());
                     }
                     catch (IOException e)
                     {
                         throw new HazelcastSerializationException(e);
                     }
-                    finally
+                }
+                return cd;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            internal IClassDefinition Create(byte[] compressedBinary)
+            {
+                IClassDefinition cd = ToClassDefinition(compressedBinary);
+                return Register(cd);
+            }
+
+            internal IClassDefinition Register(IClassDefinition cd)
+            {
+                if (cd == null)
+                {
+                    return null;
+                }
+                if (cd.GetFactoryId() != _factoryId)
+                {
+                    throw new HazelcastSerializationException("Invalid factory-id! " + _factoryId + " -> " + cd);
+                }
+                if (cd is ClassDefinition)
+                {
+                    var cdImpl = (ClassDefinition) cd;
+                    cdImpl.SetVersionIfNotSet(_portableContext.GetVersion());
+                    SetClassDefBinary(cdImpl);
+                }
+                long versionedClassId = CombineToLong(cd.GetClassId(), cd.GetVersion());
+                IClassDefinition currentCd = _versionedDefinitions.GetOrAdd(versionedClassId, cd);
+                if (Equals(currentCd, cd))
+                {
+                    return cd;
+                }
+                if (currentCd is ClassDefinition)
+                {
+                    if (!Equals(currentCd, cd))
                     {
-                        _enclosing.serializationService.Push(output);
+                        throw new HazelcastSerializationException(
+                            "Incompatible class-definitions with same class-id: " + cd + " VS " + currentCd);
+                    }
+                    return currentCd;
+                }
+                _versionedDefinitions.AddOrUpdate(versionedClassId, cd, (key, oldValue) => cd);
+                return cd;
+            }
+
+            private void SetClassDefBinary(ClassDefinition cd)
+            {
+                if (cd.GetBinary() == null)
+                {
+                    try
+                    {
+                        byte[] binary = ToClassDefinitionBinary(cd);
+                        cd.SetBinary(binary);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new HazelcastSerializationException(e);
                     }
                 }
-                long versionedClassId = CombineToLong(cdImpl.GetClassId(), cdImpl.GetVersion());
-                _enclosing.RegisterNestedDefinitions(cdImpl);
-                ClassDefinition currentCd = versionedDefinitions.GetOrAdd(versionedClassId, cdImpl);
-                return currentCd ?? cdImpl;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            private byte[] ToClassDefinitionBinary(IClassDefinition cd)
+            {
+                IBufferObjectDataOutput output = _portableContext.serializationService.Pop();
+                try
+                {
+                    WriteClassDefinition(cd, output);
+                    byte[] binary = output.ToByteArray();
+                    output.Clear();
+                    Compress(binary, output);
+                    return output.ToByteArray();
+                }
+                finally
+                {
+                    _portableContext.serializationService.Push(output);
+                }
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            private IClassDefinition ToClassDefinition(byte[] compressedBinary)
+            {
+                if (compressedBinary == null || compressedBinary.Length == 0)
+                {
+                    throw new IOException("Illegal class-definition binary! ");
+                }
+                IBufferObjectDataOutput output = _portableContext.serializationService.Pop();
+                byte[] binary;
+                try
+                {
+                    Decompress(compressedBinary, output);
+                    binary = output.ToByteArray();
+                }
+                finally
+                {
+                    _portableContext.serializationService.Push(output);
+                }
+                ClassDefinition cd =
+                    ReadClassDefinition(_portableContext.serializationService.CreateObjectDataInput(binary));
+                if (cd.GetVersion() < 0)
+                {
+                    throw new IOException("ClassDefinition version cannot be negative! -> " + cd);
+                }
+                cd.SetBinary(compressedBinary);
+                return cd;
             }
         }
     }

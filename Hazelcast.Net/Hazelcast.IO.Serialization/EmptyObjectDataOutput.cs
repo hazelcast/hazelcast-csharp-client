@@ -1,4 +1,5 @@
 using System;
+using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
@@ -6,6 +7,11 @@ namespace Hazelcast.IO.Serialization
     {
         /// <exception cref="System.IO.IOException"></exception>
         public void WriteObject(object @object)
+        {
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public void WriteData(IData data)
         {
         }
 
@@ -30,7 +36,7 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public void WriteByte(byte v)
+        public void WriteByte(int v)
         {
         }
 
@@ -80,6 +86,11 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
+        public void WriteByteArray(byte[] value)
+        {
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
         public void WriteCharArray(char[] chars)
         {
         }
@@ -114,9 +125,9 @@ namespace Hazelcast.IO.Serialization
             throw new NotSupportedException();
         }
 
-        public bool IsBigEndian()
+        public ByteOrder GetByteOrder()
         {
-            return true;
+            return ByteOrder.BigEndian;
         }
 
         /// <exception cref="System.IO.IOException"></exception>

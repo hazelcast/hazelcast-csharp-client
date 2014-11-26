@@ -3,7 +3,7 @@ using System.Net.Sockets;
 
 namespace Hazelcast.IO
 {
-    public interface SocketInterceptor
+    public interface ISocketInterceptor
     {
         void Init(Dictionary<string, string> properties);
 

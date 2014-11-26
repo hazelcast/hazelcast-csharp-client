@@ -41,7 +41,7 @@ namespace Hazelcast.Client.Connection
         private readonly HazelcastClient client;
         private readonly Router router;
 
-        private readonly SocketInterceptor socketInterceptor;
+        private readonly ISocketInterceptor socketInterceptor;
         private readonly SocketOptions socketOptions;
         private volatile bool _live;
 

@@ -26,24 +26,29 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public byte[] Write(object obj)
+        public IData ToData(object obj, int partitionHash)
         {
             IBufferObjectDataOutput output = service.Pop();
-            byte[] bytes;
             try
             {
                 serializer.Write(output, (T) obj);
-                bytes = output.ToByteArray();
+                byte[] header = null;
+                var dataOutput = output as IPortableDataOutput;
+                if (dataOutput != null)
+                {
+                    header = dataOutput.GetPortableHeader();
+                }
+                return new Data(serializer.GetTypeId(), output.ToByteArray(), partitionHash,
+                    header);
             }
             finally
             {
                 service.Push(output);
             }
-            return bytes;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public object Read(Data data)
+        public object ToObject(IData data)
         {
             IBufferObjectDataInput input = service.CreateObjectDataInput(data);
             try

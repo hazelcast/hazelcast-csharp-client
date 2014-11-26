@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Hazelcast.IO;
 
 namespace Hazelcast.Net.Ext
 {
@@ -13,11 +14,11 @@ namespace Hazelcast.Net.Ext
         private volatile int index;
         private volatile int limit;
         private volatile int mark;
-        //private bool _bigEndian=true;
+        private bool _bigEndian=true;
 
         public ByteBuffer()
         {
-            //this._bigEndian=true;
+            this._bigEndian=true;
         }
 
         private ByteBuffer(byte[] buf, int start, int len)
@@ -27,7 +28,7 @@ namespace Hazelcast.Net.Ext
             this.index = start;
             this.mark = start;
             this.capacity = buf.Length;
-            //this._bigEndian = true;
+            this._bigEndian = true;
         }
         private ByteBuffer(byte[] buf, int len)
         {
@@ -36,7 +37,17 @@ namespace Hazelcast.Net.Ext
             this.index = 0;
             this.mark = 0;
             this.capacity = buf.Length;
-            //this._bigEndian = true;
+            this._bigEndian = true;
+        }
+
+        internal ByteBuffer(byte[] buffer, int capacity, int index, int limit, int mark, bool bigEndian)
+        {
+            this.buffer = buffer;
+            this.capacity = capacity;
+            this.index = index;
+            this.limit = limit;
+            this.mark = mark;
+            _bigEndian = bigEndian;
         }
 
         public static ByteBuffer Allocate(int size)
@@ -70,7 +81,7 @@ namespace Hazelcast.Net.Ext
             }
         }
 
-        public void Compact()
+        public virtual void Compact()
         {
             System.Array.Copy(buffer, Position, buffer, 0, Remaining());
             Position = Remaining();
@@ -158,18 +169,31 @@ namespace Hazelcast.Net.Ext
             }
         }
 
-        public void Put(byte[] data)
+        public ByteOrder Order
+        {
+            get
+            {
+                return _bigEndian ? ByteOrder.BigEndian : ByteOrder.LittleEndian;
+            }
+
+            set
+            {
+                _bigEndian = (value == ByteOrder.BigEndian);
+            }
+        }
+
+        public virtual void Put(byte[] data)
         {
             Put(data, 0, data.Length);
         }
 
-        public void Put(byte data)
+        public virtual void Put(byte data)
         {
             CheckPutLimit(1);
             buffer[index++] = data;
         }
 
-        public void Put(byte[] data, int start, int len)
+        public virtual void Put(byte[] data, int start, int len)
         {
             CheckPutLimit(len);
             for (int i = 0; i < len; i++)
@@ -178,13 +202,25 @@ namespace Hazelcast.Net.Ext
             }
         }
 
-        public void PutInt(int i)
+        public virtual void PutInt(int i)
         {
             WriteInt(i);
         }
-        public void PutShort(short i)
+        public virtual void PutShort(short i)
         {
             WriteShort(i);
+        }
+
+        public ByteBuffer Put(ByteBuffer src)
+        {
+            if (src == this)
+                throw new ArgumentException("Source cannot be destination");
+            int n = src.Remaining();
+            if (n > Remaining())
+                throw new InternalBufferOverflowException();
+            for (int i = 0; i < n; i++)
+                Put(src.Get());
+            return this;
         }
 
         public int Remaining()
@@ -212,37 +248,90 @@ namespace Hazelcast.Net.Ext
             return new ByteBuffer(buf, start, len);
         }
 
+        public ByteBuffer AsReadOnlyBuffer()
+        {
+            return new ByteBufferReadOnly(this.buffer, this.capacity, this.index, this.limit, this.mark, this._bigEndian);
+        }
+
         protected virtual int ReadInt()
         {
-            CheckGetLimit(4);
-            int ch1 = buffer[index++];
-            int ch2 = buffer[index++];
-            int ch3 = buffer[index++];
-            int ch4 = buffer[index++];
-            return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+            CheckGetLimit(Bits.INT_SIZE_IN_BYTES);
+            int i = Bits.ReadInt(buffer, index, _bigEndian);
+            index += Bits.INT_SIZE_IN_BYTES;
+            return i;
         }
 
         protected virtual void WriteInt(int v)
         {
-            CheckPutLimit(4);
-            buffer[index++] = unchecked((byte)(((int)(((uint)v) >> 24)) & unchecked(0xFF)));
-            buffer[index++] = unchecked((byte)(((int)(((uint)v) >> 16)) & unchecked(0xFF)));
-            buffer[index++] = unchecked((byte)(((int)(((uint)v) >> 8)) & unchecked(0xFF)));
-            buffer[index++] = unchecked((byte)((v) & unchecked(0xFF)));
+            CheckPutLimit(Bits.INT_SIZE_IN_BYTES);
+            Bits.WriteInt(buffer, index, v, _bigEndian);
+            index += Bits.INT_SIZE_IN_BYTES;
         }
         protected virtual short ReadShort()
         {
-            CheckGetLimit(2);
-            short ch3 = buffer[index++];
-            short ch4 = buffer[index++];
-            return (short) ((ch3 << 8) + (ch4 << 0));
+            CheckGetLimit(Bits.SHORT_SIZE_IN_BYTES);
+            short i = Bits.ReadShort(buffer, index, _bigEndian);
+            index += Bits.SHORT_SIZE_IN_BYTES;
+            return i;
         }
 
         protected virtual void WriteShort(short v)
         {
-            CheckPutLimit(2);
-            buffer[index++] = unchecked((byte)(((int)(((uint)v) >> 8)) & unchecked(0xFF)));
-            buffer[index++] = unchecked((byte)((v) & unchecked(0xFF)));
+            CheckPutLimit(Bits.SHORT_SIZE_IN_BYTES);
+            Bits.WriteShort(buffer, index, v, _bigEndian);
+            index += Bits.SHORT_SIZE_IN_BYTES;
+        }
+    }
+
+    internal class ByteBufferReadOnly : ByteBuffer
+    {
+        internal ByteBufferReadOnly(byte[] buffer, int capacity, int index, int limit, int mark, bool bigEndian) : base(buffer, capacity, index, limit, mark, bigEndian)
+        {
+        }
+
+        public override void Compact()
+        {
+            ReadonlyException();
+        }
+
+        public override void Put(byte[] data)
+        {
+            ReadonlyException();
+        }
+
+        public override void Put(byte data)
+        {
+            ReadonlyException();
+        }
+
+        public override void Put(byte[] data, int start, int len)
+        {
+            ReadonlyException();
+        }
+
+        public override void PutInt(int i)
+        {
+            ReadonlyException();
+        }
+
+        public override void PutShort(short i)
+        {
+            ReadonlyException();
+        }
+
+        protected override void WriteInt(int v)
+        {
+            ReadonlyException();
+        }
+
+        protected override void WriteShort(short v)
+        {
+            ReadonlyException();
+        }
+
+        private static void ReadonlyException()
+        {
+            throw new NotSupportedException("ByteBuffer is read only");
         }
     }
 }

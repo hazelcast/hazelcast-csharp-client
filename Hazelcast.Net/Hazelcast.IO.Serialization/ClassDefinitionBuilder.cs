@@ -3,14 +3,24 @@ using System.Collections.Generic;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal sealed class ClassDefinitionBuilder
+    /// <summary>
+    ///     ClassDefinitionBuilder is used to build and register ClassDefinitions manually.
+    /// </summary>
+    /// <remarks>
+    ///     ClassDefinitionBuilder is used to build and register ClassDefinitions manually.
+    /// </remarks>
+    /// <seealso cref="IClassDefinition">IClassDefinition</seealso>
+    /// <seealso cref="IPortable">IPortable</seealso>
+    /// <seealso cref="Hazelcast.Config.SerializationConfig.AddClassDefinition(IClassDefinition)">
+    ///     Hazelcast.Config.SerializationConfig.AddClassDefinition(IClassDefinition)
+    /// </seealso>
+    public sealed class ClassDefinitionBuilder
     {
         private readonly int classId;
         private readonly int factoryId;
 
-        private readonly IList<IFieldDefinition> fieldDefinitions = new List<IFieldDefinition>();
-
-        private readonly ICollection<IClassDefinition> nestedClassDefinitions = new HashSet<IClassDefinition>();
+        private readonly IList<FieldDefinition> fieldDefinitions = new List<FieldDefinition>();
+        private readonly int version;
 
         private bool done;
         private int index;
@@ -19,6 +29,14 @@ namespace Hazelcast.IO.Serialization
         {
             this.factoryId = factoryId;
             this.classId = classId;
+            version = -1;
+        }
+
+        public ClassDefinitionBuilder(int factoryId, int classId, int version)
+        {
+            this.factoryId = factoryId;
+            this.classId = classId;
+            this.version = version;
         }
 
         public ClassDefinitionBuilder AddIntField(string fieldName)
@@ -91,7 +109,8 @@ namespace Hazelcast.IO.Serialization
             return this;
         }
 
-        public ClassDefinitionBuilder AddCharArrayField(string fieldName)
+        public ClassDefinitionBuilder AddCharArrayField(string
+            fieldName)
         {
             Check();
             fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.CharArray));
@@ -136,41 +155,34 @@ namespace Hazelcast.IO.Serialization
         public ClassDefinitionBuilder AddPortableField(string fieldName, IClassDefinition def)
         {
             Check();
-            if (def.GetClassId() == Data.NoClassId)
+            if (def.GetClassId() == 0)
             {
-                throw new ArgumentException("IPortable class id cannot be zero!");
+                throw new ArgumentException("Portable class id cannot be zero!");
             }
             fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Portable, def.GetFactoryId(),
                 def.GetClassId()));
-            nestedClassDefinitions.Add(def);
             return this;
         }
 
-        public ClassDefinitionBuilder AddPortableArrayField(string fieldName,
-            IClassDefinition def)
+        public ClassDefinitionBuilder AddPortableArrayField(string fieldName, IClassDefinition def)
         {
             Check();
-            if (def.GetClassId() == Data.NoClassId)
+            if (def.GetClassId() == 0)
             {
-                throw new ArgumentException("IPortable class id cannot be zero!");
+                throw new ArgumentException("Portable class id cannot be zero!");
             }
             fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.PortableArray, def.GetFactoryId(),
                 def.GetClassId()));
-            nestedClassDefinitions.Add(def);
             return this;
         }
 
         public IClassDefinition Build()
         {
             done = true;
-            var cd = new ClassDefinition(factoryId, classId);
-            foreach (IFieldDefinition fd in fieldDefinitions)
+            var cd = new ClassDefinition(factoryId, classId, version);
+            foreach (FieldDefinition fd in fieldDefinitions)
             {
                 cd.AddFieldDef(fd);
-            }
-            foreach (IClassDefinition nestedCd in nestedClassDefinitions)
-            {
-                cd.AddClassDef(nestedCd);
             }
             return cd;
         }
@@ -179,7 +191,7 @@ namespace Hazelcast.IO.Serialization
         {
             if (done)
             {
-                throw new HazelcastSerializationException("IClassDefinition is already built for " + classId);
+                throw new HazelcastSerializationException("ClassDefinition is already built for " + classId);
             }
         }
     }

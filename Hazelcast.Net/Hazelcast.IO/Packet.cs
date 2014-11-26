@@ -1,18 +1,21 @@
 ﻿using System;
+using System.Text;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
 
-namespace Hazelcast.IO.Serialization
+namespace Hazelcast.IO
 {
+    /// <summary>A Packet is a piece of data send over the line.</summary>
     internal sealed class Packet : DataAdapter
     {
-        public static readonly byte Version = 3;
-        public static readonly int HeaderOp = 0;
-        public static readonly int HeaderResponse = 1;
-        public static readonly int HeaderEvent = 2;
-        public static readonly int HeaderWanReplication = 3;
-        public static readonly int HeaderUrgent = 4;
-        public static readonly int HeaderBind = 5;
+        public const byte Version = 3;
 
+        public const int HeaderOp = 0;
+        public const int HeaderResponse = 1;
+        public const int HeaderEvent = 2;
+        public const int HeaderWanReplication = 3;
+        public const int HeaderUrgent = 4;
+        public const int HeaderBind = 5;
         private const int StVersion = 10;
         private const int StHeader = 11;
         private const int StPartition = 12;
@@ -20,23 +23,22 @@ namespace Hazelcast.IO.Serialization
         private short header;
         private int partitionId;
 
-
         public Packet(IPortableContext context)
             : base(context)
         {
         }
 
-        public Packet(Data value, IPortableContext context)
+        public Packet(IData value, IPortableContext context)
             : this(value, -1, context)
         {
         }
 
-        public Packet(Data value, int partitionId, IPortableContext context)
-            : base(value, context)
+        public Packet(IData value, int partitionId, IPortableContext context)
+            : base(value
+                , context)
         {
             this.partitionId = partitionId;
         }
-
 
         public void SetHeader(int bit)
         {
@@ -48,21 +50,30 @@ namespace Hazelcast.IO.Serialization
             return (header & 1 << bit) != 0;
         }
 
-        public short getHeader()
+        /// <summary>Returns the header of the Packet.</summary>
+        /// <remarks>
+        /// Returns the header of the Packet. The header is used to figure out what the content is of this Packet before
+        /// the actual payload needs to be processed.
+        /// </remarks>
+        /// <returns>the header.</returns>
+        public short GetHeader()
         {
             return header;
         }
 
-        public int getPartitionId()
+        /// <summary>Returns the partition id of this packet.</summary>
+        /// <remarks>Returns the partition id of this packet. If this packet is not for a particular partition, -1 is returned.
+        /// 	</remarks>
+        /// <returns>the partition id.</returns>
+        public int GetPartitionId()
         {
             return partitionId;
         }
 
-        public bool isUrgent()
+        public override bool IsUrgent()
         {
             return IsHeaderSet(HeaderUrgent);
         }
-
 
         public override bool WriteTo(ByteBuffer destination)
         {
@@ -77,7 +88,7 @@ namespace Hazelcast.IO.Serialization
             }
             if (!IsStatusSet(StHeader))
             {
-                if (destination.Remaining() < 2)
+                if (destination.Remaining() < Bits.SHORT_SIZE_IN_BYTES)
                 {
                     return false;
                 }
@@ -86,7 +97,7 @@ namespace Hazelcast.IO.Serialization
             }
             if (!IsStatusSet(StPartition))
             {
-                if (destination.Remaining() < 4)
+                if (destination.Remaining() < Bits.INT_SIZE_IN_BYTES)
                 {
                     return false;
                 }
@@ -108,8 +119,8 @@ namespace Hazelcast.IO.Serialization
                 SetStatus(StVersion);
                 if (Version != version)
                 {
-                    throw new ArgumentException("Packet versions are not matching! This -> "
-                                                + Version + ", Incoming -> " + version);
+                    throw new ArgumentException("Packet versions are not matching! This -> " + Version
+                         + ", Incoming -> " + version);
                 }
             }
             if (!IsStatusSet(StHeader))
@@ -131,6 +142,27 @@ namespace Hazelcast.IO.Serialization
                 SetStatus(StPartition);
             }
             return base.ReadFrom(source);
+        }
+
+        /// <summary>Returns an estimation of the packet, including its payload, in bytes.</summary>
+        /// <remarks>Returns an estimation of the packet, including its payload, in bytes.</remarks>
+        /// <returns>the size of the packet.</returns>
+        public int Size()
+        {
+            // 7 = byte(version) + short(header) + int(partitionId)
+            return (data != null ? GetDataSize(data, context) : 0) + 7;
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder("Packet{");
+            sb.Append("header=").Append(header);
+            sb.Append(", isResponse=").Append(IsHeaderSet(Hazelcast.IO.Packet.HeaderResponse));
+            sb.Append(", isOperation=").Append(IsHeaderSet(Hazelcast.IO.Packet.HeaderOp));
+            sb.Append(", isEvent=").Append(IsHeaderSet(Hazelcast.IO.Packet.HeaderEvent));
+            sb.Append(", partitionId=").Append(partitionId);
+            sb.Append('}');
+            return sb.ToString();
         }
     }
 }

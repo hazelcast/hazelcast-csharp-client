@@ -1,29 +1,28 @@
 using System;
-using System.IO;
 using System.Text;
 using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ByteArrayObjectDataOutput : OutputStream, IBufferObjectDataOutput, IPortableContextAware
+    internal class ByteArrayObjectDataOutput : OutputStream, IPortableDataOutput
     {
+        private readonly bool bigEndian;
         internal readonly int initialSize;
         internal readonly ISerializationService service;
 
         internal byte[] buffer;
 
-        internal int pos = 0;
+        internal DynamicByteBuffer header;
+        internal int pos;
 
-        internal ByteArrayObjectDataOutput(int size, ISerializationService service)
+        private byte[] utfBuffer;
+
+        internal ByteArrayObjectDataOutput(int size, ISerializationService service, ByteOrder byteOrder)
         {
             initialSize = size;
             buffer = new byte[size];
             this.service = service;
-        }
-
-        void IDataOutput.Write(byte[] b)
-        {
-            Write(b, 0, b.Length);
+            bigEndian = byteOrder == ByteOrder.BigEndian;
         }
 
         public virtual void Write(int position, int b)
@@ -44,9 +43,17 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WriteByte(byte v)
+        public void WriteByte(int v)
         {
             Write(v);
+        }
+
+        public void WriteZeroBytes(int count)
+        {
+            for (int k = 0; k < count; k++)
+            {
+                Write(0);
+            }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -69,28 +76,27 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteChar(int v)
         {
-            EnsureAvailable(2);
-            buffer[pos++] = unchecked((byte) (((int) (((uint) v) >> 8)) & unchecked(0xFF)));
-            buffer[pos++] = unchecked((byte) ((v) & unchecked(0xFF)));
+            EnsureAvailable(Bits.CHAR_SIZE_IN_BYTES);
+            Bits.WriteChar(buffer, pos, (char) v, bigEndian);
+            pos += Bits.CHAR_SIZE_IN_BYTES;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteChar(int position, int v)
         {
-            Write(position, ((int) (((uint) v) >> 8)) & unchecked(0xFF));
-            Write(position, (v) & unchecked(0xFF));
+            Bits.WriteChar(buffer, position, (char) v, bigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteChars(string s)
         {
             int len = s.Length;
-            EnsureAvailable(len*2);
+            EnsureAvailable(len*Bits.CHAR_SIZE_IN_BYTES);
             for (int i = 0; i < len; i++)
             {
                 int v = s[i];
                 WriteChar(pos, v);
-                pos += 2;
+                pos += Bits.CHAR_SIZE_IN_BYTES;
             }
         }
 
@@ -121,68 +127,64 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteInt(int v)
         {
-            EnsureAvailable(4);
-            buffer[pos++] = unchecked((byte) (((int) (((uint) v) >> 24)) & unchecked(0xFF)));
-            buffer[pos++] = unchecked((byte) (((int) (((uint) v) >> 16)) & unchecked(0xFF)));
-            buffer[pos++] = unchecked((byte) (((int) (((uint) v) >> 8)) & unchecked(0xFF)));
-            buffer[pos++] = unchecked((byte) ((v) & unchecked(0xFF)));
+            EnsureAvailable(Bits.INT_SIZE_IN_BYTES);
+            Bits.WriteInt(buffer, pos, v, bigEndian);
+            pos += Bits.INT_SIZE_IN_BYTES;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteInt(int position, int v)
         {
-            Write(position, ((int) (((uint) v) >> 24)) & unchecked(0xFF));
-            Write(position + 1, ((int) (((uint) v) >> 16)) & unchecked(0xFF));
-            Write(position + 2, ((int) (((uint) v) >> 8)) & unchecked(0xFF));
-            Write(position + 3, (v) & unchecked(0xFF));
+            Bits.WriteInt(buffer, position, v, bigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteLong(long v)
         {
-            EnsureAvailable(8);
-            buffer[pos++] = unchecked((byte) ((long) (((ulong) v) >> 56)));
-            buffer[pos++] = unchecked((byte) ((long) (((ulong) v) >> 48)));
-            buffer[pos++] = unchecked((byte) ((long) (((ulong) v) >> 40)));
-            buffer[pos++] = unchecked((byte) ((long) (((ulong) v) >> 32)));
-            buffer[pos++] = unchecked((byte) ((long) (((ulong) v) >> 24)));
-            buffer[pos++] = unchecked((byte) ((long) (((ulong) v) >> 16)));
-            buffer[pos++] = unchecked((byte) ((long) (((ulong) v) >> 8)));
-            buffer[pos++] = unchecked((byte) (v));
+            EnsureAvailable(Bits.LONG_SIZE_IN_BYTES);
+            Bits.WriteLong(buffer, pos, v, bigEndian);
+            pos += Bits.LONG_SIZE_IN_BYTES;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteLong(int position, long v)
         {
-            Write(position, (int) ((long) (((ulong) v) >> 56)));
-            Write(position + 1, (int) ((long) (((ulong) v) >> 48)));
-            Write(position + 2, (int) ((long) (((ulong) v) >> 40)));
-            Write(position + 3, (int) ((long) (((ulong) v) >> 32)));
-            Write(position + 4, (int) ((long) (((ulong) v) >> 24)));
-            Write(position + 5, (int) ((long) (((ulong) v) >> 16)));
-            Write(position + 6, (int) ((long) (((ulong) v) >> 8)));
-            Write(position + 7, (int) (v));
+            Bits.WriteLong(buffer, position, v, bigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteShort(int v)
         {
-            EnsureAvailable(2);
-            buffer[pos++] = unchecked((byte) (((int) (((uint) v) >> 8)) & unchecked(0xFF)));
-            buffer[pos++] = unchecked((byte) ((v) & unchecked(0xFF)));
+            EnsureAvailable(Bits.SHORT_SIZE_IN_BYTES);
+            Bits.WriteShort(buffer, pos, (short) v, bigEndian);
+            pos += Bits.SHORT_SIZE_IN_BYTES;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteShort(int position, int v)
         {
-            Write(position, ((int) (((uint) v) >> 8)) & unchecked(0xFF));
-            Write(position, (v) & unchecked(0xFF));
+            Bits.WriteShort(buffer, position, (short) v, bigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteUTF(string str)
         {
-            UTFUtil.WriteUTF(this, str);
+            if (utfBuffer == null)
+            {
+                utfBuffer = new byte[UTFEncoderDecoder.UTF_BUFFER_SIZE];
+            }
+            UTFEncoderDecoder.WriteUTF(this, str, utfBuffer);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteByteArray(byte[] bytes)
+        {
+            int len = (bytes == null) ? 0 : bytes.Length;
+            WriteInt(len);
+            if (len > 0)
+            {
+                Write(bytes, 0, len);
+            }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -270,44 +272,35 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WriteObject(object obj)
+        public virtual void WriteObject(object @object)
         {
-            service.WriteObject(this, obj);
+            service.WriteObject(this, @object);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteData(IData data)
+        {
+            service.WriteData(this, data);
         }
 
         /// <summary>Returns this buffer's position.</summary>
-        /// <remarks>Returns this buffer's position.</remarks>
-        public int Position()
+        public virtual int Position()
         {
             return pos;
         }
-
-        public void WriteZeroBytes(int count)
-        {
-            for (int k = 0; k < count; k++)
-            {
-                Write(0);
-            }
-        }
-
 
         public virtual void Position(int newPos)
         {
             if ((newPos > buffer.Length) || (newPos < 0))
             {
-                throw new InternalBufferOverflowException("Buffer overflow. Max size is "+buffer.Length +" but new position is "+ newPos);
+                throw new ArgumentException();
             }
             pos = newPos;
         }
 
-        public virtual byte[] GetBuffer()
-        {
-            return buffer;
-        }
-
         public virtual byte[] ToByteArray()
         {
-            if (buffer == null)
+            if (buffer == null || pos == 0)
             {
                 return new byte[0];
             }
@@ -323,12 +316,10 @@ namespace Hazelcast.IO.Serialization
             {
                 buffer = new byte[initialSize*8];
             }
-        }
-
-        public virtual bool IsBigEndian()
-        {
-            //TODO BIG ENDIAN
-            return true; //!BitConverter.IsLittleEndian;
+            if (header != null)
+            {
+                header.Clear();
+            }
         }
 
         public void Dispose()
@@ -336,9 +327,35 @@ namespace Hazelcast.IO.Serialization
             Close();
         }
 
-        public virtual IPortableContext GetSerializationContext()
+        public virtual ByteOrder GetByteOrder()
         {
-            return service.GetPortableContext();
+            return bigEndian ? ByteOrder.BigEndian : ByteOrder.LittleEndian;
+        }
+
+        public virtual DynamicByteBuffer GetHeaderBuffer()
+        {
+            if (header == null)
+            {
+                header = new DynamicByteBuffer(new byte[64]).Order(GetByteOrder());
+            }
+            return header;
+        }
+
+        public virtual byte[] GetPortableHeader()
+        {
+            if (header == null)
+            {
+                return null;
+            }
+            header.Flip();
+            if (!header.HasRemaining())
+            {
+                return null;
+            }
+            var buff = new byte[header.Limit];
+            header.Get(buff);
+            header.Clear();
+            return buff;
         }
 
         public void Write(int b)
@@ -347,12 +364,12 @@ namespace Hazelcast.IO.Serialization
             buffer[pos++] = unchecked((byte) (b));
         }
 
-        void OutputStream.Write(byte[] b)
+        public void Write(byte[] b)
         {
             Write(b, 0, b.Length);
         }
 
-        public void Write(byte[] b, int off, int len)
+        public virtual void Write(byte[] b, int off, int len)
         {
             if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
             {
@@ -371,10 +388,15 @@ namespace Hazelcast.IO.Serialization
         {
         }
 
-        public void Close()
+        public virtual void Close()
         {
-            Clear();
+            pos = 0;
             buffer = null;
+            if (header != null)
+            {
+                header.Close();
+                header = null;
+            }
         }
 
         internal void EnsureAvailable(int len)
