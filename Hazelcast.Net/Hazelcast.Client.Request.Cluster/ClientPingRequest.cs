@@ -1,12 +1,9 @@
-using System;
 using Hazelcast.Client.Request.Base;
-using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Cluster
 {
-    [Serializable]
     internal sealed class ClientPingRequest : ClientRequest
     {
         public override int GetFactoryId()
@@ -19,9 +16,9 @@ namespace Hazelcast.Client.Request.Cluster
             return ClientPortableHook.ClientPing;
         }
 
-        public override void WritePortable(IPortableWriter writer)
+        /// <exception cref="System.IO.IOException"></exception>
+        public override void Write(IPortableWriter writer)
         {
         }
-
     }
 }

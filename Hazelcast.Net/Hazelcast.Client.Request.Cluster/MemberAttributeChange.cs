@@ -1,46 +1,21 @@
-﻿using System;
-using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Request.Cluster
 {
-    /// <summary></summary>
     internal class MemberAttributeChange : IDataSerializable
     {
-        internal const int DELTA_MEMBER_PROPERTIES_OP_PUT = 2;
-        internal const int DELTA_MEMBER_PROPERTIES_OP_REMOVE = 3;
-
-        private String key;
-        private MapOperationType operationType;
-        private String uuid;
-        private Object value;
-
-        public object Value
-        {
-            get { return value; }
-        }
-
-        public string Uuid
-        {
-            get { return uuid; }
-        }
-
-        public MapOperationType OperationType
-        {
-            get { return operationType; }
-        }
-
-        public string Key
-        {
-            get { return key; }
-        }
+        private string key;
+        private MemberAttributeOperationType operationType;
+        private string uuid;
+        private object value;
 
         public MemberAttributeChange()
         {
         }
 
-        public MemberAttributeChange(String uuid, MapOperationType operationType, String key, Object value)
+        public MemberAttributeChange(string uuid, MemberAttributeOperationType operationType
+            , string key, object value)
         {
             this.uuid = uuid;
             this.operationType = operationType;
@@ -48,42 +23,54 @@ namespace Hazelcast.Client.Request.Cluster
             this.value = value;
         }
 
-        public void WriteData(IObjectDataOutput output)
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteData(IObjectDataOutput @out)
         {
-            output.WriteUTF(uuid);
-            output.WriteUTF(key);
-            switch (operationType)
+            @out.WriteUTF(uuid);
+            @out.WriteUTF(key);
+            @out.WriteByte((int) operationType);
+            if (operationType == MemberAttributeOperationType.PUT)
             {
-                case MapOperationType.PUT:
-                    output.WriteByte(DELTA_MEMBER_PROPERTIES_OP_PUT);
-                    IOUtil.WriteAttributeValue(value, output);
-                    break;
-                case MapOperationType.REMOVE:
-                    output.WriteByte(DELTA_MEMBER_PROPERTIES_OP_REMOVE);
-                    break;
+                IOUtil.WriteAttributeValue(value, @out);
             }
         }
 
-        public void ReadData(IObjectDataInput input)
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void ReadData(IObjectDataInput @in)
         {
-            uuid = input.ReadUTF();
-            key = input.ReadUTF();
-            int operation = input.ReadByte();
-            switch (operation)
+            uuid = @in.ReadUTF();
+            key = @in.ReadUTF();
+
+            operationType = (MemberAttributeOperationType) @in.ReadByte();
+            if (operationType == MemberAttributeOperationType.PUT)
             {
-                case DELTA_MEMBER_PROPERTIES_OP_PUT:
-                    operationType = MapOperationType.PUT;
-                    value = IOUtil.ReadAttributeValue(input);
-                    break;
-                case DELTA_MEMBER_PROPERTIES_OP_REMOVE:
-                    operationType = MapOperationType.REMOVE;
-                    break;
+                value = IOUtil.ReadAttributeValue(@in);
             }
         }
 
         public string GetJavaClassName()
         {
             return "com.hazelcast.cluster.client.MemberAttributeChange";
+        }
+
+        public virtual string GetUuid()
+        {
+            return uuid;
+        }
+
+        public virtual MemberAttributeOperationType GetOperationType()
+        {
+            return operationType;
+        }
+
+        public virtual string GetKey()
+        {
+            return key;
+        }
+
+        public virtual object GetValue()
+        {
+            return value;
         }
     }
 }

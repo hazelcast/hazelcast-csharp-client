@@ -1,37 +1,24 @@
-using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Base
 {
-    internal class RemoveDistributedObjectListenerRequest : ClientRequest, IRemoveRequest
-    {
-        private string registrationId;
+	/// <summary>Client request to add a distributed object listener to a remote node.</summary>
+	/// <remarks>Client request to add a distributed object listener to a remote node.</remarks>
+	internal class RemoveDistributedObjectListenerRequest : BaseClientRemoveListenerRequest
+	{
+		public RemoveDistributedObjectListenerRequest(string registrationId) : base(null, 
+			registrationId)
+		{
+		}
 
-        public RemoveDistributedObjectListenerRequest(string registrationId="")
-        {
-            this.registrationId = registrationId;
-        }
-
-        public override int GetFactoryId()
-        {
+		public override int GetFactoryId()
+		{
             return ClientPortableHook.Id;
-        }
+		}
 
-        public override int GetClassId()
-        {
+		public override int GetClassId()
+		{
             return ClientPortableHook.RemoveListener;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("r", registrationId);
-        }
-
-        public string RegistrationId
-        {
-            get { return registrationId; }
-            set { registrationId = value; }
-        }
-    }
+		}
+	}
 }

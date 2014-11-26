@@ -22,6 +22,7 @@ namespace Hazelcast.Serialization.Hook
         public const int ClientPing = 11;
         public const int GetPartitions = 12;
         public const int RemoveListener = 13;
+        public const int RemoveAllListeners = 14;
 
         public const int TotalSize = RemoveListener+1;
 
