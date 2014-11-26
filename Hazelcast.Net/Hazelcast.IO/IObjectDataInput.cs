@@ -1,30 +1,66 @@
+using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO
 {
+    /// <summary>Provides serialization methods for arrays of primitive types</summary>
     public interface IObjectDataInput : IDataInput
     {
-        /// <exception cref="System.IO.IOException"></exception>
+        /// <returns>the byte array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
+        byte[] ReadByteArray();
+
+        /// <returns>the char array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
         char[] ReadCharArray();
 
-        /// <exception cref="System.IO.IOException"></exception>
+        /// <returns>int array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
         int[] ReadIntArray();
 
-        /// <exception cref="System.IO.IOException"></exception>
+        /// <returns>long array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
         long[] ReadLongArray();
 
-        /// <exception cref="System.IO.IOException"></exception>
+        /// <returns>double array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
         double[] ReadDoubleArray();
 
-        /// <exception cref="System.IO.IOException"></exception>
+        /// <returns>float array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
         float[] ReadFloatArray();
 
-        /// <exception cref="System.IO.IOException"></exception>
+        /// <returns>short array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
         short[] ReadShortArray();
 
-        /// <exception cref="System.IO.IOException"></exception>
+        /// <returns>object array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
         T ReadObject<T>();
 
-        bool IsBigEndian();
+        /// <returns>data read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
+        IData ReadData();
+
+        /// <returns>ByteOrder BIG_ENDIAN or LITTLE_ENDIAN</returns>
+        ByteOrder GetByteOrder();
     }
 }

@@ -10,22 +10,20 @@ namespace Hazelcast.IO.Serialization
     internal sealed class PortableHookLoader
     {
         private const string FactoryId = "com.hazelcast.IPortableHook";
-
-        private readonly IDictionary<int, IPortableFactory> configuredFactories;
-
-        private readonly IDictionary<int, IPortableFactory> factories = new Dictionary<int, IPortableFactory>();
+		private readonly IDictionary<int, IPortableFactory> configuredFactories;
+		private readonly IDictionary<int, IPortableFactory> factories = new Dictionary<int, IPortableFactory>();
         private ICollection<IClassDefinition> definitions = new HashSet<IClassDefinition>();
 
-        internal PortableHookLoader(IDictionary<int, IPortableFactory> configuredFactories)
-        {
-            this.configuredFactories = configuredFactories;
-            Load();
-        }
+		internal PortableHookLoader(IDictionary<int, IPortableFactory> configuredFactories)
+		{
+			this.configuredFactories = configuredFactories;
+			Load();
+		}
 
-        private void Load()
-        {
-            try
-            {
+		private void Load()
+		{
+			try
+			{
                 IPortableHook[] hooks =
                 {
                     new SpiPortableHook(),//
@@ -56,51 +54,51 @@ namespace Hazelcast.IO.Serialization
                         definitions = definitions.Union(defs).ToList();
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-            if (configuredFactories != null)
-            {
+			}
+			catch (Exception e)
+			{
+				throw ExceptionUtil.Rethrow(e);
+			}
+			if (configuredFactories != null)
+			{
                 foreach (var entry in configuredFactories)
-                {
-                    Register(entry.Key, entry.Value);
-                }
-            }
-        }
+				{
+					Register(entry.Key, entry.Value);
+				}
+			}
+		}
 
-        internal IDictionary<int, IPortableFactory> GetFactories()
-        {
-            return factories;
-        }
+		internal IDictionary<int, IPortableFactory> GetFactories()
+		{
+			return factories;
+		}
 
-        internal ICollection<IClassDefinition> GetDefinitions()
-        {
-            return definitions;
-        }
+		internal ICollection<IClassDefinition> GetDefinitions()
+		{
+			return definitions;
+		}
 
-        private void Register(int factoryId, IPortableFactory factory)
-        {
+		private void Register(int factoryId, IPortableFactory factory)
+		{
             IPortableFactory current;
             factories.TryGetValue(factoryId, out current);
-            if (current != null)
-            {
-                if (current.Equals(factory))
-                {
+			if (current != null)
+			{
+				if (current.Equals(factory))
+				{
                     Logger.GetLogger(GetType())
                         .Warning("IPortableFactory[" + factoryId + "] is already registered! Skipping " + factory);
-                }
-                else
-                {
+				}
+				else
+				{
                     throw new ArgumentException("IPortableFactory[" + factoryId + "] is already registered! " + current +
                                                 " -> " + factory);
-                }
-            }
-            else
-            {
+				}
+			}
+			else
+			{
                 factories.Add(factoryId, factory);
-            }
-        }
-    }
+			}
+		}
+	}
 }

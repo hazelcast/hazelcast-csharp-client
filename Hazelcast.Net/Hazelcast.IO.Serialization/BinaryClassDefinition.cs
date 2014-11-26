@@ -3,20 +3,19 @@ using System.Collections.Generic;
 
 namespace Hazelcast.IO.Serialization
 {
-    [Serializable]
     internal abstract class BinaryClassDefinition : IClassDefinition
     {
         [NonSerialized] 
         private byte[] binary;
-        protected internal int classId;
-        protected internal int factoryId;
-        protected internal int version = -1;
+        internal int classId;
+        internal int factoryId;
+
+        internal int version = -1;
 
         public int GetFactoryId()
         {
             return factoryId;
         }
-
 
         public int GetClassId()
         {
@@ -28,21 +27,6 @@ namespace Hazelcast.IO.Serialization
             return version;
         }
 
-        public abstract void WriteData(IObjectDataOutput output);
-        public abstract void ReadData(IObjectDataInput input);
-        public string GetJavaClassName()
-        {
-            throw new NotSupportedException();
-        }
-
-        public abstract IFieldDefinition Get(string name);
-        public abstract IFieldDefinition Get(int fieldIndex);
-        public abstract bool HasField(string fieldName);
-        public abstract ICollection<string> GetFieldNames();
-        public abstract FieldType GetFieldType(string fieldName);
-        public abstract int GetFieldClassId(string fieldName);
-        public abstract int GetFieldCount();
-
         public byte[] GetBinary()
         {
             return binary;
@@ -52,5 +36,17 @@ namespace Hazelcast.IO.Serialization
         {
             this.binary = binary;
         }
+
+        #region IClassDefinition
+
+        public abstract IFieldDefinition GetField(string name);
+        public abstract IFieldDefinition GetField(int fieldIndex);
+        public abstract bool HasField(string fieldName);
+        public abstract ICollection<string> GetFieldNames();
+        public abstract FieldType GetFieldType(string fieldName);
+        public abstract int GetFieldClassId(string fieldName);
+        public abstract int GetFieldCount();
+
+        #endregion
     }
 }

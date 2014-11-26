@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal sealed class ByteArraySerializerAdapter<T> : ISerializerAdapter
+    internal class ByteArraySerializerAdapter<T> : ISerializerAdapter
     {
         private readonly IByteArraySerializer<T> _serializer;
 
@@ -12,36 +12,34 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public void Write(IObjectDataOutput output, object obj)
+        public virtual void Write(IObjectDataOutput output, object obj)
         {
             byte[] bytes = _serializer.Write((T) obj);
-            output.WriteInt(bytes != null ? bytes.Length : 0);
-            output.Write(bytes);
+            output.WriteByteArray(bytes);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public object Read(IObjectDataInput input)
+        public virtual object Read(IObjectDataInput @in)
         {
-            int len = input.ReadInt();
-            if (len > 0)
+            byte[] bytes = @in.ReadByteArray();
+            if (bytes == null || bytes.Length == 0)
             {
-                var bytes = new byte[len];
-                input.ReadFully(bytes);
-                return _serializer.Read(bytes);
+                return null;
             }
-            return null;
+            return _serializer.Read(bytes);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public byte[] Write(object obj)
+        public virtual IData ToData(object obj, int partitionHash)
         {
-            return _serializer.Write((T) obj);
+            byte[] data = _serializer.Write((T) obj);
+            return new Data(_serializer.GetTypeId(), data, partitionHash);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public object Read(Data data)
+        public virtual object ToObject(IData data)
         {
-            return _serializer.Read(data.buffer);
+            return _serializer.Read(data.GetData());
         }
 
         public int GetTypeId()
@@ -49,12 +47,12 @@ namespace Hazelcast.IO.Serialization
             return _serializer.GetTypeId();
         }
 
-        public void Destroy()
+        public virtual void Destroy()
         {
             _serializer.Destroy();
         }
 
-        public ISerializer GetImpl()
+        public virtual ISerializer GetImpl()
         {
             return _serializer;
         }

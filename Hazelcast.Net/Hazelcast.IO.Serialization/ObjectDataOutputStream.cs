@@ -5,28 +5,23 @@ using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ObjectDataOutputStream : OutputStream, IObjectDataOutput, IDisposable, IPortableContextAware
+    internal class ObjectDataOutputStream : OutputStream, IObjectDataOutput, IDisposable
     {
-        //private readonly DataOutputStream dataOut;
+        private const int UTF_BUFFER_SIZE = 1024;
 
         //BinaryWriter is always LittleEndian
         private readonly BinaryWriter _binaryWriter;
 
-        private readonly bool isBigEndian;
+        private readonly ByteOrder byteOrder;
         private readonly ISerializationService serializationService;
 
-        public ObjectDataOutputStream(BinaryWriter binaryWriter, ISerializationService serializationService)
-            : this(binaryWriter, serializationService, true)
-        {
-        }
+        private byte[] utfBuffer;
 
-        public ObjectDataOutputStream(BinaryWriter binaryWriter, ISerializationService serializationService,
-            bool isBigEndian)
+        public ObjectDataOutputStream(BinaryWriter binaryWriter, ISerializationService serializationService)
         {
             this.serializationService = serializationService;
             _binaryWriter = binaryWriter;
-            //this.dataOut = new DataOutputStream(outputStream);
-            this.isBigEndian = isBigEndian;
+            byteOrder = serializationService.GetByteOrder();
         }
 
         public void Dispose()
@@ -41,7 +36,7 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WriteByte(byte v)
+        public virtual void WriteByte(int v)
         {
             _binaryWriter.Write(v);
         }
@@ -58,7 +53,6 @@ namespace Hazelcast.IO.Serialization
                 _binaryWriter.Write(ByteFlipperUtil.ReverseBytes((short) v));
             }
         }
-
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteChar(int v)
@@ -143,14 +137,27 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteByteArray(byte[] bytes)
+        {
+            int len = (bytes == null) ? 0 : bytes.Length;
+            WriteInt(len);
+            if (len > 0)
+            {
+                Write(bytes);
+            }
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteCharArray(char[] chars)
         {
             int len = chars != null ? chars.Length : 0;
             WriteInt(len);
-            if (len <= 0 || chars == null) return;
-            foreach (char c in chars)
+            if (len > 0)
             {
-                WriteChar(c);
+                foreach (char c in chars)
+                {
+                    WriteChar(c);
+                }
             }
         }
 
@@ -227,7 +234,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteUTF(string str)
         {
-            UTFUtil.WriteUTF(this, str);
+            if (utfBuffer == null)
+            {
+                utfBuffer = new byte[UTF_BUFFER_SIZE];
+            }
+            UTFEncoderDecoder.WriteUTF(this, str, utfBuffer);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -236,19 +247,20 @@ namespace Hazelcast.IO.Serialization
             serializationService.WriteObject(this, @object);
         }
 
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteData(IData data)
+        {
+            serializationService.WriteData(this, data);
+        }
+
         public virtual byte[] ToByteArray()
         {
             throw new NotSupportedException();
         }
 
-        public bool IsBigEndian()
+        public virtual ByteOrder GetByteOrder()
         {
-            return isBigEndian;
-        }
-
-        public virtual IPortableContext GetSerializationContext()
-        {
-            return serializationService.GetPortableContext();
+            return byteOrder;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -266,7 +278,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public void Write(byte[] b)
         {
-            Write(b, 0, b.Length);
+            _binaryWriter.Write(b, 0, b.Length);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -279,6 +291,11 @@ namespace Hazelcast.IO.Serialization
         public void Close()
         {
             _binaryWriter.Close();
+        }
+
+        private bool IsBigEndian()
+        {
+            return byteOrder == ByteOrder.BigEndian;
         }
     }
 }

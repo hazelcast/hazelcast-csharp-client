@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO
@@ -15,6 +16,33 @@ namespace Hazelcast.IO
         public const byte PRIMITIVE_TYPE_FLOAT = 6;
         public const byte PRIMITIVE_TYPE_DOUBLE = 7;
         public const byte PRIMITIVE_TYPE_UTF = 8;
+
+        /// <summary>
+        /// This method has a direct dependency on how objects are serialized in
+        /// <see cref="DataSerializer">com.hazelcast.nio.serialization.DataSerializer</see>
+        /// ! If the stream
+        /// format is ever changed this extraction method needs to be changed too!
+        /// </summary>
+        /// <exception cref="System.IO.IOException"></exception>
+        public static long ExtractOperationCallId(IData data, ISerializationService serializationService)
+        {
+            IObjectDataInput input = serializationService.CreateObjectDataInput(data.GetData());
+            bool identified = input.ReadBoolean();
+            if (identified)
+            {
+                // read factoryId
+                input.ReadInt();
+                // read typeId
+                input.ReadInt();
+            }
+            else
+            {
+                // read classname
+                input.ReadUTF();
+            }
+            // read callId
+            return input.ReadLong();
+        }
 
         /// <exception cref="System.IO.IOException"></exception>
         public static void WriteByteArray(IObjectDataOutput output, byte[] value)
@@ -41,39 +69,29 @@ namespace Hazelcast.IO
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public static void WriteNullableData(IObjectDataOutput output, Data data)
+        public static void WriteObject(IObjectDataOutput output, object @object)
         {
-            if (data != null)
+            bool isBinary = @object is IData;
+            output.WriteBoolean(isBinary);
+            if (isBinary)
             {
-                output.WriteBoolean(true);
-                data.WriteData(output);
+                output.WriteData((IData)@object);
             }
             else
             {
-                // null
-                output.WriteBoolean(false);
+                output.WriteObject(@object);
             }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public static Data ReadNullableData(IObjectDataInput input)
+        public static T ReadObject<T>(IObjectDataInput input)
         {
-            bool isNotNull = input.ReadBoolean();
-            if (isNotNull)
+            bool isBinary = input.ReadBoolean();
+            if (isBinary)
             {
-                var data = new Data();
-                data.ReadData(input);
-                return data;
+                return (T)input.ReadData();
             }
-            return null;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public static Data ReadData(IObjectDataInput input)
-        {
-            var data = new Data();
-            data.ReadData(input);
-            return data;
+            return input.ReadObject<T>();
         }
 
         /// <summary>Closes the Closable quietly.</summary>
@@ -87,8 +105,9 @@ namespace Hazelcast.IO
                 {
                     closeable.Dispose();
                 }
-                catch (IOException)
+                catch (IOException e)
                 {
+                    Logger.GetLogger(typeof(IOUtil)).Finest("closeResource failed", e);
                 }
             }
         }
@@ -160,6 +179,10 @@ namespace Hazelcast.IO
             {
                 output.WriteByte(PRIMITIVE_TYPE_UTF);
                 output.WriteUTF((string) value);
+            }
+            else
+            {
+                throw new InvalidOperationException("Illegal attribute type id found");
             }
         }
 

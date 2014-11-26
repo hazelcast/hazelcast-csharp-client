@@ -1,340 +1,41 @@
 using System;
-using System.ComponentModel;
-using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting;
-using System.Runtime.Serialization.Formatters.Binary;
 using Hazelcast.Net.Ext;
 
-namespace Hazelcast.IO.Serialization.DefaultSerializers
+namespace Hazelcast.IO.Serialization
 {
-    //TODO FIXME
-    //internal sealed class BigDecimalSerializer : SingletonSerializer<Decimal>
-    //{
-    //    internal readonly BigIntegerSerializer bigIntegerSerializer = new BigIntegerSerializer();
-
-    //    public override int GetTypeId()
-    //    {
-    //        return SerializationConstants.DefaultTypeBigDecimal;
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public override Decimal Read(IObjectDataInput input)
-    //    {
-    //        //TODO FIXME
-    //        throw new NotImplementedException("BigDecimal");
-    //        //var bytes = new byte[input.ReadInt()];
-
-    //        //BigInteger bigInt = bigIntegerSerializer.Read(input);
-    //        //int scale = input.ReadInt();
-    //        //return new BigDecimal(bigInt, scale);
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public override void Write(IObjectDataOutput output, Decimal obj)
-    //    {
-    //        BigInteger bigInt = obj.UnscaledValue();
-    //        int scale = obj.Scale();
-    //        bigIntegerSerializer.Write(output, bigInt);
-    //        output.WriteInt(scale);
-    //    }
-
-    //    public static decimal ToDecimal(byte[] bytes)
-    //    {
-    //        //check that it is even possible to convert the array
-    //        if (bytes.Count() != 16)
-    //            throw new Exception("A decimal must be created from exactly 16 bytes");
-    //        //make an array to convert back to int32's
-    //        Int32[] bits = new Int32[4];
-    //        for (int i = 0; i <= 15; i += 4)
-    //        {
-    //            //convert every 4 bytes into an int32
-    //            bits[i / 4] = BitConverter.ToInt32(bytes, i);
-    //        }
-    //        //Use the decimal's new constructor to
-    //        //create an instance of decimal
-    //        return new decimal(bits);
-    //    }
-    //}
-
-    internal sealed class BigIntegerSerializer : SingletonSerializer<BigInteger>
+    internal sealed class DefaultSerializers
     {
-        public override int GetTypeId()
+        public sealed class DateSerializer : SingletonSerializer<DateTime>
         {
-            return SerializationConstants.DefaultTypeBigInteger;
+            public override int GetTypeId()
+            {
+                return SerializationConstants.DefaultTypeDate;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override DateTime Read(IObjectDataInput input)
+            {
+                return new DateTime().CreateDateTime(input.ReadLong());
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override void Write(IObjectDataOutput output, DateTime obj)
+            {
+                output.WriteLong(obj.Subtract(obj.EpoxDateTime()).Ticks);
+            }
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override BigInteger Read(IObjectDataInput input)
+        internal abstract class SingletonSerializer<T> : IStreamSerializer<T>
         {
-            var bytes = new byte[input.ReadInt()];
-            input.ReadFully(bytes);
-            return new BigInteger(bytes);
+            public virtual void Destroy()
+            {
+            }
+
+            public abstract int GetTypeId();
+
+            public abstract T Read(IObjectDataInput arg1);
+
+            public abstract void Write(IObjectDataOutput arg1, T arg2);
         }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void Write(IObjectDataOutput output, BigInteger obj)
-        {
-            byte[] bytes = obj.ToByteArray();
-            output.WriteInt(bytes.Length);
-            output.Write(bytes);
-        }
-    }
-
-    internal sealed class ClassSerializer : SingletonSerializer<Type>
-    {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.DefaultTypeClass;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override Type Read(IObjectDataInput input)
-        {
-            //            try {
-            //TODO CLASSLOAD
-            //                return ClassLoaderUtil.loadClass(in.getClassLoader(), in.readUTF());
-            return null;
-        }
-
-        //            } catch (ClassNotFoundException e) {
-        //                throw new HazelcastSerializationException(e);
-        //            }
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void Write(IObjectDataOutput output, Type obj)
-        {
-            output.WriteUTF(obj.FullName);
-        }
-    }
-
-    internal sealed class DateSerializer : SingletonSerializer<DateTime>
-    {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.DefaultTypeDate;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override DateTime Read(IObjectDataInput input)
-        {
-            return new DateTime().CreateDateTime(input.ReadLong());
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void Write(IObjectDataOutput output, DateTime obj)
-        {
-            output.WriteLong(obj.Subtract(obj.EpoxDateTime()).Ticks);
-        }
-    }
-
-    //internal sealed class EnumSerializer : SingletonSerializer<Enum>
-    //{
-    //    public override int GetTypeId()
-    //    {
-    //        return SerializationConstants.DefaultTypeEnum;
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public override void Write(IObjectDataOutput output, Enum obj)
-    //    {
-    //        output.WriteUTF(obj.GetType().FullName);
-    //        //TODO BURASI DOGRU MU??????
-    //        output.WriteUTF(Enum.GetName(obj.GetType(), obj));
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public override Enum Read(IObjectDataInput input)
-    //    {
-    //        string clazzName = input.ReadUTF();
-
-    //        //            String clazzName = in.readUTF();
-    //        //            Class clazz;
-    //        //            try {
-    //        //                clazz = ClassLoaderUtil.loadClass(in.getClassLoader(), clazzName);
-    //        //            } catch (ClassNotFoundException e) {
-    //        //                throw new HazelcastSerializationException("Failed to deserialize enum: " + clazzName, e);
-    //        //            }
-    //        //
-    //        //            String name = in.readUTF();
-    //        //            return Enum.valueOf(clazz, name);
-    //        //TODO CLASSLOAD
-    //        return null;
-    //    }
-    //}
-
-    //internal sealed class Externalizer : SingletonSerializer<Externalizable>
-    //{
-    //    private readonly bool gzipEnabled;
-
-    //    public Externalizer(bool gzipEnabled)
-    //    {
-    //        this.gzipEnabled = gzipEnabled;
-    //    }
-
-    //    public override int GetTypeId()
-    //    {
-    //        return SerializationConstants.DefaultTypeExternalizable;
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public override Externalizable Read(IObjectDataInput input)
-    //    {
-    //        string className = input.ReadUTF();
-    //        //            try {
-    //        //                final Externalizable ds = ClassLoaderUtil.newInstance(in.getClassLoader(), className);
-    //        //                final ObjectInputStream objectInputStream;
-    //        //                final InputStream inputStream = (InputStream) in;
-    //        //                if (gzipEnabled) {
-    //        //                    objectInputStream = newObjectInputStream(in.getClassLoader(), new GZIPInputStream(inputStream));
-    //        //                } else {
-    //        //                    objectInputStream = newObjectInputStream(in.getClassLoader(), inputStream);
-    //        //                }
-    //        //                ds.readExternal(objectInputStream);
-    //        //                return ds;
-    //        //            } catch (final Exception e) {
-    //        //                throw new HazelcastSerializationException("Problem while reading Externalizable class : "
-    //        //                        + className + ", exception: " + e);
-    //        //            }
-    //        //TODO CLASSLOAD
-    //        return null;
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public override void Write(IObjectDataOutput output, Externalizable obj)
-    //    {
-    //        output.WriteUTF(obj.GetFieldType().FullName);
-    //        ObjectOutputStream objectOutputStream;
-    //        var outputStream = (OutputStream) output;
-    //        if (gzipEnabled)
-    //        {
-    //            objectOutputStream = new ObjectOutputStream(new GZIPOutputStream(outputStream));
-    //        }
-    //        else
-    //        {
-    //            objectOutputStream = new ObjectOutputStream(outputStream);
-    //        }
-    //        obj.WriteExternal(objectOutputStream);
-    //        // Force flush if not yet written due to internal behavior if pos < 1024
-    //        objectOutputStream.Flush();
-    //    }
-    //}
-
-    //internal sealed class ObjectSerializer : SingletonSerializer<object>
-    //{
-    //    private readonly bool gzipEnabled;
-    //    private readonly bool shared;
-
-    //    public ObjectSerializer(bool shared, bool gzipEnabled)
-    //    {
-    //        this.shared = shared;
-    //        this.gzipEnabled = gzipEnabled;
-    //    }
-
-    //    public override int GetTypeId()
-    //    {
-    //        return SerializationConstants.DefaultTypeObject;
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public override object Read(IObjectDataInput input)
-    //    {
-    //        ObjectInputStream objectInputStream;
-    //        var inputStream = (InputStream) input;
-    //                    if (gzipEnabled) {
-    //                        objectInputStream = newObjectInputStream(in.getClassLoader(), new GZIPInputStream(inputStream));
-    //                    } else {
-    //                        objectInputStream = newObjectInputStream(in.getClassLoader(), inputStream);
-    //                    }
-
-    //                    final Object result;
-    //                    try {
-    //                        if (shared) {
-    //                            result = objectInputStream.readObject();
-    //                        } else {
-    //                            result = objectInputStream.readUnshared();
-    //                        }
-    //                    } catch (ClassNotFoundException e) {
-    //                        throw new HazelcastSerializationException(e);
-    //                    }
-    //                    return result;
-    //        //TODO CLASS LOAD
-    //        return null;
-    //    }
-
-    //    /// <exception cref="System.IO.IOException"></exception>
-    //    public override void Write(IObjectDataOutput output, object obj)
-    //    {
-    //        ObjectOutputStream objectOutputStream;
-    //        var outputStream = (OutputStream) output;
-    //        if (gzipEnabled)
-    //        {
-    //            objectOutputStream = new ObjectOutputStream(new GZIPOutputStream(outputStream));
-    //        }
-    //        else
-    //        {
-    //            objectOutputStream = new ObjectOutputStream(outputStream);
-    //        }
-    //        if (shared)
-    //        {
-    //            objectOutputStream.WriteObject(obj);
-    //        }
-    //        else
-    //        {
-    //            objectOutputStream.WriteUnshared(obj);
-    //        }
-    //        // Force flush if not yet written due to internal behavior if pos < 1024
-    //        objectOutputStream.Flush();
-    //    }
-    //}
-
-    //internal sealed class ObjectSerializer : SingletonSerializer<object>
-    //{
-    //    public override int GetTypeId()
-    //    {
-    //        return SerializationConstants.DefaultTypeObject;
-    //    }
-
-    //    public override object Read(IObjectDataInput input)
-    //    {
-           
-    //        var typeFullName = input.ReadUTF();
-    //        Type type = Type.GetType(typeFullName);
-
-
-    //        var bytes = new byte[size];
-            
-    //        input.ReadFully(bytes);
-
-
-    //        var ptr = Marshal.AllocHGlobal(size);
-    //        Marshal.Copy(bytes, 0, ptr, size);
-    //        var your_object = Marshal.PtrToStructure(ptr, type);
-    //        Marshal.FreeHGlobal(ptr);
-
-    //    }
-
-    //    public override void Write(IObjectDataOutput output, object obj)
-    //    {
-    //        var typeFullName = obj.GetType().FullName;
-    //        output.WriteUTF(typeFullName);
-
-
-
-    //        output.Write(bytes);
-
-    //    }
-    //}
-
-    internal abstract class SingletonSerializer<T> : IStreamSerializer<T>
-    {
-        public virtual void Destroy()
-        {
-        }
-
-        public abstract int GetTypeId();
-
-        public abstract T Read(IObjectDataInput arg1);
-
-        public abstract void Write(IObjectDataOutput arg1, T arg2);
     }
 }

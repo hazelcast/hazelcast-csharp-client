@@ -1,15 +1,52 @@
+
 namespace Hazelcast.IO.Serialization
 {
-    public interface IPortable
-    {
-        int GetFactoryId();
+	/// <summary>Portable provides an alternative serialization method.</summary>
+	/// <remarks>
+	/// Portable provides an alternative serialization method. Instead of relying on reflection, each Portable is
+	/// created by a registered
+	/// <see cref="IPortableFactory">IPortableFactory</see>
+	/// .
+	/// <p>
+	/// Portable serialization that have the following advantages:
+	/// <ul>
+	/// <li>Support multiversion of the same object type.
+	/// (See
+	/// <see cref="Hazelcast.Config.SerializationConfig.SetPortableVersion(int)">Hazelcast.Config.SerializationConfig.SetPortableVersion(int)
+	/// 	</see>
+	/// )</li>
+	/// <li>Fetching individual fields without having to rely on reflection.</li>
+	/// <li>Querying and indexing support without de-serialization and/or reflection.</li>
+	/// </ul>
+	/// </remarks>
+	/// <seealso cref="IPortableFactory">IPortableFactory</seealso>
+	/// <seealso cref="IPortableWriter">IPortableWriter</seealso>
+	/// <seealso cref="IPortableReader">IPortableReader</seealso>
+	/// <seealso cref="IClassDefinition">IClassDefinition</seealso>
+	/// <seealso cref="IDataSerializable">IDataSerializable</seealso>
+	/// <seealso cref="IIdentifiedDataSerializable">IIdentifiedDataSerializable</seealso>
+	/// <seealso cref="Hazelcast.Config.SerializationConfig">Hazelcast.Config.SerializationConfig
+	/// 	</seealso>
+	public interface IPortable
+	{
+		/// <summary>Returns PortableFactory id for this portable class</summary>
+		/// <returns>factory id</returns>
+		int GetFactoryId();
 
-        int GetClassId();
+		/// <summary>Returns class identifier for this portable class.</summary>
+		/// <remarks>Returns class identifier for this portable class. Class id should be unique per PortableFactory.
+		/// 	</remarks>
+		/// <returns>class id</returns>
+		int GetClassId();
 
-        /// <exception cref="System.IO.IOException"></exception>
-        void WritePortable(IPortableWriter writer);
+		/// <summary>Serialize this portable object using PortableWriter</summary>
+		/// <param name="writer">PortableWriter</param>
+		/// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+		void WritePortable(IPortableWriter writer);
 
-        /// <exception cref="System.IO.IOException"></exception>
-        void ReadPortable(IPortableReader reader);
-    }
+		/// <summary>Read portable fields using PortableReader</summary>
+		/// <param name="reader">PortableReader</param>
+		/// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+		void ReadPortable(IPortableReader reader);
+	}
 }

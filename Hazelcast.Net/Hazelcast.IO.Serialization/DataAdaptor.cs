@@ -2,137 +2,81 @@
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class DataAdapter : SocketWritable, SocketReadable
+    internal class DataAdapter : ISocketWritable, ISocketReadable
     {
         private const int StType = 1;
-        private const int StClassId = 2;
-        private const int StFactoryId = 3;
-        private const int StVersion = 4;
-        private const int StClassDefSize = 5;
-        private const int StClassDef = 6;
-        private const int StSize = 7;
-        private const int StValue = 8;
-        private const int StHash = 9;
-        private const int StAll = 10;
+        private const int StSize = 2;
+        private const int StValue = 3;
+        private const int StHash = 4;
+        private const int StAll = 5;
 
-        protected internal Data data;
-        
+        protected internal IData data;
+
+        protected internal IPortableContext context;
+
+        private short status;
+
         private ByteBuffer buffer;
-        private int factoryId;
-        private int classId;
-        private int version;
-        private int classDefSize;
-        private bool skipClassDef;
 
-        [System.NonSerialized]
-        private short status = 0;
+        private ClassDefinitionSerializer classDefinitionSerializer;
 
-        [System.NonSerialized]
-        private readonly IPortableContext context;
-
-        internal DataAdapter(Data data)
-        {
-            this.data = data;
-        }
-
-        internal DataAdapter(IPortableContext context)
+        public DataAdapter(IPortableContext context)
         {
             this.context = context;
         }
-        internal DataAdapter(Data data, IPortableContext context)
+
+        public DataAdapter(IData data, IPortableContext context)
         {
             this.data = data;
             this.context = context;
         }
 
-        /// <summary>
-        /// WARNING:
-        /// Should be in sync with
-        /// <see cref="Data#writeData(com.hazelcast.nio.ObjectDataOutput)">Data#writeData(com.hazelcast.nio.ObjectDataOutput)</see>
-        /// </summary>
+        public virtual bool IsUrgent()
+        {
+            return false;
+        }
+
         public virtual bool WriteTo(ByteBuffer destination)
         {
             if (!IsStatusSet(StType))
             {
-                if (destination.Remaining() < 4)
+                if (destination.Remaining() < Bits.INT_SIZE_IN_BYTES + 1)
                 {
                     return false;
                 }
-                destination.PutInt(data.type);
+                int type = data.GetType();
+                destination.PutInt(type);
+                bool hasClassDefinition = context.HasClassDefinition(data);
+                destination.Put(unchecked((byte)(hasClassDefinition ? 1 : 0)));
+                if (hasClassDefinition)
+                {
+                    classDefinitionSerializer = new ClassDefinitionSerializer(data, context);
+                }
                 SetStatus(StType);
             }
-            if (!IsStatusSet(StClassId))
+            if (classDefinitionSerializer != null)
             {
-                if (destination.Remaining() < 4)
+                if (!classDefinitionSerializer.Write(destination))
                 {
                     return false;
-                }
-                classId = data.classDefinition == null ? Data.NoClassId : data.classDefinition.GetClassId();
-                destination.PutInt(classId);
-                if (classId == Data.NoClassId)
-                {
-                    SetStatus(StFactoryId);
-                    SetStatus(StVersion);
-                    SetStatus(StClassDefSize);
-                    SetStatus(StClassDef);
-                }
-                SetStatus(StClassId);
-            }
-            if (!IsStatusSet(StFactoryId))
-            {
-                if (destination.Remaining() < 4)
-                {
-                    return false;
-                }
-                destination.PutInt(data.classDefinition.GetFactoryId());
-                SetStatus(StFactoryId);
-            }
-            if (!IsStatusSet(StVersion))
-            {
-                if (destination.Remaining() < 4)
-                {
-                    return false;
-                }
-                int version = data.classDefinition.GetVersion();
-                destination.PutInt(version);
-                SetStatus(StVersion);
-            }
-            if (!IsStatusSet(StClassDefSize))
-            {
-                if (destination.Remaining() < 4)
-                {
-                    return false;
-                }
-                BinaryClassDefinition cd = (BinaryClassDefinition)data.classDefinition;
-                byte[] binary = cd.GetBinary();
-                classDefSize = binary == null ? 0 : binary.Length;
-                destination.PutInt(classDefSize);
-                SetStatus(StClassDefSize);
-                if (classDefSize == 0)
-                {
-                    SetStatus(StClassDef);
-                }
-                else
-                {
-                    buffer = ByteBuffer.Wrap(binary);
                 }
             }
-            if (!IsStatusSet(StClassDef))
+            if (!IsStatusSet(StHash))
             {
-                IOUtil.CopyToHeapBuffer(buffer, destination);
-                if (buffer.HasRemaining())
+                if (destination.Remaining() < Bits.INT_SIZE_IN_BYTES)
                 {
                     return false;
                 }
-                SetStatus(StClassDef);
+                destination.PutInt(data.HasPartitionHash() ? data.GetPartitionHash() : 0);
+                SetStatus(StHash);
             }
             if (!IsStatusSet(StSize))
             {
-                if (destination.Remaining() < 4)
+                if (destination.Remaining() < Bits.INT_SIZE_IN_BYTES)
                 {
                     return false;
                 }
-                int size = data.BufferSize();
+                int size = data.DataSize();
                 destination.PutInt(size);
                 SetStatus(StSize);
                 if (size <= 0)
@@ -141,7 +85,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 else
                 {
-                    buffer = ByteBuffer.Wrap(data.buffer);
+                    buffer = ByteBuffer.Wrap(data.GetData());
                 }
             }
             if (!IsStatusSet(StValue))
@@ -153,24 +97,10 @@ namespace Hazelcast.IO.Serialization
                 }
                 SetStatus(StValue);
             }
-            if (!IsStatusSet(StHash))
-            {
-                if (destination.Remaining() < 4)
-                {
-                    return false;
-                }
-                destination.PutInt(data.GetPartitionHash());
-                SetStatus(StHash);
-            }
             SetStatus(StAll);
             return true;
         }
 
-        /// <summary>
-        /// WARNING:
-        /// Should be in sync with
-        /// <see cref="Data#readData(com.hazelcast.nio.ObjectDataInput)">Data#readData(com.hazelcast.nio.ObjectDataInput)</see>
-        /// </summary>
         public virtual bool ReadFrom(ByteBuffer source)
         {
             if (data == null)
@@ -179,86 +109,38 @@ namespace Hazelcast.IO.Serialization
             }
             if (!IsStatusSet(StType))
             {
-                if (source.Remaining() < 4)
+                if (source.Remaining() < Bits.INT_SIZE_IN_BYTES + 1)
                 {
                     return false;
                 }
-                data.type = source.GetInt();
+                int type = source.GetInt();
+                ((Data)data).SetType(type);
                 SetStatus(StType);
+                bool hasClassDefinition = source.Get() != 0;
+                if (hasClassDefinition)
+                {
+                    classDefinitionSerializer = new ClassDefinitionSerializer(data, context);
+                }
             }
-            if (!IsStatusSet(StClassId))
+            if (classDefinitionSerializer != null)
             {
-                if (source.Remaining() < 4)
+                if (!classDefinitionSerializer.Read(source))
                 {
                     return false;
                 }
-                classId = source.GetInt();
-                SetStatus(StClassId);
-                if (classId == Data.NoClassId)
-                {
-                    SetStatus(StFactoryId);
-                    SetStatus(StVersion);
-                    SetStatus(StClassDefSize);
-                    SetStatus(StClassDef);
-                }
             }
-            if (!IsStatusSet(StFactoryId))
+            if (!IsStatusSet(StHash))
             {
-                if (source.Remaining() < 4)
+                if (source.Remaining() < Bits.INT_SIZE_IN_BYTES)
                 {
                     return false;
                 }
-                factoryId = source.GetInt();
-                SetStatus(StFactoryId);
-            }
-            if (!IsStatusSet(StVersion))
-            {
-                if (source.Remaining() < 4)
-                {
-                    return false;
-                }
-                version = source.GetInt();
-                SetStatus(StVersion);
-            }
-            if (!IsStatusSet(StClassDef))
-            {
-                IClassDefinition cd;
-                if (!skipClassDef && (cd = context.Lookup(factoryId, classId, version)) != null)
-                {
-                    data.classDefinition = cd;
-                    skipClassDef = true;
-                }
-                if (!IsStatusSet(StClassDefSize))
-                {
-                    if (source.Remaining() < 4)
-                    {
-                        return false;
-                    }
-                    classDefSize = source.GetInt();
-                    SetStatus(StClassDefSize);
-                }
-                if (!IsStatusSet(StClassDef))
-                {
-                    if (source.Remaining() < classDefSize)
-                    {
-                        return false;
-                    }
-                    if (skipClassDef)
-                    {
-                        source.Position = classDefSize + source.Position;
-                    }
-                    else
-                    {
-                        byte[] binary = new byte[classDefSize];
-                        source.Get(binary);
-                        data.classDefinition = new BinaryClassDefinitionProxy(factoryId, classId, version, binary);
-                    }
-                    SetStatus(StClassDef);
-                }
+                ((Data)data).SetPartitionHash(source.GetInt());
+                SetStatus(StHash);
             }
             if (!IsStatusSet(StSize))
             {
-                if (source.Remaining() < 4)
+                if (source.Remaining() < Bits.INT_SIZE_IN_BYTES)
                 {
                     return false;
                 }
@@ -274,17 +156,8 @@ namespace Hazelcast.IO.Serialization
                     return false;
                 }
                 buffer.Flip();
-                data.buffer = ((byte[])buffer.Array());
+                ((Data)data).SetData(((byte[])buffer.Array()));
                 SetStatus(StValue);
-            }
-            if (!IsStatusSet(StHash))
-            {
-                if (source.Remaining() < 4)
-                {
-                    return false;
-                }
-                data.partitionHash = source.GetInt();
-                SetStatus(StHash);
             }
             SetStatus(StAll);
             return true;
@@ -292,7 +165,10 @@ namespace Hazelcast.IO.Serialization
 
         protected internal void SetStatus(int bit)
         {
-            status |= (short)(1 << bit);
+            unchecked
+            {
+                status |= (short)(1 << bit);
+            }
         }
 
         protected internal bool IsStatusSet(int bit)
@@ -300,13 +176,12 @@ namespace Hazelcast.IO.Serialization
             return (status & 1 << bit) != 0;
         }
 
-        public Data GetData()
+        public IData GetData()
         {
-            data.PostConstruct(context);
             return data;
         }
 
-        public void SetData(Data data)
+        public void SetData(IData data)
         {
             this.data = data;
         }
@@ -316,18 +191,51 @@ namespace Hazelcast.IO.Serialization
             return IsStatusSet(StAll);
         }
 
-        public virtual void OnEnqueue()
-        {
-        }
-
         public virtual void Reset()
         {
             buffer = null;
-            classId = 0;
-            version = 0;
-            classDefSize = 0;
             data = null;
             status = 0;
+            classDefinitionSerializer = null;
+        }
+
+        public static int GetDataSize(IData data, IPortableContext context)
+        {
+            // type
+            int total = Bits.INT_SIZE_IN_BYTES;
+            // class def flag
+            total += 1;
+            if (context.HasClassDefinition(data))
+            {
+                IClassDefinition[] classDefinitions = context.GetClassDefinitions(data);
+                if (classDefinitions == null || classDefinitions.Length == 0)
+                {
+                    throw new HazelcastSerializationException("ClassDefinition could not be found!");
+                }
+                // class definitions count
+                total += Bits.INT_SIZE_IN_BYTES;
+                foreach (IClassDefinition classDef in classDefinitions)
+                {
+                    // classDefinition-classId
+                    total += Bits.INT_SIZE_IN_BYTES;
+                    // classDefinition-factory-id
+                    total += Bits.INT_SIZE_IN_BYTES;
+                    // classDefinition-version
+                    total += Bits.INT_SIZE_IN_BYTES;
+                    // classDefinition-binary-length
+                    total += Bits.INT_SIZE_IN_BYTES;
+                    byte[] bytes = ((BinaryClassDefinition)classDef).GetBinary();
+                    // classDefinition-binary
+                    total += bytes.Length;
+                }
+            }
+            // partition-hash
+            total += Bits.INT_SIZE_IN_BYTES;
+            // data-size
+            total += Bits.INT_SIZE_IN_BYTES;
+            // data
+            total += data.DataSize();
+            return total;
         }
     }
 }

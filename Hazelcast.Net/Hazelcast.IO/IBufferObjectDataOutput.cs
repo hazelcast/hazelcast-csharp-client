@@ -36,8 +36,6 @@ namespace Hazelcast.IO
 
         void Position(int newPos);
 
-        byte[] GetBuffer();
-
         void Clear();
     }
 }

@@ -9,20 +9,32 @@ using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
+    /// <summary>
+    ///     This class is the default serializer for all types that are serialized using Hazelcast
+    ///     internal methods.
+    /// </summary>
+    /// <remarks>
+    ///     This class is the default serializer for all types that are serialized using Hazelcast
+    ///     internal methods. Due to the operation responding on deserialization errors this class
+    ///     has a dependency to
+    ///     <see cref="Hazelcast.IO.IOUtil.ExtractOperationCallId(IData, ISerializationService)">
+    ///         Hazelcast.IO.IOUtil.ExtractOperationCallId(IData, ISerializationService)
+    ///     </see>
+    ///     .
+    ///     If the way the DataSerializer serializes values is changed the extract method needs to be changed too!
+    /// </remarks>
     internal sealed class DataSerializer : IStreamSerializer<IDataSerializable>
     {
-        private const string FactoryId = "com.hazelcast.DataSerializerHook";
+        private readonly IDictionary<string, Type> class2Type = new Dictionary<string, Type>
+        {
+            {"com.hazelcast.query.SqlPredicate", typeof (SqlPredicate)},
+            {"com.hazelcast.transaction.TransactionOptions", typeof (TransactionOptions)}
+        };
 
         private readonly IDictionary<int, IDataSerializableFactory> factories =
             new Dictionary<int, IDataSerializableFactory>();
 
-
-        private readonly IDictionary<string, Type> class2Type = new Dictionary<string, Type>()
-        {
-            {"com.hazelcast.query.SqlPredicate", typeof(SqlPredicate)},
-            {"com.hazelcast.transaction.TransactionOptions", typeof(TransactionOptions)}
-        }; 
-        internal DataSerializer(IDictionary<int, IDataSerializableFactory> dataSerializableFactories)
+        internal DataSerializer(IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories)
         {
             try
             {
@@ -67,7 +79,7 @@ namespace Hazelcast.IO.Serialization
 
         public int GetTypeId()
         {
-            return SerializationConstants.ConstantTypeData;
+            return SerializationConstants.ConstantTypeDataSerializable;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -95,7 +107,7 @@ namespace Hazelcast.IO.Serialization
                     if (ds == null)
                     {
                         throw new HazelcastSerializationException(dsf + " is not be able to create an instance for id: " +
-                                                                  id);
+                                                                  id + " on factoryId: " + factoryId);
                     }
                 }
                 else
@@ -106,7 +118,8 @@ namespace Hazelcast.IO.Serialization
                     if (type != null) ds = Activator.CreateInstance(type) as IDataSerializable;
                     if (ds == null)
                     {
-                        throw new HazelcastSerializationException("Not able to create an instance for className: " +className);
+                        throw new HazelcastSerializationException("Not able to create an instance for className: " +
+                                                                  className);
                     }
                 }
                 ds.ReadData(input);
@@ -123,8 +136,8 @@ namespace Hazelcast.IO.Serialization
                     throw;
                 }
                 throw new HazelcastSerializationException(
-                    "Problem while reading IDataSerializable, namespace: " + factoryId + ", id: " + id + ", class: " +
-                    className + ", exception: " + e.Message, e);
+                    "Problem while reading DataSerializable, namespace: " + factoryId + ", id: " + id + ", class: '" +
+                    className + "', exception: " + e.Message, e);
             }
         }
 
@@ -165,12 +178,11 @@ namespace Hazelcast.IO.Serialization
                 if (current.Equals(factory))
                 {
                     Logger.GetLogger(GetType())
-                        .Warning("IDataSerializableFactory[" + factoryId + "] is already registered! Skipping " +
-                                 factory);
+                        .Warning("DataSerializableFactory[" + factoryId + "] is already registered! Skipping " + factory);
                 }
                 else
                 {
-                    throw new ArgumentException("IDataSerializableFactory[" + factoryId + "] is already registered! " +
+                    throw new ArgumentException("DataSerializableFactory[" + factoryId + "] is already registered! " +
                                                 current + " -> " + factory);
                 }
             }

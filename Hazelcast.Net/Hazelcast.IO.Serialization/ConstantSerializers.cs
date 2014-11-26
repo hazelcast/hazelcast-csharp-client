@@ -2,10 +2,6 @@ namespace Hazelcast.IO.Serialization
 {
     internal sealed class ConstantSerializers
     {
-        private ConstantSerializers()
-        {
-        }
-
         internal sealed class BooleanSerializer : SingletonSerializer<bool>
         {
             public override int GetTypeId()

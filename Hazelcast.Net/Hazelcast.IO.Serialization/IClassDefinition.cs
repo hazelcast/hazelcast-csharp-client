@@ -2,26 +2,54 @@ using System.Collections.Generic;
 
 namespace Hazelcast.IO.Serialization
 {
-    public interface IClassDefinition : IDataSerializable
-    {
-        int GetFactoryId();
+	/// <summary>ClassDefinition defines a class schema for Portable classes.</summary>
+	/// <remarks>
+	/// ClassDefinition defines a class schema for Portable classes. It allows to query field names, types, class id etc.
+	/// It can be created manually using
+	/// <see cref="ClassDefinitionBuilder">ClassDefinitionBuilder</see>
+	/// or ondemand during serialization phase.
+	/// </remarks>
+	/// <seealso cref="IPortable">IPortable</seealso>
+	/// <seealso cref="ClassDefinitionBuilder">ClassDefinitionBuilder</seealso>
+	public interface IClassDefinition
+	{
+		/// <param name="name">name of the field</param>
+		/// <returns>field definition by given name or null</returns>
+		IFieldDefinition GetField(string name);
 
-        IFieldDefinition Get(string name);
+		/// <param name="fieldIndex">index of the field</param>
+		/// <returns>field definition by given index</returns>
+		/// <exception cref="System.IndexOutOfRangeException">System.IndexOutOfRangeException
+		/// 	</exception>
+		IFieldDefinition GetField(int fieldIndex);
 
-        IFieldDefinition Get(int fieldIndex);
+		/// <param name="fieldName">field name</param>
+		/// <returns>true if this class definition contains a field named by given name</returns>
+		bool HasField(string fieldName);
 
-        bool HasField(string fieldName);
+		/// <returns>all field names contained in this class definition</returns>
+		ICollection<string> GetFieldNames();
 
-        ICollection<string> GetFieldNames();
+		/// <param name="fieldName">name of the field</param>
+		/// <returns>type of given field</returns>
+		/// <exception cref="System.ArgumentException">System.ArgumentException</exception>
+		FieldType GetFieldType(string fieldName);
 
-        FieldType GetFieldType(string fieldName);
+		/// <param name="fieldName">name of the field</param>
+		/// <returns>class id of given field</returns>
+		/// <exception cref="System.ArgumentException">System.ArgumentException</exception>
+		int GetFieldClassId(string fieldName);
 
-        int GetFieldClassId(string fieldName);
+		/// <returns>total field count</returns>
+		int GetFieldCount();
 
-        int GetFieldCount();
+		/// <returns>factory id</returns>
+		int GetFactoryId();
 
-        int GetClassId();
+		/// <returns>class id</returns>
+		int GetClassId();
 
-        int GetVersion();
-    }
+		/// <returns>version</returns>
+		int GetVersion();
+	}
 }
