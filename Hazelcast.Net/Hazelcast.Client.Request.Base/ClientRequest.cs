@@ -1,59 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Hazelcast.IO.Serialization;
+﻿using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Request.Base
 {
-    /// <summary>
-    /// Base client request, All Request must extend this class
-    /// </summary>
-    public abstract class ClientRequest:IPortable
-    {
-        int callId = -1;
+	internal abstract class ClientRequest : IVersionedPortable
+	{
+		protected internal int callId = -1;
 
-        public int CallId
-        {
-            get { return callId; }
-            set { callId = value; }
-        }
+		public virtual int GetCallId()
+		{
+			return callId;
+		}
 
-        public virtual bool Sticky
-        {
-            get { return false; }
-        }
+		public virtual void SetCallId(int callId)
+		{
+			this.callId = callId;
+		}
 
-        public abstract int GetFactoryId();
-        public abstract int GetClassId();
+		/// <exception cref="System.IO.IOException"></exception>
+		public void WritePortable(IPortableWriter writer)
+		{
+			writer.WriteInt("cId", callId);
+			Write(writer);
+		}
 
-        void IPortable.WritePortable(IPortableWriter writer)
-        {
-            BaseWritePortable(writer);
-            WritePortable(writer);
-        }
+	    public void ReadPortable(IPortableReader reader)
+	    {
+	        throw new System.NotImplementedException();
+	    }
 
-        protected virtual void BaseWritePortable(IPortableWriter writer)
-        {
-            writer.WriteInt("cId", callId);
-        }
-        
-        public abstract void WritePortable(IPortableWriter writer);
+		/// <exception cref="System.IO.IOException"></exception>
+		public abstract void Write(IPortableWriter writer);
 
-        public void ReadPortable(IPortableReader reader)
-        {
-            
-        }
+		public virtual int GetClassVersion()
+		{
+			return 1;
+		}
 
-    }
+		public abstract int GetClassId();
 
-
-    internal interface IRemoveRequest
-    {
-        string RegistrationId
-        {
-            //get;
-            set;
-        }
-    }
+		public abstract int GetFactoryId();
+	}
 }

@@ -4,34 +4,33 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Client.Request.Base
 {
     internal class ClientDestroyRequest : ClientRequest, IRetryableRequest
-    {
-        private string name;
+	{
+		private string name;
 
-        private string serviceName;
+		private string serviceName;
 
-
-        public ClientDestroyRequest(string name, string serviceName)
-        {
-            this.name = name;
-            this.serviceName = serviceName;
-        }
+		public ClientDestroyRequest(string name, string serviceName)
+		{
+			this.name = name;
+			this.serviceName = serviceName;
+		}
 
         public override int GetFactoryId()
-        {
-            return ClientPortableHook.Id;
-        }
+		{
+			return ClientPortableHook.Id;
+		}
 
         public override int GetClassId()
-        {
-            return ClientPortableHook.DestroyProxy;
-        }
+		{
+			return ClientPortableHook.DestroyProxy;
+		}
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("n", name);
-            writer.WriteUTF("s", serviceName);
-        }
+		/// <exception cref="System.IO.IOException"></exception>
+        public override void Write(IPortableWriter writer)
+		{
+			writer.WriteUTF("n", name);
+			writer.WriteUTF("s", serviceName);
+		}
 
-    }
+	}
 }
