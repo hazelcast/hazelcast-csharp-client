@@ -7,7 +7,6 @@ namespace Hazelcast.Client.Request.Collection
     {
         internal int index = -1;
 
-
         public ListGetRequest(string name, int index) : base(name)
         {
             this.index = index;
@@ -19,11 +18,10 @@ namespace Hazelcast.Client.Request.Collection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             writer.WriteInt("i", index);
         }
-
     }
 }

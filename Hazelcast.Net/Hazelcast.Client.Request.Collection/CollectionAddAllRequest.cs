@@ -7,10 +7,9 @@ namespace Hazelcast.Client.Request.Collection
 {
     internal class CollectionAddAllRequest : CollectionRequest
     {
-        protected internal IList<Data> valueList;
+        protected internal IList<IData> valueList;
 
-
-        public CollectionAddAllRequest(string name, IList<Data> valueList) : base(name)
+        public CollectionAddAllRequest(string name, IList<IData> valueList) : base(name)
         {
             this.valueList = valueList;
         }
@@ -21,16 +20,15 @@ namespace Hazelcast.Client.Request.Collection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
             output.WriteInt(valueList.Count);
             foreach (Data value in valueList)
             {
-                value.WriteData(output);
+                output.WriteData(value);
             }
         }
-
     }
 }

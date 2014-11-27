@@ -7,17 +7,16 @@ namespace Hazelcast.Client.Request.Collection
 {
     internal class CollectionContainsRequest : CollectionRequest
     {
-        private ICollection<Data> valueSet;
+        private readonly ICollection<IData> valueSet;
 
-
-        public CollectionContainsRequest(string name, ICollection<Data> valueSet) : base(name)
+        public CollectionContainsRequest(string name, ICollection<IData> valueSet) : base(name)
         {
             this.valueSet = valueSet;
         }
 
-        public CollectionContainsRequest(string name, Data value) : base(name)
+        public CollectionContainsRequest(string name, IData value) : base(name)
         {
-            valueSet = new HashSet<Data> {value};
+            valueSet = new HashSet<IData> {value};
         }
 
         public override int GetClassId()
@@ -26,14 +25,14 @@ namespace Hazelcast.Client.Request.Collection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
             output.WriteInt(valueSet.Count);
-            foreach (Data value in valueSet)
+            foreach (IData value in valueSet)
             {
-                value.WriteData(output);
+                output.WriteData(value);
             }
         }
     }
