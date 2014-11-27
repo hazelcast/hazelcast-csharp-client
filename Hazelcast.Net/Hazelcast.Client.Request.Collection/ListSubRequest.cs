@@ -5,10 +5,8 @@ namespace Hazelcast.Client.Request.Collection
 {
     internal class ListSubRequest : CollectionRequest
     {
-        private int from;
-
-        private int to;
-
+        private readonly int from;
+        private readonly int to;
 
         public ListSubRequest(string name, int from, int to) : base(name)
         {
@@ -22,12 +20,11 @@ namespace Hazelcast.Client.Request.Collection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             writer.WriteInt("f", from);
             writer.WriteInt("t", to);
         }
-
     }
 }

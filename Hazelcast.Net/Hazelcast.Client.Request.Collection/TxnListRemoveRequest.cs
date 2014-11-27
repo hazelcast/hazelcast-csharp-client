@@ -5,8 +5,7 @@ namespace Hazelcast.Client.Request.Collection
 {
     internal class TxnListRemoveRequest : TxnCollectionRequest
     {
-
-        public TxnListRemoveRequest(string name, Data value) : base(name, value)
+        public TxnListRemoveRequest(string name, IData value) : base(name, value)
         {
         }
 

@@ -5,10 +5,9 @@ namespace Hazelcast.Client.Request.Collection
 {
     internal class CollectionRemoveRequest : CollectionRequest
     {
-        private Data value;
+        private readonly IData value;
 
-
-        public CollectionRemoveRequest(string name, Data value) : base(name)
+        public CollectionRemoveRequest(string name, IData value) : base(name)
         {
             this.value = value;
         }
@@ -19,11 +18,10 @@ namespace Hazelcast.Client.Request.Collection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
-            value.WriteData(writer.GetRawDataOutput());
+            base.Write(writer);
+            writer.GetRawDataOutput().WriteData(value);
         }
-
     }
 }

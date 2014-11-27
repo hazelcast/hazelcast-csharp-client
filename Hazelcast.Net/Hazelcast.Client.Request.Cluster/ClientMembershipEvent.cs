@@ -3,7 +3,7 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
-using Sharpen;
+
 
 namespace Hazelcast.Client.Request.Cluster
 {

@@ -6,10 +6,9 @@ namespace Hazelcast.Client.Request.Collection
     internal class ListIndexOfRequest : CollectionRequest
     {
         internal bool last;
-        internal Data value;
+        internal IData value;
 
-
-        public ListIndexOfRequest(string name, Data value, bool last) : base(name)
+        public ListIndexOfRequest(string name, IData value, bool last) : base(name)
         {
             this.value = value;
             this.last = last;
@@ -21,12 +20,11 @@ namespace Hazelcast.Client.Request.Collection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             writer.WriteBoolean("l", last);
-            value.WriteData(writer.GetRawDataOutput());
+            writer.GetRawDataOutput().WriteData(value);
         }
-
     }
 }

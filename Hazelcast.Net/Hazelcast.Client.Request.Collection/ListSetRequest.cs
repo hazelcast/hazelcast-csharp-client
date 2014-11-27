@@ -5,12 +5,10 @@ namespace Hazelcast.Client.Request.Collection
 {
     internal class ListSetRequest : CollectionRequest
     {
-        private int index;
+        private readonly int index;
+        private readonly IData value;
 
-        private Data value;
-
-
-        public ListSetRequest(string name, int index, Data value) : base(name)
+        public ListSetRequest(string name, int index, IData value) : base(name)
         {
             this.index = index;
             this.value = value;
@@ -22,12 +20,11 @@ namespace Hazelcast.Client.Request.Collection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             writer.WriteInt("i", index);
-            value.WriteData(writer.GetRawDataOutput());
+            writer.GetRawDataOutput().WriteData(value);
         }
-
     }
 }

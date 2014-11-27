@@ -9,7 +9,6 @@ namespace Hazelcast.Client.Request.Collection
         protected internal string name;
         protected internal string serviceName;
 
-
         protected CollectionRequest(string name)
         {
             this.name = name;
@@ -20,16 +19,16 @@ namespace Hazelcast.Client.Request.Collection
             return CollectionPortableHook.FId;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("s", serviceName);
-            writer.WriteUTF("n", name);
-        }
-
         public virtual void SetServiceName(string serviceName)
         {
             this.serviceName = serviceName;
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public override void Write(IPortableWriter writer)
+        {
+            writer.WriteUTF("s", serviceName);
+            writer.WriteUTF("n", name);
         }
     }
 }

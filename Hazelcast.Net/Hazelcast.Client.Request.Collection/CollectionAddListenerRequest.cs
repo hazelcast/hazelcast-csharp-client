@@ -4,10 +4,10 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Collection
 {
-    internal class CollectionAddListenerRequest : ClientRequest
+    internal class CollectionAddListenerRequest : ClientRequest, IRetryableRequest
     {
-        private bool includeValue;
-        private string name;
+        private readonly bool includeValue;
+        private readonly string name;
 
         private string serviceName;
 
@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Request.Collection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteBoolean("i", includeValue);
