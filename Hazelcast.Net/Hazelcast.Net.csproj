@@ -75,6 +75,9 @@
     <Compile Include="Hazelcast.Client.Request.Concurrent.Atomiclong\ApplyRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Concurrent.Atomiclong\GetAndAlterRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Concurrent.Atomiclong\ReadRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Concurrent.Lock\AwaitRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Concurrent.Lock\BeforeAwaitRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Concurrent.Lock\SignalRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Map\MapRemoveEntryListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\KeyBasedContainsRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\RemoveEntryListenerRequest.cs" />
@@ -82,6 +85,7 @@
     <Compile Include="Hazelcast.Client.Request.Queue\RemoveListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Topic\RemoveMessageListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Transaction\BaseTransactionRequest.cs" />
+    <Compile Include="Hazelcast.Client.Spi\IObjectNamespace.cs" />
     <Compile Include="Hazelcast.Client.Spi\IRemotingService.cs" />
     <Compile Include="Hazelcast.Client.Spi\PacketManager.cs" />
     <Compile Include="Hazelcast.Client.Spi\Exception.cs" />

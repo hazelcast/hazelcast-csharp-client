@@ -12,6 +12,10 @@ namespace Hazelcast.Serialization.Hook
         public const int IsLocked = 3;
         public const int GetLockCount = 5;
         public const int GetRemainingLease = 6;
+        public const int ConditionBeforeAwait = 7;
+        public const int ConditionAwait = 8;
+        public const int ConditionSignal = 9;
+
         public static readonly int FactoryId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.LockPortableFactory, -15);
 
         public virtual int GetFactoryId()
