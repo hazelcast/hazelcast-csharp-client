@@ -1,18 +1,19 @@
 using Hazelcast.Client.Request.Base;
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Atomiclong
 {
-    internal abstract class AtomicLongRequest : ClientRequest
+    internal abstract class AbstractAlterRequest : ClientRequest
     {
-        internal long delta;
-        internal string name;
+        protected internal IData function;
+        protected internal string name;
 
-        protected internal AtomicLongRequest(string name, long delta)
+        protected AbstractAlterRequest(string name, IData function)
         {
             this.name = name;
-            this.delta = delta;
+            this.function = function;
         }
 
         public override int GetFactoryId()
@@ -24,7 +25,8 @@ namespace Hazelcast.Client.Request.Concurrent.Atomiclong
         public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            writer.WriteLong("d", delta);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            output.WriteData(function);
         }
     }
 }

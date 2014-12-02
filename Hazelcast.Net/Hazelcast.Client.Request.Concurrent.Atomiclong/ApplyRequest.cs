@@ -1,27 +1,29 @@
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Concurrent.Atomiclong
 {
-    internal class CompareAndSetRequest : AtomicLongRequest
+    internal class ApplyRequest : ReadRequest
     {
-        private readonly long expect;
+        private readonly IData function;
 
-        public CompareAndSetRequest(string name, long expect, long value) : base(name, value)
+        public ApplyRequest(string name, IData function) : base(name)
         {
-            this.expect = expect;
+            this.function = function;
         }
 
         public override int GetClassId()
         {
-            return AtomicLongPortableHook.CompareAndSet;
+            return AtomicLongPortableHook.Apply;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public override void Write(IPortableWriter writer)
         {
             base.Write(writer);
-            writer.WriteLong("e", expect);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            output.WriteData(function);
         }
     }
 }
