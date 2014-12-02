@@ -5,9 +5,11 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
 {
     internal sealed class LockRequest : AbstractLockRequest
     {
+        public LockRequest(IData key, int threadId) : base(key, threadId)
+        {
+        }
 
-        public LockRequest(Data key, long threadId, long ttl, long timeout)
-            : base(key, threadId, ttl, timeout)
+        public LockRequest(IData key, int threadId, long ttl, long timeout) : base(key, threadId, ttl, timeout)
         {
         }
 

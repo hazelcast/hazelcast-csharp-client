@@ -8,6 +8,8 @@ namespace Hazelcast.IO.Serialization
 
         private readonly int _length;
 
+        public ArrayPortableFactory(): this(null){ }
+
         public ArrayPortableFactory(Func<int, IPortable>[] ctorArray)
         {
             if (ctorArray != null && ctorArray.Length > 0)

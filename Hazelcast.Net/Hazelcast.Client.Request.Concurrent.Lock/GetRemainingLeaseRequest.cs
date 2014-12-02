@@ -1,4 +1,5 @@
 using Hazelcast.Client.Request.Base;
+using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
@@ -7,14 +8,17 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
 {
     internal sealed class GetRemainingLeaseRequest : ClientRequest
     {
-        private Data key;
+        private readonly IData key;
 
-
-        public GetRemainingLeaseRequest(Data key)
+        public GetRemainingLeaseRequest(IData key)
         {
             this.key = key;
         }
 
+        public string GetServiceName()
+        {
+            return ServiceNames.Lock;
+        }
 
         public override int GetFactoryId()
         {
@@ -27,11 +31,10 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
+            output.WriteData(key);
         }
-
     }
 }

@@ -1,5 +1,4 @@
 using Hazelcast.Client.Request.Base;
-using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
@@ -7,14 +6,12 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
 {
     internal abstract class AbstractLockRequest : ClientRequest
     {
-        protected internal Data key;
+        private readonly long threadId;
+        private readonly long timeout = -1;
+        private readonly long ttl = -1;
+        protected internal IData key;
 
-        private long threadId;
-
-        private long timeout = -1;
-        private long ttl = -1;
-
-        protected AbstractLockRequest(Data key, long threadId, long ttl=-1, long timeout=-1)
+        protected AbstractLockRequest(IData key, int threadId, long ttl = -1, long timeout = -1)
         {
             this.key = key;
             this.threadId = threadId;
@@ -23,15 +20,13 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteLong("tid", threadId);
             writer.WriteLong("ttl", ttl);
             writer.WriteLong("timeout", timeout);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
+            output.WriteData(key);
         }
-
-
     }
 }

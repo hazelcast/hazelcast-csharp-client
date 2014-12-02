@@ -6,12 +6,11 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
 {
     internal sealed class IsLockedRequest : AbstractIsLockedRequest, IRetryableRequest
     {
-
-        public IsLockedRequest(Data key) : base(key)
+        public IsLockedRequest(IData key) : base(key)
         {
         }
 
-        public IsLockedRequest(Data key, long threadId) : base(key, threadId)
+        public IsLockedRequest(IData key, int threadId) : base(key, threadId)
         {
         }
 
