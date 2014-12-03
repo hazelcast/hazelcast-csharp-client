@@ -19,9 +19,9 @@ namespace Hazelcast.Client.Request.Concurrent.Semaphore
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             writer.WriteLong("t", timeout);
         }
 
