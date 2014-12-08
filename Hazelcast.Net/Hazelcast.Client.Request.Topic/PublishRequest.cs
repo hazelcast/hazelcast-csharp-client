@@ -7,11 +7,10 @@ namespace Hazelcast.Client.Request.Topic
 {
     internal class PublishRequest : ClientRequest
     {
-        private Data message;
-        internal string name;
+        private readonly IData message;
+        private readonly string name;
 
-
-        public PublishRequest(string name, Data message)
+        public PublishRequest(string name, IData message)
         {
             this.name = name;
             this.message = message;
@@ -28,12 +27,11 @@ namespace Hazelcast.Client.Request.Topic
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            message.WriteData(output);
+            output.WriteData(message);
         }
-
     }
 }
