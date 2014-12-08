@@ -7,12 +7,10 @@ namespace Hazelcast.Client.Request.Multimap
     internal class PutRequest : MultiMapKeyBasedRequest
     {
         internal int index = -1;
-
         internal long threadId = -1;
-        internal Data value;
+        internal IData value;
 
-
-        public PutRequest(string name, Data key, Data value, int index, long threadId) : base(name, key)
+        public PutRequest(string name, IData key, IData value, int index, long threadId) : base(name, key)
         {
             this.value = value;
             this.index = index;
@@ -25,14 +23,13 @@ namespace Hazelcast.Client.Request.Multimap
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteInt("i", index);
             writer.WriteLong("t", threadId);
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            value.WriteData(output);
+            output.WriteData(value);
         }
-
     }
 }

@@ -6,16 +6,15 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class TxnMultiMapRemoveRequest : TxnMultiMapRequest
     {
-        internal Data key;
+        internal IData key;
+        internal IData value;
 
-        internal Data value;
-
-        public TxnMultiMapRemoveRequest(string name, Data key) : base(name)
+        public TxnMultiMapRemoveRequest(string name, IData key) : base(name)
         {
             this.key = key;
         }
 
-        public TxnMultiMapRemoveRequest(string name, Data key, Data value) : this(name, key)
+        public TxnMultiMapRemoveRequest(string name, IData key, IData value) : this(name, key)
         {
             this.value = value;
         }
@@ -26,14 +25,12 @@ namespace Hazelcast.Client.Request.Multimap
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
-            IOUtil.WriteNullableData(output, value);
+            output.WriteData(key);
+            output.WriteData(value);
         }
-
-
     }
 }

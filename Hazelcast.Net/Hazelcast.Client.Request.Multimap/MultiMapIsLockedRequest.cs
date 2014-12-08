@@ -9,16 +9,16 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal string name;
 
-        public MultiMapIsLockedRequest(Data key, string name) : base(key)
+        public MultiMapIsLockedRequest(IData key, string name) : base(key)
         {
             this.name = name;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            base.WritePortable(writer);
+            base.Write(writer);
         }
 
         public override int GetFactoryId()

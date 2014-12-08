@@ -6,7 +6,6 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class GetAllRequest : MultiMapKeyBasedRequest, IRetryableRequest
     {
-
         public GetAllRequest(string name, Data key) : base(name, key)
         {
         }

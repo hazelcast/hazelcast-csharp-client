@@ -1,18 +1,13 @@
 using Hazelcast.Client.Request.Base;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
-namespace Hazelcast.Client.Request.Map
+namespace Hazelcast.Client.Request.Multimap
 {
-    internal class RemoveEntryListenerRequest : ClientRequest, IRemoveRequest
+    internal class RemoveEntryListenerRequest : BaseClientRemoveListenerRequest
     {
-        private string name;
-        private string registrationId;
-
         public RemoveEntryListenerRequest(string name, string registrationId)
+            : base(name, registrationId)
         {
-            this.name = name;
-            this.registrationId = registrationId;
         }
 
         public override int GetFactoryId()
@@ -23,19 +18,6 @@ namespace Hazelcast.Client.Request.Map
         public override int GetClassId()
         {
             return MultiMapPortableHook.RemoveEntryListener;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("n", name);
-            writer.WriteUTF("r", registrationId);
-        }
-
-        public string RegistrationId
-        {
-            get { return registrationId; }
-            set { registrationId = value; }
         }
     }
 }

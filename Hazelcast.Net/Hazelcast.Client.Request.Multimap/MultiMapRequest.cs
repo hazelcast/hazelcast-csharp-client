@@ -8,8 +8,7 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal string name;
 
-
-        protected internal MultiMapRequest(string name)
+        protected MultiMapRequest(string name)
         {
             this.name = name;
         }
@@ -20,10 +19,9 @@ namespace Hazelcast.Client.Request.Multimap
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
         }
-
     }
 }

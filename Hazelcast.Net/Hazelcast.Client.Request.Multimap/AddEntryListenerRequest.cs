@@ -8,10 +8,10 @@ namespace Hazelcast.Client.Request.Multimap
     internal class AddEntryListenerRequest : ClientRequest
     {
         internal bool includeValue;
-        internal Data key;
+        internal IData key;
         internal string name;
 
-        public AddEntryListenerRequest(string name, Data key, bool includeValue)
+        public AddEntryListenerRequest(string name, IData key, bool includeValue)
         {
             this.name = name;
             this.key = key;
@@ -29,13 +29,12 @@ namespace Hazelcast.Client.Request.Multimap
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteBoolean("i", includeValue);
             writer.WriteUTF("n", name);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            IOUtil.WriteNullableData(output, key);
+            output.WriteData(key);
         }
-
     }
 }
