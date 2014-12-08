@@ -6,8 +6,8 @@ namespace Hazelcast.Client.Request.Queue
 {
     internal class AddListenerRequest : ClientRequest
     {
-        private bool includeValue;
-        private string name;
+        private readonly bool includeValue;
+        private readonly string name;
 
         public AddListenerRequest(string name, bool includeValue)
         {
@@ -26,11 +26,10 @@ namespace Hazelcast.Client.Request.Queue
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteBoolean("i", includeValue);
         }
-
     }
 }

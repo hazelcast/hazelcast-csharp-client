@@ -1,18 +1,14 @@
 using Hazelcast.Client.Request.Base;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    internal class RemoveListenerRequest : ClientRequest, IRemoveRequest
+    /// <summary>Remove listener request belong to the Queue item.</summary>
+    /// <remarks>Remove listener request belong to the Queue item.</remarks>
+    internal class RemoveListenerRequest : BaseClientRemoveListenerRequest
     {
-        private string registrationId;
-        private string name;
-
-        public RemoveListenerRequest(string name, string registrationId)
+        protected internal RemoveListenerRequest(string name, string registrationId) : base(name, registrationId)
         {
-            this.name = name;
-            this.registrationId = registrationId;
         }
 
         public override int GetFactoryId()
@@ -23,19 +19,6 @@ namespace Hazelcast.Client.Request.Queue
         public override int GetClassId()
         {
             return QueuePortableHook.RemoveListener;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("n", name);
-            writer.WriteUTF("r", registrationId);
-        }
-
-        public string RegistrationId
-        {
-            get { return registrationId; }
-            set { registrationId = value; }
         }
     }
 }

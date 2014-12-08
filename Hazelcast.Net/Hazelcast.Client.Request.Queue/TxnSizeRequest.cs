@@ -1,5 +1,4 @@
 using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Transaction;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
@@ -8,10 +7,6 @@ namespace Hazelcast.Client.Request.Queue
     internal class TxnSizeRequest : BaseTransactionRequest
     {
         internal string name;
-
-        public TxnSizeRequest()
-        {
-        }
 
         public TxnSizeRequest(string name)
         {
@@ -29,10 +24,10 @@ namespace Hazelcast.Client.Request.Queue
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
+            base.Write(writer);
             writer.WriteUTF("n", name);
         }
-
     }
 }

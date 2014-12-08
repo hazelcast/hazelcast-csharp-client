@@ -6,10 +6,14 @@ namespace Hazelcast.Client.Request.Queue
 {
     internal class OfferRequest : QueueRequest
     {
-        internal Data data;
+        internal IData data;
 
+        public OfferRequest(string name, IData data) : base(name)
+        {
+            this.data = data;
+        }
 
-        public OfferRequest(string name, long timeoutMillis, Data data) : base(name, timeoutMillis)
+        public OfferRequest(string name, long timeoutMillis, IData data) : base(name, timeoutMillis)
         {
             this.data = data;
         }
@@ -20,12 +24,11 @@ namespace Hazelcast.Client.Request.Queue
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            data.WriteData(output);
+            output.WriteData(data);
         }
-
     }
 }

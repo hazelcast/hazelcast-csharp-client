@@ -7,11 +7,10 @@ namespace Hazelcast.Client.Request.Queue
 {
     internal class CompareAndRemoveRequest : QueueRequest
     {
-        private ICollection<Data> dataList;
-
+        private readonly ICollection<IData> dataList;
         internal bool retain;
 
-        public CompareAndRemoveRequest(string name, ICollection<Data> dataList, bool retain) : base(name)
+        public CompareAndRemoveRequest(string name, ICollection<IData> dataList, bool retain) : base(name)
         {
             this.dataList = dataList;
             this.retain = retain;
@@ -23,17 +22,16 @@ namespace Hazelcast.Client.Request.Queue
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             writer.WriteBoolean("r", retain);
             writer.WriteInt("s", dataList.Count);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            foreach (Data data in dataList)
+            foreach (IData data in dataList)
             {
-                data.WriteData(output);
+                output.WriteData(data);
             }
         }
-
     }
 }
