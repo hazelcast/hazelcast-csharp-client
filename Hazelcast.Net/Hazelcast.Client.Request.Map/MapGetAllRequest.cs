@@ -8,10 +8,10 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapGetAllRequest : ClientRequest, IRetryableRequest
     {
-        private readonly ICollection<Data> keys;// = new HashSet<Data>();
+        private readonly ICollection<IData> keys;
         protected internal string name;
 
-        public MapGetAllRequest(string name, ICollection<Data> keys)
+        public MapGetAllRequest(string name, ICollection<IData> keys)
         {
             this.name = name;
             this.keys = keys;
@@ -28,19 +28,18 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteInt("size", keys.Count);
             if (keys.Count > 0)
             {
                 IObjectDataOutput output = writer.GetRawDataOutput();
-                foreach (Data key in keys)
+                foreach (IData key in keys)
                 {
-                    key.WriteData(output);
+                    output.WriteData(key);
                 }
             }
         }
-
     }
 }

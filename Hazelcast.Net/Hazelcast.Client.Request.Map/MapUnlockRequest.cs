@@ -9,8 +9,7 @@ namespace Hazelcast.Client.Request.Map
         private string name;
 
 
-        public MapUnlockRequest(string name, Data key, long threadId, bool force)
-            : base(key, threadId, force)
+        public MapUnlockRequest(string name, IData key, long threadId, bool force): base(key, threadId, force)
         {
             this.name = name;
         }
@@ -26,10 +25,10 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            base.WritePortable(writer);
+            base.Write(writer);
         }
 
     }

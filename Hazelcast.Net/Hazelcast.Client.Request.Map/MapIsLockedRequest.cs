@@ -7,9 +7,9 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapIsLockedRequest : AbstractIsLockedRequest, IRetryableRequest
     {
-        private string name;
+        private readonly string name;
 
-        public MapIsLockedRequest(string name, Data key) : base(key)
+        public MapIsLockedRequest(string name, IData key) : base(key)
         {
             this.name = name;
         }
@@ -25,11 +25,10 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            base.WritePortable(writer);
+            base.Write(writer);
         }
-
     }
 }

@@ -5,10 +5,10 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapTryPutRequest : MapPutRequest
     {
-        private long timeout;
+        private readonly long timeout;
 
 
-        public MapTryPutRequest(string name, Data key, Data value, long threadId, long timeout)
+        public MapTryPutRequest(string name, IData key, IData value, long threadId, long timeout)
             : base(name, key, value, threadId, -1)
         {
             this.timeout = timeout;
@@ -20,11 +20,10 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteLong("timeout", timeout);
-            base.WritePortable(writer);
+            base.Write(writer);
         }
-
     }
 }

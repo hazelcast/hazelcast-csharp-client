@@ -6,12 +6,11 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Map
 {
-    [Serializable]
     internal class MapValueCollection : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
-        internal ICollection<Data> values;
+        internal ICollection<IData> values;
 
-        public MapValueCollection(ICollection<Data> values)
+        public MapValueCollection(ICollection<IData> values)
         {
             this.values = values;
         }
@@ -25,9 +24,9 @@ namespace Hazelcast.Map
         {
             int size = values.Count;
             output.WriteInt(size);
-            foreach (Data o in values)
+            foreach (IData o in values)
             {
-                o.WriteData(output);
+                output.WriteData(o);
             }
         }
 
@@ -35,11 +34,10 @@ namespace Hazelcast.Map
         public virtual void ReadData(IObjectDataInput input)
         {
             int size = input.ReadInt();
-            values = new List<Data>(size);
+            values = new List<IData>(size);
             for (int i = 0; i < size; i++)
             {
-                var data = new Data();
-                data.ReadData(input);
+                IData data = input.ReadData();
                 values.Add(data);
             }
         }
@@ -55,7 +53,7 @@ namespace Hazelcast.Map
             return MapDataSerializerHook.Values;
         }
 
-        public virtual ICollection<Data> GetValues()
+        public virtual ICollection<IData> GetValues()
         {
             return values;
         }

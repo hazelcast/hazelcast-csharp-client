@@ -19,7 +19,7 @@ namespace Hazelcast.Map
             return (V)base.GetValue();
         }
     }
-    [Serializable]
+
     internal class SimpleEntryView : IdentifiedDataSerializable, IIdentifiedDataSerializable
     {
         private object key;

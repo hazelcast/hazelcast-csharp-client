@@ -6,7 +6,7 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapKeySetRequest : ClientRequest, IRetryableRequest
     {
-        private string name;
+        private readonly string name;
 
         public MapKeySetRequest(string name)
         {
@@ -24,10 +24,9 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
         }
-
     }
 }

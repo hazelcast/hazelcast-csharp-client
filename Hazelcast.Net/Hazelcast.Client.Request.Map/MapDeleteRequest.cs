@@ -5,38 +5,37 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    internal class MapDeleteRequest : ClientRequest
-    {
-        protected internal Data key;
-        protected internal string name;
+	internal class MapDeleteRequest : ClientRequest
+	{
+		protected internal string name;
+		protected internal IData key;
+		protected internal long threadId;
 
-        protected internal long threadId;
+		public MapDeleteRequest(string name, IData key, int threadId)
+		{
+			this.name = name;
+			this.key = key;
+			this.threadId = threadId;
+		}
 
-        public MapDeleteRequest(string name, Data key, long threadId)
-        {
-            this.name = name;
-            this.key = key;
-            this.threadId = threadId;
-        }
-
-        public override int GetFactoryId()
-        {
+		public override int GetFactoryId()
+		{
             return MapPortableHook.FId;
-        }
+		}
 
-        public override int GetClassId()
-        {
+		public override int GetClassId()
+		{
             return MapPortableHook.Delete;
-        }
+		}
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("n", name);
-            writer.WriteLong("t", threadId);
-            IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
-        }
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void Write(IPortableWriter writer)
+		{
+			writer.WriteUTF("n", name);
+			writer.WriteLong("t", threadId);
+			IObjectDataOutput output = writer.GetRawDataOutput();
+			output.WriteData(key);
+		}
 
-    }
+	}
 }

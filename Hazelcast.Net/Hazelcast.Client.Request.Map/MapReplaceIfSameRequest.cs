@@ -6,10 +6,9 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapReplaceIfSameRequest : MapPutRequest
     {
-        private Data testValue;
+        private readonly IData testValue;
 
-
-        public MapReplaceIfSameRequest(string name, Data key, Data testValue, Data value, long threadId)
+        public MapReplaceIfSameRequest(string name, IData key, IData testValue, IData value, long threadId)
             : base(name, key, value, threadId)
         {
             this.testValue = testValue;
@@ -21,12 +20,11 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            testValue.WriteData(output);
+            output.WriteData(testValue);
         }
-
     }
 }

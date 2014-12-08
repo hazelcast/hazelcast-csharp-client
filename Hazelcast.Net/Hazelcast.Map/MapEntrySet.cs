@@ -6,17 +6,16 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Map
 {
-    [Serializable]
     internal sealed class MapEntrySet : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
-        private readonly ICollection<KeyValuePair<Data, Data>> entrySet;
+        private readonly ICollection<KeyValuePair<IData, IData>> entrySet;
 
         public MapEntrySet()
         {
-            entrySet = new HashSet<KeyValuePair<Data, Data>>();
+            entrySet = new HashSet<KeyValuePair<IData, IData>>();
         }
 
-        public MapEntrySet(ICollection<KeyValuePair<Data, Data>> entrySet)
+        public MapEntrySet(ICollection<KeyValuePair<IData, IData>> entrySet)
         {
             this.entrySet = entrySet;
         }
@@ -26,10 +25,10 @@ namespace Hazelcast.Map
         {
             int size = entrySet.Count;
             output.WriteInt(size);
-            foreach (var o in entrySet)
+            foreach (KeyValuePair<IData, IData> o in entrySet)
             {
-                o.Key.WriteData(output);
-                o.Value.WriteData(output);
+                output.WriteData(o.Key);
+                output.WriteData(o.Value);
             }
         }
 
@@ -39,7 +38,9 @@ namespace Hazelcast.Map
             int size = input.ReadInt();
             for (int i = 0; i < size; i++)
             {
-                var entry = new KeyValuePair<Data, Data>(IOUtil.ReadData(input), IOUtil.ReadData(input));
+                IData key = input.ReadData();
+                IData value = input.ReadData();
+                var entry = new KeyValuePair<IData, IData>(key, value);
                 entrySet.Add(entry);
             }
         }
@@ -54,19 +55,19 @@ namespace Hazelcast.Map
             return MapDataSerializerHook.EntrySet;
         }
 
-        public ICollection<KeyValuePair<Data, Data>> GetEntrySet()
+        public ICollection<KeyValuePair<IData, IData>> GetEntrySet()
         {
             return entrySet;
         }
 
-        public void Add(KeyValuePair<Data, Data> entry)
+        public void Add(KeyValuePair<IData, IData> entry)
         {
             entrySet.Add(entry);
         }
 
         public void Add(Data key, Data value)
         {
-            entrySet.Add(new KeyValuePair<Data, Data>(key, value));
+            entrySet.Add(new KeyValuePair<IData, IData>(key, value));
         }
     }
 }

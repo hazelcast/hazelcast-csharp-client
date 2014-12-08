@@ -1,7 +1,6 @@
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
@@ -14,32 +13,27 @@ namespace Hazelcast.Client.Request.Map
         {
         }
 
-        public TxnMapRequest(string name, TxnMapRequestType requestType, Data key) : this(name, requestType)
+        public TxnMapRequest(string name, TxnMapRequestType requestType, IData key) : this(name, requestType)
         {
             this.key = key;
         }
 
-        public TxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value)
+        public TxnMapRequest(string name, TxnMapRequestType requestType, IData key, IData value)
             : this(name, requestType, key)
         {
             this.value = value;
         }
 
-        public TxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, Data newValue)
+        public TxnMapRequest(string name, TxnMapRequestType requestType, IData key, IData value, IData newValue)
             : this(name, requestType, key, value)
         {
             this.newValue = newValue;
         }
 
-        //public TxnMapRequest(string name, TxnMapRequestType requestType, IPredicate<K, V> predicate)
-        //    : this(name, requestType, null, null, null)
-        //{
-        //    this.predicate = predicate;
-        //}
-
-        public TxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, long ttl, TimeUnit timeUnit)
-            : base(name,requestType,key,value,ttl,timeUnit)
+        public TxnMapRequest(string name, TxnMapRequestType requestType, IPredicate<K, V> predicate)
+            : this(name, requestType, null, null, null)
         {
+            this.predicate = predicate;
         }
 
         public override int GetClassId()
@@ -52,6 +46,5 @@ namespace Hazelcast.Client.Request.Map
         {
             writer.WriteObject(predicate);
         }
-
     }
 }

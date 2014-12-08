@@ -7,14 +7,14 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapRemoveIfSameRequest : ClientRequest
     {
-        protected internal Data key;
+        protected internal IData key;
         protected internal string name;
 
         protected internal long threadId;
-        protected internal Data value;
+        protected internal IData value;
 
 
-        public MapRemoveIfSameRequest(string name, Data key, Data value, long threadId)
+        public MapRemoveIfSameRequest(string name, IData key, IData value, long threadId)
         {
             this.name = name;
             this.key = key;
@@ -33,13 +33,13 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteLong("t", threadId);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
-            value.WriteData(output);
+            output.WriteData(key);
+            output.WriteData(value);
         }
     }
 }

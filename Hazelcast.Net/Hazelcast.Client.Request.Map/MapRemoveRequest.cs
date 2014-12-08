@@ -7,12 +7,13 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapRemoveRequest : ClientRequest
     {
-        protected internal Data key;
+        private bool async;
+        protected internal IData key;
         protected internal string name;
 
         protected internal long threadId;
 
-        public MapRemoveRequest(string name, Data key, long threadId)
+        public MapRemoveRequest(string name, IData key, long threadId)
         {
             this.name = name;
             this.key = key;
@@ -29,15 +30,19 @@ namespace Hazelcast.Client.Request.Map
             return MapPortableHook.Remove;
         }
 
+        public void SetAsync(bool async)
+        {
+            this.async = async;
+        }
+
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteLong("t", threadId);
+            writer.WriteBoolean("a", async);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
+            output.WriteData(key);
         }
-
-
     }
 }

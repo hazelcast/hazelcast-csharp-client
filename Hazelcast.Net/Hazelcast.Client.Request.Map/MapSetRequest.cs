@@ -3,17 +3,20 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    internal class MapSetRequest : MapPutRequest
-    {
+	internal class MapSetRequest : MapPutRequest
+	{
+		public MapSetRequest(string name, IData key, IData value, long threadId) : base(name, key, value, threadId)
+		{
+		}
 
-        public MapSetRequest(string name, Data key, Data value, long threadId, long ttl)
-            : base(name, key, value, threadId, ttl)
-        {
-        }
+        public MapSetRequest(string name, IData key, IData value, long threadId, long ttl)
+			 : base(name, key, value, threadId, ttl)
+		{
+		}
 
-        public override int GetClassId()
-        {
+		public override int GetClassId()
+		{
             return MapPortableHook.Set;
-        }
-    }
+		}
+	}
 }

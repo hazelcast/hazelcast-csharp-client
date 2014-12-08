@@ -8,10 +8,9 @@ namespace Hazelcast.Client.Request.Map
     internal class MapContainsValueRequest : ClientRequest, IRetryableRequest
     {
         private string name;
+        private IData value;
 
-        private Data value;
-
-        public MapContainsValueRequest(string name, Data value)
+        public MapContainsValueRequest(string name, IData value)
         {
             this.name = name;
             this.value = value;
@@ -28,12 +27,11 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            value.WriteData(output);
+            output.WriteData(value);
         }
-
     }
 }
