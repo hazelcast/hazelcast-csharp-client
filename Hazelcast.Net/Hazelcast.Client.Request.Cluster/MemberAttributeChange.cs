@@ -24,27 +24,27 @@ namespace Hazelcast.Client.Request.Cluster
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WriteData(IObjectDataOutput @out)
+        public virtual void WriteData(IObjectDataOutput output)
         {
-            @out.WriteUTF(uuid);
-            @out.WriteUTF(key);
-            @out.WriteByte((int) operationType);
+            output.WriteUTF(uuid);
+            output.WriteUTF(key);
+            output.WriteByte((int) operationType);
             if (operationType == MemberAttributeOperationType.PUT)
             {
-                IOUtil.WriteAttributeValue(value, @out);
+                IOUtil.WriteAttributeValue(value, output);
             }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadData(IObjectDataInput @in)
+        public virtual void ReadData(IObjectDataInput input)
         {
-            uuid = @in.ReadUTF();
-            key = @in.ReadUTF();
+            uuid = input.ReadUTF();
+            key = input.ReadUTF();
 
-            operationType = (MemberAttributeOperationType) @in.ReadByte();
+            operationType = (MemberAttributeOperationType) input.ReadByte();
             if (operationType == MemberAttributeOperationType.PUT)
             {
-                value = IOUtil.ReadAttributeValue(@in);
+                value = IOUtil.ReadAttributeValue(input);
             }
         }
 

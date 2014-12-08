@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
         private readonly long ttl = -1;
         protected internal IData key;
 
-        protected AbstractLockRequest(IData key, int threadId, long ttl = -1, long timeout = -1)
+        protected AbstractLockRequest(IData key, long threadId, long ttl = -1, long timeout = -1)
         {
             this.key = key;
             this.threadId = threadId;

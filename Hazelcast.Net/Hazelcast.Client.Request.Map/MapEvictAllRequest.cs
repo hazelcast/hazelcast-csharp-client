@@ -4,23 +4,24 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    internal class MapFlushRequest : ClientRequest
+	/// <summary>Evict all entries request used by clients.</summary>
+	internal class MapEvictAllRequest : ClientRequest, IRetryableRequest
 	{
-		protected internal string name;
+		private string name;
 
-		public MapFlushRequest(string name)
+		public MapEvictAllRequest(string name)
 		{
 			this.name = name;
 		}
 
 		public override int GetFactoryId()
 		{
-            return MapPortableHook.FId;
+			return MapPortableHook.FId;
 		}
 
 		public override int GetClassId()
 		{
-            return MapPortableHook.Flush;
+			return MapPortableHook.EvictAll;
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
@@ -28,6 +29,5 @@ namespace Hazelcast.Client.Request.Map
 		{
 			writer.WriteUTF("n", name);
 		}
-
-		}
 	}
+}

@@ -48,8 +48,12 @@ namespace Hazelcast.Serialization.Hook
         public const int ExecuteWithPredicate = 43;
         public const int RemoveEntryListener = 44;
         public const int ExecuteOnKeys = 45;
+        public const int EvictAll = 46;
+        public const int LoadAllGivenKeys = 47;
+        public const int LoadAllKeys = 48;
+        public const int IsEmpty = 49;
 
-        public const int TotalSize = ExecuteOnKeys + 1;
+        public const int TotalSize = IsEmpty + 1;
 
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.MapPortableFactory, -10);
 

@@ -6,12 +6,11 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Map
 {
-    [Serializable]
     internal class MapKeySet : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
-        internal ICollection<Data> keySet;
+        internal ICollection<IData> keySet;
 
-        public MapKeySet(ICollection<Data> keySet)
+        public MapKeySet(ICollection<IData> keySet)
         {
             this.keySet = keySet;
         }
@@ -25,9 +24,9 @@ namespace Hazelcast.Map
         {
             int size = keySet.Count;
             output.WriteInt(size);
-            foreach (Data o in keySet)
+            foreach (IData o in keySet)
             {
-                o.WriteData(output);
+                output.WriteData(o);
             }
         }
 
@@ -35,15 +34,13 @@ namespace Hazelcast.Map
         public virtual void ReadData(IObjectDataInput input)
         {
             int size = input.ReadInt();
-            keySet = new HashSet<Data>();
+            keySet = new HashSet<IData>(new IData[size]);
             for (int i = 0; i < size; i++)
             {
-                var data = new Data();
-                data.ReadData(input);
+                IData data = input.ReadData();
                 keySet.Add(data);
             }
         }
-
         public virtual int GetFactoryId()
         {
             return MapDataSerializerHook.FId;
@@ -54,7 +51,7 @@ namespace Hazelcast.Map
             return MapDataSerializerHook.KeySet;
         }
 
-        public virtual ICollection<Data> GetKeySet()
+        public virtual ICollection<IData> GetKeySet()
         {
             return keySet;
         }

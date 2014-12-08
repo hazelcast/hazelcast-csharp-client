@@ -71,27 +71,27 @@ namespace Hazelcast.Client.Request.Cluster
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public void WriteData(IObjectDataOutput @out)
+		public void WriteData(IObjectDataOutput output)
 		{
-			member.WriteData(@out);
-			@out.WriteInt(eventType);
-			@out.WriteBoolean(memberAttributeChange != null);
+			member.WriteData(output);
+			output.WriteInt(eventType);
+			output.WriteBoolean(memberAttributeChange != null);
 			if (memberAttributeChange != null)
 			{
-				memberAttributeChange.WriteData(@out);
+				memberAttributeChange.WriteData(output);
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"></exception>
-		public void ReadData(IObjectDataInput @in)
+		public void ReadData(IObjectDataInput input)
 		{
 			member = new MemberImpl();
-			member.ReadData(@in);
-			eventType = @in.ReadInt();
-			if (@in.ReadBoolean())
+			member.ReadData(input);
+			eventType = input.ReadInt();
+			if (input.ReadBoolean())
 			{
 				memberAttributeChange = new MemberAttributeChange();
-				memberAttributeChange.ReadData(@in);
+				memberAttributeChange.ReadData(input);
 			}
 		}
 

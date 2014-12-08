@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Proxy
 
         public V Put(K key, V value, long ttl, TimeUnit timeunit)
         {
-            var request = new TxnMapRequest<K, V>(GetName(), AbstractTxnMapRequest.TxnMapRequestType.PuttWithTTL, ToData(key),
+            var request = new TxnMapRequest<K, V>(GetName(), AbstractTxnMapRequest.TxnMapRequestType.PutWithTtl, ToData(key),
                 ToData(value),ttl,timeunit);
             return Invoke<V>(request);
         }

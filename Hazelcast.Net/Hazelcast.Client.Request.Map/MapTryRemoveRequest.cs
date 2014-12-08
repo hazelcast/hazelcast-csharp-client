@@ -6,41 +6,42 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Client.Request.Map
 {
     internal class MapTryRemoveRequest : ClientRequest
-    {
-        protected internal Data key;
-        protected internal string name;
+	{
+		protected internal string name;
 
-        protected internal long threadId;
+		protected internal IData key;
 
-        protected internal long timeout;
+		protected internal long threadId;
 
-        public MapTryRemoveRequest(string name, Data key, long threadId, long timeout)
-        {
-            this.name = name;
-            this.key = key;
-            this.threadId = threadId;
-            this.timeout = timeout;
-        }
+		protected internal long timeout;
 
-        public override int GetFactoryId()
-        {
+		public MapTryRemoveRequest(string name, IData key, long threadId, long timeout)
+		{
+			this.name = name;
+			this.key = key;
+			this.threadId = threadId;
+			this.timeout = timeout;
+		}
+
+		public override int GetFactoryId()
+		{
             return MapPortableHook.FId;
-        }
+		}
 
-        public override int GetClassId()
-        {
+		public override int GetClassId()
+		{
             return MapPortableHook.TryRemove;
-        }
+		}
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("n", name);
-            writer.WriteLong("t", threadId);
-            writer.WriteLong("timeout", timeout);
-            IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
-        }
+		/// <exception cref="System.IO.IOException"></exception>
+		public override void Write(IPortableWriter writer)
+		{
+			writer.WriteUTF("n", name);
+			writer.WriteLong("t", threadId);
+			writer.WriteLong("timeout", timeout);
+			IObjectDataOutput output = writer.GetRawDataOutput();
+			output.WriteData(key);
+		}
 
-    }
-}
+		}
+	}

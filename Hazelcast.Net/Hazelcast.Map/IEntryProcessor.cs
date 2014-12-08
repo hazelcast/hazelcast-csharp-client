@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Map
 {
-    public interface EntryProcessor<K, V>
+    public interface IEntryProcessor<K, V>
     {
         /// <summary>Process the entry without worrying about concurrency.</summary>
         /// <remarks>
@@ -19,6 +19,6 @@ namespace Hazelcast.Map
         ///     <p />
         /// </remarks>
         /// <returns>back up processor</returns>
-        EntryBackupProcessor<K, V> GetBackupProcessor();
+        IEntryBackupProcessor<K, V> GetBackupProcessor();
     }
 }

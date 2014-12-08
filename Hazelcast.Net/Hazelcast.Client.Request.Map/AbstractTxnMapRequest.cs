@@ -1,10 +1,6 @@
-using System;
 using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Transaction;
-using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
@@ -29,16 +25,15 @@ namespace Hazelcast.Client.Request.Map
             Values = 14,
             ValuesByPredicate = 15,
             GetForUpdate = 16,
-            PuttWithTTL = 17
+            PutWithTtl = 17
         }
 
         internal string name;
         internal TxnMapRequestType requestType;
-        internal Data key;
-        internal Data value;
-        internal Data newValue;
+        internal IData key;
+        internal IData value;
+        internal IData newValue;
         internal long ttl = -1;
-
 
         protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType)
         {
@@ -46,27 +41,21 @@ namespace Hazelcast.Client.Request.Map
             this.requestType = requestType;
         }
 
-        protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, Data key) : this(name, requestType)
+        protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, IData key) : this(name, requestType)
         {
             this.key = key;
         }
 
-        protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value)
+        protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, IData key, IData value)
             : this(name, requestType, key)
         {
             this.value = value;
         }
 
-        //protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, Data newValue)
-        //    : this(name, requestType, key, value)
-        //{
-        //    this.newValue = newValue;
-        //}
-
-        protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, Data key, Data value, long ttl, TimeUnit timeUnit)
-            : this(name, requestType, key, value)
+        protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, IData key, IData value,
+            IData newValue) : this(name, requestType, key, value)
         {
-            this.ttl = timeUnit.ToMillis(ttl);
+            this.newValue = newValue;
         }
 
         public override int GetFactoryId()
@@ -75,18 +64,18 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
+            base.Write(writer);
             writer.WriteUTF("n", name);
             writer.WriteInt("t", (int) requestType);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            IOUtil.WriteNullableData(output, key);
-            IOUtil.WriteNullableData(output, value);
-            IOUtil.WriteNullableData(output, newValue);
+            output.WriteData(key);
+            output.WriteData(value);
+            output.WriteData(newValue);
             WriteDataInner(output);
             output.WriteLong(ttl);
         }
-
 
         /// <exception cref="System.IO.IOException"></exception>
         protected internal abstract void WriteDataInner(IObjectDataOutput writer);

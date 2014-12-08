@@ -7,13 +7,19 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapGetEntryViewRequest : ClientRequest, IRetryableRequest
     {
-        private Data key;
-        private string name;
+        private readonly IData key;
+        private readonly string name;
+        private readonly long threadId;
 
-        public MapGetEntryViewRequest(string name, Data key)
+        public MapGetEntryViewRequest()
+        {
+        }
+
+        public MapGetEntryViewRequest(string name, IData key, long threadId)
         {
             this.name = name;
             this.key = key;
+            this.threadId = threadId;
         }
 
         public override int GetFactoryId()
@@ -27,16 +33,12 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
+            writer.WriteLong("threadId", threadId);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
-        }
-
-        public virtual object GetKey()
-        {
-            return key;
+            output.WriteData(key);
         }
     }
 }

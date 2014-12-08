@@ -6,15 +6,14 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapLockRequest : AbstractLockRequest
     {
-        private string name;
+        private readonly string name;
 
-        public MapLockRequest(string name, Data key, long threadId)
-            : base(key, threadId)
+        public MapLockRequest(string name, IData key, long threadId) : base(key, threadId)
         {
             this.name = name;
         }
 
-        public MapLockRequest(string name, Data key, long threadId, long ttl, long timeout)
+        public MapLockRequest(string name, IData key, long threadId, long ttl, long timeout)
             : base(key, threadId, ttl, timeout)
         {
             this.name = name;
@@ -31,11 +30,10 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            base.WritePortable(writer);
+            base.Write(writer);
         }
-
     }
 }

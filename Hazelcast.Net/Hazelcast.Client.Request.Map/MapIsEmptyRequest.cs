@@ -4,18 +4,13 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Map
 {
-    internal class MapAddIndexRequest : ClientRequest
+    internal class MapIsEmptyRequest : ClientRequest
     {
-        private string attribute;
-        private string name;
+        private readonly string name;
 
-        private bool ordered;
-
-        public MapAddIndexRequest(string name, string attribute, bool ordered)
+        public MapIsEmptyRequest(string name)
         {
             this.name = name;
-            this.attribute = attribute;
-            this.ordered = ordered;
         }
 
         public override int GetFactoryId()
@@ -25,16 +20,13 @@ namespace Hazelcast.Client.Request.Map
 
         public override int GetClassId()
         {
-            return MapPortableHook.AddIndex;
+            return MapPortableHook.IsEmpty;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            writer.WriteUTF("a", attribute);
-            writer.WriteBoolean("o", ordered);
         }
-
     }
 }

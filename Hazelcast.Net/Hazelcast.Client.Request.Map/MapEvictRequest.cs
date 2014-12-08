@@ -7,12 +7,11 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapEvictRequest : ClientRequest
     {
-        private Data key;
+        private IData key;
         private string name;
-
         private long threadId;
 
-        public MapEvictRequest(string name, Data key, long threadId)
+        public MapEvictRequest(string name, IData key, long threadId)
         {
             this.name = name;
             this.key = key;
@@ -30,13 +29,12 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteLong("t", threadId);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
+            output.WriteData(key);
         }
-
     }
 }

@@ -78,6 +78,8 @@
     <Compile Include="Hazelcast.Client.Request.Concurrent.Lock\AwaitRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Concurrent.Lock\BeforeAwaitRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Concurrent.Lock\SignalRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Map\MapEvictAllRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Map\MapIsEmptyRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Map\MapRemoveEntryListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\KeyBasedContainsRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\RemoveEntryListenerRequest.cs" />
@@ -478,8 +480,8 @@
     <Compile Include="Hazelcast.Logging\LoggingService.cs" />
     <Compile Include="Hazelcast.Logging\LogListener.cs" />
     <Compile Include="Hazelcast.Logging\NoLogFactory.cs" />
-    <Compile Include="Hazelcast.Map\EntryBackupProcessor.cs" />
-    <Compile Include="Hazelcast.Map\EntryProcessor.cs" />
+    <Compile Include="Hazelcast.Map\IEntryBackupProcessor.cs" />
+    <Compile Include="Hazelcast.Map\IEntryProcessor.cs" />
     <Compile Include="Hazelcast.Map\MapEntrySet.cs" />
     <Compile Include="Hazelcast.Map\IMapInterceptor.cs" />
     <Compile Include="Hazelcast.Map\MapKeySet.cs" />

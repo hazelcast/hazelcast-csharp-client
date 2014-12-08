@@ -1,4 +1,3 @@
-using System;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
@@ -17,16 +16,16 @@ namespace Hazelcast.Client.Request.Map
             this.iterationType = iterationType;
         }
 
-        public override int GetFactoryId()
+        public sealed override int GetFactoryId()
         {
             return MapPortableHook.FId;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
-            writer.WriteUTF("t", iterationType.ToString().ToUpper());
+            writer.WriteUTF("t", iterationType.ToString());
             WritePortableInner(writer);
         }
 

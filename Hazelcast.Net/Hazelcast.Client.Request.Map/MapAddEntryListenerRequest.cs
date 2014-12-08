@@ -8,11 +8,11 @@ namespace Hazelcast.Client.Request.Map
 {
     internal class MapAddEntryListenerRequest<K, V> : ClientRequest
     {
-        private IPredicate<K, V> predicate;
+        private readonly bool includeValue;
+        private readonly IData key;
+        private readonly string name;
 
-        private bool includeValue;
-        private Data key;
-        private string name;
+        private readonly IPredicate<K,V> predicate;
 
         public MapAddEntryListenerRequest(string name, bool includeValue)
         {
@@ -20,7 +20,7 @@ namespace Hazelcast.Client.Request.Map
             this.includeValue = includeValue;
         }
 
-        public MapAddEntryListenerRequest(string name, Data key, bool includeValue) : this(name, includeValue)
+        public MapAddEntryListenerRequest(string name, IData key, bool includeValue) : this(name, includeValue)
         {
             this.key = key;
         }
@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Request.Map
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("name", name);
             writer.WriteBoolean("i", includeValue);
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Request.Map
                 if (hasKey)
                 {
                     IObjectDataOutput output = writer.GetRawDataOutput();
-                    key.WriteData(output);
+                    output.WriteData(key);
                 }
             }
             else
@@ -64,11 +64,9 @@ namespace Hazelcast.Client.Request.Map
                 output.WriteObject(predicate);
                 if (hasKey)
                 {
-                    key.WriteData(output);
+                    output.WriteData(key);
                 }
             }
         }
-
-   
     }
 }
