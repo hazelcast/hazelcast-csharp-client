@@ -4,10 +4,9 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Topic
 {
-    internal class AddMessageListenerRequest : ClientRequest
+    internal class AddMessageListenerRequest : ClientRequest, IRetryableRequest
     {
-        private string name;
-
+        private readonly string name;
 
         public AddMessageListenerRequest(string name)
         {
@@ -25,10 +24,9 @@ namespace Hazelcast.Client.Request.Topic
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
         }
-
     }
 }

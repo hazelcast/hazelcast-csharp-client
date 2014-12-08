@@ -6,7 +6,7 @@ namespace Hazelcast.Client.Request.Topic
 {
     internal class PortableMessage : EventArgs, IPortable
     {
-        private Data message;
+        private IData message;
 
         private long publishTime;
 
@@ -16,7 +16,7 @@ namespace Hazelcast.Client.Request.Topic
         {
         }
 
-        public PortableMessage(Data message, long publishTime, string uuid)
+        public PortableMessage(IData message, long publishTime, string uuid)
         {
             this.message = message;
             this.publishTime = publishTime;
@@ -46,11 +46,10 @@ namespace Hazelcast.Client.Request.Topic
         {
             publishTime = reader.ReadLong("pt");
             uuid = reader.ReadUTF("u");
-            message = new Data();
-            message.ReadData(reader.GetRawDataInput());
+            message = reader.GetRawDataInput().ReadData();
         }
 
-        public virtual Data GetMessage()
+        public virtual IData GetMessage()
         {
             return message;
         }
