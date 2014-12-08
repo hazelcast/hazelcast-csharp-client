@@ -7,8 +7,7 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal long threadId = -1;
 
-
-        public RemoveAllRequest(string name, Data key, long threadId) : base(name, key)
+        public RemoveAllRequest(string name, IData key, long threadId) : base(name, key)
         {
             this.threadId = threadId;
         }
@@ -19,11 +18,10 @@ namespace Hazelcast.Client.Request.Multimap
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteLong("t", threadId);
-            base.WritePortable(writer);
+            base.Write(writer);
         }
-
     }
 }

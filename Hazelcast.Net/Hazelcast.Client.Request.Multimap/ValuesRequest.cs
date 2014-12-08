@@ -5,7 +5,6 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class ValuesRequest : MultiMapAllPartitionRequest, IRetryableRequest
     {
-
         public ValuesRequest(string name) : base(name)
         {
         }

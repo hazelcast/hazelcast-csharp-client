@@ -5,8 +5,7 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class ClearRequest : MultiMapAllPartitionRequest, IRetryableRequest
     {
-
-        public ClearRequest(string name) : base(name)
+        protected internal ClearRequest(string name) : base(name)
         {
         }
 

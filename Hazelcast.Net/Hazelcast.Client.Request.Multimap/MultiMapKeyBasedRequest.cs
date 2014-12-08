@@ -5,22 +5,19 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal abstract class MultiMapKeyBasedRequest : MultiMapRequest
     {
-        internal Data key;
+        internal IData key;
 
-
-        protected internal MultiMapKeyBasedRequest(string name, Data key) : base(name)
+        protected internal MultiMapKeyBasedRequest(string name, IData key) : base(name)
         {
             this.key = key;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
+            output.WriteData(key);
         }
-
-
     }
 }

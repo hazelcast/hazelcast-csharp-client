@@ -6,12 +6,10 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class TxnMultiMapPutRequest : TxnMultiMapRequest
     {
-        internal Data key;
+        internal IData key;
+        internal IData value;
 
-        internal Data value;
-
-
-        public TxnMultiMapPutRequest(string name, Data key, Data value) : base(name)
+        public TxnMultiMapPutRequest(string name, IData key, IData value) : base(name)
         {
             this.key = key;
             this.value = value;
@@ -23,13 +21,12 @@ namespace Hazelcast.Client.Request.Multimap
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
-            value.WriteData(output);
+            output.WriteData(key);
+            output.WriteData(value);
         }
-
     }
 }

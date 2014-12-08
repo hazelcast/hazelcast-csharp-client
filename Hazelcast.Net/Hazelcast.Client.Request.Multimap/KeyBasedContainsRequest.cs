@@ -6,11 +6,18 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class KeyBasedContainsRequest : MultiMapKeyBasedRequest
     {
-        internal Data value;
-        public KeyBasedContainsRequest(string name, Data key, Data value)
-            : base(name, key)
+        private readonly long threadId;
+        private readonly IData value;
+
+        public KeyBasedContainsRequest(string name, IData key, IData value) : base(name, key)
         {
             this.value = value;
+        }
+
+        public KeyBasedContainsRequest(string name, IData key, IData value, long threadId) : base(name, key)
+        {
+            this.value = value;
+            this.threadId = threadId;
         }
 
         public override int GetClassId()
@@ -19,11 +26,12 @@ namespace Hazelcast.Client.Request.Multimap
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
-            IOUtil.WriteNullableData(writer.GetRawDataOutput(), value);
+            writer.WriteLong("threadId", threadId);
+            base.Write(writer);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            output.WriteData(value);
         }
-
     }
 }

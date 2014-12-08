@@ -81,6 +81,7 @@
     <Compile Include="Hazelcast.Client.Request.Map\MapEvictAllRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Map\MapIsEmptyRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Map\MapRemoveEntryListenerRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Multimap\ContainsRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\KeyBasedContainsRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\RemoveEntryListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\TxnMultiMapRemoveAllRequest.cs" />
@@ -235,7 +236,6 @@
     <Compile Include="Hazelcast.Client.Request.Map\TxnMapWithSQLQueryRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\AddEntryListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\ClearRequest.cs" />
-    <Compile Include="Hazelcast.Client.Request.Multimap\ContainsEntryRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\CountRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\EntrySetRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\GetAllRequest.cs" />

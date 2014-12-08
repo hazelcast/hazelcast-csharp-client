@@ -4,15 +4,14 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Multimap
 {
-    internal class TxnMultiMapRemoveAllRequest : TxnMultiMapRequest
+    public class TxnMultiMapRemoveAllRequest : TxnMultiMapRequest
     {
-        internal Data key;
+        internal IData key;
 
-        public TxnMultiMapRemoveAllRequest(string name, Data key) : base(name)
+        public TxnMultiMapRemoveAllRequest(string name, IData key) : base(name)
         {
             this.key = key;
         }
-
 
         public override int GetClassId()
         {
@@ -20,13 +19,11 @@ namespace Hazelcast.Client.Request.Multimap
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
+            output.WriteData(key);
         }
-
-
     }
 }
