@@ -18,7 +18,7 @@ namespace Hazelcast.Client.Request.Partition
             return ClientPortableHook.GetPartitions;
         }
 
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
         }
 

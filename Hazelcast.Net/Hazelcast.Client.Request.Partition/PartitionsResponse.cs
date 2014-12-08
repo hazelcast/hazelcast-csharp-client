@@ -1,19 +1,13 @@
-using System;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Partition
 {
-    internal sealed class PartitionsResponse : IdentifiedDataSerializable,IIdentifiedDataSerializable
+    internal sealed class PartitionsResponse : IdentifiedDataSerializable, IIdentifiedDataSerializable
     {
         private Address[] members;
-
         private int[] ownerIndexes;
-
-        public PartitionsResponse()
-        {
-        }
 
         public int GetFactoryId()
         {
