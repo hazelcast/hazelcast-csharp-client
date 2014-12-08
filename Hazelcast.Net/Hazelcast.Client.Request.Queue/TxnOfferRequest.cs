@@ -1,5 +1,4 @@
 using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Transaction;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
@@ -7,12 +6,11 @@ namespace Hazelcast.Client.Request.Queue
 {
     internal class TxnOfferRequest : BaseTransactionRequest
     {
-        internal Data data;
+        internal IData data;
         internal string name;
-
         internal long timeout;
 
-        public TxnOfferRequest(string name, long timeout, Data data)
+        public TxnOfferRequest(string name, long timeout, IData data)
         {
             this.name = name;
             this.timeout = timeout;
@@ -30,13 +28,12 @@ namespace Hazelcast.Client.Request.Queue
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
+            base.Write(writer);
             writer.WriteUTF("n", name);
             writer.WriteLong("t", timeout);
-            data.WriteData(writer.GetRawDataOutput());
+            writer.GetRawDataOutput().WriteData(data);
         }
-
-
     }
 }

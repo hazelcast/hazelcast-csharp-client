@@ -5,7 +5,7 @@ namespace Hazelcast.Client.Request.Queue
 {
     internal class PeekRequest : QueueRequest, IRetryableRequest
     {
-        public PeekRequest(string name) : base(name)
+        protected internal PeekRequest(string name) : base(name)
         {
         }
 

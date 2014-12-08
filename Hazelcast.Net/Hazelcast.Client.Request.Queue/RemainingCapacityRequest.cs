@@ -1,16 +1,12 @@
 using Hazelcast.Client.Request.Base;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Queue
 {
-    internal class RemainingCapacityRequest : ClientRequest, IRetryableRequest
+    internal class RemainingCapacityRequest : QueueRequest, IRetryableRequest
     {
-        protected internal string name;
-
-        public RemainingCapacityRequest(string name)
+        protected internal RemainingCapacityRequest(string name) : base(name)
         {
-            this.name = name;
         }
 
         public override int GetFactoryId()
@@ -22,13 +18,5 @@ namespace Hazelcast.Client.Request.Queue
         {
             return QueuePortableHook.RemainingCapacity;
         }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("n", name);
-        }
-
-
     }
 }

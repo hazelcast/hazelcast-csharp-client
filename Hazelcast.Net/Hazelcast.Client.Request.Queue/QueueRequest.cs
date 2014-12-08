@@ -7,7 +7,6 @@ namespace Hazelcast.Client.Request.Queue
     internal abstract class QueueRequest : ClientRequest
     {
         protected internal string name;
-
         protected internal long timeoutMillis;
 
         protected internal QueueRequest(string name)
@@ -27,13 +26,10 @@ namespace Hazelcast.Client.Request.Queue
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("n", name);
             writer.WriteLong("t", timeoutMillis);
         }
-
-
-
     }
 }

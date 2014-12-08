@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using Hazelcast.Client.Request.Queue;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook
@@ -25,8 +23,9 @@ namespace Hazelcast.Serialization.Hook
         public const int TxnSize = 16;
         public const int TxnPeek = 17;
         public const int RemoveListener = 18;
+        public const int IsEmpty = 19;
 
-        public const int TotalSize = RemoveListener + 1;
+        public const int TotalSize = IsEmpty + 1;
         public static readonly int FId = FactoryIdHelper.GetFactoryId(FactoryIdHelper.QueuePortableFactory, -11);
 
         public virtual int GetFactoryId()

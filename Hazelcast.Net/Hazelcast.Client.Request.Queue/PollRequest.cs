@@ -4,8 +4,11 @@ namespace Hazelcast.Client.Request.Queue
 {
     internal class PollRequest : QueueRequest
     {
+        protected internal PollRequest(string name) : base(name)
+        {
+        }
 
-        public PollRequest(string name, long timeoutMillis) : base(name, timeoutMillis)
+        protected internal PollRequest(string name, long timeoutMillis) : base(name, timeoutMillis)
         {
         }
 

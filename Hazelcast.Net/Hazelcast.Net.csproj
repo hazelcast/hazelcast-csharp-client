@@ -85,6 +85,7 @@
     <Compile Include="Hazelcast.Client.Request.Multimap\KeyBasedContainsRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\RemoveEntryListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Multimap\TxnMultiMapRemoveAllRequest.cs" />
+    <Compile Include="Hazelcast.Client.Request.Queue\IsEmptyRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Queue\RemoveListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Topic\RemoveMessageListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Transaction\BaseTransactionRequest.cs" />

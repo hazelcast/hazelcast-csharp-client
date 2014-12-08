@@ -6,9 +6,9 @@ namespace Hazelcast.Client.Request.Queue
 {
     internal class RemoveRequest : QueueRequest
     {
-        internal Data data;
+        internal IData data;
 
-        public RemoveRequest(string name, Data data) : base(name)
+        public RemoveRequest(string name, IData data) : base(name)
         {
             this.data = data;
         }
@@ -19,12 +19,11 @@ namespace Hazelcast.Client.Request.Queue
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            base.WritePortable(writer);
+            base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            data.WriteData(output);
+            output.WriteData(data);
         }
-
     }
 }
