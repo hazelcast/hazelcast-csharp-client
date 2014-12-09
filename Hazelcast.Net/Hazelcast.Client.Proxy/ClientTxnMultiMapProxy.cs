@@ -26,7 +26,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new TxnMultiMapGetRequest(GetName(), ToData(key));
             var portableCollection = Invoke<PortableCollection>(request);
-            ICollection<Data> collection = portableCollection.GetCollection();
+            ICollection<IData> collection = portableCollection.GetCollection();
             ICollection<V> coll;
             if (collection is IList)
             {
@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Proxy
             {
                 coll = new HashSet<V>();
             }
-            foreach (Data data in collection)
+            foreach (IData data in collection)
             {
                 coll.Add( ToObject<V>(data));
             }
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new TxnMultiMapRemoveAllRequest(GetName(), ToData(key));
             var portableCollection = Invoke<PortableCollection>(request);
-            ICollection<Data> collection = portableCollection.GetCollection();
+            ICollection<IData> collection = portableCollection.GetCollection();
             ICollection<V> coll;
             if (collection is IList)
             {
@@ -64,7 +64,7 @@ namespace Hazelcast.Client.Proxy
             {
                 coll = new HashSet<V>();
             }
-            foreach (Data data in collection)
+            foreach (IData data in collection)
             {
                 coll.Add( ToObject<V>(data));
             }

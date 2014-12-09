@@ -123,20 +123,20 @@ namespace Hazelcast.Util
                 IQueryResultEntry entry = _enumerator.Current;
                 if (_enclosing.iterationType == IterationType.Value)
                 {
-                    Data valueData = entry.GetValueData();
+                    IData valueData = entry.GetValueData();
                     _Current = (_enclosing.data) ? valueData : _enclosing.serializationService.ToObject<object>(valueData);
                     return true;
                 }
                 if (_enclosing.iterationType == IterationType.Key)
                 {
-                    Data keyData = entry.GetKeyData();
+                    IData keyData = entry.GetKeyData();
                     _Current = (_enclosing.data) ? keyData : _enclosing.serializationService.ToObject<object>(keyData);
                     return true;
                 }
                 else
                 {
-                    Data keyData = entry.GetKeyData();
-                    Data valueData = entry.GetValueData();
+                    IData keyData = entry.GetKeyData();
+                    IData valueData = entry.GetValueData();
                     var keyValuePair =
                         new KeyValuePair<object, object>(_enclosing.serializationService.ToObject<object>(keyData),
                             _enclosing.serializationService.ToObject<object>(valueData));

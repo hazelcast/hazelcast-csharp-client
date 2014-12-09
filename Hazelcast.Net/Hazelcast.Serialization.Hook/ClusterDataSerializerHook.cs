@@ -9,7 +9,6 @@ namespace Hazelcast.Serialization.Hook
     internal sealed class ClusterDataSerializerHook : DataSerializerHook
     {
         public const int FId = 0;
-        public const int Data = 0;
         public const int Address = 1;
         public const int Member = 2;
         public const int Heartbeat = 3;
@@ -25,7 +24,6 @@ namespace Hazelcast.Serialization.Hook
         public IDataSerializableFactory CreateFactory()
         {
             var constructors = new Func<int, IIdentifiedDataSerializable>[MembershipEvent + 1];
-            constructors[Data] = arg => new Data();
             constructors[Address] = arg => new Address();
             constructors[Member] = arg => new Member();
             //constructors[Heartbeat] = delegate { throw new NotSupportedException("NOT IMPLEMENTED ON CLIENT"); };

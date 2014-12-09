@@ -114,9 +114,9 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new TxnMapRequest<K, V>(GetName(), AbstractTxnMapRequest.TxnMapRequestType.Keyset);
             var result = Invoke<MapKeySet>(request);
-            ICollection<Data> dataKeySet = result.GetKeySet();
+            ICollection<IData> dataKeySet = result.GetKeySet();
             var keySet = new HashSet<K>();
-            foreach (Data data in dataKeySet)
+            foreach (IData data in dataKeySet)
             {
                 keySet.Add( ToObject<K>(data));
             }
@@ -144,9 +144,9 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new TxnMapRequest<K, V>(GetName(), AbstractTxnMapRequest.TxnMapRequestType.Values);
             var result = Invoke<MapValueCollection>(request);
-            ICollection<Data> dataValues = result.GetValues();
+            ICollection<IData> dataValues = result.GetValues();
             var values = new HashSet<V>();
-            foreach (Data value in dataValues)
+            foreach (IData value in dataValues)
             {
                 values.Add( ToObject<V>(value));
             }

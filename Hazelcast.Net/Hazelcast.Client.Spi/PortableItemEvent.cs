@@ -9,7 +9,7 @@ namespace Hazelcast.Client.Spi
     internal class PortableItemEvent : EventArgs, IPortable
     {
         private ItemEventType eventType;
-        private Data item;
+        private IData item;
 
         private string uuid;
 
@@ -17,7 +17,7 @@ namespace Hazelcast.Client.Spi
         {
         }
 
-        public PortableItemEvent(Data item, ItemEventType eventType, string uuid)
+        public PortableItemEvent(IData item, ItemEventType eventType, string uuid)
         {
             this.item = item;
             this.eventType = eventType;
@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Spi
             item = IOUtil.ReadNullableData(reader.GetRawDataInput());
         }
 
-        public virtual Data GetItem()
+        public virtual IData GetItem()
         {
             return item;
         }

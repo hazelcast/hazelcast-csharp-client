@@ -15,7 +15,7 @@ namespace Hazelcast.Client.Proxy
         public virtual bool Add(E e)
         {
             ThrowExceptionIfNull(e);
-            Data value = ToData(e);
+            IData value = ToData(e);
             var request = new TxnSetAddRequest(GetName(), value);
             var result = Invoke<bool>(request);
             return result;
@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Proxy
         public virtual bool Remove(E e)
         {
             ThrowExceptionIfNull(e);
-            Data value = ToData(e);
+            IData value = ToData(e);
             var request = new TxnSetRemoveRequest(GetName(), value);
             var result = Invoke<bool>(request);
             return result;

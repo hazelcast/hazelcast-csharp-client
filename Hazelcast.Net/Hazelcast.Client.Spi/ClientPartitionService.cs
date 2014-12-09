@@ -41,7 +41,7 @@ namespace Hazelcast.Client.Spi
             return rtn;
         }
 
-        internal int GetPartitionId(Data key)
+        internal int GetPartitionId(IData key)
         {
             int pc = partitionCount;
             if (pc <= 0)
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Spi
 
         public int GetPartitionId(object key)
         {
-            Data data = client.GetSerializationService().ToData(key);
+            IData data = client.GetSerializationService().ToData(key);
             return GetPartitionId(data);
         }
 

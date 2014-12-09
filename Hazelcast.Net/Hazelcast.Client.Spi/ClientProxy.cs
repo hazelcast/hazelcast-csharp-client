@@ -108,12 +108,12 @@ namespace Hazelcast.Client.Spi
             }  
         }
 
-        protected internal virtual Data ToData(object o)
+        protected internal virtual IData ToData(object o)
         {
             return GetContext().GetSerializationService().ToData(o);
         }
 
-        protected internal virtual T ToObject<T>(Data data)
+        protected internal virtual T ToObject<T>(IData data)
         {
             return GetContext().GetSerializationService().ToObject<T>(data);
         }

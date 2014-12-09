@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Proxy
 {
     internal class ClientLockProxy : ClientProxy, ILock
     {
-        private volatile Data key;
+        private volatile IData key;
 
         public ClientLockProxy(string serviceName, string objectId) : base(serviceName, objectId)
         {
@@ -92,7 +92,7 @@ namespace Hazelcast.Client.Proxy
         {
         }
 
-        private Data GetKeyData()
+        private IData GetKeyData()
         {
             if (key == null)
             {

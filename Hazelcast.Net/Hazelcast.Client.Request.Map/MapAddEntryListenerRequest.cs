@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Request.Map
             this.key = key;
         }
 
-        public MapAddEntryListenerRequest(string name, Data key, bool includeValue, IPredicate<K, V> predicate)
+        public MapAddEntryListenerRequest(string name, IData key, bool includeValue, IPredicate<K, V> predicate)
             : this(name, key, includeValue)
         {
             this.predicate = predicate;

@@ -137,11 +137,11 @@ namespace Hazelcast.IO.Serialization
 			{
 				return false;
 			}
-			if (!(o is IData))
+			if (!(o is Data))
 			{
 				return false;
 			}
-			IData data = (IData)o;
+			Data data = (Data)o;
 			if (GetType() != data.GetType())
 			{
 				return false;

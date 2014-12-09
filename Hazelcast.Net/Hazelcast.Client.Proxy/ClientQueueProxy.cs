@@ -57,7 +57,7 @@ namespace Hazelcast.Client.Proxy
 
         public bool Offer(E e, long timeout, TimeUnit unit)
         {
-            Data data = GetContext().GetSerializationService().ToData(e);
+            IData data = GetContext().GetSerializationService().ToData(e);
             var request = new OfferRequest(name, unit.ToMillis(timeout), data);
             var result = Invoke<bool>(request);
             return result;
@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Proxy
 
         public bool Remove(object o)
         {
-            Data data = GetContext().GetSerializationService().ToData(o);
+            IData data = GetContext().GetSerializationService().ToData(o);
             var request = new RemoveRequest(name, data);
             var result = Invoke<bool>(request);
             return result;
@@ -101,7 +101,7 @@ namespace Hazelcast.Client.Proxy
 
         public bool Contains(object o)
         {
-            ICollection<Data> list = new List<Data>(1);
+            ICollection<IData> list = new List<IData>(1);
             list.Add(GetContext().GetSerializationService().ToData(o));
             var request = new ContainsRequest(name, list);
             var result = Invoke<bool>(request);
@@ -122,8 +122,8 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new DrainRequest(name, maxElements);
             var result = Invoke<PortableCollection>(request);
-            ICollection<Data> coll = result.GetCollection();
-            foreach (Data data in coll)
+            ICollection<IData> coll = result.GetCollection();
+            foreach (IData data in coll)
             {
                 var e = GetContext().GetSerializationService().ToObject<E>(data);
                 c.Add((T) e);
@@ -193,17 +193,17 @@ namespace Hazelcast.Client.Proxy
 
         public IEnumerator<E> GetEnumerator()
         {
-            ICollection<Data> coll = GetAll();
+            ICollection<IData> coll = GetAll();
             return new QueueIterator<E>(coll.GetEnumerator(), GetContext().GetSerializationService());
         }
 
 
         public E[] ToArray()
         {
-            ICollection<Data> coll = GetAll();
+            ICollection<IData> coll = GetAll();
             int i = 0;
             var array = new E[coll.Count];
-            foreach (Data data in coll)
+            foreach (IData data in coll)
             {
                 array[i++] = GetContext().GetSerializationService().ToObject<E>(data);
             }
@@ -228,7 +228,7 @@ namespace Hazelcast.Client.Proxy
 
         public bool ContainsAll<_T0>(ICollection<_T0> c)
         {
-            IList<Data> list = GetDataList(c);
+            IList<IData> list = GetDataList(c);
             var request = new ContainsRequest(name, list);
             var result = Invoke<bool>(request);
             return result;
@@ -296,11 +296,11 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        private ICollection<Data> GetAll()
+        private ICollection<IData> GetAll()
         {
             var request = new IteratorRequest(name);
             var result = Invoke<PortableCollection>(request);
-            ICollection<Data> coll = result.GetCollection();
+            ICollection<IData> coll = result.GetCollection();
             return coll;
         }
 
@@ -308,9 +308,9 @@ namespace Hazelcast.Client.Proxy
         {
         }
 
-        private IList<Data> GetDataList<T>(ICollection<T> objects)
+        private IList<IData> GetDataList<T>(ICollection<T> objects)
         {
-            IList<Data> dataList = new List<Data>(objects.Count);
+            IList<IData> dataList = new List<IData>(objects.Count);
             foreach (object o in objects)
             {
                 dataList.Add(GetContext().GetSerializationService().ToData(o));

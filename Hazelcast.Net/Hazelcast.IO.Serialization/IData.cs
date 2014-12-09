@@ -5,10 +5,6 @@ namespace Hazelcast.IO.Serialization
 	/// <summary>Data is basic unit of serialization.</summary>
 	/// <remarks>
 	/// Data is basic unit of serialization. It stores binary form of an object serialized
-	/// by
-	/// <see cref="ISerializationService.ToData{B}(object)">ISerializationService.ToData&lt;B&gt;(object)
-	/// 	</see>
-	/// .
 	/// </remarks>
 	public interface IData
 	{

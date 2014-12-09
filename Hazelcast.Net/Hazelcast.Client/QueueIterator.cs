@@ -7,11 +7,11 @@ namespace Hazelcast.Client
 {
     internal class QueueIterator<E> : IEnumerator<E>
     {
-        private readonly IEnumerator<Data> iter;
+        private readonly IEnumerator<IData> iter;
         private readonly ISerializationService serializationService;
         private E _currentE;
 
-        public QueueIterator(IEnumerator<Data> iter, ISerializationService serializationService)
+        public QueueIterator(IEnumerator<IData> iter, ISerializationService serializationService)
         {
             this.iter = iter;
             this.serializationService = serializationService;

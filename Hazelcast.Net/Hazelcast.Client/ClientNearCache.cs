@@ -26,7 +26,7 @@ namespace Hazelcast.Client
         internal const int cleanupInterval = 5000;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientNearCache));
         public static readonly object NullObject = new object();
-        internal readonly ConcurrentDictionary<Data, CacheRecord> cache;
+        internal readonly ConcurrentDictionary<IData, CacheRecord> cache;
         internal readonly ClientNearCacheType cacheType;
         internal readonly AtomicBoolean canCleanUp;
 
@@ -57,7 +57,7 @@ namespace Hazelcast.Client
             timeToLiveMillis = nearCacheConfig.GetTimeToLiveSeconds()*1000;
             invalidateOnChange = nearCacheConfig.IsInvalidateOnChange();
             evictionPolicy = (EvictionPolicy) Enum.Parse(typeof (EvictionPolicy), nearCacheConfig.GetEvictionPolicy());
-            cache = new ConcurrentDictionary<Data, CacheRecord>();
+            cache = new ConcurrentDictionary<IData, CacheRecord>();
             canCleanUp = new AtomicBoolean(true);
             canEvict = new AtomicBoolean(true);
             lastCleanup = Clock.CurrentTimeMillis();
@@ -109,7 +109,7 @@ namespace Hazelcast.Client
         }
 
 
-        public virtual void Put(Data key, object @object)
+        public virtual void Put(IData key, object @object)
         {
             FireTtlCleanup();
             if (evictionPolicy == EvictionPolicy.None && cache.Count >= maxSize)
@@ -213,7 +213,7 @@ namespace Hazelcast.Client
             }
         }
 
-        public virtual object Get(Data key)
+        public virtual object Get(IData key)
         {
             FireTtlCleanup();
             CacheRecord record = null;
@@ -237,7 +237,7 @@ namespace Hazelcast.Client
             return null;
         }
 
-        public virtual void Invalidate(Data key)
+        public virtual void Invalidate(IData key)
         {
             try
             {
@@ -284,14 +284,14 @@ namespace Hazelcast.Client
             internal readonly long creationTime;
 
             internal readonly AtomicInteger hit;
-            internal readonly Data key;
+            internal readonly IData key;
 
             internal readonly object value;
 
             //TODO volatile
             internal long lastAccessTime;
 
-            internal CacheRecord(ClientNearCache _enclosing, Data key, object value)
+            internal CacheRecord(ClientNearCache _enclosing, IData key, object value)
             {
                 this._enclosing = _enclosing;
                 this.key = key;

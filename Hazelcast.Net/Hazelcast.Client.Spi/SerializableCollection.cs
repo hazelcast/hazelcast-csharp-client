@@ -8,22 +8,22 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Client.Spi
 {
     [Serializable]
-    internal sealed class SerializableCollection : IdentifiedDataSerializable,IIdentifiedDataSerializable, IEnumerable<Data>
+    internal sealed class SerializableCollection : IdentifiedDataSerializable,IIdentifiedDataSerializable, IEnumerable<IData>
     {
-        private ICollection<Data> collection;
+        private ICollection<IData> collection;
 
         public SerializableCollection()
         {
         }
 
-        public SerializableCollection(ICollection<Data> collection)
+        public SerializableCollection(ICollection<IData> collection)
         {
             this.collection = collection;
         }
 
-        public IEnumerator<Data> GetEnumerator()
+        public IEnumerator<IData> GetEnumerator()
         {
-            return collection == null ? new List<Data>().GetEnumerator() : collection.GetEnumerator();
+            return collection == null ? new List<IData>().GetEnumerator() : collection.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -40,7 +40,7 @@ namespace Hazelcast.Client.Spi
                 return;
             }
             output.WriteInt(collection.Count);
-            foreach (Data data in collection)
+            foreach (IData data in collection)
             {
                 data.WriteData(output);
             }
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Spi
             {
                 return;
             }
-            collection = new List<Data>(size);
+            collection = new List<IData>(size);
             for (int i = 0; i < size; i++)
             {
                 collection.Add(IOUtil.ReadData(input));
@@ -71,7 +71,7 @@ namespace Hazelcast.Client.Spi
             return SpiDataSerializerHook.Collection;
         }
 
-        public ICollection<Data> GetCollection()
+        public ICollection<IData> GetCollection()
         {
             return collection;
         }

@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Test
 
             object obj=new DataSerializableType(1000,1000);
             long start = Clock.CurrentTimeMillis();
-            Data data = service.ToData(obj);
+            IXyzx data = service.ToData(obj);
 
             var dataSerializableType = service.ToObject<DataSerializableType>(data);
 

@@ -65,7 +65,7 @@ namespace Hazelcast.Map
             entrySet.Add(entry);
         }
 
-        public void Add(Data key, Data value)
+        public void Add(IData key, IData value)
         {
             entrySet.Add(new KeyValuePair<IData, IData>(key, value));
         }

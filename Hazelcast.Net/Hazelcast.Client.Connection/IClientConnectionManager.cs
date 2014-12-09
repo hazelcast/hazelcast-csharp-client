@@ -19,7 +19,7 @@ namespace Hazelcast.Client.Connection
         //bool WriteToOwner(Data data);
 
         /// <exception cref="System.IO.IOException"></exception>
-        Data ReadFromOwner();
+        IData ReadFromOwner();
 
         /// <exception cref="System.IO.IOException"></exception>
         object SendAndReceiveFromOwner(ClientRequest clientRequest);

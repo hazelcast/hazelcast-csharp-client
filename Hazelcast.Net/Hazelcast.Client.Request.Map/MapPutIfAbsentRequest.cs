@@ -6,7 +6,7 @@ namespace Hazelcast.Client.Request.Map
     internal class MapPutIfAbsentRequest : MapPutRequest
     {
 
-        public MapPutIfAbsentRequest(string name, Data key, Data value, long threadId, long ttl)
+        public MapPutIfAbsentRequest(string name, IData key, IData value, long threadId, long ttl)
             : base(name, key, value, threadId, ttl)
         {
         }

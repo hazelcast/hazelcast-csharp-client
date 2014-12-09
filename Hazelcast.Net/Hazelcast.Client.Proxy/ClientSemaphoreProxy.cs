@@ -13,7 +13,7 @@ namespace Hazelcast.Client.Proxy
     {
         private readonly string name;
 
-        private volatile Data key;
+        private volatile IData key;
 
         public ClientSemaphoreProxy(string serviceName, string objectId) : base(serviceName, objectId)
         {
@@ -117,7 +117,7 @@ namespace Hazelcast.Client.Proxy
             return base.Invoke<T>(request, GetPartitionKey());
         }
 
-        public virtual Data GetPartitionKey()
+        public virtual IData GetPartitionKey()
         {
             if (key == null)
             {

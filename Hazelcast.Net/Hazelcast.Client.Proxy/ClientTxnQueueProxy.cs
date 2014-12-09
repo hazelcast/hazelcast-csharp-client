@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public virtual bool Offer(E e, long timeout, TimeUnit unit)
         {
-            Data data = ToData(e);
+            IData data = ToData(e);
             var request = new TxnOfferRequest(GetName(), unit.ToMillis(timeout), data);
             var result = Invoke<bool>(request);
             return result;

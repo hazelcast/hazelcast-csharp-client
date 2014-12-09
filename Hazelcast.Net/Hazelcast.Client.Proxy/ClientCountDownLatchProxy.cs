@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Proxy
 {
     internal class ClientCountDownLatchProxy : ClientProxy, ICountDownLatch
     {
-        private volatile Data key;
+        private volatile IData key;
 
         public ClientCountDownLatchProxy(string serviceName, string objectId) : base(serviceName, objectId)
         {
@@ -49,7 +49,7 @@ namespace Hazelcast.Client.Proxy
         {
         }
 
-        private Data GetKey()
+        private IData GetKey()
         {
             if (key == null)
             {

@@ -9,28 +9,28 @@ namespace Hazelcast.Util
     /// </summary>
     internal interface IQueryResultEntry
     {
-        Data GetKeyData();
+        IData GetKeyData();
 
-        Data GetValueData();
+        IData GetValueData();
 
-        Data GetIndexKey();
+        IData GetIndexKey();
     }
 
 
     [System.Serializable]
     internal class QueryResultEntry : IdentifiedDataSerializable,IIdentifiedDataSerializable, IQueryResultEntry
     {
-        private Data indexKey;
+        private IData indexKey;
 
-        private Data keyData;
+        private IData keyData;
 
-        private Data valueData;
+        private IData valueData;
 
         public QueryResultEntry()
         {
         }
 
-        public QueryResultEntry(Data keyData, Data indexKey, Data valueData)
+        public QueryResultEntry(IData keyData, IData indexKey, IData valueData)
         {
             this.keyData = keyData;
             this.indexKey = indexKey;
@@ -81,17 +81,17 @@ namespace Hazelcast.Util
             return indexKey != null ? indexKey.GetHashCode() : 0;
         }
 
-        public virtual Data GetKeyData()
+        public virtual IData GetKeyData()
         {
             return keyData;
         }
 
-        public virtual Data GetValueData()
+        public virtual IData GetValueData()
         {
             return valueData;
         }
 
-        public virtual Data GetIndexKey()
+        public virtual IData GetIndexKey()
         {
             return indexKey;
         }
