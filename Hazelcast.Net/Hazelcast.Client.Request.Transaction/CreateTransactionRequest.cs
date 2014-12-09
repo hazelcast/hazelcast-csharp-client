@@ -1,4 +1,4 @@
-using Hazelcast.Client.Request.Base;
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 using Hazelcast.Transaction;
@@ -7,8 +7,8 @@ namespace Hazelcast.Client.Request.Transaction
 {
     internal class CreateTransactionRequest : BaseTransactionRequest
     {
-        internal TransactionOptions options;
-
+        private TransactionOptions options;
+        private IDataSerializable sXid = null;//SerializableXID
 
         public CreateTransactionRequest(TransactionOptions options)
         {
@@ -26,13 +26,15 @@ namespace Hazelcast.Client.Request.Transaction
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
-            var objectDataOutput = writer.GetRawDataOutput();
-            options.WriteData(objectDataOutput);
-            //TODO if xid is implemented below permanent false should be replaced
-            objectDataOutput.WriteBoolean(false);//(sXid != null);
+            base.Write(writer);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            options.WriteData(output);
+            output.WriteBoolean(sXid != null);
+            if (sXid != null) {
+                sXid.WriteData(output);
+            }
         }
-
     }
 }

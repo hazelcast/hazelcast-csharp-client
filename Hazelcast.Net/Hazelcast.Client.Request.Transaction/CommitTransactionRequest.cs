@@ -1,4 +1,3 @@
-using Hazelcast.Client.Request.Base;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
@@ -6,6 +5,17 @@ namespace Hazelcast.Client.Request.Transaction
 {
     internal class CommitTransactionRequest : BaseTransactionRequest
     {
+        private readonly bool prepareAndCommit;
+
+        public CommitTransactionRequest()
+        {
+        }
+
+        public CommitTransactionRequest(bool prepareAndCommit)
+        {
+            this.prepareAndCommit = prepareAndCommit;
+        }
+
         public override int GetFactoryId()
         {
             return ClientTxnPortableHook.FId;
@@ -16,11 +26,11 @@ namespace Hazelcast.Client.Request.Transaction
             return ClientTxnPortableHook.Commit;
         }
 
-        public override void WritePortable(IPortableWriter writer)
+        /// <exception cref="System.IO.IOException"></exception>
+        public override void Write(IPortableWriter writer)
         {
-            //TODO below is xid dependent fix it if implemented
-            //bool prepareAndCommit;
-            writer.WriteBoolean("pc", true);
+            base.Write(writer);
+            writer.WriteBoolean("pc", prepareAndCommit);
         }
     }
 }
