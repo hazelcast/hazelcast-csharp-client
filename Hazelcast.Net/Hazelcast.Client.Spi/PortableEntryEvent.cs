@@ -9,14 +9,14 @@ namespace Hazelcast.Client.Spi
     internal class PortableEntryEvent : EventArgs, IPortable
     {
         private EntryEventType eventType;
-        private Data key;
+        private IData key;
 
-        private Data oldValue;
+        private IData oldValue;
 
         private string uuid;
         private int numberOfAffectedEntries = 1;
 
-        private Data value;
+        private IData value;
 
         public PortableEntryEvent()
         {
@@ -41,16 +41,44 @@ namespace Hazelcast.Client.Spi
             return SpiPortableHook.EntryEvent;
         }
 
+        ///// <exception cref="System.IO.IOException"></exception>
+        //public virtual void WritePortable(IPortableWriter writer)
+        //{
+        //    writer.WriteInt("e", (int) eventType);
+        //    writer.WriteUTF("u", uuid);
+        //    writer.WriteInt("n", numberOfAffectedEntries);
+        //    IObjectDataOutput output = writer.GetRawDataOutput();
+        //    key.WriteData(output);
+        //    IOUtil.WriteNullableData(output, value);
+        //    IOUtil.WriteNullableData(output, oldValue);
+        //}
+
+        ///// <exception cref="System.IO.IOException"></exception>
+        //public virtual void ReadPortable(IPortableReader reader)
+        //{
+        //    eventType = (EntryEventType)reader.ReadInt("e");
+        //    uuid = reader.ReadUTF("u");
+        //    numberOfAffectedEntries = reader.ReadInt("n");
+        //    IObjectDataInput input = reader.GetRawDataInput();
+        //    key = IOUtil.ReadNullableData(input);
+        //    value = IOUtil.ReadNullableData(input);
+        //    oldValue = IOUtil.ReadNullableData(input);
+        //}
+
+
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WritePortable(IPortableWriter writer)
         {
-            writer.WriteInt("e", (int) eventType);
+            // Map Event and Entry Event is merged to one event, because when cpp client get response
+            // from node, it first creates the class then fills the class what comes from wire. Currently
+            // it can not handle more than one type response.
+            writer.WriteInt("e", (int)eventType);
             writer.WriteUTF("u", uuid);
             writer.WriteInt("n", numberOfAffectedEntries);
-            IObjectDataOutput output = writer.GetRawDataOutput();
-            key.WriteData(output);
-            IOUtil.WriteNullableData(output, value);
-            IOUtil.WriteNullableData(output, oldValue);
+            IObjectDataOutput @out = writer.GetRawDataOutput();
+            @out.WriteData(key);
+            @out.WriteData(value);
+            @out.WriteData(oldValue);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -59,10 +87,10 @@ namespace Hazelcast.Client.Spi
             eventType = (EntryEventType)reader.ReadInt("e");
             uuid = reader.ReadUTF("u");
             numberOfAffectedEntries = reader.ReadInt("n");
-            IObjectDataInput input = reader.GetRawDataInput();
-            key = IOUtil.ReadNullableData(input);
-            value = IOUtil.ReadNullableData(input);
-            oldValue = IOUtil.ReadNullableData(input);
+            IObjectDataInput @in = reader.GetRawDataInput();
+            key = @in.ReadData();
+            value = @in.ReadData();
+            oldValue = @in.ReadData();
         }
 
         public virtual Data GetKey()

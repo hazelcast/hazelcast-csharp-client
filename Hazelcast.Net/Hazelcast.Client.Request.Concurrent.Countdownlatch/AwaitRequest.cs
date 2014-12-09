@@ -7,7 +7,6 @@ namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
     internal sealed class AwaitRequest : ClientRequest
     {
         private string name;
-
         private long timeout;
 
         public AwaitRequest(string name, long timeout)
@@ -27,7 +26,7 @@ namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("name", name);
             writer.WriteLong("timeout", timeout);

@@ -27,7 +27,7 @@ namespace Hazelcast.Client.Request.Concurrent.Countdownlatch
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override void WritePortable(IPortableWriter writer)
+        public override void Write(IPortableWriter writer)
         {
             writer.WriteUTF("name", name);
             writer.WriteInt("count", count);

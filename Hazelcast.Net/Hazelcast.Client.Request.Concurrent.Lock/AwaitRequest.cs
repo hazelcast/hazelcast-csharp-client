@@ -40,8 +40,8 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
             writer.WriteLong("tout", timeout);
             writer.WriteLong("tid", threadId);
             writer.WriteUTF("cid", conditionId);
-            IObjectDataOutput @out = writer.GetRawDataOutput();
-            ns.WriteData(@out);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            ns.WriteData(output);
         }
     }
 }
