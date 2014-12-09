@@ -169,7 +169,7 @@ namespace Hazelcast.Client.Connection
             throw new HazelcastException("Cannot connect to Cluster");
         }
 
-        public Data ReadFromOwner()
+        public IData ReadFromOwner()
         {
             if (_ownerConnection != null)
             {
@@ -531,17 +531,17 @@ namespace Hazelcast.Client.Connection
                 throw new IOException("Retry this");
             }
 
-            IEnumerator<Data> enumerator = coll.GetEnumerator();
+            IEnumerator<IData> enumerator = coll.GetEnumerator();
             enumerator.MoveNext();
             if (enumerator.Current != null)
             {
-                Data addressData = enumerator.Current;
+                IData addressData = enumerator.Current;
                 var address = ss.ToObject<Address>(addressData);
                 connection.SetRemoteEndpoint(address);
                 enumerator.MoveNext();
                 if (enumerator.Current != null)
                 {
-                    Data principalData = enumerator.Current;
+                    IData principalData = enumerator.Current;
                     return ss.ToObject<T>(principalData);
                 }
             }

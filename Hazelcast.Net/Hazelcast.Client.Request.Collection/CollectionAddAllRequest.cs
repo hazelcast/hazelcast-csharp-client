@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Request.Collection
             base.Write(writer);
             IObjectDataOutput output = writer.GetRawDataOutput();
             output.WriteInt(valueList.Count);
-            foreach (Data value in valueList)
+            foreach (IData value in valueList)
             {
                 output.WriteData(value);
             }

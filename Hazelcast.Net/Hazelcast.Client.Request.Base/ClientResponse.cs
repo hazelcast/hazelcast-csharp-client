@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Request.Base
     internal class ClientResponse : IdentifiedDataSerializable,IIdentifiedDataSerializable
     {
         private int _callId;
-        private Data _response;
+        private IData _response;
 
         private GenericError _error;
 
@@ -45,8 +45,8 @@ namespace Hazelcast.Client.Request.Base
             }
             else
             {
-                _response = new Data();
-                _response.ReadData(input);
+                _response = input.ReadData();
+                _error = null;
             }
         }
 
@@ -55,7 +55,7 @@ namespace Hazelcast.Client.Request.Base
             get { return _error; }
         }
 
-        public Data Response
+        public IData Response
         {
             get { return _response; }
         }

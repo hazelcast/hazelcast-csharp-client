@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Proxy
     {
         private readonly string name;
 
-        private volatile Data key;
+        private volatile IData key;
 
         public ClientTopicProxy(string serviceName, string objectId) : base(serviceName, objectId)
         {
@@ -20,7 +20,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual void Publish(E message)
         {
-            Data data = GetContext().GetSerializationService().ToData(message);
+            IData data = GetContext().GetSerializationService().ToData(message);
             var request = new PublishRequest(name, data);
             Invoke<object>(request);
         }
@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Proxy
         {
         }
 
-        private Data GetKey()
+        private IData GetKey()
         {
             return key ?? (key = GetContext().GetSerializationService().ToData(name));
         }

@@ -50,12 +50,12 @@ namespace Hazelcast.Client.Proxy
 
         internal abstract void OnDestroy();
 
-        internal virtual Data ToData(object obj)
+        internal virtual IData ToData(object obj)
         {
             return proxy.GetClient().GetSerializationService().ToData(obj);
         }
 
-        internal virtual E ToObject<E>(Data data)
+        internal virtual E ToObject<E>(IData data)
         {
             return proxy.GetClient().GetSerializationService().ToObject<E>(data);
         }

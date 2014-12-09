@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Proxy
     internal class ClientAtomicLongProxy : ClientProxy, IAtomicLong
     {
         private readonly string name;
-        private volatile Data key;
+        private volatile IData key;
 
         public ClientAtomicLongProxy(string serviceName, string objectId) : base(serviceName, objectId)
         {
@@ -101,7 +101,7 @@ namespace Hazelcast.Client.Proxy
             return Invoke<T>(req, GetKey());
         }
 
-        private Data GetKey()
+        private IData GetKey()
         {
             if (key == null)
             {

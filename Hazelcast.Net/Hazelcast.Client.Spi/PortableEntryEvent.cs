@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Spi
         {
         }
 
-        public PortableEntryEvent(Data key, Data value, Data oldValue, EntryEventType eventType, string uuid)
+        public PortableEntryEvent(IData key, IData value, IData oldValue, EntryEventType eventType, string uuid)
         {
             this.key = key;
             this.value = value;
@@ -93,17 +93,17 @@ namespace Hazelcast.Client.Spi
             oldValue = @in.ReadData();
         }
 
-        public virtual Data GetKey()
+        public virtual IData GetKey()
         {
             return key;
         }
 
-        public virtual Data GetValue()
+        public virtual IData GetValue()
         {
             return value;
         }
 
-        public virtual Data GetOldValue()
+        public virtual IData GetOldValue()
         {
             return oldValue;
         }

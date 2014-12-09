@@ -203,7 +203,7 @@ namespace Hazelcast.Client.Connection
         #region BLOCKING IO
 
         /// <exception cref="System.IO.IOException"></exception>
-        private void Write(Data data)
+        private void Write(IData data)
         {
             sendBuffer.Clear();
             var packet = new Packet(data, serializationService.GetPortableContext());
@@ -232,7 +232,7 @@ namespace Hazelcast.Client.Connection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public Data Read()
+        public IData Read()
         {
             receiveBuffer.Clear();
             var readFromSocket = true;
@@ -282,9 +282,9 @@ namespace Hazelcast.Client.Connection
         /// <exception cref="System.IO.IOException"></exception>
         public object SendAndReceive(ClientRequest clientRequest)
         {
-            Data request = serializationService.ToData(clientRequest);
+            IData request = serializationService.ToData(clientRequest);
             Write(request);
-            Data responseData = Read();
+            IData responseData = Read();
 
             var clientResponse = serializationService.ToObject<ClientResponse>(responseData);
             var response = serializationService.ToObject<object>(clientResponse.Response);
@@ -424,7 +424,7 @@ namespace Hazelcast.Client.Connection
             }
             var callId = RegisterCall(task);
             ClientRequest clientRequest = taskData.Request;
-            Data data = serializationService.ToData(clientRequest);
+            IData data = serializationService.ToData(clientRequest);
             var packet = new Packet(data, taskData.PartitionId, serializationService.GetPortableContext());
             //enqueue to write queue
             if (!WriteAsync(packet))

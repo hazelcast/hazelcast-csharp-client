@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Proxy
         public E Set(int index, E element)
         {
             ThrowExceptionIfNull(element);
-            Data value = ToData(element);
+            IData value = ToData(element);
             var request = new ListSetRequest(GetName(), index, value);
             return Invoke<E>(request);
         }
@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Proxy
         public void Add(int index, E element)
         {
             ThrowExceptionIfNull(element);
-            Data value = ToData(element);
+            IData value = ToData(element);
             var request = new ListAddRequest(GetName(), value, index);
             Invoke<object>(request);
         }
@@ -70,7 +70,7 @@ namespace Hazelcast.Client.Proxy
         public bool AddAll<_T0>(int index, ICollection<_T0> c) where _T0 : E
         {
             ThrowExceptionIfNull(c);
-            IList<Data> valueList = new List<Data>(c.Count);
+            IList<IData> valueList = new List<IData>(c.Count);
             foreach (E e in c)
             {
                 ThrowExceptionIfNull(e);
@@ -85,9 +85,9 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new ListSubRequest(GetName(), fromIndex, toIndex);
             var result = Invoke<SerializableCollection>(request);
-            ICollection<Data> collection = result.GetCollection();
+            ICollection<IData> collection = result.GetCollection();
             IList<E> list = new List<E>(collection.Count);
-            foreach (Data value in collection)
+            foreach (IData value in collection)
             {
                 list.Add(ToObject<E>(value));
             }
@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Proxy
         private int IndexOfInternal(object o, bool last)
         {
             ThrowExceptionIfNull(o);
-            Data value = ToData(o);
+            IData value = ToData(o);
             var request = new ListIndexOfRequest(GetName(), value, last);
             var result = Invoke<int>(request);
             return result;

@@ -350,7 +350,7 @@ namespace Hazelcast.Client.Spi
                 }
                 members.Clear();
             }
-            foreach (Data d in coll.GetCollection())
+            foreach (IData d in coll.GetCollection())
             {
                 members.Add(serializationService.ToObject<Member>(d));
             }

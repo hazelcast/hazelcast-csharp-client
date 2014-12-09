@@ -21,8 +21,8 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool Put(K key, V value)
         {
-            Data keyData = GetSerializationService().ToData(key);
-            Data valueData = GetSerializationService().ToData(value);
+            IData keyData = GetSerializationService().ToData(key);
+            IData valueData = GetSerializationService().ToData(value);
             var request = new PutRequest(name, keyData, valueData, -1, ThreadUtil.GetThreadId());
             var result = Invoke<bool>(request, keyData);
             return result;
@@ -30,7 +30,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual ICollection<V> Get(K key)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new GetAllRequest(name, keyData);
             var result = Invoke<PortableCollection>(request, keyData);
             return ToObjectCollection<V>(result, true);
@@ -38,8 +38,8 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool Remove(object key, object value)
         {
-            Data keyData = GetSerializationService().ToData(key);
-            Data valueData = GetSerializationService().ToData(value);
+            IData keyData = GetSerializationService().ToData(key);
+            IData valueData = GetSerializationService().ToData(value);
             var request = new RemoveRequest(name, keyData, valueData, ThreadUtil.GetThreadId());
             var result = Invoke<bool>(request, keyData);
             return result;
@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual ICollection<V> Remove(object key)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new RemoveAllRequest(name, keyData, ThreadUtil.GetThreadId());
             var result = Invoke<PortableCollection>(request, keyData);
             return ToObjectCollection<V>(result, true);
@@ -71,7 +71,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new EntrySetRequest(name);
             var result = Invoke<PortableEntrySetResponse>(request);
-            ICollection<KeyValuePair<Data, Data>> dataEntrySet = result.GetEntrySet();
+            ICollection<KeyValuePair<IData, IData>> dataEntrySet = result.GetEntrySet();
             ISet<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
             foreach (var entry in dataEntrySet)
             {
@@ -84,7 +84,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool ContainsKey(K key)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new KeyBasedContainsRequest(name, keyData, null);
             var result = Invoke<bool>(request, keyData);
             return result;
@@ -92,7 +92,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool ContainsValue(object value)
         {
-            Data valueData = GetSerializationService().ToData(value);
+            IData valueData = GetSerializationService().ToData(value);
             var request = new ContainsEntryRequest(name, valueData);
             var result = Invoke<bool>(request);
             return result;
@@ -100,8 +100,8 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool ContainsEntry(K key, V value)
         {
-            Data keyData = GetSerializationService().ToData(key);
-            Data valueData = GetSerializationService().ToData(value);
+            IData keyData = GetSerializationService().ToData(key);
+            IData valueData = GetSerializationService().ToData(value);
             var request = new KeyBasedContainsRequest(name, keyData, valueData);
             var result = Invoke<bool>(request, keyData);
             return result;
@@ -122,7 +122,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual int ValueCount(K key)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new CountRequest(name, keyData);
             var result = Invoke<int>(request, keyData);
             return result;
@@ -144,7 +144,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual string AddEntryListener(IEntryListener<K, V> listener, K key, bool includeValue)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new AddEntryListenerRequest(name, keyData, includeValue);
             DistributedEventHandler handler = (_event) => OnEntryEvent((PortableEntryEvent)_event, includeValue, listener);
             return Listen(request, keyData, handler);
@@ -152,14 +152,14 @@ namespace Hazelcast.Client.Proxy
 
         public virtual void Lock(K key)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new MultiMapLockRequest(keyData, ThreadUtil.GetThreadId(), name);
             Invoke<object>(request, keyData);
         }
 
         public virtual void Lock(K key, long leaseTime, TimeUnit timeUnit)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new MultiMapLockRequest(keyData, ThreadUtil.GetThreadId(),
                 GetTimeInMillis(leaseTime, timeUnit), -1, name);
             Invoke<object>(request, keyData);
@@ -167,7 +167,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool IsLocked(K key)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new MultiMapIsLockedRequest(keyData, name);
             var result = Invoke<bool>(request, keyData);
             return result;
@@ -188,7 +188,7 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public virtual bool TryLock(K key, long time, TimeUnit timeunit)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new MultiMapLockRequest(keyData, ThreadUtil.GetThreadId(), long.MaxValue,
                 GetTimeInMillis(time, timeunit), name);
             var result = Invoke<bool>(request, keyData);
@@ -197,14 +197,14 @@ namespace Hazelcast.Client.Proxy
 
         public virtual void Unlock(K key)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new MultiMapUnlockRequest(keyData, ThreadUtil.GetThreadId(), name);
             Invoke<bool>(request, keyData);
         }
 
         public virtual void ForceUnlock(K key)
         {
-            Data keyData = GetSerializationService().ToData(key);
+            IData keyData = GetSerializationService().ToData(key);
             var request = new MultiMapUnlockRequest(keyData, ThreadUtil.GetThreadId(), true, name);
             Invoke<bool>(request, keyData);
         }
@@ -216,7 +216,7 @@ namespace Hazelcast.Client.Proxy
 
         private ICollection<T> ToObjectCollection<T>(PortableCollection result, bool list)
         {
-            ICollection<Data> coll = result.GetCollection();
+            ICollection<IData> coll = result.GetCollection();
             ICollection<T> collection;
             if (list)
             {
@@ -230,7 +230,7 @@ namespace Hazelcast.Client.Proxy
             {
                 return collection;
             }
-            foreach (Data data in coll)
+            foreach (IData data in coll)
             {
                 var item = GetSerializationService().ToObject<T>(data);
                 collection.Add(item);

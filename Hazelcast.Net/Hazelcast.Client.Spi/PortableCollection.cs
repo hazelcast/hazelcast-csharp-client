@@ -8,13 +8,13 @@ namespace Hazelcast.Client.Spi
 {
     internal sealed class PortableCollection : IPortable
     {
-        private ICollection<Data> collection;
+        private ICollection<IData> collection;
 
         public PortableCollection()
         {
         }
 
-        public PortableCollection(ICollection<Data> collection)
+        public PortableCollection(ICollection<IData> collection)
         {
             this.collection = collection;
         }
@@ -40,7 +40,7 @@ namespace Hazelcast.Client.Spi
             }
             writer.WriteInt("s", collection.Count);
             IObjectDataOutput output = writer.GetRawDataOutput();
-            foreach (Data data in collection)
+            foreach (IData data in collection)
             {
                 data.WriteData(output);
             }
@@ -57,22 +57,22 @@ namespace Hazelcast.Client.Spi
             }
             if (list)
             {
-                collection = new List<Data>(size);
+                collection = new List<IData>(size);
             }
             else
             {
-                collection = new HashSet<Data>();
+                collection = new HashSet<IData>();
             }
             IObjectDataInput input = reader.GetRawDataInput();
             for (int i = 0; i < size; i++)
             {
-                var data = new Data();
+                var data = new IData();
                 data.ReadData(input);
                 collection.Add(data);
             }
         }
 
-        public ICollection<Data> GetCollection()
+        public ICollection<IData> GetCollection()
         {
             return collection;
         }

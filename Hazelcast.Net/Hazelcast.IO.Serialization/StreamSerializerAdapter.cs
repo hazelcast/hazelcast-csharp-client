@@ -38,7 +38,7 @@ namespace Hazelcast.IO.Serialization
                 {
                     header = dataOutput.GetPortableHeader();
                 }
-                return new Data(serializer.GetTypeId(), output.ToByteArray(), partitionHash,
+                return new IData(serializer.GetTypeId(), output.ToByteArray(), partitionHash,
                     header);
             }
             finally

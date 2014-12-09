@@ -119,7 +119,7 @@ namespace Hazelcast.Client.Proxy
         public bool ContainsAll<T>(ICollection<T> c)
         {
             ThrowExceptionIfNull(c);
-            ICollection<Data> valueSet = new HashSet<Data>();
+            ICollection<IData> valueSet = new HashSet<IData>();
             foreach (object o in c)
             {
                 ThrowExceptionIfNull(o);
@@ -143,7 +143,7 @@ namespace Hazelcast.Client.Proxy
         public bool AddAll<T>(ICollection<T> c)
         {
             ThrowExceptionIfNull(c);
-            IList<Data> valueList = new List<Data>();
+            IList<IData> valueList = new List<IData>();
             foreach (T e in c)
             {
                 ThrowExceptionIfNull(e);
@@ -191,7 +191,7 @@ namespace Hazelcast.Client.Proxy
         private bool CompareAndRemove<T>(bool retain, ICollection<T> c)
         {
             ThrowExceptionIfNull(c);
-            ICollection<Data> valueSet = new HashSet<Data>();
+            ICollection<IData> valueSet = new HashSet<IData>();
             foreach (object o in c)
             {
                 ThrowExceptionIfNull(o);
@@ -217,9 +217,9 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new CollectionGetAllRequest(GetName());
             var result = Invoke<SerializableCollection>(request);
-            ICollection<Data> collection = result.GetCollection();
+            ICollection<IData> collection = result.GetCollection();
             var list = new List<E>(collection.Count);
-            foreach (Data value in collection)
+            foreach (IData value in collection)
             {
                 list.Add(ToObject<E>(value));
             }
