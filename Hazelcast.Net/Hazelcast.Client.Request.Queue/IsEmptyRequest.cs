@@ -4,7 +4,7 @@ using Hazelcast.Serialization.Hook;
 namespace Hazelcast.Client.Request.Queue
 {
     /// <summary>Request to check if the Queue is empty</summary>
-    public class IsEmptyRequest : QueueRequest, IRetryableRequest
+    internal class IsEmptyRequest : QueueRequest, IRetryableRequest
     {
         protected internal IsEmptyRequest(string name) : base(name)
         {
