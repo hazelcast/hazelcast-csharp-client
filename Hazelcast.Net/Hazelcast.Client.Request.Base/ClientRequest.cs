@@ -2,7 +2,7 @@
 
 namespace Hazelcast.Client.Request.Base
 {
-	internal abstract class ClientRequest : IVersionedPortable
+	public abstract class ClientRequest : IVersionedPortable
 	{
 		protected internal int callId = -1;
 

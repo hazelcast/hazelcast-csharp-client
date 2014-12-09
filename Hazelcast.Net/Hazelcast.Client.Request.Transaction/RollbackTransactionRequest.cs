@@ -1,5 +1,3 @@
-using Hazelcast.Client.Request.Base;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client.Request.Transaction
@@ -15,10 +13,5 @@ namespace Hazelcast.Client.Request.Transaction
         {
             return ClientTxnPortableHook.Rollback;
         }
-
-        public override void WritePortable(IPortableWriter writer)
-        {
-        }
-
     }
 }
