@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Test
             client = null;
         }
 
-        protected string Name
+        protected static string Name
         {
             get
             {

@@ -229,12 +229,12 @@ namespace Hazelcast.IO.Serialization
                             throw new HazelcastSerializationException(e);
                         }
                     }
-                    //call by reflaction
-                    MethodInfo method = typeof(ISerializationService).GetMethod("Register");
-                    MethodInfo generic = method.MakeGenericMethod(typeClass);
-                    generic.Invoke(ss, new object[] { serializer });
-                    //mimics: ss.Register<typeClass>(serializer);"
-                    //
+                    ////call by reflaction
+                    //MethodInfo method = typeof(ISerializationService).GetMethod("Register");
+                    //MethodInfo generic = method.MakeGenericMethod(typeClass);
+                    //generic.Invoke(ss, new object[] { serializer });
+                    ////mimics: ss.Register<typeClass>(serializer);"
+                    ss.Register(typeClass, serializer);
                 }
             }
             return ss;

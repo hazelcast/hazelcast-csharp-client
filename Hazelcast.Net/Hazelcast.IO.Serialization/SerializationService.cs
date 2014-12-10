@@ -470,9 +470,10 @@ namespace Hazelcast.IO.Serialization
         }
         private ISerializerAdapter CreateSerializerAdapter(Type type, ISerializer serializer)
         {
-            MethodInfo makeGenericMethod = GetType().GetMethod("CreateSerializerAdapterByGeneric").MakeGenericMethod(type);
+            MethodInfo methodInfo = GetType().GetMethod("CreateSerializerAdapterByGeneric", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo makeGenericMethod = methodInfo.MakeGenericMethod(type);
             object result = makeGenericMethod.Invoke(this, new object[] { serializer });
-            return (ISerializerAdapter) result;
+            return (ISerializerAdapter)result;
         }
 
         private ISerializerAdapter CreateSerializerAdapterByGeneric<T>(ISerializer serializer)

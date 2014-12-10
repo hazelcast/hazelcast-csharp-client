@@ -2,8 +2,9 @@ namespace Hazelcast.Util
 {
     public enum IterationType
     {
-        Key,
-        Value,
-        Entry
+        //DO NOT CHANGE THE NAMES
+        KEY,
+        VALUE,
+        ENTRY
     }
 }
