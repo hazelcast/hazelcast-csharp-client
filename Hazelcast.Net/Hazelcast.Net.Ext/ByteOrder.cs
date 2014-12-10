@@ -7,6 +7,9 @@ namespace Hazelcast.Net.Ext
     /// </summary>
     public class ByteOrder
     {
+        public const string BigEndianText = "BIG_ENDIAN";
+        public const string LittleEndianText = "LITTLE_ENDIAN";
+
         /// <summary>
         /// Big Endian
         /// </summary>
@@ -26,6 +29,11 @@ namespace Hazelcast.Net.Ext
         public static ByteOrder NativeOrder()
         {
             return BitConverter.IsLittleEndian ? LittleEndian : BigEndian;
+        }
+
+        public static ByteOrder GetByteOrder(string name)
+        {
+            return BigEndianText.Equals(name) ? BigEndian : LittleEndian;
         }
     }
 }

@@ -14,6 +14,27 @@ namespace Hazelcast.Client.Request.Cluster
         {
         }
 
+        public object Value
+        {
+            get { return value; }
+        }
+
+        public string Uuid
+        {
+            get { return uuid; }
+        }
+
+        public MemberAttributeOperationType OperationType
+        {
+            get { return operationType; }
+        }
+
+        public string Key
+        {
+            get { return key; }
+        }
+
+
         public MemberAttributeChange(string uuid, MemberAttributeOperationType operationType
             , string key, object value)
         {
@@ -51,26 +72,6 @@ namespace Hazelcast.Client.Request.Cluster
         public string GetJavaClassName()
         {
             return "com.hazelcast.cluster.client.MemberAttributeChange";
-        }
-
-        public virtual string GetUuid()
-        {
-            return uuid;
-        }
-
-        public virtual MemberAttributeOperationType GetOperationType()
-        {
-            return operationType;
-        }
-
-        public virtual string GetKey()
-        {
-            return key;
-        }
-
-        public virtual object GetValue()
-        {
-            return value;
         }
     }
 }

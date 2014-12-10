@@ -36,6 +36,11 @@ namespace Hazelcast.Client.Request.Map
             this.predicate = predicate;
         }
 
+        public TxnMapRequest(string name, TxnMapRequestType requestType, IData key, IData value, long ttl, TimeUnit timeUnit)
+            : base(name, requestType, key, value, ttl, timeUnit)
+        {
+        }
+
         public override int GetClassId()
         {
             return MapPortableHook.TxnRequest;
@@ -46,5 +51,6 @@ namespace Hazelcast.Client.Request.Map
         {
             writer.WriteObject(predicate);
         }
+
     }
 }

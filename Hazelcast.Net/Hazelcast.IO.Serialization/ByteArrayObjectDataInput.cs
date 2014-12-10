@@ -513,7 +513,7 @@ namespace Hazelcast.IO.Serialization
 
         public T ReadObject<T>()
         {
-            return (T) ReadObject();
+            return service.ReadObject<T>(this);
         }
 
         /// <summary>
@@ -600,7 +600,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public IData ReadData()
         {
-            return service.ReadData<IData>(this);
+            return service.ReadData(this);
         }
 
         public virtual int SkipBytes(int n)
@@ -651,7 +651,7 @@ namespace Hazelcast.IO.Serialization
 
         public virtual ByteBuffer GetHeaderBuffer()
         {
-            return header != null ? header : EMPTY_BUFFER;
+            return header ?? EMPTY_BUFFER;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -659,12 +659,6 @@ namespace Hazelcast.IO.Serialization
         public string ReadLine()
         {
             throw new NotSupportedException();
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public object ReadObject()
-        {
-            return service.ReadObject(this);
         }
 
         /// <exception cref="System.IO.IOException"></exception>

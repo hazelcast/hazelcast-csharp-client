@@ -356,7 +356,7 @@ namespace Hazelcast.Client.Proxy
         public IEntryView<K, V> GetEntryView(K key)
         {
             var keyData = ToData(key);
-            var request = new MapGetEntryViewRequest(name, keyData);
+            var request = new MapGetEntryViewRequest(name, keyData, ThreadUtil.GetThreadId());
             var entryView = Invoke<SimpleEntryView>(request, keyData);
             if (entryView == null)
             {

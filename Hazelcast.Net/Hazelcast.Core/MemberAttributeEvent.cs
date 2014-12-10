@@ -10,14 +10,14 @@ namespace Hazelcast.Core
 {
     public class MemberAttributeEvent:MembershipEvent,IDataSerializable
     {
-        private MapOperationType operationType;
+        private MemberAttributeOperationType operationType;
         private String key;
         private object value;
         private Member member;
 
         public MemberAttributeEvent():base(null, null, MemberAttributeChanged, null){ }
 
-        public MemberAttributeEvent(ICluster cluster, IMember member, MapOperationType operationType, String key, Object value)
+        public MemberAttributeEvent(ICluster cluster, IMember member, MemberAttributeOperationType operationType, String key, Object value)
             : base(cluster, member, MemberAttributeChanged, null)
         {
             this.member = (Member) member;
@@ -26,7 +26,7 @@ namespace Hazelcast.Core
             this.value = value;
         }
 
-        public MapOperationType GetOperationType()
+        public MemberAttributeOperationType GetOperationType()
         {
             return operationType;
         }
@@ -50,15 +50,10 @@ namespace Hazelcast.Core
         {
             output.WriteUTF(key);
             member.WriteData(output);
-            switch (operationType)
+            output.WriteByte((byte) operationType);
+            if (operationType == MemberAttributeOperationType.PUT)
             {
-                case MapOperationType.PUT:
-                    output.WriteByte(MemberAttributeChange.DELTA_MEMBER_PROPERTIES_OP_PUT);
-                    output.WriteObject(value);
-                    break;
-                case MapOperationType.REMOVE:
-                    output.WriteByte(MemberAttributeChange.DELTA_MEMBER_PROPERTIES_OP_REMOVE);
-                    break;
+                IOUtil.WriteAttributeValue(value, output);
             }
         }
 
@@ -67,18 +62,10 @@ namespace Hazelcast.Core
             key = input.ReadUTF();
             member = new Member();
             member.ReadData(input);
-            int operation = input.ReadByte();
-            switch (operation)
+            operationType = (MemberAttributeOperationType) input.ReadByte();
+            if (operationType == MemberAttributeOperationType.PUT) 
             {
-                case MemberAttributeChange.DELTA_MEMBER_PROPERTIES_OP_PUT:
-                    operationType = MapOperationType.PUT;
-                    value = IOUtil.ReadAttributeValue(input);
-                    break;
-                case MemberAttributeChange.DELTA_MEMBER_PROPERTIES_OP_REMOVE:
-                    operationType = MapOperationType.REMOVE;
-                    break;
-                default:
-                    throw new NotSupportedException("Unknown operation type received: " + operationType);
+                value = IOUtil.ReadAttributeValue(input);
             }
             this.Source = member;
         }

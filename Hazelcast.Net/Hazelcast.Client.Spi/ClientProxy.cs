@@ -65,7 +65,7 @@ namespace Hazelcast.Client.Spi
             return ListenerUtil.Listen(context, registrationRequest, null, handler);
         }
 
-        protected virtual bool StopListening(ClientRequest request, String registrationId)
+        protected virtual bool StopListening(BaseClientRemoveListenerRequest request, string registrationId)
         {
             return ListenerUtil.StopListening(context, request, registrationId);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Hazelcast.Logging;
+using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Config
 {
@@ -143,20 +144,18 @@ namespace Hazelcast.Config
                         serializationConfig.SetCheckClassDefErrors(CheckTrue(GetTextContent(child)));
                         break;
                     case "use-native-byte-order":
-                        serializationConfig.SetUseNativebool(CheckTrue(GetTextContent(child)));
+                        serializationConfig.SetUseNativeByteOrder(CheckTrue(GetTextContent(child)));
                         break;
                     case "byte-order":
-                        bool isBigEndian = Boolean.Parse(GetTextContent(child));
-                        serializationConfig.SetBigEndian(isBigEndian);
+                        string bigEndian = GetTextContent(child);
+                        ByteOrder byteOrder = ByteOrder.GetByteOrder(bigEndian);
+                        serializationConfig.SetByteOrder(byteOrder);
                         break;
                     case "enable-compression":
                         serializationConfig.SetEnableCompression(CheckTrue(GetTextContent(child)));
                         break;
                     case "enable-shared-object":
                         serializationConfig.SetEnableSharedObject(CheckTrue(GetTextContent(child)));
-                        break;
-                    case "allow-unsafe":
-                        serializationConfig.SetAllowUnsafe(CheckTrue(GetTextContent(child)));
                         break;
                     case "data-serializable-factories":
                         FillDataSerializableFactories(child, serializationConfig);

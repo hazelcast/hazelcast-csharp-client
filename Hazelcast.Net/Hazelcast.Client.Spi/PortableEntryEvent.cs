@@ -41,31 +41,6 @@ namespace Hazelcast.Client.Spi
             return SpiPortableHook.EntryEvent;
         }
 
-        ///// <exception cref="System.IO.IOException"></exception>
-        //public virtual void WritePortable(IPortableWriter writer)
-        //{
-        //    writer.WriteInt("e", (int) eventType);
-        //    writer.WriteUTF("u", uuid);
-        //    writer.WriteInt("n", numberOfAffectedEntries);
-        //    IObjectDataOutput output = writer.GetRawDataOutput();
-        //    key.WriteData(output);
-        //    IOUtil.WriteNullableData(output, value);
-        //    IOUtil.WriteNullableData(output, oldValue);
-        //}
-
-        ///// <exception cref="System.IO.IOException"></exception>
-        //public virtual void ReadPortable(IPortableReader reader)
-        //{
-        //    eventType = (EntryEventType)reader.ReadInt("e");
-        //    uuid = reader.ReadUTF("u");
-        //    numberOfAffectedEntries = reader.ReadInt("n");
-        //    IObjectDataInput input = reader.GetRawDataInput();
-        //    key = IOUtil.ReadNullableData(input);
-        //    value = IOUtil.ReadNullableData(input);
-        //    oldValue = IOUtil.ReadNullableData(input);
-        //}
-
-
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WritePortable(IPortableWriter writer)
         {
@@ -75,10 +50,10 @@ namespace Hazelcast.Client.Spi
             writer.WriteInt("e", (int)eventType);
             writer.WriteUTF("u", uuid);
             writer.WriteInt("n", numberOfAffectedEntries);
-            IObjectDataOutput @out = writer.GetRawDataOutput();
-            @out.WriteData(key);
-            @out.WriteData(value);
-            @out.WriteData(oldValue);
+            IObjectDataOutput output = writer.GetRawDataOutput();
+            output.WriteData(key);
+            output.WriteData(value);
+            output.WriteData(oldValue);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -87,10 +62,10 @@ namespace Hazelcast.Client.Spi
             eventType = (EntryEventType)reader.ReadInt("e");
             uuid = reader.ReadUTF("u");
             numberOfAffectedEntries = reader.ReadInt("n");
-            IObjectDataInput @in = reader.GetRawDataInput();
-            key = @in.ReadData();
-            value = @in.ReadData();
-            oldValue = @in.ReadData();
+            IObjectDataInput input = reader.GetRawDataInput();
+            key = input.ReadData();
+            value = input.ReadData();
+            oldValue = input.ReadData();
         }
 
         public virtual IData GetKey()

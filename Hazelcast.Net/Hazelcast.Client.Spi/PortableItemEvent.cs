@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Spi
         {
             writer.WriteInt("e", (int) eventType);
             writer.WriteUTF("u", uuid);
-            IOUtil.WriteNullableData(writer.GetRawDataOutput(), item);
+            writer.GetRawDataOutput().WriteData(item);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Spi
         {
             eventType = (ItemEventType)reader.ReadInt("e");
             uuid = reader.ReadUTF("u");
-            item = IOUtil.ReadNullableData(reader.GetRawDataInput());
+            item = reader.GetRawDataInput().ReadData();
         }
 
         public virtual IData GetItem()

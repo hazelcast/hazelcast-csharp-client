@@ -8,12 +8,13 @@ namespace Hazelcast.Client.Request.Multimap
     {
         internal string name;
 
-        public MultiMapLockRequest(IData key, int threadId, string name) : base(key, threadId)
+        public MultiMapLockRequest(IData key, long threadId, string name)
+            : base(key, threadId)
         {
             this.name = name;
         }
 
-        public MultiMapLockRequest(IData key, int threadId, long ttl, long timeout, string name)
+        public MultiMapLockRequest(IData key, long threadId, long ttl, long timeout, string name)
             : base(key, threadId, ttl, timeout)
         {
             this.name = name;

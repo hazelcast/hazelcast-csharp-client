@@ -9,7 +9,7 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
         private readonly long threadId;
         protected internal IData key;
 
-        protected internal AbstractIsLockedRequest(IData key, int threadId = -1)
+        protected internal AbstractIsLockedRequest(IData key, long threadId = -1)
         {
             this.key = key;
             this.threadId = threadId;

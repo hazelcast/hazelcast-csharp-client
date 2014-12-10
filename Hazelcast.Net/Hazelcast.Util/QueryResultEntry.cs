@@ -40,17 +40,17 @@ namespace Hazelcast.Util
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteData(IObjectDataOutput output)
         {
-            IOUtil.WriteNullableData(output, GetIndexKey());
-            IOUtil.WriteNullableData(output, GetKeyData());
-            IOUtil.WriteNullableData(output, GetValueData());
+            output.WriteData(indexKey);
+            output.WriteData(keyData);
+            output.WriteData(valueData);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void ReadData(IObjectDataInput input)
         {
-            indexKey = IOUtil.ReadNullableData(input);
-            keyData = IOUtil.ReadNullableData(input);
-            valueData = IOUtil.ReadNullableData(input);
+            indexKey = input.ReadData();
+            keyData = input.ReadData();
+            valueData = input.ReadData();
         }
 
         public string GetJavaClassName()

@@ -10,7 +10,7 @@ namespace Hazelcast.Client.Request.Concurrent.Lock
         {
         }
 
-        public IsLockedRequest(IData key, int threadId) : base(key, threadId)
+        public IsLockedRequest(IData key, long threadId) : base(key, threadId)
         {
         }
 

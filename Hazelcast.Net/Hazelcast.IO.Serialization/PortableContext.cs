@@ -100,12 +100,10 @@ namespace Hazelcast.IO.Serialization
         public IClassDefinition LookupOrRegisterClassDefinition(IPortable p)
         {
             int portableVersion = PortableVersionHelper.GetVersion(p, version);
-            IClassDefinition cd = LookupClassDefinition(p.GetFactoryId(), p.GetClassId(), portableVersion
-                );
+            IClassDefinition cd = LookupClassDefinition(p.GetFactoryId(), p.GetClassId(), portableVersion);
             if (cd == null)
             {
-                var writer = new ClassDefinitionWriter(this, p.GetFactoryId(),
-                    p.GetClassId(), portableVersion);
+                var writer = new ClassDefinitionWriter(this, p.GetFactoryId(),p.GetClassId(), portableVersion);
                 p.WritePortable(writer);
                 cd = writer.RegisterAndGet();
             }
@@ -133,8 +131,7 @@ namespace Hazelcast.IO.Serialization
                         {
                             throw new ArgumentException("Unknown field: " + name);
                         }
-                        currentClassDef = LookupClassDefinition(fd.GetFactoryId(), fd.GetClassId(), currentClassDef
-                            .GetVersion());
+                        currentClassDef = LookupClassDefinition(fd.GetFactoryId(), fd.GetClassId(), currentClassDef.GetVersion());
                         if (currentClassDef == null)
                         {
                             throw new ArgumentException("Not a registered Portable field: " + fd);
@@ -225,7 +222,7 @@ namespace Hazelcast.IO.Serialization
         {
             output.WriteInt(fd.index);
             output.WriteUTF(fd.fieldName);
-            //        out.writeByte(fd.type.getId());
+            output.WriteByte((byte) fd.type);
             output.WriteInt(fd.factoryId);
             output.WriteInt(fd.classId);
         }
@@ -239,10 +236,10 @@ namespace Hazelcast.IO.Serialization
         {
             int index = input.ReadInt();
             string name = input.ReadUTF();
-            byte typeId = input.ReadByte();
+            FieldType fieldType = (FieldType) input.ReadByte();
             int factoryId = input.ReadInt();
             int classId = input.ReadInt();
-            return new FieldDefinition(index, name, FieldType.CHAR, factoryId, classId);
+            return new FieldDefinition(index, name, fieldType, factoryId, classId);
         }
 
         /// <exception cref="System.IO.IOException"></exception>

@@ -1,4 +1,5 @@
-﻿using Hazelcast.IO.Serialization;
+﻿using System;
+using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Request.Base
 {
@@ -6,15 +7,20 @@ namespace Hazelcast.Client.Request.Base
 	{
 		protected internal int callId = -1;
 
-		public virtual int GetCallId()
-		{
-			return callId;
-		}
+        [NonSerialized] 
+        private bool singleConnection;
 
-		public virtual void SetCallId(int callId)
-		{
-			this.callId = callId;
-		}
+	    public int CallId
+	    {
+	        get { return callId; }
+	        set { callId = value; }
+	    }
+
+	    public bool SingleConnection
+	    {
+	        get { return singleConnection; }
+	        set { singleConnection = value; }
+	    }
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public void WritePortable(IPortableWriter writer)

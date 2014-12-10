@@ -4,10 +4,10 @@ namespace Hazelcast.Util
 {
 	internal sealed class HashUtil
 	{
-		private static readonly bool LITTLE_ENDIAN = ByteOrder.LittleEndian == ByteOrder
+		private static readonly bool IsLittleEndian = ByteOrder.LittleEndian == ByteOrder
 			.NativeOrder();
 
-		private const int DEFAULT_MURMUR_SEED = unchecked((int)(0x01000193));
+		private const int DEFAULT_MURMUR_SEED = 0x01000193;
 
 		public static int MurmurHash3_x86_32(byte[] data, int offset, int len)
 		{
@@ -25,8 +25,10 @@ namespace Hazelcast.Util
 			for (int i = offset; i < roundedEnd; i += 4)
 			{
 				// little endian load order
-				int k1 = (data[i] & unchecked((int)(0xff))) | ((data[i + 1] & unchecked((int)(0xff
-					))) << 8) | ((data[i + 2] & unchecked((int)(0xff))) << 16) | (data[i + 3] << 24);
+				int k1 = (data[i] & unchecked((int)(0xff))) | 
+                    ((data[i + 1] & unchecked((int)(0xff))) << 8) | 
+                    ((data[i + 2] & unchecked((int)(0xff))) << 16) | 
+                    (data[i + 3] << 24);
 				k1 *= c1;
 				k1 = (k1 << 15) | ((int)(((uint)k1) >> 17));
 				// ROTL32(k1,15);
@@ -62,6 +64,7 @@ namespace Hazelcast.Util
 					// ROTL32(k1,15);
 					k1_1 *= c2;
 					h1 ^= k1_1;
+				    break;
 				}
 			}
 			// finalization
@@ -210,6 +213,7 @@ namespace Hazelcast.Util
 					h2 += h1;
 					h1 = h1 * 3 + unchecked((int)(0x52dce729));
 					h2 = h2 * 3 + unchecked((int)(0x38495ab5));
+				    break;
 				}
 			}
 			//                c1 = c1 * 5 + 0x7b7d159c;   // unused, used only for 128-bit version
@@ -254,8 +258,5 @@ namespace Hazelcast.Util
 			return k;
 		}
 
-		public HashUtil()
-		{
-		}
 	}
 }

@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Spi
             output.WriteInt(collection.Count);
             foreach (IData data in collection)
             {
-                data.WriteData(output);
+                output.WriteData(data);
             }
         }
 
@@ -57,7 +57,7 @@ namespace Hazelcast.Client.Spi
             collection = new List<IData>(size);
             for (int i = 0; i < size; i++)
             {
-                collection.Add(IOUtil.ReadData(input));
+                collection.Add(input.ReadData());
             }
         }
 

@@ -358,7 +358,7 @@ namespace Hazelcast.IO.Serialization
                     data = new byte[dataSize];
                     input.ReadFully(data);
                 }
-                return new IData(typeId, data, partitionHash, header);
+                return new Data(typeId, data, partitionHash, header);
             }
             catch (Exception e)
             {
