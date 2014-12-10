@@ -531,7 +531,7 @@ namespace Hazelcast.Client.Proxy
 
         public ISet<K> KeySet(IPredicate<K, V> predicate)
         {
-            var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Key);
+            var request = new MapQueryRequest<K, V>(name, predicate, IterationType.KEY);
             var result = Invoke<QueryResultSet>(request);
             ISet<K> keySet = new HashSet<K>();
             foreach (object data in result)
@@ -544,7 +544,7 @@ namespace Hazelcast.Client.Proxy
 
         public ISet<KeyValuePair<K, V>> EntrySet(IPredicate<K, V> predicate)
         {
-            var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Entry);
+            var request = new MapQueryRequest<K, V>(name, predicate, IterationType.ENTRY);
             var result = Invoke<QueryResultSet>(request);
             ISet<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
             foreach (IQueryResultEntry dataEntry in result.entries)
@@ -558,7 +558,7 @@ namespace Hazelcast.Client.Proxy
 
         public ICollection<V> Values(IPredicate<K, V> predicate)
         {
-            var request = new MapQueryRequest<K, V>(name, predicate, IterationType.Value);
+            var request = new MapQueryRequest<K, V>(name, predicate, IterationType.VALUE);
             var result = Invoke<QueryResultSet>(request);
             ICollection<V> values = new List<V>(result.Count);
             foreach (object data in result)

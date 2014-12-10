@@ -121,13 +121,13 @@ namespace Hazelcast.Util
             if (_enumerator.MoveNext())
             {
                 IQueryResultEntry entry = _enumerator.Current;
-                if (_enclosing.iterationType == IterationType.Value)
+                if (_enclosing.iterationType == IterationType.VALUE)
                 {
                     IData valueData = entry.GetValueData();
                     _Current = (_enclosing.data) ? valueData : _enclosing.serializationService.ToObject<object>(valueData);
                     return true;
                 }
-                if (_enclosing.iterationType == IterationType.Key)
+                if (_enclosing.iterationType == IterationType.KEY)
                 {
                     IData keyData = entry.GetKeyData();
                     _Current = (_enclosing.data) ? keyData : _enclosing.serializationService.ToObject<object>(keyData);

@@ -1,7 +1,9 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Net.Ext;
+using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -9,7 +11,7 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientLockTest:HazelcastBaseTest
 	{
-        internal const string name = "testlock";
+        internal static string name = Name;
 
 		internal static ILock l;
 
@@ -31,17 +33,15 @@ namespace Hazelcast.Client.Test
 		public virtual void TestLock()
 		{
 			l.Lock();
-            CountdownEvent latch = new CountdownEvent(1);
+            var latch = new CountdownEvent(1);
 
-		    var t1 = new Thread(delegate(object o)
+		    Task.Factory.StartNew(() =>
 		    {
-                if (!l.TryLock())
+		        if (!l.TryLock())
                 {
                     latch.Signal();
                 }
 		    });
-            t1.Start();
-
 			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
 			l.ForceUnlock();
 		}
@@ -53,27 +53,26 @@ namespace Hazelcast.Client.Test
 		{
 			l.Lock(3, TimeUnit.SECONDS);
 
-            CountdownEvent latch = new CountdownEvent(2);
+            var latch = new CountdownEvent(2);
 
-            var t1 = new Thread(delegate(object o)
-            {
-                if (!ClientLockTest.l.TryLock())
-                {
-                    latch.Signal();
-                }
-                try
-                {
-                    if (ClientLockTest.l.TryLock(5, TimeUnit.SECONDS))
-                    {
-                        latch.Signal();
-                    }
-                }
-                catch (Exception e)
-                {
+		    Task.Factory.StartNew(() =>
+		    {
+		        if (!l.TryLock())
+		        {
+		            latch.Signal();
+		        }
+		        try
+		        {
+		            if (l.TryLock(5, TimeUnit.SECONDS))
+		            {
+		                latch.Signal();
+		            }
+		        }
+		        catch (Exception e)
+		        {
                     
-                }
-            });
-            t1.Start();
+		        }
+		    });
             
 			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
 			l.ForceUnlock();
