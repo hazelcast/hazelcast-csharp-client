@@ -189,7 +189,7 @@ namespace Hazelcast.IO
             return address;
         }
 
-        private static IPAddress GetAddressByName(string name)
+        public static IPAddress GetAddressByName(string name)
         {
             return name == "0.0.0.0" ? IPAddress.Any : Dns.GetHostAddresses(name).FirstOrDefault();
         }

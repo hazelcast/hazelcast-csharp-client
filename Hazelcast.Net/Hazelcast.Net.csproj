@@ -69,6 +69,7 @@
     <Compile Include="Hazelcast.Client.Request.Base\RemoveDistributedObjectListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Cluster\MemberAttributeChange.cs" />
     <Compile Include="Hazelcast.Client.Request.Cluster\MemberAttributeOperationType.cs" />
+    <Compile Include="Hazelcast.Client.Request.Collection\CollectionRemoveListenerRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Concurrent.Atomiclong\AbstractAlterRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Concurrent.Atomiclong\AlterAndGetRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Concurrent.Atomiclong\AlterRequest.cs" />

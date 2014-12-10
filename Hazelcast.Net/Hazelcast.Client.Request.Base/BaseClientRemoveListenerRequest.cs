@@ -7,8 +7,7 @@ namespace Hazelcast.Client.Request.Base
 		protected internal string name;
 
 		protected internal string registrationId;
-		protected internal BaseClientRemoveListenerRequest(string name, string registrationId
-			)
+		protected internal BaseClientRemoveListenerRequest(string name, string registrationId)
 		{
 			this.name = name;
 			this.registrationId = registrationId;

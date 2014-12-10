@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Spi
             IObjectDataOutput output = writer.GetRawDataOutput();
             foreach (IData data in collection)
             {
-                data.WriteData(output);
+                output.WriteData(data);
             }
         }
 
@@ -66,8 +66,7 @@ namespace Hazelcast.Client.Spi
             IObjectDataInput input = reader.GetRawDataInput();
             for (int i = 0; i < size; i++)
             {
-                var data = new IData();
-                data.ReadData(input);
+                var data = input.ReadData();
                 collection.Add(data);
             }
         }

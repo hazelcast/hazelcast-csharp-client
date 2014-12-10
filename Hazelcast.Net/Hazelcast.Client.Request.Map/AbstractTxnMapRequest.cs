@@ -1,4 +1,5 @@
 using Hazelcast.Client.Request.Base;
+using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
@@ -56,6 +57,12 @@ namespace Hazelcast.Client.Request.Map
             IData newValue) : this(name, requestType, key, value)
         {
             this.newValue = newValue;
+        }
+
+        protected AbstractTxnMapRequest(string name, TxnMapRequestType requestType, IData key, IData value, long ttl, TimeUnit timeUnit)
+            : this(name, requestType, key, value)
+        {
+            this.ttl = timeUnit.ToMillis(ttl);
         }
 
         public override int GetFactoryId()

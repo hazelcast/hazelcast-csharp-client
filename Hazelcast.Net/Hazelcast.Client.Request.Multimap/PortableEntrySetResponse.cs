@@ -7,11 +7,20 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class PortableEntrySetResponse : IPortable
     {
-        internal ICollection<KeyValuePair<IData, IData>> entrySet = null;
+        private ICollection<KeyValuePair<IData, IData>> entrySet = null;
 
         public PortableEntrySetResponse(ICollection<KeyValuePair<IData, IData>> entrySet)
         {
             this.entrySet = entrySet;
+        }
+
+        public PortableEntrySetResponse()
+        {
+        }
+
+        public ICollection<KeyValuePair<IData, IData>> EntrySet
+        {
+            get { return entrySet; }
         }
 
         public virtual int GetFactoryId()

@@ -31,25 +31,19 @@ namespace Hazelcast.Util
             }
         }
 
-        public static bool StopListening(ClientContext context, ClientRequest request, String registrationId)
+        public static bool StopListening(ClientContext context, BaseClientRemoveListenerRequest request, String registrationId)
         {
             try
             {
                 var unregistrationId = context.GetRemotingService().UnregisterListener(registrationId);
 
-                if (unregistrationId == null)
+                if (unregistrationId)
                 {
                     return false;
                 }
-
-                if (request is IRemoveRequest)
-                {
-                    ((IRemoveRequest)request).RegistrationId = registrationId;
-                }
-
+                request.SetRegistrationId(registrationId);
                 Task<bool> task = context.GetInvocationService().InvokeOnRandomTarget<bool>(request);
                 var result = context.GetSerializationService().ToObject<bool>(task.Result);
-
                 return result;
             }
             catch (Exception e)

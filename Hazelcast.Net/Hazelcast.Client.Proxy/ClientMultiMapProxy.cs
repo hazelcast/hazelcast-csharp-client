@@ -71,7 +71,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new EntrySetRequest(name);
             var result = Invoke<PortableEntrySetResponse>(request);
-            ICollection<KeyValuePair<IData, IData>> dataEntrySet = result.GetEntrySet();
+            ICollection<KeyValuePair<IData, IData>> dataEntrySet = result.EntrySet;
             ISet<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
             foreach (var entry in dataEntrySet)
             {
@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Proxy
         public virtual bool ContainsValue(object value)
         {
             IData valueData = GetSerializationService().ToData(value);
-            var request = new ContainsEntryRequest(name, valueData);
+            var request = new ContainsRequest(name, valueData);
             var result = Invoke<bool>(request);
             return result;
         }
@@ -123,7 +123,7 @@ namespace Hazelcast.Client.Proxy
         public virtual int ValueCount(K key)
         {
             IData keyData = GetSerializationService().ToData(key);
-            var request = new CountRequest(name, keyData);
+            var request = new CountRequest(name, keyData, ThreadUtil.GetThreadId());
             var result = Invoke<int>(request, keyData);
             return result;
         }

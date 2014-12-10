@@ -34,8 +34,7 @@ namespace Hazelcast.IO
         }
 
         public Packet(IData value, int partitionId, IPortableContext context)
-            : base(value
-                , context)
+            : base(value, context)
         {
             this.partitionId = partitionId;
         }

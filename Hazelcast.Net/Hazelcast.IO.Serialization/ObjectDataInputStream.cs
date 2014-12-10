@@ -318,7 +318,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual IData ReadData()
         {
-            return serializationService.ReadData<IData>(this);
+            return serializationService.ReadData(this);
         }
 
         public virtual ByteOrder GetByteOrder()
@@ -329,7 +329,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public T ReadObject<T>()
         {
-            return (T)serializationService.ReadObject(this);
+            return serializationService.ReadObject<T>(this);
         }
 
         private bool IsBigEndian()

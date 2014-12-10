@@ -165,14 +165,14 @@ namespace Hazelcast.Core
         }
 
 
-        public void UpdateAttribute(MapOperationType operationType, String key, Object value)
+        public void UpdateAttribute(MemberAttributeOperationType operationType, String key, Object value)
         {
             switch (operationType)
             {
-                case MapOperationType.PUT:
+                case MemberAttributeOperationType.PUT:
                     _attributes.TryAdd(key, value);
                     break;
-                case MapOperationType.REMOVE:
+                case MemberAttributeOperationType.REMOVE:
                     object _out;
                     _attributes.TryRemove(key,out _out);
                     break;

@@ -498,7 +498,7 @@ namespace Hazelcast.Client.Connection
 
             var taskData = task.AsyncState as TaskData;
             taskData.RetryCount++;
-            if (taskData.RetryCount > ClientConnectionManager.RetryCount || taskData.Request.Sticky)
+            if (taskData.RetryCount > ClientConnectionManager.RetryCount || taskData.Request.SingleConnection)
             {
                 return false;
             }

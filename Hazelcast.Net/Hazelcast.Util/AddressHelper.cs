@@ -3,16 +3,13 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Hazelcast.IO;
+using Hazelcast.Logging;
 
 namespace Hazelcast.Util
 {
-    internal sealed class AddressHelper
+    internal static class AddressHelper
     {
         private const int MaxPortTries = 3;
-
-        private AddressHelper()
-        {
-        }
 
         public static ICollection<IPEndPoint> GetSocketAddresses(string address)
         {
@@ -27,6 +24,7 @@ namespace Hazelcast.Util
             }
             catch (Exception)
             {
+                Logger.GetLogger(typeof(AddressHelper)).Finest("Address not available");
             }
             return GetPossibleSocketAddresses(inetAddress, addressHolder.port, scopedAddress);
         }

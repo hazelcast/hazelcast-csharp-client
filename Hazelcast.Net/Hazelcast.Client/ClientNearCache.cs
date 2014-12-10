@@ -257,7 +257,7 @@ namespace Hazelcast.Client
         {
             if (registrationId != null)
             {
-                ClientRequest request;
+                BaseClientRemoveListenerRequest request;
                 if (cacheType == ClientNearCacheType.Map)
                 {
                     request = new MapRemoveEntryListenerRequest(mapName, registrationId);

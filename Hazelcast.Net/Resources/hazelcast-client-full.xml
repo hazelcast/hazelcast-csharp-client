@@ -56,6 +56,8 @@
 
     <serialization>
         <portable-version>0</portable-version>
+        <use-native-byte-order>true</use-native-byte-order>
+        <byte-order>BIG_ENDIAN</byte-order>
         <data-serializable-factories>
             <data-serializable-factory factory-id="1">com.hazelcast.examples.DataSerializableFactory</data-serializable-factory>
         </data-serializable-factories>
