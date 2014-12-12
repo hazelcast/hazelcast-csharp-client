@@ -46,7 +46,7 @@ namespace Hazelcast.Client.Proxy
         public void Clear()
         {
             var request = new CollectionClearRequest(GetName());
-            Invoke<bool>(request);
+            Invoke<object>(request);
         }
 
         public bool Contains(E item)
@@ -158,7 +158,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new CollectionAddListenerRequest(GetName(), includeValue);
             request.SetServiceName(GetServiceName());
-            return Listen(request, GetPartitionKey(), (args) => HandleItemListener((PortableItemEvent)args, listener, includeValue));
+            return Listen(request, GetPartitionKey(), args => HandleItemListener(args, listener, includeValue));
         }
 
         public bool RemoveItemListener(string registrationId)
@@ -171,11 +171,10 @@ namespace Hazelcast.Client.Proxy
         {
         }
 
-        private void HandleItemListener(PortableItemEvent portableItemEvent, IItemListener<E> listener,
-            bool includeValue)
+        private void HandleItemListener(IData eventData, IItemListener<E> listener, bool includeValue)
         {
-            E item = includeValue ? GetContext().GetSerializationService().ToObject<E>(portableItemEvent.GetItem())
-                : default(E);
+            var portableItemEvent = ToObject<PortableItemEvent>(eventData);
+            E item = includeValue ? GetContext().GetSerializationService().ToObject<E>(portableItemEvent.GetItem()) : default(E);
             IMember member = GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
             var itemEvent = new ItemEvent<E>(GetName(), portableItemEvent.GetEventType(), item, member);
             if (portableItemEvent.GetEventType() == ItemEventType.Added)

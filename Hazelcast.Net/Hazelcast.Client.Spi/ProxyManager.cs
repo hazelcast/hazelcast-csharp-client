@@ -7,6 +7,7 @@ using Hazelcast.Client.Proxy;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Config;
 using Hazelcast.Core;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
@@ -181,7 +182,7 @@ namespace Hazelcast.Client.Spi
             var request = new ClientCreateRequest(clientProxy.GetName(), clientProxy.GetServiceName());
             try
             {
-                client.GetInvocationService().InvokeOnRandomTarget<object>(request);
+                client.GetInvocationService().InvokeOnRandomTarget(request);
             }
             catch (Exception e)
             {
@@ -212,9 +213,9 @@ namespace Hazelcast.Client.Spi
                 this, client.GetClientConfig());
             //EventHandler<PortableDistributedObjectEvent> eventHandler = new _EventHandler_211(this, listener);
 
-            DistributedEventHandler eventHandler = delegate(object eventArgs)
+            DistributedEventHandler eventHandler = delegate(IData eventArgs)
             {
-                var e = eventArgs as PortableDistributedObjectEvent;
+                var e = client.GetSerializationService().ToObject<PortableDistributedObjectEvent>(eventArgs);
                 if (e != null)
                 {
                     var ns = new ObjectNamespace(e.GetServiceName(), e.GetName());

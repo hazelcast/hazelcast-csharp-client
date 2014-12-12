@@ -163,10 +163,8 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                Task<PartitionsResponse> task =
-                    client.GetInvocationService()
-                        .InvokeOnTarget<PartitionsResponse>(new GetPartitionsRequest(), address);
-                PartitionsResponse partitionsResponse = task.Result;
+                var task = client.GetInvocationService().InvokeOnTarget(new GetPartitionsRequest(), address);
+                var partitionsResponse = task.Result;
                 return client.GetSerializationService().ToObject<PartitionsResponse>(partitionsResponse);
             }
             catch (Exception e)

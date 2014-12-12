@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Spi;
+using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
@@ -13,13 +14,13 @@ namespace Hazelcast.Util
         public static String Listen(ClientContext context, ClientRequest request, Object key,DistributedEventHandler handler)
         {
             try {
-                Task<string> task = null;
+                Task<IData> task;
                 if (key == null) {
-                    task = context.GetInvocationService().InvokeOnRandomTarget<string>(request, handler);
+                    task = context.GetInvocationService().InvokeOnRandomTarget(request, handler);
                 }
                 else
                 {
-                    task = context.GetInvocationService().InvokeOnKeyOwner<string>(request, key, handler);
+                    task = context.GetInvocationService().InvokeOnKeyOwner(request, key, handler);
                 }
                 var registrationId = context.GetSerializationService().ToObject<string>(task.Result);
                 context.GetRemotingService().RegisterListener(registrationId, request.CallId);
@@ -42,7 +43,7 @@ namespace Hazelcast.Util
                     return false;
                 }
                 request.SetRegistrationId(registrationId);
-                Task<bool> task = context.GetInvocationService().InvokeOnRandomTarget<bool>(request);
+                Task<IData> task = context.GetInvocationService().InvokeOnRandomTarget(request);
                 var result = context.GetSerializationService().ToObject<bool>(task.Result);
                 return result;
             }

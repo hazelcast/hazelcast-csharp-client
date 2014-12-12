@@ -239,7 +239,7 @@ namespace Hazelcast.Client
             try
             {
                 var request = new GetDistributedObjectsRequest();
-                var task = invocationService.InvokeOnRandomTarget<SerializableCollection>(request);
+                var task = invocationService.InvokeOnRandomTarget(request);
                 var serializableCollection = serializationService.ToObject<SerializableCollection>(task.Result);
                 foreach (var data in serializableCollection)
                 {

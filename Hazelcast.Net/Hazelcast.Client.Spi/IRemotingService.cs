@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
@@ -13,7 +14,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="request"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        Task<TResult> Send<TResult>(ClientRequest request);
+        Task<IData> Send(ClientRequest request);
 
         /// <summary>
         /// </summary>
@@ -21,7 +22,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="target"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        Task<TResult> Send<TResult>(ClientRequest request, Address target);
+        Task<IData> Send(ClientRequest request, Address target);
 
         /// <summary>
         /// 
@@ -31,7 +32,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="target"></param>
         /// <param name="partitionId"></param>
         /// <returns></returns>
-        Task<TResult> Send<TResult>(ClientRequest request, Address target, int partitionId);
+        Task<IData> Send(ClientRequest request, Address target, int partitionId);
 
         /// <summary>
         /// </summary>
@@ -39,7 +40,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="handler"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        Task<TResult> SendAndHandle<TResult>(ClientRequest request, DistributedEventHandler handler);
+        Task<IData> SendAndHandle(ClientRequest request, DistributedEventHandler handler);
 
         /// <summary>
         /// </summary>
@@ -48,7 +49,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="handler"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        Task<TResult> SendAndHandle<TResult>(ClientRequest request, Address target, DistributedEventHandler handler);
+        Task<IData> SendAndHandle(ClientRequest request, Address target, DistributedEventHandler handler);
 
         /// <summary>
         /// </summary>

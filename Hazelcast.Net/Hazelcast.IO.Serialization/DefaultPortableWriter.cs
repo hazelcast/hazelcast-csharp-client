@@ -18,7 +18,7 @@ namespace Hazelcast.IO.Serialization
             this.serializer = serializer;
             this.output = output;
             this.cd = cd;
-            writtenFields = new HashSet<string>(new string[cd.GetFieldCount()]);
+            writtenFields = new HashSet<string>();//new string[cd.GetFieldCount()]);
             begin = output.Position();
             // room for final offset
             output.WriteZeroBytes(4);

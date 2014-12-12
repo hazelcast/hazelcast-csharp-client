@@ -6,13 +6,24 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class GetAllRequest : MultiMapKeyBasedRequest, IRetryableRequest
     {
-        public GetAllRequest(string name, IData key) : base(name, key)
+        private readonly long threadId;
+
+        public GetAllRequest(string name, IData key, long threadId)
+            : base(name, key)
         {
+            this.threadId = threadId;
         }
 
         public override int GetClassId()
         {
             return MultiMapPortableHook.GetAll;
+        }
+
+
+        public override void Write(IPortableWriter writer)
+        {
+            writer.WriteLong("threadId", threadId);
+            base.Write(writer);
         }
     }
 }

@@ -138,7 +138,7 @@ namespace Hazelcast.Client.Request.Transaction
             var rpc = client.GetRemotingService();
             try
             {
-                var task = rpc.Send<T>(request, txOwner);
+                var task = rpc.Send(request, txOwner);
                 var result = task.Result;
                 return ss.ToObject<T>(result);
             }

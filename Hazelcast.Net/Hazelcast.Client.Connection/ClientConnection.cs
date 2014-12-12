@@ -401,16 +401,16 @@ namespace Hazelcast.Client.Connection
             return true;
         }
 
-        public Task<TResult> Send<TResult>(ClientRequest clientRequest, int partitionId)
+        public Task<IData> Send(ClientRequest clientRequest, int partitionId)
         {
-            return Send<TResult>(clientRequest, null, partitionId);
+            return Send(clientRequest, null, partitionId);
         }
 
-        public Task<TResult> Send<TResult>(ClientRequest clientRequest, DistributedEventHandler handler, int partitionId)
+        public Task<IData> Send(ClientRequest clientRequest, DistributedEventHandler handler, int partitionId)
         {
             var taskData = new TaskData(clientRequest, null, handler, partitionId);
             //create task
-            var task = new Task<TResult>(taskObj => ResponseReady<TResult>((TaskData) taskObj), taskData);
+            var task = new Task<IData>(taskObj => ResponseReady((TaskData) taskObj), taskData);
             Send(task);
             return task;
         }
@@ -442,16 +442,15 @@ namespace Hazelcast.Client.Connection
         /// <summary>
         ///     Request Task Execute Function. When response ready. This Func is called and result is return as Task.Result
         /// </summary>
-        /// <typeparam name="TResult"></typeparam>
         /// <param name="taskData"></param>
         /// <returns>response result to Task.Result</returns>
-        private TResult ResponseReady<TResult>(TaskData taskData)
+        private IData ResponseReady(TaskData taskData)
         {
             if (taskData.Error != null)
             {
-                //throw serializationService.ToObject<GenericError>(taskData.Error);
+                throw taskData.Error;
             }
-            return serializationService.ToObject<TResult>(taskData.Response);
+            return taskData.Response;
         }
 
         private int RegisterCall(Task task)
@@ -826,19 +825,22 @@ namespace Hazelcast.Client.Connection
 
         private void HandleReceivedPacket(object inputObj)
         {
-            Packet packet = inputObj as Packet;
-            var clientResponse = serializationService.ToObject<ClientResponse>(packet.GetData());
+            var localPacket = inputObj as Packet;
+            var clientResponse = serializationService.ToObject<ClientResponse>(localPacket.GetData());
             int callId = clientResponse.CallId;
             GenericError error = clientResponse.Error;
-            object response = (error == null) ? serializationService.ToObject<object>(clientResponse.Response) : null;
-
-            bool isEvent = packet.IsHeaderSet(Packet.HeaderEvent);
+            IData response = clientResponse.Response;
+            bool isEvent = localPacket.IsHeaderSet(Packet.HeaderEvent);
             if (!isEvent)
             {
                 Task task;
                 if (requestTasks.TryRemove(callId, out task))
                 {
                     HandleRequestTask(task, response, error);
+                }
+                else
+                {
+                    logger.Warning("No call for callId: " + callId + ", response: " + response);
                 }
             }
             else
@@ -855,7 +857,7 @@ namespace Hazelcast.Client.Connection
                     var td = task.AsyncState as TaskData;
                     if (td != null && td.Handler != null)
                     {
-                        td.Handler(serializationService.ToObject<object>(response));
+                        td.Handler(response);
                         return;
                     }
                 }
@@ -868,7 +870,7 @@ namespace Hazelcast.Client.Connection
             HandleRequestTask(task, null, error);
         }
 
-        private void HandleRequestTask(Task task, object response, GenericError error)
+        private void HandleRequestTask(Task task, IData response, GenericError error)
         {
             if (task == null)
             {
@@ -939,7 +941,7 @@ namespace Hazelcast.Client.Connection
             //Close();
         }
 
-        private static void UpdateResponse(Task task, object response, GenericError error)
+        private static void UpdateResponse(Task task, IData response, GenericError error)
         {
             var taskData = task.AsyncState as TaskData;
             if (taskData != null)
@@ -1000,13 +1002,13 @@ namespace Hazelcast.Client.Connection
     internal class TaskData
     {
         private volatile GenericError _error;
-        private volatile object _response;
+        private volatile IData _response;
         private volatile ClientRequest _request;
         private volatile DistributedEventHandler _handler;
         private volatile int _retryCount;
         private volatile int _partitionId;
 
-        public TaskData(ClientRequest request, object response = null, DistributedEventHandler handler = null,
+        public TaskData(ClientRequest request, IData response = null, DistributedEventHandler handler = null,
             int partitionId = -1)
         {
             _retryCount = 0;
@@ -1034,7 +1036,7 @@ namespace Hazelcast.Client.Connection
             set { _request = value; }
         }
 
-        internal object Response
+        internal IData Response
         {
             get { return _response; }
             set { _response = value; }
