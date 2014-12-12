@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Proxy
         public string AddItemListener(IItemListener<E> listener, bool includeValue)
         {
             var request = new AddListenerRequest(GetName(), includeValue);
-            return Listen(request, GetPartitionKey(),(args) => HandleItemListener((PortableItemEvent) args, listener, includeValue));
+            return Listen(request, GetPartitionKey(), args => HandleItemListener( args, listener, includeValue));
         }
 
         public bool RemoveItemListener(string registrationId)
@@ -277,10 +277,10 @@ namespace Hazelcast.Client.Proxy
         {
             return GetEnumerator();
         }
-
-        private void HandleItemListener(PortableItemEvent portableItemEvent, IItemListener<E> listener,
-            bool includeValue)
+                
+        private void HandleItemListener(IData eventData, IItemListener<E> listener, bool includeValue)
         {
+            var portableItemEvent = ToObject<PortableItemEvent>(eventData);
             E item = includeValue
                 ? GetContext().GetSerializationService().ToObject<E>(portableItemEvent.GetItem())
                 : default(E);

@@ -7,7 +7,7 @@ namespace Hazelcast.Client.Request.Multimap
     internal class PutRequest : MultiMapKeyBasedRequest
     {
         internal int index = -1;
-        internal long threadId = -1;
+        internal long threadId;
         internal IData value;
 
         public PutRequest(string name, IData key, IData value, int index, long threadId) : base(name, key)

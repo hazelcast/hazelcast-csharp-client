@@ -31,7 +31,7 @@ namespace Hazelcast.Client.Proxy
         public virtual ICollection<V> Get(K key)
         {
             IData keyData = GetSerializationService().ToData(key);
-            var request = new GetAllRequest(name, keyData);
+            var request = new GetAllRequest(name, keyData, ThreadUtil.GetThreadId());
             var result = Invoke<PortableCollection>(request, keyData);
             return ToObjectCollection<V>(result, true);
         }
@@ -131,7 +131,7 @@ namespace Hazelcast.Client.Proxy
         public virtual string AddEntryListener(IEntryListener<K, V> listener, bool includeValue)
         {
             var request = new AddEntryListenerRequest(name, null, includeValue);
-            DistributedEventHandler handler = (_event) => OnEntryEvent((PortableEntryEvent)_event, includeValue, listener);
+            DistributedEventHandler handler = eventData => OnEntryEvent(eventData, includeValue, listener);
 
             return Listen(request, handler);
         }
@@ -146,7 +146,7 @@ namespace Hazelcast.Client.Proxy
         {
             IData keyData = GetSerializationService().ToData(key);
             var request = new AddEntryListenerRequest(name, keyData, includeValue);
-            DistributedEventHandler handler = (_event) => OnEntryEvent((PortableEntryEvent)_event, includeValue, listener);
+            DistributedEventHandler handler = eventData => OnEntryEvent(eventData, includeValue, listener);
             return Listen(request, keyData, handler);
         }
 
@@ -247,9 +247,9 @@ namespace Hazelcast.Client.Proxy
         {
             return timeunit != null ? timeunit.ToMillis(time) : time;
         }
-
-        public void OnEntryEvent(PortableEntryEvent _event, bool includeValue, IEntryListener<K, V> listener)
+        public void OnEntryEvent(IData eventData, bool includeValue, IEntryListener<K, V> listener)
         {
+            var _event = ToObject<PortableEntryEvent>(eventData);
             V value = default(V);
             V oldValue = default(V);
             if (includeValue)

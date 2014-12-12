@@ -34,7 +34,7 @@ namespace Hazelcast.Map
         public virtual void ReadData(IObjectDataInput input)
         {
             int size = input.ReadInt();
-            keySet = new HashSet<IData>(new IData[size]);
+            keySet = new HashSet<IData>();
             for (int i = 0; i < size; i++)
             {
                 IData data = input.ReadData();

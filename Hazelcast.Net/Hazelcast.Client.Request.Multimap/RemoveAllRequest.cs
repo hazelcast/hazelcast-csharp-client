@@ -5,7 +5,7 @@ namespace Hazelcast.Client.Request.Multimap
 {
     internal class RemoveAllRequest : MultiMapKeyBasedRequest
     {
-        internal long threadId = -1;
+        internal long threadId;
 
         public RemoveAllRequest(string name, IData key, long threadId) : base(name, key)
         {

@@ -1,5 +1,6 @@
 ﻿using Hazelcast.Client.Connection;
 using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
@@ -19,6 +20,7 @@ namespace Hazelcast.Util
 
     internal delegate void Authenticator(ClientConnection connection);
 
-    public delegate void DistributedEventHandler(object _event);
+    //public delegate void DistributedEventHandler(object _event);
+    public delegate void DistributedEventHandler(IData _eventData);
     
 }

@@ -358,25 +358,13 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestUnlock()
         {
+            map.ForceUnlock("key1");
             map.Put("key1", "value1");
             Assert.AreEqual("value1", map.Get("key1"));
             map.Lock("key1");
-            CountdownEvent latch = new CountdownEvent(1);
-
-            var t1 = new Thread(delegate(object o)
-            {
-                map.Unlock("key1");
-                if (map.IsLocked("key1"))
-                {
-                    latch.Signal();
-                }
-            });
-            t1.Start();
-            Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
-
+            Assert.IsTrue(map.IsLocked("key1"));
             map.Unlock("key1");
             Assert.IsFalse(map.IsLocked("key1"));
-
             map.ForceUnlock("key1");
         }
 

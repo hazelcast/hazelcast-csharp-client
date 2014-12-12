@@ -129,7 +129,7 @@ namespace Hazelcast.Client
             {
                 value = inMemoryFormat.Equals(InMemoryFormat.Binary)
                     ? context.GetSerializationService().ToData(@object)
-                    : @object;
+                    : context.GetSerializationService().ToObject<object>(@object);
             }
             cache.TryAdd(key, new CacheRecord(this, key, value));
         }

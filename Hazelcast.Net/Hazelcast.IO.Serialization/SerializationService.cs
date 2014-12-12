@@ -523,7 +523,7 @@ namespace Hazelcast.IO.Serialization
             {
                 // look for super classes
                 Type typeSuperclass = type.BaseType;
-                ICollection<Type> interfaces = new HashSet<Type>(new Type[5]);
+                ICollection<Type> interfaces = new HashSet<Type>();//new Type[5]);
                 GetInterfaces(type, interfaces);
                 while (typeSuperclass != null)
                 {

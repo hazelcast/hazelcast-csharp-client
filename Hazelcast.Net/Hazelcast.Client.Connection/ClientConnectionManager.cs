@@ -486,7 +486,7 @@ namespace Hazelcast.Client.Connection
                 foreach (var clientConnection in _clientConnections)
                 {
                     var request = new ClientPingRequest();
-                    clientConnection.Send<Object>(request, -1);
+                    clientConnection.Send(request, -1);
                 }
                 try
                 {
@@ -558,32 +558,32 @@ namespace Hazelcast.Client.Connection
             clientConnection.Send(task);
         }
 
-        public Task<TResult> Send<TResult>(ClientRequest request)
+        public Task<IData> Send(ClientRequest request)
         {
-            return Send<TResult>(request, null, -1);
+            return Send(request, null, -1);
         }
 
-        public Task<TResult> Send<TResult>(ClientRequest request, Address target)
+        public Task<IData> Send(ClientRequest request, Address target)
         {
-            return Send<TResult>(request, target, -1);
+            return Send(request, target, -1);
         }
 
-        public Task<TResult> Send<TResult>(ClientRequest request, Address target, int partitionId)
+        public Task<IData> Send(ClientRequest request, Address target, int partitionId)
         {
             ClientConnection clientConnection = _GetOrConnectWithRetry(target);
-            return clientConnection.Send<TResult>(request, partitionId);
+            return clientConnection.Send(request, partitionId);
         }
 
-        public Task<TResult> SendAndHandle<TResult>(ClientRequest request, DistributedEventHandler handler)
+        public Task<IData> SendAndHandle(ClientRequest request, DistributedEventHandler handler)
         {
-            return SendAndHandle<TResult>(request, null, handler);
+            return SendAndHandle(request, null, handler);
         }
 
-        public Task<TResult> SendAndHandle<TResult>(ClientRequest request, Address target,
+        public Task<IData> SendAndHandle(ClientRequest request, Address target,
             DistributedEventHandler handler)
         {
             ClientConnection clientConnection = _GetOrConnectWithRetry(target);
-            return clientConnection.Send<TResult>(request, handler, -1);
+            return clientConnection.Send(request, handler, -1);
         }
 
         public void RegisterListener(string registrationId, int callId)

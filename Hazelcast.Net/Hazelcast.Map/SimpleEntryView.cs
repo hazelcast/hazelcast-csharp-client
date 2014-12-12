@@ -44,8 +44,8 @@ namespace Hazelcast.Map
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void ReadData(IObjectDataInput input)
         {
-            key = input.ReadObject<object>();
-            value = input.ReadObject<object>();
+            key = IOUtil.ReadObject<object>(input);
+            value = IOUtil.ReadObject<object>(input);
             cost = input.ReadLong();
             creationTime = input.ReadLong();
             expirationTime = input.ReadLong();

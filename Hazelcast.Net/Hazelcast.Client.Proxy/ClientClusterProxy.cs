@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Proxy
         {
             ICollection<IMember> members = clusterService.GetMemberList();
 
-            return members != null ? new HashSet<IMember>(members) : new HashSet<IMember>(new IMember[0]);
+            return members != null ? new HashSet<IMember>(members) : new HashSet<IMember>();
         }
 
         public virtual IMember GetLocalMember()

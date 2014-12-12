@@ -44,7 +44,7 @@ namespace Hazelcast.Client.Spi
             var request = new ClientDestroyRequest(objectName, GetServiceName());
             try
             {
-                context.GetInvocationService().InvokeOnRandomTarget<object>(request);
+                context.GetInvocationService().InvokeOnRandomTarget(request);
             }
             catch (Exception e)
             {
@@ -90,18 +90,21 @@ namespace Hazelcast.Client.Spi
 
         protected virtual T Invoke<T>(ClientRequest request, object key)
         {
-            try {
-                var task = GetContext().GetInvocationService().InvokeOnKeyOwner<T>(request, key);
+            try
+            {
+                var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
+                task.Wait(TimeSpan.FromSeconds(60));
                 var result = task.Result;
                 return context.GetSerializationService().ToObject<T>(result);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 throw ExceptionUtil.Rethrow(e);
             }  
         }
         protected virtual T Invoke<T>(ClientRequest request)
         {
             try {
-                var task = GetContext().GetInvocationService().InvokeOnRandomTarget<T>(request);
+                var task = GetContext().GetInvocationService().InvokeOnRandomTarget(request);
                 return context.GetSerializationService().ToObject<T>(task.Result);
             } catch (Exception e) {
                 throw ExceptionUtil.Rethrow(e);
