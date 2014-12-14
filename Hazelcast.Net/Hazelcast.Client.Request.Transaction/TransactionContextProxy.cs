@@ -46,7 +46,7 @@ namespace Hazelcast.Client.Request.Transaction
         /// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
         public virtual void CommitTransaction()
         {
-            transaction.Commit();
+            transaction.Commit(true);
         }
 
         public virtual void RollbackTransaction()
@@ -136,6 +136,11 @@ namespace Hazelcast.Client.Request.Transaction
         public virtual HazelcastClient GetClient()
         {
             return client;
+        }
+
+        public Address TxnOwner
+        {
+            get { return _txnOwnerNode; }
         }
 
     }

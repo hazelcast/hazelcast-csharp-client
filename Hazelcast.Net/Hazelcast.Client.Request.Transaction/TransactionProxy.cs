@@ -73,7 +73,7 @@ namespace Hazelcast.Client.Request.Transaction
             }
         }
 
-        internal void Commit()
+        internal void Commit(bool prepareAndCommit)
         {
             try
             {
@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Request.Transaction
                 }
                 CheckThread();
                 CheckTimeout();
-                Invoke<object>(new CommitTransactionRequest());
+                Invoke<object>(new CommitTransactionRequest(prepareAndCommit));
                 state = TransactionState.Committed;
             }
             catch (Exception e)
@@ -126,7 +126,7 @@ namespace Hazelcast.Client.Request.Transaction
             }
         }
 
-        internal T Invoke<T>(ClientRequest request)
+        private T Invoke<T>(ClientRequest request)
         {
             var btr = request as BaseTransactionRequest;
             if (btr != null)
@@ -139,6 +139,7 @@ namespace Hazelcast.Client.Request.Transaction
             try
             {
                 var task = rpc.Send(request, txOwner);
+                task.Wait(TimeSpan.FromSeconds(60));
                 var result = task.Result;
                 return ss.ToObject<T>(result);
             }

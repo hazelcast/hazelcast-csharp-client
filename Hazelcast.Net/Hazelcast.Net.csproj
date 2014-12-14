@@ -63,7 +63,6 @@
   <ItemGroup>
     <Compile Include="Hazelcast.Client.Connection\ClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Request.Base\BaseClientRemoveListenerRequest.cs" />
-    <Compile Include="Hazelcast.Client.Request.Base\BaseTransactionRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Base\ClientRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Base\ClientResponse.cs" />
     <Compile Include="Hazelcast.Client.Request.Base\RemoveDistributedObjectListenerRequest.cs" />

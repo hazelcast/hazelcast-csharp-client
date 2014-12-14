@@ -29,10 +29,9 @@ namespace Hazelcast.Client.Request.Map
         {
             return MapPortableHook.Remove;
         }
-
-        public void SetAsync(bool async)
+        public void SetAsAsync()
         {
-            this.async = async;
+            async = true;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -44,5 +43,6 @@ namespace Hazelcast.Client.Request.Map
             IObjectDataOutput output = writer.GetRawDataOutput();
             output.WriteData(key);
         }
+
     }
 }

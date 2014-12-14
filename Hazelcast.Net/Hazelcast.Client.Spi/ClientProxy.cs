@@ -105,7 +105,9 @@ namespace Hazelcast.Client.Spi
         {
             try {
                 var task = GetContext().GetInvocationService().InvokeOnRandomTarget(request);
-                return context.GetSerializationService().ToObject<T>(task.Result);
+                task.Wait(TimeSpan.FromSeconds(60));
+                var result = task.Result;
+                return context.GetSerializationService().ToObject<T>(result);
             } catch (Exception e) {
                 throw ExceptionUtil.Rethrow(e);
             }  

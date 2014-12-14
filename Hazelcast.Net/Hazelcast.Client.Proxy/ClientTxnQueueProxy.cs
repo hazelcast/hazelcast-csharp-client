@@ -3,7 +3,6 @@ using Hazelcast.Client.Request.Queue;
 using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client.Proxy
 {

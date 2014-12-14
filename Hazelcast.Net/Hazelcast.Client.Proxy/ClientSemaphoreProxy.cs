@@ -4,8 +4,6 @@ using Hazelcast.Client.Request.Concurrent.Semaphore;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
-using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {

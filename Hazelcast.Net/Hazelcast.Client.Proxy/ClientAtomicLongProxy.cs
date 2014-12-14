@@ -1,10 +1,8 @@
-using System;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Concurrent.Atomiclong;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
