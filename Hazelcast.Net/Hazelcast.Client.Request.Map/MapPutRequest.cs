@@ -45,9 +45,9 @@ namespace Hazelcast.Client.Request.Map
             return MapPortableHook.Put;
         }
 
-        public void SetAsync(bool async)
+        public void SetAsAsync()
         {
-            this.async = async;
+            this.async = true;
         }
 
         /// <exception cref="System.IO.IOException"></exception>

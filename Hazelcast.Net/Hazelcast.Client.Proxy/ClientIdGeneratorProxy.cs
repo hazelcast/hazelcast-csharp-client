@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Proxy
                 if (init)
                 {
                     local.Set(step);
-                    residue.Set((int) (id % BlockSize) + 1);
+                    residue.Set((int) (id%BlockSize) + 1);
                 }
                 return init;
             }

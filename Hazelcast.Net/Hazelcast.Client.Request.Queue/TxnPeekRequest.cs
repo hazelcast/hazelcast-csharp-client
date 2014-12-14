@@ -1,4 +1,5 @@
 using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Request.Transaction;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Serialization.Hook;
 

@@ -7,7 +7,6 @@ using Hazelcast.Client.Request.Collection;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -164,7 +163,7 @@ namespace Hazelcast.Client.Proxy
         public bool RemoveItemListener(string registrationId)
         {
             var request = new CollectionRemoveListenerRequest(GetName(), registrationId, GetServiceName());
-            return StopListening(request,registrationId);
+            return StopListening(request, registrationId);
         }
 
         protected override void OnDestroy()
@@ -174,7 +173,9 @@ namespace Hazelcast.Client.Proxy
         private void HandleItemListener(IData eventData, IItemListener<E> listener, bool includeValue)
         {
             var portableItemEvent = ToObject<PortableItemEvent>(eventData);
-            E item = includeValue ? GetContext().GetSerializationService().ToObject<E>(portableItemEvent.GetItem()) : default(E);
+            E item = includeValue
+                ? GetContext().GetSerializationService().ToObject<E>(portableItemEvent.GetItem())
+                : default(E);
             IMember member = GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
             var itemEvent = new ItemEvent<E>(GetName(), portableItemEvent.GetEventType(), item, member);
             if (portableItemEvent.GetEventType() == ItemEventType.Added)
@@ -209,7 +210,7 @@ namespace Hazelcast.Client.Proxy
                 CollectionRequest request = collectionRequest;
                 request.SetServiceName(GetServiceName());
             }
-            return base.Invoke<T>(req,GetPartitionKey());
+            return base.Invoke<T>(req, GetPartitionKey());
         }
 
         protected IEnumerable<E> GetAll()

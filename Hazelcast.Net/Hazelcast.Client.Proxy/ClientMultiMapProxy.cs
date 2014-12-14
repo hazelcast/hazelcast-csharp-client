@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Hazelcast.Client.Request.Map;
 using Hazelcast.Client.Request.Multimap;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
@@ -57,7 +55,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = new KeySetRequest(name);
             var result = Invoke<PortableCollection>(request);
-            return (ISet<K>)ToObjectCollection<K>(result, false);
+            return (ISet<K>) ToObjectCollection<K>(result, false);
         }
 
         public virtual ICollection<V> Values()
@@ -85,7 +83,7 @@ namespace Hazelcast.Client.Proxy
         public virtual bool ContainsKey(K key)
         {
             IData keyData = GetSerializationService().ToData(key);
-            var request = new KeyBasedContainsRequest(name, keyData, null);
+            var request = new KeyBasedContainsRequest(name, keyData, null, ThreadUtil.GetThreadId());
             var result = Invoke<bool>(request, keyData);
             return result;
         }
@@ -102,7 +100,7 @@ namespace Hazelcast.Client.Proxy
         {
             IData keyData = GetSerializationService().ToData(key);
             IData valueData = GetSerializationService().ToData(value);
-            var request = new KeyBasedContainsRequest(name, keyData, valueData);
+            var request = new KeyBasedContainsRequest(name, keyData, valueData, ThreadUtil.GetThreadId());
             var result = Invoke<bool>(request, keyData);
             return result;
         }
@@ -138,8 +136,8 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool RemoveEntryListener(string registrationId)
         {
-            var request = new RemoveEntryListenerRequest(name,registrationId);
-            return StopListening(request,registrationId);
+            var request = new RemoveEntryListenerRequest(name, registrationId);
+            return StopListening(request, registrationId);
         }
 
         public virtual string AddEntryListener(IEntryListener<K, V> listener, K key, bool includeValue)
@@ -247,6 +245,7 @@ namespace Hazelcast.Client.Proxy
         {
             return timeunit != null ? timeunit.ToMillis(time) : time;
         }
+
         public void OnEntryEvent(IData eventData, bool includeValue, IEntryListener<K, V> listener)
         {
             var _event = ToObject<PortableEntryEvent>(eventData);

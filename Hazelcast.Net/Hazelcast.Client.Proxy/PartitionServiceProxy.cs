@@ -1,15 +1,10 @@
-using System;
-using Hazelcast.Client.Spi;
-using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
-
 namespace Hazelcast.Client.Proxy
 {
     //internal class PartitionServiceProxy : IClientPartitionService
     //{
     //    public PartitionServiceProxy(ClientPartitionService partitionService)
     //    {
-            
+
 
     //    }
 

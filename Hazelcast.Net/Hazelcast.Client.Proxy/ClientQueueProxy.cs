@@ -1,14 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Queue;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
-using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -25,13 +22,13 @@ namespace Hazelcast.Client.Proxy
         public string AddItemListener(IItemListener<E> listener, bool includeValue)
         {
             var request = new AddListenerRequest(GetName(), includeValue);
-            return Listen(request, GetPartitionKey(), args => HandleItemListener( args, listener, includeValue));
+            return Listen(request, GetPartitionKey(), args => HandleItemListener(args, listener, includeValue));
         }
 
         public bool RemoveItemListener(string registrationId)
         {
             var request = new RemoveListenerRequest(name, registrationId);
-            return StopListening(request,registrationId);
+            return StopListening(request, registrationId);
         }
 
         public bool Add(E e)
@@ -88,7 +85,7 @@ namespace Hazelcast.Client.Proxy
 
         public bool Remove(E item)
         {
-            return Remove((object)item);
+            return Remove((object) item);
         }
 
         public bool Remove(object o)
@@ -270,14 +267,14 @@ namespace Hazelcast.Client.Proxy
         public void CopyTo(E[] array, int arrayIndex)
         {
             E[] a = ToArray();
-            if(a != null) a.CopyTo(array,arrayIndex);
+            if (a != null) a.CopyTo(array, arrayIndex);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
-                
+
         private void HandleItemListener(IData eventData, IItemListener<E> listener, bool includeValue)
         {
             var portableItemEvent = ToObject<PortableItemEvent>(eventData);
@@ -323,9 +320,5 @@ namespace Hazelcast.Client.Proxy
         {
             return base.Invoke<T>(request, GetPartitionKey());
         }
-
-    
     }
-
-  
 }

@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Proxy
             }
             foreach (IData data in collection)
             {
-                coll.Add( ToObject<V>(data));
+                coll.Add(ToObject<V>(data));
             }
             return coll;
         }
@@ -66,7 +66,7 @@ namespace Hazelcast.Client.Proxy
             }
             foreach (IData data in collection)
             {
-                coll.Add( ToObject<V>(data));
+                coll.Add(ToObject<V>(data));
             }
             return coll;
         }

@@ -11,10 +11,11 @@ namespace Hazelcast.Client.Request.Map
 		private IData key;
 		private long threadId;
 
-		public MapContainsKeyRequest(string name, IData key)
+		public MapContainsKeyRequest(string name, IData key, long threadId)
 		{
 			this.name = name;
 			this.key = key;
+		    this.threadId = threadId;
 		}
 
 		public override int GetFactoryId()

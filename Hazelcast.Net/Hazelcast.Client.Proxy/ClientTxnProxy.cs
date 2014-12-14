@@ -1,5 +1,5 @@
 using System;
-using System.Runtime.Remoting;
+using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Client.Spi;
@@ -45,7 +45,24 @@ namespace Hazelcast.Client.Proxy
 
         protected virtual T Invoke<T>(ClientRequest request)
         {
-            return proxy.transaction.Invoke<T>(request);
+            var btr = request as BaseTransactionRequest;
+            if (btr != null)
+            {
+                btr.TxnId = proxy.GetTxnId();
+                btr.ClientThreadId = ThreadUtil.GetThreadId();
+            }
+            IRemotingService rpc = proxy.GetClient().GetRemotingService();
+            try
+            {
+                Task<IData> task = rpc.Send(request, proxy.TxnOwner);
+                task.Wait(TimeSpan.FromSeconds(60));
+                IData result = task.Result;
+                return ToObject<T>(result);
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
         }
 
         internal abstract void OnDestroy();

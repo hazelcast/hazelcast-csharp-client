@@ -1,11 +1,8 @@
-using System;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Concurrent.Countdownlatch;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
-using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
