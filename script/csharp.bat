@@ -1,5 +1,5 @@
 call mvn dependency:get -DrepoUrl=https://oss.sonatype.org/content/repositories/snapshots -Dartifact=com.hazelcast:hazelcast:3.4.1-SNAPSHOT -Ddest=hazelcast.jar
-start "hazelcast" java -cp hazelcast.jar -Dhazelcast.config=script\hazelcast.xml com.hazelcast.core.server.StartServer
+start "hazelcast" java -cp hazelcast.jar -Dhazelcast.event.queue.capacity=1100000 -Dhazelcast.config=script\hazelcast.xml com.hazelcast.core.server.StartServer
 ping -n 10 127.0.0.1 >nul
 nunit-console /xml:"console-text.xml" "Hazelcast.Test/Hazelcast.Test.nunit"
 ping -n 10 127.0.0.1 >nul
