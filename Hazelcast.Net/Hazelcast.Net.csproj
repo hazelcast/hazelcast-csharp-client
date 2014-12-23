@@ -550,6 +550,7 @@
     <Compile Include="Hazelcast.Util\RandomLB.cs" />
     <Compile Include="Hazelcast.Util\RoundRobinLB.cs" />
     <Compile Include="Hazelcast.Util\StaticLB.cs" />
+    <Compile Include="Hazelcast.Util\StripedTaskScheduler.cs" />
     <Compile Include="Hazelcast.Util\ThreadUtil.cs" />
     <Compile Include="Hazelcast.Util\ValidationUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
