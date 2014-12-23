@@ -183,11 +183,15 @@ namespace Hazelcast.IO.Serialization
 
         public T ToObject<T>(object data)
         {
-            if (!(data is IData))
+            if (data == null)
+            {
+                return default(T);
+            }
+            var dataObj = data as IData;
+            if (dataObj == null)
             {
                 return (T)data;
             }
-            IData dataObj = (IData)data;
             if (dataObj.DataSize() == 0 && dataObj.GetType() == SerializationConstants.ConstantTypeNull)
             {
                 return default(T);
@@ -221,8 +225,7 @@ namespace Hazelcast.IO.Serialization
         {
             if (obj is IData)
             {
-                throw new HazelcastSerializationException("Cannot write a Data instance! " + "Use #writeData(ObjectDataOutput out, Data data) instead."
-                    );
+                throw new HazelcastSerializationException("Cannot write a Data instance! Use #writeData(ObjectDataOutput out, Data data) instead.");
             }
             bool isNull = obj == null;
             try

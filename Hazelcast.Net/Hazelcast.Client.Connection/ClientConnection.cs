@@ -857,12 +857,20 @@ namespace Hazelcast.Client.Connection
                     var td = task.AsyncState as TaskData;
                     if (td != null && td.Handler != null)
                     {
-                        td.Handler(response);
+                        var partitionId = localPacket.GetPartitionId();
+                        HandeEventResponse(partitionId,response, td.Handler);
                         return;
                     }
                 }
                 logger.Warning("No eventHandler for callId: " + callId + ", event: " + response);
             }
+        }
+
+        private void HandeEventResponse(int partitionId, IData responseData, DistributedEventHandler handlerFunc)
+        {
+            object state = partitionId;
+            var eventTask = new Task(o => handlerFunc(responseData), state);
+            eventTask.Start(_clientConnectionManager.TaskScheduler);
         }
 
         private void HandleRequestTask(Task task, GenericError error)
