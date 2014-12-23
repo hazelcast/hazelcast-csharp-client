@@ -577,12 +577,13 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestPutTransient()
         {
+            Assert.AreEqual(0, map.Size());
+
             map.PutTransient("key1", "value1", 2, TimeUnit.SECONDS);
             Assert.AreEqual("value1", map.Get("key1"));
 
-            Thread.Sleep(TimeSpan.FromSeconds(6));
+            Thread.Sleep(TimeSpan.FromSeconds(3));
 
-            Assert.AreEqual(0, map.Size());
             Assert.AreNotEqual("value1", map.Get("key1"));
         }
 
@@ -689,10 +690,10 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
         }
 
-        [Test, Ignore]
+        [Test]
         public void testListenerExtreme()
         {
-            const int TestItemCount = 100*1000;
+            const int TestItemCount = 1*1000;
             //CountdownEvent latch1 = new CountdownEvent(TestItemCount);
             var latch = new CountdownEvent(TestItemCount);
             //CountdownEvent latch3 = new CountdownEvent(1);
@@ -727,9 +728,10 @@ namespace Hazelcast.Client.Test
                 map.AddEntryListener(listener, "key" + i, false);
             }
 
-            map.Remove("key0");
-
-            map.Clear(); //kneel down :)
+            for (int i = 0; i < TestItemCount; i++)
+            {
+                map.RemoveAsync("key" + i);
+            }
 
             latch.Wait(TimeSpan.FromSeconds(10));
             Console.WriteLine(latch.CurrentCount);
@@ -812,6 +814,36 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
+        }
+
+        [Test]
+        public void testListenerEventOrder()
+        {
+            var map2 = client.GetMap<int, int>(Name);
+            map2.Put(1, 0);
+
+            var eventDataReceived = new Queue<int>();
+
+            var listener = new EntryAdapter<int, int>(
+                e => { },
+                e => { },
+                e => eventDataReceived.Enqueue(e.GetValue()),
+                e => { });
+
+            string reg1 = map2.AddEntryListener(listener, true);
+
+            for (int i = 1; i < 10000; i++)
+            {
+                map2.Put(1, i);
+            }
+
+            int oldEventData = -1;
+            foreach (var eventData in eventDataReceived)
+            {
+                Assert.Less(oldEventData,eventData);
+                oldEventData = eventData;
+            }
+            
         }
 
         ///// <exception cref="System.Exception"></exception>
