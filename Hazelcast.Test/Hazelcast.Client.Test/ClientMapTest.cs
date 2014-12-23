@@ -819,6 +819,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void testListenerEventOrder()
         {
+            const int maxSize = 10000; 
             var map2 = client.GetMap<int, int>(Name);
             map2.Put(1, 0);
 
@@ -832,10 +833,15 @@ namespace Hazelcast.Client.Test
 
             string reg1 = map2.AddEntryListener(listener, true);
 
-            for (int i = 1; i < 10000; i++)
+            for (int i = 1; i < maxSize; i++)
             {
                 map2.Put(1, i);
             }
+            while (eventDataReceived.Count != maxSize-1)
+            {
+                Thread.Sleep(100);
+            }
+            Assert.AreEqual(maxSize - 1, eventDataReceived.Count);
 
             int oldEventData = -1;
             foreach (var eventData in eventDataReceived)
