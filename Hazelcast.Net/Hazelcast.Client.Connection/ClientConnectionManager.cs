@@ -24,6 +24,7 @@ namespace Hazelcast.Client.Connection
         #region fields
 
         public const int RetryCount = 20;
+        public const int DefaultEventThreadCount = 3;
         private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
 
         private readonly ConcurrentDictionary<Address, LinkedListNode<ClientConnection>> _addresses = new ConcurrentDictionary<Address, LinkedListNode<ClientConnection>>();
@@ -31,6 +32,8 @@ namespace Hazelcast.Client.Connection
         private readonly ConcurrentDictionary<string, string> _registrationAliasMap = new ConcurrentDictionary<string, string>();
 
         private readonly LinkedList<ClientConnection> _clientConnections =new LinkedList<ClientConnection>();
+
+        private readonly StripedTaskScheduler _taskScheduler;
 
         private readonly ICredentials _credentials;
 
@@ -77,6 +80,23 @@ namespace Hazelcast.Client.Connection
 
             //        int connectionTimeout = config.getConnectionTimeout(); //TODO
             socketOptions = config.GetNetworkConfig().GetSocketOptions();
+            int eventTreadCount = 0;
+
+            var param = Environment.GetEnvironmentVariable("hazelcast.client.event.thread.count");
+            try
+            {
+                if (param != null)
+                {
+                    eventTreadCount = Convert.ToInt32(param, 10);
+                }
+            }
+            catch (Exception)
+            {
+                
+                logger.Warning("Provided event thread count is not a valid value : "+param);
+            }
+            eventTreadCount = eventTreadCount == 0 ? DefaultEventThreadCount : eventTreadCount;
+            _taskScheduler = new StripedTaskScheduler(eventTreadCount);
         }
 
         #region IConnectionManager
@@ -135,6 +155,8 @@ namespace Hazelcast.Client.Connection
                 }
                 catch (Exception) { }
                 //_ownerConnection = null;
+
+                _taskScheduler.Dispose();
             }
             catch (Exception e)
             {
@@ -619,5 +641,10 @@ namespace Hazelcast.Client.Connection
         }
 
         #endregion
+
+        public StripedTaskScheduler TaskScheduler
+        {
+            get { return _taskScheduler; }
+        }
     }
 }
