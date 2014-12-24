@@ -45,8 +45,15 @@ namespace Hazelcast.Util
 
             while (!blockingTasks.IsAddingCompleted)
             {
-                var task = blockingTasks.Take();
-                TryExecuteTask(task);
+                try
+                {
+                    var task = blockingTasks.Take();
+                    TryExecuteTask(task);
+                }
+                catch (InvalidOperationException e)
+                {
+                    //BlockingCollection is empty, just ignore it
+                }
             }
         }
 
