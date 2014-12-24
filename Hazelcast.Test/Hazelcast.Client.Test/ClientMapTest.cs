@@ -831,7 +831,7 @@ namespace Hazelcast.Client.Test
                 e => eventDataReceived.Enqueue(e.GetValue()),
                 e => { });
 
-            string reg1 = map2.AddEntryListener(listener, true);
+            map2.AddEntryListener(listener, true);
 
             for (int i = 1; i < maxSize; i++)
             {

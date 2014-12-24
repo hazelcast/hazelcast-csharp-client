@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Transaction;
+using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -796,7 +797,17 @@ namespace Hazelcast.Client.Connection
                     if (complete)
                     {
                         //ASYNC HANDLE Received Packet
-                        Task.Factory.StartNew(HandleReceivedPacket, packet);
+                        Packet localPacket = packet;
+                        if (packet.IsHeaderSet(Packet.HeaderEvent))
+                        {
+                            object state = packet.GetPartitionId();
+                            var eventTask = new Task(o => HandleEventPacket(localPacket), state);
+                            eventTask.Start(_clientConnectionManager.TaskScheduler);
+                        }
+                        else
+                        {
+                            Task.Factory.StartNew(() => HandleReceivedPacket(localPacket));
+                        }
                         packet = null;
                     }
                     else
@@ -804,7 +815,6 @@ namespace Hazelcast.Client.Connection
                         break;
                     }
                 }
-
                 if (receiveBuffer.HasRemaining())
                 {
                     receiveBuffer.Compact();
@@ -813,7 +823,6 @@ namespace Hazelcast.Client.Connection
                 {
                     receiveBuffer.Clear();
                 }
-
                 BeginRead();
             }
             catch (Exception e)
@@ -823,54 +832,46 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private void HandleReceivedPacket(object inputObj)
+        private void HandleReceivedPacket(Packet localPacket)
         {
-            var localPacket = inputObj as Packet;
             var clientResponse = serializationService.ToObject<ClientResponse>(localPacket.GetData());
             int callId = clientResponse.CallId;
             GenericError error = clientResponse.Error;
             IData response = clientResponse.Response;
-            bool isEvent = localPacket.IsHeaderSet(Packet.HeaderEvent);
-            if (!isEvent)
+            Task task;
+            if (requestTasks.TryRemove(callId, out task))
             {
-                Task task;
-                if (requestTasks.TryRemove(callId, out task))
-                {
-                    HandleRequestTask(task, response, error);
-                }
-                else
-                {
-                    logger.Warning("No call for callId: " + callId + ", response: " + response);
-                }
+                HandleRequestTask(task, response, error);
             }
             else
             {
-                if (error != null)
-                {
-                    logger.Severe("Event Response cannot be an exception :" + error.Name);
-                }
-                //event handler
-                Task task = null;
-                eventTasks.TryGetValue(callId, out task);
-                if (task != null)
-                {
-                    var td = task.AsyncState as TaskData;
-                    if (td != null && td.Handler != null)
-                    {
-                        var partitionId = localPacket.GetPartitionId();
-                        HandeEventResponse(partitionId,response, td.Handler);
-                        return;
-                    }
-                }
-                logger.Warning("No eventHandler for callId: " + callId + ", event: " + response);
+                logger.Warning("No call for callId: " + callId + ", response: " + response);
             }
         }
 
-        private void HandeEventResponse(int partitionId, IData responseData, DistributedEventHandler handlerFunc)
+        private void HandleEventPacket(Packet localPacket)
         {
-            object state = partitionId;
-            var eventTask = new Task(o => handlerFunc(responseData), state);
-            eventTask.Start(_clientConnectionManager.TaskScheduler);
+            var clientResponse = serializationService.ToObject<ClientResponse>(localPacket.GetData());
+            int callId = clientResponse.CallId;
+            GenericError error = clientResponse.Error;
+            IData response = clientResponse.Response;
+            if (error != null)
+            {
+                logger.Severe("Event Response cannot be an exception :" + error.Name);
+            }
+            //event handler
+            Task task;
+            eventTasks.TryGetValue(callId, out task);
+            if (task == null)
+            {
+                logger.Warning("No eventHandler for callId: " + callId + ", event: " + response);
+                return;
+            }
+            var td = task.AsyncState as TaskData;
+            if (td != null && td.Handler != null)
+            {
+                td.Handler(response);
+            }
         }
 
         private void HandleRequestTask(Task task, GenericError error)
