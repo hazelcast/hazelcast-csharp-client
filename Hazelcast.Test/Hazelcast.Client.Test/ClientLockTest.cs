@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Test
 	    [Test]
 	    public virtual void TestIsLock()
 	    {
-	        Assert.IsTrue(l.TryLock(2, TimeUnit.SECONDS));
+	        Assert.IsTrue(l.TryLock(10, TimeUnit.SECONDS));
 
 	        var isLocked = l.IsLocked();
 	        Assert.IsTrue(isLocked);
