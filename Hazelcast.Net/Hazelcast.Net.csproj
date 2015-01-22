@@ -13,6 +13,7 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+	<keyfile>..\snkey\hazelcast.snk</keyfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -609,7 +610,7 @@
   </Target>
   <Target Name="Merge" DependsOnTargets="Build">
     <!-- Merge together files -->
-    <ILMerge InputAssemblies="$(OutputPath)\HazelcastClient3x.dll;$(OutputPath)\ICSharpCode.SharpZipLib.dll" Internalize="true" OutputFile="$(OutputPath)\..\HazelcastClient3x.dll" ToolPath="..\packages\ilmerge.2.13.0307\" />
+    <ILMerge InputAssemblies="$(OutputPath)\HazelcastClient3x.dll;$(OutputPath)\ICSharpCode.SharpZipLib.dll" Internalize="true" OutputFile="$(OutputPath)\..\HazelcastClient3x.dll" ToolPath="..\packages\ilmerge.2.13.0307\" KeyFile="$(keyfile)"/>
     <!-- Cleanup unneed files -->
     <CreateItem Include="$(OutputPath)\HazelcastClient3x.*;$(OutputPath)\ICSharpCode.SharpZipLib.*">
       <Output TaskParameter="Include" ItemName="PurgeBuildFiles" />
