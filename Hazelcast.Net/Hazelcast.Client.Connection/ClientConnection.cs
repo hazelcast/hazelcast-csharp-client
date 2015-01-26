@@ -613,7 +613,6 @@ namespace Hazelcast.Client.Connection
             }
             if (lastWritable == null && (lastWritable = Poll()) == null && sendBuffer.Position == 0)
             {
-                //sending.Set(false);
                 return;
             }
 
@@ -676,8 +675,8 @@ namespace Hazelcast.Client.Connection
                 {
                     return;
                 }
-                //logger.Info("SEND BUFFER CALLBACK: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
                 sendBuffer.Position += sendByteSize;
+                //logger.Info("SEND BUFFER CALLBACK: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
 
                 //if success case
                 if (sendBuffer.HasRemaining())
@@ -696,7 +695,7 @@ namespace Hazelcast.Client.Connection
                 sending.Set(false);
             }
 
-            if (sending.Get() && !writeQueue.IsEmpty)
+            if (sending.Get() &&(lastWritable != null || !writeQueue.IsEmpty))
             {
                 BeginWrite();
             }
