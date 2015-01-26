@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client;
@@ -122,6 +123,26 @@ namespace Hazelcast.Client.Test
 
             m2.TryGetValue(3, out gv);
             Assert.AreEqual(gv, 3);
+        }
+
+        [Test]
+        public virtual void TestGetAllExtreme()
+        {
+            IDictionary<object, object> mm = new Dictionary<object, object>();
+            const int keycount = 1000;
+
+            //insert dummy keys and values 
+            foreach (var itemIndex in Enumerable.Range(0, keycount))
+            {
+                mm.Add(itemIndex.ToString(), itemIndex.ToString());
+            }
+
+            map.PutAll(mm);
+            Assert.AreEqual(map.Size(), keycount);
+
+            IDictionary<object, object> dictionary = map.GetAll(mm.Keys);
+            Assert.AreEqual(dictionary.Count, keycount);
+
         }
 
         /// <exception cref="System.Exception"></exception>
