@@ -145,6 +145,16 @@ namespace Hazelcast.Client.Test
 
         }
 
+        [Test]
+        public virtual void TestPutBigData()
+        {
+            const int dataSize = 128000;
+            var largeString = string.Join(",", Enumerable.Range(0, dataSize));
+
+            map.Put("large_value", largeString);
+            Assert.AreEqual(map.Size(), 1);
+        }
+
         /// <exception cref="System.Exception"></exception>
         [Test]
         public virtual void TestAsyncGet()
