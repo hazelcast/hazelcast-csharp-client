@@ -13,12 +13,12 @@
 [assembly: System.Reflection.AssemblyCompany("Hazelcast Inc.")]
 [assembly: System.Reflection.AssemblyProduct("Hazelcast Enterprise Edition")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2008-2014, Hazelcast, Inc")]
-[assembly: System.Reflection.AssemblyConfiguration("Commit 859ef1e")]
+[assembly: System.Reflection.AssemblyConfiguration("Commit 9281dfb")]
 [assembly: System.Runtime.InteropServices.ComVisible(false)]
 [assembly: System.CLSCompliant(true)]
-[assembly: System.Reflection.AssemblyVersion("3.4.0.1")]
-[assembly: System.Reflection.AssemblyFileVersion("3.4.0.1")]
-[assembly: System.Reflection.AssemblyInformationalVersion("3.4.0.1")]
+[assembly: System.Reflection.AssemblyVersion("3.4.0.2")]
+[assembly: System.Reflection.AssemblyFileVersion("3.4.0.2")]
+[assembly: System.Reflection.AssemblyInformationalVersion("3.4.0.2")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Hazelcast.Test")]
 
 
