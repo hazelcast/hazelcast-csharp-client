@@ -690,7 +690,7 @@ namespace Hazelcast.IO.Serialization
 
         private sealed class ThreadLocalOutputCache
         {
-            private readonly ConcurrentDictionary<Thread, Queue<IBufferObjectDataOutput>> map;
+            private readonly ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>> map;
             private readonly SerializationService serializationService;
             private readonly int bufferSize;
 
@@ -699,25 +699,21 @@ namespace Hazelcast.IO.Serialization
                 this.serializationService = serializationService;
                 bufferSize = serializationService.outputBufferSize;
                 int initialCapacity = Environment.ProcessorCount;
-                map = new ConcurrentDictionary<Thread, Queue<IBufferObjectDataOutput>>(1, initialCapacity);
+                map = new ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>>(1, initialCapacity);
             }
 
             internal IBufferObjectDataOutput Pop()
             {
-                Queue<IBufferObjectDataOutput> outputQueue;
+                ConcurrentQueue<IBufferObjectDataOutput> outputQueue;
                 Thread t = Thread.CurrentThread;
                 map.TryGetValue(t, out outputQueue);
                 if (outputQueue == null)
                 {
-                    outputQueue = new Queue<IBufferObjectDataOutput>(3);
+                    outputQueue = new ConcurrentQueue<IBufferObjectDataOutput>();
                     map.TryAdd(t, outputQueue);
                 }
-                IBufferObjectDataOutput output = null;
-                try
-                {
-                    output = outputQueue.Dequeue();
-                }
-                catch (InvalidOperationException){}
+                IBufferObjectDataOutput output;
+                outputQueue.TryDequeue(out output);
                 return output ?? serializationService.CreateObjectDataOutput(bufferSize);
             }
 
@@ -725,9 +721,13 @@ namespace Hazelcast.IO.Serialization
             {
                 if (output == null) return;
                 output.Clear();
-                Queue<IBufferObjectDataOutput> outputQueue=null;
+                ConcurrentQueue<IBufferObjectDataOutput> outputQueue = null;
                 map.TryGetValue(Thread.CurrentThread, out outputQueue);
-                if (outputQueue != null) return;
+                if (outputQueue == null)
+                {
+                    IOUtil.CloseResource(output);
+                    return;
+                }
                 try
                 {
                     outputQueue.Enqueue(output);
@@ -736,6 +736,7 @@ namespace Hazelcast.IO.Serialization
                 {
                     IOUtil.CloseResource(output);
                 }
+
             }
 
             internal void Clear()

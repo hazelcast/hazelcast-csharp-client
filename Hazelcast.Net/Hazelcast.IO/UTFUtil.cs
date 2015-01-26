@@ -595,44 +595,32 @@ namespace Hazelcast.IO
         /// <exception cref="System.IO.IOException"></exception>
         private static int Buffering(byte[] buffer, int pos, byte value, IDataOutput output)
         {
-            try
+            if (pos < buffer.Length)
             {
                 buffer[pos] = value;
                 return pos + 1;
             }
-            catch (IndexOutOfRangeException)
-            {
-                // Array bounds check by programmatically is not needed like
-                // "if (pos < buffer.length)".
-                // JVM checks instead of us, so it is unnecessary.
-                output.Write(buffer, 0, buffer.Length);
-                buffer[0] = value;
-                return 1;
-            }
+            output.Write(buffer, 0, buffer.Length);
+            buffer[0] = value;
+            return 1;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         private int Buffered(byte[] buffer, int pos, int utfLength, int readCount, IDataInput input)
         {
-            try
+            if (pos < buffer.Length)
             {
                 // 0. index of buffer is used to hold read data
                 // so copy read data to there.
                 buffer[0] = buffer[pos];
                 return pos + 1;
             }
-            catch (IndexOutOfRangeException)
-            {
-                // Array bounds check by programmatically is not needed like
-                // "if (pos < buffer.length)".
-                // checks instead of us, so it is unnecessary.
-                input.ReadFully(buffer, 1, Math.Min(buffer.Length - 1, utfLength - readCount));
-                // The first readable data is at 1. index since 0. index is used to
-                // hold read data.
-                // So the next one will be 2. index.
-                buffer[0] = buffer[1];
-                return 2;
-            }
+            input.ReadFully(buffer, 1, Math.Min(buffer.Length - 1, utfLength - readCount));
+            // The first readable data is at 1. index since 0. index is used to
+            // hold read data.
+            // So the next one will be 2. index.
+            buffer[0] = buffer[1];
+            return 2;
         }
 
         private static UTFEncoderDecoder BuildUTFUtil()
