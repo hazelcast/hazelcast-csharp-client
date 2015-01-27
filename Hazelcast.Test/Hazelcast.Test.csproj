@@ -103,6 +103,7 @@
     <Compile Include="QueueTest.cs" />
     <Compile Include="SimpleExample1.cs" />
     <Compile Include="SimpleMapTestFromClient.cs" />
+    <Compile Include="ListenerApp.cs" />
     <Compile Include="WindowsApp.cs" />
   </ItemGroup>
   <ItemGroup>
