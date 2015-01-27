@@ -57,7 +57,7 @@ namespace Hazelcast.Test
 
         private static Stats stats;
 
-        static void Main(string[] args)
+        static void Main2(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
