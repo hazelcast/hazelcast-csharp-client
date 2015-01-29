@@ -9,17 +9,10 @@ namespace Hazelcast.Core
     /// <seealso cref="IEntryListener{K,V}" />
     /// <seealso cref="IMap{K,V}.AddEntryListener(IEntryListener{K,V}, bool)" />
     [Serializable]
-    public class EntryEvent<K, V> : EventObject
+    public class EntryEvent<K, V> : AbstractMapEvent
     {
-        protected internal readonly EntryEventType entryEventType;
-        protected internal readonly IMember member;
-
-        protected internal readonly string name;
-
         protected internal K key;
-
         protected internal V oldValue;
-
         protected internal V value;
 
         public EntryEvent(object source, IMember member, EntryEventType eventType, K key, V value)
@@ -28,14 +21,11 @@ namespace Hazelcast.Core
         }
 
         public EntryEvent(object source, IMember member, EntryEventType eventType, K key, V oldValue, V value)
-            : base(source)
+            : base(source, member,eventType)
         {
-            name = (string) source;
-            this.member = member;
             this.key = key;
             this.oldValue = oldValue;
             this.value = value;
-            entryEventType = eventType;
         }
 
         public override object GetSource()
@@ -51,17 +41,44 @@ namespace Hazelcast.Core
         }
 
         /// <summary>Returns the old value of the entry event</summary>
-        /// <returns></returns>
+        /// <returns>the old value</returns>
         public virtual V GetOldValue()
         {
             return oldValue;
         }
 
         /// <summary>Returns the value of the entry event</summary>
-        /// <returns></returns>
+        /// <returns>the valueS</returns>
         public virtual V GetValue()
         {
             return value;
+        }
+
+        public override string ToString()
+        {
+            return "EntryEvent {" + GetSource() + "} key=" + GetKey() + ", oldValue=" + GetOldValue() + ", value=" +
+                   GetValue() + ", event=" + GetEventType() + ", by " + member;
+        }
+    }
+
+    public abstract class AbstractMapEvent : EventObject
+    {
+
+        protected internal readonly string name;
+        private readonly EntryEventType entryEventType;
+        protected internal readonly IMember member;
+
+        protected AbstractMapEvent(object source, IMember member, EntryEventType eventType)
+            : base(source)
+        {
+            name = (string) source;
+            this.member = member;
+            entryEventType = eventType;
+        }
+
+        public override object GetSource()
+        {
+            return name;
         }
 
         /// <summary>Returns the member fired this event.</summary>
@@ -89,9 +106,8 @@ namespace Hazelcast.Core
 
         public override string ToString()
         {
-            return "EntryEvent {" + GetSource() + "} key=" + GetKey() + ", oldValue=" + GetOldValue() + ", value=" +
-                   GetValue() + ", event=" + entryEventType + ", by " + member;
-        }
+            return "AbstractMapEvent {" + GetName() + "} eventType=" + entryEventType + ", by " + member;
+        }   
     }
 
     public class EventObject
