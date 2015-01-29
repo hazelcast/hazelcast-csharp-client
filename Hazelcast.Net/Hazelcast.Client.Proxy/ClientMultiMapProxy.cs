@@ -257,31 +257,22 @@ namespace Hazelcast.Client.Proxy
                 oldValue = GetSerializationService().ToObject<V>(_event.GetOldValue());
             }
             var key = GetSerializationService().ToObject<K>(_event.GetKey());
-            IMember member = GetContext().GetClusterService().GetMember(_event.GetUuid());
-            var entryEvent = new EntryEvent<K, V>(name, member, _event.GetEventType(), key, oldValue, value);
+            var member = GetContext().GetClusterService().GetMember(_event.GetUuid());
             switch (_event.GetEventType())
             {
                 case EntryEventType.Added:
                 {
-                    listener.EntryAdded(entryEvent);
+                    listener.EntryAdded(new EntryEvent<K, V>(name, member, _event.GetEventType(), key, oldValue, value));
                     break;
                 }
-
                 case EntryEventType.Removed:
                 {
-                    listener.EntryRemoved(entryEvent);
+                    listener.EntryRemoved(new EntryEvent<K, V>(name, member, _event.GetEventType(), key, oldValue, value));
                     break;
                 }
-
-                case EntryEventType.Updated:
+                case EntryEventType.ClearAll:
                 {
-                    listener.EntryUpdated(entryEvent);
-                    break;
-                }
-
-                case EntryEventType.Evicted:
-                {
-                    listener.EntryEvicted(entryEvent);
+                    listener.MapCleared(new MapEvent(name, member, _event.GetEventType(), _event.GetNumberOfAffectedEntries()));
                     break;
                 }
             }
