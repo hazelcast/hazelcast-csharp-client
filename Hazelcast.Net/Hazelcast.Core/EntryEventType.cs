@@ -7,6 +7,8 @@ namespace Hazelcast.Core
         Added = 1,
         Removed = 2,
         Updated = 3,
-        Evicted = 4
+        Evicted = 4,
+        EvictAll = 5,
+        ClearAll = 6
     }
 }
