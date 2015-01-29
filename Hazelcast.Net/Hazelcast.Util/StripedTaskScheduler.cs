@@ -97,7 +97,7 @@ namespace Hazelcast.Util
             if (state is int)
             {
                 BlockingCollection<Task> blockingTasks;
-                var partitionId = (int)state;
+                var partitionId = Math.Abs((int)state);
                 var threadId = partitionId % _numberOfThreads;
                 _tasks.TryGetValue(threadId, out blockingTasks);
                 if (blockingTasks != null && !blockingTasks.IsAddingCompleted)

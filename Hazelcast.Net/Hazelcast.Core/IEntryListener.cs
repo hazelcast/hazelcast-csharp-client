@@ -29,5 +29,16 @@ namespace Hazelcast.Core
         /// <remarks>Invoked when an entry is evicted.</remarks>
         /// <param name="event">entry event</param>
         void EntryEvicted(EntryEvent<K, V> @event);
+
+        /// <summary>Invoked when all entries are evicted.</summary>
+        /// <remarks>Invoked when all entries are evicted.</remarks>
+        /// <param name="event">entry event</param>
+        void MapEvicted(MapEvent @event);
+
+       /// <summary>Invoked when all entries are removed.</summary>
+        /// <remarks>Invoked when all entries are removed.</remarks>
+        /// <param name="event">entry event</param>
+        void MapCleared(MapEvent @event);
+
     }
 }

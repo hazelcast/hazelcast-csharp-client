@@ -710,7 +710,6 @@ namespace Hazelcast.Client.Test
             map.Put("key5", "value5");
 
             Thread.Sleep(10000);
-            Console.WriteLine("Please");
 
             map.Remove("key1");
             map.Remove("key3");
@@ -719,6 +718,32 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
+        }
+
+        [Test]
+        public void testListenerClearAll()
+        {
+            CountdownEvent latchClearAll = new CountdownEvent(1);
+
+            EntryAdapter<object, object> listener1 = new EntryAdapter<object, object>(
+                delegate(EntryEvent<object, object> @event) { },
+                delegate(EntryEvent<object, object> @event) { },
+                delegate(EntryEvent<object, object> @event) { },
+                delegate(EntryEvent<object, object> @event) { },
+                delegate(MapEvent evt) {  },
+                delegate(MapEvent evt) { latchClearAll.Signal(); });
+
+            string reg1 = map.AddEntryListener(listener1, false);
+
+            map.Put("key1", "value1");
+            //map.Put("key2", "value2");
+            //map.Put("key3", "value3");
+            //map.Put("key4", "value4");
+            //map.Put("key5", "value5");
+
+            map.Clear();
+
+            Assert.IsTrue(latchClearAll.Wait(TimeSpan.FromSeconds(15)));
         }
 
         [Test]
