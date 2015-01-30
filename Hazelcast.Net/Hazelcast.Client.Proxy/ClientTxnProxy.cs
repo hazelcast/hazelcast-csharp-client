@@ -55,8 +55,7 @@ namespace Hazelcast.Client.Proxy
             try
             {
                 Task<IData> task = rpc.Send(request, proxy.TxnOwner);
-                task.Wait(TimeSpan.FromSeconds(60));
-                IData result = task.Result;
+                IData result = ThreadUtil.GetResult(task);
                 return ToObject<T>(result);
             }
             catch (Exception e)

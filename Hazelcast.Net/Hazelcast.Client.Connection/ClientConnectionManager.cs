@@ -543,16 +543,19 @@ namespace Hazelcast.Client.Connection
             connection.InitProtocalData();
             auth.SetReAuth(reAuth);
             auth.SetFirstConnection(firstConnection);
-            SerializableCollection coll;
+            SerializableCollection coll = null;
             try
             {
                 coll = (SerializableCollection)connection.SendAndReceive(auth);
             }
             catch (Exception e)
             {
+                //ignore the exception, it will be handled on next line if coll is null
+            }
+            if (coll == null)
+            {
                 throw new IOException("Retry this");
             }
-
             IEnumerator<IData> enumerator = coll.GetEnumerator();
             enumerator.MoveNext();
             if (enumerator.Current != null)

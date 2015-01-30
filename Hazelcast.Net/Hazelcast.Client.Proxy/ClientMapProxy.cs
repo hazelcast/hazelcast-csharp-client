@@ -146,11 +146,12 @@ namespace Hazelcast.Client.Proxy
                 Task<IData> task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
                 Task<V> deserializeTask = task.ContinueWith(continueTask =>
                 {
+                    var result = ThreadUtil.GetResult(continueTask);
                     if (nearCache != null)
                     {
-                        nearCache.Put(keyData, continueTask.Result);
+                        nearCache.Put(keyData, result);
                     }
-                    return ToObject<V>(continueTask.Result);
+                    return ToObject<V>(result);
                 });
                 return deserializeTask;
             }
@@ -178,7 +179,7 @@ namespace Hazelcast.Client.Proxy
                 Task<V> deserializeTask = task.ContinueWith(continueTask =>
                 {
                     InvalidateNearCacheEntry(keyData);
-                    return ToObject<V>(continueTask.Result);
+                    return ToObject<V>(ThreadUtil.GetResult(continueTask));
                 });
                 return deserializeTask;
             }
@@ -199,7 +200,7 @@ namespace Hazelcast.Client.Proxy
                 Task<V> deserializeTask = task.ContinueWith(continueTask =>
                 {
                     InvalidateNearCacheEntry(keyData);
-                    return ToObject<V>(continueTask.Result);
+                    return ToObject<V>(ThreadUtil.GetResult(continueTask));
                 });
                 return deserializeTask;
             }

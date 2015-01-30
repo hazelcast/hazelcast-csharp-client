@@ -93,8 +93,7 @@ namespace Hazelcast.Client.Spi
             try
             {
                 var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
-                task.Wait(TimeSpan.FromSeconds(60));
-                var result = task.Result;
+                var result = ThreadUtil.GetResult(task);
                 return context.GetSerializationService().ToObject<T>(result);
             }
             catch (Exception e) {
@@ -105,8 +104,7 @@ namespace Hazelcast.Client.Spi
         {
             try {
                 var task = GetContext().GetInvocationService().InvokeOnRandomTarget(request);
-                task.Wait(TimeSpan.FromSeconds(60));
-                var result = task.Result;
+                var result = ThreadUtil.GetResult(task);
                 return context.GetSerializationService().ToObject<T>(result);
             } catch (Exception e) {
                 throw ExceptionUtil.Rethrow(e);
