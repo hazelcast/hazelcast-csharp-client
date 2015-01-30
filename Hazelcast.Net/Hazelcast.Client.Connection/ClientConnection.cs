@@ -107,10 +107,8 @@ namespace Hazelcast.Client.Connection
                 //TODO BURASI NOLCAK
                 //clientSocket.ExclusiveAddressUse SetReuseAddress(options.IsReuseAddress());
 
-                if (options.GetTimeout() > 0)
-                {
-                    clientSocket.ReceiveTimeout = options.GetTimeout();
-                }
+                clientSocket.ReceiveTimeout = options.GetTimeout() > 0 ? options.GetTimeout() : 2000;
+
                 int bufferSize = options.GetBufferSize()*1024;
                 if (bufferSize < 0)
                 {
@@ -243,6 +241,10 @@ namespace Hazelcast.Client.Connection
                 if (readFromSocket)
                 {
                     SocketError socketError;
+                    if (!clientSocket.Connected)
+                    {
+                        throw new IOException("Remote socket closed!");
+                    }
                     int receivedByteSize = 
                         clientSocket.Receive(
                         receiveBuffer.Array(),
@@ -894,12 +896,12 @@ namespace Hazelcast.Client.Connection
             }
             if (error != null)
             {
-                if (error.Name.Contains("TargetNotMemberException"))
+                if (error.Name !=null && error.Name.Contains("TargetNotMemberException"))
                 {
                     if (_ReSend(task)) return;
                 }
-                if (error.Name.Contains("HazelcastInstanceNotActiveException") ||
-                    error.Name.Contains("TargetDisconnectedException"))
+                if (error.Name != null && (error.Name.Contains("HazelcastInstanceNotActiveException") ||
+                    error.Name.Contains("TargetDisconnectedException")))
                 {
                     if (taskData.Request is IRetryableRequest || redoOperations)
                     {
