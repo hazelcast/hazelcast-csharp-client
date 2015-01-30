@@ -139,8 +139,7 @@ namespace Hazelcast.Client.Request.Transaction
             try
             {
                 var task = rpc.Send(request, txOwner);
-                task.Wait(TimeSpan.FromSeconds(60));
-                var result = task.Result;
+                var result = ThreadUtil.GetResult(task);
                 return ss.ToObject<T>(result);
             }
             catch (Exception e)

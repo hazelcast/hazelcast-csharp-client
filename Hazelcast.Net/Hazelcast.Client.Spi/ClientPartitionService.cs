@@ -10,6 +10,7 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
@@ -164,7 +165,7 @@ namespace Hazelcast.Client.Spi
             try
             {
                 var task = client.GetInvocationService().InvokeOnTarget(new GetPartitionsRequest(), address);
-                var partitionsResponse = task.Result;
+                var partitionsResponse = ThreadUtil.GetResult(task);
                 return client.GetSerializationService().ToObject<PartitionsResponse>(partitionsResponse);
             }
             catch (Exception e)

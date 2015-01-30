@@ -75,7 +75,10 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public void Close()
         {
-            _binaryReader.Close();
+            if (_binaryReader != null)
+            {
+                _binaryReader.Close();
+            }
         }
 
         public void Mark(int readlimit)
