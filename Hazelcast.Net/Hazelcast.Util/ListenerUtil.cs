@@ -22,7 +22,7 @@ namespace Hazelcast.Util
                 {
                     task = context.GetInvocationService().InvokeOnKeyOwner(request, key, handler);
                 }
-                var registrationId = context.GetSerializationService().ToObject<string>(task.Result);
+                var registrationId = context.GetSerializationService().ToObject<string>(ThreadUtil.GetResult(task));
                 context.GetRemotingService().RegisterListener(registrationId, request.CallId);
                 return registrationId;
             }
@@ -44,7 +44,7 @@ namespace Hazelcast.Util
                 }
                 request.SetRegistrationId(registrationId);
                 Task<IData> task = context.GetInvocationService().InvokeOnRandomTarget(request);
-                var result = context.GetSerializationService().ToObject<bool>(task.Result);
+                var result = context.GetSerializationService().ToObject<bool>(ThreadUtil.GetResult(task));
                 return result;
             }
             catch (Exception e)
