@@ -46,7 +46,7 @@ namespace Hazelcast.Test
 
     internal class SimpleMapTestFromClient
     {
-        public static int THREAD_COUNT = 100;
+        public static int THREAD_COUNT = 5;
         public static int ENTRY_COUNT = 10*1000;
         public static int VALUE_SIZE = 1000;
         public static int STATS_SECONDS = 10;
@@ -57,13 +57,13 @@ namespace Hazelcast.Test
 
         private static Stats stats;
 
-        static void Main2(string[] args)
+        static void Main(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
             var clientConfig = new ClientConfig();
-            clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
-            //clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
+            clientConfig.GetNetworkConfig().AddAddress("192.168.2.73");
+            clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
             hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
 
             Console.WriteLine("Client Ready to go");
@@ -107,10 +107,8 @@ namespace Hazelcast.Test
             for (int i = 0; i < THREAD_COUNT; i++)
             {
                 var t = new Task(()=> HzTask(hazelcast),TaskCreationOptions.LongRunning);
-                
-                t.Start();
-
                 tasks.Add(t);
+                t.Start();
             }
 
             var tm = new Thread(StatDisplayTask);
@@ -136,8 +134,14 @@ namespace Hazelcast.Test
             {
                 var random = new Random();
                 IMap<string, byte[]> map = hz.GetMap<String, byte[]>("default");
+                int i = 0;
                 while (true)
                 {
+                    i++;
+                    if (i%1000 == 0)
+                    {
+                        Console.WriteLine("Iterate....");
+                    }
                     try
                     {
                         int key = random.Next(0, ENTRY_COUNT);
@@ -163,7 +167,8 @@ namespace Hazelcast.Test
                     catch (Exception ex)
                     {
                         Interlocked.Increment(ref stats.exceptions);
-                        //Console.WriteLine(ex);
+                        Console.WriteLine("HATAAAAAA");
+                        Console.WriteLine(ex.StackTrace);
                         //Console.ReadKey();
                         //break;
                     }
@@ -173,9 +178,10 @@ namespace Hazelcast.Test
             }
             catch (Exception e)
             {
-                //Console.WriteLine(e.StackTrace);
+                Console.WriteLine("HATAAAAAA--BUYUK");
+                Console.WriteLine(e.StackTrace);
             }
-
+            Console.WriteLine("BITTIIIII");
         }
 
         public static void StatDisplayTask()
