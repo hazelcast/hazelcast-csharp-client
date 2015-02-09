@@ -40,5 +40,9 @@ namespace Hazelcast.Client.Spi
         public TargetDisconnectedException(Address address) : base("Target[" + address + "] disconnected.")
         {
         }
+
+        public TargetDisconnectedException(String msg) : base(msg)
+        {
+        }
     }
 }

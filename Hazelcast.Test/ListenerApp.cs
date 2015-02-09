@@ -13,7 +13,7 @@ namespace Hazelcast.Test
     public class ListenerApp
     {
 
-        static void Main(string[] args)
+        static void Main2(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 

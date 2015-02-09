@@ -23,7 +23,8 @@ namespace Hazelcast.Client.Connection
     {
         #region fields
 
-        public const int RetryCount = 20;
+        public static int RetryCount = 2000;
+        public static int RetryWaitTime = 2500;
         public const int DefaultEventThreadCount = 3;
         private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
 
@@ -45,7 +46,7 @@ namespace Hazelcast.Client.Connection
         private readonly Router router;
 
         private readonly ISocketInterceptor socketInterceptor;
-        private readonly SocketOptions socketOptions;
+        private ClientNetworkConfig _networkConfig;
         private volatile bool _live;
 
         private volatile int _nextConnectionId;
@@ -56,6 +57,10 @@ namespace Hazelcast.Client.Connection
         private volatile ClientPrincipal principal;
 
         private Thread _heartBeatThread;
+
+        private object _connectionMutex = new object();
+       
+
         #endregion
 
         public ClientConnectionManager(HazelcastClient client, LoadBalancer loadBalancer, bool smartRouting = true)
@@ -66,6 +71,9 @@ namespace Hazelcast.Client.Connection
             _smartRouting = smartRouting;
 
             ClientConfig config = client.GetClientConfig();
+
+            _networkConfig = config.GetNetworkConfig();
+
             _redoOperation = config.GetNetworkConfig().IsRedoOperation();
             _credentials = config.GetCredentials();
 
@@ -78,25 +86,43 @@ namespace Hazelcast.Client.Connection
             }
             socketInterceptor = null;
 
-            //        int connectionTimeout = config.getConnectionTimeout(); //TODO
-            socketOptions = config.GetNetworkConfig().GetSocketOptions();
-            int eventTreadCount = 0;
+            var eventTreadCount = ReadEnvironmentVar("hazelcast.client.event.thread.count");
+            eventTreadCount = eventTreadCount > 0 ? eventTreadCount : DefaultEventThreadCount;
+            _taskScheduler = new StripedTaskScheduler(eventTreadCount);
 
-            var param = Environment.GetEnvironmentVariable("hazelcast.client.event.thread.count");
+            var timeout = ReadEnvironmentVar("hazelcast.client.request.timeout");
+            if (timeout > 0)
+            {
+                ThreadUtil.TaskOperationTimeOutMilliseconds = timeout;
+            }
+            var retryCount = ReadEnvironmentVar("hazelcast.client.request.retry.count");
+            if (retryCount > 0)
+            {
+                RetryCount = retryCount;
+            }
+            var retryWaitTime = ReadEnvironmentVar("hazelcast.client.request.retry.wait.time");
+            if (retryWaitTime > 0)
+            {
+                RetryWaitTime = retryWaitTime;
+            }
+        }
+
+        private int ReadEnvironmentVar(string var)
+        {
+            int p = 0;
+            var param = Environment.GetEnvironmentVariable(var);
             try
             {
                 if (param != null)
                 {
-                    eventTreadCount = Convert.ToInt32(param, 10);
+                    p = Convert.ToInt32(param, 10);
                 }
             }
             catch (Exception)
             {
-                
-                logger.Warning("Provided event thread count is not a valid value : "+param);
+                logger.Warning("Provided value is not a valid value : " + param);
             }
-            eventTreadCount = eventTreadCount == 0 ? DefaultEventThreadCount : eventTreadCount;
-            _taskScheduler = new StripedTaskScheduler(eventTreadCount);
+            return p;
         }
 
         #region IConnectionManager
@@ -274,51 +300,62 @@ namespace Hazelcast.Client.Connection
                     if (_addresses.TryRemove(address, out linkedListNode))
                     {
                         _clientConnections.Remove(linkedListNode);
+                        
                     }
                 }
-
-                //if (linkedListNode != null)
-                //{
-                //    DestroyConnection(linkedListNode.Value);
-                //}
-
             }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         /// <exception cref="HazelcastException"></exception>
-        private ClientConnection TryGetNewConnection(Address address, Authenticator _authenticator, bool blocking)
+        private ClientConnection TryGetNewConnection(Address address, Authenticator _authenticator)
         {
             CheckLive();
-            return GetNewConnection(address, _authenticator, blocking);
+            return GetNewConnection(address, _authenticator, false);
         }
 
         private ClientConnection GetNewConnection(Address address, Authenticator _authenticator, bool blocking)
         {
-            lock (this)
+            Console.WriteLine("GETNEW-CONNECTION");
+            ClientConnection connection = null;
+            lock (_connectionMutex)
             {
-                int id = blocking ? -1 : _nextConnectionId;
-                var connection = new ClientConnection(this, id, address, socketOptions, client.GetSerializationService(),
-                    _redoOperation);
-                if (socketInterceptor != null)
+                try
                 {
-                    socketInterceptor.OnConnect(connection.GetSocket());
+                    int id = blocking ? -1 : _nextConnectionId;
+                    connection = new ClientConnection(this, id, address, _networkConfig, client.GetSerializationService(),
+                        _redoOperation);
+                    if (socketInterceptor != null)
+                    {
+                        socketInterceptor.OnConnect(connection.GetSocket());
+                    }
+                    _authenticator(connection);
+                    if (!blocking)
+                    {
+                        Console.WriteLine("SwitchToNonBlockingMode YAPILACAK....");
+                        connection.SwitchToNonBlockingMode();
+                        Interlocked.Increment(ref _nextConnectionId);
+                    }
+                    Console.WriteLine("CONNECTION RETURN isConnected:" + connection.GetSocket().Connected);
+                    return connection;
                 }
-                _authenticator(connection);
-                if (!blocking)
+                catch (Exception e)
                 {
-                    connection.SwitchToNonBlockingMode();
-                    Interlocked.Increment(ref _nextConnectionId);
+                    if (connection != null)
+                    {
+                        connection.Close();
+                    }
+                    ExceptionUtil.Rethrow(e, typeof(IOException));
                 }
-                return connection;
             }
+            return null;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         private ClientConnection _GetOrConnectWithRetry(Address target)
         {
             int count = 0;
-            IOException lastError = null;
+            Exception lastError = null;
             while (count < RetryCount)
             {
                 try
@@ -338,9 +375,21 @@ namespace Hazelcast.Client.Connection
                 {
                     lastError = e;
                 }
+                catch (HazelcastInstanceNotActiveException e)
+                {
+                    lastError = e;
+                }
                 target = null;
                 count++;
+                try
+                {
+                    Thread.Sleep(100);
+                }
+                catch (Exception)
+                {
+                }
             }
+            Console.WriteLine("LAST ERRRROR: "+lastError);
             throw lastError;
         }
 
@@ -370,7 +419,7 @@ namespace Hazelcast.Client.Connection
                 {
                     if (!_addresses.ContainsKey(address))
                     {
-                        clientConnection = TryGetNewConnection(address, _authenticator, false);
+                        clientConnection = TryGetNewConnection(address, _authenticator);
                         var linkedListNode = _clientConnections.AddLast(clientConnection);
                         _addresses.TryAdd(address, linkedListNode);
                     }
@@ -410,23 +459,28 @@ namespace Hazelcast.Client.Connection
                 foreach (IPEndPoint isa in socketAddresses)
                 {
                     var address = new Address(isa);
+                    ClientConnection connection=null;
                     try
                     {
-                        ClientConnection connection = GetNewConnection(address, ManagerAuthenticator, true);
+                        connection = GetNewConnection(address, ManagerAuthenticator, true);
                         _live = true;
                         FireConnectionEvent(false);
                         return connection;
                     }
-                    catch (IOException e)
-                    {
-                        lastError = e;
-                        logger.Finest("IO error during initial connection...", e);
-                    }
                     catch (AuthenticationException e)
                     {
                         lastError = e;
-                        logger.Warning("Authentication error on " + address, e);
+                        logger.Warning("Authentication error during initial connection to " + address, e);
                     }
+                    catch (Exception e)
+                    {
+                        lastError = e;
+                        logger.Finest("Exception during initial connection to" + address, e);
+                    }
+                    //if (connection != null)
+                    //{
+                    //    connection.Close();
+                    //}
                 }
                 if (attempt++ >= connectionAttemptLimit)
                 {
@@ -538,6 +592,7 @@ namespace Hazelcast.Client.Connection
         private T _Authenticate<T>(ClientConnection connection, ICredentials credentials, ClientPrincipal principal,
             bool reAuth, bool firstConnection)
         {
+            Console.WriteLine("AUTHENTICATE :::::");
             ISerializationService ss = client.GetSerializationService();
             var auth = new AuthenticationRequest(credentials, principal);
             connection.InitProtocalData();
@@ -546,7 +601,9 @@ namespace Hazelcast.Client.Connection
             SerializableCollection coll = null;
             try
             {
+                Console.WriteLine("SEnding AUTH");
                 coll = (SerializableCollection)connection.SendAndReceive(auth);
+                Console.WriteLine("AUTHENTICATE RESULT" + coll);
             }
             catch (Exception e)
             {
@@ -579,6 +636,7 @@ namespace Hazelcast.Client.Connection
 
         internal void ReSend(Task task)
         {
+            Console.Write(">R>"+task.Id+">");
             ClientConnection clientConnection = _GetOrConnectWithRetry(null);
             clientConnection.Send(task);
         }
