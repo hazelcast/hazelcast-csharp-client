@@ -12,8 +12,11 @@ namespace Hazelcast.Client.Request.Base
     {
         private int _callId;
         private IData _response;
+        public IData _errData;
 
         private GenericError _error;
+
+        private Boolean _isError;
 
         public ClientResponse()
         {
@@ -37,22 +40,13 @@ namespace Hazelcast.Client.Request.Base
         public void ReadData(IObjectDataInput input)
         {
             _callId = input.ReadInt();
-            var isError = input.ReadBoolean();
-            if (isError)
-            {
-                _error = input.ReadObject<GenericError>();
-                _response = null;
-            }
-            else
-            {
-                _response = input.ReadData();
-                _error = null;
-            }
+            _isError = input.ReadBoolean();
+            _response = input.ReadData();
         }
 
-        public GenericError Error
+        public Boolean IsError
         {
-            get { return _error; }
+            get { return _isError; }
         }
 
         public IData Response
