@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using Hazelcast.Client;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Transaction;
@@ -43,9 +44,7 @@ WrongTargetException
     /// </summary>
     internal sealed class ExceptionUtil
     {
-        private const string ExceptionSeparator = "------ End remote and begin local stack-trace ------";
-
-        public static Exception Rethrow(Exception t)
+        public static Exception Rethrow(Exception t, Type allowedType)
         {
             if (t is NotImplementedException)
             {
@@ -59,129 +58,66 @@ WrongTargetException
                     Rethrow(exception);
                 }
             }
-            if (t is GenericError)
+            var e = t is GenericError ? ConvertGenericError((GenericError)t) : t;
+            if (allowedType != null && allowedType.IsInstanceOfType(e))
             {
-                var genericError = ((GenericError) t);
-                var name = genericError.Name.Substring(genericError.Name.LastIndexOf(".")+1);
-                switch (name)
+                throw e;
+            }
+            throw new HazelcastException(t);
+        }
+
+        public static Exception ConvertGenericError(GenericError genericError)
+        {
+            var name = genericError.Name.Substring(genericError.Name.LastIndexOf(".") + 1);
+            switch (name)
+            {
+                case "IllegalStateException":
+                    return new InvalidOperationException(genericError.Message);
+                case "IllegalMonitorStateException":
+                    return new SynchronizationLockException(genericError.Message);
+                case "IOException":
+                    return new IOException(genericError.Message);
+                case "TransactionException":
+                    return new TransactionException(genericError.Message);
+                case "TransactionNotActiveException":
+                    return new TransactionNotActiveException(genericError.Message);
+                case "HazelcastException":
+                    return new HazelcastException(genericError.Message);
+                case "NullPointerException":
+                    return new NullReferenceException(genericError.Message);
+                case "QueryException":
+                    return new QueryException(genericError.Message);
+                case "HazelcastInstanceNotActiveException":
+                    return new HazelcastInstanceNotActiveException();
+                case "TargetDisconnectedException":
+                    return new TargetDisconnectedException(genericError.Message);
+                default:
+                    return new HazelcastException(genericError.Message);
+            }
+        }
+
+        public static Exception Rethrow(Exception t)
+        {
+            if (t is NotImplementedException)
+            {
+                throw t;
+            }
+            if (t is AggregateException)
+            {
+                var readOnlyCollection = ((AggregateException)t).InnerExceptions;
+                foreach (var exception in readOnlyCollection)
                 {
-                    case "IllegalStateException":
-                        throw new InvalidOperationException(genericError.Message);
-                    case "IllegalMonitorStateException":
-                        throw new SynchronizationLockException(genericError.Message);
-                    case "IOException":
-                        throw new IOException(genericError.Message);
-                    case "TransactionException":
-                        throw new TransactionException(genericError.Message);
-                    case "TransactionNotActiveException":
-                        throw new TransactionNotActiveException(genericError.Message);
-                    case "HazelcastException":
-                        throw new HazelcastException(genericError.Message);
-                    case "NullPointerException":
-                        throw new NullReferenceException(genericError.Message);
-                    case "QueryException":
-                        throw new QueryException(genericError.Message);
-                    default:
-                        throw t;
+                    Rethrow(exception);
                 }
             }
+            if (t is GenericError)
+            {
 
-            Logger.GetLogger(typeof(HazelcastException)).Finest(t);
-            throw new HazelcastException(t);
-            //if (t. is Error)
-            //{
-            //    if (t is OutOfMemoryException)
-            //    {
-            //        OutOfMemoryErrorDispatcher.OnOutOfMemory((OutOfMemoryException)t);
-            //    }
-            //    throw (Error)t;
-            //}
-            //else
-            //{
-            //    if (t is RuntimeException)
-            //    {
-            //        throw (RuntimeException)t;
-            //    }
-            //    else
-            //    {
-            //        if (t is ExecutionException)
-            //        {
-            //            Exception cause = t.InnerException;
-            //            if (cause != null)
-            //            {
-            //                throw Rethrow(cause);
-            //            }
-            //            else
-            //            {
-            //                throw new HazelcastException(t);
-            //            }
-            //        }
-            //        else
-            //        {
-            //            throw new HazelcastException(t);
-            //        }
-            //    }
-            //}
+                throw ConvertGenericError(t as GenericError);
+            }
+            throw t;
         }
 
-        /// <exception cref="T"></exception>
-        public static Exception Rethrow<T>(Exception t) where T : Exception
-        {
-            return Rethrow<Exception>(t);
-            //System.Type allowedType = typeof(T);
-            //if (t is Error)
-            //{
-            //    if (t is OutOfMemoryException)
-            //    {
-            //        OutOfMemoryErrorDispatcher.OnOutOfMemory((OutOfMemoryException)t);
-            //    }
-            //    throw (Error)t;
-            //}
-            //else
-            //{
-            //    if (t is RuntimeException)
-            //    {
-            //        throw (RuntimeException)t;
-            //    }
-            //    else
-            //    {
-            //        if (t is ExecutionException)
-            //        {
-            //            Exception cause = t.InnerException;
-            //            if (cause != null)
-            //            {
-            //                throw Rethrow(cause, allowedType);
-            //            }
-            //            else
-            //            {
-            //                throw new HazelcastException(t);
-            //            }
-            //        }
-            //        else
-            //        {
-            //            if (allowedType.IsAssignableFrom(t.GetFieldType()))
-            //            {
-            //                throw (T)t;
-            //            }
-            //            else
-            //            {
-            //                throw new HazelcastException(t);
-            //            }
-            //        }
-            //    }
-            //}
-        }
-
-        /// <exception cref="System.Exception"></exception>
-        public static Exception RethrowAllowInterrupted(Exception t)
-        {
-            return Rethrow<Exception>(t);
-        }
-
-        //public static T SneakyThrow<T>(Exception t) where T : Exception
-        //{
-        //    throw t;
-        //}
 
         //public static void FixRemoteStackTrace(Exception remoteCause, StackTraceElement[] localSideStackTrace)
         //{

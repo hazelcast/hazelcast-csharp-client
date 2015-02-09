@@ -31,15 +31,11 @@ namespace Hazelcast.Config
 		/// </remarks>
 		private bool redoOperation = false;
 
-		/// <summary>Client will be sending heartbeat messages to members and this is the timeout.</summary>
+        /// <summary>Timeout value in millis for nodes to accept client connection requests</summary>
 		/// <remarks>
-		/// Client will be sending heartbeat messages to members and this is the timeout. If there is no any message
-		/// passing between client and member within the
-		/// <see cref="connectionTimeout">connectionTimeout</see>
-		/// milliseconds the connection
-		/// will be closed.
+        /// Timeout value in millis for nodes to accept client connection requests
 		/// </remarks>
-		private int connectionTimeout = 60000;
+		private int connectionTimeout = -1;
 
 		/// <summary>
 		/// While client is trying to connect initially to one of the members in the
@@ -50,7 +46,7 @@ namespace Hazelcast.Config
 		/// <see cref="connectionAttemptLimit">connectionAttemptLimit</see>
 		/// times.
 		/// </summary>
-		private int connectionAttemptLimit = 2;
+		private int connectionAttemptLimit = 20;
 
 		/// <summary>Period for the next attempt to find a member to connect.</summary>
 		/// <remarks>
@@ -58,7 +54,7 @@ namespace Hazelcast.Config
 		/// <see cref="connectionAttemptLimit">connectionAttemptLimit</see>
 		/// ).
 		/// </remarks>
-		private int connectionAttemptPeriod = 3000;
+		private int connectionAttemptPeriod = 5000;
 
 		/// <summary>Will be called with the Socket, each time client creates a connection to any Member.</summary>
 		/// <remarks>Will be called with the Socket, each time client creates a connection to any Member.</remarks>
