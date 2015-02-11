@@ -133,11 +133,6 @@ namespace Hazelcast.Client.Connection
                     clientSocket.Close();
                     throw new IOException("Failed to connect server.");
                 }
-                else
-                {
-                    Console.WriteLine("SOCKET CONNECTED::::::::::" + id);
-                }
-
                 var netStream = new NetworkStream(clientSocket, false);
                 var bufStream = new BufferedStream(netStream, bufferSize);
 
@@ -181,7 +176,6 @@ namespace Hazelcast.Client.Connection
 
         private void StartAsyncProcess()
         {
-            Console.WriteLine("FIRST BEGIN READ:::::::");
             BeginRead();
         }
 
@@ -373,44 +367,38 @@ namespace Hazelcast.Client.Connection
         public void RemoveConnectionCalls()
         {
             logger.Finest("RemoveConnectionCalls id:"+id+" ...START :"+ requestTasks.Count);
-            GenericError responseGenericError;
-            if (_clientConnectionManager.Live)
-            {
-                responseGenericError = new GenericError("TargetDisconnectedException", "Disconnected:" + GetRemoteEndpoint(), "", 0);
-            }
-            else
-            {
-                responseGenericError = new GenericError("HazelcastException", "Client is shutting down!!!", "", 0);
-            }
+            //GenericError responseGenericError;
+            //if (_clientConnectionManager.Live)
+            //{
+            //    responseGenericError = new GenericError("TargetDisconnectedException", "Disconnected:" + GetRemoteEndpoint(), "", 0);
+            //}
+            //else
+            //{
+            //    responseGenericError = new GenericError("HazelcastException", "Client is shutting down!!!", "", 0);
+            //}
             foreach (var entry in requestTasks)
             {
-                logger.Finest("Removing Connection tasks...S1");
-
                 Task removed;
                 if (requestTasks.TryRemove(entry.Key, out removed))
                 {
-                    logger.Finest("Handle a request by Exception");
-                    HandleRequestTask(removed, responseGenericError);
+                    HandleRequestTaskAsFailed(removed);
                 }
                 if (eventTasks.TryRemove(entry.Key, out removed))
                 {
-                    logger.Finest("Handle an event req by Exception");
-                    HandleRequestTask(removed, responseGenericError);
+                    HandleRequestTaskAsFailed(removed);
                 }
             }
             //requestTasks.Clear();
 
             foreach (var entry in eventTasks)
             {
-                logger.Finest("Removing Connection tasks....s2");
                 Task removed;
                 if (eventTasks.TryRemove(entry.Key, out removed))
                 {
-                    HandleRequestTask(removed, responseGenericError);
+                    HandleRequestTaskAsFailed(removed);
                 }
             }
             //eventTasks.Clear();
-            logger.Finest("RemoveConnectionCalls...END");
         }
 
         #endregion
@@ -466,8 +454,8 @@ namespace Hazelcast.Client.Connection
                 UnRegisterCall(callId);
                 UnRegisterEvent(callId);
 
-                var genericError = new GenericError("TargetDisconnectedException", "Disconnected:" + GetRemoteEndpoint(), "", 0);
-                HandleRequestTask(task, genericError);
+                //var genericError = new GenericError("TargetDisconnectedException", "Disconnected:" + GetRemoteEndpoint(), "", 0);
+                HandleRequestTaskAsFailed(task);
             }
         }
 
@@ -522,25 +510,34 @@ namespace Hazelcast.Client.Connection
             return _task;
         }
 
-
         private bool _ReSend(Task task)
         {
-            logger.Finest("ReSending task:" + task);
-
+            logger.Finest("ReSending task:" + task.Id);
             var taskData = task.AsyncState as TaskData;
-            taskData.RetryCount++;
-            if (taskData.RetryCount > ClientConnectionManager.RetryCount || taskData.Request.SingleConnection)
+            if (taskData == null)
+            {
+                return false;
+            }
+            if (taskData.IncrementAndGetRetryCount() > ClientConnectionManager.RetryCount || taskData.Request.SingleConnection)
             {
                 return false;
             }
             Task.Factory.StartNew(() =>
             {
-                while (!_clientConnectionManager.OwnerLive)
-                {
-                    Console.WriteLine("WAITING FOR OWNER COME BACK TO RESEND");
-                    Thread.Sleep(ClientConnectionManager.RetryWaitTime);
-                }
+
+                //while (!_clientConnectionManager.OwnerLive)
+                //{
+                //    Console.WriteLine("WAITING FOR OWNER COME BACK TO RESEND");
+                //    Thread.Sleep(ClientConnectionManager.RetryWaitTime);
+                //}
+                Thread.Sleep(ClientConnectionManager.RetryWaitTime);
                 _clientConnectionManager.ReSend(task);
+            }).ContinueWith(taskResend =>
+            {
+                if (taskResend.IsFaulted && taskResend.Exception !=null)
+                {
+                    HandleRequestTaskAsFailed(task);
+                }
             });
             return true;
         }
@@ -548,14 +545,6 @@ namespace Hazelcast.Client.Connection
         #endregion
 
         #region ASYNC PROCESS
-
-        private void ProcessError()
-        {
-            //ERROR
-            logger.Severe("Socket Error occured");
-            //Task.Factory.StartNew(Close);
-        }
-
         private void BeginWrite()
         {
             if (!CheckLive())
@@ -677,7 +666,6 @@ namespace Hazelcast.Client.Connection
             }
             try
             {
-                Console.Write("<");
                 var socketError = SocketError.Success;
                 try
                 {
@@ -737,7 +725,6 @@ namespace Hazelcast.Client.Connection
         {
             if (clientSocket == null)
             {
-                Console.WriteLine("CLIENT SOCKET NULLLLLL :::::::::::::::");
                 return;
             }
             try
@@ -851,9 +838,19 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private void HandleRequestTask(Task task, GenericError error)
+        private void HandleRequestTaskAsFailed(Task task)
         {
-            HandleRequestTask(task, null, error);
+            GenericError responseGenericError;
+            if (_clientConnectionManager.Live)
+            {
+                responseGenericError = new GenericError("TargetDisconnectedException", "Disconnected:" + GetRemoteEndpoint(), "", 0);
+            }
+            else
+            {
+                responseGenericError = new GenericError("HazelcastException", "Client is shutting down!!!", "", 0);
+            }
+
+            HandleRequestTask(task, null, responseGenericError);
         }
 
         private void HandleRequestTask(Task task, IData response, GenericError error)
@@ -914,7 +911,6 @@ namespace Hazelcast.Client.Connection
 
         private void HandleSocketException(Exception e)
         {
-            Console.WriteLine("HANDLE SOCKET EXCEPTION ::::::" + e);
             var se = e as SocketException;
             if (se != null)
             {
@@ -992,7 +988,7 @@ namespace Hazelcast.Client.Connection
         private volatile IData _response;
         private volatile ClientRequest _request;
         private volatile DistributedEventHandler _handler;
-        private volatile int _retryCount;
+        private int _retryCount;
         private volatile int _partitionId;
 
         public TaskData(ClientRequest request, IData response = null, DistributedEventHandler handler = null,
@@ -1032,7 +1028,11 @@ namespace Hazelcast.Client.Connection
         internal int RetryCount
         {
             get { return _retryCount; }
-            set { _retryCount = value; }
+        }
+
+        internal int IncrementAndGetRetryCount()
+        {
+            return Interlocked.Increment(ref _retryCount);
         }
 
         public int PartitionId

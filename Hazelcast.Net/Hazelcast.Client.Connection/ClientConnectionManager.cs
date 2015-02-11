@@ -23,8 +23,8 @@ namespace Hazelcast.Client.Connection
     {
         #region fields
 
-        public static int RetryCount = 2000;
-        public static int RetryWaitTime = 2500;
+        public static int RetryCount = 20;
+        public static int RetryWaitTime = 250;
         public const int DefaultEventThreadCount = 3;
         private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
 
@@ -282,8 +282,7 @@ namespace Hazelcast.Client.Connection
         {
             if (clientConnection != null && !clientConnection.Live)
             {
-                logger.Finest("ClientManager is Destroying Connection con:" + clientConnection);
-                DestroyConnection(clientConnection.GetRemoteEndpoint());
+                 DestroyConnection(clientConnection.GetRemoteEndpoint());
             }
         }
 
@@ -316,7 +315,6 @@ namespace Hazelcast.Client.Connection
 
         private ClientConnection GetNewConnection(Address address, Authenticator _authenticator, bool blocking)
         {
-            Console.WriteLine("GETNEW-CONNECTION");
             ClientConnection connection = null;
             lock (_connectionMutex)
             {
@@ -332,11 +330,9 @@ namespace Hazelcast.Client.Connection
                     _authenticator(connection);
                     if (!blocking)
                     {
-                        Console.WriteLine("SwitchToNonBlockingMode YAPILACAK....");
                         connection.SwitchToNonBlockingMode();
                         Interlocked.Increment(ref _nextConnectionId);
                     }
-                    Console.WriteLine("CONNECTION RETURN isConnected:" + connection.GetSocket().Connected);
                     return connection;
                 }
                 catch (Exception e)
@@ -389,7 +385,6 @@ namespace Hazelcast.Client.Connection
                 {
                 }
             }
-            Console.WriteLine("LAST ERRRROR: "+lastError);
             throw lastError;
         }
 
@@ -592,7 +587,6 @@ namespace Hazelcast.Client.Connection
         private T _Authenticate<T>(ClientConnection connection, ICredentials credentials, ClientPrincipal principal,
             bool reAuth, bool firstConnection)
         {
-            Console.WriteLine("AUTHENTICATE :::::");
             ISerializationService ss = client.GetSerializationService();
             var auth = new AuthenticationRequest(credentials, principal);
             connection.InitProtocalData();
@@ -601,9 +595,7 @@ namespace Hazelcast.Client.Connection
             SerializableCollection coll = null;
             try
             {
-                Console.WriteLine("SEnding AUTH");
                 coll = (SerializableCollection)connection.SendAndReceive(auth);
-                Console.WriteLine("AUTHENTICATE RESULT" + coll);
             }
             catch (Exception e)
             {
@@ -636,7 +628,7 @@ namespace Hazelcast.Client.Connection
 
         internal void ReSend(Task task)
         {
-            Console.Write(">R>"+task.Id+">");
+            Console.WriteLine("/R-id:" + task.Id +"-c:"+((TaskData)task.AsyncState).RetryCount + ">");
             ClientConnection clientConnection = _GetOrConnectWithRetry(null);
             clientConnection.Send(task);
         }
