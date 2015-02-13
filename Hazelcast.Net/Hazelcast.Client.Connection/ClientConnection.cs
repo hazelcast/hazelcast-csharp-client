@@ -40,7 +40,7 @@ namespace Hazelcast.Client.Connection
         private volatile Address _endpoint;
 
         private volatile Socket clientSocket;
-        private long lastRead = Clock.CurrentTimeMillis();
+        //private long lastRead = Clock.CurrentTimeMillis();
 
         private readonly ISerializationService serializationService;
 
@@ -55,13 +55,13 @@ namespace Hazelcast.Client.Connection
         private readonly bool redoOperations;
         private readonly ClientConnectionManager _clientConnectionManager;
 
-        private ByteBuffer sendBuffer;
-        private ByteBuffer receiveBuffer;
+        private readonly ByteBuffer sendBuffer;
+        private readonly ByteBuffer receiveBuffer;
 
-        private Packet packet;
+        private volatile Packet packet;
         //private DataAdapter sendDataAdapter;
 
-        private ISocketWritable lastWritable;
+        private volatile ISocketWritable lastWritable;
 
         private volatile bool live = false;
 
@@ -208,6 +208,15 @@ namespace Hazelcast.Client.Connection
             return clientSocket;
         }
 
+        internal int CurrentCallId
+        {
+            get { return _callIdCounter;}
+        }
+
+        internal int Id
+        {
+            get { return id;}
+        }
         #endregion
 
         #region BLOCKING IO
@@ -449,6 +458,7 @@ namespace Hazelcast.Client.Connection
             IData data = serializationService.ToData(clientRequest);
             var packet = new Packet(data, taskData.PartitionId, serializationService.GetPortableContext());
             //enqueue to write queue
+            //Console.WriteLine("SENDING:"+callId);
             if (!WriteAsync(packet))
             {
                 UnRegisterCall(callId);
@@ -554,6 +564,7 @@ namespace Hazelcast.Client.Connection
             }
             if (lastWritable == null && (lastWritable = Poll()) == null && sendBuffer.Position == 0)
             {
+                //TODO SENDING
                 return;
             }
 
@@ -575,29 +586,14 @@ namespace Hazelcast.Client.Connection
                 sendBuffer.Flip();
                 try
                 {
+                    if (ThreadUtil.debug) { Console.Write(" BW"+id);}
                     //logger.Info("SEND BUFFER --------: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
                     SocketError socketError;
-                    clientSocket.BeginSend(
+                    var send = clientSocket.BeginSend(
                         sendBuffer.Array(),
                         sendBuffer.Position,
                         sendBuffer.Remaining(),
                         SocketFlags.None, out socketError, EndWriteCallback, null);
-
-                    //HANDLE ERRORs
-                    //switch (socketError)
-                    //{
-                    //    case SocketError.WouldBlock:
-                    //        //Would Block so do something ...
-                    //        //TODO
-                    //        throw new NotImplementedException("WOULD BLOCK DO SOMETHING :)");
-                    //        break;
-                    //    case SocketError.IOPending:
-                    //        throw new NotImplementedException("IOPending DO SOMETHING :)");
-                    //        break;
-                    //    case SocketError.NoBufferSpaceAvailable:
-                    //        throw new NotImplementedException("NoBufferSpaceAvailable DO SOMETHING :)");
-                    //        break;
-                    //}
                 }
                 catch (Exception e)
                 {
@@ -611,12 +607,13 @@ namespace Hazelcast.Client.Connection
         {
             try
             {
+                if (ThreadUtil.debug) { Console.Write(" EW"+id); }
                 SocketError socketError;
                 int sendByteSize = clientSocket.EndSend(asyncResult, out socketError);
 
                 if (sendByteSize <= 0)
                 {
-                    Close();;
+                    Close();
                     return;
                 }
 
@@ -666,53 +663,22 @@ namespace Hazelcast.Client.Connection
             }
             try
             {
-                var socketError = SocketError.Success;
                 try
                 {
+                    if (ThreadUtil.debug) { Console.Write(" BR:"+id); }
+                    var socketError = SocketError.Success;
+                    //Console.Write(id);
                     clientSocket.BeginReceive(
                         receiveBuffer.Array(),
                         receiveBuffer.Position,
                         receiveBuffer.Remaining(),
                         SocketFlags.None, out socketError, EndReadCallback, null);
                 }
-                //catch (ArgumentNullException)
-                //{
-                //}
-                //catch (ArgumentOutOfRangeException ae)
-                //{
-                //    logger.Finest("ArgumentOutOfRangeException info: size:" + receiveBuffer.Array().Count() + " limit:" +
-                //                  receiveBuffer.Limit + " pos:" + receiveBuffer.Position);
-                //}
-                //catch (ObjectDisposedException oe)
-                //{
-                //    logger.Finest("ObjectDisposedException at Socket.Rea for endPoint: " + GetRemoteEndpoint(), oe);
-                //}
-                //catch (SocketException se)
-                //{
-                //    logger.Severe("SocketException at Socket.Read for endPoint: " + GetRemoteEndpoint(), se);
-                //    HandleSocketException(se);
-                //}
                 catch (Exception e)
                 {
                     logger.Severe("Exception at Socket.Read for endPoint: " + GetRemoteEndpoint(), e);
                     HandleSocketException(e);
                 }
-
-                //HANDLE ERRORs
-                //switch (socketError)
-                //{
-                //    case SocketError.WouldBlock:
-                //        //Would Block so do something ...
-                //        //TODO
-                //        throw new NotImplementedException("WOULD BLOCK DO SOMETHING :)");
-                //        break;
-                //    case SocketError.IOPending:
-                //        throw new NotImplementedException("IOPending DO SOMETHING :)");
-                //        break;
-                //    case SocketError.NoBufferSpaceAvailable:
-                //        throw new NotImplementedException("NoBufferSpaceAvailable DO SOMETHING :)");
-                //        break;
-                //}
             }
             catch (Exception e)
             {
@@ -729,6 +695,7 @@ namespace Hazelcast.Client.Connection
             }
             try
             {
+                if (ThreadUtil.debug) { Console.Write(" ER"+id); }
                 SocketError socketError;
                 int receivedByteSize = clientSocket.EndReceive(asyncResult, out socketError);
 
@@ -756,18 +723,21 @@ namespace Hazelcast.Client.Connection
                     if (complete)
                     {
                         //ASYNC HANDLE Received Packet
-                        Packet localPacket = packet;
-                        if (packet.IsHeaderSet(Packet.HeaderEvent))
+                        lock (packet)
                         {
-                            object state = packet.GetPartitionId();
-                            var eventTask = new Task(o => HandleEventPacket(localPacket), state);
-                            eventTask.Start(_clientConnectionManager.TaskScheduler);
+                            Packet localPacket = packet;
+                            if (packet.IsHeaderSet(Packet.HeaderEvent))
+                            {
+                                object state = packet.GetPartitionId();
+                                var eventTask = new Task(o => HandleEventPacket(localPacket), state);
+                                eventTask.Start(_clientConnectionManager.TaskScheduler);
+                            }
+                            else
+                            {
+                                Task.Factory.StartNew(() => HandleReceivedPacket(localPacket));
+                            }
+                            packet = null;
                         }
-                        else
-                        {
-                            Task.Factory.StartNew(() => HandleReceivedPacket(localPacket));
-                        }
-                        packet = null;
                     }
                     else
                     {
@@ -799,6 +769,7 @@ namespace Hazelcast.Client.Connection
         {
             var clientResponse = serializationService.ToObject<ClientResponse>(localPacket.GetData());
             int callId = clientResponse.CallId;
+            //Console.WriteLine("HANDLING RECEIVED:"+callId);
             IData response = clientResponse.Response;
             GenericError error = clientResponse.IsError?serializationService.ToObject<GenericError>(response):null;
             Task task;
@@ -939,8 +910,17 @@ namespace Hazelcast.Client.Connection
         private ISocketWritable Poll()
         {
             lastWritable = null;
-            writeQueue.TryDequeue(out lastWritable);
-            return lastWritable;
+            if (writeQueue.TryDequeue(out lastWritable))
+            {
+                return lastWritable;
+            }
+            else
+            {
+                if(writeQueue.Count > 0)
+                Console.WriteLine("EPIC FAIL AT POLL:::::::::::::::");
+
+            }
+            return null;
         }
 
         private int NextCallId()
@@ -978,6 +958,14 @@ namespace Hazelcast.Client.Connection
                 return "Connection [" + _endpoint + " -> " + localSocketAddress + "]";
             }
             return "Connection [" + _endpoint + " -> CLOSED ]";
+        }
+
+        public void healtCheck()
+        {
+            if (ThreadUtil.debug)
+            {
+                Console.WriteLine("CONN:" + id + ", live:"+Live + " sending:" + sending.Get() +" queue:"+writeQueue.Count);
+            }
         }
     }
 
