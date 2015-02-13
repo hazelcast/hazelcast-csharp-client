@@ -5,10 +5,8 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
-    public sealed class ThreadUtil
+    internal sealed class ThreadUtil
     {
-        public static volatile bool debug = false;
-
         public static int TaskOperationTimeOutMilliseconds = 250 * 1000;
 
         public static long GetThreadId()
