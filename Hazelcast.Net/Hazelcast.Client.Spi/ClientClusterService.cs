@@ -81,7 +81,7 @@ namespace Hazelcast.Client.Spi
 
             _thread = new Thread(ClusterListenerLoop)
             {
-                //IsBackground = true,
+                IsBackground = true,
                 Name = ("ClusterListener" + new Random().Next()).Substring(0, 20)
             };
 
@@ -144,7 +144,7 @@ namespace Hazelcast.Client.Spi
             conMan.Shutdown();
             _thread.Interrupt();
             //_thread.Abort();
-            _thread.Join();
+            //_thread.Join();
         }
 
         public IMember GetMember(Address address)

@@ -138,7 +138,7 @@ namespace Hazelcast.Client.Connection
             //start HeartBeat
             _heartBeatThread = new Thread(HearthBeatLoop)
             {
-                //IsBackground = true,
+                IsBackground = true,
                 Name = ("HearthBeat" + new Random().Next()).Substring(0, 15)
             };
             _heartBeatThread.Start();
@@ -156,7 +156,7 @@ namespace Hazelcast.Client.Connection
             if (_heartBeatThread.IsAlive)
             {
                 _heartBeatThread.Interrupt();
-                _heartBeatThread.Join();
+                //_heartBeatThread.Join();
             }
             try
             {
