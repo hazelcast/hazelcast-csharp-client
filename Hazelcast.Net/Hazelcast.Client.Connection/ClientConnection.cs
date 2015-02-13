@@ -229,8 +229,10 @@ namespace Hazelcast.Client.Connection
             {
                 try
                 {
-                    lastWritable = writeQueue.Take();
-                    
+                    if (lastWritable == null)
+                    {
+                        lastWritable = writeQueue.Take();
+                    }
                 }
                 catch (InvalidOperationException)
                 {
