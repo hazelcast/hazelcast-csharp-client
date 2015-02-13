@@ -617,11 +617,7 @@ namespace Hazelcast.Client.Connection
 
         public Task<IData> Send(ClientRequest request, Address target, int partitionId)
         {
-
             ClientConnection clientConnection = _GetOrConnectWithRetry(target);
-
-            clientConnection.healtCheck();
-
             return clientConnection.Send(request, partitionId);
         }
 

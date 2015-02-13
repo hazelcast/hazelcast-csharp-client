@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Connection
 
         private readonly ConcurrentDictionary<int, Task> eventTasks = new ConcurrentDictionary<int, Task>();
 
-        private readonly ConcurrentQueue<ISocketWritable> writeQueue = new ConcurrentQueue<ISocketWritable>();
+        private readonly BlockingCollection<ISocketWritable> writeQueue = new BlockingCollection<ISocketWritable>();
 
         private int _callIdCounter = 1;
 
@@ -177,6 +177,7 @@ namespace Hazelcast.Client.Connection
         private void StartAsyncProcess()
         {
             BeginRead();
+            new Thread(WriteQueueLoop).Start();
         }
 
         #endregion
@@ -220,6 +221,82 @@ namespace Hazelcast.Client.Connection
         #endregion
 
         #region BLOCKING IO
+
+        private void WriteQueueLoop()
+        {
+            while (!writeQueue.IsAddingCompleted)
+            {
+                try
+                {
+                    lastWritable = writeQueue.Take();
+                    
+                }
+                catch (InvalidOperationException)
+                {
+                    //BlockingCollection is empty
+                }
+
+                while (sendBuffer.HasRemaining() && lastWritable != null)
+                {
+                    bool complete = lastWritable.WriteTo(sendBuffer);
+                    if (complete)
+                    {
+                        //grap one from queue
+                        ISocketWritable tmp = null;
+                        writeQueue.TryTake(out tmp);
+                        lastWritable = tmp;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                if (sendBuffer.Position > 0)
+                {
+                    sendBuffer.Flip();
+                    try
+                    {
+                        SocketError socketError;
+                        int sendByteSize = clientSocket.Send(
+                            sendBuffer.Array(),
+                            sendBuffer.Position,
+                            sendBuffer.Remaining(),
+                            SocketFlags.None, out socketError);
+
+                        if (sendByteSize <= 0)
+                        {
+                            Close();
+                            return;
+                        }
+
+                        if (socketError != SocketError.Success)
+                        {
+                            logger.Warning("Operation System Level Socket error code:" + socketError);
+                            Close();
+                            return;
+                        }
+
+                        sendBuffer.Position += sendByteSize;
+                        //logger.Info("SEND BUFFER CALLBACK: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
+
+                        //if success case
+                        if (sendBuffer.HasRemaining())
+                        {
+                            sendBuffer.Compact();
+                        }
+                        else
+                        {
+                            sendBuffer.Clear();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        lastWritable = null;
+                        HandleSocketException(e);
+                    }
+                }
+            }
+        }
 
         /// <exception cref="System.IO.IOException"></exception>
         private void Write(IData data)
@@ -335,6 +412,7 @@ namespace Hazelcast.Client.Connection
                 return;
             }
             live = false;
+            writeQueue.CompleteAdding();
             if (logger.IsFinestEnabled())
             {
                 logger.Finest("Closing socket, id:" + id);
@@ -376,15 +454,6 @@ namespace Hazelcast.Client.Connection
         public void RemoveConnectionCalls()
         {
             logger.Finest("RemoveConnectionCalls id:"+id+" ...START :"+ requestTasks.Count);
-            //GenericError responseGenericError;
-            //if (_clientConnectionManager.Live)
-            //{
-            //    responseGenericError = new GenericError("TargetDisconnectedException", "Disconnected:" + GetRemoteEndpoint(), "", 0);
-            //}
-            //else
-            //{
-            //    responseGenericError = new GenericError("HazelcastException", "Client is shutting down!!!", "", 0);
-            //}
             foreach (var entry in requestTasks)
             {
                 Task removed;
@@ -424,12 +493,12 @@ namespace Hazelcast.Client.Connection
                 }
                 return false;
             }
-            writeQueue.Enqueue(packet);
-            if (sending.CompareAndSet(false, true))
-            {
-                BeginWrite();
-            }
-            return true;
+            return writeQueue.TryAdd(packet);
+            //if (sending.CompareAndSet(false, true))
+            //{
+            //    BeginWrite();
+            //}
+            //return true;
         }
 
         public Task<IData> Send(ClientRequest clientRequest, int partitionId)
@@ -555,105 +624,6 @@ namespace Hazelcast.Client.Connection
         #endregion
 
         #region ASYNC PROCESS
-        private void BeginWrite()
-        {
-            if (!CheckLive())
-            {
-                Close();
-                return;
-            }
-            if (lastWritable == null && (lastWritable = Poll()) == null && sendBuffer.Position == 0)
-            {
-                //TODO SENDING
-                return;
-            }
-
-            while (sendBuffer.HasRemaining() && lastWritable != null)
-            {
-                bool complete = lastWritable.WriteTo(sendBuffer);
-                if (complete)
-                {
-                    //grap one from queue
-                    lastWritable = Poll();
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (sendBuffer.Position > 0)
-            {
-                sendBuffer.Flip();
-                try
-                {
-                    if (ThreadUtil.debug) { Console.Write(" BW"+id);}
-                    //logger.Info("SEND BUFFER --------: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
-                    SocketError socketError;
-                    var send = clientSocket.BeginSend(
-                        sendBuffer.Array(),
-                        sendBuffer.Position,
-                        sendBuffer.Remaining(),
-                        SocketFlags.None, out socketError, EndWriteCallback, null);
-                }
-                catch (Exception e)
-                {
-                    lastWritable = null;
-                    HandleSocketException(e);
-                }
-            }
-        }
-
-        private void EndWriteCallback(IAsyncResult asyncResult)
-        {
-            try
-            {
-                if (ThreadUtil.debug) { Console.Write(" EW"+id); }
-                SocketError socketError;
-                int sendByteSize = clientSocket.EndSend(asyncResult, out socketError);
-
-                if (sendByteSize <= 0)
-                {
-                    Close();
-                    return;
-                }
-
-                if (socketError != SocketError.Success)
-                {
-                    logger.Warning("Operation System Level Socket error code:" + socketError);
-                    Close();
-                    return;
-                }
-
-                sendBuffer.Position += sendByteSize;
-                //logger.Info("SEND BUFFER CALLBACK: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
-
-                //if success case
-                if (sendBuffer.HasRemaining())
-                {
-                    sendBuffer.Compact();
-                }
-                else
-                {
-                    sendBuffer.Clear();
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Warning(e);
-                HandleSocketException(e);
-                sending.Set(false);
-            }
-
-            if (sending.Get() &&(lastWritable != null || !writeQueue.IsEmpty))
-            {
-                BeginWrite();
-            }
-            else
-            {
-                sending.Set(false);
-            }
-        }
-
         private void BeginRead()
         {
             if (!CheckLive())
@@ -665,7 +635,7 @@ namespace Hazelcast.Client.Connection
             {
                 try
                 {
-                    if (ThreadUtil.debug) { Console.Write(" BR:"+id); }
+                    //if (ThreadUtil.debug) { Console.Write(" BR:"+id); }
                     var socketError = SocketError.Success;
                     //Console.Write(id);
                     clientSocket.BeginReceive(
@@ -695,7 +665,7 @@ namespace Hazelcast.Client.Connection
             }
             try
             {
-                if (ThreadUtil.debug) { Console.Write(" ER"+id); }
+                //if (ThreadUtil.debug) { Console.Write(" ER"+id); }
                 SocketError socketError;
                 int receivedByteSize = clientSocket.EndReceive(asyncResult, out socketError);
 
@@ -907,22 +877,6 @@ namespace Hazelcast.Client.Connection
 
         #endregion
 
-        private ISocketWritable Poll()
-        {
-            lastWritable = null;
-            if (writeQueue.TryDequeue(out lastWritable))
-            {
-                return lastWritable;
-            }
-            else
-            {
-                if(writeQueue.Count > 0)
-                Console.WriteLine("EPIC FAIL AT POLL:::::::::::::::");
-
-            }
-            return null;
-        }
-
         private int NextCallId()
         {
             return Interlocked.Increment(ref _callIdCounter);
@@ -959,15 +913,7 @@ namespace Hazelcast.Client.Connection
             }
             return "Connection [" + _endpoint + " -> CLOSED ]";
         }
-
-        public void healtCheck()
-        {
-            if (ThreadUtil.debug)
-            {
-                Console.WriteLine("CONN:" + id + ", live:"+Live + " sending:" + sending.Get() +" queue:"+writeQueue.Count);
-            }
-        }
-    }
+     }
 
 
     internal class TaskData
