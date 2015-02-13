@@ -160,7 +160,7 @@ namespace Hazelcast.Client.Connection
             {
                 sendBuffer.Clear();
                 receiveBuffer.Clear();
-                clientSocket.Blocking = false;
+                //clientSocket.Blocking = false;
                 StartAsyncProcess();
             }
             //ignore other cases
@@ -421,7 +421,7 @@ namespace Hazelcast.Client.Connection
             live = false;
             writeQueue.CompleteAdding();
 
-            if (writeThread.IsAlive)
+            if (writeThread != null && writeThread.IsAlive)
             {
                 writeThread.Interrupt();
                 //writeThread.Join();
