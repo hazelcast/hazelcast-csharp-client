@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Hazelcast.Client;
 using Hazelcast.Config;
 using Hazelcast.Core;
+using Hazelcast.Util;
 
 namespace Hazelcast.Test
 {
@@ -46,7 +47,7 @@ namespace Hazelcast.Test
 
     internal class SimpleMapTestFromClient
     {
-        public static int THREAD_COUNT = 5;
+        public static int THREAD_COUNT = 50;
         public static int ENTRY_COUNT = 10*1000;
         public static int VALUE_SIZE = 1000;
         public static int STATS_SECONDS = 10;
@@ -60,9 +61,10 @@ namespace Hazelcast.Test
         static void Main(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            Environment.SetEnvironmentVariable("hazelcast.client.request.timeout", "5000");
 
             var clientConfig = new ClientConfig();
-            clientConfig.GetNetworkConfig().AddAddress("192.168.2.73");
+            clientConfig.GetNetworkConfig().AddAddress("192.168.2.50:5701");
             clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
             hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
 
@@ -137,11 +139,11 @@ namespace Hazelcast.Test
                 int i = 0;
                 while (true)
                 {
-                    i++;
-                    if (i%1000 == 0)
-                    {
-                        Console.WriteLine("Iterate....");
-                    }
+                    //i++;
+                    //if (i % 1000 == 0)
+                    //{
+                    //    Console.WriteLine("Iterate...."+i);
+                    //}
                     try
                     {
                         int key = random.Next(0, ENTRY_COUNT);
@@ -166,9 +168,13 @@ namespace Hazelcast.Test
                     }
                     catch (Exception ex)
                     {
+                        if (ex is TimeoutException)
+                        {
+                            ThreadUtil.debug = true;
+                        }
                         Interlocked.Increment(ref stats.exceptions);
-                        Console.WriteLine("HATAAAAAA");
-                        Console.WriteLine(ex.StackTrace);
+                        Console.WriteLine("HATAAAAAA @" + ThreadUtil.GetThreadId());
+                        Console.WriteLine(ex.Message);
                         //Console.ReadKey();
                         //break;
                     }
