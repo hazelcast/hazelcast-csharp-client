@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
@@ -28,11 +29,11 @@ namespace Hazelcast.Client.Connection
         public const int DefaultEventThreadCount = 3;
         private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
 
-        private readonly ConcurrentDictionary<Address, LinkedListNode<ClientConnection>> _addresses = new ConcurrentDictionary<Address, LinkedListNode<ClientConnection>>();
+        private readonly ConcurrentDictionary<Address, ClientConnection> _addresses = new ConcurrentDictionary<Address, ClientConnection>();
         private readonly ConcurrentDictionary<string, int> _registrationMap = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, string> _registrationAliasMap = new ConcurrentDictionary<string, string>();
 
-        private readonly LinkedList<ClientConnection> _clientConnections =new LinkedList<ClientConnection>();
+        //private readonly LinkedList<ClientConnection> _clientConnections =new LinkedList<ClientConnection>();
 
         private readonly StripedTaskScheduler _taskScheduler;
 
@@ -53,13 +54,12 @@ namespace Hazelcast.Client.Connection
         LinkedListNode<ClientConnection> nextConnectionNode = null;
         //private volatile int _whoisnextId;
 
-        private ClientConnection _ownerConnection;
+        private volatile ClientConnection _ownerConnection;
         private volatile ClientPrincipal principal;
 
         private Thread _heartBeatThread;
 
         private object _connectionMutex = new object();
-       
 
         #endregion
 
@@ -141,6 +141,7 @@ namespace Hazelcast.Client.Connection
                 //IsBackground = true,
                 Name = ("HearthBeat" + new Random().Next()).Substring(0, 15)
             };
+            _heartBeatThread.Start();
         }
 
         public bool Shutdown()
@@ -159,27 +160,25 @@ namespace Hazelcast.Client.Connection
             }
             try
             {
-                var _itrNode = _clientConnections.Last;
-                if (_itrNode != null)
+                foreach (var kvPair in _addresses)
                 {
-                    while (_itrNode != null)
+                    try
                     {
-                        try
-                        {
-                            var nxt=_itrNode.Previous;
-                            _itrNode.Value.Close();
-                            _itrNode = nxt;
-                        }
-                        catch (Exception) { }
+                        kvPair.Value.Close();
+                    }
+                    catch (Exception)
+                    {
+                        logger.Finest("Exception during closing connection on shutdown");
                     }
                 }
-
-                _clientConnections.Clear();
                 try
                 {
                     _ownerConnection.Close();
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                    logger.Finest("Exception during closing owner connection on shutdown");
+                }
                 //_ownerConnection = null;
 
                 _taskScheduler.Dispose();
@@ -245,31 +244,6 @@ namespace Hazelcast.Client.Connection
            return _ownerConnection != null ? _ownerConnection.GetRemoteEndpoint():null;
         }
 
-        /// <summary>
-        ///     used by in & out threads the process the next connection
-        /// </summary>
-        /// <returns>next ClientConnection</returns>
-        internal ClientConnection NextProcessConnection()
-        {
-            try
-            {
-                for (;;)
-                {
-                    var current = nextConnectionNode;// ?? _clientConnections.First;
-                    var newVal = (current == null) ? _clientConnections.First : current.Next ?? _clientConnections.First;
-                    if (Interlocked.CompareExchange(ref nextConnectionNode, newVal, current) == current)
-                    {
-                        return current!=null?current.Value:null;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                logger.Finest("NextProcessConnection problem...");
-            }
-            return null;
-        }
-
         public Client GetLocalClient()
         {
             ClientPrincipal cp = principal;
@@ -291,16 +265,12 @@ namespace Hazelcast.Client.Connection
         #region ClientConnectionManager Privates
         private void DestroyConnection(Address address)
         {
-            if (address != null)
+            lock (_connectionMutex)
             {
-                lock ((_addresses))
+                if (address != null)
                 {
-                    LinkedListNode<ClientConnection> linkedListNode=null;
-                    if (_addresses.TryRemove(address, out linkedListNode))
-                    {
-                        _clientConnections.Remove(linkedListNode);
-                        
-                    }
+                    ClientConnection connection = null;
+                    _addresses.TryRemove(address, out connection);
                 }
             }
         }
@@ -352,12 +322,12 @@ namespace Hazelcast.Client.Connection
         {
             int count = 0;
             Exception lastError = null;
+            var theTarget = target;
             while (count < RetryCount)
             {
                 try
                 {
-                    var theTarget = target;
-                    if (target == null || !isMember(target))
+                    if (theTarget == null || !isMember(theTarget))
                     {
                         theTarget = router.Next();
                     }
@@ -375,7 +345,7 @@ namespace Hazelcast.Client.Connection
                 {
                     lastError = e;
                 }
-                target = null;
+                theTarget = null;
                 count++;
                 try
                 {
@@ -407,29 +377,19 @@ namespace Hazelcast.Client.Connection
             {
                 address = _ownerConnection.GetRemoteEndpoint();
             }
-            ClientConnection clientConnection = null;
-            if (!_addresses.ContainsKey(address))
+            lock (_connectionMutex)
             {
-                lock (_addresses)
+
+                ClientConnection clientConnection = _addresses.GetOrAdd(address, address1 =>
                 {
-                    if (!_addresses.ContainsKey(address))
-                    {
-                        clientConnection = TryGetNewConnection(address, _authenticator);
-                        var linkedListNode = _clientConnections.AddLast(clientConnection);
-                        _addresses.TryAdd(address, linkedListNode);
-                    }
+                    return clientConnection = TryGetNewConnection(address, _authenticator);
+                });
+                if (clientConnection == null)
+                {
+                    logger.Severe("CONNECTION Cannot be NULL here");
                 }
+                return clientConnection;
             }
-            LinkedListNode<ClientConnection> clientConnectionNode = null;
-            if (_addresses.TryGetValue(address, out clientConnectionNode))
-            {
-                clientConnection=clientConnectionNode.Value;
-            }
-            if (clientConnection == null)
-            {
-                logger.Severe("CONNECTION NULL");
-            }
-            return clientConnection;
         }
 
         public bool InitOwnerConnection()
@@ -547,17 +507,29 @@ namespace Hazelcast.Client.Connection
 
         private bool RemoveEventHandler(int callId)
         {
-            return _clientConnections.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
+            return _addresses.Values.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
+            //return _clientConnections.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
         }
 
         private void HearthBeatLoop()
         {
             while (_heartBeatThread.IsAlive)
             {
-                foreach (var clientConnection in _clientConnections)
+                foreach (var clientConnection in _addresses.Values)
                 {
                     var request = new ClientPingRequest();
-                    clientConnection.Send(request, -1);
+                    var task = clientConnection.Send(request, -1);
+                    var remoteEndPoint = clientConnection.GetSocket() != null ? clientConnection.GetSocket().RemoteEndPoint.ToString() : "CLOSED";
+                    try
+                    {
+                        var result = ThreadUtil.GetResult(task);
+                        //Console.WriteLine("PING:" + remoteEndPoint);
+                    }
+                    catch (Exception)
+                    {
+
+                        //Console.WriteLine("PING ERROR:" + remoteEndPoint);
+                    }
                 }
                 try
                 {
@@ -628,8 +600,8 @@ namespace Hazelcast.Client.Connection
 
         internal void ReSend(Task task)
         {
-            Console.WriteLine("/R-id:" + task.Id +"-c:"+((TaskData)task.AsyncState).RetryCount + ">");
             ClientConnection clientConnection = _GetOrConnectWithRetry(null);
+            //Console.WriteLine("RESEND TO:"+clientConnection.GetSocket().RemoteEndPoint);
             clientConnection.Send(task);
         }
 
@@ -645,7 +617,11 @@ namespace Hazelcast.Client.Connection
 
         public Task<IData> Send(ClientRequest request, Address target, int partitionId)
         {
+
             ClientConnection clientConnection = _GetOrConnectWithRetry(target);
+
+            clientConnection.healtCheck();
+
             return clientConnection.Send(request, partitionId);
         }
 
