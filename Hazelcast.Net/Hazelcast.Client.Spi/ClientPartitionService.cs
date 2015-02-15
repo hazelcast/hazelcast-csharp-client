@@ -165,8 +165,12 @@ namespace Hazelcast.Client.Spi
             try
             {
                 var task = client.GetInvocationService().InvokeOnTarget(new GetPartitionsRequest(), address);
-                var partitionsResponse = ThreadUtil.GetResult(task);
+                var partitionsResponse = ThreadUtil.GetResult(task, 150000);
                 return client.GetSerializationService().ToObject<PartitionsResponse>(partitionsResponse);
+            }
+            catch (TimeoutException e)
+            {
+                logger.Finest("Operation timed out while fetching cluster partition table!", e);
             }
             catch (Exception e)
             {

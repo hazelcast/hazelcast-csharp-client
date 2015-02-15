@@ -5,8 +5,10 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
-    internal sealed class ThreadUtil
+    public sealed class ThreadUtil
     {
+        public static volatile bool debug = false;
+
         public static int TaskOperationTimeOutMilliseconds = 250 * 1000;
 
         public static long GetThreadId()
@@ -14,7 +16,7 @@ namespace Hazelcast.Util
             return Thread.CurrentThread.ManagedThreadId;
         }
 
-        public static IData GetResult(Task<IData> task)
+        public static IData GetResult(Task<IData> task, int timeout)
         {
             try
             {
@@ -26,15 +28,14 @@ namespace Hazelcast.Util
             }
             catch (AggregateException e)
             {
-                e.Handle(exception =>
-                {
-                    ExceptionUtil.Rethrow(exception);
-                    return true;
-                });
-                
-                throw;
+                ExceptionUtil.Rethrow(e);
             }
             return task.Result;
+        } 
+        
+        public static IData GetResult(Task<IData> task)
+        {
+            return GetResult(task, TaskOperationTimeOutMilliseconds);
         }
     }
 }
