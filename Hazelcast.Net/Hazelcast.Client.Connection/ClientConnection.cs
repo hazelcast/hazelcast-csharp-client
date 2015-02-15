@@ -863,7 +863,8 @@ namespace Hazelcast.Client.Connection
             eventTasks.TryGetValue(callId, out task);
             if (task == null)
             {
-                logger.Warning("No eventHandler for callId: " + callId + ", event: " + response);
+                //we already unregistered the handler so simply ignore event
+                //logger.Warning("No eventHandler for callId: " + callId + ", event: " + response);
                 return;
             }
             var td = task.AsyncState as TaskData;
