@@ -398,7 +398,7 @@ namespace Hazelcast.IO.Serialization
         {
             if (e is OutOfMemoryException)
             {
-                OutOfMemoryErrorDispatcher.OnOutOfMemory((OutOfMemoryException)e);
+                //OutOfMemoryErrorDispatcher.OnOutOfMemory((OutOfMemoryException)e);
                 throw e;
             }
             if (e is HazelcastSerializationException)
