@@ -65,7 +65,7 @@ namespace Hazelcast.Client.Connection
 
         private volatile bool live = false;
 
-        private AtomicBoolean sending = new AtomicBoolean(false);
+        private Thread writeThread;
 
         #endregion
 
@@ -177,7 +177,8 @@ namespace Hazelcast.Client.Connection
         private void StartAsyncProcess()
         {
             BeginRead();
-            new Thread(WriteQueueLoop).Start();
+            writeThread = new Thread(WriteQueueLoop) {IsBackground = true};
+            writeThread.Start();
         }
 
         #endregion
@@ -234,6 +235,10 @@ namespace Hazelcast.Client.Connection
                 catch (InvalidOperationException)
                 {
                     //BlockingCollection is empty
+                    if (writeQueue.IsAddingCompleted)
+                    {
+                        return;
+                    }
                 }
 
                 while (sendBuffer.HasRemaining() && lastWritable != null)
@@ -413,6 +418,12 @@ namespace Hazelcast.Client.Connection
             }
             live = false;
             writeQueue.CompleteAdding();
+
+            if (writeThread.IsAlive)
+            {
+                writeThread.Interrupt();
+                //writeThread.Join();
+            }
             if (logger.IsFinestEnabled())
             {
                 logger.Finest("Closing socket, id:" + id);
