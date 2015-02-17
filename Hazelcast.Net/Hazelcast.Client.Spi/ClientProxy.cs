@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Core;
-using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Util;
