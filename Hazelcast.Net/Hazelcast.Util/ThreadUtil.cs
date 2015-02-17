@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Client.Connection;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
@@ -18,6 +19,8 @@ namespace Hazelcast.Util
         {
             try
             {
+                var taskData = task.AsyncState as TaskData;
+                taskData.Wait();
                 var responseReady = task.Wait(TimeSpan.FromMilliseconds(TaskOperationTimeOutMilliseconds));
                 if (!responseReady)
                 {
