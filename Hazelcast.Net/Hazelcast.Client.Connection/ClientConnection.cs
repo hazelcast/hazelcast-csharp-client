@@ -177,7 +177,7 @@ namespace Hazelcast.Client.Connection
         private void StartAsyncProcess()
         {
             BeginRead();
-            writeThread = new Thread(WriteQueueLoop) {IsBackground = true};
+            writeThread = new Thread(WriteQueueLoop) { IsBackground = true,Priority = ThreadPriority.Highest };
             writeThread.Start();
         }
 
@@ -562,6 +562,7 @@ namespace Hazelcast.Client.Connection
             {
                 ExceptionUtil.Rethrow(taskData.Error);
             }
+            taskData.ResponseReady();
             return taskData.Response;
         }
 
@@ -938,6 +939,8 @@ namespace Hazelcast.Client.Connection
         private int _retryCount;
         private volatile int _partitionId;
 
+        private Object _mutex = new Object();
+
         public TaskData(ClientRequest request, IData response = null, DistributedEventHandler handler = null,
             int partitionId = -1)
         {
@@ -986,6 +989,25 @@ namespace Hazelcast.Client.Connection
         {
             get { return _partitionId; }
             set { _partitionId = value; }
+        }
+
+        public bool Wait()
+        {
+            var result = true;
+            Monitor.Enter(_mutex);
+            if (_response == null)
+            {
+                result = Monitor.Wait(_mutex, ThreadUtil.TaskOperationTimeOutMilliseconds);
+            }
+            Monitor.Exit(_mutex);
+            return result;
+        }
+
+        public void ResponseReady()
+        {
+            Monitor.Enter(_mutex);
+            Monitor.PulseAll(_mutex);
+            Monitor.Exit(_mutex);
         }
     }
 }
