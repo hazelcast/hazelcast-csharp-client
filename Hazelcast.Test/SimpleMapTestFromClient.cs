@@ -61,7 +61,7 @@ namespace Hazelcast.Test
         static void Main(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
-            Environment.SetEnvironmentVariable("hazelcast.client.request.timeout", "5000");
+            Environment.SetEnvironmentVariable("hazelcast.client.request.timeout", "250000");
 
             var clientConfig = new ClientConfig();
             clientConfig.GetNetworkConfig().AddAddress("192.168.2.50:5701");
@@ -150,9 +150,7 @@ namespace Hazelcast.Test
                         int operation = random.Next(0, 100);
                         if (operation < GET_PERCENTAGE)
                         {
-                            //                            long start = Clock.currentTimeMillis();
                             map.Get(key.ToString());
-                            //                            System.out.println("Get takes " + (Clock.currentTimeMillis() - start) + " ms" );
                             Interlocked.Increment(ref stats.gets);
                         }
                         else if (operation < GET_PERCENTAGE + PUT_PERCENTAGE)
@@ -168,10 +166,6 @@ namespace Hazelcast.Test
                     }
                     catch (Exception ex)
                     {
-                        if (ex is TimeoutException)
-                        {
-                            ThreadUtil.debug = true;
-                        }
                         Interlocked.Increment(ref stats.exceptions);
                         Console.WriteLine("HATAAAAAA @" + ThreadUtil.GetThreadId());
                         Console.WriteLine(ex.Message);
