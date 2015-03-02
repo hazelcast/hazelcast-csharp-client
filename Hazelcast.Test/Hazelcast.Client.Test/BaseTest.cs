@@ -48,6 +48,11 @@ namespace Hazelcast.Client.Test
                 Console.WriteLine("Waiting to start up  client");
                 Thread.Sleep(100);
             }
+            InitMoreFixture();
+        }
+
+        public virtual void InitMoreFixture()
+        {
         }
 
         [TestFixtureTearDown]
