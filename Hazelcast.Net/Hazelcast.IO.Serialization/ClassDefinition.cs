@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ClassDefinition : BinaryClassDefinition
+    internal class ClassDefinition : IClassDefinition
     {
-        private readonly IList<IFieldDefinition> fieldDefinitions = new List<IFieldDefinition>();
+        private int factoryId;
 
-        private readonly IDictionary<string, IFieldDefinition> fieldDefinitionsMap = new
-            Dictionary<string, IFieldDefinition>();
+        private int classId;
+
+        private int version = -1;
+
+        private readonly IDictionary<string, IFieldDefinition> fieldDefinitionsMap = new Dictionary<string, IFieldDefinition>();
 
         public ClassDefinition()
         {
@@ -22,29 +26,43 @@ namespace Hazelcast.IO.Serialization
             this.version = version;
         }
 
-        public override IFieldDefinition GetField(string name)
+        internal virtual void AddFieldDef(FieldDefinition fd)
         {
-            IFieldDefinition returnedVal;
-            fieldDefinitionsMap.TryGetValue(name, out returnedVal);
-            return returnedVal;
+            fieldDefinitionsMap[fd.GetName()] = fd;
         }
 
-        public override IFieldDefinition GetField(int fieldIndex)
+        public virtual IFieldDefinition GetField(string name)
         {
-            return fieldDefinitions[fieldIndex];
+            return fieldDefinitionsMap[name];
         }
 
-        public override bool HasField(string fieldName)
+        public virtual IFieldDefinition GetField(int fieldIndex)
+        {
+            if (fieldIndex < 0 || fieldIndex >= fieldDefinitionsMap.Count)
+            {
+                throw new IndexOutOfRangeException("Index: " + fieldIndex + ", Size: " + fieldDefinitionsMap.Count);
+            }
+            foreach (IFieldDefinition fieldDefinition in fieldDefinitionsMap.Values)
+            {
+                if (fieldIndex == fieldDefinition.GetIndex())
+                {
+                    return fieldDefinition;
+                }
+            }
+            throw new IndexOutOfRangeException("Index: " + fieldIndex + ", Size: " + fieldDefinitionsMap.Count);
+        }
+
+        public virtual bool HasField(string fieldName)
         {
             return fieldDefinitionsMap.ContainsKey(fieldName);
         }
 
-        public override ICollection<string> GetFieldNames()
+        public virtual ICollection<string> GetFieldNames()
         {
             return new HashSet<string>(fieldDefinitionsMap.Keys);
         }
 
-        public override FieldType GetFieldType(string fieldName)
+        public virtual FieldType GetFieldType(string fieldName)
         {
             IFieldDefinition fd = GetField(fieldName);
             if (fd != null)
@@ -54,7 +72,7 @@ namespace Hazelcast.IO.Serialization
             throw new ArgumentException("Unknown field: " + fieldName);
         }
 
-        public override int GetFieldClassId(string fieldName)
+        public virtual int GetFieldClassId(string fieldName)
         {
             IFieldDefinition fd = GetField(fieldName);
             if (fd != null)
@@ -64,20 +82,29 @@ namespace Hazelcast.IO.Serialization
             throw new ArgumentException("Unknown field: " + fieldName);
         }
 
-        public override int GetFieldCount()
-        {
-            return fieldDefinitions.Count;
-        }
-
-        internal virtual void AddFieldDef(FieldDefinition fd)
-        {
-            fieldDefinitions.Add(fd);
-            fieldDefinitionsMap.Add(fd.GetName(), fd);
-        }
-
         internal virtual ICollection<IFieldDefinition> GetFieldDefinitions()
         {
-            return fieldDefinitions;
+            return fieldDefinitionsMap.Values;
+        }
+
+        public virtual int GetFieldCount()
+        {
+            return fieldDefinitionsMap.Count;
+        }
+
+        public int GetFactoryId()
+        {
+            return factoryId;
+        }
+
+        public int GetClassId()
+        {
+            return classId;
+        }
+
+        public int GetVersion()
+        {
+            return version;
         }
 
         internal virtual void SetVersionIfNotSet(int version)
@@ -98,7 +125,7 @@ namespace Hazelcast.IO.Serialization
             {
                 return false;
             }
-            var that = (ClassDefinition) o;
+            ClassDefinition that = (ClassDefinition)o;
             if (classId != that.classId)
             {
                 return false;
@@ -111,7 +138,7 @@ namespace Hazelcast.IO.Serialization
             {
                 return false;
             }
-            foreach (IFieldDefinition fd in fieldDefinitions)
+            foreach (IFieldDefinition fd in fieldDefinitionsMap.Values)
             {
                 IFieldDefinition fd2 = that.GetField(fd.GetName());
                 if (fd2 == null)
@@ -129,7 +156,7 @@ namespace Hazelcast.IO.Serialization
         public override int GetHashCode()
         {
             int result = classId;
-            result = 31*result + version;
+            result = 31 * result + version;
             return result;
         }
 
@@ -140,7 +167,7 @@ namespace Hazelcast.IO.Serialization
             sb.Append("{factoryId=").Append(factoryId);
             sb.Append(", classId=").Append(classId);
             sb.Append(", version=").Append(version);
-            sb.Append(", fieldDefinitions=").Append(fieldDefinitions);
+            sb.Append(", fieldDefinitions=").Append(fieldDefinitionsMap.Values);
             sb.Append('}');
             return sb.ToString();
         }

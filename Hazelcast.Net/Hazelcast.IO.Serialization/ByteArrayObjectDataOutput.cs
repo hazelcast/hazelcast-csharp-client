@@ -4,17 +4,13 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ByteArrayObjectDataOutput : OutputStream, IPortableDataOutput
+    internal class ByteArrayObjectDataOutput : OutputStream, IBufferObjectDataOutput
     {
-        private readonly bool bigEndian;
         internal readonly int initialSize;
+        private readonly bool isBigEndian;
         internal readonly ISerializationService service;
-
         internal byte[] buffer;
-
-        internal DynamicByteBuffer header;
         internal int pos;
-
         private byte[] utfBuffer;
 
         internal ByteArrayObjectDataOutput(int size, ISerializationService service, ByteOrder byteOrder)
@@ -22,7 +18,7 @@ namespace Hazelcast.IO.Serialization
             initialSize = size;
             buffer = new byte[size];
             this.service = service;
-            bigEndian = byteOrder == ByteOrder.BigEndian;
+            isBigEndian = byteOrder == ByteOrder.BigEndian;
         }
 
         public virtual void Write(int position, int b)
@@ -50,7 +46,7 @@ namespace Hazelcast.IO.Serialization
 
         public void WriteZeroBytes(int count)
         {
-            for (int k = 0; k < count; k++)
+            for (var k = 0; k < count; k++)
             {
                 Write(0);
             }
@@ -65,9 +61,9 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteBytes(string s)
         {
-            int len = s.Length;
+            var len = s.Length;
             EnsureAvailable(len);
-            for (int i = 0; i < len; i++)
+            for (var i = 0; i < len; i++)
             {
                 buffer[pos++] = unchecked((byte) s[i]);
             }
@@ -76,27 +72,27 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteChar(int v)
         {
-            EnsureAvailable(Bits.CHAR_SIZE_IN_BYTES);
-            Bits.WriteChar(buffer, pos, (char) v, bigEndian);
-            pos += Bits.CHAR_SIZE_IN_BYTES;
+            EnsureAvailable(Bits.CharSizeInBytes);
+            Bits.WriteChar(buffer, pos, (char) v, isBigEndian);
+            pos += Bits.CharSizeInBytes;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteChar(int position, int v)
         {
-            Bits.WriteChar(buffer, position, (char) v, bigEndian);
+            Bits.WriteChar(buffer, position, (char) v, isBigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteChars(string s)
         {
-            int len = s.Length;
-            EnsureAvailable(len*Bits.CHAR_SIZE_IN_BYTES);
-            for (int i = 0; i < len; i++)
+            var len = s.Length;
+            EnsureAvailable(len*Bits.CharSizeInBytes);
+            for (var i = 0; i < len; i++)
             {
                 int v = s[i];
                 WriteChar(pos, v);
-                pos += Bits.CHAR_SIZE_IN_BYTES;
+                pos += Bits.CharSizeInBytes;
             }
         }
 
@@ -112,6 +108,16 @@ namespace Hazelcast.IO.Serialization
             WriteLong(position, BitConverter.DoubleToInt64Bits(v));
         }
 
+        public void WriteDouble(double v, ByteOrder byteOrder)
+        {
+            WriteLong(BitConverter.DoubleToInt64Bits(v), byteOrder);
+        }
+
+        public void WriteDouble(int position, double v, ByteOrder byteOrder)
+        {
+            WriteLong(position, BitConverter.DoubleToInt64Bits(v), byteOrder);
+        }
+
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteFloat(float v)
         {
@@ -124,46 +130,92 @@ namespace Hazelcast.IO.Serialization
             WriteInt(position, BitConverter.ToInt32(BitConverter.GetBytes(v), 0));
         }
 
+        public void WriteFloat(float v, ByteOrder byteOrder)
+        {
+            WriteInt(BitConverter.ToInt32(BitConverter.GetBytes(v), 0), byteOrder);
+        }
+
+        public void WriteFloat(int position, float v, ByteOrder byteOrder)
+        {
+            WriteInt(position, BitConverter.ToInt32(BitConverter.GetBytes(v), 0), byteOrder);
+        }
+
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteInt(int v)
         {
-            EnsureAvailable(Bits.INT_SIZE_IN_BYTES);
-            Bits.WriteInt(buffer, pos, v, bigEndian);
-            pos += Bits.INT_SIZE_IN_BYTES;
+            EnsureAvailable(Bits.IntSizeInBytes);
+            Bits.WriteInt(buffer, pos, v, isBigEndian);
+            pos += Bits.IntSizeInBytes;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteInt(int position, int v)
         {
-            Bits.WriteInt(buffer, position, v, bigEndian);
+            Bits.WriteInt(buffer, position, v, isBigEndian);
+        }
+
+        public void WriteInt(int v, ByteOrder byteOrder)
+        {
+            EnsureAvailable(Bits.IntSizeInBytes);
+            Bits.WriteInt(buffer, pos, v, byteOrder == ByteOrder.BigEndian);
+            pos += Bits.IntSizeInBytes;
+        }
+
+        public void WriteInt(int position, int v, ByteOrder byteOrder)
+        {
+            Bits.WriteInt(buffer, position, v, byteOrder == ByteOrder.BigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteLong(long v)
         {
-            EnsureAvailable(Bits.LONG_SIZE_IN_BYTES);
-            Bits.WriteLong(buffer, pos, v, bigEndian);
-            pos += Bits.LONG_SIZE_IN_BYTES;
+            EnsureAvailable(Bits.LongSizeInBytes);
+            Bits.WriteLong(buffer, pos, v, isBigEndian);
+            pos += Bits.LongSizeInBytes;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteLong(int position, long v)
         {
-            Bits.WriteLong(buffer, position, v, bigEndian);
+            Bits.WriteLong(buffer, position, v, isBigEndian);
+        }
+
+        public void WriteLong(long v, ByteOrder byteOrder)
+        {
+            EnsureAvailable(Bits.LongSizeInBytes);
+            Bits.WriteLong(buffer, pos, v, isBigEndian);
+            pos += Bits.LongSizeInBytes;
+        }
+
+        public void WriteLong(int position, long v, ByteOrder byteOrder)
+        {
+            Bits.WriteLong(buffer, position, v, isBigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteShort(int v)
         {
-            EnsureAvailable(Bits.SHORT_SIZE_IN_BYTES);
-            Bits.WriteShort(buffer, pos, (short) v, bigEndian);
-            pos += Bits.SHORT_SIZE_IN_BYTES;
+            EnsureAvailable(Bits.ShortSizeInBytes);
+            Bits.WriteShort(buffer, pos, (short) v, isBigEndian);
+            pos += Bits.ShortSizeInBytes;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteShort(int position, int v)
         {
-            Bits.WriteShort(buffer, position, (short) v, bigEndian);
+            Bits.WriteShort(buffer, position, (short) v, isBigEndian);
+        }
+
+        public void WriteShort(int v, ByteOrder byteOrder)
+        {
+            EnsureAvailable(Bits.ShortSizeInBytes);
+            Bits.WriteShort(buffer, pos, (short)v, byteOrder == ByteOrder.BigEndian);
+            pos += Bits.ShortSizeInBytes;
+        }
+
+        public void WriteShort(int position, int v, ByteOrder byteOrder)
+        {
+            Bits.WriteShort(buffer, position, (short)v, byteOrder == ByteOrder.BigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -179,7 +231,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteByteArray(byte[] bytes)
         {
-            int len = (bytes == null) ? 0 : bytes.Length;
+            var len = (bytes == null) ? 0 : bytes.Length;
             WriteInt(len);
             if (len > 0)
             {
@@ -190,11 +242,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteCharArray(char[] chars)
         {
-            int len = chars != null ? chars.Length : 0;
+            var len = chars != null ? chars.Length : 0;
             WriteInt(len);
             if (len > 0)
             {
-                foreach (char c in chars)
+                foreach (var c in chars)
                 {
                     WriteChar(c);
                 }
@@ -204,11 +256,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteIntArray(int[] ints)
         {
-            int len = ints != null ? ints.Length : 0;
+            var len = ints != null ? ints.Length : 0;
             WriteInt(len);
             if (len > 0)
             {
-                foreach (int i in ints)
+                foreach (var i in ints)
                 {
                     WriteInt(i);
                 }
@@ -218,11 +270,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteLongArray(long[] longs)
         {
-            int len = longs != null ? longs.Length : 0;
+            var len = longs != null ? longs.Length : 0;
             WriteInt(len);
             if (len > 0)
             {
-                foreach (long l in longs)
+                foreach (var l in longs)
                 {
                     WriteLong(l);
                 }
@@ -232,11 +284,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteDoubleArray(double[] doubles)
         {
-            int len = doubles != null ? doubles.Length : 0;
+            var len = doubles != null ? doubles.Length : 0;
             WriteInt(len);
             if (len > 0)
             {
-                foreach (double d in doubles)
+                foreach (var d in doubles)
                 {
                     WriteDouble(d);
                 }
@@ -246,11 +298,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteFloatArray(float[] floats)
         {
-            int len = floats != null ? floats.Length : 0;
+            var len = floats != null ? floats.Length : 0;
             WriteInt(len);
             if (len > 0)
             {
-                foreach (float f in floats)
+                foreach (var f in floats)
                 {
                     WriteFloat(f);
                 }
@@ -260,11 +312,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteShortArray(short[] shorts)
         {
-            int len = shorts != null ? shorts.Length : 0;
+            var len = shorts != null ? shorts.Length : 0;
             WriteInt(len);
             if (len > 0)
             {
-                foreach (short s in shorts)
+                foreach (var s in shorts)
                 {
                     WriteShort(s);
                 }
@@ -316,10 +368,6 @@ namespace Hazelcast.IO.Serialization
             {
                 buffer = new byte[initialSize*8];
             }
-            if (header != null)
-            {
-                header.Clear();
-            }
         }
 
         public void Dispose()
@@ -329,33 +377,7 @@ namespace Hazelcast.IO.Serialization
 
         public virtual ByteOrder GetByteOrder()
         {
-            return bigEndian ? ByteOrder.BigEndian : ByteOrder.LittleEndian;
-        }
-
-        public virtual DynamicByteBuffer GetHeaderBuffer()
-        {
-            if (header == null)
-            {
-                header = new DynamicByteBuffer(new byte[64]).Order(GetByteOrder());
-            }
-            return header;
-        }
-
-        public virtual byte[] GetPortableHeader()
-        {
-            if (header == null)
-            {
-                return null;
-            }
-            header.Flip();
-            if (!header.HasRemaining())
-            {
-                return null;
-            }
-            var buff = new byte[header.Limit];
-            header.Get(buff);
-            header.Clear();
-            return buff;
+            return isBigEndian ? ByteOrder.BigEndian : ByteOrder.LittleEndian;
         }
 
         public void Write(int b)
@@ -392,11 +414,6 @@ namespace Hazelcast.IO.Serialization
         {
             pos = 0;
             buffer = null;
-            if (header != null)
-            {
-                header.Close();
-                header = null;
-            }
         }
 
         internal void EnsureAvailable(int len)
@@ -405,7 +422,7 @@ namespace Hazelcast.IO.Serialization
             {
                 if (buffer != null)
                 {
-                    int newCap = Math.Max(buffer.Length << 1, buffer.Length + len);
+                    var newCap = Math.Max(buffer.Length << 1, buffer.Length + len);
                     var newBuffer = new byte[newCap];
                     Array.Copy(buffer, 0, newBuffer, 0, pos);
                     buffer = newBuffer;

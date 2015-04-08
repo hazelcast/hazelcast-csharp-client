@@ -29,19 +29,6 @@ namespace Hazelcast.IO.Serialization
             return _serializer.Read(bytes);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual IData ToData(object obj, int partitionHash)
-        {
-            byte[] data = _serializer.Write((T) obj);
-            return new Data(_serializer.GetTypeId(), data, partitionHash);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual object ToObject(IData data)
-        {
-            return _serializer.Read(data.GetData());
-        }
-
         public int GetTypeId()
         {
             return _serializer.GetTypeId();

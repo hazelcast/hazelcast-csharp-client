@@ -4,23 +4,23 @@ namespace Hazelcast.IO
 	/// <summary>Access and manipulate bits, bytes, primitives ...</summary>
 	internal sealed class Bits
 	{
-		/// <summary>Short size in bytes</summary>
-		public const int SHORT_SIZE_IN_BYTES = 2;
+        /// <summary>Short size in bytes</summary>
+        public const int ShortSizeInBytes = 2;
 
-		/// <summary>Char size in bytes</summary>
-		public const int CHAR_SIZE_IN_BYTES = 2;
+        /// <summary>Char size in bytes</summary>
+        public const int CharSizeInBytes = 2;
 
-		/// <summary>Integer size in bytes</summary>
-		public const int INT_SIZE_IN_BYTES = 4;
+        /// <summary>Integer size in bytes</summary>
+        public const int IntSizeInBytes = 4;
 
-		/// <summary>Float size in bytes</summary>
-		public const int FLOAT_SIZE_IN_BYTES = 4;
+        /// <summary>Float size in bytes</summary>
+        public const int FloatSizeInBytes = 4;
 
-		/// <summary>Long size in bytes</summary>
-		public const int LONG_SIZE_IN_BYTES = 8;
+        /// <summary>Long size in bytes</summary>
+        public const int LongSizeInBytes = 8;
 
-		/// <summary>Double size in bytes</summary>
-		public const int DOUBLE_SIZE_IN_BYTES = 8;
+        /// <summary>Double size in bytes</summary>
+        public const int DoubleSizeInBytes = 8;
 
 		public static char ReadChar(byte[] buffer, int pos, bool bigEndian)
 		{
