@@ -255,31 +255,31 @@ namespace Hazelcast.Net.Ext
 
         protected virtual int ReadInt()
         {
-            CheckGetLimit(Bits.INT_SIZE_IN_BYTES);
+            CheckGetLimit(Bits.IntSizeInBytes);
             int i = Bits.ReadInt(buffer, index, _bigEndian);
-            index += Bits.INT_SIZE_IN_BYTES;
+            index += Bits.IntSizeInBytes;
             return i;
         }
 
         protected virtual void WriteInt(int v)
         {
-            CheckPutLimit(Bits.INT_SIZE_IN_BYTES);
+            CheckPutLimit(Bits.IntSizeInBytes);
             Bits.WriteInt(buffer, index, v, _bigEndian);
-            index += Bits.INT_SIZE_IN_BYTES;
+            index += Bits.IntSizeInBytes;
         }
         protected virtual short ReadShort()
         {
-            CheckGetLimit(Bits.SHORT_SIZE_IN_BYTES);
+            CheckGetLimit(Bits.ShortSizeInBytes);
             short i = Bits.ReadShort(buffer, index, _bigEndian);
-            index += Bits.SHORT_SIZE_IN_BYTES;
+            index += Bits.ShortSizeInBytes;
             return i;
         }
 
         protected virtual void WriteShort(short v)
         {
-            CheckPutLimit(Bits.SHORT_SIZE_IN_BYTES);
+            CheckPutLimit(Bits.ShortSizeInBytes);
             Bits.WriteShort(buffer, index, v, _bigEndian);
-            index += Bits.SHORT_SIZE_IN_BYTES;
+            index += Bits.ShortSizeInBytes;
         }
     }
 

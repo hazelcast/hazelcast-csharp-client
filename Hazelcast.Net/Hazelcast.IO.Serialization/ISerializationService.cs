@@ -46,10 +46,6 @@ namespace Hazelcast.IO.Serialization
 
 		ByteOrder GetByteOrder();
 
-		IBufferObjectDataOutput Pop();
-
-        void Push(IBufferObjectDataOutput output);
-
 		void Destroy();
 	}
 }

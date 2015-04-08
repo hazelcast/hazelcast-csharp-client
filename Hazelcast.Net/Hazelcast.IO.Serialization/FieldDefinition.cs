@@ -4,16 +4,20 @@ namespace Hazelcast.IO.Serialization
 {
     internal class FieldDefinition : IFieldDefinition
     {
-        internal int index;
-        internal string fieldName;
-        internal FieldType type;
         internal int classId;
         internal int factoryId;
+        internal string fieldName;
+        internal int index;
+        internal FieldType type;
 
-        public FieldDefinition(){}
+        internal FieldDefinition()
+        {
+        }
 
-        internal FieldDefinition(int index, string fieldName, FieldType type): 
-            this(index, fieldName, type, 0, 0){}
+        internal FieldDefinition(int index, string fieldName, FieldType type)
+            : this(index, fieldName, type, 0, 0)
+        {
+        }
 
         internal FieldDefinition(int index, string fieldName, FieldType type, int factoryId, int classId)
         {
@@ -54,34 +58,50 @@ namespace Hazelcast.IO.Serialization
             return type == FieldType.Portable || type == FieldType.PortableArray;
         }
 
-        protected bool Equals(FieldDefinition other)
+        //CHECKSTYLE:OFF
+        //Generated equals method has too high NPath Complexity
+        public override bool Equals(object o)
         {
-            return string.Equals(fieldName, other.fieldName) && type == other.type && classId == other.classId && factoryId == other.factoryId;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((FieldDefinition) obj);
+            if (this == o)
+            {
+                return true;
+            }
+            if (o == null || GetType() != o.GetType())
+            {
+                return false;
+            }
+            var that = (FieldDefinition) o;
+            if (classId != that.classId)
+            {
+                return false;
+            }
+            if (factoryId != that.factoryId)
+            {
+                return false;
+            }
+            if (fieldName != null ? !fieldName.Equals(that.fieldName) : that.fieldName != null)
+            {
+                return false;
+            }
+            if (type != that.type)
+            {
+                return false;
+            }
+            return true;
         }
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                int hashCode = (fieldName != null ? fieldName.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (int) type;
-                hashCode = (hashCode*397) ^ classId;
-                hashCode = (hashCode*397) ^ factoryId;
-                return hashCode;
-            }
+            var result = fieldName != null ? fieldName.GetHashCode() : 0;
+            result = 31*result + (type != null ? type.GetHashCode() : 0);
+            result = 31*result + classId;
+            result = 31*result + factoryId;
+            return result;
         }
 
         public override string ToString()
         {
-            var sb = new StringBuilder("FieldDefinitionImpl{");
+            var sb = new StringBuilder("FieldDefinition{");
             sb.Append("index=").Append(index);
             sb.Append(", fieldName='").Append(fieldName).Append('\'');
             sb.Append(", type=").Append(type);

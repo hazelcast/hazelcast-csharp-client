@@ -15,7 +15,7 @@ namespace Hazelcast.IO.Serialization
 
         private static readonly IPartitioningStrategy emptyPartitioningStrategy = new EmptyPartitioningStrategy();
         protected internal readonly IManagedContext managedContext;
-        protected internal readonly IPortableContext portableContext;
+        protected internal readonly PortableContext portableContext;
         protected internal readonly IInputOutputFactory inputOutputFactory;
         protected internal readonly IPartitioningStrategy globalPartitioningStrategy;
         private readonly Dictionary<Type, ISerializerAdapter> constantTypesMap = new Dictionary<Type, ISerializerAdapter>(CONSTANT_SERIALIZERS_SIZE);
@@ -145,24 +145,30 @@ namespace Hazelcast.IO.Serialization
             {
                 return (IData) obj;
             }
-            int partitionHash = CalculatePartitionHash(obj, strategy);
+            IBufferObjectDataOutput @out = Pop();
             try
             {
                 ISerializerAdapter serializer = SerializerFor(obj.GetType());
-                if (serializer == null)
+                @out.WriteInt(serializer.GetTypeId(), ByteOrder.BigEndian);
+                int partitionHash = CalculatePartitionHash(obj, strategy);
+                bool hasPartitionHash = partitionHash != 0;
+                @out.WriteBoolean(hasPartitionHash);
+                serializer.Write(@out, obj);
+                if (hasPartitionHash)
                 {
-                    if (active)
-                    {
-                        throw new HazelcastSerializationException("There is no suitable serializer for "+ obj.GetType());
-                    }
-                    throw new HazelcastInstanceNotActiveException();
+                    @out.WriteInt(partitionHash, ByteOrder.BigEndian);
                 }
-                return serializer.ToData(obj, partitionHash);
+                return new DefaultData(@out.ToByteArray());
             }
             catch (Exception e)
             {
                 throw HandleException(e);
             }
+            finally
+            {
+                Push(@out);
+            }
+
         }
 
         protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)
@@ -181,34 +187,31 @@ namespace Hazelcast.IO.Serialization
             return partitionHash;
         }
 
-        public T ToObject<T>(object data)
+        public T ToObject<T>(object @object)
         {
-            if (data == null)
+            if (!(@object is IData))
+            {
+                return (T)@object;
+            }
+            IData data = (IData)@object;
+            if (IsNullData(data))
             {
                 return default(T);
             }
-            var dataObj = data as IData;
-            if (dataObj == null)
-            {
-                return (T)data;
-            }
-            if (dataObj.DataSize() == 0 && dataObj.GetType() == SerializationConstants.ConstantTypeNull)
-            {
-                return default(T);
-            }
+            IBufferObjectDataInput @in = CreateObjectDataInput(data);
             try
             {
-                int typeId = dataObj.GetType();
+                int typeId = data.GetTypeId();
                 ISerializerAdapter serializer = SerializerFor(typeId);
                 if (serializer == null)
                 {
                     if (active)
                     {
-                        throw new HazelcastSerializationException("There is no suitable de-serializer for type "+ typeId);
+                        throw new HazelcastSerializationException("There is no suitable de-serializer for type " + typeId);
                     }
                     throw new HazelcastInstanceNotActiveException();
                 }
-                object obj = serializer.ToObject(dataObj);
+                object obj = serializer.Read(@in);
                 if (managedContext != null)
                 {
                     obj = managedContext.Initialize(obj);
@@ -219,6 +222,15 @@ namespace Hazelcast.IO.Serialization
             {
                 throw HandleException(e);
             }
+            finally
+            {
+                IOUtil.CloseResource(@in);
+            }
+        }
+
+        internal static bool IsNullData(IData data)
+        {
+            return data.DataSize() == 0 && data.GetTypeId() == SerializationConstants.ConstantTypeNull;
         }
 
         public void WriteObject(IObjectDataOutput output, object obj)
@@ -236,15 +248,6 @@ namespace Hazelcast.IO.Serialization
                     return;
                 }
                 ISerializerAdapter serializer = SerializerFor(obj.GetType());
-                if (serializer == null)
-                {
-                    if (active)
-                    {
-                        throw new HazelcastSerializationException("There is no suitable serializer for "
-                            + obj.GetType());
-                    }
-                    throw new HazelcastInstanceNotActiveException();
-                }
                 output.WriteInt(serializer.GetTypeId());
                 serializer.Write(output, obj);
             }
@@ -297,15 +300,7 @@ namespace Hazelcast.IO.Serialization
                 {
                     return;
                 }
-                output.WriteInt(data.GetType());
-                output.WriteInt(data.HasPartitionHash() ? data.GetPartitionHash() : 0);
-                WritePortableHeader(output, data);
-                int size = data.DataSize();
-                output.WriteInt(size);
-                if (size > 0)
-                {
-                    WriteDataInternal(output, data);
-                }
+                WriteDataInternal(output, data);
             }
             catch (Exception e)
             {
@@ -314,32 +309,9 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        private void WritePortableHeader(IObjectDataOutput outp, IData data)
-        {
-            if (data.HeaderSize() == 0)
-            {
-                outp.WriteInt(0);
-            }
-            else
-            {
-                if (!(outp is IPortableDataOutput))
-                {
-                    throw new HazelcastSerializationException("PortableDataOutput is required to be able "
-                         + "to write Portable header.");
-                }
-                byte[] header = data.GetHeader();
-                IPortableDataOutput output = (IPortableDataOutput)outp;
-                DynamicByteBuffer headerBuffer = output.GetHeaderBuffer();
-                output.WriteInt(header.Length);
-                output.WriteInt(headerBuffer.Position());
-                headerBuffer.Put(header);
-            }
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
         private void WriteDataInternal(IObjectDataOutput output, IData data)
         {
-            output.Write(data.GetData());
+            output.WriteByteArray(data.ToByteArray());
         }
 
         public IData ReadData(IObjectDataInput input)
@@ -351,43 +323,12 @@ namespace Hazelcast.IO.Serialization
                 {
                     return null;
                 }
-                int typeId = input.ReadInt();
-                int partitionHash = input.ReadInt();
-                byte[] header = ReadPortableHeader(input);
-                int dataSize = input.ReadInt();
-                byte[] data = null;
-                if (dataSize > 0)
-                {
-                    data = new byte[dataSize];
-                    input.ReadFully(data);
-                }
-                return new Data(typeId, data, partitionHash, header);
+                return new DefaultData(input.ReadByteArray());
             }
             catch (Exception e)
             {
                 throw HandleException(e);
             }
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        protected internal byte[] ReadPortableHeader(IObjectDataInput inp)
-        {
-            byte[] header = null;
-            int len = inp.ReadInt();
-            if (len > 0)
-            {
-                if (!(inp is IPortableDataInput))
-                {
-                    throw new HazelcastSerializationException("PortableDataInput is required to be able to read Portable header.");
-                }
-                IPortableDataInput input = (IPortableDataInput)inp;
-                ByteBuffer headerBuffer = input.GetHeaderBuffer();
-                int pos = input.ReadInt();
-                headerBuffer.Position = pos;
-                header = new byte[len];
-                headerBuffer.Get(header);
-            }
-            return header;
         }
 
         public virtual void DisposeData(IData data)
@@ -408,12 +349,12 @@ namespace Hazelcast.IO.Serialization
             throw new HazelcastSerializationException(e);
         }
 
-        public IBufferObjectDataOutput Pop()
+        protected internal IBufferObjectDataOutput Pop()
         {
             return dataOutputQueue.Pop();
         }
 
-        public void Push(IBufferObjectDataOutput output)
+        protected internal void Push(IBufferObjectDataOutput output)
         {
             dataOutputQueue.Push(output);
         }
@@ -515,7 +456,16 @@ namespace Hazelcast.IO.Serialization
             {
                 return serializer;
             }
-            return LookupSerializer(type);
+            serializer = LookupSerializer(type);
+            if (serializer == null)
+            {
+                if (active)
+                {
+                    throw new HazelcastSerializationException("There is no suitable serializer for " + type);
+                }
+                throw new HazelcastInstanceNotActiveException();
+            }
+            return serializer;
         }
 
         private ISerializerAdapter LookupSerializer(Type type)
@@ -653,7 +603,7 @@ namespace Hazelcast.IO.Serialization
         {
             if (!data.IsPortable())
             {
-                throw new ArgumentException();
+                throw new ArgumentException("Given data is not Portable! -> " + data.GetTypeId());
             }
             IBufferObjectDataInput input = CreateObjectDataInput(data);
             return portableSerializer.CreateReader(input);

@@ -8,12 +8,6 @@ namespace Hazelcast.IO.Serialization
 		/// <exception cref="System.IO.IOException"></exception>
 		object Read(IObjectDataInput @in);
 
-		/// <exception cref="System.IO.IOException"></exception>
-		IData ToData(object obj, int partitionHash);
-
-		/// <exception cref="System.IO.IOException"></exception>
-		object ToObject(IData data);
-
 		int GetTypeId();
 
 		void Destroy();

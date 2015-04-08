@@ -309,7 +309,7 @@ namespace Hazelcast.Client.Connection
         private void Write(IData data)
         {
             sendBuffer.Clear();
-            var packet = new Packet(data, serializationService.GetPortableContext());
+            var packet = new Packet(data);
             packet.WriteTo(sendBuffer);
             var complete = false;
             while (!complete)
@@ -339,7 +339,7 @@ namespace Hazelcast.Client.Connection
         {
             receiveBuffer.Clear();
             var readFromSocket = true;
-            var packet = new Packet(serializationService.GetPortableContext());
+            var packet = new Packet();
             while (true)
             {
                 if (readFromSocket)
@@ -538,7 +538,7 @@ namespace Hazelcast.Client.Connection
             var callId = RegisterCall(task);
             ClientRequest clientRequest = taskData.Request;
             IData data = serializationService.ToData(clientRequest);
-            var packet = new Packet(data, taskData.PartitionId, serializationService.GetPortableContext());
+            var packet = new Packet(data, taskData.PartitionId);
             //enqueue to write queue
             //Console.WriteLine("SENDING:"+callId);
             if (!WriteAsync(packet))
@@ -701,7 +701,7 @@ namespace Hazelcast.Client.Connection
                 {
                     if (packet == null)
                     {
-                        packet = new Packet(serializationService.GetPortableContext());
+                        packet = new Packet();
                     }
                     bool complete = packet.ReadFrom(receiveBuffer);
                     if (complete)

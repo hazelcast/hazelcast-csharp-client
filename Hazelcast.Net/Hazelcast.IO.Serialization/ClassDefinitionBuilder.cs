@@ -176,6 +176,18 @@ namespace Hazelcast.IO.Serialization
             return this;
         }
 
+        internal ClassDefinitionBuilder AddField(FieldDefinition fieldDefinition)
+        {
+            Check();
+            if (index != fieldDefinition.GetIndex())
+            {
+                throw new ArgumentException("Invalid field index");
+            }
+            index++;
+            fieldDefinitions.Add(fieldDefinition);
+            return this;
+        }
+
         public IClassDefinition Build()
         {
             done = true;
@@ -193,6 +205,21 @@ namespace Hazelcast.IO.Serialization
             {
                 throw new HazelcastSerializationException("ClassDefinition is already built for " + classId);
             }
+        }
+
+        public int GetFactoryId()
+        {
+            return factoryId;
+        }
+
+        public int GetClassId()
+        {
+            return classId;
+        }
+
+        public int GetVersion()
+        {
+            return version;
         }
     }
 }
