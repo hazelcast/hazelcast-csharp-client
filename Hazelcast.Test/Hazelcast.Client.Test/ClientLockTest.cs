@@ -15,17 +15,17 @@ namespace Hazelcast.Client.Test
 
 		internal static ILock l;
 
-        [SetUp]
-        public void Init()
+        public override void InitMoreFixture()
         {
             l = client.GetLock(name);
         }
 
+        [SetUp]
         [TearDown]
         public static void Destroy()
         {
             l.ForceUnlock();
-            l.Destroy();
+            //l.Destroy();
         }
 
 		/// <exception cref="System.Exception"></exception>
@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Test
 	    [Test]
 	    public virtual void TestIsLock()
 	    {
-	        Assert.IsTrue(l.TryLock(10, TimeUnit.SECONDS));
+	        Assert.IsTrue(l.TryLock(20, TimeUnit.SECONDS));
 
 	        var isLocked = l.IsLocked();
 	        Assert.IsTrue(isLocked);
