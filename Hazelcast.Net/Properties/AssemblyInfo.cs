@@ -16,9 +16,9 @@
 [assembly: System.Reflection.AssemblyConfiguration("Commit 475324b")]
 [assembly: System.Runtime.InteropServices.ComVisible(false)]
 [assembly: System.CLSCompliant(true)]
-[assembly: System.Reflection.AssemblyVersion("3.5.0.3")]
-[assembly: System.Reflection.AssemblyFileVersion("3.5.0.3")]
-[assembly: System.Reflection.AssemblyInformationalVersion("3.5.0.3")]
+[assembly: System.Reflection.AssemblyVersion("3.5.0.4")]
+[assembly: System.Reflection.AssemblyFileVersion("3.5.0.4")]
+[assembly: System.Reflection.AssemblyInformationalVersion("3.5.0.4")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Hazelcast.Test")]
 
 
