@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Client.Model;
 using Hazelcast.Config;
 using Hazelcast.Core;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 using NUnit.Framework;
 
@@ -15,10 +10,16 @@ namespace Hazelcast.Client.Test
 {
     public class HazelcastBaseTest
     {
-        protected IHazelcastInstance client ;
+        internal static string UNLIMITED_LICENSE =
+            "HazelcastEnterprise#9999Nodes#9999Clients#HDMemory:99999999GB#w7yAkRj1IbHcBfVimEOuKr638599939999peZ319999z05999Wn149zGxG09";
 
-        protected static volatile Random random = new Random((int)Clock.CurrentTimeMillis());
+        protected static volatile Random random = new Random((int) Clock.CurrentTimeMillis());
+        protected IHazelcastInstance client;
 
+        protected static string Name
+        {
+            get { return "csharp-name-" + random.Next(1000000); }
+        }
 
         protected IHazelcastInstance InitClient()
         {
@@ -32,11 +33,8 @@ namespace Hazelcast.Client.Test
             config.GetNetworkConfig().AddAddress("127.0.0.1");
             config.AddNearCacheConfig("nearCachedMap*", new NearCacheConfig().SetInMemoryFormat(InMemoryFormat.Object));
             config.GetSerializationConfig().AddPortableFactory(1, new PortableFactory());
+            config.SetLicenseKey(UNLIMITED_LICENSE);
             return HazelcastClient.NewHazelcastClient(config);
-        }
-
-        public HazelcastBaseTest()
-        {
         }
 
         [TestFixtureSetUp]
@@ -63,14 +61,6 @@ namespace Hazelcast.Client.Test
             client.Shutdown();
             Console.WriteLine("Shut down client");
             client = null;
-        }
-
-        protected static string Name
-        {
-            get
-            {
-                return "csharp-name-" + random.Next(1000000);
-            }
         }
     }
 }
