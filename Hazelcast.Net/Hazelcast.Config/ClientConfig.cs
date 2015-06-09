@@ -60,6 +60,19 @@ namespace Hazelcast.Config
 
         private IDictionary<string, NearCacheConfig> nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
 
+        private string licenseKey;
+
+        public virtual string GetLicenseKey()
+        {
+            return licenseKey;
+        }
+
+        public virtual ClientConfig SetLicenseKey(string licenseKey)
+        {
+            this.licenseKey = licenseKey;
+            return this;
+        }
+
         //public virtual ClientSecurityConfig GetSecurityConfig()
         //{
         //    return securityConfig;

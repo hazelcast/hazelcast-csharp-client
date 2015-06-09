@@ -89,6 +89,7 @@
         <in-memory-format>OBJECT</in-memory-format>
     </near-cache>
 
+  <license-key>ENTERPRISE_KEY</license-key>
 
 
 </hazelcast-client>

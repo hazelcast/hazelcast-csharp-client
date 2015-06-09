@@ -15,6 +15,19 @@ namespace Hazelcast.Config
 
         private readonly XmlDocument document = new XmlDocument();
 
+        internal XmlClientConfigBuilder(TextReader reader)
+        {
+            try
+            {
+                document.Load(reader);
+                reader.Dispose();
+            }
+            catch (Exception)
+            {
+                throw new InvalidOperationException("Could not parse configuration file, giving up.");
+            }
+        }
+
         private XmlClientConfigBuilder(string configFile=null)
         {
             if (configFile == null)
@@ -52,7 +65,6 @@ namespace Hazelcast.Config
                         logger.Info("Using Default configuration file");
                     }
                 }
-
                 try
                 {
                     document.Load(input);
@@ -72,6 +84,11 @@ namespace Hazelcast.Config
         public static ClientConfig Build(string configFile = null)
         {
             return new XmlClientConfigBuilder(configFile).Init();
+        }
+
+        public static ClientConfig Build(TextReader reader)
+        {
+            return new XmlClientConfigBuilder(reader).Init();
         }
 
         protected ClientConfig Init()
@@ -122,6 +139,9 @@ namespace Hazelcast.Config
                         break;
                     case "near-cache":
                         HandleNearCache(node);
+                        break;
+                    case "license-key":
+                        clientConfig.SetLicenseKey(GetTextContent(node));
                         break;
                 }
             }

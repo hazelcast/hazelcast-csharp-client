@@ -39,28 +39,24 @@ namespace Hazelcast.Client
         private readonly ClientConfig config;
         private readonly IClientConnectionManager connectionManager;
         private readonly ClientExecutionService executionService;
-
         private readonly int id = ClientId.GetAndIncrement();
-
         private readonly string instanceName;
         private readonly ClientInvocationService invocationService;
-
         //private readonly ThreadGroup threadGroup;
 
         private readonly LifecycleService lifecycleService;
-
         private readonly ClientPartitionService partitionService;
-
         private readonly ProxyManager proxyManager;
         private readonly ISerializationService serializationService;
-
         private readonly ConcurrentDictionary<string, object> userContext;
 
         private HazelcastClient(ClientConfig config)
         {
             this.config = config;
-            GroupConfig groupConfig = config.GetGroupConfig();
+            var groupConfig = config.GetGroupConfig();
             instanceName = "hz.client_" + id + (groupConfig != null ? "_" + groupConfig.GetName() : string.Empty);
+
+            BeforeStart(config);
             //threadGroup = new ThreadGroup(instanceName);
             lifecycleService = new LifecycleService(this);
             try
@@ -94,13 +90,14 @@ namespace Hazelcast.Client
             //TODO EXECUTION SERVICE
             executionService = new ClientExecutionService(instanceName, config.GetExecutorPoolSize());
             clusterService = new ClientClusterService(this);
-            LoadBalancer loadBalancer = config.GetLoadBalancer();
+            var loadBalancer = config.GetLoadBalancer();
             if (loadBalancer == null)
             {
                 loadBalancer = new RoundRobinLB();
             }
 
-            connectionManager = new ClientConnectionManager(this, loadBalancer, config.GetNetworkConfig().IsSmartRouting());
+            connectionManager = new ClientConnectionManager(this, loadBalancer,
+                config.GetNetworkConfig().IsSmartRouting());
 
             invocationService = new ClientInvocationService(this);
             userContext = new ConcurrentDictionary<string, object>();
@@ -109,7 +106,19 @@ namespace Hazelcast.Client
             partitionService = new ClientPartitionService(this);
         }
 
+        private static void BeforeStart(ClientConfig clientConfig)
+        {
+            var licenseKey = clientConfig.GetLicenseKey();
+            var list = new List<LicenseType>
+            {
+                LicenseType.ENTERPRISE,
+                LicenseType.ENTERPRISE_SECURITY_ONLY
+            };
+            LicenseExtractor.CheckLicenseKey(licenseKey, list);
+        }
+
         #region HazelcastInstance
+
         public string GetName()
         {
             return instanceName;
@@ -240,7 +249,8 @@ namespace Hazelcast.Client
             {
                 var request = new GetDistributedObjectsRequest();
                 var task = invocationService.InvokeOnRandomTarget(request);
-                var serializableCollection = serializationService.ToObject<SerializableCollection>(ThreadUtil.GetResult(task));
+                var serializableCollection =
+                    serializationService.ToObject<SerializableCollection>(ThreadUtil.GetResult(task));
                 foreach (var data in serializableCollection)
                 {
                     var o = serializationService.ToObject<DistributedObjectInfo>(data);
@@ -283,7 +293,7 @@ namespace Hazelcast.Client
 
         public T GetDistributedObject<T>(string serviceName, string name) where T : IDistributedObject
         {
-            ClientProxy clientProxy = proxyManager.GetOrCreateProxy<T>(serviceName, name);
+            var clientProxy = proxyManager.GetOrCreateProxy<T>(serviceName, name);
 
             return (T) (clientProxy as IDistributedObject);
         }
@@ -300,9 +310,8 @@ namespace Hazelcast.Client
 
         #endregion
 
-
-
         #region HC
+
         private void Start()
         {
             lifecycleService.SetStarted();
@@ -359,7 +368,7 @@ namespace Hazelcast.Client
         {
             return connectionManager;
         }
- 
+
         internal void DoShutdown()
         {
             HazelcastClientProxy _out;
@@ -370,18 +379,20 @@ namespace Hazelcast.Client
             connectionManager.Shutdown();
             proxyManager.Destroy();
         }
-#endregion
+
+        #endregion
 
         #region statics
+
         /// <summary>
-        /// Creates a new hazelcast client using default configuration.
+        ///     Creates a new hazelcast client using default configuration.
         /// </summary>
         /// <remarks>
-        /// Creates a new hazelcast client using default configuration.
+        ///     Creates a new hazelcast client using default configuration.
         /// </remarks>
         /// <returns>IHazelcastInstance.</returns>
         /// <example>
-        /// <code>
+        ///     <code>
         ///     var hazelcastInstance = Hazelcast.NewHazelcastClient();
         ///     var myMap = hazelcastInstance.GetMap("myMap");
         /// </code>
@@ -392,12 +403,12 @@ namespace Hazelcast.Client
         }
 
         /// <summary>
-        /// Creates a new hazelcast client using the given configuration xml file 
+        ///     Creates a new hazelcast client using the given configuration xml file
         /// </summary>
         /// <param name="configFile">The configuration file with full or relative path.</param>
         /// <returns>IHazelcastInstance.</returns>
         /// <example>
-        /// <code>
+        ///     <code>
         ///     //Full path
         ///     var hazelcastInstance = Hazelcast.NewHazelcastClient(@"C:\Users\user\Hazelcast.Net\hazelcast-client.xml");
         ///     var myMap = hazelcastInstance.GetMap("myMap");
@@ -413,7 +424,7 @@ namespace Hazelcast.Client
         }
 
         /// <summary>
-        /// Creates a new hazelcast client using the given configuration object created programmaticly.
+        ///     Creates a new hazelcast client using the given configuration object created programmaticly.
         /// </summary>
         /// <param name="config">The configuration.</param>
         /// <returns>IHazelcastInstance.</returns>
@@ -437,20 +448,20 @@ namespace Hazelcast.Client
         }
 
         /// <summary>
-        /// Gets all Hazelcast clients.
+        ///     Gets all Hazelcast clients.
         /// </summary>
         /// <returns>ICollection&lt;IHazelcastInstance&gt;</returns>
         public static ICollection<IHazelcastInstance> GetAllHazelcastClients()
         {
-            return (ICollection<IHazelcastInstance>)Clients.Values;
+            return (ICollection<IHazelcastInstance>) Clients.Values;
         }
 
         /// <summary>
-        /// Shutdowns all Hazelcast Clients .
+        ///     Shutdowns all Hazelcast Clients .
         /// </summary>
         public static void ShutdownAll()
         {
-            foreach (HazelcastClientProxy proxy in Clients.Values)
+            foreach (var proxy in Clients.Values)
             {
                 try
                 {
@@ -463,6 +474,7 @@ namespace Hazelcast.Client
             }
             Clients.Clear();
         }
+
         #endregion
     }
 }
