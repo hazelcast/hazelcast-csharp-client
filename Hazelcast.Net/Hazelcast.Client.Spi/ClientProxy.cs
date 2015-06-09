@@ -1,4 +1,6 @@
 using System;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
@@ -38,7 +40,7 @@ namespace Hazelcast.Client.Spi
         public void Destroy()
         {
             OnDestroy();
-            var request = new ClientDestroyRequest(objectName, GetServiceName());
+            var request = ClientDestroyProxyCodec.EncodeRequest(objectName, GetServiceName());
             try
             {
                 context.GetInvocationService().InvokeOnRandomTarget(request);
@@ -51,20 +53,20 @@ namespace Hazelcast.Client.Spi
             context = null;
         }
 
-        protected virtual string Listen(ClientRequest registrationRequest, Object partitionKey, DistributedEventHandler handler)
+        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse decodeListenerResponse, object partitionKey, DistributedEventHandler handler)
         {
-            return ListenerUtil.Listen(context, registrationRequest, partitionKey, handler);
+            return ListenerUtil.Listen(context, registrationRequest, decodeListenerResponse, partitionKey, handler);
         }
 
 
-        protected virtual string Listen(ClientRequest registrationRequest, DistributedEventHandler handler)
+        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse decodeListenerResponse, DistributedEventHandler handler)
         {
-            return ListenerUtil.Listen(context, registrationRequest, null, handler);
+            return ListenerUtil.Listen(context, registrationRequest, decodeListenerResponse, null, handler);
         }
 
-        protected virtual bool StopListening(BaseClientRemoveListenerRequest request, string registrationId)
+        protected virtual bool StopListening(ClientMessage registrationRequest, DecodeStopListenerResponse decodeListenerResponse, string registrationId)
         {
-            return ListenerUtil.StopListening(context, request, registrationId);
+            return ListenerUtil.StopListening(context, registrationRequest, decodeListenerResponse, registrationId);
         }
 
 
@@ -85,24 +87,23 @@ namespace Hazelcast.Client.Spi
 
         protected abstract void OnDestroy();
 
-        protected virtual T Invoke<T>(ClientRequest request, object key)
+        protected virtual ClientMessage Invoke(IClientMessage request, object key)
         {
             try
             {
                 var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
-                var result = ThreadUtil.GetResult(task);
-                return context.GetSerializationService().ToObject<T>(result);
+                return ThreadUtil.GetResult(task);
             }
             catch (Exception e) {
                 throw ExceptionUtil.Rethrow(e);
             }  
         }
-        protected virtual T Invoke<T>(ClientRequest request)
+
+        protected virtual ClientMessage Invoke(IClientMessage request)
         {
             try {
                 var task = GetContext().GetInvocationService().InvokeOnRandomTarget(request);
-                var result = ThreadUtil.GetResult(task);
-                return context.GetSerializationService().ToObject<T>(result);
+                return ThreadUtil.GetResult(task);
             } catch (Exception e) {
                 throw ExceptionUtil.Rethrow(e);
             }  

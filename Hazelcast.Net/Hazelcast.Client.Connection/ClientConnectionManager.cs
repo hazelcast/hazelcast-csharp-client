@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Cluster;
 using Hazelcast.Client.Spi;
@@ -603,28 +604,28 @@ namespace Hazelcast.Client.Connection
             clientConnection.Send(task);
         }
 
-        public Task<IData> Send(ClientRequest request)
+        public Task<IClientMessage> Send(IClientMessage request)
         {
             return Send(request, null, -1);
         }
 
-        public Task<IData> Send(ClientRequest request, Address target)
+        public Task<IClientMessage> Send(IClientMessage request, Address target)
         {
             return Send(request, target, -1);
         }
 
-        public Task<IData> Send(ClientRequest request, Address target, int partitionId)
+        public Task<IClientMessage> Send(IClientMessage request, Address target, int partitionId)
         {
             ClientConnection clientConnection = _GetOrConnectWithRetry(target);
             return clientConnection.Send(request, partitionId);
         }
 
-        public Task<IData> SendAndHandle(ClientRequest request, DistributedEventHandler handler)
+        public Task<IClientMessage> SendAndHandle(IClientMessage request, DistributedEventHandler handler)
         {
             return SendAndHandle(request, null, handler);
         }
 
-        public Task<IData> SendAndHandle(ClientRequest request, Address target,
+        public Task<IClientMessage> SendAndHandle(IClientMessage request, Address target,
             DistributedEventHandler handler)
         {
             ClientConnection clientConnection = _GetOrConnectWithRetry(target);

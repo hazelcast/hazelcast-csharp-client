@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
+using Hazelcast.Client.Protocol;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
@@ -15,7 +16,7 @@ namespace Hazelcast.Util
             return Thread.CurrentThread.ManagedThreadId;
         }
 
-        public static IData GetResult(Task<IData> task, int timeout)
+        public static ClientMessage GetResult(Task<IClientMessage> task, int timeout)
         {
             try
             {
@@ -30,10 +31,10 @@ namespace Hazelcast.Util
             {
                 ExceptionUtil.Rethrow(e);
             }
-            return task.Result;
+            return (ClientMessage) task.Result;
         } 
         
-        public static IData GetResult(Task<IData> task)
+        public static ClientMessage GetResult(Task<IClientMessage> task)
         {
             return GetResult(task, TaskOperationTimeOutMilliseconds);
         }

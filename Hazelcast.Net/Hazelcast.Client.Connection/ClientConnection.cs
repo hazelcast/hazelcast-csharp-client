@@ -8,6 +8,9 @@ using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
+using Hazelcast.Client.Protocol.Util;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Client.Spi;
@@ -58,8 +61,10 @@ namespace Hazelcast.Client.Connection
         private readonly ByteBuffer sendBuffer;
         private readonly ByteBuffer receiveBuffer;
 
-        private volatile Packet packet;
+        //private volatile Packet packet;
         //private DataAdapter sendDataAdapter;
+
+        private ClientMessageBuilder builder;
 
         private volatile ISocketWritable lastWritable;
 
@@ -144,6 +149,8 @@ namespace Hazelcast.Client.Connection
 
                 sendBuffer = ByteBuffer.Allocate(BufferSize);
                 receiveBuffer = ByteBuffer.Allocate(BufferSize);
+
+                builder = new ClientMessageBuilder(HandleClientMessage);
 
                 live = true;
             }
@@ -514,16 +521,16 @@ namespace Hazelcast.Client.Connection
             //return true;
         }
 
-        public Task<IData> Send(ClientRequest clientRequest, int partitionId)
+        public Task<IClientMessage> Send(IClientMessage clientRequest, int partitionId)
         {
             return Send(clientRequest, null, partitionId);
         }
 
-        public Task<IData> Send(ClientRequest clientRequest, DistributedEventHandler handler, int partitionId)
+        public Task<IClientMessage> Send(IClientMessage clientRequest, DistributedEventHandler handler, int partitionId)
         {
             var taskData = new TaskData(clientRequest, null, handler, partitionId);
             //create task
-            var task = new Task<IData>(taskObj => ResponseReady((TaskData) taskObj), taskData);
+            var task = new Task<IClientMessage>(taskObj => ResponseReady((TaskData)taskObj), taskData);
             Send(task);
             return task;
         }
@@ -536,8 +543,8 @@ namespace Hazelcast.Client.Connection
                 return;
             }
             var callId = RegisterCall(task);
-            ClientRequest clientRequest = taskData.Request;
-            IData data = serializationService.ToData(clientRequest);
+            var clientRequest = taskData.Request;
+            var data = serializationService.ToData(clientRequest);
             var packet = new Packet(data, taskData.PartitionId);
             //enqueue to write queue
             //Console.WriteLine("SENDING:"+callId);
@@ -556,7 +563,7 @@ namespace Hazelcast.Client.Connection
         /// </summary>
         /// <param name="taskData"></param>
         /// <returns>response result to Task.Result</returns>
-        private IData ResponseReady(TaskData taskData)
+        private IClientMessage ResponseReady(TaskData taskData)
         {
             if (taskData.Error != null)
             {
@@ -577,7 +584,7 @@ namespace Hazelcast.Client.Connection
             }
 
             var taskData = task.AsyncState as TaskData;
-            ClientRequest clientRequest = taskData != null ? taskData.Request : null;
+            var clientRequest = taskData != null ? taskData.Request : null;
             clientRequest.CallId = nextCallId;
 
             requestTasks.TryAdd(nextCallId, task);
@@ -697,37 +704,9 @@ namespace Hazelcast.Client.Connection
                 }
                 receiveBuffer.Position += receivedByteSize;
                 receiveBuffer.Flip();
-                while (receiveBuffer.HasRemaining())
-                {
-                    if (packet == null)
-                    {
-                        packet = new Packet();
-                    }
-                    bool complete = packet.ReadFrom(receiveBuffer);
-                    if (complete)
-                    {
-                        //ASYNC HANDLE Received Packet
-                        lock (packet)
-                        {
-                            Packet localPacket = packet;
-                            if (packet.IsHeaderSet(Packet.HeaderEvent))
-                            {
-                                object state = packet.GetPartitionId();
-                                var eventTask = new Task(o => HandleEventPacket(localPacket), state);
-                                eventTask.Start(_clientConnectionManager.TaskScheduler);
-                            }
-                            else
-                            {
-                                Task.Factory.StartNew(() => HandleReceivedPacket(localPacket));
-                            }
-                            packet = null;
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
+
+                builder.OnData(receiveBuffer);
+
                 if (receiveBuffer.HasRemaining())
                 {
                     receiveBuffer.Compact();
@@ -736,7 +715,6 @@ namespace Hazelcast.Client.Connection
                 {
                     receiveBuffer.Clear();
                 }
-                //BeginRead();
             }
             catch (Exception e)
             {
@@ -749,13 +727,32 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private void HandleReceivedPacket(Packet localPacket)
+        private void HandleClientMessage(ClientMessage message)
         {
-            var clientResponse = serializationService.ToObject<ClientResponse>(localPacket.GetData());
-            int callId = clientResponse.CallId;
+            if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
+            {
+                object state = message.GetPartitionId();
+                var eventTask = new Task(o => HandleEventPacket(message), state);
+                eventTask.Start(_clientConnectionManager.TaskScheduler);
+            }
+            else
+            {
+                Task.Factory.StartNew(() => HandleReceivedPacket(message));
+            }
+        }
+
+        private void HandleReceivedPacket(ClientMessage localPacket)
+        {
+            var clientResponse = localPacket;//serializationService.ToObject<ClientResponse>(localPacket.GetData());
+            int callId = clientResponse.GetCorrelationId();
             //Console.WriteLine("HANDLING RECEIVED:"+callId);
-            IData response = clientResponse.Response;
-            GenericError error = clientResponse.IsError?serializationService.ToObject<GenericError>(response):null;
+            //IData response = clientResponse.Response;
+            GenericError error = null;
+            if (clientResponse.GetMessageType() == ExceptionResultCodec.Type)
+            {
+                var er = ExceptionResultCodec.Decode(clientResponse);
+                error = new GenericError(er.className, er.message, er.stacktrace, 0);
+            }
             Task task;
             if (requestTasks.TryRemove(callId, out task))
             {
@@ -767,16 +764,16 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private void HandleEventPacket(Packet localPacket)
+        private void HandleEventPacket(ClientMessage localPacket)
         {
-            var clientResponse = serializationService.ToObject<ClientResponse>(localPacket.GetData());
-            int callId = clientResponse.CallId;
-            IData response = clientResponse.Response;
-            GenericError error = clientResponse.IsError ? serializationService.ToObject<GenericError>(response) : null;
-            if (error != null)
-            {
-                logger.Severe("Event Response cannot be an exception :" + error.Name);
-            }
+            var clientResponse = localPacket;//serializationService.ToObject<ClientResponse>(localPacket.GetData());
+            int callId = clientResponse.GetCorrelationId();
+            //IData response = clientResponse.GetData();
+            //GenericError error = clientResponse.IsError ? serializationService.ToObject<GenericError>(response) : null;
+            //if (error != null)
+            //{
+            //    logger.Severe("Event Response cannot be an exception :" + error.Name);
+            //}
             //event handler
             Task task;
             eventTasks.TryGetValue(callId, out task);
@@ -789,7 +786,7 @@ namespace Hazelcast.Client.Connection
             var td = task.AsyncState as TaskData;
             if (td != null && td.Handler != null)
             {
-                td.Handler(response);
+                td.Handler(clientResponse);
             }
         }
 
@@ -808,7 +805,7 @@ namespace Hazelcast.Client.Connection
             HandleRequestTask(task, null, responseGenericError);
         }
 
-        private void HandleRequestTask(Task task, IData response, GenericError error)
+        private void HandleRequestTask(Task task, ClientMessage response, GenericError error)
         {
             if (task == null)
             {
@@ -830,7 +827,7 @@ namespace Hazelcast.Client.Connection
                 if (error.Name != null && (error.Name.Contains("HazelcastInstanceNotActiveException") ||
                     error.Name.Contains("TargetDisconnectedException")))
                 {
-                    if (taskData.Request is IRetryableRequest || redoOperations)
+                    if (taskData.Request.IsRetryable() || redoOperations)
                     {
                         if (_ReSend(task)) return;
                     }
@@ -846,7 +843,7 @@ namespace Hazelcast.Client.Connection
             {
                 var registrationId = serializationService.ToObject<string>(taskData.Response);
                 var alias = serializationService.ToObject<string>(response);
-                _clientConnectionManager.ReRegisterListener(registrationId, alias, taskData.Request.CallId);
+                _clientConnectionManager.ReRegisterListener(registrationId, alias, taskData.Request.GetCorrelationId());
                 return;
             }
             ////////////////////////////////////////////
@@ -934,14 +931,14 @@ namespace Hazelcast.Client.Connection
     {
         private volatile GenericError _error;
         private volatile IData _response;
-        private volatile ClientRequest _request;
+        private volatile ClientMessage _request;
         private volatile DistributedEventHandler _handler;
         private int _retryCount;
         private volatile int _partitionId;
 
-        private Object _mutex = new Object();
+        private readonly object _mutex = new object();
 
-        public TaskData(ClientRequest request, IData response = null, DistributedEventHandler handler = null,
+        public TaskData(ClientMessage request, IData response = null, DistributedEventHandler handler = null,
             int partitionId = -1)
         {
             _retryCount = 0;
@@ -963,7 +960,7 @@ namespace Hazelcast.Client.Connection
             set { _handler = value; }
         }
 
-        internal ClientRequest Request
+        internal ClientMessage Request
         {
             get { return _request; }
             set { _request = value; }

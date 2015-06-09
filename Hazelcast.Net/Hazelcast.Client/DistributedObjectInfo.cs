@@ -3,7 +3,7 @@ using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client
 {
-    internal class DistributedObjectInfo : IPortable
+    internal class DistributedObjectInfo
     {
         private string name;
         private string serviceName;
@@ -12,31 +12,13 @@ namespace Hazelcast.Client
         {
         }
 
-        public virtual int GetFactoryId()
+        public DistributedObjectInfo(string serviceName, string name)
         {
-            return ClientPortableHook.Id;
-        }
-
-        public virtual int GetClassId()
-        {
-            return ClientPortableHook.DistributedObjectInfo;
+            this.name = name;
+            this.serviceName = serviceName;
         }
 
         //REQUIRED
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("sn", serviceName);
-            writer.WriteUTF("n", name);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadPortable(IPortableReader reader)
-        {
-            serviceName = reader.ReadUTF("sn");
-            name = reader.ReadUTF("n");
-        }
 
         public virtual string GetServiceName()
         {

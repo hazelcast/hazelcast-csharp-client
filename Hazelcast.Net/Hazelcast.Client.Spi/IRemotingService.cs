@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -14,7 +15,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="request"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        Task<IData> Send(ClientRequest request);
+        Task<IClientMessage> Send(IClientMessage request);
 
         /// <summary>
         /// </summary>
@@ -22,7 +23,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="target"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        Task<IData> Send(ClientRequest request, Address target);
+        Task<IClientMessage> Send(IClientMessage request, Address target);
 
         /// <summary>
         /// 
@@ -32,7 +33,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="target"></param>
         /// <param name="partitionId"></param>
         /// <returns></returns>
-        Task<IData> Send(ClientRequest request, Address target, int partitionId);
+        Task<IClientMessage> Send(IClientMessage request, Address target, int partitionId);
 
         /// <summary>
         /// </summary>
@@ -40,7 +41,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="handler"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        Task<IData> SendAndHandle(ClientRequest request, DistributedEventHandler handler);
+        Task<IClientMessage> SendAndHandle(IClientMessage request, DistributedEventHandler handler);
 
         /// <summary>
         /// </summary>
@@ -49,7 +50,7 @@ namespace Hazelcast.Client.Spi
         /// <param name="handler"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        Task<IData> SendAndHandle(ClientRequest request, Address target, DistributedEventHandler handler);
+        Task<IClientMessage> SendAndHandle(IClientMessage request, Address target, DistributedEventHandler handler);
 
         /// <summary>
         /// </summary>

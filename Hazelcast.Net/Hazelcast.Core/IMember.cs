@@ -14,17 +14,9 @@ namespace Hazelcast.Core
     /// </remarks>
     /// <seealso cref="ICluster">Cluster</seealso>
     /// <seealso cref="IMembershipListener">MembershipListener</seealso>
-    public interface IMember : IDataSerializable, IEndpoint
+    public interface IMember : IEndpoint
     {
         Address GetAddress();
-
-        /// <summary>Returns if this member is the local member.</summary>
-        /// <remarks>Returns if this member is the local member.</remarks>
-        /// <returns>
-        /// <tt>true<tt> if this member is the
-        /// local member, <tt>false</tt> otherwise.
-        /// </returns>
-        bool LocalMember();
 
         /// <summary>Returns the socket address of this member.</summary>
         /// <remarks>Returns the socket address of this member.</remarks>
@@ -42,25 +34,9 @@ namespace Hazelcast.Core
         /// </summary>
         /// <returns>Attributes for this member.</returns>
         /// <since>3.2</since>
-        IDictionary<string, object> GetAttributes();
+        IDictionary<string, string> GetAttributes();
 
-        T GetAttribute<T>(string key);
+        string GetAttribute(string key);
 
-        void SetAttribute<T>(string key, T value);
-
-
-        /// <summary>
-        /// Removes a key-value pair attribute for this member if given key was
-        /// previously assigned as an attribute.<br/>
-        /// If key wasn't assigned to a value this method does nothing.
-        /// </summary>
-        /// <remarks>
-        /// Removes a key-value pair attribute for this member if given key was
-        /// previously assigned as an attribute.<br/>
-        /// If key wasn't assigned to a value this method does nothing.
-        /// </remarks>
-        /// <param name="key">The key to be deleted from the member attributes</param>
-        /// <since>3.2</since>
-        void RemoveAttribute(string key);
     }
 }

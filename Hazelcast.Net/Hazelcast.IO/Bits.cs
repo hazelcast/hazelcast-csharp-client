@@ -4,6 +4,12 @@ namespace Hazelcast.IO
 	/// <summary>Access and manipulate bits, bytes, primitives ...</summary>
 	internal sealed class Bits
 	{
+        /// <summary>Byte size in bytes</summary>
+        public const int ByteSizeInBytes = 1;
+
+        /// <summary>Boolean size in bytes</summary>
+        public const int BooleanSizeInBytes = 1;
+
         /// <summary>Short size in bytes</summary>
         public const int ShortSizeInBytes = 2;
 
@@ -21,6 +27,9 @@ namespace Hazelcast.IO
 
         /// <summary>Double size in bytes</summary>
         public const int DoubleSizeInBytes = 8;
+
+        /// <summary>Length of the data blocks used by the CPU cache sub-system in bytes.</summary>
+        public const int CacheLineLength = 64;
 
 		public static char ReadChar(byte[] buffer, int pos, bool bigEndian)
 		{

@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
@@ -13,22 +13,22 @@ namespace Hazelcast.Client.Spi
     public interface IClientInvocationService
     {
         /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnRandomTarget(ClientRequest request);
+        Task<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
 
         /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnTarget(ClientRequest request, Address target);
+        Task<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
 
         /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnKeyOwner(ClientRequest request, object key);
+        Task<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
 
         /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnRandomTarget(ClientRequest request, DistributedEventHandler handler);
+        Task<IClientMessage> InvokeOnRandomTarget(IClientMessage request, DistributedEventHandler handler);
 
         /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnTarget(ClientRequest request, Address target, DistributedEventHandler handler);
+        Task<IClientMessage> InvokeOnTarget(IClientMessage request, Address target, DistributedEventHandler handler);
 
         /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnKeyOwner(ClientRequest request, object key, DistributedEventHandler handler);
+        Task<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key, DistributedEventHandler handler);
 
     }
 }

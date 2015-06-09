@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -15,19 +16,19 @@ namespace Hazelcast.Client.Spi
             this.client = client;
         }
 
-        public Task<IData> InvokeOnRandomTarget(ClientRequest request)
+        public Task<IClientMessage> InvokeOnRandomTarget(IClientMessage request)
         {
             IRemotingService remotingService = GetRemotingService();
             return remotingService.Send(request);
         }
 
-        public Task<IData> InvokeOnTarget(ClientRequest request, Address target)
+        public Task<IData> InvokeOnTarget(IClientMessage request, Address target)
         {
             IRemotingService remotingService = GetRemotingService();
             return remotingService.Send(request, target);
         }
 
-        public Task<IData> InvokeOnKeyOwner(ClientRequest request, object key)
+        public Task<IData> InvokeOnKeyOwner(IClientMessage request, object key)
         {
             var partitionService = (ClientPartitionService) client.GetClientPartitionService();
             int partitionId = partitionService.GetPartitionId(key);
@@ -40,19 +41,19 @@ namespace Hazelcast.Client.Spi
             return InvokeOnRandomTarget(request);
         }
 
-        public Task<IData> InvokeOnRandomTarget(ClientRequest request, DistributedEventHandler handler)
+        public Task<IData> InvokeOnRandomTarget(IClientMessage request, DistributedEventHandler handler)
         {
             IRemotingService remotingService = GetRemotingService();
             return remotingService.SendAndHandle(request, handler);
         }
 
-        public Task<IData> InvokeOnTarget(ClientRequest request, Address target, DistributedEventHandler handler)
+        public Task<IData> InvokeOnTarget(IClientMessage request, Address target, DistributedEventHandler handler)
         {
             IRemotingService remotingService = GetRemotingService();
             return remotingService.SendAndHandle(request, target, handler);
         }
 
-        public Task<IData> InvokeOnKeyOwner(ClientRequest request, object key, DistributedEventHandler handler)
+        public Task<IData> InvokeOnKeyOwner(IClientMessage request, object key, DistributedEventHandler handler)
         {
             var partitionService = (ClientPartitionService) client.GetClientPartitionService();
             Address owner = partitionService.GetPartitionOwner(partitionService.GetPartitionId(key));
