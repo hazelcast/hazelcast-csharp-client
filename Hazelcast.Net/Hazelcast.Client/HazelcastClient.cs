@@ -112,7 +112,7 @@ namespace Hazelcast.Client
             var list = new List<LicenseType>
             {
                 LicenseType.ENTERPRISE,
-                LicenseType.ENTERPRISE_SECURITY_ONLY
+              //  LicenseType.ENTERPRISE_SECURITY_ONLY
             };
             LicenseExtractor.CheckLicenseKey(licenseKey, list);
         }
