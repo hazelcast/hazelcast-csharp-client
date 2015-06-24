@@ -608,17 +608,6 @@
     <AssemblyInfo CodeLanguage="CS" OutputFile="Properties\AssemblyInfo.cs" GenerateClass="false" AssemblyTitle="Hazelcast .Net Client" AssemblyDescription="Hazelcast .Net Client $(PlatformTarget)" AssemblyCompany="Hazelcast Inc." AssemblyProduct="Hazelcast Enterprise Edition" AssemblyCopyright="Copyright (c) 2008-2014, Hazelcast, Inc" AssemblyConfiguration="Commit $(CommitHash)" ComVisible="false" CLSCompliant="true" AssemblyVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyFileVersion="$(Major).$(Minor).$(Build).$(Revision)" AssemblyInformationalVersion="$(Major).$(Minor).$(Build).$(Revision)" 
 	InternalsVisibleTo="Hazelcast.Test, PublicKey=00240000048000009400000006020000002400005253413100040000010001004d81045a994968ac643918d7bbce405b2473471d8de6aed6bbffc0fe1874bfcabf3c0b437c6c5293a589bdcbe884c6d86934069b35deaf5ab2e770cbff41a20dd4014bb53e481c30bd3ead29437b02dec5916a717a4a2b4fd353e81238b89ae09e5ba0ab615c5fef7937aabab4e240c3dffe2b948047769eeb07f674589d0bb3" />
   </Target>
-  <Target Name="Merge" DependsOnTargets="Build">
-    <!-- Merge together files -->
-    <ILMerge InputAssemblies="$(OutputPath)\HazelcastClient3x.dll;$(OutputPath)\ICSharpCode.SharpZipLib.dll" Internalize="true" OutputFile="$(OutputPath)\..\HazelcastClient3x.dll" ToolPath="..\packages\ilmerge.2.13.0307\" KeyFile="$(keyfile)" />
-    <!-- Cleanup unneed files -->
-    <CreateItem Include="$(OutputPath)\HazelcastClient3x.*;$(OutputPath)\ICSharpCode.SharpZipLib.*">
-      <Output TaskParameter="Include" ItemName="PurgeBuildFiles" />
-    </CreateItem>
-    <Delete Files="@(PurgeBuildFiles)" />
-    <MV SourceFiles="$(OutputPath)\..\HazelcastClient3x.dll" DestinationFiles="$(OutputPath)\HazelcastClient3x.dll" />
-    <MV SourceFiles="$(OutputPath)\..\HazelcastClient3x.pdb" DestinationFiles="$(OutputPath)\HazelcastClient3x.pdb" />
-  </Target>
   <Target Name="Nightly">
     <Message Text="Build Committed Revision: $(Revision)" />
   </Target>
