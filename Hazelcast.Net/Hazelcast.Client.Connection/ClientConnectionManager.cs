@@ -547,22 +547,20 @@ namespace Hazelcast.Client.Connection
         #region Authenticators
         private void ClusterAuthenticator(ClientConnection connection)
         {
-            _Authenticate<object>(connection, _credentials, principal, false, false);
+            _Authenticate<object>(connection, _credentials, principal, false);
         }
 
         private void ManagerAuthenticator(ClientConnection connection)
         {
-            principal = _Authenticate<ClientPrincipal>(connection, _credentials, principal, true, true);
+            principal = _Authenticate<ClientPrincipal>(connection, _credentials, principal, true);
         }
 
 
-        private T _Authenticate<T>(ClientConnection connection, ICredentials credentials, ClientPrincipal principal,
-            bool reAuth, bool firstConnection)
+        private T _Authenticate<T>(ClientConnection connection, ICredentials credentials, ClientPrincipal principal, bool firstConnection)
         {
             ISerializationService ss = client.GetSerializationService();
             var auth = new AuthenticationRequest(credentials, principal);
             connection.InitProtocalData();
-            auth.SetReAuth(reAuth);
             auth.SetFirstConnection(firstConnection);
             SerializableCollection coll = null;
             try
