@@ -10,8 +10,6 @@ namespace Hazelcast.Client.Request.Base
 
 		private ClientPrincipal principal;
 
-		private bool reAuth;
-
 		private bool firstConnection = false;
 
 		public AuthenticationRequest()
@@ -39,11 +37,6 @@ namespace Hazelcast.Client.Request.Base
 			return ClientPortableHook.Auth;
 		}
 
-		public void SetReAuth(bool reAuth)
-		{
-			this.reAuth = reAuth;
-		}
-
 		public bool IsFirstConnection()
 		{
 			return firstConnection;
@@ -66,7 +59,6 @@ namespace Hazelcast.Client.Request.Base
 			{
 				writer.WriteNullPortable("principal", ClientPortableHook.Id, ClientPortableHook.Principal);
 			}
-			writer.WriteBoolean("reAuth", reAuth);
 			writer.WriteBoolean("firstConnection", firstConnection);
 		}
 	}
