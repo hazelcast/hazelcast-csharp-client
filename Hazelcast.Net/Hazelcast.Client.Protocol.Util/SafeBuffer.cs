@@ -133,7 +133,8 @@ namespace Hazelcast.Client.Protocol.Util
             {
                 if (index < 0 || length < 0 || (index + length) > Capacity())
                 {
-                    throw new IndexOutOfRangeException(string.Format("index=%d, length=%d, capacity=%d", index, length, Capacity()));
+                    throw new IndexOutOfRangeException(string.Format("index=%d, length=%d, capacity=%d", index, length,
+                        Capacity()));
                 }
             }
         }

@@ -6,7 +6,9 @@ namespace Hazelcast.Client.Protocol.Util
     /// <summary>Builder for appending buffers that grows capacity as necessary.</summary>
     internal class BufferBuilder
     {
+        /// <summary>Buffer's default initial capacity</summary>
         public const int InitialCapacity = 4096;
+
         private readonly IClientProtocolBuffer protocolBuffer;
         private int capacity;
         private int position;
@@ -25,6 +27,7 @@ namespace Hazelcast.Client.Protocol.Util
         private BufferBuilder(int initialCapacity)
         {
             capacity = QuickMath.NextPowerOfTwo(initialCapacity);
+
             protocolBuffer = new SafeBuffer(new byte[capacity]);
         }
 
@@ -82,7 +85,7 @@ namespace Hazelcast.Client.Protocol.Util
             {
                 var newCapacity = QuickMath.NextPowerOfTwo(requiredCapacity);
                 var newBuffer = new byte[newCapacity];
-                Array.Copy(protocolBuffer.ByteArray(), 0, newBuffer, 0, newCapacity);
+                Array.Copy(protocolBuffer.ByteArray(), 0, newBuffer, 0, capacity);
                 capacity = newCapacity;
                 protocolBuffer.Wrap(newBuffer);
             }

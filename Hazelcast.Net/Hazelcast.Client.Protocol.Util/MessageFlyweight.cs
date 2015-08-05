@@ -106,6 +106,11 @@ namespace Hazelcast.Client.Protocol.Util
             return this;
         }
 
+        public virtual MessageFlyweight Set(KeyValuePair<IData, IData> entry)
+        {
+            return Set(entry.Key).Set(entry.Value);
+        }
+
         //endregion SET Overloads
         //region GET Overloads
         public virtual bool GetBoolean()
@@ -174,6 +179,13 @@ namespace Hazelcast.Client.Protocol.Util
                 result.Add(GetData());
             }
             return result;
+        }
+
+        public virtual KeyValuePair<IData, IData> GetMapEntry()
+        {
+            var key = GetData();
+            var value = GetData();
+            return new KeyValuePair<IData, IData>(key, value);
         }
 
         //endregion GET Overloads
