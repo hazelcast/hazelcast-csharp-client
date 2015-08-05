@@ -4,13 +4,6 @@ namespace Hazelcast.Client.Protocol
     /// <remarks>
     ///     Message type ids of event responses in client protocol. They also used to bind a request to event inside Request
     ///     annotation.
-    ///     <p />
-    ///     Event response classes are defined
-    ///     <see cref="com.hazelcast.client.impl.protocol.template.EventResponseTemplate" />
-    ///     <p />
-    ///     see
-    ///     <see cref="com.hazelcast.client.impl.protocol.template.ClientMessageTemplate#membershipListener()" />
-    ///     for  a sample usage of events in a request.
     /// </remarks>
     public sealed class EventMessageConst
     {

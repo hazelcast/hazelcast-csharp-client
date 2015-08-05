@@ -4,13 +4,6 @@ namespace Hazelcast.Client.Protocol
     /// <remarks>
     ///     Message type ids of responses in client protocol. They also used to bind a request to a response inside Request
     ///     annotation.
-    ///     <p />
-    ///     Response classes are defined
-    ///     <see cref="com.hazelcast.client.impl.protocol.template.ResponseTemplate" />
-    ///     <p />
-    ///     see
-    ///     <see cref="com.hazelcast.client.impl.protocol.template.ClientMessageTemplate#membershipListener()" />
-    ///     for  a sample usage of responses in a request.
     /// </remarks>
     public sealed class ResponseMessageConst
     {

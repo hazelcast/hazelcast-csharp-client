@@ -8,7 +8,7 @@ namespace Hazelcast.Client.Protocol.Util
     ///     and
     ///     <see cref="UnsafeBuffer" />
     /// </remarks>
-    public interface IClientProtocolBuffer
+    internal interface IClientProtocolBuffer
     {
         /// <summary>Attach a view to a byte[] for providing direct access.</summary>
         /// <param name="buffer">to which the view is attached.</param>
