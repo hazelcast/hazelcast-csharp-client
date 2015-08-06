@@ -1,5 +1,5 @@
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Concurrent.Atomiclong;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
@@ -18,16 +18,16 @@ namespace Hazelcast.Client.Proxy
 
         public virtual long AddAndGet(long delta)
         {
-            var request = new AddAndGetRequest(name, delta);
-            var result = Invoke<long>(request);
-            return result;
+            var request = AtomicLongAddAndGetCodec.EncodeRequest(name, delta);
+            var response = Invoke(request);
+            return AtomicLongAddAndGetCodec.DecodeResponse(response).response;
         }
 
         public virtual bool CompareAndSet(long expect, long update)
         {
-            var request = new CompareAndSetRequest(name, expect, update);
-            var result = Invoke<bool>(request);
-            return result;
+            var request = AtomicLongCompareAndSetCodec.EncodeRequest(name, expect, update);
+            var response = Invoke(request);
+            return AtomicLongCompareAndSetCodec.DecodeResponse(response).response;
         }
 
         public virtual long DecrementAndGet()
@@ -42,16 +42,16 @@ namespace Hazelcast.Client.Proxy
 
         public virtual long GetAndAdd(long delta)
         {
-            var request = new GetAndAddRequest(name, delta);
-            var result = Invoke<long>(request);
-            return result;
+            var request = AtomicLongGetAndAddCodec.EncodeRequest(name, delta);
+            var response = Invoke(request);
+            return AtomicLongGetAndAddCodec.DecodeResponse(response).response;
         }
 
         public virtual long GetAndSet(long newValue)
         {
-            var request = new GetAndSetRequest(name, newValue);
-            var result = Invoke<long>(request);
-            return result;
+            var request = AtomicLongGetAndSetCodec.EncodeRequest(name, newValue);
+            var response = Invoke(request);
+            return AtomicLongGetAndAddCodec.DecodeResponse(response).response;
         }
 
         public virtual long IncrementAndGet()
@@ -66,8 +66,8 @@ namespace Hazelcast.Client.Proxy
 
         public virtual void Set(long newValue)
         {
-            var request = new SetRequest(name, newValue);
-            Invoke<object>(request);
+            var request = AtomicLongSetCodec.EncodeRequest(name, newValue);
+            Invoke(request);
         }
 
         //public void Alter(Func<long, long> function)
@@ -94,9 +94,9 @@ namespace Hazelcast.Client.Proxy
         {
         }
 
-        protected override T Invoke<T>(ClientRequest req)
+        protected override ClientMessage Invoke(IClientMessage request)
         {
-            return Invoke<T>(req, GetKey());
+            return Invoke(request, GetKey());
         }
 
         private IData GetKey()
