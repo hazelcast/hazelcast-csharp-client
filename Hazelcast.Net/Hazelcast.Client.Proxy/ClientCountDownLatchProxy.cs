@@ -1,11 +1,14 @@
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Concurrent.Countdownlatch;
-using Hazelcast.Client.Spi;
-using Hazelcast.Core;
-using Hazelcast.IO.Serialization;
-
 namespace Hazelcast.Client.Proxy
 {
+    using Core;
+
+    using IO.Serialization;
+
+    using Protocol;
+    using Protocol.Codec;
+
+    using Spi;
+
     internal class ClientCountDownLatchProxy : ClientProxy, ICountDownLatch
     {
         private volatile IData key;
@@ -16,30 +19,30 @@ namespace Hazelcast.Client.Proxy
 
         /// <exception cref="System.Exception"></exception>
         public virtual bool Await(long timeout, TimeUnit unit)
-        {
-            var request = new AwaitRequest(GetName(), GetTimeInMillis(timeout, unit));
-            var result = Invoke<bool>(request);
-            return result;
+        {            
+            var request = CountDownLatchAwaitCodec.EncodeRequest(GetName(), GetTimeInMillis(timeout, unit));
+            var response = Invoke(request);
+            return CountDownLatchAwaitCodec.DecodeResponse(response).response;            
         }
 
         public virtual void CountDown()
         {
-            var request = new CountDownRequest(GetName());
-            Invoke<object>(request);
+            var request = CountDownLatchCountDownCodec.EncodeRequest(GetName());            
+            Invoke(request);
         }
 
         public virtual int GetCount()
         {
-            var request = new GetCountRequest(GetName());
-            var result = Invoke<int>(request);
-            return result;
+            var request = CountDownLatchGetCountCodec.EncodeRequest(GetName());
+            var response = Invoke(request);
+            return CountDownLatchGetCountCodec.DecodeResponse(response).response;            
         }
 
         public virtual bool TrySetCount(int count)
         {
-            var request = new SetCountRequest(GetName(), count);
-            var result = Invoke<bool>(request);
-            return result;
+            var request = CountDownLatchTrySetCountCodec.EncodeRequest(GetName(), count);
+            var response = Invoke(request);
+            return CountDownLatchTrySetCountCodec.DecodeResponse(response).response;            
         }
 
         protected override void OnDestroy()
@@ -60,9 +63,9 @@ namespace Hazelcast.Client.Proxy
             return timeunit != null ? timeunit.ToMillis(time) : time;
         }
 
-        protected override T Invoke<T>(ClientRequest req)
+        protected override ClientMessage Invoke(IClientMessage request)
         {
-            return Invoke<T>(req, GetKey());
+            return Invoke(request, GetKey());
         }
     }
 }
