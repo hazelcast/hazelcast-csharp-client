@@ -103,7 +103,6 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListIndexOfCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListIsEmptyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListLastIndexOfCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\ListListIteratorCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListMessageType.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListRemoveCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListRemoveListenerCodec.cs" />
