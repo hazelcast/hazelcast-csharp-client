@@ -85,8 +85,9 @@ namespace Hazelcast.Client.Proxy
             Invoke(request);
         }
 
-        protected override void OnDestroy()
+        protected override IClientMessage Invoke(IClientMessage request)
         {
+            return base.Invoke(request, GetKeyData());
         }
 
         private IData GetKeyData()

@@ -90,8 +90,9 @@ namespace Hazelcast.Client.Proxy
         //    throw new NotImplementedException();
         //}
 
-        protected override void OnDestroy()
+        protected override IClientMessage Invoke(IClientMessage request)
         {
+            return Invoke(request, GetKey());
         }
 
         private IData GetKey()

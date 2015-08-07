@@ -1,8 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
+using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
@@ -269,8 +269,14 @@ namespace Hazelcast.Client.Proxy
             get { return false; }
         }
 
-        protected override void OnDestroy()
+        protected override T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
         {
+            return base.Invoke(request, GetPartitionKey(), decodeResponse);
+        }
+
+        protected override IClientMessage Invoke(IClientMessage request)
+        {
+            return base.Invoke(request, GetPartitionKey());
         }
 
         private ICollection<E> GetAll()
@@ -278,7 +284,7 @@ namespace Hazelcast.Client.Proxy
             var request = ListGetAllCodec.EncodeRequest(GetName());
             var response = Invoke(request);
             var resultParameters = ListGetAllCodec.DecodeResponse(response).list;
-            return resultParameters.Select(ToObject<E>).ToList();
+            return Enumerable.ToList(resultParameters.Select(ToObject<E>));
         }
 
         private void HandleItemListener(IData eventData, IItemListener<E> listener, bool includeValue)

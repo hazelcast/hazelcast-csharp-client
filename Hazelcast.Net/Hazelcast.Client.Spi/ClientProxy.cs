@@ -85,7 +85,10 @@ namespace Hazelcast.Client.Spi
             this.context = context;
         }
 
-        protected abstract void OnDestroy();
+        protected virtual void OnDestroy()
+        {
+            
+        }
 
         protected virtual IClientMessage Invoke(IClientMessage request, object key)
         {
@@ -97,6 +100,12 @@ namespace Hazelcast.Client.Spi
             catch (Exception e) {
                 throw ExceptionUtil.Rethrow(e);
             }  
+        }
+
+        protected virtual T Invoke<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
+        {
+            var response = Invoke(request, key);
+            return decodeResponse(response);
         }
 
         protected virtual IClientMessage Invoke(IClientMessage request)

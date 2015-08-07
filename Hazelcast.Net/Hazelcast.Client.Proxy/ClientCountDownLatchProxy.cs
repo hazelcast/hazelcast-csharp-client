@@ -45,10 +45,6 @@ namespace Hazelcast.Client.Proxy
             return CountDownLatchTrySetCountCodec.DecodeResponse(response).response;            
         }
 
-        protected override void OnDestroy()
-        {
-        }
-
         private IData GetKey()
         {
             if (key == null)
@@ -56,6 +52,11 @@ namespace Hazelcast.Client.Proxy
                 key = ToData(GetName());
             }
             return key;
+        }
+
+        protected override IClientMessage Invoke(IClientMessage request)
+        {
+            return Invoke(request, GetKey());
         }
 
         private long GetTimeInMillis(long time, TimeUnit timeunit)
