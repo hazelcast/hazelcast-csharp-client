@@ -1,5 +1,6 @@
 using System;
-using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Request.Concurrent.Lock;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
@@ -18,41 +19,39 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool IsLocked()
         {
-            var request = new IsLockedRequest(GetKeyData());
-            var result = Invoke<bool>(request);
-            return result;
+            var request = LockIsLockedCodec.EncodeRequest(GetName());
+            return Invoke(request, m => LockIsLockedCodec.DecodeResponse(m).response);
         }
 
         public virtual bool IsLockedByCurrentThread()
         {
-            var request = new IsLockedRequest(GetKeyData(), ThreadUtil.GetThreadId());
-            var result = Invoke<bool>(request);
-            return result;
+            var request = LockIsLockedByCurrentThreadCodec.EncodeRequest(GetName(), ThreadUtil.GetThreadId());
+            return Invoke(request, m => LockIsLockedByCurrentThreadCodec.DecodeResponse(m).response);
         }
 
         public virtual int GetLockCount()
         {
-            var request = new GetLockCountRequest(GetKeyData());
-            return Invoke<int>(request);
+            var request = LockGetLockCountCodec.EncodeRequest(GetName());
+            return Invoke(request, m => LockGetLockCountCodec.DecodeResponse(m).response);
         }
 
         public virtual long GetRemainingLeaseTime()
         {
-            var request = new GetRemainingLeaseRequest(GetKeyData());
-            return Invoke<long>(request);
+            var request = LockGetRemainingLeaseTimeCodec.EncodeRequest(GetName());
+            return Invoke(request, m => LockGetRemainingLeaseTimeCodec.DecodeResponse(m).response);
         }
 
         public virtual void Lock(long leaseTime, TimeUnit? timeUnit)
         {
-            var request = new LockRequest(GetKeyData(), ThreadUtil.GetThreadId(), GetTimeInMillis(leaseTime, timeUnit),
-                -1);
-            Invoke<bool>(request);
+            var request = LockLockCodec.EncodeRequest(GetName(), GetTimeInMillis(leaseTime, timeUnit),
+                ThreadUtil.GetThreadId());
+            Invoke(request);            
         }
 
         public virtual void ForceUnlock()
         {
-            var request = new UnlockRequest(GetKeyData(), ThreadUtil.GetThreadId(), true);
-            Invoke<object>(request);
+            var request = LockForceUnlockCodec.EncodeRequest(GetName());
+            Invoke(request);
         }
 
         public virtual void Lock()
@@ -75,16 +74,15 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public virtual bool TryLock(long time, TimeUnit? unit)
         {
-            var request = new LockRequest(GetKeyData(), ThreadUtil.GetThreadId(), long.MaxValue,
+            var request = LockTryLockCodec.EncodeRequest(GetName(), ThreadUtil.GetThreadId(), long.MaxValue,
                 GetTimeInMillis(time, unit));
-            var result = Invoke<bool>(request);
-            return result;
+            return Invoke(request, m => LockTryLockCodec.DecodeResponse(m).response);          
         }
 
         public virtual void Unlock()
         {
-            var request = new UnlockRequest(GetKeyData(), ThreadUtil.GetThreadId());
-            Invoke<object>(request);
+            var request = LockUnlockCodec.EncodeRequest(GetName(), ThreadUtil.GetThreadId());
+            Invoke(request);
         }
 
         protected override void OnDestroy()
@@ -103,11 +101,6 @@ namespace Hazelcast.Client.Proxy
         private long GetTimeInMillis(long time, TimeUnit? timeunit)
         {
             return timeunit.HasValue ? timeunit.Value.ToMillis(time) : time;
-        }
-
-        protected override T Invoke<T>(ClientRequest req)
-        {
-            return base.Invoke<T>(req, GetKeyData());
         }
     }
 }

@@ -109,6 +109,12 @@ namespace Hazelcast.Client.Spi
             }  
         }
 
+        protected virtual T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
+        {
+            var response = Invoke(request);
+            return decodeResponse(response);
+        }
+
         protected internal virtual IData ToData(object o)
         {
             return GetContext().GetSerializationService().ToData(o);
