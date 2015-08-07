@@ -165,13 +165,13 @@ namespace Hazelcast.IO.Serialization
                     if (type == FieldType.PortableArray)
                     {
                         var k_1 = @in.ReadInt();
+                        fieldFactoryId = @in.ReadInt();
+                        fieldClassId = @in.ReadInt();
+                        // TODO: what there's a null inner Portable field
                         if (k_1 > 0)
                         {
-                            fieldFactoryId = @in.ReadInt();
-                            fieldClassId = @in.ReadInt();
                             var p = @in.ReadInt();
                             @in.Position(p);
-                            // TODO: what there's a null inner Portable field
                             var fieldVersion = @in.ReadInt();
                             ReadClassDefinition(@in, fieldFactoryId, fieldClassId, fieldVersion);
                         }
