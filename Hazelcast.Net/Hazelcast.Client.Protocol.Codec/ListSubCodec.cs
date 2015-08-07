@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Protocol.Codec
             list = new List<IData>();
             for (int list_index = 0; list_index<list_size; list_index++) {
                 IData list_item;
-            list_item = clientMessage.GetIData();
+            list_item = clientMessage.GetData();
                 list.Add(list_item);
             }
             parameters.list = list;

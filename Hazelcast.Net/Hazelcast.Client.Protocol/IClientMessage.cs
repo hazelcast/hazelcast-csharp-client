@@ -1,4 +1,5 @@
-﻿using Hazelcast.IO.Serialization;
+﻿using System.Collections.Generic;
+using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Protocol
 {
@@ -9,5 +10,8 @@ namespace Hazelcast.Client.Protocol
         IData GetData();
         string GetStringUtf8();
         int GetInt();
+        long GetLong();
+        KeyValuePair<IData, IData> GetMapEntry
+            ();
     }
 }

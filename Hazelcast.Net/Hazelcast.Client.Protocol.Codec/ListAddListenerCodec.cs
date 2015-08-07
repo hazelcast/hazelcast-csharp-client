@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public abstract class AbstractEventHandler
         {
-            public static void Handle(ClientMessage clientMessage, HandleDelegate handle)
+            public static void Handle(IClientMessage clientMessage, HandleDelegate handle)
             {
                 int messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventItem) {

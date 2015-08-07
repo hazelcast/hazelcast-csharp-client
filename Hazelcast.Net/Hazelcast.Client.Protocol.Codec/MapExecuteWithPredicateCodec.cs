@@ -1,147 +1,72 @@
-using System.Collections.Generic;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class MapExecuteWithPredicateCodec
-	{
-		public static readonly MapMessageType RequestType = MapMessageType.MapExecutewithpredicate;
+    internal sealed class MapExecuteWithPredicateCodec
+    {
 
-		public const int ResponseType = 108;
+        public static readonly MapMessageType RequestType = MapMessageType.MapExecuteWithPredicate;
+        public const int ResponseType = 114;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly MapMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly MapMessageType TYPE = RequestType;
+            public string name;
+            public IData entryProcessor;
+            public IData predicate;
 
-			public string name;
+            public static int CalculateDataSize(string name, IData entryProcessor, IData predicate)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += ParameterUtil.CalculateDataSize(entryProcessor);
+                dataSize += ParameterUtil.CalculateDataSize(predicate);
+                return dataSize;
+            }
+        }
 
-			public IData entryProcessor;
+        public static ClientMessage EncodeRequest(string name, IData entryProcessor, IData predicate)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, entryProcessor, predicate);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.Set(entryProcessor);
+            clientMessage.Set(predicate);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			public IData predicate;
+        //************************ RESPONSE *************************//
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name, IData entryProcessor, IData predicate)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				dataSize += ParameterUtil.CalculateDataSize(entryProcessor);
-				dataSize += ParameterUtil.CalculateDataSize(predicate);
-				return dataSize;
-			}
-		}
 
-		public static ClientMessage EncodeRequest(string name, IData entryProcessor, IData predicate)
-		{
-			int requiredDataSize = MapExecuteWithPredicateCodec.RequestParameters.CalculateDataSize(name, entryProcessor, predicate);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.Set(entryProcessor);
-			clientMessage.Set(predicate);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public class ResponseParameters
+        {
+            public ISet<KeyValuePair<IData,IData>> entrySet;
+        }
 
-		public static MapExecuteWithPredicateCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			MapExecuteWithPredicateCodec.RequestParameters parameters = new MapExecuteWithPredicateCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			IData entryProcessor;
-			entryProcessor = null;
-			entryProcessor = clientMessage.GetData();
-			parameters.entryProcessor = entryProcessor;
-			IData predicate;
-			predicate = null;
-			predicate = clientMessage.GetData();
-			parameters.predicate = predicate;
-			return parameters;
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            ISet<KeyValuePair<IData,IData>> entrySet = null;
+            int entrySet_size = clientMessage.GetInt();
+            entrySet = new HashSet<KeyValuePair<IData,IData>>();
+            for (int entrySet_index = 0; entrySet_index<entrySet_size; entrySet_index++) {
+                KeyValuePair<IData,IData> entrySet_item;
+            entrySet_item = clientMessage.GetMapEntry();
+                entrySet.Add(entrySet_item);
+            }
+            parameters.entrySet = entrySet;
+            return parameters;
+        }
 
-		public class ResponseParameters
-		{
-			public IDictionary<IData, IData> map;
-
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize(IDictionary<IData, IData> map)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				ICollection<IData> map_keySet = (ICollection<IData>)map.Keys;
-				dataSize += Bits.IntSizeInBytes;
-				foreach (IData map_keySet_item in map_keySet)
-				{
-					dataSize += ParameterUtil.CalculateDataSize(map_keySet_item);
-				}
-				ICollection<IData> map_values = (ICollection<IData>)map.Values;
-				dataSize += Bits.IntSizeInBytes;
-				foreach (IData map_values_item in map_values)
-				{
-					dataSize += ParameterUtil.CalculateDataSize(map_values_item);
-				}
-				return dataSize;
-			}
-		}
-
-		public static ClientMessage EncodeResponse(IDictionary<IData, IData> map)
-		{
-			int requiredDataSize = MapExecuteWithPredicateCodec.ResponseParameters.CalculateDataSize(map);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			ICollection<IData> map_keySet = (ICollection<IData>)map.Keys;
-			clientMessage.Set(map_keySet.Count);
-			foreach (IData map_keySet_item in map_keySet)
-			{
-				clientMessage.Set(map_keySet_item);
-			}
-			ICollection<IData> map_values = (ICollection<IData>)map.Values;
-			clientMessage.Set(map_values.Count);
-			foreach (IData map_values_item in map_values)
-			{
-				clientMessage.Set(map_values_item);
-			}
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
-
-		public static MapExecuteWithPredicateCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			MapExecuteWithPredicateCodec.ResponseParameters parameters = new MapExecuteWithPredicateCodec.ResponseParameters();
-			IDictionary<IData, IData> map;
-			map = null;
-			IList<IData> map_keySet;
-			int map_keySet_size = clientMessage.GetInt();
-			map_keySet = new AList<IData>(map_keySet_size);
-			for (int map_keySet_index = 0; map_keySet_index < map_keySet_size; map_keySet_index++)
-			{
-				IData map_keySet_item;
-				map_keySet_item = clientMessage.GetData();
-				map_keySet.AddItem(map_keySet_item);
-			}
-			IList<IData> map_values;
-			int map_values_size = clientMessage.GetInt();
-			map_values = new AList<IData>(map_values_size);
-			for (int map_values_index = 0; map_values_index < map_values_size; map_values_index++)
-			{
-				IData map_values_item;
-				map_values_item = clientMessage.GetData();
-				map_values.AddItem(map_values_item);
-			}
-			map = new Dictionary<IData, IData>();
-			for (int map_index = 0; map_index < map_keySet_size; map_index++)
-			{
-				map[map_keySet[map_index]] = map_values[map_index];
-			}
-			parameters.map = map;
-			return parameters;
-		}
-	}
+    }
 }
