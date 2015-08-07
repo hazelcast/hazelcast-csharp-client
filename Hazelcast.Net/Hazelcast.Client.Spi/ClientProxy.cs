@@ -87,7 +87,7 @@ namespace Hazelcast.Client.Spi
 
         protected abstract void OnDestroy();
 
-        protected virtual ClientMessage Invoke(IClientMessage request, object key)
+        protected virtual IClientMessage Invoke(IClientMessage request, object key)
         {
             try
             {
@@ -99,7 +99,7 @@ namespace Hazelcast.Client.Spi
             }  
         }
 
-        protected virtual ClientMessage Invoke(IClientMessage request)
+        protected virtual IClientMessage Invoke(IClientMessage request)
         {
             try {
                 var task = GetContext().GetInvocationService().InvokeOnRandomTarget(request);

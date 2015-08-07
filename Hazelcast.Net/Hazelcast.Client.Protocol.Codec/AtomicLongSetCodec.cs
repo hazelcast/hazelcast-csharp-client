@@ -49,7 +49,7 @@ namespace Hazelcast.Client.Protocol.Codec
         {
         }
 
-        public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             ResponseParameters parameters = new ResponseParameters();
             return parameters;

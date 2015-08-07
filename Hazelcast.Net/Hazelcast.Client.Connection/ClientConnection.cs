@@ -931,14 +931,14 @@ namespace Hazelcast.Client.Connection
     {
         private volatile GenericError _error;
         private volatile IData _response;
-        private volatile ClientMessage _request;
+        private volatile IClientMessage _request;
         private volatile DistributedEventHandler _handler;
         private int _retryCount;
         private volatile int _partitionId;
 
         private readonly object _mutex = new object();
 
-        public TaskData(ClientMessage request, IData response = null, DistributedEventHandler handler = null,
+        public TaskData(IClientMessage request, IData response = null, DistributedEventHandler handler = null,
             int partitionId = -1)
         {
             _retryCount = 0;

@@ -62,10 +62,5 @@ namespace Hazelcast.Client.Proxy
         {
             return timeunit != null ? timeunit.ToMillis(time) : time;
         }
-
-        protected override ClientMessage Invoke(IClientMessage request)
-        {
-            return Invoke(request, GetKey());
-        }
     }
 }
