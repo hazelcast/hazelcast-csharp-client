@@ -2,99 +2,65 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class MultiMapValueCountCodec
-	{
-		public static readonly MultiMapMessageType RequestType = MultiMapMessageType.MultimapValuecount;
+    internal sealed class MultiMapValueCountCodec
+    {
 
-		public const int ResponseType = 102;
+        public static readonly MultiMapMessageType RequestType = MultiMapMessageType.MultiMapValueCount;
+        public const int ResponseType = 102;
+        public const bool Retryable = true;
 
-		public const bool Retryable = true;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly MultiMapMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly MultiMapMessageType TYPE = RequestType;
+            public string name;
+            public IData key;
+            public long threadId;
 
-			public string name;
+            public static int CalculateDataSize(string name, IData key, long threadId)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += ParameterUtil.CalculateDataSize(key);
+                dataSize += Bits.LongSizeInBytes;
+                return dataSize;
+            }
+        }
 
-			public IData key;
+        public static ClientMessage EncodeRequest(string name, IData key, long threadId)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, key, threadId);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.Set(key);
+            clientMessage.Set(threadId);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			public long threadId;
+        //************************ RESPONSE *************************//
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name, IData key, long threadId)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				dataSize += ParameterUtil.CalculateDataSize(key);
-				dataSize += Bits.LongSizeInBytes;
-				return dataSize;
-			}
-		}
 
-		public static ClientMessage EncodeRequest(string name, IData key, long threadId)
-		{
-			int requiredDataSize = MultiMapValueCountCodec.RequestParameters.CalculateDataSize(name, key, threadId);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.Set(key);
-			clientMessage.Set(threadId);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public class ResponseParameters
+        {
+            public int response;
+        }
 
-		public static MultiMapValueCountCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			MultiMapValueCountCodec.RequestParameters parameters = new MultiMapValueCountCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			IData key;
-			key = null;
-			key = clientMessage.GetData();
-			parameters.key = key;
-			long threadId;
-			threadId = clientMessage.GetLong();
-			parameters.threadId = threadId;
-			return parameters;
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            int response ;
+            response = clientMessage.GetInt();
+            parameters.response = response;
+            return parameters;
+        }
 
-		public class ResponseParameters
-		{
-			public int response;
-
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize(int response)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += Bits.IntSizeInBytes;
-				return dataSize;
-			}
-		}
-
-		public static ClientMessage EncodeResponse(int response)
-		{
-			int requiredDataSize = MultiMapValueCountCodec.ResponseParameters.CalculateDataSize(response);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.Set(response);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
-
-		public static MultiMapValueCountCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			MultiMapValueCountCodec.ResponseParameters parameters = new MultiMapValueCountCodec.ResponseParameters();
-			int response;
-			response = clientMessage.GetInt();
-			parameters.response = response;
-			return parameters;
-		}
-	}
+    }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Request.Base;
@@ -134,6 +135,38 @@ namespace Hazelcast.Client.Spi
             return GetContext().GetSerializationService().ToObject<T>(data);
         }
 
+        protected internal virtual IList<T> ToList<T>(ICollection<IData> dataList)
+        {
+            var list = new List<T>(dataList.Count);
+            foreach (var data in dataList)
+            {
+                list.Add(ToObject<T>(data));
+            }
+            return list;
+        }
+
+        protected internal virtual ISet<T> ToSet<T>(ICollection<IData> dataList)
+        {
+            var set = new HashSet<T>();
+            foreach (var data in dataList)
+            {
+                set.Add(ToObject<T>(data));
+            }
+            return set;
+        }
+
+        protected internal virtual ISet<KeyValuePair<K, V>> ToEntrySet<K, V>(
+            ICollection<KeyValuePair<IData, IData>> entryCollection)
+        {
+            ISet<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
+            foreach (var entry in entryCollection)
+            {
+                var key = ToObject<K>(entry.Key);
+                var val = ToObject<V>(entry.Value);
+                entrySet.Add(new KeyValuePair<K, V>(key, val));
+            }
+            return entrySet;
+        }
         protected internal virtual void ThrowExceptionIfNull(object o)
         {
             if (o == null)
