@@ -1,76 +1,56 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
-using Hazelcast.Net.Ext;
+using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class QueueClearCodec
-	{
-		public static readonly QueueMessageType RequestType = QueueMessageType.QueueClear;
+    internal sealed class QueueClearCodec
+    {
 
-		public const int ResponseType = 100;
+        public static readonly QueueMessageType RequestType = QueueMessageType.QueueClear;
+        public const int ResponseType = 100;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly QueueMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly QueueMessageType TYPE = RequestType;
+            public string name;
 
-			public string name;
+            public static int CalculateDataSize(string name)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                return dataSize;
+            }
+        }
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				return dataSize;
-			}
-		}
+        public static ClientMessage EncodeRequest(string name)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-		public static ClientMessage EncodeRequest(string name)
-		{
-			int requiredDataSize = QueueClearCodec.RequestParameters.CalculateDataSize(name);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        //************************ RESPONSE *************************//
 
-		public static QueueClearCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			QueueClearCodec.RequestParameters parameters = new QueueClearCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			return parameters;
-		}
 
-		public class ResponseParameters
-		{
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize()
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				return dataSize;
-			}
-		}
+        public class ResponseParameters
+        {
+        }
 
-		public static ClientMessage EncodeResponse()
-		{
-			int requiredDataSize = QueueClearCodec.ResponseParameters.CalculateDataSize();
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            return parameters;
+        }
 
-		public static QueueClearCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			QueueClearCodec.ResponseParameters parameters = new QueueClearCodec.ResponseParameters();
-			return parameters;
-		}
-	}
+    }
 }

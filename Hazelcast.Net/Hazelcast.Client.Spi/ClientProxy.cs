@@ -59,7 +59,6 @@ namespace Hazelcast.Client.Spi
             return ListenerUtil.Listen(context, registrationRequest, decodeListenerResponse, partitionKey, handler);
         }
 
-
         protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse decodeListenerResponse, DistributedEventHandler handler)
         {
             return ListenerUtil.Listen(context, registrationRequest, decodeListenerResponse, null, handler);
