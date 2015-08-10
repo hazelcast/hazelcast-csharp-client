@@ -88,6 +88,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchGetCountCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchMessageType.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchTrySetCountCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\EntryViewCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllWithIndexCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddCodec.cs" />

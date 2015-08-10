@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Protocol.Codec
             bool dataEntryView_isNull = clientMessage.GetBoolean();
             if (!dataEntryView_isNull)
             {
-            dataEntryView = com.hazelcast.client.impl.protocol.codec.EntryViewCodec.Decode(clientMessage);
+            dataEntryView = EntryViewCodec.Decode(clientMessage);
             parameters.dataEntryView = dataEntryView;
             }
             return parameters;
