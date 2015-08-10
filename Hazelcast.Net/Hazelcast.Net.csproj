@@ -83,6 +83,8 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongIncrementAndGetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongMessageType.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongSetCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientDestroyProxyCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientMessageType.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchAwaitCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchCountDownCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchGetCountCodec.cs" />
