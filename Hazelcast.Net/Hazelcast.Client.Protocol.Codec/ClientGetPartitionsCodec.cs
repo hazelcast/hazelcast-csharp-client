@@ -1,112 +1,71 @@
 using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
-using Hazelcast.Net.Ext;
+using Hazelcast.IO.Serialization;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class ClientGetPartitionsCodec
-	{
-		public static readonly ClientMessageType RequestType = ClientMessageType.ClientGetpartitions;
+    internal sealed class ClientGetPartitionsCodec
+    {
 
-		public const int ResponseType = 110;
+        public static readonly ClientMessageType RequestType = ClientMessageType.ClientGetPartitions;
+        public const int ResponseType = 108;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly ClientMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly ClientMessageType TYPE = RequestType;
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize()
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				return dataSize;
-			}
-		}
+            public static int CalculateDataSize()
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                return dataSize;
+            }
+        }
 
-		public static ClientMessage EncodeRequest()
-		{
-			int requiredDataSize = ClientGetPartitionsCodec.RequestParameters.CalculateDataSize();
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public static ClientMessage EncodeRequest()
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize();
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-		public static ClientGetPartitionsCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			ClientGetPartitionsCodec.RequestParameters parameters = new ClientGetPartitionsCodec.RequestParameters();
-			return parameters;
-		}
+        //************************ RESPONSE *************************//
 
-		public class ResponseParameters
-		{
-			public Address[] members;
 
-			public int[] ownerIndexes;
+        public class ResponseParameters
+        {
+            public IDictionary<Address,ISet<int>> partitions;
+        }
 
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize(Address[] members, int[] ownerIndexes)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += Bits.IntSizeInBytes;
-				foreach (Address members_item in members)
-				{
-					dataSize += AddressCodec.CalculateDataSize(members_item);
-				}
-				dataSize += Bits.IntSizeInBytes;
-				foreach (int ownerIndexes_item in ownerIndexes)
-				{
-					dataSize += Bits.IntSizeInBytes;
-				}
-				return dataSize;
-			}
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            IDictionary<Address,ISet<int>> partitions = null;
+            int partitions_size = clientMessage.GetInt();
+            partitions = new Dictionary<Address,ISet<int>>(partitions_size);
+            for (int partitions_index = 0;partitions_index<partitions_size;partitions_index++) {
+                Address partitions_key;
+                ISet<int> partitions_val;
+            partitions_key = AddressCodec.Decode(clientMessage);
+            int partitions_val_size = clientMessage.GetInt();
+            partitions_val = new HashSet<int>();
+            for (int partitions_val_index = 0; partitions_val_index<partitions_val_size; partitions_val_index++) {
+                int partitions_val_item;
+            partitions_val_item = clientMessage.GetInt();
+                partitions_val.Add(partitions_val_item);
+            }
+                partitions.Add(partitions_key, partitions_val);
+            }
+            parameters.partitions = partitions;
+            return parameters;
+        }
 
-		public static ClientMessage EncodeResponse(Address[] members, int[] ownerIndexes)
-		{
-			int requiredDataSize = ClientGetPartitionsCodec.ResponseParameters.CalculateDataSize(members, ownerIndexes);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.Set(members.Length);
-			foreach (Address members_item in members)
-			{
-				AddressCodec.Encode(members_item, clientMessage);
-			}
-			clientMessage.Set(ownerIndexes.Length);
-			foreach (int ownerIndexes_item in ownerIndexes)
-			{
-				clientMessage.Set(ownerIndexes_item);
-			}
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
-
-		public static ClientGetPartitionsCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			ClientGetPartitionsCodec.ResponseParameters parameters = new ClientGetPartitionsCodec.ResponseParameters();
-			Address[] members;
-			members = null;
-			int members_size = clientMessage.GetInt();
-			members = new Address[members_size];
-			for (int members_index = 0; members_index < members_size; members_index++)
-			{
-				Address members_item = AddressCodec.Decode(clientMessage);
-				members[members_index] = members_item;
-			}
-			parameters.members = members;
-			int[] ownerIndexes;
-			ownerIndexes = null;
-			int ownerIndexes_size = clientMessage.GetInt();
-			ownerIndexes = new int[ownerIndexes_size];
-			for (int ownerIndexes_index = 0; ownerIndexes_index < ownerIndexes_size; ownerIndexes_index++)
-			{
-				int ownerIndexes_item = clientMessage.GetInt();
-				ownerIndexes[ownerIndexes_index] = ownerIndexes_item;
-			}
-			parameters.ownerIndexes = ownerIndexes;
-			return parameters;
-		}
-	}
+    }
 }

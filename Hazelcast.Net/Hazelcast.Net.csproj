@@ -69,6 +69,7 @@
   <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
   <ItemGroup>
     <Compile Include="Hazelcast.Client.Connection\ClientConnectionManager.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\AddressCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAddAndGetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAlterAndGetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAlterCodec.cs" />

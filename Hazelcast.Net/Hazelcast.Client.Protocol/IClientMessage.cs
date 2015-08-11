@@ -11,7 +11,8 @@ namespace Hazelcast.Client.Protocol
         string GetStringUtf8();
         int GetInt();
         long GetLong();
-        KeyValuePair<IData, IData> GetMapEntry
-            ();
+        KeyValuePair<IData, IData> GetMapEntry();
+        bool IsRetryable();
+        int GetCorrelationId();
     }
 }
