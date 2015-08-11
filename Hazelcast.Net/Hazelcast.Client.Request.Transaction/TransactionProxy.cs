@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Threading;
 using Hazelcast.Client.Connection;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Spi;
 using Hazelcast.IO;
@@ -63,7 +65,10 @@ namespace Hazelcast.Client.Request.Transaction
                 }
                 _threadFlag = true;
                 startTime = Clock.CurrentTimeMillis();
-                txnId = Invoke<string>(new CreateTransactionRequest(options));
+                var request = TransactionCreateCodec.EncodeRequest(GetTimeoutMillis(), options.GetDurability(),
+                    (int)options.GetTransactionType(), threadId);
+                var response = Invoke(request);
+                txnId = TransactionCreateCodec.DecodeResponse(response).response;
                 state = TransactionState.Active;
             }
             catch (Exception e)
@@ -83,7 +88,8 @@ namespace Hazelcast.Client.Request.Transaction
                 }
                 CheckThread();
                 CheckTimeout();
-                Invoke<object>(new CommitTransactionRequest(prepareAndCommit));
+                var request = TransactionCommitCodec.EncodeRequest(GetTxnId(), threadId, prepareAndCommit);
+                Invoke(request);
                 state = TransactionState.Committed;
             }
             catch (Exception e)
@@ -113,7 +119,8 @@ namespace Hazelcast.Client.Request.Transaction
                 CheckThread();
                 try
                 {
-                    Invoke<object>(new RollbackTransactionRequest());
+                    var request = TransactionRollbackCodec.EncodeRequest(txnId, threadId);
+                    Invoke(request);
                 }
                 catch (Exception)
                 {
@@ -126,21 +133,13 @@ namespace Hazelcast.Client.Request.Transaction
             }
         }
 
-        private T Invoke<T>(ClientRequest request)
+        private IClientMessage Invoke(IClientMessage request)
         {
-            var btr = request as BaseTransactionRequest;
-            if (btr != null)
-            {
-                btr.TxnId = txnId;
-                btr.ClientThreadId = threadId;
-            }
-            var ss = client.GetSerializationService();
             var rpc = client.GetRemotingService();
             try
             {
                 var task = rpc.Send(request, txOwner);
-                var result = ThreadUtil.GetResult(task);
-                return ss.ToObject<T>(result);
+                return ThreadUtil.GetResult(task);
             }
             catch (Exception e)
             {

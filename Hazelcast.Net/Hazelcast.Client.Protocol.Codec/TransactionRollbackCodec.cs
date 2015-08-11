@@ -1,84 +1,59 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
-using Hazelcast.Net.Ext;
+using Hazelcast.IO.Serialization;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class TransactionRollbackCodec
-	{
-		public static readonly TransactionMessageType RequestType = TransactionMessageType.TransactionRollback;
+    internal sealed class TransactionRollbackCodec
+    {
 
-		public const int ResponseType = 100;
+        public static readonly TransactionMessageType RequestType = TransactionMessageType.TransactionRollback;
+        public const int ResponseType = 100;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly TransactionMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly TransactionMessageType TYPE = RequestType;
+            public string transactionId;
+            public long threadId;
 
-			public string transactionId;
+            public static int CalculateDataSize(string transactionId, long threadId)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(transactionId);
+                dataSize += Bits.LongSizeInBytes;
+                return dataSize;
+            }
+        }
 
-			public long threadId;
+        public static ClientMessage EncodeRequest(string transactionId, long threadId)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(transactionId, threadId);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(transactionId);
+            clientMessage.Set(threadId);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string transactionId, long threadId)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(transactionId);
-				dataSize += Bits.LongSizeInBytes;
-				return dataSize;
-			}
-		}
+        //************************ RESPONSE *************************//
 
-		public static ClientMessage EncodeRequest(string transactionId, long threadId)
-		{
-			int requiredDataSize = TransactionRollbackCodec.RequestParameters.CalculateDataSize(transactionId, threadId);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(transactionId);
-			clientMessage.Set(threadId);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
 
-		public static TransactionRollbackCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			TransactionRollbackCodec.RequestParameters parameters = new TransactionRollbackCodec.RequestParameters();
-			string transactionId;
-			transactionId = null;
-			transactionId = clientMessage.GetStringUtf8();
-			parameters.transactionId = transactionId;
-			long threadId;
-			threadId = clientMessage.GetLong();
-			parameters.threadId = threadId;
-			return parameters;
-		}
+        public class ResponseParameters
+        {
+        }
 
-		public class ResponseParameters
-		{
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize()
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				return dataSize;
-			}
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            return parameters;
+        }
 
-		public static ClientMessage EncodeResponse()
-		{
-			int requiredDataSize = TransactionRollbackCodec.ResponseParameters.CalculateDataSize();
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
-
-		public static TransactionRollbackCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			TransactionRollbackCodec.ResponseParameters parameters = new TransactionRollbackCodec.ResponseParameters();
-			return parameters;
-		}
-	}
+    }
 }

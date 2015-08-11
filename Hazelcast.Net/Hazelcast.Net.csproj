@@ -83,7 +83,9 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongIncrementAndGetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongMessageType.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongSetCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientCreateProxyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientDestroyProxyCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientGetPartitionsCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientMessageType.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchAwaitCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchCountDownCodec.cs" />
@@ -289,6 +291,10 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\TransactionalSetMessageType.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\TransactionalSetRemoveCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\TransactionalSetSizeCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\TransactionCommitCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\TransactionCreateCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\TransactionMessageType.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\TransactionRollbackCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Util\BufferBuilder.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Util\ClientMessageBuilder.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Util\IClientProtocolBuffer.cs" />
