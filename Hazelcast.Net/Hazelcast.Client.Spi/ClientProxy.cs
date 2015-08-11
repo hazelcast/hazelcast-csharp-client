@@ -129,6 +129,29 @@ namespace Hazelcast.Client.Spi
             return GetContext().GetSerializationService().ToData(o);
         }
 
+        protected ISet<IData> ToDataSet<T>(ICollection<T> c)
+        {
+            ThrowExceptionIfNull(c);
+            var valueSet = new HashSet<IData>();
+            foreach (var o in c)
+            {
+                ThrowExceptionIfNull(o);
+                valueSet.Add(ToData(o));
+            }
+            return valueSet;
+        }
+
+        protected IList<IData> ToDataList<T>(ICollection<T> c)
+        {
+            ThrowExceptionIfNull(c);
+            var values = new List<IData>(c.Count);
+            foreach (var o in c)
+            {
+                ThrowExceptionIfNull(o);
+                values.Add(ToData(o));
+            }
+            return values;
+        }
         protected internal virtual T ToObject<T>(IData data)
         {
             return GetContext().GetSerializationService().ToObject<T>(data);
