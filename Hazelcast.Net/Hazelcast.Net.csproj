@@ -247,6 +247,10 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\SetRemoveCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\SetRemoveListenerCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\SetSizeCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\TopicAddMessageListenerCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\TopicMessageType.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\TopicPublishCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\TopicRemoveMessageListenerCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Util\BufferBuilder.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Util\ClientMessageBuilder.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Util\IClientProtocolBuffer.cs" />

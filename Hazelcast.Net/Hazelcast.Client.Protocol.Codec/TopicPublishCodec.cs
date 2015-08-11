@@ -1,85 +1,59 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class TopicPublishCodec
-	{
-		public static readonly TopicMessageType RequestType = TopicMessageType.TopicPublish;
+    internal sealed class TopicPublishCodec
+    {
 
-		public const int ResponseType = 100;
+        public static readonly TopicMessageType RequestType = TopicMessageType.TopicPublish;
+        public const int ResponseType = 100;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly TopicMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly TopicMessageType TYPE = RequestType;
+            public string name;
+            public IData message;
 
-			public string name;
+            public static int CalculateDataSize(string name, IData message)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += ParameterUtil.CalculateDataSize(message);
+                return dataSize;
+            }
+        }
 
-			public IData message;
+        public static ClientMessage EncodeRequest(string name, IData message)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, message);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.Set(message);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name, IData message)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				dataSize += ParameterUtil.CalculateDataSize(message);
-				return dataSize;
-			}
-		}
+        //************************ RESPONSE *************************//
 
-		public static ClientMessage EncodeRequest(string name, IData message)
-		{
-			int requiredDataSize = TopicPublishCodec.RequestParameters.CalculateDataSize(name, message);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.Set(message);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
 
-		public static TopicPublishCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			TopicPublishCodec.RequestParameters parameters = new TopicPublishCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			IData message;
-			message = null;
-			message = clientMessage.GetData();
-			parameters.message = message;
-			return parameters;
-		}
+        public class ResponseParameters
+        {
+        }
 
-		public class ResponseParameters
-		{
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize()
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				return dataSize;
-			}
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            return parameters;
+        }
 
-		public static ClientMessage EncodeResponse()
-		{
-			int requiredDataSize = TopicPublishCodec.ResponseParameters.CalculateDataSize();
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
-
-		public static TopicPublishCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			TopicPublishCodec.ResponseParameters parameters = new TopicPublishCodec.ResponseParameters();
-			return parameters;
-		}
-	}
+    }
 }
