@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Request.Multimap;
 using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Client.Spi;
@@ -17,77 +18,55 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
         public virtual bool Put(K key, V value)
         {
-            var request = new TxnMultiMapPutRequest(GetName(), ToData(key), ToData(value));
-            var result = Invoke<bool>(request);
-            return result;
+            var keyData = ToData(key);
+            var valueData = ToData(value);
+            var request = TransactionalMultiMapPutCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+                keyData, valueData);
+
+            return Invoke(request, m => TransactionalMultiMapPutCodec.DecodeResponse(m).response);
         }
 
         public virtual ICollection<V> Get(K key)
         {
-            var request = new TxnMultiMapGetRequest(GetName(), ToData(key));
-            var portableCollection = Invoke<PortableCollection>(request);
-            ICollection<IData> collection = portableCollection.GetCollection();
-            ICollection<V> coll;
-            if (collection is IList)
-            {
-                coll = new List<V>(collection.Count);
-            }
-            else
-            {
-                coll = new HashSet<V>();
-            }
-            foreach (IData data in collection)
-            {
-                coll.Add(ToObject<V>(data));
-            }
-            return coll;
+            var keyData = ToData(key);
+            var request = TransactionalMultiMapGetCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), keyData);
+            var list = Invoke(request, m => TransactionalMultiMapGetCodec.DecodeResponse(m).list);
+            return ToList<V>(list);
         }
 
         public virtual bool Remove(object key, object value)
         {
-            var request = new TxnMultiMapRemoveRequest(GetName(), ToData(key), ToData(value));
-            var result = Invoke<bool>(request);
-            return result;
+            var keyData = ToData(key);
+            var valueData = ToData(value);
+            var request = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+                keyData, valueData);
+
+            return Invoke(request, m => TransactionalMultiMapRemoveEntryCodec.DecodeResponse(m).response);
         }
 
         public virtual ICollection<V> Remove(object key)
         {
-            var request = new TxnMultiMapRemoveAllRequest(GetName(), ToData(key));
-            var portableCollection = Invoke<PortableCollection>(request);
-            ICollection<IData> collection = portableCollection.GetCollection();
-            ICollection<V> coll;
-            if (collection is IList)
-            {
-                coll = new List<V>(collection.Count);
-            }
-            else
-            {
-                coll = new HashSet<V>();
-            }
-            foreach (IData data in collection)
-            {
-                coll.Add(ToObject<V>(data));
-            }
-            return coll;
+            var keyData = ToData(key);
+            var request = TransactionalMultiMapRemoveCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+                keyData);
+
+            var result = Invoke(request, m => TransactionalMultiMapRemoveCodec.DecodeResponse(m).list);
+            return ToList<V>(result);
         }
 
         public virtual int ValueCount(K key)
         {
-            var request = new TxnMultiMapValueCountRequest(GetName(), ToData(key));
-            var result = Invoke<int>(request);
-            return result;
+            var keyData = ToData(key);
+            var request = TransactionalMultiMapValueCountCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+                keyData);
+
+            return Invoke(request, m => TransactionalMultiMapValueCountCodec.DecodeResponse(m).response);
         }
 
         public virtual int Size()
         {
-            var request = new TxnMultiMapSizeRequest(GetName());
-            var result = Invoke<int>(request);
-            return result;
-        }
-
-        public override string GetName()
-        {
-            return (string) GetId();
+            var request = TransactionalMultiMapSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
+            return Invoke(request, m => TransactionalMultiMapSizeCodec.DecodeResponse(m).response);
         }
 
         public override string GetServiceName()

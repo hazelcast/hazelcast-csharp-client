@@ -189,6 +189,7 @@ namespace Hazelcast.Client.Spi
             }
             return entrySet;
         }
+
         protected internal virtual void ThrowExceptionIfNull(object o)
         {
             if (o == null)
