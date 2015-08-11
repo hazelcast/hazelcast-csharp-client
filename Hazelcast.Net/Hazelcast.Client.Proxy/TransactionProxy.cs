@@ -1,16 +1,12 @@
 using System;
-using System.IO;
 using System.Threading;
-using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Spi;
 using Hazelcast.IO;
 using Hazelcast.Transaction;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Request.Transaction
+namespace Hazelcast.Client.Proxy
 {
     internal sealed class TransactionProxy
     {

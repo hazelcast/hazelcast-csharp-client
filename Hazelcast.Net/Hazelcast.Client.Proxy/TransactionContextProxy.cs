@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using Hazelcast.Client.Connection;
-using Hazelcast.Client.Proxy;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Transaction;
 
-namespace Hazelcast.Client.Request.Transaction
+namespace Hazelcast.Client.Proxy
 {
     internal class TransactionContextProxy : ITransactionContext
     {

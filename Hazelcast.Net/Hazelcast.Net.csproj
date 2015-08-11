@@ -378,8 +378,8 @@
     <Compile Include="Hazelcast.Client.Request.Transaction\CommitTransactionRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Transaction\CreateTransactionRequest.cs" />
     <Compile Include="Hazelcast.Client.Request.Transaction\RollbackTransactionRequest.cs" />
-    <Compile Include="Hazelcast.Client.Request.Transaction\TransactionContextProxy.cs" />
-    <Compile Include="Hazelcast.Client.Request.Transaction\TransactionProxy.cs" />
+    <Compile Include="Hazelcast.Client.Proxy\TransactionContextProxy.cs" />
+    <Compile Include="Hazelcast.Client.Proxy\TransactionProxy.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientClusterService.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientContext.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientExecutionService.cs" />
