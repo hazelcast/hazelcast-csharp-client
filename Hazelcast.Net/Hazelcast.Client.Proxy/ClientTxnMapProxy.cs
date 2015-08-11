@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Map;
 using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Core;
-using Hazelcast.IO.Serialization;
-using Hazelcast.Map;
 
 namespace Hazelcast.Client.Proxy
 {

@@ -1,8 +1,7 @@
 using System;
-using Hazelcast.Client.Request.Queue;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Core;
-using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -27,10 +26,10 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public virtual bool Offer(E e, long timeout, TimeUnit unit)
         {
-            IData data = ToData(e);
-            var request = new TxnOfferRequest(GetName(), unit.ToMillis(timeout), data);
-            var result = Invoke<bool>(request);
-            return result;
+            var data = ToData(e);
+            var request = TransactionalQueueOfferCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), data, 
+                unit.ToMillis(timeout));
+            return Invoke(request, m => TransactionalQueueOfferCodec.DecodeResponse(m).response);
         }
 
         public virtual E Poll()
@@ -48,8 +47,10 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public virtual E Poll(long timeout, TimeUnit unit)
         {
-            var request = new TxnPollRequest(GetName(), unit.ToMillis(timeout));
-            return Invoke<E>(request);
+            var request = TransactionalQueuePollCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+                unit.ToMillis(timeout));
+            var result = Invoke(request, m => TransactionalQueuePollCodec.DecodeResponse(m).response);
+            return ToObject<E>(result);
         }
 
         public virtual E Peek()
@@ -67,20 +68,16 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public virtual E Peek(long timeout, TimeUnit unit)
         {
-            var request = new TxnPeekRequest(GetName(), unit.ToMillis(timeout));
-            return Invoke<E>(request);
+            var request = TransactionalQueuePeekCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+                unit.ToMillis(timeout));
+            var result = Invoke(request, m => TransactionalQueuePeekCodec.DecodeResponse(m).response);
+            return ToObject<E>(result);
         }
 
         public virtual int Size()
         {
-            var request = new TxnSizeRequest(GetName());
-            var result = Invoke<int>(request);
-            return result;
-        }
-
-        public override string GetName()
-        {
-            return (string) GetId();
+            var request = TransactionalQueueSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
+            return Invoke(request, m => TransactionalQueueSizeCodec.DecodeResponse(m).response);
         }
 
         public override string GetServiceName()

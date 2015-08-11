@@ -1,7 +1,6 @@
-using Hazelcast.Client.Request.Collection;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Core;
-using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -15,26 +14,23 @@ namespace Hazelcast.Client.Proxy
         public virtual bool Add(E e)
         {
             ThrowExceptionIfNull(e);
-            IData value = ToData(e);
-            var request = new TxnSetAddRequest(GetName(), value);
-            var result = Invoke<bool>(request);
-            return result;
+            var value = ToData(e);
+            var request = TransactionalSetAddCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), value);
+            return Invoke(request, m => TransactionalSetAddCodec.DecodeResponse(m).response);
         }
 
         public virtual bool Remove(E e)
         {
             ThrowExceptionIfNull(e);
-            IData value = ToData(e);
-            var request = new TxnSetRemoveRequest(GetName(), value);
-            var result = Invoke<bool>(request);
-            return result;
+            var value = ToData(e);
+            var request = TransactionalSetRemoveCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), value);
+            return Invoke(request, m => TransactionalSetRemoveCodec.DecodeResponse(m).response);
         }
 
         public virtual int Size()
         {
-            var request = new TxnSetSizeRequest(GetName());
-            var result = Invoke<int>(request);
-            return result;
+            var request = TransactionalSetSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
+            return Invoke(request, m => TransactionalSetSizeCodec.DecodeResponse(m).response);
         }
 
         public override string GetServiceName()

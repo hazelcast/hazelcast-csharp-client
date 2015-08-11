@@ -1,11 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Multimap;
 using Hazelcast.Client.Request.Transaction;
-using Hazelcast.Client.Spi;
 using Hazelcast.Core;
-using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Proxy
 {
