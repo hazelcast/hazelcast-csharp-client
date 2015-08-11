@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Map;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.IO.Serialization;

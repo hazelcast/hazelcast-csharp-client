@@ -1,7 +1,6 @@
 using System;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Concurrent.Lock;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;

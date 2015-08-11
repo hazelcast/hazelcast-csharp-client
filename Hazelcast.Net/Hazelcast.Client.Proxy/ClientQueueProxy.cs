@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Queue;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
