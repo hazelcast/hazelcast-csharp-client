@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Protocol.Util;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.IO;
@@ -396,7 +395,7 @@ namespace Hazelcast.Client.Connection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public object SendAndReceive(ClientRequest clientRequest)
+        public object SendAndReceive(IClientMessage clientRequest)
         {
             IData request = serializationService.ToData(clientRequest);
             Write(request);

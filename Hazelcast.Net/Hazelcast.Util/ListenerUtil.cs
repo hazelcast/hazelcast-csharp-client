@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Spi;
 using Hazelcast.IO.Serialization;
 

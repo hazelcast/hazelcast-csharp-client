@@ -64,7 +64,7 @@ namespace Hazelcast.Client.Protocol.Codec
                 dataSize += ParameterUtil.CalculateDataSize(eventType);
 
             ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-            clientMessage.SetMessageType(EventMessageConst.EventDistributedobject);
+            clientMessage.SetMessageType(EventMessageConst.EventDistributedObject);
             clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
 
             clientMessage.Set(name);
@@ -76,24 +76,23 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public abstract class AbstractEventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleDelegate handle)
+            public static void Handle(IClientMessage clientMessage, HandleDistributedObject handleDistributedObject)
             {
                 int messageType = clientMessage.GetMessageType();
-                if (messageType == EventMessageConst.EventDistributedobject) {
+                if (messageType == EventMessageConst.EventDistributedObject) {
             string name = null;
             name = clientMessage.GetStringUtf8();
             string serviceName = null;
             serviceName = clientMessage.GetStringUtf8();
             string eventType = null;
             eventType = clientMessage.GetStringUtf8();
-                    handle(name, serviceName, eventType);
+                    handleDistributedObject(name, serviceName, eventType);
                     return;
                 }
                 Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
             }
 
-            public delegate void HandleDelegate(string name, string serviceName, string eventType);
-
+            public delegate void HandleDistributedObject(string name, string serviceName, string eventType);
        }
 
     }

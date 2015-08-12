@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public abstract class AbstractEventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleDelegate handle)
+            public static void Handle(IClientMessage clientMessage, HandlePartitionLost handlePartitionLost)
             {
                 int messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventPartitionLost) {
@@ -105,14 +105,13 @@ namespace Hazelcast.Client.Protocol.Codec
             {
             source = AddressCodec.Decode(clientMessage);
             }
-                    handle(partitionId, lostBackupCount, source);
+                    handlePartitionLost(partitionId, lostBackupCount, source);
                     return;
                 }
                 Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
             }
 
-            public delegate void HandleDelegate(int partitionId, int lostBackupCount, Address source);
-
+            public delegate void HandlePartitionLost(int partitionId, int lostBackupCount, Address source);
        }
 
     }

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.IO.Serialization;

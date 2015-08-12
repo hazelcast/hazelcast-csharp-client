@@ -1,4 +1,4 @@
-using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO;
@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Connection
         IData ReadFromOwner();
 
         /// <exception cref="System.IO.IOException"></exception>
-        object SendAndReceiveFromOwner(ClientRequest clientRequest);
+        object SendAndReceiveFromOwner(IClientMessage request);
 
         Address BindToRandomAddress();
 

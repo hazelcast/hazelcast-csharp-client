@@ -8,18 +8,18 @@ namespace Hazelcast.Client.Protocol
     public sealed class EventMessageConst
     {
         public const int EventMember = 200;
-        public const int EventMemberset = 201;
-        public const int EventMemberattributechange = 202;
+        public const int EventMemberSet = 201;
+        public const int EventMemberAttributeChange = 202;
         public const int EventEntry = 203;
         public const int EventItem = 204;
         public const int EventTopic = 205;
-        public const int EventPartitionlost = 206;
-        public const int EventDistributedobject = 207;
-        public const int EventCacheinvalidation = 208;
-        public const int EventMappartitionlost = 209;
+        public const int EventPartitionLost = 206;
+        public const int EventDistributedObject = 207;
+        public const int EventCacheInvalidation = 208;
+        public const int EventMapPartitionLost = 209;
         public const int EventCache = 210;
-        public const int EventCachebatchinvalidation = 211;
-        public const int EventQuerycachesingle = 212;
-        public const int EventQuerycachebatch = 213;
+        public const int EventCacheBatchInvalidation = 211;
+        public const int EventQueryCacheSingle = 212;
+        public const int EventQueryCacheBatch = 213;
     }
 }

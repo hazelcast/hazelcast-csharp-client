@@ -10,7 +10,7 @@ namespace Hazelcast.Client.Protocol.Codec
 		{
 		}
 
-		public static MemberAttributeChange Decode(ClientMessage clientMessage)
+		public static MemberAttributeChange Decode(IClientMessage clientMessage)
 		{
 			string uuid = clientMessage.GetStringUtf8();
 			string key = clientMessage.GetStringUtf8();
@@ -41,14 +41,14 @@ namespace Hazelcast.Client.Protocol.Codec
 			{
 				return Bits.BooleanSizeInBytes;
 			}
-			int dataSize = ParameterUtil.CalculateStringDataSize(memberAttributeChange.Uuid);
-			dataSize += ParameterUtil.CalculateStringDataSize(memberAttributeChange.Key);
+			int dataSize = ParameterUtil.CalculateDataSize(memberAttributeChange.Uuid);
+            dataSize += ParameterUtil.CalculateDataSize(memberAttributeChange.Key);
 			//operation type
 			dataSize += Bits.IntSizeInBytes;
 			MemberAttributeOperationType operationType = memberAttributeChange.OperationType;
 			if (operationType == MemberAttributeOperationType.PUT)
 			{
-				dataSize += ParameterUtil.CalculateStringDataSize(memberAttributeChange.Value.ToString());
+                dataSize += ParameterUtil.CalculateDataSize(memberAttributeChange.Value.ToString());
 			}
 			return dataSize;
 		}

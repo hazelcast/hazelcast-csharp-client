@@ -8,7 +8,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Hazelcast.Client.Connection;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Config;
 using Hazelcast.IO;
 

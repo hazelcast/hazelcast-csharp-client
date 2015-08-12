@@ -48,11 +48,11 @@ namespace Hazelcast.Client.Protocol.Codec
         {
             ResponseParameters parameters = new ResponseParameters();
             IDictionary<Address,ISet<int>> partitions = null;
-            int partitions_size = clientMessage.GetInt();
-            partitions = new Dictionary<Address,ISet<int>>(partitions_size);
-            for (int partitions_index = 0;partitions_index<partitions_size;partitions_index++) {
-                Address partitions_key;
-                ISet<int> partitions_val;
+        int partitions_size = clientMessage.GetInt();
+        partitions = new Dictionary<Address,ISet<int>>(partitions_size);
+        for (int partitions_index = 0;partitions_index<partitions_size;partitions_index++) {
+            Address partitions_key;
+            ISet<int> partitions_val;
             partitions_key = AddressCodec.Decode(clientMessage);
             int partitions_val_size = clientMessage.GetInt();
             partitions_val = new HashSet<int>();
@@ -61,8 +61,8 @@ namespace Hazelcast.Client.Protocol.Codec
             partitions_val_item = clientMessage.GetInt();
                 partitions_val.Add(partitions_val_item);
             }
-                partitions.Add(partitions_key, partitions_val);
-            }
+            partitions.Add(partitions_key, partitions_val);
+        }
             parameters.partitions = partitions;
             return parameters;
         }

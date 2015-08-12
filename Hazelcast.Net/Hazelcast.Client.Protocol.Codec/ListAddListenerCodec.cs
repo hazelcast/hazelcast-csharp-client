@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public abstract class AbstractEventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleDelegate handle)
+            public static void Handle(IClientMessage clientMessage, HandleItem handleItem)
             {
                 int messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventItem) {
@@ -111,14 +111,13 @@ namespace Hazelcast.Client.Protocol.Codec
             uuid = clientMessage.GetStringUtf8();
             int eventType ;
             eventType = clientMessage.GetInt();
-                    handle(item, uuid, eventType);
+                    handleItem(item, uuid, eventType);
                     return;
                 }
                 Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
             }
 
-            public delegate void HandleDelegate(IData item, string uuid, int eventType);
-
+            public delegate void HandleItem(IData item, string uuid, int eventType);
        }
 
     }

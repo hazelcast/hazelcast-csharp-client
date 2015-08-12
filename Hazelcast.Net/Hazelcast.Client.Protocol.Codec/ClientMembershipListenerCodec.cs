@@ -107,7 +107,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public abstract class AbstractEventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleDelegate handle)
+            public static void Handle(IClientMessage clientMessage, HandleMember handleMember, HandleMemberSet handleMemberSet, HandleMemberAttributeChange handleMemberAttributeChange)
             {
                 int messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventMember) {
@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Protocol.Codec
             member = MemberCodec.Decode(clientMessage);
             int eventType ;
             eventType = clientMessage.GetInt();
-                    handle(member, eventType);
+                    handleMember(member, eventType);
                     return;
                 }
                 if (messageType == EventMessageConst.EventMemberSet) {
@@ -127,24 +127,21 @@ namespace Hazelcast.Client.Protocol.Codec
             members_item = MemberCodec.Decode(clientMessage);
                 members.Add(members_item);
             }
-                    handle(members);
+                    handleMemberSet(members);
                     return;
                 }
                 if (messageType == EventMessageConst.EventMemberAttributeChange) {
             Hazelcast.Client.Request.Cluster.MemberAttributeChange memberAttributeChange = null;
             memberAttributeChange = MemberAttributeChangeCodec.Decode(clientMessage);
-                    handle(memberAttributeChange);
+                    handleMemberAttributeChange(memberAttributeChange);
                     return;
                 }
                 Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
             }
 
-            public delegate void HandleDelegate(Hazelcast.Core.Member member, int eventType);
-
-            public delegate void HandleDelegate(ISet<Hazelcast.Core.Member> members);
-
-            public delegate void HandleDelegate(Hazelcast.Client.Request.Cluster.MemberAttributeChange memberAttributeChange);
-
+            public delegate void HandleMember(Hazelcast.Core.Member member, int eventType);
+            public delegate void HandleMemberSet(ISet<Hazelcast.Core.Member> members);
+            public delegate void HandleMemberAttributeChange(Hazelcast.Client.Request.Cluster.MemberAttributeChange memberAttributeChange);
        }
 
     }

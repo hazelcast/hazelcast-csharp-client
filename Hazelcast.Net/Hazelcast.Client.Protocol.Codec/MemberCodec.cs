@@ -28,12 +28,12 @@ namespace Hazelcast.Client.Protocol.Codec
 		{
 		}
 
-		public static Member Decode(ClientMessage clientMessage)
+		public static Member Decode(IClientMessage clientMessage)
 		{
 			Address address = AddressCodec.Decode(clientMessage);
 			string uuid = clientMessage.GetStringUtf8();
 			int attributeSize = clientMessage.GetInt();
-			IDictionary<string, object> attributes = new Dictionary<string, object>();
+            IDictionary<string, string> attributes = new Dictionary<string, string>();
 			for (int i = 0; i < attributeSize; i++)
 			{
 				string key = clientMessage.GetStringUtf8();

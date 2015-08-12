@@ -4,13 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Cluster;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
@@ -209,7 +206,7 @@ namespace Hazelcast.Client.Connection
             return _GetOrConnectWithRetry(address).GetRemoteEndpoint();
         }
 
-        public object SendAndReceiveFromOwner(ClientRequest clientRequest)
+        public object SendAndReceiveFromOwner(IClientMessage clientRequest)
         {
             if (_ownerConnection != null)
             {
@@ -561,7 +558,7 @@ namespace Hazelcast.Client.Connection
         private T _Authenticate<T>(ClientConnection connection, ICredentials credentials, ClientPrincipal principal, bool firstConnection)
         {
             ISerializationService ss = client.GetSerializationService();
-            var auth = new AuthenticationRequest(credentials, principal);
+            var auth = ClientAuthenticationCodec.EncodeRequest(??, ??, principal.GetUuid(), principal.GetOwnerUuid(), ??);
             connection.InitProtocalData();
             auth.SetFirstConnection(firstConnection);
             SerializableCollection coll = null;

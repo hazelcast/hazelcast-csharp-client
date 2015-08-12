@@ -153,7 +153,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public abstract class AbstractEventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleDelegate handle)
+            public static void Handle(IClientMessage clientMessage, HandleEntry handleEntry)
             {
                 int messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventEntry) {
@@ -187,14 +187,13 @@ namespace Hazelcast.Client.Protocol.Codec
             uuid = clientMessage.GetStringUtf8();
             int numberOfAffectedEntries ;
             numberOfAffectedEntries = clientMessage.GetInt();
-                    handle(key, value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
+                    handleEntry(key, value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
                     return;
                 }
                 Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
             }
 
-            public delegate void HandleDelegate(IData key, IData value, IData oldValue, IData mergingValue, int eventType, string uuid, int numberOfAffectedEntries);
-
+            public delegate void HandleEntry(IData key, IData value, IData oldValue, IData mergingValue, int eventType, string uuid, int numberOfAffectedEntries);
        }
 
     }

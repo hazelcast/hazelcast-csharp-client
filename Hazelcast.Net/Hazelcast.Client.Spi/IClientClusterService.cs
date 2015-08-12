@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Core;
 using Hazelcast.IO;
 

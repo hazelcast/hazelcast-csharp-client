@@ -2,15 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Security.Permissions;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
-using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Request.Cluster;
 using Hazelcast.Config;
 using Hazelcast.Core;
@@ -336,7 +331,8 @@ namespace Hazelcast.Client.Spi
         {
             var serializationService = _client.GetSerializationService();
             var ccm = _client.GetConnectionManager();
-            var request = new AddMembershipListenerRequest();
+            var request = ClientMembershipListenerCodec.EncodeRequest();
+
             var coll= (SerializableCollection)ccm.SendAndReceiveFromOwner(request);
             
             var members = new List<IMember>(GetMemberList());

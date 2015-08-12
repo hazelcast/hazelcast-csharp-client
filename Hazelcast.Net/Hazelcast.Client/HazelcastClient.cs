@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Proxy;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;

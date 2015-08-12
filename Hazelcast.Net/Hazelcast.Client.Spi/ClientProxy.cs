@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;

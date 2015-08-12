@@ -6,7 +6,6 @@ using System.Linq;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Proxy;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
