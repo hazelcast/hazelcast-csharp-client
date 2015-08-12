@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Request.Cluster;
 using Hazelcast.Client.Spi;
@@ -518,7 +519,7 @@ namespace Hazelcast.Client.Connection
             {
                 foreach (var clientConnection in _addresses.Values)
                 {
-                    var request = new ClientPingRequest();
+                    var request = ClientPingCodec.EncodeRequest();
                     var task = clientConnection.Send(request, -1);
                     var remoteEndPoint = clientConnection.GetSocket() != null ? clientConnection.GetSocket().RemoteEndPoint.ToString() : "CLOSED";
                     try

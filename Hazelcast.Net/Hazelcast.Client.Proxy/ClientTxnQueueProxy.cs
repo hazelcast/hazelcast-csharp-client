@@ -1,6 +1,5 @@
 using System;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Core;
 
 namespace Hazelcast.Client.Proxy

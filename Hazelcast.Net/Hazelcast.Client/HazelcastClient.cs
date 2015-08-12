@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Hazelcast.Client.Connection;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Proxy;
 using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Spi;
@@ -246,11 +247,11 @@ namespace Hazelcast.Client
         {
             try
             {
-                var request = new GetDistributedObjectsRequest();
+                var request = ClientGetDistributedObjectCodec.EncodeRequest();
                 var task = invocationService.InvokeOnRandomTarget(request);
-                var serializableCollection =
-                    serializationService.ToObject<SerializableCollection>(ThreadUtil.GetResult(task));
-                foreach (var data in serializableCollection)
+                var response = ThreadUtil.GetResult(task);
+                var result = ClientGetDistributedObjectCodec.DecodeResponse(response).infoCollection;
+                foreach (var data in result)
                 {
                     var o = serializationService.ToObject<DistributedObjectInfo>(data);
                     GetDistributedObject<IDistributedObject>(o.GetServiceName(), o.GetName());

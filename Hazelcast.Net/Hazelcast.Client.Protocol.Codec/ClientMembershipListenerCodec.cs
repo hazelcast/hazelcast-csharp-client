@@ -1,175 +1,151 @@
-using System.Collections.Generic;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
-using Hazelcast.Client.Request.Cluster;
-using Hazelcast.Core;
 using Hazelcast.IO;
-using Hazelcast.Logging;
+using Hazelcast.IO.Serialization;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class ClientMembershipListenerCodec
-	{
-		public static readonly ClientMessageType RequestType = ClientMessageType.ClientMembershiplistener;
+    internal sealed class ClientMembershipListenerCodec
+    {
 
-		public const int ResponseType = 104;
+        public static readonly ClientMessageType RequestType = ClientMessageType.ClientMembershipListener;
+        public const int ResponseType = 104;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly ClientMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly ClientMessageType TYPE = RequestType;
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize()
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				return dataSize;
-			}
-		}
+            public static int CalculateDataSize()
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                return dataSize;
+            }
+        }
 
-		public static ClientMessage EncodeRequest()
-		{
-			int requiredDataSize = ClientMembershipListenerCodec.RequestParameters.CalculateDataSize();
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public static ClientMessage EncodeRequest()
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize();
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-		public static ClientMembershipListenerCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			ClientMembershipListenerCodec.RequestParameters parameters = new ClientMembershipListenerCodec.RequestParameters();
-			return parameters;
-		}
+        //************************ RESPONSE *************************//
 
-		public class ResponseParameters
-		{
-			public string response;
 
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize(string response)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(response);
-				return dataSize;
-			}
-		}
+        public class ResponseParameters
+        {
+            public string response;
+        }
 
-		public static ClientMessage EncodeResponse(string response)
-		{
-			int requiredDataSize = ClientMembershipListenerCodec.ResponseParameters.CalculateDataSize(response);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.Set(response);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            string response = null;
+            response = clientMessage.GetStringUtf8();
+            parameters.response = response;
+            return parameters;
+        }
 
-		public static ClientMembershipListenerCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			ClientMembershipListenerCodec.ResponseParameters parameters = new ClientMembershipListenerCodec.ResponseParameters();
-			string response;
-			response = null;
-			response = clientMessage.GetStringUtf8();
-			parameters.response = response;
-			return parameters;
-		}
 
-		//************************ EVENTS *************************//
-		public static ClientMessage EncodeMemberEvent(Member member, int eventType)
-		{
-			int dataSize = ClientMessage.HeaderSize;
-			dataSize += MemberCodec.CalculateDataSize(member);
-			dataSize += Bits.IntSizeInBytes;
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-			clientMessage.SetMessageType(EventMessageConst.EventMember);
-			clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
-			MemberCodec.Encode(member, clientMessage);
-			clientMessage.Set(eventType);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        //************************ EVENTS *************************//
 
-		public static ClientMessage EncodeMemberListEvent(ICollection<Member> members)
-		{
-			int dataSize = ClientMessage.HeaderSize;
-			dataSize += Bits.IntSizeInBytes;
-			foreach (Member members_item in members)
-			{
-				dataSize += MemberCodec.CalculateDataSize(members_item);
-			}
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-			clientMessage.SetMessageType(EventMessageConst.EventMemberlist);
-			clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
-			clientMessage.Set(members.Count);
-			foreach (Member members_item_1 in members)
-			{
-				MemberCodec.Encode(members_item_1, clientMessage);
-			}
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public static ClientMessage EncodeMemberEvent(Hazelcast.Core.Member member, int eventType)
+        {
+            int dataSize = ClientMessage.HeaderSize;
+                dataSize += MemberCodec.CalculateDataSize(member);
+                dataSize += Bits.IntSizeInBytes;
 
-		public static ClientMessage EncodeMemberAttributeChangeEvent(MemberAttributeChange memberAttributeChange)
-		{
-			int dataSize = ClientMessage.HeaderSize;
-			dataSize += MemberAttributeChangeCodec.CalculateDataSize(memberAttributeChange);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-			clientMessage.SetMessageType(EventMessageConst.EventMemberattributechange);
-			clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
-			MemberAttributeChangeCodec.Encode(memberAttributeChange, clientMessage);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
+            clientMessage.SetMessageType(EventMessageConst.EventMember);
+            clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
 
-		public abstract class AbstractEventHandler
-		{
-			public virtual void Handle(ClientMessage clientMessage)
-			{
-				int messageType = clientMessage.GetMessageType();
-				if (messageType == EventMessageConst.EventMember)
-				{
-					Member member;
-					member = null;
-					member = MemberCodec.Decode(clientMessage);
-					int eventType;
-					eventType = clientMessage.GetInt();
-					Handle(member, eventType);
-					return;
-				}
-				if (messageType == EventMessageConst.EventMemberlist)
-				{
-					ICollection<Member> members;
-					members = null;
-					int members_size = clientMessage.GetInt();
-					members = new List<Member>(members_size);
-					for (int members_index = 0; members_index < members_size; members_index++)
-					{
-						Member members_item;
-						members_item = MemberCodec.Decode(clientMessage);
-						members.Add(members_item);
-					}
-					Handle(members);
-					return;
-				}
-				if (messageType == EventMessageConst.EventMemberattributechange)
-				{
-					MemberAttributeChange memberAttributeChange;
-					memberAttributeChange = null;
-					memberAttributeChange = MemberAttributeChangeCodec.Decode(clientMessage);
-					Handle(memberAttributeChange);
-					return;
-				}
-				Logger.GetLogger(base.GetType()).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
-			}
+            MemberCodec.Encode(member, clientMessage);
+            clientMessage.Set(eventType);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
+        public static ClientMessage EncodeMemberSetEvent(ISet<Hazelcast.Core.Member> members)
+        {
+            int dataSize = ClientMessage.HeaderSize;
+                dataSize += Bits.IntSizeInBytes;
+                foreach (var members_item in members )
+                {
+                dataSize += MemberCodec.CalculateDataSize(members_item);
+                }
 
-			public abstract void Handle(Member member, int eventType);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
+            clientMessage.SetMessageType(EventMessageConst.EventMemberSet);
+            clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
 
-			public abstract void Handle(ICollection<Member> members);
+            clientMessage.Set(members.Count);
+            foreach (var members_item in members) {
+            MemberCodec.Encode(members_item, clientMessage);
+            }
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
+        public static ClientMessage EncodeMemberAttributeChangeEvent(Hazelcast.Client.Request.Cluster.MemberAttributeChange memberAttributeChange)
+        {
+            int dataSize = ClientMessage.HeaderSize;
+                dataSize += MemberAttributeChangeCodec.CalculateDataSize(memberAttributeChange);
 
-			public abstract void Handle(MemberAttributeChange memberAttributeChange);
-		}
-	}
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
+            clientMessage.SetMessageType(EventMessageConst.EventMemberAttributeChange);
+            clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
+
+            MemberAttributeChangeCodec.Encode(memberAttributeChange, clientMessage);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
+
+        public abstract class AbstractEventHandler
+        {
+            public static void Handle(IClientMessage clientMessage, HandleDelegate handle)
+            {
+                int messageType = clientMessage.GetMessageType();
+                if (messageType == EventMessageConst.EventMember) {
+            Hazelcast.Core.Member member = null;
+            member = MemberCodec.Decode(clientMessage);
+            int eventType ;
+            eventType = clientMessage.GetInt();
+                    handle(member, eventType);
+                    return;
+                }
+                if (messageType == EventMessageConst.EventMemberSet) {
+            ISet<Hazelcast.Core.Member> members = null;
+            int members_size = clientMessage.GetInt();
+            members = new HashSet<Hazelcast.Core.Member>();
+            for (int members_index = 0; members_index<members_size; members_index++) {
+                Hazelcast.Core.Member members_item;
+            members_item = MemberCodec.Decode(clientMessage);
+                members.Add(members_item);
+            }
+                    handle(members);
+                    return;
+                }
+                if (messageType == EventMessageConst.EventMemberAttributeChange) {
+            Hazelcast.Client.Request.Cluster.MemberAttributeChange memberAttributeChange = null;
+            memberAttributeChange = MemberAttributeChangeCodec.Decode(clientMessage);
+                    handle(memberAttributeChange);
+                    return;
+                }
+                Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
+            }
+
+            public delegate void HandleDelegate(Hazelcast.Core.Member member, int eventType);
+
+            public delegate void HandleDelegate(ISet<Hazelcast.Core.Member> members);
+
+            public delegate void HandleDelegate(Hazelcast.Client.Request.Cluster.MemberAttributeChange memberAttributeChange);
+
+       }
+
+    }
 }

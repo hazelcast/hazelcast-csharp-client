@@ -30,16 +30,8 @@ namespace Hazelcast.IO.Serialization
                     new PartitionPortableHook(),//
                     new ClientPortableHook(),//
                     new ClientTxnPortableHook(),//
-                    new MapPortableHook(),//
                     new QueuePortableHook(),//
-                    new MultiMapPortableHook(),//
-                    new CollectionPortableHook(),//
                     new ExecutorPortableHook(),//
-                    new TopicPortableHook(),//
-                    new LockPortableHook(),//
-                    new SemaphorePortableHook(),//
-                    new AtomicLongPortableHook(),//
-                    new CountDownLatchPortableHook()//
                 };
                 foreach (IPortableHook hook in hooks)
                 {

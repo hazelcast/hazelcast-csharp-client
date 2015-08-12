@@ -8,7 +8,7 @@ namespace Hazelcast.Client.Protocol.Codec
 		{
 		}
 
-		public static DistributedObjectInfo Decode(ClientMessage clientMessage)
+		public static DistributedObjectInfo Decode(IClientMessage clientMessage)
 		{
 			string serviceName = clientMessage.GetStringUtf8();
 			string name = clientMessage.GetStringUtf8();
@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
 		public static int CalculateDataSize(DistributedObjectInfo info)
 		{
-			return ParameterUtil.CalculateStringDataSize(info.GetServiceName()) + ParameterUtil.CalculateStringDataSize(info.GetName());
+			return ParameterUtil.CalculateDataSize(info.GetServiceName()) + ParameterUtil.CalculateDataSize(info.GetName());
 		}
 	}
 }

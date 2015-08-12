@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Hazelcast.Client.Request.Transaction;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Serialization.Hook

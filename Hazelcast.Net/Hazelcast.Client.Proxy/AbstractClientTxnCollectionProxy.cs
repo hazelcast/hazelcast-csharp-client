@@ -1,5 +1,4 @@
 using System;
-using Hazelcast.Client.Request.Transaction;
 
 namespace Hazelcast.Client.Proxy
 {

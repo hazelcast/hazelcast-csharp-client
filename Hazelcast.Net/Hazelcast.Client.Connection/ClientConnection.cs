@@ -12,7 +12,6 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.IO;
@@ -960,7 +959,7 @@ namespace Hazelcast.Client.Connection
             set { _handler = value; }
         }
 
-        internal ClientMessage Request
+        internal IClientMessage Request
         {
             get { return _request; }
             set { _request = value; }
