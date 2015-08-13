@@ -40,10 +40,7 @@ namespace Hazelcast.IO.Serialization
             {
                 DataSerializerHook[] hooks =
                 {
-                    new ClusterDataSerializerHook(),
                     new SpiDataSerializerHook(),
-                    new PartitionDataSerializerHook(),
-                    new ClientDataSerializerHook(),
                     new MapDataSerializerHook(),
                     new QueueDataSerializerHook(),
                     new MultiMapDataSerializerHook(),

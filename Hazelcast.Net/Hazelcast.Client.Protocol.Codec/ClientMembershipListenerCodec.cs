@@ -3,6 +3,7 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using System.Collections.Generic;
+using Hazelcast.Client.Spi;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
@@ -56,7 +57,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         //************************ EVENTS *************************//
 
-        public static ClientMessage EncodeMemberEvent(Hazelcast.Core.Member member, int eventType)
+        public static ClientMessage EncodeMemberEvent(Core.IMember member, int eventType)
         {
             int dataSize = ClientMessage.HeaderSize;
                 dataSize += MemberCodec.CalculateDataSize(member);
@@ -71,7 +72,7 @@ namespace Hazelcast.Client.Protocol.Codec
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
-        public static ClientMessage EncodeMemberSetEvent(ISet<Hazelcast.Core.Member> members)
+        public static ClientMessage EncodeMemberSetEvent(ISet<Core.IMember> members)
         {
             int dataSize = ClientMessage.HeaderSize;
                 dataSize += Bits.IntSizeInBytes;
@@ -91,7 +92,7 @@ namespace Hazelcast.Client.Protocol.Codec
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
-        public static ClientMessage EncodeMemberAttributeChangeEvent(Hazelcast.Client.Request.Cluster.MemberAttributeChange memberAttributeChange)
+        public static ClientMessage EncodeMemberAttributeChangeEvent(MemberAttributeChange memberAttributeChange)
         {
             int dataSize = ClientMessage.HeaderSize;
                 dataSize += MemberAttributeChangeCodec.CalculateDataSize(memberAttributeChange);
@@ -111,7 +112,7 @@ namespace Hazelcast.Client.Protocol.Codec
             {
                 int messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventMember) {
-            Hazelcast.Core.Member member = null;
+            Core.IMember member = null;
             member = MemberCodec.Decode(clientMessage);
             int eventType ;
             eventType = clientMessage.GetInt();
@@ -119,11 +120,11 @@ namespace Hazelcast.Client.Protocol.Codec
                     return;
                 }
                 if (messageType == EventMessageConst.EventMemberSet) {
-            ISet<Hazelcast.Core.Member> members = null;
+            ISet<Core.IMember> members = null;
             int members_size = clientMessage.GetInt();
-            members = new HashSet<Hazelcast.Core.Member>();
+            members = new HashSet<Core.IMember>();
             for (int members_index = 0; members_index<members_size; members_index++) {
-                Hazelcast.Core.Member members_item;
+                Core.IMember members_item;
             members_item = MemberCodec.Decode(clientMessage);
                 members.Add(members_item);
             }
@@ -131,7 +132,7 @@ namespace Hazelcast.Client.Protocol.Codec
                     return;
                 }
                 if (messageType == EventMessageConst.EventMemberAttributeChange) {
-            Hazelcast.Client.Request.Cluster.MemberAttributeChange memberAttributeChange = null;
+            MemberAttributeChange memberAttributeChange = null;
             memberAttributeChange = MemberAttributeChangeCodec.Decode(clientMessage);
                     handleMemberAttributeChange(memberAttributeChange);
                     return;
@@ -139,9 +140,9 @@ namespace Hazelcast.Client.Protocol.Codec
                 Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
             }
 
-            public delegate void HandleMember(Hazelcast.Core.Member member, int eventType);
-            public delegate void HandleMemberSet(ISet<Hazelcast.Core.Member> members);
-            public delegate void HandleMemberAttributeChange(Hazelcast.Client.Request.Cluster.MemberAttributeChange memberAttributeChange);
+            public delegate void HandleMember(Core.IMember member, int eventType);
+            public delegate void HandleMemberSet(ISet<Core.IMember> members);
+            public delegate void HandleMemberAttributeChange(MemberAttributeChange memberAttributeChange);
        }
 
     }

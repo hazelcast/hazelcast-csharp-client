@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using Hazelcast.Client.Request.Cluster;
+using Hazelcast.Client.Spi;
 using Hazelcast.IO;
 using Hazelcast.Logging;
 

@@ -374,7 +374,6 @@ namespace Hazelcast.Client
             Clients.TryRemove(id, out _out);
             executionService.Shutdown();
             partitionService.Stop();
-            clusterService.Stop();
             connectionManager.Shutdown();
             proxyManager.Destroy();
         }

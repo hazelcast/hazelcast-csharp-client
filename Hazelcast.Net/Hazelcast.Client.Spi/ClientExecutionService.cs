@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Net.Ext;
@@ -8,6 +9,7 @@ namespace Hazelcast.Client.Spi
 {
     internal sealed class ClientExecutionService : IClientExecutionService
     {
+        private readonly TaskFactory _taskFactory = Task.Factory;
         //private ExecutorService executor;
 
         //private ScheduledExecutorService scheduledExecutor;
@@ -35,22 +37,28 @@ namespace Hazelcast.Client.Spi
 
         public Task Submit(Action action)
         {
-            return Task.Factory.StartNew(action);
+            return _taskFactory.StartNew(action);
         }
 
         public Task Submit(Action<object> action, object state)
         {
-            return Task.Factory.StartNew(action, state);
+            return _taskFactory.StartNew(action, state);
         }
 
         public Task<T> Submit<T>(Func<object, T> function)
         {
-            return Task.Factory.StartNew(function, null);
+            return _taskFactory.StartNew(function, null);
         }
 
         public Task<T> Submit<T>(Func<object, T> function, object state)
         {
-            return Task.Factory.StartNew(function, state);
+            return _taskFactory.StartNew(function, state);
+        }
+
+        internal Task SubmitInternal(Action action)
+        {
+            //TODO: should use different thread pool
+            return _taskFactory.StartNew(action);
         }
 
         public Task<object> ScheduleWithFixedDelay(Runnable command, long initialDelay, long period, TimeUnit unit)
@@ -65,13 +73,11 @@ namespace Hazelcast.Client.Spi
             //return scheduledExecutor.Schedule(new _Runnable_65(this, command), delay, unit);
         }
 
-
         public Task<object> ScheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit)
         {
             throw new NotImplementedException();
             //return scheduledExecutor.ScheduleAtFixedRate(new _Runnable_74(this, command), initialDelay, period, unit);
         }
-
 
         public void Shutdown()
         {

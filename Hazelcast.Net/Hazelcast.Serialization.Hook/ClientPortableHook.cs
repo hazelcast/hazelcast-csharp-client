@@ -36,7 +36,6 @@ namespace Hazelcast.Serialization.Hook
             constructors[GenericError] = arg => new GenericError();
             //constructors[Auth] = arg => new AuthenticationRequest();
             constructors[Principal] = arg => new ClientPrincipal();
-            constructors[DistributedObjectInfo] = arg => new DistributedObjectInfo();
             //constructors[GetDistributedObjectInfo] = arg => new GetDistributedObjectsRequest();
             //constructors[CreateProxy] = arg => new ClientCreateRequest();
             //constructors[DestroyProxy] = arg => new ClientDestroyRequest();

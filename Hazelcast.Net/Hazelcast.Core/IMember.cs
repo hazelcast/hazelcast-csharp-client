@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Net;
-using Hazelcast.Client.Request.Cluster;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 

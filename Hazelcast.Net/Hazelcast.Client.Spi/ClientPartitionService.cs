@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
 using Hazelcast.IO;
@@ -14,42 +15,42 @@ namespace Hazelcast.Client.Spi
 {
     internal sealed class ClientPartitionService : IClientPartitionService
     {
-        private static readonly ILogger logger = Logger.GetLogger(typeof (IClientPartitionService));
-        private readonly HazelcastClient client;
-        private readonly ConcurrentDictionary<int, Address> partitions = new ConcurrentDictionary<int, Address>();
-        private readonly AtomicBoolean updating = new AtomicBoolean(false);
-        private volatile int partitionCount;
-        private Thread partitionThread;
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientPartitionService));
+        private readonly HazelcastClient _client;
+        private readonly ConcurrentDictionary<int, Address> _partitions = new ConcurrentDictionary<int, Address>();
+        private readonly AtomicBoolean _updating = new AtomicBoolean(false);
+        private volatile int _partitionCount;
+        private Thread _partitionThread;
 
         public ClientPartitionService(HazelcastClient client)
         {
-            this.client = client;
+            _client = client;
         }
 
         public void Start()
         {
             GetInitialPartitions();
 
-            partitionThread = new Thread(RefreshPartitionsWithFixedDelay) {IsBackground = true};
-            partitionThread.Start();
+            _partitionThread = new Thread(RefreshPartitionsWithFixedDelay) {IsBackground = true};
+            _partitionThread.Start();
         }
 
         public void Stop()
         {
             try
             {
-                partitionThread.Abort();
+                _partitionThread.Abort();
             }
             catch (Exception e)
             {
-                logger.Finest("Shut down partition refresher thread problem...");
+                Logger.Finest("Shut down partition refresher thread problem...", e);
             }
-            partitions.Clear();
+            _partitions.Clear();
         }
 
         public void RefreshPartitions()
         {
-            partitionThread.Interrupt();
+            _partitionThread.Interrupt();
         }
 
         private void RefreshPartitionsWithFixedDelay()
@@ -63,21 +64,21 @@ namespace Hazelcast.Client.Spi
                 }
                 catch (ThreadInterruptedException)
                 {
-                    logger.Finest("Partition Refresher thread wakes up");
+                    Logger.Finest("Partition Refresher thread wakes up");
                 }
             }
         }
 
         private void __RefreshPartitions()
         {
-            logger.Finest("Refresh Partitions at " + DateTime.Now.ToLocalTime());
-            if (updating.CompareAndSet(false, true))
+            Logger.Finest("Refresh Partitions at " + DateTime.Now.ToLocalTime());
+            if (_updating.CompareAndSet(false, true))
             {
                 try
                 {
-                    var clusterService = client.GetClientClusterService();
+                    var clusterService = _client.GetClientClusterService();
                     var master = clusterService.GetMasterAddress();
-                    var response = GetPartitionsFrom((ClientClusterService) clusterService, master);
+                    var response = GetPartitionsFrom(master);
                     if (response != null)
                     {
                         ProcessPartitionResponse(response);
@@ -88,27 +89,27 @@ namespace Hazelcast.Client.Spi
                 }
                 catch (Exception e)
                 {
-                    logger.Warning(e);
+                    Logger.Warning(e);
                 }
                 finally
                 {
-                    updating.Set(false);
+                    _updating.Set(false);
                 }
             }
         }
 
         private void GetInitialPartitions()
         {
-            var clusterService = client.GetClientClusterService();
+            var clusterService = _client.GetClientClusterService();
             var memberList = clusterService.GetMemberList();
             foreach (var member in memberList)
             {
                 var target = member.GetAddress();
                 if (target == null)
                 {
-                    logger.Severe("Address cannot be null");
+                    Logger.Severe("Address cannot be null");
                 }
-                var response = GetPartitionsFrom((ClientClusterService) clusterService, target);
+                var response = GetPartitionsFrom(target);
                 if (response != null)
                 {
                     ProcessPartitionResponse(response);
@@ -119,23 +120,22 @@ namespace Hazelcast.Client.Spi
             throw new InvalidOperationException("Cannot get initial partitions!");
         }
 
-        private ClientGetPartitionsCodec.ResponseParameters GetPartitionsFrom(ClientClusterService clusterService,
-            Address address)
+        private ClientGetPartitionsCodec.ResponseParameters GetPartitionsFrom(Address address)
         {
             try
             {
                 var request = ClientGetPartitionsCodec.EncodeRequest();
-                var task = client.GetInvocationService().InvokeOnTarget(request, address);
+                var task = _client.GetInvocationService().InvokeOnTarget(request, address);
                 var result = ThreadUtil.GetResult(task, 150000);
                 return ClientGetPartitionsCodec.DecodeResponse(result);
             }
             catch (TimeoutException e)
             {
-                logger.Finest("Operation timed out while fetching cluster partition table!", e);
+                Logger.Finest("Operation timed out while fetching cluster partition table!", e);
             }
             catch (Exception e)
             {
-                logger.Severe("Error while fetching cluster partition table!", e);
+                Logger.Severe("Error while fetching cluster partition table!", e);
             }
             return null;
         }
@@ -143,40 +143,40 @@ namespace Hazelcast.Client.Spi
         private void ProcessPartitionResponse(ClientGetPartitionsCodec.ResponseParameters response)
         {
             var partitionResponse = response.partitions;
-            partitions.Clear();
+            _partitions.Clear();
             foreach (var entry in partitionResponse)
             {
                 var address = entry.Key;
                 foreach (var partition in entry.Value)
                 {
-                    partitions.TryAdd(partition, address);
+                    _partitions.TryAdd(partition, address);
                 }
             }
-            partitionCount = partitions.Count;
+            _partitionCount = _partitions.Count;
         }
 
         internal class Partition : IPartition
         {
-            private readonly HazelcastClient client;
-            private readonly int partitionId;
+            private readonly HazelcastClient _client;
+            private readonly int _partitionId;
 
             public Partition(HazelcastClient client, int partitionId)
             {
-                this.client = client;
-                this.partitionId = partitionId;
+                _client = client;
+                _partitionId = partitionId;
             }
 
             public int GetPartitionId()
             {
-                return partitionId;
+                return _partitionId;
             }
 
             public IMember GetOwner()
             {
-                var owner = client.GetPartitionService().GetPartitionOwner(partitionId);
+                var owner = _client.GetPartitionService().GetPartitionOwner(_partitionId);
                 if (owner != null)
                 {
-                    return client.GetClientClusterService().GetMember(owner);
+                    return _client.GetClientClusterService().GetMember(owner);
                 }
                 return null;
             }
@@ -184,7 +184,7 @@ namespace Hazelcast.Client.Spi
             public override string ToString()
             {
                 var sb = new StringBuilder("PartitionImpl{");
-                sb.Append("partitionId=").Append(partitionId);
+                sb.Append("partitionId=").Append(_partitionId);
                 sb.Append('}');
                 return sb.ToString();
             }
@@ -195,13 +195,13 @@ namespace Hazelcast.Client.Spi
         public Address GetPartitionOwner(int partitionId)
         {
             Address rtn;
-            partitions.TryGetValue(partitionId, out rtn);
+            _partitions.TryGetValue(partitionId, out rtn);
             return rtn;
         }
 
         internal int GetPartitionId(IData key)
         {
-            var pc = partitionCount;
+            var pc = _partitionCount;
             if (pc <= 0)
             {
                 return 0;
@@ -212,13 +212,13 @@ namespace Hazelcast.Client.Spi
 
         public int GetPartitionId(object key)
         {
-            var data = client.GetSerializationService().ToData(key);
+            var data = _client.GetSerializationService().ToData(key);
             return GetPartitionId(data);
         }
 
         public int GetPartitionCount()
         {
-            return partitionCount;
+            return _partitionCount;
         }
 
         #endregion

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
@@ -12,64 +11,59 @@ using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
+using Hazelcast.Security;
 using Hazelcast.Util;
-using ICredentials = Hazelcast.Security.ICredentials;
 
 namespace Hazelcast.Client.Connection
 {
     internal class ClientConnectionManager : IClientConnectionManager
     {
-        #region fields
-
+        public const int DefaultEventThreadCount = 3;
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientConnectionManager));
         public static int RetryCount = 20;
         public static int RetryWaitTime = 250;
-        public const int DefaultEventThreadCount = 3;
-        private static readonly ILogger logger = Logger.GetLogger(typeof (IClientConnectionManager));
 
-        private readonly ConcurrentDictionary<Address, ClientConnection> _addresses = new ConcurrentDictionary<Address, ClientConnection>();
-        private readonly ConcurrentDictionary<string, int> _registrationMap = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentDictionary<string, string> _registrationAliasMap = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<Address, ClientConnection> _addresses =
+            new ConcurrentDictionary<Address, ClientConnection>();
 
-        //private readonly LinkedList<ClientConnection> _clientConnections =new LinkedList<ClientConnection>();
+        private readonly HazelcastClient _client;
 
-        private readonly StripedTaskScheduler _taskScheduler;
+        private readonly ConcurrentBag<IConnectionListener> _connectionListeners =
+            new ConcurrentBag<IConnectionListener>();
 
+        private readonly object _connectionMutex = new object();
         private readonly ICredentials _credentials;
 
+        private readonly ConcurrentBag<IConnectionHeartbeatListener> _heatHeartbeatListeners =
+            new ConcurrentBag<IConnectionHeartbeatListener>();
+
+        private readonly ClientNetworkConfig _networkConfig;
         private readonly bool _redoOperation;
+
+        private readonly ConcurrentDictionary<string, string> _registrationAliasMap =
+            new ConcurrentDictionary<string, string>();
+
+        private readonly ConcurrentDictionary<string, int> _registrationMap = new ConcurrentDictionary<string, int>();
+        private readonly Router _router;
         private readonly bool _smartRouting;
-
-        private readonly Authenticator authenticator;
-        private readonly HazelcastClient client;
-        private readonly Router router;
-
-        private readonly ISocketInterceptor socketInterceptor;
-        private ClientNetworkConfig _networkConfig;
+        private readonly ISocketInterceptor _socketInterceptor;
+        private readonly StripedTaskScheduler _taskScheduler;
+        private Thread _heartBeatThread;
         private volatile bool _live;
-
         private volatile int _nextConnectionId;
-        LinkedListNode<ClientConnection> nextConnectionNode = null;
+        private LinkedListNode<ClientConnection> _nextConnectionNode = null;
         //private volatile int _whoisnextId;
 
-        private volatile ClientConnection _ownerConnection;
-        private volatile ClientPrincipal principal;
-
-        private Thread _heartBeatThread;
-
-        private object _connectionMutex = new object();
-
-        #endregion
+        private volatile ClientPrincipal _principal;
 
         public ClientConnectionManager(HazelcastClient client, LoadBalancer loadBalancer, bool smartRouting = true)
         {
-            this.client = client;
-            authenticator = ClusterAuthenticator;
-            router = new Router(loadBalancer);
+            _client = client;
+            _router = new Router(loadBalancer);
             _smartRouting = smartRouting;
 
-            ClientConfig config = client.GetClientConfig();
+            var config = client.GetClientConfig();
 
             _networkConfig = config.GetNetworkConfig();
 
@@ -77,13 +71,13 @@ namespace Hazelcast.Client.Connection
             _credentials = config.GetCredentials();
 
             //init socketInterceptor
-            SocketInterceptorConfig sic = config.GetNetworkConfig().GetSocketInterceptorConfig();
+            var sic = config.GetNetworkConfig().GetSocketInterceptorConfig();
             if (sic != null && sic.IsEnabled())
             {
                 //TODO SOCKET INTERCEPTOR
                 throw new NotImplementedException("Socket Interceptor not Implemented!!!");
             }
-            socketInterceptor = null;
+            _socketInterceptor = null;
 
             var eventTreadCount = ReadEnvironmentVar("hazelcast.client.event.thread.count");
             eventTreadCount = eventTreadCount > 0 ? eventTreadCount : DefaultEventThreadCount;
@@ -106,25 +100,10 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private int ReadEnvironmentVar(string var)
+        public StripedTaskScheduler TaskScheduler
         {
-            int p = 0;
-            var param = Environment.GetEnvironmentVariable(var);
-            try
-            {
-                if (param != null)
-                {
-                    p = Convert.ToInt32(param, 10);
-                }
-            }
-            catch (Exception)
-            {
-                logger.Warning("Provided value is not a valid value : " + param);
-            }
-            return p;
+            get { return _taskScheduler; }
         }
-
-        #region IConnectionManager
 
         public void Start()
         {
@@ -133,7 +112,6 @@ namespace Hazelcast.Client.Connection
                 return;
             }
             _live = true;
-            InitOwnerConnection();
             //start HeartBeat
             _heartBeatThread = new Thread(HearthBeatLoop)
             {
@@ -167,26 +145,16 @@ namespace Hazelcast.Client.Connection
                     }
                     catch (Exception)
                     {
-                        logger.Finest("Exception during closing connection on shutdown");
+                        Logger.Finest("Exception during closing connection on shutdown");
                     }
                 }
-                try
-                {
-                    _ownerConnection.Close();
-                }
-                catch (Exception)
-                {
-                    logger.Finest("Exception during closing owner connection on shutdown");
-                }
-                //_ownerConnection = null;
 
                 _taskScheduler.Dispose();
             }
             catch (Exception e)
             {
-                logger.Warning(e.Message);
+                Logger.Warning(e.Message);
             }
-            _live = _ownerConnection != null && _ownerConnection.Live;
             return _live;
         }
 
@@ -194,132 +162,131 @@ namespace Hazelcast.Client.Connection
         {
             get { return _live; }
         }
-        public bool OwnerLive
-        {
-            get { return _ownerConnection != null && _ownerConnection.Live; }
-        }
 
         public Address BindToRandomAddress()
         {
             CheckLive();
-            Address address = router.Next();
-            return _GetOrConnectWithRetry(address).GetRemoteEndpoint();
+            var address = _router.Next();
+            return GetOrConnectWithRetry(address).GetRemoteEndpoint();
         }
 
-        public object SendAndReceiveFromOwner(IClientMessage clientRequest)
+        public void AddConnectionListener(IConnectionListener connectionListener)
         {
-            if (_ownerConnection != null)
+            _connectionListeners.Add(connectionListener);
+        }
+
+        public void AddConnectionHeartBeatListener(IConnectionHeartbeatListener connectonHeartbeatListener)
+        {
+            _heatHeartbeatListeners.Add(connectonHeartbeatListener);
+        }
+
+        public Task<IClientMessage> Send(IClientMessage request)
+        {
+            return Send(request, null, -1);
+        }
+
+        public Task<IClientMessage> Send(IClientMessage request, Address target)
+        {
+            return Send(request, target, -1);
+        }
+
+        public Task<IClientMessage> Send(IClientMessage request, Address target, int partitionId)
+        {
+            var clientConnection = GetOrConnectWithRetry(target);
+            return clientConnection.Send(request, partitionId);
+        }
+
+        public Task<IClientMessage> SendAndHandle(IClientMessage request, DistributedEventHandler handler)
+        {
+            return SendAndHandle(request, null, handler);
+        }
+
+        public Task<IClientMessage> SendAndHandle(IClientMessage request, Address target,
+            DistributedEventHandler handler)
+        {
+            var clientConnection = GetOrConnectWithRetry(target);
+            return clientConnection.Send(request, handler, -1);
+        }
+
+        public void RegisterListener(string registrationId, int callId)
+        {
+            _registrationAliasMap.TryAdd(registrationId, registrationId);
+            _registrationMap.TryAdd(registrationId, callId);
+        }
+
+        public bool UnregisterListener(string registrationId)
+        {
+            string uuid;
+            if (_registrationAliasMap.TryRemove(registrationId, out uuid))
             {
-                return _ownerConnection.SendAndReceive(clientRequest);
+                int callId;
+                if (_registrationMap.TryRemove(registrationId, out callId))
+                {
+                    return RemoveEventHandler(callId);
+                }
             }
-            throw new HazelcastException("Cannot connect to Cluster");
+            return false;
         }
 
-        public IData ReadFromOwner()
+        public void ReRegisterListener(string uuidregistrationId, string alias, int callId)
         {
-            if (_ownerConnection != null)
+            string oldAlias = null;
+            if (_registrationAliasMap.TryRemove(uuidregistrationId, out oldAlias))
             {
-                return _ownerConnection.Read();
+                int removed;
+                _registrationMap.TryRemove(oldAlias, out removed);
+                _registrationMap.TryAdd(alias, callId);
             }
-            throw new HazelcastException("Cannot connect to Cluster");
+            _registrationAliasMap.TryAdd(uuidregistrationId, alias);
         }
 
-        public void FireConnectionEvent(bool disconnected)
-        {
-            var lifecycleService = (LifecycleService) client.GetLifecycleService();
-            LifecycleEvent.LifecycleState state = disconnected
-                ? LifecycleEvent.LifecycleState.ClientDisconnected
-                : LifecycleEvent.LifecycleState.ClientConnected;
-            lifecycleService.FireLifecycleEvent(state);
-
-            if (disconnected && _ownerConnection != null)
-            {
-                _ownerConnection.Close();
-            }
-        }
-
-        public Address OwnerAddress()
-        {
-           return _ownerConnection != null ? _ownerConnection.GetRemoteEndpoint():null;
-        }
-
-        public Client GetLocalClient()
-        {
-            ClientPrincipal cp = principal;
-            IPEndPoint socketAddress = _ownerConnection != null ? _ownerConnection.GetLocalSocketAddress() : null;
-            string uuid = cp != null ? cp.GetUuid() : null;
-            return new Client(uuid, socketAddress);
-        }
-
-        internal void DestroyConnection(ClientConnection clientConnection)
+        public void DestroyConnection(ClientConnection clientConnection)
         {
             if (clientConnection != null && !clientConnection.Live)
             {
-                 DestroyConnection(clientConnection.GetRemoteEndpoint());
-            }
-        }
-
-        #endregion
-
-        #region ClientConnectionManager Privates
-        private void DestroyConnection(Address address)
-        {
-            lock (_connectionMutex)
-            {
-                if (address != null)
-                {
-                    ClientConnection connection = null;
-                    _addresses.TryRemove(address, out connection);
-                }
+                DestroyConnection(clientConnection.GetRemoteEndpoint());
             }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        /// <exception cref="HazelcastException"></exception>
-        private ClientConnection TryGetNewConnection(Address address, Authenticator _authenticator)
+        public ClientConnection GetOrConnect(Address address, Authenticator authenticator)
         {
-            CheckLive();
-            return GetNewConnection(address, _authenticator, false);
-        }
-
-        private ClientConnection GetNewConnection(Address address, Authenticator _authenticator, bool blocking)
-        {
-            ClientConnection connection = null;
+            if (address == null)
+            {
+                throw new ArgumentException("address");
+            }
+            if (!_smartRouting)
+            {
+                //TODO: What to do here if smart routing is turned off?
+                //address = _ownerConnection.GetRemoteEndpoint();
+            }
             lock (_connectionMutex)
             {
-                try
+                var clientConnection = _addresses.GetOrAdd(address,
+                    address1 =>
+                    {
+                        var connection = TryGetNewConnection(address, authenticator);
+                        FireConnectionListenerEvent(f => f.ConnectionAdded(connection));
+                        return connection;
+                    });
+                if (clientConnection == null)
                 {
-                    int id = blocking ? -1 : _nextConnectionId;
-                    connection = new ClientConnection(this, id, address, _networkConfig, client.GetSerializationService(),
-                        _redoOperation);
-                    if (socketInterceptor != null)
-                    {
-                        socketInterceptor.OnConnect(connection.GetSocket());
-                    }
-                    _authenticator(connection);
-                    if (!blocking)
-                    {
-                        connection.SwitchToNonBlockingMode();
-                        Interlocked.Increment(ref _nextConnectionId);
-                    }
-                    return connection;
+                    Logger.Severe("CONNECTION Cannot be NULL here");
                 }
-                catch (Exception e)
-                {
-                    if (connection != null)
-                    {
-                        connection.Close();
-                    }
-                    ExceptionUtil.Rethrow(e, typeof(IOException));
-                }
+                return clientConnection;
             }
-            return null;
+        }
+
+        public ClientConnection GetConnection(Address address)
+        {
+            ClientConnection connection;
+            return _addresses.TryGetValue(address, out connection) ? connection : null;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        private ClientConnection _GetOrConnectWithRetry(Address target)
+        public ClientConnection GetOrConnectWithRetry(Address target)
         {
-            int count = 0;
+            var count = 0;
             Exception lastError = null;
             var theTarget = target;
             while (count < RetryCount)
@@ -328,13 +295,13 @@ namespace Hazelcast.Client.Connection
                 {
                     if (theTarget == null || !isMember(theTarget))
                     {
-                        theTarget = router.Next();
+                        theTarget = _router.Next();
                     }
                     if (theTarget == null)
                     {
-                        logger.Severe("Address cannot be null here...");
+                        Logger.Severe("Address cannot be null here...");
                     }
-                    return _GetOrConnect(theTarget, authenticator);
+                    return GetOrConnect(theTarget, ClusterAuthenticator);
                 }
                 catch (IOException e)
                 {
@@ -357,142 +324,11 @@ namespace Hazelcast.Client.Connection
             throw lastError;
         }
 
-            
-        private bool isMember(Address target) 
+        public void ReSend(Task task)
         {
-            var clientClusterService = client.GetClientClusterService();
-            return clientClusterService.GetMember(target) != null;
-        }
-
-
-        /// <exception cref="System.IO.IOException"></exception>
-        private ClientConnection _GetOrConnect(Address address, Authenticator _authenticator)
-        {
-            if (address == null)
-            {
-                throw new ArgumentException("address");
-            }
-            if (!_smartRouting)
-            {
-                address = _ownerConnection.GetRemoteEndpoint();
-            }
-            lock (_connectionMutex)
-            {
-
-                ClientConnection clientConnection = _addresses.GetOrAdd(address, address1 =>
-                {
-                    return clientConnection = TryGetNewConnection(address, _authenticator);
-                });
-                if (clientConnection == null)
-                {
-                    logger.Severe("CONNECTION Cannot be NULL here");
-                }
-                return clientConnection;
-            }
-        }
-
-        public bool InitOwnerConnection()
-        {
-            if (_live)
-            {
-                ICollection<IPEndPoint> ipEndPoints = GetEndPoints();
-                _ownerConnection = ConnectToOwner(ipEndPoints);
-                logger.Finest("Owner connection established: " + _ownerConnection);
-            }
-            return _ownerConnection != null;
-        }
-
-        private ClientConnection ConnectToOwner(ICollection<IPEndPoint> socketAddresses)
-        {
-            int connectionAttemptLimit = client.GetClientConfig().GetNetworkConfig().GetConnectionAttemptLimit();
-            int attempt = 0;
-            Exception lastError = null;
-            while (true)
-            {
-                long nextTry = Clock.CurrentTimeMillis() + client.GetClientConfig().GetNetworkConfig().GetConnectionAttemptPeriod();
-                foreach (IPEndPoint isa in socketAddresses)
-                {
-                    var address = new Address(isa);
-                    ClientConnection connection=null;
-                    try
-                    {
-                        connection = GetNewConnection(address, ManagerAuthenticator, true);
-                        _live = true;
-                        FireConnectionEvent(false);
-                        return connection;
-                    }
-                    catch (AuthenticationException e)
-                    {
-                        lastError = e;
-                        logger.Warning("Authentication error during initial connection to " + address, e);
-                    }
-                    catch (Exception e)
-                    {
-                        lastError = e;
-                        logger.Finest("Exception during initial connection to" + address, e);
-                    }
-                    //if (connection != null)
-                    //{
-                    //    connection.Close();
-                    //}
-                }
-                if (attempt++ >= connectionAttemptLimit)
-                {
-                    break;
-                }
-                var remainingTime = (int) (nextTry - Clock.CurrentTimeMillis());
-                logger.Warning(
-                    string.Format("Unable to get alive cluster connection, try in {0} ms later, attempt {1} of{2}.",
-                        Math.Max(0, remainingTime), attempt, connectionAttemptLimit));
-                if (remainingTime > 0)
-                {
-                    try
-                    {
-                        Thread.Sleep(remainingTime);
-                    }
-                    catch (Exception)
-                    {
-                        break;
-                    }
-                }
-            }
-            throw new InvalidOperationException("Unable to connect to any address in the config!", lastError);
-        }
-
-
-        /// <exception cref="System.Exception"></exception>
-        private ICollection<IPEndPoint> GetEndPoints()
-        {
-            ICollection<IMember> memberList = client.GetClientClusterService().GetMemberList();
-
-            List<IPEndPoint> socketAddresses = memberList.Select(member => member.GetSocketAddress()).ToList();
-            var r = new Random();
-            IOrderedEnumerable<IPEndPoint> shuffled = socketAddresses.OrderBy(x => r.Next());
-
-            var ipEndPoints = new List<IPEndPoint>(shuffled);
-
-            var addresses = new HashSet<IPEndPoint>();
-            if (memberList.Count > 0)
-            {
-                addresses.UnionWith(ipEndPoints);
-            }
-            addresses.UnionWith(GetConfigAddresses());
-
-            return addresses;
-        }
-
-        private ICollection<IPEndPoint> GetConfigAddresses()
-        {
-            var socketAddresses = new List<IPEndPoint>();
-            foreach (string address in client.GetClientConfig().GetNetworkConfig().GetAddresses())
-            {
-                ICollection<IPEndPoint> endPoints = AddressHelper.GetSocketAddresses(address);
-                socketAddresses = socketAddresses.Union(endPoints).ToList();
-            }
-
-            var r = new Random();
-            IOrderedEnumerable<IPEndPoint> shuffled = socketAddresses.OrderBy(x => r.Next());
-            return new List<IPEndPoint>(shuffled);
+            var clientConnection = GetOrConnectWithRetry(null);
+            //Console.WriteLine("RESEND TO:"+clientConnection.GetSocket().RemoteEndPoint);
+            clientConnection.Send(task);
         }
 
         /// <exception cref="HazelcastException"></exception>
@@ -504,10 +340,92 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private bool RemoveEventHandler(int callId)
+        private void ClusterAuthenticator(ClientConnection connection)
         {
-            return _addresses.Values.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
-            //return _clientConnections.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
+            var ss = _client.GetSerializationService();
+            var clusterService = (ClientClusterService) _client.GetClientClusterService();
+            var principal = clusterService.GetPrincipal();
+
+            var uuid = principal.GetUuid();
+            var ownerUuid = principal.GetOwnerUuid();
+            ClientMessage request;
+
+            if (_credentials is UsernamePasswordCredentials)
+            {
+                var usernamePasswordCr = (UsernamePasswordCredentials) _credentials;
+                request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
+                    usernamePasswordCr.GetPassword(), uuid, ownerUuid, false,
+                    ClientTypes.Csharp);
+            }
+            else
+            {
+                var data = ss.ToData(_credentials);
+                request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
+                    ClientTypes.Csharp);
+            }
+
+            connection.Init();
+            IClientMessage response;
+            try
+            {
+                response = connection.Send(request, -1).Result;
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
+            var rp = ClientAuthenticationCodec.DecodeResponse(response);
+            connection.SetRemoteEndpoint(rp.address);
+        }
+
+        private void DestroyConnection(Address address)
+        {
+            lock (_connectionMutex)
+            {
+                if (address != null)
+                {
+                    ClientConnection connection = null;
+                    if (_addresses.TryRemove(address, out connection))
+                    {
+                        FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));       
+                    }
+                }
+            }
+        }
+
+        private ClientConnection GetNewConnection(Address address, Authenticator authenticator, bool blocking)
+        {
+            ClientConnection connection = null;
+            lock (_connectionMutex)
+            {
+                try
+                {
+                    var id = blocking ? -1 : _nextConnectionId;
+                    connection = new ClientConnection(this, id, address, _networkConfig,
+                        _client.GetSerializationService(),
+                        _redoOperation);
+                    if (_socketInterceptor != null)
+                    {
+                        _socketInterceptor.OnConnect(connection.GetSocket());
+                    }
+                    authenticator(connection);
+                    if (!blocking)
+                    {
+                        connection.SwitchToNonBlockingMode();
+                        Interlocked.Increment(ref _nextConnectionId);
+                    }
+                    return connection;
+                }
+                catch (Exception e)
+                {
+                    if (connection != null)
+                    {
+                        connection.Close();
+                    }
+                    ExceptionUtil.Rethrow(e, typeof (IOException));
+                }
+            }
+            return null;
         }
 
         private void HearthBeatLoop()
@@ -518,7 +436,11 @@ namespace Hazelcast.Client.Connection
                 {
                     var request = ClientPingCodec.EncodeRequest();
                     var task = clientConnection.Send(request, -1);
-                    var remoteEndPoint = clientConnection.GetSocket() != null ? clientConnection.GetSocket().RemoteEndPoint.ToString() : "CLOSED";
+                    var remoteEndPoint = clientConnection.GetSocket() != null
+                        ? clientConnection.GetSocket().RemoteEndPoint.ToString()
+                        : "CLOSED";
+
+                    //TODO: fire heartbeat stopped event if heartbeat times out
                     try
                     {
                         var result = ThreadUtil.GetResult(task);
@@ -526,7 +448,6 @@ namespace Hazelcast.Client.Connection
                     }
                     catch (Exception)
                     {
-
                         //Console.WriteLine("PING ERROR:" + remoteEndPoint);
                     }
                 }
@@ -541,132 +462,57 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        #endregion
-
-        #region Authenticators
-        private void ClusterAuthenticator(ClientConnection connection)
-        {
-            _Authenticate<object>(connection, _credentials, principal, false);
+        private void FireHeartBeatEvent(Action<IConnectionHeartbeatListener> listenerAction) {
+            foreach (var listener in _heatHeartbeatListeners)
+            {
+                listenerAction(listener);
+            }
         }
 
-        private void ManagerAuthenticator(ClientConnection connection)
+        private void FireConnectionListenerEvent(Action<IConnectionListener> listenerAction)
         {
-            principal = _Authenticate<ClientPrincipal>(connection, _credentials, principal, true);
+            foreach (var listener in _connectionListeners)
+            {
+                listenerAction(listener);
+            }
         }
 
-
-        private T _Authenticate<T>(ClientConnection connection, ICredentials credentials, ClientPrincipal principal, bool firstConnection)
+        private bool isMember(Address target)
         {
-            ISerializationService ss = client.GetSerializationService();
-            var auth = ClientAuthenticationCodec.EncodeRequest(??, ??, principal.GetUuid(), principal.GetOwnerUuid(), ??);
-            connection.InitProtocalData();
-            auth.SetFirstConnection(firstConnection);
-            SerializableCollection coll = null;
+            var clientClusterService = _client.GetClientClusterService();
+            return clientClusterService.GetMember(target) != null;
+        }
+
+        private int ReadEnvironmentVar(string var)
+        {
+            var p = 0;
+            var param = Environment.GetEnvironmentVariable(var);
             try
             {
-                coll = (SerializableCollection)connection.SendAndReceive(auth);
-            }
-            catch (Exception e)
-            {
-                //ignore the exception, it will be handled on next line if coll is null
-            }
-            if (coll == null)
-            {
-                throw new IOException("Retry this");
-            }
-            IEnumerator<IData> enumerator = coll.GetEnumerator();
-            enumerator.MoveNext();
-            if (enumerator.Current != null)
-            {
-                IData addressData = enumerator.Current;
-                var address = ss.ToObject<Address>(addressData);
-                connection.SetRemoteEndpoint(address);
-                enumerator.MoveNext();
-                if (enumerator.Current != null)
+                if (param != null)
                 {
-                    IData principalData = enumerator.Current;
-                    return ss.ToObject<T>(principalData);
+                    p = Convert.ToInt32(param, 10);
                 }
             }
-            throw new AuthenticationException(); //TODO
-        }
-
-        #endregion
-
-        #region IRemotingService
-
-        internal void ReSend(Task task)
-        {
-            ClientConnection clientConnection = _GetOrConnectWithRetry(null);
-            //Console.WriteLine("RESEND TO:"+clientConnection.GetSocket().RemoteEndPoint);
-            clientConnection.Send(task);
-        }
-
-        public Task<IClientMessage> Send(IClientMessage request)
-        {
-            return Send(request, null, -1);
-        }
-
-        public Task<IClientMessage> Send(IClientMessage request, Address target)
-        {
-            return Send(request, target, -1);
-        }
-
-        public Task<IClientMessage> Send(IClientMessage request, Address target, int partitionId)
-        {
-            ClientConnection clientConnection = _GetOrConnectWithRetry(target);
-            return clientConnection.Send(request, partitionId);
-        }
-
-        public Task<IClientMessage> SendAndHandle(IClientMessage request, DistributedEventHandler handler)
-        {
-            return SendAndHandle(request, null, handler);
-        }
-
-        public Task<IClientMessage> SendAndHandle(IClientMessage request, Address target,
-            DistributedEventHandler handler)
-        {
-            ClientConnection clientConnection = _GetOrConnectWithRetry(target);
-            return clientConnection.Send(request, handler, -1);
-        }
-
-        public void RegisterListener(string registrationId, int callId)
-        {
-            _registrationAliasMap.TryAdd(registrationId, registrationId);
-            _registrationMap.TryAdd(registrationId, callId);
-        }
-
-        public bool UnregisterListener(string registrationId)
-        {
-            string uuid;
-            if (_registrationAliasMap.TryRemove(registrationId, out uuid))
+            catch (Exception)
             {
-                int callId ;
-                if (_registrationMap.TryRemove(registrationId, out callId))
-                {
-                    return RemoveEventHandler(callId);
-                }
+                Logger.Warning("Provided value is not a valid value : " + param);
             }
-            return false;
+            return p;
         }
 
-        public void ReRegisterListener(string uuidregistrationId, string alias, int callId)
+        private bool RemoveEventHandler(int callId)
         {
-            string oldAlias = null;
-            if (_registrationAliasMap.TryRemove(uuidregistrationId, out oldAlias))
-            {
-                int removed;
-                _registrationMap.TryRemove(oldAlias,out removed);
-                _registrationMap.TryAdd(alias, callId);
-            }
-            _registrationAliasMap.TryAdd(uuidregistrationId, alias);
+            return _addresses.Values.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
+            //return _clientConnections.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
         }
 
-        #endregion
-
-        public StripedTaskScheduler TaskScheduler
+        /// <exception cref="System.IO.IOException"></exception>
+        /// <exception cref="HazelcastException"></exception>
+        private ClientConnection TryGetNewConnection(Address address, Authenticator _authenticator)
         {
-            get { return _taskScheduler; }
+            CheckLive();
+            return GetNewConnection(address, _authenticator, false);
         }
     }
 }

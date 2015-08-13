@@ -69,6 +69,8 @@
   <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
   <ItemGroup>
     <Compile Include="Hazelcast.Client.Connection\ClientConnectionManager.cs" />
+    <Compile Include="Hazelcast.Client.Connection\IConnectionListener.cs" />
+    <Compile Include="Hazelcast.Client.Connection\IConnectionHeartbeatListener.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AddressCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAddAndGetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAlterAndGetCodec.cs" />
@@ -86,6 +88,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongSetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientAddDistributedObjectListenerCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientAuthenticationCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientAuthenticationCustomCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientCreateProxyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientDestroyProxyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientGetDistributedObjectCodec.cs" />
@@ -316,8 +319,9 @@
     <Compile Include="Hazelcast.Client.Protocol\IClientMessage.cs" />
     <Compile Include="Hazelcast.Client.Protocol\ResponseMessageConst.cs" />
     <Compile Include="Hazelcast.Client.Proxy\AbstractClientCollectionProxy.cs" />
-    <Compile Include="Hazelcast.Client.Request.Cluster\MemberAttributeChange.cs" />
-    <Compile Include="Hazelcast.Client.Request.Cluster\MemberAttributeOperationType.cs" />
+    <Compile Include="Hazelcast.Client.Spi\MemberAttributeChange.cs" />
+    <Compile Include="Hazelcast.Client.Spi\MemberAttributeOperationType.cs" />
+    <Compile Include="Hazelcast.Client.Spi\ClientMembershipListener.cs" />
     <Compile Include="Hazelcast.Client.Spi\IObjectNamespace.cs" />
     <Compile Include="Hazelcast.Client.Spi\IRemotingService.cs" />
     <Compile Include="Hazelcast.Client.Spi\PacketManager.cs" />
@@ -342,7 +346,6 @@
     <Compile Include="Hazelcast.Client.Connection\IClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Connection\ClientConnection.cs" />
     <Compile Include="Hazelcast.Client.Connection\DefaultSocketFactory.cs" />
-    <Compile Include="Hazelcast.Client.Connection\HeartBeatChecker.cs" />
     <Compile Include="Hazelcast.Client.Connection\Router.cs" />
     <Compile Include="Hazelcast.Client.Connection\ISocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Connection\SSLSocketFactory.cs" />
@@ -365,7 +368,6 @@
     <Compile Include="Hazelcast.Client.Proxy\ClientTxnProxy.cs" />
     <Compile Include="Hazelcast.Client.Proxy\ClientTxnQueueProxy.cs" />
     <Compile Include="Hazelcast.Client.Proxy\ClientTxnSetProxy.cs" />
-    <Compile Include="Hazelcast.Client.Request.Cluster\ClientMembershipEvent.cs" />
     <Compile Include="Hazelcast.Client.Proxy\TransactionContextProxy.cs" />
     <Compile Include="Hazelcast.Client.Proxy\TransactionProxy.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientClusterService.cs" />
@@ -404,7 +406,6 @@
     <Compile Include="Hazelcast.IO\IDataOutput.cs" />
     <Compile Include="Hazelcast.IO\ISocketReadable.cs" />
     <Compile Include="Hazelcast.IO\ISocketWritable.cs" />
-    <Compile Include="Hazelcast.IO\Packet.cs" />
     <Compile Include="Hazelcast.Logging\LogLevel.cs" />
     <Compile Include="Hazelcast.Logging\ConsoleLogFactory.cs" />
     <Compile Include="Hazelcast.Logging\TraceLogFactory.cs" />
@@ -576,7 +577,6 @@
     <Compile Include="Hazelcast.Security\UsernamePasswordCredentials.cs" />
     <Compile Include="Hazelcast.Serialization.Hook\AtomicLongDataSerializerHook.cs" />
     <Compile Include="Hazelcast.Serialization.Hook\ClientTxnPortableHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\ClusterDataSerializerHook.cs" />
     <Compile Include="Hazelcast.Serialization.Hook\CollectionDataSerializerHook.cs" />
     <Compile Include="Hazelcast.Serialization.Hook\CountDownLatchDataSerializerHook.cs" />
     <Compile Include="Hazelcast.Serialization.Hook\ExecutorDataSerializerHook.cs" />

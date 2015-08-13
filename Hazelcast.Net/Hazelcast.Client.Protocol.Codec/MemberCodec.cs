@@ -43,12 +43,12 @@ namespace Hazelcast.Client.Protocol.Codec
 			return new Member(address, uuid, attributes);
 		}
 
-		public static void Encode(Member member, ClientMessage clientMessage)
+		public static void Encode(IMember member, ClientMessage clientMessage)
 		{
 			//NOT REQUIRED ON CLIENT
 		}
 
-		public static int CalculateDataSize(Member member)
+		public static int CalculateDataSize(IMember member)
 		{
 			throw new NotSupportedException("should not be called on client side");
 		}

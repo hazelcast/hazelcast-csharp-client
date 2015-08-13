@@ -255,7 +255,7 @@ namespace Hazelcast.Client.Protocol
         /// <summary>Sets the correlation id field.</summary>
         /// <param name="correlationId">The value to set in the correlation id field.</param>
         /// <returns>The ClientMessage with the new correlation id field value.</returns>
-        public virtual ClientMessage SetCorrelationId(int correlationId)
+        public virtual IClientMessage SetCorrelationId(int correlationId)
         {
             Int32Set(CorrelationIdFieldOffset, correlationId);
             return this;
