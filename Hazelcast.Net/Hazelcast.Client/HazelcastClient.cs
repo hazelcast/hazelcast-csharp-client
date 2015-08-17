@@ -316,6 +316,7 @@ namespace Hazelcast.Client
             lifecycleService.SetStarted();
             try
             {
+                connectionManager.Start();
                 clusterService.Start();
             }
             catch (InvalidOperationException e)

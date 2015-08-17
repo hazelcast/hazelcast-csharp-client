@@ -284,6 +284,7 @@ namespace Hazelcast.Client.Connection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
+        /// TODO: move logic to ClientInvocationService, single retry mechanism in invocation
         public ClientConnection GetOrConnectWithRetry(Address target)
         {
             var count = 0;
@@ -393,14 +394,14 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private ClientConnection GetNewConnection(Address address, Authenticator authenticator, bool blocking)
+        private ClientConnection GetNewConnection(Address address, Authenticator authenticator)
         {
             ClientConnection connection = null;
             lock (_connectionMutex)
             {
                 try
                 {
-                    var id = blocking ? -1 : _nextConnectionId;
+                    var id = _nextConnectionId;
                     connection = new ClientConnection(this, id, address, _networkConfig,
                         _client.GetSerializationService(),
                         _redoOperation);
@@ -408,12 +409,9 @@ namespace Hazelcast.Client.Connection
                     {
                         _socketInterceptor.OnConnect(connection.GetSocket());
                     }
+                    connection.SwitchToNonBlockingMode();
                     authenticator(connection);
-                    if (!blocking)
-                    {
-                        connection.SwitchToNonBlockingMode();
-                        Interlocked.Increment(ref _nextConnectionId);
-                    }
+                    Interlocked.Increment(ref _nextConnectionId);
                     return connection;
                 }
                 catch (Exception e)
@@ -509,10 +507,10 @@ namespace Hazelcast.Client.Connection
 
         /// <exception cref="System.IO.IOException"></exception>
         /// <exception cref="HazelcastException"></exception>
-        private ClientConnection TryGetNewConnection(Address address, Authenticator _authenticator)
+        private ClientConnection TryGetNewConnection(Address address, Authenticator authenticator)
         {
             CheckLive();
-            return GetNewConnection(address, _authenticator, false);
+            return GetNewConnection(address, authenticator);
         }
     }
 }

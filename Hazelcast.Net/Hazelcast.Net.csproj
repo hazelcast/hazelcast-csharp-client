@@ -383,7 +383,6 @@
     <Compile Include="Hazelcast.Client.Spi\IClientProxyFactory.cs" />
     <Compile Include="Hazelcast.Client.Spi\ObjectNamespace.cs" />
     <Compile Include="Hazelcast.Client.Spi\PortableCollection.cs" />
-    <Compile Include="Hazelcast.Client.Spi\PortableDistributedObjectEvent.cs" />
     <Compile Include="Hazelcast.Client.Spi\PortableEntryEvent.cs" />
     <Compile Include="Hazelcast.Client.Spi\PortableItemEvent.cs" />
     <Compile Include="Hazelcast.Client.Spi\ProxyManager.cs" />

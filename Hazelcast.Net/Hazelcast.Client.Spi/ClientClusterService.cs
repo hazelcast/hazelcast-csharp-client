@@ -347,7 +347,7 @@ namespace Hazelcast.Client.Spi
                 }
             }
             throw new InvalidOperationException("Unable to connect to any address in the config! " +
-                                                "The following addresses were tried:" + triedAddresses);
+                                                "The following addresses were tried:" + string.Join(", ", triedAddresses));
         }
 
         private void FireConnectionEvent(LifecycleEvent.LifecycleState state)
@@ -421,7 +421,7 @@ namespace Hazelcast.Client.Spi
             {
                 var usernamePasswordCr = (UsernamePasswordCredentials) _credentials;
                 request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
-                    usernamePasswordCr.GetPassword(), uuid, ownerUuid, false,
+                    usernamePasswordCr.GetPassword(), uuid, ownerUuid, true,
                     ClientTypes.Csharp);
             }
             else

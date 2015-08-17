@@ -35,7 +35,6 @@ namespace Hazelcast.Client.Connection
         private readonly bool _redoOperations;
         private readonly ConcurrentDictionary<int, Task> _requestTasks = new ConcurrentDictionary<int, Task>();
         private readonly ByteBuffer _sendBuffer;
-        private readonly ISerializationService _serializationService;
         private readonly BlockingCollection<ISocketWritable> _writeQueue = new BlockingCollection<ISocketWritable>();
         private int _callIdCounter = 1;
         private volatile Socket _clientSocket;
@@ -57,7 +56,6 @@ namespace Hazelcast.Client.Connection
             var socketOptions = clientNetworkConfig.GetSocketOptions();
             var socketFactory = socketOptions.GetSocketFactory();
 
-            _serializationService = serializationService;
             if (socketFactory == null)
             {
                 socketFactory = new DefaultSocketFactory();
@@ -198,6 +196,7 @@ namespace Hazelcast.Client.Connection
 
         public Task<IClientMessage> Send(IClientMessage clientRequest, DistributedEventHandler handler, int partitionId)
         {
+            clientRequest.AddFlag(ClientMessage.BeginAndEndFlags);
             var taskData = new TaskData(clientRequest, null, handler, partitionId);
             //create task
             var task = new Task<IClientMessage>(taskObj => ResponseReady((TaskData) taskObj), taskData);
@@ -265,8 +264,7 @@ namespace Hazelcast.Client.Connection
         /// <exception cref="System.IO.IOException"></exception>
         internal void Init()
         {
-            _out.Write(Encoding.UTF8.GetBytes(Protocols.ClientBinary));
-            _out.Write(Encoding.UTF8.GetBytes(ClientTypes.Csharp));
+            _out.Write(Encoding.UTF8.GetBytes(Protocols.ClientBinaryNew));
             _out.Flush();
         }
 
@@ -299,8 +297,8 @@ namespace Hazelcast.Client.Connection
             {
                 return false;
             }
-            if (taskData.IncrementAndGetRetryCount() > ClientConnectionManager.RetryCount ||
-                taskData.Request.SingleConnection) //TODO: taskData.Request.IsRetryable() 
+            if (taskData.IncrementAndGetRetryCount() > ClientConnectionManager.RetryCount)
+//                taskData.Request.SingleConnection) //TODO: a way to ensure transactional requests always get invoked on same connection 
             {
                 return false;
             }
@@ -527,9 +525,10 @@ namespace Hazelcast.Client.Connection
 
             if (taskData.Response != null && response != null)
             {
-                var registrationId = _serializationService.ToObject<string>(taskData.Response); //TODO: Is this right?
-                var alias = _serializationService.ToObject<string>(response);
-                _clientConnectionManager.ReRegisterListener(registrationId, alias, taskData.Request.GetCorrelationId());
+                //TODO: Re-register listener
+//                var registrationId = _serializationService.ToObject<string>(taskData.Response); 
+//                var alias = _serializationService.ToObject<string>(response);
+//                _clientConnectionManager.ReRegisterListener(registrationId, alias, taskData.Request.GetCorrelationId());
                 return;
             }
             ////////////////////////////////////////////

@@ -207,7 +207,7 @@ namespace Hazelcast.Client.Protocol
         /// <summary>Sets the flags field value.</summary>
         /// <param name="flags">The value to set in the flags field.</param>
         /// <returns>The ClientMessage with the new flags field value.</returns>
-        public virtual ClientMessage AddFlag(short flags)
+        public virtual IClientMessage AddFlag(short flags)
         {
             Uint8Put(FlagsFieldOffset, (short) (GetFlags() | flags));
             return this;

@@ -23,11 +23,7 @@ namespace Hazelcast.Serialization.Hook
         public IPortableFactory CreateFactory()
         {
             var constructors = new Func<int, IPortable>[DistributedObjectEvent + 1];
-            constructors[UsernamePwdCred] = arg => new UsernamePasswordCredentials();
-            constructors[Collection] = arg => new PortableCollection();
-            constructors[ItemEvent] = arg => new PortableItemEvent();
-            constructors[EntryEvent] = arg => new PortableEntryEvent();
-            constructors[DistributedObjectEvent] = arg => new PortableDistributedObjectEvent();
+           
             return new ArrayPortableFactory(constructors);
         }
 
