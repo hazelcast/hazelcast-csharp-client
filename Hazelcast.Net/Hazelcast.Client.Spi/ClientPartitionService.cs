@@ -50,7 +50,10 @@ namespace Hazelcast.Client.Spi
 
         public void RefreshPartitions()
         {
-            _partitionThread.Interrupt();
+            if (_partitionThread != null)
+            {
+                _partitionThread.Interrupt();
+            }
         }
 
         private void RefreshPartitionsWithFixedDelay()

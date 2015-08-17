@@ -276,7 +276,13 @@ namespace Hazelcast.Client.Connection
                 return;
             }
             var callId = RegisterCall(task);
-            var clientRequest = (ISocketWritable)taskData.Request; //TODO: fix accessibility
+            var clientRequest = (ClientMessage) taskData.Request; //TODO: fix accessibility
+            clientRequest.AddFlag(ClientMessage.BeginAndEndFlags);
+            if (taskData.PartitionId != -1)
+            {
+                clientRequest.SetPartitionId(taskData.PartitionId);
+            }
+
             //enqueue to write queue
             //Console.clientRequest("SENDING:"+callId);
             if (!WriteAsync(clientRequest))

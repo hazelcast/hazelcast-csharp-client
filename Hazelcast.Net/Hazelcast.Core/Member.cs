@@ -21,12 +21,12 @@ namespace Hazelcast.Core
         }
 
         public Member(Address address)
-            : this(address, null, null)
+            : this(address, null, new Dictionary<string, string>())
         {
         }
 
         public Member(Address address, string uuid)
-            : this(address, uuid, null)
+            : this(address, uuid, new Dictionary<string, string>())
         {
         }
 

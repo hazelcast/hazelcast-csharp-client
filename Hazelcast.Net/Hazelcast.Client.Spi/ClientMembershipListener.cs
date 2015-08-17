@@ -7,6 +7,7 @@ using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
@@ -121,8 +122,10 @@ namespace Hazelcast.Client.Spi
             try
             {
                 var clientMessage = ClientMembershipListenerCodec.EncodeRequest();
+                DistributedEventHandler handler = m => ClientMembershipListenerCodec.AbstractEventHandler
+                    .Handle(m, HandleMember, HandleMemberCollection, HandleMemberAttributeChange);
                 var response =
-                    _client.GetInvocationService().InvokeOnTarget(clientMessage, ownerConnectionAddress).Result;
+                    _client.GetInvocationService().InvokeOnTarget(clientMessage, ownerConnectionAddress, handler).Result;
 
                 //registraiton id is ignored as this listener will never be removed
                 var registirationId = ClientMembershipListenerCodec.DecodeResponse(response).response;

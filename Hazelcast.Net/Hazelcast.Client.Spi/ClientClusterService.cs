@@ -444,6 +444,10 @@ namespace Hazelcast.Client.Spi
             var result = ClientAuthenticationCodec.DecodeResponse(response);
             connection.SetRemoteEndpoint(result.address);
             _principal = new ClientPrincipal(result.uuid, result.ownerUuid);
+
+            // add initial member
+            _clientMembershipListener.HandleMember(new Member(result.address, result.ownerUuid), MembershipEvent.MemberAdded);
         }
+
     }
 }
