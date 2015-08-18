@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                _partitionThread.Abort();
+//                _partitionThread.Abort();
             }
             catch (Exception e)
             {

@@ -1,11 +1,10 @@
 using System;
 using System.Text;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client
 {
-    internal sealed class GenericError :Exception, IPortable
+    internal sealed class GenericError :Exception
     {
         private string name;
         private string message;
@@ -42,34 +41,6 @@ namespace Hazelcast.Client
             this.message = message;
             this.details = details;
             this.type = type;
-        }
-
-        public int GetFactoryId()
-        {
-            return ClientPortableHook.Id;
-        }
-
-        public int GetClassId()
-        {
-            return ClientPortableHook.GenericError;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("n", name);
-            writer.WriteUTF("m", message);
-            writer.WriteUTF("d", details);
-            writer.WriteInt("t", type);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadPortable(IPortableReader reader)
-        {
-            name = reader.ReadUTF("n");
-            message = reader.ReadUTF("m");
-            details = reader.ReadUTF("d");
-            type = reader.ReadInt("t");
         }
 
         public override string ToString()

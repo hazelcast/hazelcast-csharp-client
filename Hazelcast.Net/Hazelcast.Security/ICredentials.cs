@@ -12,7 +12,7 @@ namespace Hazelcast.Security
     ///     <p />
     ///     It is used on authentication process by
     /// </remarks>
-    public interface ICredentials : IPortable
+    public interface ICredentials 
     {
         /// <summary>Returns IP address of endpoint.</summary>
         /// <remarks>Returns IP address of endpoint.</remarks>

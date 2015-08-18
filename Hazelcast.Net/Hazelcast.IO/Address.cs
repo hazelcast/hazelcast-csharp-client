@@ -2,9 +2,6 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using Hazelcast.IO.Serialization;
-using Hazelcast.Serialization.Hook;
 using Hazelcast.Util;
 
 namespace Hazelcast.IO

@@ -382,11 +382,7 @@
     <Compile Include="Hazelcast.Client.Spi\IClientPartitionService.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientProxyFactory.cs" />
     <Compile Include="Hazelcast.Client.Spi\ObjectNamespace.cs" />
-    <Compile Include="Hazelcast.Client.Spi\PortableCollection.cs" />
-    <Compile Include="Hazelcast.Client.Spi\PortableEntryEvent.cs" />
-    <Compile Include="Hazelcast.Client.Spi\PortableItemEvent.cs" />
     <Compile Include="Hazelcast.Client.Spi\ProxyManager.cs" />
-    <Compile Include="Hazelcast.Client.Spi\SerializableCollection.cs" />
     <Compile Include="Hazelcast.Client\AuthenticationException.cs" />
     <Compile Include="Hazelcast.Core\MapEvent.cs" />
     <Compile Include="Hazelcast.Core\MapOperationType.cs" />
@@ -398,6 +394,7 @@
     <Compile Include="Hazelcast.IO.Serialization\ISerializationServiceBuilder.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializerHook.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IVersionedPortable.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\PortableHookLoader.cs" />
     <Compile Include="Hazelcast.IO.Serialization\PortableVersionHelper.cs" />
     <Compile Include="Hazelcast.IO\Bits.cs" />
     <Compile Include="Hazelcast.IO\DynamicByteBuffer.cs" />
@@ -415,7 +412,6 @@
     <Compile Include="Hazelcast.Core\TimeUnit.cs" />
     <Compile Include="Hazelcast.Client\Client.cs" />
     <Compile Include="Hazelcast.Client\ClientNearCache.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\ClientPortableHook.cs" />
     <Compile Include="Hazelcast.Client\ClientPrincipal.cs" />
     <Compile Include="Hazelcast.Client\ClientTypes.cs" />
     <Compile Include="Hazelcast.Client\DistributedObjectInfo.cs" />
@@ -485,7 +481,6 @@
     <Compile Include="Hazelcast.Core\IPartitionAware.cs" />
     <Compile Include="Hazelcast.Core\IPartitioningStrategy.cs" />
     <Compile Include="Hazelcast.Core\IPredicate.cs" />
-    <Compile Include="Hazelcast.Core\RunnableAdapter.cs" />
     <Compile Include="Hazelcast.Core\TerminatedLifecycleService.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ArrayDataSerializableFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ArrayPortableFactory.cs" />
@@ -520,7 +515,6 @@
     <Compile Include="Hazelcast.IO.Serialization\IPortable.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IPortableFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IPortableHook.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\PortableHookLoader.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IPortableReader.cs" />
     <Compile Include="Hazelcast.IO.Serialization\PortableSerializer.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IPortableWriter.cs" />
@@ -557,10 +551,7 @@
     <Compile Include="Hazelcast.Logging\NoLogFactory.cs" />
     <Compile Include="Hazelcast.Map\IEntryBackupProcessor.cs" />
     <Compile Include="Hazelcast.Map\IEntryProcessor.cs" />
-    <Compile Include="Hazelcast.Map\MapEntrySet.cs" />
     <Compile Include="Hazelcast.Map\IMapInterceptor.cs" />
-    <Compile Include="Hazelcast.Map\MapKeySet.cs" />
-    <Compile Include="Hazelcast.Map\MapValueCollection.cs" />
     <Compile Include="Hazelcast.Map\RecordStatistics.cs" />
     <Compile Include="Hazelcast.Map\SimpleEntryView.cs" />
     <Compile Include="Hazelcast.Net.Ext\AtomicBoolean.cs" />
@@ -574,22 +565,6 @@
     <Compile Include="Hazelcast.Security\ICredentials.cs" />
     <Compile Include="Hazelcast.Security\ICredentialsFactory.cs" />
     <Compile Include="Hazelcast.Security\UsernamePasswordCredentials.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\AtomicLongDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\ClientTxnPortableHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\CollectionDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\CountDownLatchDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\ExecutorDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\ExecutorPortableHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\LockDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\MapDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\MultiMapDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\PartitionPortableHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\QueueDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\QueuePortableHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\SemaphoreDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\SpiDataSerializerHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\SpiPortableHook.cs" />
-    <Compile Include="Hazelcast.Serialization.Hook\TopicDataSerializerHook.cs" />
     <Compile Include="Hazelcast.Transaction\ITransactionalObject.cs" />
     <Compile Include="Hazelcast.Transaction\ITransactionalTask.cs" />
     <Compile Include="Hazelcast.Transaction\ITransactionalTaskContext.cs" />
@@ -609,8 +584,6 @@
     <Compile Include="Hazelcast.Util\IterationType.cs" />
     <Compile Include="Hazelcast.Util\License.cs" />
     <Compile Include="Hazelcast.Util\ListenerUtil.cs" />
-    <Compile Include="Hazelcast.Util\QueryResultEntry.cs" />
-    <Compile Include="Hazelcast.Util\QueryResultSet.cs" />
     <Compile Include="Hazelcast.Util\QuickMath.cs" />
     <Compile Include="Hazelcast.Util\RandomLB.cs" />
     <Compile Include="Hazelcast.Util\RoundRobinLB.cs" />
