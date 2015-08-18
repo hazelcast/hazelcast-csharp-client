@@ -33,8 +33,8 @@ namespace Hazelcast.Client.Proxy
 
         public virtual int Size()
         {
-            var request = TransactionalSetSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            return Invoke(request, m => TransactionalSetSizeCodec.DecodeResponse(m).response);
+            var request = TransactionalListSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
+            return Invoke(request, m => TransactionalListSizeCodec.DecodeResponse(m).response);
         }
     }
 }

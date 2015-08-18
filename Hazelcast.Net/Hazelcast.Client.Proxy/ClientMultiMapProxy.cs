@@ -46,7 +46,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
 
             var request = MultiMapRemoveCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
-            var list = Invoke(request, keyData, m => MultiMapRemoveCodec.DecodeResponse(request).list);
+            var list = Invoke(request, keyData, m => MultiMapRemoveCodec.DecodeResponse(m).list);
             return ToList<V>(list);
         }
 
@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Proxy
         {
             var valueData = ToData(value);
             var request = MultiMapContainsValueCodec.EncodeRequest(GetName(), valueData);
-            return Invoke(request, m => MultiMapContainsValueCodec.DecodeResponse(request).response);
+            return Invoke(request, m => MultiMapContainsValueCodec.DecodeResponse(m).response);
         }
 
         public virtual bool ContainsEntry(K key, V value)

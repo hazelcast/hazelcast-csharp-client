@@ -191,7 +191,7 @@ namespace Hazelcast.IO.Serialization
         {
             if (!(@object is IData))
             {
-                return (T)@object;
+                return @object == null ? default(T) : (T) @object;
             }
             IData data = (IData)@object;
             if (IsNullData(data))

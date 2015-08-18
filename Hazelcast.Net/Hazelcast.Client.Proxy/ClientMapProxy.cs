@@ -250,7 +250,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapPutTransientCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(),
                 timeunit.ToMillis(ttl));
             InvalidateNearCacheEntry(keyData);
-            Invoke(request);
+            Invoke(request, keyData);
         }
 
         public V PutIfAbsent(K key, V value)

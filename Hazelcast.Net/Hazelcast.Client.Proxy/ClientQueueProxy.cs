@@ -264,7 +264,7 @@ namespace Hazelcast.Client.Proxy
         public void Clear()
         {
             var request = QueueClearCodec.EncodeRequest(GetName());
-            Invoke(request);
+            Invoke(request, QueueClearCodec.DecodeResponse);
         }
 
         public void CopyTo(E[] array, int arrayIndex)
