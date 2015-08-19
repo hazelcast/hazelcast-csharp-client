@@ -23,7 +23,7 @@ namespace Hazelcast.Util
 
     public delegate void DistributedEventHandler(IClientMessage eventMessage);
 
-    internal delegate string DecodeStartListenerResponse(ClientMessage requestMessage);
-    internal delegate bool DecodeStopListenerResponse(ClientMessage requestMessage);
+    internal delegate string DecodeStartListenerResponse(IClientMessage requestMessage);
+    internal delegate bool DecodeStopListenerResponse(IClientMessage requestMessage);
 
 }

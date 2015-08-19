@@ -2,119 +2,69 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class TransactionalQueueTakeCodec
-	{
-		public static readonly TransactionalQueueMessageType RequestType = TransactionalQueueMessageType.TransactionalqueueTake;
+    internal sealed class TransactionalQueueTakeCodec
+    {
 
-		public const int ResponseType = 105;
+        public static readonly TransactionalQueueMessageType RequestType = TransactionalQueueMessageType.TransactionalQueueTake;
+        public const int ResponseType = 105;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly TransactionalQueueMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly TransactionalQueueMessageType TYPE = RequestType;
+            public string name;
+            public string txnId;
+            public long threadId;
 
-			public string name;
+            public static int CalculateDataSize(string name, string txnId, long threadId)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += ParameterUtil.CalculateDataSize(txnId);
+                dataSize += Bits.LongSizeInBytes;
+                return dataSize;
+            }
+        }
 
-			public string txnId;
+        public static ClientMessage EncodeRequest(string name, string txnId, long threadId)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, txnId, threadId);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.Set(txnId);
+            clientMessage.Set(threadId);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			public long threadId;
+        //************************ RESPONSE *************************//
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name, string txnId, long threadId)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				dataSize += ParameterUtil.CalculateStringDataSize(txnId);
-				dataSize += Bits.LongSizeInBytes;
-				return dataSize;
-			}
-		}
 
-		public static ClientMessage EncodeRequest(string name, string txnId, long threadId)
-		{
-			int requiredDataSize = TransactionalQueueTakeCodec.RequestParameters.CalculateDataSize(name, txnId, threadId);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.Set(txnId);
-			clientMessage.Set(threadId);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public class ResponseParameters
+        {
+            public IData response;
+        }
 
-		public static TransactionalQueueTakeCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			TransactionalQueueTakeCodec.RequestParameters parameters = new TransactionalQueueTakeCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			string txnId;
-			txnId = null;
-			txnId = clientMessage.GetStringUtf8();
-			parameters.txnId = txnId;
-			long threadId;
-			threadId = clientMessage.GetLong();
-			parameters.threadId = threadId;
-			return parameters;
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            IData response = null;
+            bool response_isNull = clientMessage.GetBoolean();
+            if (!response_isNull)
+            {
+            response = clientMessage.GetData();
+            parameters.response = response;
+            }
+            return parameters;
+        }
 
-		public class ResponseParameters
-		{
-			public IData response;
-
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize(IData response)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += Bits.BooleanSizeInBytes;
-				if (response != null)
-				{
-					dataSize += ParameterUtil.CalculateDataSize(response);
-				}
-				return dataSize;
-			}
-		}
-
-		public static ClientMessage EncodeResponse(IData response)
-		{
-			int requiredDataSize = TransactionalQueueTakeCodec.ResponseParameters.CalculateDataSize(response);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			bool response_isNull;
-			if (response == null)
-			{
-				response_isNull = true;
-				clientMessage.Set(response_isNull);
-			}
-			else
-			{
-				response_isNull = false;
-				clientMessage.Set(response_isNull);
-				clientMessage.Set(response);
-			}
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
-
-		public static TransactionalQueueTakeCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			TransactionalQueueTakeCodec.ResponseParameters parameters = new TransactionalQueueTakeCodec.ResponseParameters();
-			IData response;
-			response = null;
-			bool response_isNull = clientMessage.GetBoolean();
-			if (!response_isNull)
-			{
-				response = clientMessage.GetData();
-				parameters.response = response;
-			}
-			return parameters;
-		}
-	}
+    }
 }

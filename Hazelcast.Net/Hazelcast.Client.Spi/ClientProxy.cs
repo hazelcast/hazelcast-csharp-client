@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
@@ -58,7 +58,6 @@ namespace Hazelcast.Client.Spi
             return ListenerUtil.Listen(context, registrationRequest, decodeListenerResponse, partitionKey, handler);
         }
 
-
         protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse decodeListenerResponse, DistributedEventHandler handler)
         {
             return ListenerUtil.Listen(context, registrationRequest, decodeListenerResponse, null, handler);
@@ -85,9 +84,12 @@ namespace Hazelcast.Client.Spi
             this.context = context;
         }
 
-        protected abstract void OnDestroy();
+        protected virtual void OnDestroy()
+        {
+            
+        }
 
-        protected virtual ClientMessage Invoke(IClientMessage request, object key)
+        protected virtual IClientMessage Invoke(IClientMessage request, object key)
         {
             try
             {
@@ -99,7 +101,13 @@ namespace Hazelcast.Client.Spi
             }  
         }
 
-        protected virtual ClientMessage Invoke(IClientMessage request)
+        protected virtual T Invoke<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
+        {
+            var response = Invoke(request, key);
+            return decodeResponse(response);
+        }
+
+        protected virtual IClientMessage Invoke(IClientMessage request)
         {
             try {
                 var task = GetContext().GetInvocationService().InvokeOnRandomTarget(request);
@@ -109,14 +117,76 @@ namespace Hazelcast.Client.Spi
             }  
         }
 
+        protected virtual T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
+        {
+            var response = Invoke(request);
+            return decodeResponse(response);
+        }
+
         protected internal virtual IData ToData(object o)
         {
             return GetContext().GetSerializationService().ToData(o);
         }
 
+        protected ISet<IData> ToDataSet<T>(ICollection<T> c)
+        {
+            ThrowExceptionIfNull(c);
+            var valueSet = new HashSet<IData>();
+            foreach (var o in c)
+            {
+                ThrowExceptionIfNull(o);
+                valueSet.Add(ToData(o));
+            }
+            return valueSet;
+        }
+
+        protected IList<IData> ToDataList<T>(ICollection<T> c)
+        {
+            ThrowExceptionIfNull(c);
+            var values = new List<IData>(c.Count);
+            foreach (var o in c)
+            {
+                ThrowExceptionIfNull(o);
+                values.Add(ToData(o));
+            }
+            return values;
+        }
         protected internal virtual T ToObject<T>(IData data)
         {
             return GetContext().GetSerializationService().ToObject<T>(data);
+        }
+
+        protected internal virtual IList<T> ToList<T>(ICollection<IData> dataList)
+        {
+            var list = new List<T>(dataList.Count);
+            foreach (var data in dataList)
+            {
+                list.Add(ToObject<T>(data));
+            }
+            return list;
+        }
+
+        protected internal virtual ISet<T> ToSet<T>(ICollection<IData> dataList)
+        {
+            var set = new HashSet<T>();
+            foreach (var data in dataList)
+            {
+                set.Add(ToObject<T>(data));
+            }
+            return set;
+        }
+
+        protected internal virtual ISet<KeyValuePair<K, V>> ToEntrySet<K, V>(
+            ICollection<KeyValuePair<IData, IData>> entryCollection)
+        {
+            ISet<KeyValuePair<K, V>> entrySet = new HashSet<KeyValuePair<K, V>>();
+            foreach (var entry in entryCollection)
+            {
+                var key = ToObject<K>(entry.Key);
+                var val = ToObject<V>(entry.Value);
+                entrySet.Add(new KeyValuePair<K, V>(key, val));
+            }
+            return entrySet;
         }
 
         protected internal virtual void ThrowExceptionIfNull(object o)

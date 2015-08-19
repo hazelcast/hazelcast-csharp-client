@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
-using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Protocol.Util;
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Transaction;
-using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -27,54 +21,27 @@ namespace Hazelcast.Client.Connection
     /// <remarks>Holds the clientSocket to one of the members of Hazelcast ICluster.</remarks>
     internal sealed class ClientConnection
     {
-        #region fields
-
-        private static readonly ILogger logger = Logger.GetLogger(typeof (ClientConnection));
-
         public const int BufferSize = 1 << 15; //32k
-        public const int socketReceiveBufferSize = 1 << 15; //32k
-        public const int socketSendBufferSize = 1 << 15; //32k
-
+        public const int SocketReceiveBufferSize = 1 << 15; //32k
+        public const int SocketSendBufferSize = 1 << 15; //32k
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConnection));
+        private readonly ClientMessageBuilder _builder;
+        private readonly ClientConnectionManager _clientConnectionManager;
+        private readonly ConcurrentDictionary<int, Task> _eventTasks = new ConcurrentDictionary<int, Task>();
+        private readonly int _id;
         private readonly ObjectDataInputStream _in;
         private readonly ObjectDataOutputStream _out;
-
-        private readonly int id;
-
-        private volatile Address _endpoint;
-
-        private volatile Socket clientSocket;
-        //private long lastRead = Clock.CurrentTimeMillis();
-
-        private readonly ISerializationService serializationService;
-
-        private readonly ConcurrentDictionary<int, Task> requestTasks = new ConcurrentDictionary<int, Task>();
-
-        private readonly ConcurrentDictionary<int, Task> eventTasks = new ConcurrentDictionary<int, Task>();
-
-        private readonly BlockingCollection<ISocketWritable> writeQueue = new BlockingCollection<ISocketWritable>();
-
+        private readonly ByteBuffer _receiveBuffer;
+        private readonly bool _redoOperations;
+        private readonly ConcurrentDictionary<int, Task> _requestTasks = new ConcurrentDictionary<int, Task>();
+        private readonly ByteBuffer _sendBuffer;
+        private readonly BlockingCollection<ISocketWritable> _writeQueue = new BlockingCollection<ISocketWritable>();
         private int _callIdCounter = 1;
-
-        private readonly bool redoOperations;
-        private readonly ClientConnectionManager _clientConnectionManager;
-
-        private readonly ByteBuffer sendBuffer;
-        private readonly ByteBuffer receiveBuffer;
-
-        //private volatile Packet packet;
-        //private DataAdapter sendDataAdapter;
-
-        private ClientMessageBuilder builder;
-
-        private volatile ISocketWritable lastWritable;
-
-        private volatile bool live = false;
-
-        private Thread writeThread;
-
-        #endregion
-
-        #region CONSTRUCTOR INIT ETC
+        private volatile Socket _clientSocket;
+        private volatile Address _endpoint;
+        private volatile ISocketWritable _lastWritable;
+        private volatile bool _live;
+        private Thread _writeThread;
 
         /// <exception cref="System.IO.IOException"></exception>
         public ClientConnection(ClientConnectionManager clientConnectionManager, int id, Address address,
@@ -82,63 +49,64 @@ namespace Hazelcast.Client.Connection
             ISerializationService serializationService, bool redoOperations)
         {
             _clientConnectionManager = clientConnectionManager;
-            this.id = id;
-            this.redoOperations = redoOperations;
+            _id = id;
+            _redoOperations = redoOperations;
 
-            IPEndPoint isa = address.GetInetSocketAddress();
+            var isa = address.GetInetSocketAddress();
             var socketOptions = clientNetworkConfig.GetSocketOptions();
-            ISocketFactory socketFactory = socketOptions.GetSocketFactory();
+            var socketFactory = socketOptions.GetSocketFactory();
 
-            this.serializationService = serializationService;
             if (socketFactory == null)
             {
                 socketFactory = new DefaultSocketFactory();
             }
-            clientSocket = socketFactory.CreateSocket();
+            _clientSocket = socketFactory.CreateSocket();
             try
             {
-                clientSocket = new Socket(isa.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                _clientSocket = new Socket(isa.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 
                 var lingerOption = new LingerOption(true, 5);
                 if (socketOptions.GetLingerSeconds() > 0)
                 {
                     lingerOption.LingerTime = socketOptions.GetLingerSeconds();
                 }
-                clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lingerOption);
+                _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lingerOption);
 
 
-                clientSocket.NoDelay = socketOptions.IsTcpNoDelay();
+                _clientSocket.NoDelay = socketOptions.IsTcpNoDelay();
 
                 //TODO BURASI NOLCAK
                 //clientSocket.ExclusiveAddressUse SetReuseAddress(options.IsReuseAddress());
 
-                clientSocket.ReceiveTimeout = socketOptions.GetTimeout() > 0 ? socketOptions.GetTimeout() : -1;
+                _clientSocket.ReceiveTimeout = socketOptions.GetTimeout() > 0 ? socketOptions.GetTimeout() : -1;
 
-                int bufferSize = socketOptions.GetBufferSize() * 1024;
+                var bufferSize = socketOptions.GetBufferSize()*1024;
                 if (bufferSize < 0)
                 {
                     bufferSize = BufferSize;
                 }
 
-                clientSocket.SendBufferSize = bufferSize;
-                clientSocket.ReceiveBufferSize = bufferSize;
+                _clientSocket.SendBufferSize = bufferSize;
+                _clientSocket.ReceiveBufferSize = bufferSize;
 
-                clientSocket.UseOnlyOverlappedIO = true;
+                _clientSocket.UseOnlyOverlappedIO = true;
 
                 //clientSocket.Connect(address.GetHost(), address.GetPort());
 
-                var connectionTimeout = clientNetworkConfig.GetConnectionTimeout()>-1?clientNetworkConfig.GetConnectionTimeout():-1;
-                var socketResult = clientSocket.BeginConnect(address.GetHost(), address.GetPort(),null,null);
+                var connectionTimeout = clientNetworkConfig.GetConnectionTimeout() > -1
+                    ? clientNetworkConfig.GetConnectionTimeout()
+                    : -1;
+                var socketResult = _clientSocket.BeginConnect(address.GetHost(), address.GetPort(), null, null);
 
-                socketResult.AsyncWaitHandle.WaitOne(connectionTimeout,true);
-                if (!clientSocket.Connected)
+                socketResult.AsyncWaitHandle.WaitOne(connectionTimeout, true);
+                if (!_clientSocket.Connected)
                 {
                     // NOTE, MUST CLOSE THE SOCKET
-                    clientSocket.Close();
+                    _clientSocket.Close();
                     throw new IOException("Failed to connect server.");
                 }
-                var netStream = new NetworkStream(clientSocket, false);
+                var netStream = new NetworkStream(_clientSocket, false);
                 var bufStream = new BufferedStream(netStream, bufferSize);
 
                 var writer = new BinaryWriter(bufStream);
@@ -147,54 +115,45 @@ namespace Hazelcast.Client.Connection
                 _out = serializationService.CreateObjectDataOutputStream(writer);
                 _in = serializationService.CreateObjectDataInputStream(reader);
 
-                sendBuffer = ByteBuffer.Allocate(BufferSize);
-                receiveBuffer = ByteBuffer.Allocate(BufferSize);
+                _sendBuffer = ByteBuffer.Allocate(BufferSize);
+                _receiveBuffer = ByteBuffer.Allocate(BufferSize);
 
-                builder = new ClientMessageBuilder(HandleClientMessage);
+                _builder = new ClientMessageBuilder(HandleClientMessage);
 
-                live = true;
+                _live = true;
             }
             catch (Exception e)
             {
-                clientSocket.Close();
+                _clientSocket.Close();
                 throw new IOException("Cannot connect!. Socket error:" + e.Message);
             }
         }
 
-        public void SwitchToNonBlockingMode()
+        public bool Live
         {
-            if (clientSocket.Blocking)
-            {
-                sendBuffer.Clear();
-                receiveBuffer.Clear();
-                //clientSocket.Blocking = false;
-                StartAsyncProcess();
-            }
-            //ignore other cases
+            get { return _live; }
+        }
+
+        internal int CurrentCallId
+        {
+            get { return _callIdCounter; }
+        }
+
+        internal int Id
+        {
+            get { return _id; }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        internal void InitProtocalData()
+        public void Close()
         {
-            _out.Write(Encoding.UTF8.GetBytes(Protocols.ClientBinary));
-            _out.Write(Encoding.UTF8.GetBytes(ClientTypes.Csharp));
-            _out.Flush();
+            Logger.Finest("Closing socket" + _id);
+            Release();
         }
 
-        private void StartAsyncProcess()
+        public IPEndPoint GetLocalSocketAddress()
         {
-            BeginRead();
-            writeThread = new Thread(WriteQueueLoop) { IsBackground = true,Priority = ThreadPriority.Highest };
-            writeThread.Start();
-        }
-
-        #endregion
-
-        #region GETTER-SETTER
-
-        public bool Live
-        {
-            get { return live; }
+            return _clientSocket != null ? (IPEndPoint) _clientSocket.LocalEndPoint : null;
         }
 
         public Address GetRemoteEndpoint()
@@ -202,323 +161,32 @@ namespace Hazelcast.Client.Connection
             return _endpoint;
         }
 
-        public void SetRemoteEndpoint(Address address)
-        {
-            _endpoint = address;
-        }
-
-        public IPEndPoint GetLocalSocketAddress()
-        {
-            return clientSocket != null ? (IPEndPoint) clientSocket.LocalEndPoint : null;
-        }
-
-        internal Socket GetSocket()
-        {
-            return clientSocket;
-        }
-
-        internal int CurrentCallId
-        {
-            get { return _callIdCounter;}
-        }
-
-        internal int Id
-        {
-            get { return id;}
-        }
-        #endregion
-
-        #region BLOCKING IO
-
-        private void WriteQueueLoop()
-        {
-            while (!writeQueue.IsAddingCompleted)
-            {
-                try
-                {
-                    if (lastWritable == null)
-                    {
-                        lastWritable = writeQueue.Take();
-                    }
-                }
-                catch (InvalidOperationException)
-                {
-                    //BlockingCollection is empty
-                    if (writeQueue.IsAddingCompleted)
-                    {
-                        return;
-                    }
-                }
-
-                while (sendBuffer.HasRemaining() && lastWritable != null)
-                {
-                    bool complete = lastWritable.WriteTo(sendBuffer);
-                    if (complete)
-                    {
-                        //grap one from queue
-                        ISocketWritable tmp = null;
-                        writeQueue.TryTake(out tmp);
-                        lastWritable = tmp;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                if (sendBuffer.Position > 0)
-                {
-                    sendBuffer.Flip();
-                    try
-                    {
-                        SocketError socketError;
-                        int sendByteSize = clientSocket.Send(
-                            sendBuffer.Array(),
-                            sendBuffer.Position,
-                            sendBuffer.Remaining(),
-                            SocketFlags.None, out socketError);
-
-                        if (sendByteSize <= 0)
-                        {
-                            Close();
-                            return;
-                        }
-
-                        if (socketError != SocketError.Success)
-                        {
-                            logger.Warning("Operation System Level Socket error code:" + socketError);
-                            Close();
-                            return;
-                        }
-
-                        sendBuffer.Position += sendByteSize;
-                        //logger.Info("SEND BUFFER CALLBACK: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
-
-                        //if success case
-                        if (sendBuffer.HasRemaining())
-                        {
-                            sendBuffer.Compact();
-                        }
-                        else
-                        {
-                            sendBuffer.Clear();
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        lastWritable = null;
-                        HandleSocketException(e);
-                    }
-                }
-            }
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        private void Write(IData data)
-        {
-            sendBuffer.Clear();
-            var packet = new Packet(data);
-            packet.WriteTo(sendBuffer);
-            var complete = false;
-            while (!complete)
-            {
-                complete = packet.WriteTo(sendBuffer);
-                sendBuffer.Flip();
-                try
-                {
-                    SocketError socketError;
-                    clientSocket.Send(
-                        sendBuffer.Array(),
-                        sendBuffer.Position,
-                        sendBuffer.Remaining(),
-                        SocketFlags.None, out socketError);
-                }
-                catch (Exception e)
-                {
-                    ExceptionUtil.Rethrow(e);
-                }
-                sendBuffer.Clear();
-            }
-
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public IData Read()
-        {
-            receiveBuffer.Clear();
-            var readFromSocket = true;
-            var packet = new Packet();
-            while (true)
-            {
-                if (readFromSocket)
-                {
-                    try
-                    {
-                        SocketError socketError;
-                        int receivedByteSize =
-                            clientSocket.Receive(
-                                receiveBuffer.Array(),
-                                receiveBuffer.Position,
-                                receiveBuffer.Remaining(),
-                                SocketFlags.None, out socketError);
-                        if (receivedByteSize <= 0)
-                        {
-                            throw new IOException("Remote socket closed!");
-                        }
-                        receiveBuffer.Position += receivedByteSize;
-                        receiveBuffer.Flip();
-                    }
-                    catch (Exception)
-                    {
-                        throw new IOException("Remote socket closed!");
-                    }
-                }
-                bool complete = packet.ReadFrom(receiveBuffer);
-                if (complete)
-                {
-                    return packet.GetData();
-                }
-
-                if (receiveBuffer.HasRemaining())
-                {
-                    readFromSocket = false;
-                    receiveBuffer.Compact();
-                }
-                else
-                {
-                    readFromSocket = true;
-                    receiveBuffer.Clear();
-                } 
-            }
-
-            //var data = new Data();
-            //data.ReadData(_in);
-            //lastRead = Clock.CurrentTimeMillis();
-            //return data;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public object SendAndReceive(ClientRequest clientRequest)
-        {
-            IData request = serializationService.ToData(clientRequest);
-            Write(request);
-            IData responseData = Read();
-
-            var clientResponse = serializationService.ToObject<ClientResponse>(responseData);
-            if (clientResponse.IsError)
-            {
-                var resp = clientResponse.Response;
-                var error = serializationService.ToObject<GenericError>(resp);
-                ExceptionUtil.Rethrow(error);
-            }
-            var response = serializationService.ToObject<object>(clientResponse.Response);
-            return response;
-        }
-
-        #endregion
-
-        #region DISPOSING
-
-        /// <exception cref="System.IO.IOException"></exception>
-        private void Release()
-        {
-            if (!live)
-            {
-                return;
-            }
-            live = false;
-            writeQueue.CompleteAdding();
-
-            if (writeThread != null && writeThread.IsAlive)
-            {
-                writeThread.Interrupt();
-                //writeThread.Join();
-            }
-            if (logger.IsFinestEnabled())
-            {
-                logger.Finest("Closing socket, id:" + id);
-            }
-
-
-            //bool lockTaken = false;
-            //spinLock.Enter(ref lockTaken);
-            //try
-            //{
-            clientSocket.Shutdown(SocketShutdown.Both);
-            clientSocket.Close();
-
-            _out.Close();
-            _in.Close();
-
-            clientSocket = null;
-
-            if (id > -1)
-            {
-                _clientConnectionManager.DestroyConnection(this);
-                RemoveConnectionCalls();
-            }
-            //}
-            //finally
-            //{
-            //    if (lockTaken) spinLock.Exit();
-            //}
-            //GetSocket().Close();
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void Close()
-        {
-            logger.Finest("Closing socket" + id);
-            Release();
-        }
-
         public void RemoveConnectionCalls()
         {
-            logger.Finest("RemoveConnectionCalls id:"+id+" ...START :"+ requestTasks.Count);
-            foreach (var entry in requestTasks)
+            Logger.Finest("RemoveConnectionCalls id:" + _id + " ...START :" + _requestTasks.Count);
+            foreach (var entry in _requestTasks)
             {
                 Task removed;
-                if (requestTasks.TryRemove(entry.Key, out removed))
+                if (_requestTasks.TryRemove(entry.Key, out removed))
                 {
                     HandleRequestTaskAsFailed(removed);
                 }
-                if (eventTasks.TryRemove(entry.Key, out removed))
+                if (_eventTasks.TryRemove(entry.Key, out removed))
                 {
                     HandleRequestTaskAsFailed(removed);
                 }
             }
             //requestTasks.Clear();
 
-            foreach (var entry in eventTasks)
+            foreach (var entry in _eventTasks)
             {
                 Task removed;
-                if (eventTasks.TryRemove(entry.Key, out removed))
+                if (_eventTasks.TryRemove(entry.Key, out removed))
                 {
                     HandleRequestTaskAsFailed(removed);
                 }
             }
             //eventTasks.Clear();
-        }
-
-        #endregion
-
-        #region ASYNC SEND RESEND REGISTER ETC
-
-        public bool WriteAsync(ISocketWritable packet)
-        {
-            if (!live)
-            {
-                if (logger.IsFinestEnabled())
-                {
-                    logger.Finest("Connection is closed, won't write packet -> " + packet);
-                }
-                return false;
-            }
-            return writeQueue.TryAdd(packet);
-            //if (sending.CompareAndSet(false, true))
-            //{
-            //    BeginWrite();
-            //}
-            //return true;
         }
 
         public Task<IClientMessage> Send(IClientMessage clientRequest, int partitionId)
@@ -528,11 +196,76 @@ namespace Hazelcast.Client.Connection
 
         public Task<IClientMessage> Send(IClientMessage clientRequest, DistributedEventHandler handler, int partitionId)
         {
+            clientRequest.AddFlag(ClientMessage.BeginAndEndFlags);
             var taskData = new TaskData(clientRequest, null, handler, partitionId);
             //create task
-            var task = new Task<IClientMessage>(taskObj => ResponseReady((TaskData)taskObj), taskData);
+            var task = new Task<IClientMessage>(taskObj => ResponseReady((TaskData) taskObj), taskData);
             Send(task);
             return task;
+        }
+
+        public void SetRemoteEndpoint(Address address)
+        {
+            _endpoint = address;
+        }
+
+        public void SwitchToNonBlockingMode()
+        {
+            if (_clientSocket.Blocking)
+            {
+                _sendBuffer.Clear();
+                _receiveBuffer.Clear();
+                //clientSocket.Blocking = false;
+                StartAsyncProcess();
+            }
+            //ignore other cases
+        }
+
+        public override string ToString()
+        {
+            var localSocketAddress = GetLocalSocketAddress();
+            if (localSocketAddress != null)
+            {
+                return "Connection [" + _endpoint + " -> " + localSocketAddress + "]";
+            }
+            return "Connection [" + _endpoint + " -> CLOSED ]";
+        }
+
+        public Task UnRegisterEvent(int callId)
+        {
+            Task _task = null;
+            _eventTasks.TryRemove(callId, out _task);
+            return _task;
+        }
+
+        public bool WriteAsync(ISocketWritable packet)
+        {
+            if (!_live)
+            {
+                if (Logger.IsFinestEnabled())
+                {
+                    Logger.Finest("Connection is closed, won't write packet -> " + packet);
+                }
+                return false;
+            }
+            return _writeQueue.TryAdd(packet);
+            //if (sending.CompareAndSet(false, true))
+            //{
+            //    BeginWrite();
+            //}
+            //return true;
+        }
+
+        internal Socket GetSocket()
+        {
+            return _clientSocket;
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        internal void Init()
+        {
+            _out.Write(Encoding.UTF8.GetBytes(Protocols.ClientBinaryNew));
+            _out.Flush();
         }
 
         internal void Send(Task task)
@@ -544,11 +277,15 @@ namespace Hazelcast.Client.Connection
             }
             var callId = RegisterCall(task);
             var clientRequest = taskData.Request;
-            var data = serializationService.ToData(clientRequest);
-            var packet = new Packet(data, taskData.PartitionId);
+            clientRequest.AddFlag(ClientMessage.BeginAndEndFlags);
+            if (taskData.PartitionId != -1)
+            {
+                clientRequest.SetPartitionId(taskData.PartitionId);
+            }
+
             //enqueue to write queue
-            //Console.WriteLine("SENDING:"+callId);
-            if (!WriteAsync(packet))
+            //Console.clientRequest("SENDING:"+callId);
+            if (!WriteAsync((ISocketWritable)clientRequest))
             {
                 UnRegisterCall(callId);
                 UnRegisterEvent(callId);
@@ -556,6 +293,368 @@ namespace Hazelcast.Client.Connection
                 //var genericError = new GenericError("TargetDisconnectedException", "Disconnected:" + GetRemoteEndpoint(), "", 0);
                 HandleRequestTaskAsFailed(task);
             }
+        }
+
+        private bool _ReSend(Task task)
+        {
+            Logger.Finest("ReSending task:" + task.Id);
+            var taskData = task.AsyncState as TaskData;
+            if (taskData == null)
+            {
+                return false;
+            }
+            if (taskData.IncrementAndGetRetryCount() > ClientConnectionManager.RetryCount)
+//                taskData.Request.SingleConnection) //TODO: a way to ensure transactional requests always get invoked on same connection 
+            {
+                return false;
+            }
+            Task.Factory.StartNew(() =>
+            {
+                //while (!_clientConnectionManager.OwnerLive)
+                //{
+                //    Console.WriteLine("WAITING FOR OWNER COME BACK TO RESEND");
+                //    Thread.Sleep(ClientConnectionManager.RetryWaitTime);
+                //}
+                Thread.Sleep(ClientConnectionManager.RetryWaitTime);
+                _clientConnectionManager.ReSend(task);
+            }).ContinueWith(taskResend =>
+            {
+                if (taskResend.IsFaulted && taskResend.Exception != null)
+                {
+                    HandleRequestTaskAsFailed(task);
+                }
+            });
+            return true;
+        }
+
+        private void BeginRead()
+        {
+            if (!CheckLive())
+            {
+                Close();
+                return;
+            }
+            try
+            {
+                try
+                {
+                    //if (ThreadUtil.debug) { Console.Write(" BR:"+id); }
+                    var socketError = SocketError.Success;
+                    //Console.Write(id);
+                    _clientSocket.BeginReceive(
+                        _receiveBuffer.Array(),
+                        _receiveBuffer.Position,
+                        _receiveBuffer.Remaining(),
+                        SocketFlags.None, out socketError, EndReadCallback, null);
+                }
+                catch (Exception e)
+                {
+                    Logger.Severe("Exception at Socket.Read for endPoint: " + GetRemoteEndpoint(), e);
+                    HandleSocketException(e);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Severe("Fatal Error at BeginRead : " + GetRemoteEndpoint(), e);
+                HandleSocketException(e);
+            }
+        }
+
+        private bool CheckLive()
+        {
+            if (!_live)
+            {
+                if (Logger.IsFinestEnabled())
+                {
+                    Logger.Finest("We are being asked to read, but connection is not live so we won't");
+                }
+                return false;
+            }
+            if (!_clientSocket.Connected)
+            {
+                if (Logger.IsFinestEnabled())
+                {
+                    Logger.Finest("We are being asked to read, but connection is not connected...");
+                }
+                Task.Factory.StartNew(Close);
+                return false;
+            }
+            return true;
+        }
+
+        private void EndReadCallback(IAsyncResult asyncResult)
+        {
+            if (_clientSocket == null)
+            {
+                return;
+            }
+            try
+            {
+                //if (ThreadUtil.debug) { Console.Write(" ER"+id); }
+                SocketError socketError;
+                var receivedByteSize = _clientSocket.EndReceive(asyncResult, out socketError);
+
+                if (receivedByteSize <= 0)
+                {
+                    //Socket Closed
+                    Close();
+                }
+
+                if (socketError != SocketError.Success)
+                {
+                    Logger.Warning("Operation System Level Socket error code:" + socketError);
+                    Close();
+                    return;
+                }
+                _receiveBuffer.Position += receivedByteSize;
+                _receiveBuffer.Flip();
+
+                _builder.OnData(_receiveBuffer);
+
+                if (_receiveBuffer.HasRemaining())
+                {
+                    _receiveBuffer.Compact();
+                }
+                else
+                {
+                    _receiveBuffer.Clear();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Severe("Fatal Error at EndReadCallback : " + GetRemoteEndpoint(), e);
+                HandleSocketException(e);
+            }
+            finally
+            {
+                BeginRead();
+            }
+        }
+
+        private void HandleClientMessage(IClientMessage message)
+        {
+            if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
+            {
+                object state = message.GetPartitionId();
+                var eventTask = new Task(o => HandleEventPacket(message), state);
+                eventTask.Start(_clientConnectionManager.TaskScheduler);
+            }
+            else
+            {
+                Task.Factory.StartNew(() => HandleReceivedPacket(message));
+            }
+        }
+
+        private void HandleEventPacket(IClientMessage localPacket)
+        {
+            var clientResponse = localPacket; //serializationService.ToObject<ClientResponse>(response.GetData());
+            var callId = clientResponse.GetCorrelationId();
+            //IData response = clientResponse.GetData();
+            //GenericError error = clientResponse.IsError ? serializationService.ToObject<GenericError>(response) : null;
+            //if (error != null)
+            //{
+            //    logger.Severe("Event Response cannot be an exception :" + error.Name);
+            //}
+            //event handler
+            Task task;
+            _eventTasks.TryGetValue(callId, out task);
+            if (task == null)
+            {
+                //we already unregistered the handler so simply ignore event
+                //logger.Warning("No eventHandler for callId: " + callId + ", event: " + response);
+                return;
+            }
+            var td = task.AsyncState as TaskData;
+            if (td != null && td.Handler != null)
+            {
+                td.Handler(clientResponse);
+            }
+        }
+
+        private void HandleReceivedPacket(IClientMessage response)
+        {
+            var callId = response.GetCorrelationId();
+            //Console.WriteLine("HANDLING RECEIVED:"+callId);
+            //IData response = clientResponse.Response;
+            GenericError error = null;
+
+            //TODO : error handling
+//            if (response.GetMessageType() == ExceptionResultCodec.Type)
+//            {
+//                var er = ExceptionResultCodec.Decode(clientResponse);
+//                error = new GenericError(er.className, er.message, er.stacktrace, 0);
+//            }
+            Task task;
+            if (_requestTasks.TryRemove(callId, out task))
+            {
+                HandleRequestTask(task, response, error);
+            }
+            else
+            {
+                Logger.Finest("No call for callId: " + callId + ", response: " + response);
+            }
+        }
+
+        private void HandleRequestTask(Task task, IClientMessage response, GenericError error)
+        {
+            if (task == null)
+            {
+                Logger.Finest("Task does not exists");
+                return;
+            }
+            var taskData = task.AsyncState as TaskData;
+            if (taskData == null)
+            {
+                Logger.Severe("TaskData cannot be null");
+                return;
+            }
+            if (error != null)
+            {
+                if (error.Name != null && error.Name.Contains("TargetNotMemberException"))
+                {
+                    if (_ReSend(task)) return;
+                }
+                if (error.Name != null && (error.Name.Contains("HazelcastInstanceNotActiveException") ||
+                                           error.Name.Contains("TargetDisconnectedException")))
+                {
+                    if (taskData.Request.IsRetryable() || _redoOperations)
+                    {
+                        if (_ReSend(task)) return;
+                    }
+                }
+            }
+            if (taskData.Response != null && taskData.Handler == null)
+            {
+                Logger.Severe("Response can only be set once!!!");
+                return;
+            }
+
+            if (taskData.Response != null && response != null)
+            {
+                //TODO: Re-register listener
+//                var registrationId = _serializationService.ToObject<string>(taskData.Response); 
+//                var alias = _serializationService.ToObject<string>(response);
+//                _clientConnectionManager.ReRegisterListener(registrationId, alias, taskData.Request.GetCorrelationId());
+                return;
+            }
+            ////////////////////////////////////////////
+
+            UpdateResponse(task, response, error);
+
+            //Response ready, lets run the task to return a Result
+            if (!task.IsCompleted)
+            {
+                task.Start();
+            }
+            else
+            {
+                Logger.Severe("Already started task error");
+            }
+        }
+
+        private void HandleRequestTaskAsFailed(Task task)
+        {
+            GenericError responseGenericError;
+            if (_clientConnectionManager.Live)
+            {
+                responseGenericError = new GenericError("TargetDisconnectedException",
+                    "Disconnected:" + GetRemoteEndpoint(), "", 0);
+            }
+            else
+            {
+                responseGenericError = new GenericError("HazelcastException", "Client is shutting down!!!", "", 0);
+            }
+
+            HandleRequestTask(task, null, responseGenericError);
+        }
+
+        private void HandleSocketException(Exception e)
+        {
+            var se = e as SocketException;
+            if (se != null)
+            {
+                var errorCode = se.ErrorCode;
+                Logger.Warning("Operation System Level Socket error code:" + errorCode);
+            }
+            else
+            {
+                Logger.Warning(e.Message, e);
+            }
+            Close();
+        }
+
+        private int NextCallId()
+        {
+            return Interlocked.Increment(ref _callIdCounter);
+        }
+
+        private int RegisterCall(Task task)
+        {
+            //FIXME make queue size constriant
+            //register task
+            var nextCallId = NextCallId();
+            while (_requestTasks.ContainsKey(nextCallId) || _eventTasks.ContainsKey(nextCallId))
+            {
+                nextCallId = NextCallId();
+            }
+
+            var taskData = task.AsyncState as TaskData;
+            var clientRequest = taskData != null ? taskData.Request : null;
+            clientRequest.SetCorrelationId(nextCallId);
+
+            _requestTasks.TryAdd(nextCallId, task);
+            var td = task.AsyncState as TaskData;
+            if (td != null && td.Handler != null)
+            {
+                _eventTasks.TryAdd(nextCallId, task);
+            }
+            return nextCallId;
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        private void Release()
+        {
+            if (!_live)
+            {
+                return;
+            }
+            _live = false;
+            _writeQueue.CompleteAdding();
+
+            if (_writeThread != null && _writeThread.IsAlive)
+            {
+                _writeThread.Interrupt();
+                //writeThread.Join();
+            }
+            if (Logger.IsFinestEnabled())
+            {
+                Logger.Finest("Closing socket, id:" + _id);
+            }
+
+
+            //bool lockTaken = false;
+            //spinLock.Enter(ref lockTaken);
+            //try
+            //{
+            _clientSocket.Shutdown(SocketShutdown.Both);
+            _clientSocket.Close();
+
+            _out.Close();
+            _in.Close();
+
+            _clientSocket = null;
+
+            if (_id > -1)
+            {
+                _clientConnectionManager.DestroyConnection(this);
+                RemoveConnectionCalls();
+            }
+            //}
+            //finally
+            //{
+            //    if (lockTaken) spinLock.Exit();
+            //}
+            //GetSocket().Close();
         }
 
         /// <summary>
@@ -573,310 +672,21 @@ namespace Hazelcast.Client.Connection
             return taskData.Response;
         }
 
-        private int RegisterCall(Task task)
+        private void StartAsyncProcess()
         {
-            //FIXME make queue size constriant
-            //register task
-            int nextCallId = NextCallId();
-            while (requestTasks.ContainsKey(nextCallId) || eventTasks.ContainsKey(nextCallId))
-            {
-                nextCallId = NextCallId();
-            }
-
-            var taskData = task.AsyncState as TaskData;
-            var clientRequest = taskData != null ? taskData.Request : null;
-            clientRequest.CallId = nextCallId;
-
-            requestTasks.TryAdd(nextCallId, task);
-            var td = task.AsyncState as TaskData;
-            if (td != null && td.Handler != null)
-            {
-                eventTasks.TryAdd(nextCallId, task);
-            }
-            return nextCallId;
+            BeginRead();
+            _writeThread = new Thread(WriteQueueLoop) {IsBackground = true, Priority = ThreadPriority.Highest};
+            _writeThread.Start();
         }
 
         private Task UnRegisterCall(int callId)
         {
             Task _task;
-            requestTasks.TryRemove(callId, out _task);
+            _requestTasks.TryRemove(callId, out _task);
             return _task;
         }
 
-        public Task UnRegisterEvent(int callId)
-        {
-            Task _task = null;
-            eventTasks.TryRemove(callId, out _task);
-            return _task;
-        }
-
-        private bool _ReSend(Task task)
-        {
-            logger.Finest("ReSending task:" + task.Id);
-            var taskData = task.AsyncState as TaskData;
-            if (taskData == null)
-            {
-                return false;
-            }
-            if (taskData.IncrementAndGetRetryCount() > ClientConnectionManager.RetryCount || taskData.Request.SingleConnection)
-            {
-                return false;
-            }
-            Task.Factory.StartNew(() =>
-            {
-
-                //while (!_clientConnectionManager.OwnerLive)
-                //{
-                //    Console.WriteLine("WAITING FOR OWNER COME BACK TO RESEND");
-                //    Thread.Sleep(ClientConnectionManager.RetryWaitTime);
-                //}
-                Thread.Sleep(ClientConnectionManager.RetryWaitTime);
-                _clientConnectionManager.ReSend(task);
-            }).ContinueWith(taskResend =>
-            {
-                if (taskResend.IsFaulted && taskResend.Exception !=null)
-                {
-                    HandleRequestTaskAsFailed(task);
-                }
-            });
-            return true;
-        }
-
-        #endregion
-
-        #region ASYNC PROCESS
-        private void BeginRead()
-        {
-            if (!CheckLive())
-            {               
-                Close();
-                return;
-            }
-            try
-            {
-                try
-                {
-                    //if (ThreadUtil.debug) { Console.Write(" BR:"+id); }
-                    var socketError = SocketError.Success;
-                    //Console.Write(id);
-                    clientSocket.BeginReceive(
-                        receiveBuffer.Array(),
-                        receiveBuffer.Position,
-                        receiveBuffer.Remaining(),
-                        SocketFlags.None, out socketError, EndReadCallback, null);
-                }
-                catch (Exception e)
-                {
-                    logger.Severe("Exception at Socket.Read for endPoint: " + GetRemoteEndpoint(), e);
-                    HandleSocketException(e);
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Severe("Fatal Error at BeginRead : " + GetRemoteEndpoint(), e);
-                HandleSocketException(e);
-            }
-        }
-
-        private void EndReadCallback(IAsyncResult asyncResult)
-        {
-            if (clientSocket == null)
-            {
-                return;
-            }
-            try
-            {
-                //if (ThreadUtil.debug) { Console.Write(" ER"+id); }
-                SocketError socketError;
-                int receivedByteSize = clientSocket.EndReceive(asyncResult, out socketError);
-
-                if (receivedByteSize <= 0)
-                {
-                    //Socket Closed
-                    Close();
-                }
-
-                if (socketError != SocketError.Success)
-                {
-                    logger.Warning("Operation System Level Socket error code:" + socketError);
-                    Close();
-                    return;
-                }
-                receiveBuffer.Position += receivedByteSize;
-                receiveBuffer.Flip();
-
-                builder.OnData(receiveBuffer);
-
-                if (receiveBuffer.HasRemaining())
-                {
-                    receiveBuffer.Compact();
-                }
-                else
-                {
-                    receiveBuffer.Clear();
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Severe("Fatal Error at EndReadCallback : " + GetRemoteEndpoint(), e);
-                HandleSocketException(e);
-            }
-            finally
-            {
-                BeginRead();
-            }
-        }
-
-        private void HandleClientMessage(ClientMessage message)
-        {
-            if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
-            {
-                object state = message.GetPartitionId();
-                var eventTask = new Task(o => HandleEventPacket(message), state);
-                eventTask.Start(_clientConnectionManager.TaskScheduler);
-            }
-            else
-            {
-                Task.Factory.StartNew(() => HandleReceivedPacket(message));
-            }
-        }
-
-        private void HandleReceivedPacket(ClientMessage localPacket)
-        {
-            var clientResponse = localPacket;//serializationService.ToObject<ClientResponse>(localPacket.GetData());
-            int callId = clientResponse.GetCorrelationId();
-            //Console.WriteLine("HANDLING RECEIVED:"+callId);
-            //IData response = clientResponse.Response;
-            GenericError error = null;
-            if (clientResponse.GetMessageType() == ExceptionResultCodec.Type)
-            {
-                var er = ExceptionResultCodec.Decode(clientResponse);
-                error = new GenericError(er.className, er.message, er.stacktrace, 0);
-            }
-            Task task;
-            if (requestTasks.TryRemove(callId, out task))
-            {
-                HandleRequestTask(task, response, error);
-            }
-            else
-            {
-                logger.Finest("No call for callId: " + callId + ", response: " + response);
-            }
-        }
-
-        private void HandleEventPacket(ClientMessage localPacket)
-        {
-            var clientResponse = localPacket;//serializationService.ToObject<ClientResponse>(localPacket.GetData());
-            int callId = clientResponse.GetCorrelationId();
-            //IData response = clientResponse.GetData();
-            //GenericError error = clientResponse.IsError ? serializationService.ToObject<GenericError>(response) : null;
-            //if (error != null)
-            //{
-            //    logger.Severe("Event Response cannot be an exception :" + error.Name);
-            //}
-            //event handler
-            Task task;
-            eventTasks.TryGetValue(callId, out task);
-            if (task == null)
-            {
-                //we already unregistered the handler so simply ignore event
-                //logger.Warning("No eventHandler for callId: " + callId + ", event: " + response);
-                return;
-            }
-            var td = task.AsyncState as TaskData;
-            if (td != null && td.Handler != null)
-            {
-                td.Handler(clientResponse);
-            }
-        }
-
-        private void HandleRequestTaskAsFailed(Task task)
-        {
-            GenericError responseGenericError;
-            if (_clientConnectionManager.Live)
-            {
-                responseGenericError = new GenericError("TargetDisconnectedException", "Disconnected:" + GetRemoteEndpoint(), "", 0);
-            }
-            else
-            {
-                responseGenericError = new GenericError("HazelcastException", "Client is shutting down!!!", "", 0);
-            }
-
-            HandleRequestTask(task, null, responseGenericError);
-        }
-
-        private void HandleRequestTask(Task task, ClientMessage response, GenericError error)
-        {
-            if (task == null)
-            {
-                logger.Finest("Task not exist");
-                return;
-            }
-            var taskData = task.AsyncState as TaskData;
-            if (taskData == null)
-            {
-                logger.Severe("TaskData cannot be null");
-                return;
-            }
-            if (error != null)
-            {
-                if (error.Name !=null && error.Name.Contains("TargetNotMemberException"))
-                {
-                    if (_ReSend(task)) return;
-                }
-                if (error.Name != null && (error.Name.Contains("HazelcastInstanceNotActiveException") ||
-                    error.Name.Contains("TargetDisconnectedException")))
-                {
-                    if (taskData.Request.IsRetryable() || redoOperations)
-                    {
-                        if (_ReSend(task)) return;
-                    }
-                }
-            }
-            if (taskData.Response != null && taskData.Handler == null)
-            {
-                logger.Severe("Response can only be set once!!!");
-                return;
-            }
-
-            if (taskData.Response != null && response != null)
-            {
-                var registrationId = serializationService.ToObject<string>(taskData.Response);
-                var alias = serializationService.ToObject<string>(response);
-                _clientConnectionManager.ReRegisterListener(registrationId, alias, taskData.Request.GetCorrelationId());
-                return;
-            }
-            ////////////////////////////////////////////
-
-            UpdateResponse(task, response, error);
-
-            //Response ready, lets run the task to return a Result
-            if (!task.IsCompleted)
-            {
-                task.Start();
-            }
-            else
-            {
-                logger.Severe("Already started task error");
-            }
-        }
-
-        private void HandleSocketException(Exception e)
-        {
-            var se = e as SocketException;
-            if (se != null)
-            {
-                int errorCode = se.ErrorCode;
-                logger.Warning("Operation System Level Socket error code:" + errorCode);
-            }
-            else
-            {
-                logger.Warning(e.Message, e);
-            }
-            Close();
-        }
-
-        private static void UpdateResponse(Task task, IData response, GenericError error)
+        private static void UpdateResponse(Task task, IClientMessage response, GenericError error)
         {
             var taskData = task.AsyncState as TaskData;
             if (taskData != null)
@@ -886,59 +696,101 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        #endregion
-
-        private int NextCallId()
+        private void WriteQueueLoop()
         {
-            return Interlocked.Increment(ref _callIdCounter);
-        }
-
-        private bool CheckLive()
-        {
-            if (!live)
+            while (!_writeQueue.IsAddingCompleted)
             {
-                if (logger.IsFinestEnabled())
+                try
                 {
-                    logger.Finest("We are being asked to read, but connection is not live so we won't");
+                    if (_lastWritable == null)
+                    {
+                        _lastWritable = _writeQueue.Take();
+                    }
                 }
-                return false;
-            }
-            if (!clientSocket.Connected)
-            {
-                if (logger.IsFinestEnabled())
+                catch (InvalidOperationException)
                 {
-                    logger.Finest("We are being asked to read, but connection is not connected...");
+                    //BlockingCollection is empty
+                    if (_writeQueue.IsAddingCompleted)
+                    {
+                        return;
+                    }
                 }
-                Task.Factory.StartNew(Close);
-                return false;
-            }
-            return true;
-        }
 
-        public override string ToString()
-        {
-            IPEndPoint localSocketAddress = GetLocalSocketAddress();
-            if (localSocketAddress != null)
-            {
-                return "Connection [" + _endpoint + " -> " + localSocketAddress + "]";
+                while (_sendBuffer.HasRemaining() && _lastWritable != null)
+                {
+                    var complete = _lastWritable.WriteTo(_sendBuffer);
+                    if (complete)
+                    {
+                        //grap one from queue
+                        ISocketWritable tmp = null;
+                        _writeQueue.TryTake(out tmp);
+                        _lastWritable = tmp;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                if (_sendBuffer.Position > 0)
+                {
+                    _sendBuffer.Flip();
+                    try
+                    {
+                        SocketError socketError;
+                        var sendByteSize = _clientSocket.Send(
+                            _sendBuffer.Array(),
+                            _sendBuffer.Position,
+                            _sendBuffer.Remaining(),
+                            SocketFlags.None, out socketError);
+
+                        if (sendByteSize <= 0)
+                        {
+                            Close();
+                            return;
+                        }
+
+                        if (socketError != SocketError.Success)
+                        {
+                            Logger.Warning("Operation System Level Socket error code:" + socketError);
+                            Close();
+                            return;
+                        }
+
+                        _sendBuffer.Position += sendByteSize;
+                        //logger.Info("SEND BUFFER CALLBACK: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
+
+                        //if success case
+                        if (_sendBuffer.HasRemaining())
+                        {
+                            _sendBuffer.Compact();
+                        }
+                        else
+                        {
+                            _sendBuffer.Clear();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _lastWritable = null;
+                        HandleSocketException(e);
+                    }
+                }
             }
-            return "Connection [" + _endpoint + " -> CLOSED ]";
         }
-     }
+    }
 
 
     internal class TaskData
     {
-        private volatile GenericError _error;
-        private volatile IData _response;
-        private volatile ClientMessage _request;
-        private volatile DistributedEventHandler _handler;
-        private int _retryCount;
-        private volatile int _partitionId;
-
         private readonly object _mutex = new object();
+        private volatile GenericError _error;
+        private volatile DistributedEventHandler _handler;
+        private volatile int _partitionId;
+        private volatile IClientMessage _request;
+        private volatile IClientMessage _response;
+        private int _retryCount;
 
-        public TaskData(ClientMessage request, IData response = null, DistributedEventHandler handler = null,
+        public TaskData(IClientMessage request, IClientMessage response = null, DistributedEventHandler handler = null,
             int partitionId = -1)
         {
             _retryCount = 0;
@@ -960,13 +812,13 @@ namespace Hazelcast.Client.Connection
             set { _handler = value; }
         }
 
-        internal ClientMessage Request
+        internal IClientMessage Request
         {
             get { return _request; }
             set { _request = value; }
         }
 
-        internal IData Response
+        internal IClientMessage Response
         {
             get { return _response; }
             set { _response = value; }
@@ -977,15 +829,17 @@ namespace Hazelcast.Client.Connection
             get { return _retryCount; }
         }
 
-        internal int IncrementAndGetRetryCount()
-        {
-            return Interlocked.Increment(ref _retryCount);
-        }
-
         public int PartitionId
         {
             get { return _partitionId; }
             set { _partitionId = value; }
+        }
+
+        public void ResponseReady()
+        {
+            Monitor.Enter(_mutex);
+            Monitor.PulseAll(_mutex);
+            Monitor.Exit(_mutex);
         }
 
         public bool Wait()
@@ -1000,11 +854,9 @@ namespace Hazelcast.Client.Connection
             return result;
         }
 
-        public void ResponseReady()
+        internal int IncrementAndGetRetryCount()
         {
-            Monitor.Enter(_mutex);
-            Monitor.PulseAll(_mutex);
-            Monitor.Exit(_mutex);
+            return Interlocked.Increment(ref _retryCount);
         }
     }
 }

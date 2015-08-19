@@ -1,8 +1,7 @@
 using System;
-using System.Threading.Tasks;
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Transaction;
-using Hazelcast.Client.Spi;
+using System.Collections.Generic;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Transaction;
@@ -12,21 +11,20 @@ namespace Hazelcast.Client.Proxy
 {
     internal abstract class ClientTxnProxy : ITransactionalObject
     {
-        internal readonly string objectName;
-
-        internal readonly TransactionContextProxy proxy;
+        internal readonly string ObjectName;
+        internal readonly TransactionContextProxy Proxy;
 
         internal ClientTxnProxy(string objectName, TransactionContextProxy proxy)
         {
-            this.objectName = objectName;
-            this.proxy = proxy;
+            ObjectName = objectName;
+            Proxy = proxy;
         }
 
         public void Destroy()
         {
             OnDestroy();
-            var request = new ClientDestroyRequest(objectName, GetServiceName());
-            Invoke<object>(request);
+            var request = ClientDestroyProxyCodec.EncodeRequest(ObjectName, GetServiceName());
+            Invoke(request);
         }
 
         public virtual string GetPartitionKey()
@@ -34,29 +32,21 @@ namespace Hazelcast.Client.Proxy
             return StringPartitioningStrategy.GetPartitionKey(GetName());
         }
 
-        public abstract string GetName();
-
-        public abstract string GetServiceName();
-
-        public virtual object GetId()
+        public virtual string GetName()
         {
-            return objectName;
+            return ObjectName;
         }
 
-        protected virtual T Invoke<T>(ClientRequest request)
+        public abstract string GetServiceName();
+        internal abstract void OnDestroy();
+
+        protected virtual IClientMessage Invoke(IClientMessage request)
         {
-            var btr = request as BaseTransactionRequest;
-            if (btr != null)
-            {
-                btr.TxnId = proxy.GetTxnId();
-                btr.ClientThreadId = ThreadUtil.GetThreadId();
-            }
-            IRemotingService rpc = proxy.GetClient().GetRemotingService();
+            var rpc = Proxy.GetClient().GetRemotingService();
             try
             {
-                Task<IData> task = rpc.Send(request, proxy.TxnOwner);
-                IData result = ThreadUtil.GetResult(task);
-                return ToObject<T>(result);
+                var task = rpc.Send(request, Proxy.TxnOwner);
+                return ThreadUtil.GetResult(task);
             }
             catch (Exception e)
             {
@@ -64,16 +54,51 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        internal abstract void OnDestroy();
-
-        internal virtual IData ToData(object obj)
+        protected virtual T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
         {
-            return proxy.GetClient().GetSerializationService().ToData(obj);
+            var response = Invoke(request);
+            return decodeResponse(response);
         }
 
-        internal virtual E ToObject<E>(IData data)
+        protected virtual string GetTransactionId()
         {
-            return proxy.GetClient().GetSerializationService().ToObject<E>(data);
+            return Proxy.GetTxnId();
         }
+
+        protected virtual long GetThreadId()
+        {
+            return ThreadUtil.GetThreadId();
+        }
+
+        protected virtual IData ToData(object obj)
+        {
+            return Proxy.GetClient().GetSerializationService().ToData(obj);
+        }
+
+        protected virtual E ToObject<E>(IData data)
+        {
+            return Proxy.GetClient().GetSerializationService().ToObject<E>(data);
+        }
+
+        protected internal virtual IList<T> ToList<T>(ICollection<IData> dataList)
+        {
+            var list = new List<T>(dataList.Count);
+            foreach (var data in dataList)
+            {
+                list.Add(ToObject<T>(data));
+            }
+            return list;
+        }
+
+        protected internal virtual ISet<T> ToSet<T>(ICollection<IData> dataList)
+        {
+            var set = new HashSet<T>();
+            foreach (var data in dataList)
+            {
+                set.Add(ToObject<T>(data));
+            }
+            return set;
+        }
+
     }
 }

@@ -1,67 +1,53 @@
 using Hazelcast.Client.Protocol;
-using Hazelcast.Net.Ext;
+using Hazelcast.Client.Protocol.Util;
+using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class ClientPingCodec
-	{
-		public static readonly ClientMessageType RequestType = ClientMessageType.ClientPing;
+    internal sealed class ClientPingCodec
+    {
 
-		public const int ResponseType = 100;
+        public static readonly ClientMessageType RequestType = ClientMessageType.ClientPing;
+        public const int ResponseType = 100;
+        public const bool Retryable = true;
 
-		public const bool Retryable = true;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly ClientMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly ClientMessageType TYPE = RequestType;
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize()
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				return dataSize;
-			}
-		}
+            public static int CalculateDataSize()
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                return dataSize;
+            }
+        }
 
-		public static ClientMessage EncodeRequest()
-		{
-			int requiredDataSize = ClientPingCodec.RequestParameters.CalculateDataSize();
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public static ClientMessage EncodeRequest()
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize();
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-		public static ClientPingCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			ClientPingCodec.RequestParameters parameters = new ClientPingCodec.RequestParameters();
-			return parameters;
-		}
+        //************************ RESPONSE *************************//
 
-		public class ResponseParameters
-		{
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize()
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				return dataSize;
-			}
-		}
 
-		public static ClientMessage EncodeResponse()
-		{
-			int requiredDataSize = ClientPingCodec.ResponseParameters.CalculateDataSize();
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public class ResponseParameters
+        {
+        }
 
-		public static ClientPingCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			ClientPingCodec.ResponseParameters parameters = new ClientPingCodec.ResponseParameters();
-			return parameters;
-		}
-	}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            return parameters;
+        }
+
+    }
 }

@@ -1,34 +1,39 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Queue;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
     internal sealed class ClientQueueProxy<E> : ClientProxy, IQueue<E>
     {
-        private readonly string name;
-
         public ClientQueueProxy(string serviceName, string name)
             : base(serviceName, name)
         {
-            this.name = name;
         }
 
         public string AddItemListener(IItemListener<E> listener, bool includeValue)
         {
-            var request = new AddListenerRequest(GetName(), includeValue);
-            return Listen(request, GetPartitionKey(), args => HandleItemListener(args, listener, includeValue));
+            var request = QueueAddListenerCodec.EncodeRequest(GetName(), includeValue);
+
+            DistributedEventHandler handler = m =>
+                QueueAddListenerCodec.AbstractEventHandler.Handle(m, (item, uuid, type) =>
+                {
+                    HandleItemListener(item, uuid, (ItemEventType)type, listener, includeValue);
+                });
+
+            return Listen(request, m => QueueAddListenerCodec.DecodeResponse(m).response, GetPartitionKey(), handler);
         }
 
         public bool RemoveItemListener(string registrationId)
         {
-            var request = new RemoveListenerRequest(name, registrationId);
-            return StopListening(request, registrationId);
+            var request = QueueRemoveListenerCodec.EncodeRequest(GetName(), registrationId);
+            return StopListening(request, m => QueueRemoveListenerCodec.DecodeResponse(m).response, registrationId);
         }
 
         public bool Add(E e)
@@ -54,10 +59,9 @@ namespace Hazelcast.Client.Proxy
 
         public bool Offer(E e, long timeout, TimeUnit unit)
         {
-            IData data = GetContext().GetSerializationService().ToData(e);
-            var request = new OfferRequest(name, unit.ToMillis(timeout), data);
-            var result = Invoke<bool>(request);
-            return result;
+            var data = ToData(e);
+            var request = QueueOfferCodec.EncodeRequest(GetName(), data, unit.ToMillis(timeout));
+            return Invoke(request, m => QueueOfferCodec.DecodeResponse(m).response);
         }
 
         public void Put(E e)
@@ -67,20 +71,22 @@ namespace Hazelcast.Client.Proxy
 
         public E Take()
         {
-            return Poll(-1, TimeUnit.MILLISECONDS);
+            var request = QueueTakeCodec.EncodeRequest(GetName());
+            var result = Invoke(request, m => QueueTakeCodec.DecodeResponse(m).response);
+            return ToObject<E>(result);
         }
 
         public E Poll(long timeout, TimeUnit unit)
         {
-            var request = new PollRequest(name, unit.ToMillis(timeout));
-            return Invoke<E>(request);
+            var request = QueuePollCodec.EncodeRequest(GetName(), unit.ToMillis(timeout));
+            var result = Invoke(request, m => QueuePollCodec.DecodeResponse(m).response);
+            return ToObject<E>(result);
         }
 
         public int RemainingCapacity()
         {
-            var request = new RemainingCapacityRequest(name);
-            var result = Invoke<int>(request);
-            return result;
+            var request = QueueRemainingCapacityCodec.EncodeRequest(GetName());
+            return Invoke(request, m => QueueRemainingCapacityCodec.DecodeResponse(m).response);
         }
 
         public bool Remove(E item)
@@ -90,19 +96,16 @@ namespace Hazelcast.Client.Proxy
 
         public bool Remove(object o)
         {
-            IData data = GetContext().GetSerializationService().ToData(o);
-            var request = new RemoveRequest(name, data);
-            var result = Invoke<bool>(request);
-            return result;
+            var data = ToData(o);
+            var request = QueueRemoveCodec.EncodeRequest(GetName(), data);
+            return Invoke(request, m => QueueRemoveCodec.DecodeResponse(m).response);
         }
 
         public bool Contains(object o)
         {
-            ICollection<IData> list = new List<IData>(1);
-            list.Add(GetContext().GetSerializationService().ToData(o));
-            var request = new ContainsRequest(name, list);
-            var result = Invoke<bool>(request);
-            return result;
+            var value = ToData(o);
+            var request = QueueContainsCodec.EncodeRequest(GetName(), value);
+            return Invoke(request, m => QueueContainsCodec.DecodeResponse(m).response);
         }
 
         public bool Contains(E item)
@@ -112,25 +115,31 @@ namespace Hazelcast.Client.Proxy
 
         public int DrainTo<T>(ICollection<T> c) where T : E
         {
-            return DrainTo(c, -1);
+            var request = QueueDrainToCodec.EncodeRequest(GetName());
+            var result = Invoke(request, m => QueueDrainToCodec.DecodeResponse(m).list);
+            foreach (var data in result)
+            {
+                var e = ToObject<E>(data);
+                c.Add((T)e);
+            }
+            return result.Count; ;
         }
 
         public int DrainTo<T>(ICollection<T> c, int maxElements) where T : E
         {
-            var request = new DrainRequest(name, maxElements);
-            var result = Invoke<PortableCollection>(request);
-            ICollection<IData> coll = result.GetCollection();
-            foreach (IData data in coll)
+            var request = QueueDrainToMaxSizeCodec.EncodeRequest(GetName(), maxElements);
+            var result = Invoke(request, m => QueueDrainToMaxSizeCodec.DecodeResponse(m).list);
+            foreach (var data in result)
             {
-                var e = GetContext().GetSerializationService().ToObject<E>(data);
+                var e = ToObject<E>(data);
                 c.Add((T) e);
             }
-            return coll.Count;
+            return result.Count;
         }
 
         public E Remove()
         {
-            E res = Poll();
+            var res = Poll();
             if (res == null)
             {
                 throw new InvalidOperationException("Queue is empty!");
@@ -152,7 +161,7 @@ namespace Hazelcast.Client.Proxy
 
         public E Element()
         {
-            E res = Peek();
+            var res = Peek();
             if (res == null)
             {
                 throw new InvalidOperationException("Queue is empty!");
@@ -162,8 +171,9 @@ namespace Hazelcast.Client.Proxy
 
         public E Peek()
         {
-            var request = new PeekRequest(name);
-            return Invoke<E>(request);
+            var request = QueuePeekCodec.EncodeRequest(GetName());
+            var result = Invoke(request, m => QueuePeekCodec.DecodeResponse(m).response);
+            return ToObject<E>(result);
         }
 
         public int Count
@@ -178,9 +188,8 @@ namespace Hazelcast.Client.Proxy
 
         public int Size()
         {
-            var request = new SizeRequest(GetName());
-            var result = Invoke<int>(request);
-            return result;
+            var request = QueueSizeCodec.EncodeRequest(GetName());
+            return Invoke(request, m => QueueSizeCodec.DecodeResponse(m).response);
         }
 
         public bool IsEmpty()
@@ -190,17 +199,16 @@ namespace Hazelcast.Client.Proxy
 
         public IEnumerator<E> GetEnumerator()
         {
-            ICollection<IData> coll = GetAll();
+            var coll = GetAll();
             return new QueueIterator<E>(coll.GetEnumerator(), GetContext().GetSerializationService());
         }
 
-
         public E[] ToArray()
         {
-            ICollection<IData> coll = GetAll();
-            int i = 0;
+            var coll = GetAll();
+            var i = 0;
             var array = new E[coll.Count];
-            foreach (IData data in coll)
+            foreach (var data in coll)
             {
                 array[i++] = GetContext().GetSerializationService().ToObject<E>(data);
             }
@@ -209,7 +217,7 @@ namespace Hazelcast.Client.Proxy
 
         public T[] ToArray<T>(T[] a)
         {
-            E[] array = ToArray();
+            var array = ToArray();
             if (a.Length < array.Length)
             {
                 // Make a new array of a's runtime type, but my contents:
@@ -225,31 +233,27 @@ namespace Hazelcast.Client.Proxy
 
         public bool ContainsAll<_T0>(ICollection<_T0> c)
         {
-            IList<IData> list = GetDataList(c);
-            var request = new ContainsRequest(name, list);
-            var result = Invoke<bool>(request);
-            return result;
+            var dataSet = GetDataSet(c);
+            var request = QueueContainsAllCodec.EncodeRequest(GetName(), dataSet);
+            return Invoke(request, m => QueueContainsAllCodec.DecodeResponse(m).response);
         }
 
         public bool AddAll<T>(ICollection<T> c)
         {
-            var request = new AddAllRequest(name, GetDataList(c));
-            var result = Invoke<bool>(request);
-            return result;
+            var request = QueueAddAllCodec.EncodeRequest(GetName(), GetDataSet(c));
+            return Invoke(request, m => QueueAddAllCodec.DecodeResponse(m).response);
         }
 
         public bool RemoveAll<T>(ICollection<T> c)
         {
-            var request = new CompareAndRemoveRequest(name, GetDataList(c), false);
-            var result = Invoke<bool>(request);
-            return result;
+            var request = QueueCompareAndRemoveAllCodec.EncodeRequest(GetName(), GetDataSet(c));
+            return Invoke(request, m => QueueCompareAndRemoveAllCodec.DecodeResponse(m).response);
         }
 
         public bool RetainAll<T>(ICollection<T> c)
         {
-            var request = new CompareAndRemoveRequest(name, GetDataList(c), true);
-            var result = Invoke<bool>(request);
-            return result;
+            var request = QueueCompareAndRetainAllCodec.EncodeRequest(GetName(), GetDataSet(c));
+            return Invoke(request, m => QueueCompareAndRetainAllCodec.DecodeResponse(m).response);
         }
 
         void ICollection<E>.Add(E item)
@@ -259,14 +263,13 @@ namespace Hazelcast.Client.Proxy
 
         public void Clear()
         {
-            var request = new ClearRequest(name);
-            Invoke<object>(request);
+            var request = QueueClearCodec.EncodeRequest(GetName());
+            Invoke(request, QueueClearCodec.DecodeResponse);
         }
-
 
         public void CopyTo(E[] array, int arrayIndex)
         {
-            E[] a = ToArray();
+            var a = ToArray();
             if (a != null) a.CopyTo(array, arrayIndex);
         }
 
@@ -275,15 +278,14 @@ namespace Hazelcast.Client.Proxy
             return GetEnumerator();
         }
 
-        private void HandleItemListener(IData eventData, IItemListener<E> listener, bool includeValue)
+        private void HandleItemListener(IData itemData, String uuid, ItemEventType eventType, IItemListener<E> listener, bool includeValue)
         {
-            var portableItemEvent = ToObject<PortableItemEvent>(eventData);
-            E item = includeValue
-                ? GetContext().GetSerializationService().ToObject<E>(portableItemEvent.GetItem())
+            var item = includeValue
+                ? ToObject<E>(itemData)
                 : default(E);
-            IMember member = GetContext().GetClusterService().GetMember(portableItemEvent.GetUuid());
-            var itemEvent = new ItemEvent<E>(GetName(), portableItemEvent.GetEventType(), item, member);
-            if (portableItemEvent.GetEventType() == ItemEventType.Added)
+            var member = GetContext().GetClusterService().GetMember(uuid);
+            var itemEvent = new ItemEvent<E>(GetName(), eventType, item, member);
+            if (eventType == ItemEventType.Added)
             {
                 listener.ItemAdded(itemEvent);
             }
@@ -295,19 +297,13 @@ namespace Hazelcast.Client.Proxy
 
         private ICollection<IData> GetAll()
         {
-            var request = new IteratorRequest(name);
-            var result = Invoke<PortableCollection>(request);
-            ICollection<IData> coll = result.GetCollection();
-            return coll;
+            var request = QueueIteratorCodec.EncodeRequest(GetName());
+            return Invoke(request, m => QueueIteratorCodec.DecodeResponse(m).list);
         }
 
-        protected override void OnDestroy()
+        private ISet<IData> GetDataSet<T>(ICollection<T> objects)
         {
-        }
-
-        private IList<IData> GetDataList<T>(ICollection<T> objects)
-        {
-            IList<IData> dataList = new List<IData>(objects.Count);
+            ISet<IData> dataList = new HashSet<IData>();
             foreach (object o in objects)
             {
                 dataList.Add(GetContext().GetSerializationService().ToData(o));
@@ -315,10 +311,9 @@ namespace Hazelcast.Client.Proxy
             return dataList;
         }
 
-
-        protected override T Invoke<T>(ClientRequest request)
+        protected override T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
         {
-            return base.Invoke<T>(request, GetPartitionKey());
+            return base.Invoke(request, GetPartitionKey(), decodeResponse);
         }
     }
 }

@@ -2,16 +2,13 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using Hazelcast.IO.Serialization;
-using Hazelcast.Serialization.Hook;
 using Hazelcast.Util;
 
 namespace Hazelcast.IO
 {
     /// <summary>Represents an address of a member in the cluster.</summary>
     /// <remarks>Represents an address of a member in the cluster.</remarks>
-    public sealed class Address : IdentifiedDataSerializable, IIdentifiedDataSerializable
+    public sealed class Address 
     {
         public const int Id = 1;
 
@@ -60,47 +57,6 @@ namespace Hazelcast.IO
             }
             this.port = port;
             hostSet = !AddressUtil.IsIpAddress(host);
-        }
-
-        public int GetFactoryId()
-        {
-            return ClusterDataSerializerHook.FId;
-        }
-
-        public int GetId()
-        {
-            return Id;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void WriteData(IObjectDataOutput output)
-        {
-            output.WriteInt(port);
-            output.Write(type);
-            if (host != null)
-            {
-                byte[] address = Encoding.UTF8.GetBytes(host);
-                output.WriteInt(address.Length);
-                output.Write(address);
-            }
-            else
-            {
-                output.WriteInt(0);
-            }
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadData(IObjectDataInput input)
-        {
-            port = input.ReadInt();
-            type = input.ReadByte();
-            int len = input.ReadInt();
-            if (len > 0)
-            {
-                var address = new byte[len];
-                input.ReadFully(address);
-                host = Encoding.UTF8.GetString(address);
-            }
         }
 
         public string GetHost()

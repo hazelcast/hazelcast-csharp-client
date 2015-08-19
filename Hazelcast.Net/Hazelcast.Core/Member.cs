@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using Hazelcast.Client.Request.Cluster;
+using Hazelcast.Client.Spi;
 using Hazelcast.IO;
 using Hazelcast.Logging;
 
@@ -21,12 +21,12 @@ namespace Hazelcast.Core
         }
 
         public Member(Address address)
-            : this(address, null, null)
+            : this(address, null, new Dictionary<string, string>())
         {
         }
 
         public Member(Address address, string uuid)
-            : this(address, uuid, null)
+            : this(address, uuid, new Dictionary<string, string>())
         {
         }
 

@@ -1,85 +1,59 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class MultiMapForceUnlockCodec
-	{
-		public static readonly MultiMapMessageType RequestType = MultiMapMessageType.MultimapForceunlock;
+    internal sealed class MultiMapForceUnlockCodec
+    {
 
-		public const int ResponseType = 100;
+        public static readonly MultiMapMessageType RequestType = MultiMapMessageType.MultiMapForceUnlock;
+        public const int ResponseType = 100;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly MultiMapMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly MultiMapMessageType TYPE = RequestType;
+            public string name;
+            public IData key;
 
-			public string name;
+            public static int CalculateDataSize(string name, IData key)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += ParameterUtil.CalculateDataSize(key);
+                return dataSize;
+            }
+        }
 
-			public IData key;
+        public static ClientMessage EncodeRequest(string name, IData key)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, key);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.Set(key);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name, IData key)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				dataSize += ParameterUtil.CalculateDataSize(key);
-				return dataSize;
-			}
-		}
+        //************************ RESPONSE *************************//
 
-		public static ClientMessage EncodeRequest(string name, IData key)
-		{
-			int requiredDataSize = MultiMapForceUnlockCodec.RequestParameters.CalculateDataSize(name, key);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.Set(key);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
 
-		public static MultiMapForceUnlockCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			MultiMapForceUnlockCodec.RequestParameters parameters = new MultiMapForceUnlockCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			IData key;
-			key = null;
-			key = clientMessage.GetData();
-			parameters.key = key;
-			return parameters;
-		}
+        public class ResponseParameters
+        {
+        }
 
-		public class ResponseParameters
-		{
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize()
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				return dataSize;
-			}
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            return parameters;
+        }
 
-		public static ClientMessage EncodeResponse()
-		{
-			int requiredDataSize = MultiMapForceUnlockCodec.ResponseParameters.CalculateDataSize();
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
-
-		public static MultiMapForceUnlockCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			MultiMapForceUnlockCodec.ResponseParameters parameters = new MultiMapForceUnlockCodec.ResponseParameters();
-			return parameters;
-		}
-	}
+    }
 }

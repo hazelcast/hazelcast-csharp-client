@@ -12,7 +12,7 @@ namespace Hazelcast.Client.Protocol.Util
     internal class SafeBuffer : IClientProtocolBuffer
     {
         private const bool ShouldBoundsCheck = true;
-        private byte[] byteArray;
+        private byte[] _byteArray;
 
         public SafeBuffer(byte[] buffer)
         {
@@ -21,22 +21,22 @@ namespace Hazelcast.Client.Protocol.Util
 
         public virtual void PutLong(int index, long value)
         {
-            Bits.WriteLongL(byteArray, index, value);
+            Bits.WriteLongL(_byteArray, index, value);
         }
 
         public virtual void PutInt(int index, int value)
         {
-            Bits.WriteIntL(byteArray, index, value);
+            Bits.WriteIntL(_byteArray, index, value);
         }
 
         public virtual void PutShort(int index, short value)
         {
-            Bits.WriteShortL(byteArray, index, value);
+            Bits.WriteShortL(_byteArray, index, value);
         }
 
         public virtual void PutByte(int index, byte value)
         {
-            byteArray[index] = value;
+            _byteArray[index] = value;
         }
 
         public virtual void PutBytes(int index, byte[] src)
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Protocol.Util
         {
             BoundsCheck(index, length);
             BoundsCheck(src, offset, length);
-            Array.Copy(src, offset, byteArray, offset + index, length);
+            Array.Copy(src, offset, _byteArray, index, length);
         }
 
         public virtual int PutStringUtf8(int index, string value)
@@ -70,41 +70,41 @@ namespace Hazelcast.Client.Protocol.Util
 
         public void Wrap(byte[] buffer)
         {
-            byteArray = buffer;
+            _byteArray = buffer;
         }
 
         public byte[] ByteArray()
         {
-            return byteArray;
+            return _byteArray;
         }
 
         public virtual int Capacity()
         {
-            return byteArray.Length;
+            return _byteArray.Length;
         }
 
         public virtual long GetLong(int index)
         {
             BoundsCheck(index, Bits.LongSizeInBytes);
-            return Bits.ReadLongL(byteArray, index);
+            return Bits.ReadLongL(_byteArray, index);
         }
 
         public virtual int GetInt(int index)
         {
             BoundsCheck(index, Bits.IntSizeInBytes);
-            return Bits.ReadIntL(byteArray, index);
+            return Bits.ReadIntL(_byteArray, index);
         }
 
         public virtual short GetShort(int index)
         {
             BoundsCheck(index, Bits.ShortSizeInBytes);
-            return Bits.ReadShortL(byteArray, index);
+            return Bits.ReadShortL(_byteArray, index);
         }
 
         public virtual byte GetByte(int index)
         {
             BoundsCheck(index, Bits.ByteSizeInBytes);
-            return byteArray[index];
+            return _byteArray[index];
         }
 
         public virtual void GetBytes(int index, byte[] dst)
@@ -116,7 +116,7 @@ namespace Hazelcast.Client.Protocol.Util
         {
             BoundsCheck(index, length);
             BoundsCheck(dst, offset, length);
-            Array.Copy(byteArray, offset + index, dst, offset, length);
+            Array.Copy(_byteArray, offset + index, dst, offset, length);
         }
 
         public virtual string GetStringUtf8(int offset, int length)
@@ -133,7 +133,8 @@ namespace Hazelcast.Client.Protocol.Util
             {
                 if (index < 0 || length < 0 || (index + length) > Capacity())
                 {
-                    throw new IndexOutOfRangeException(string.Format("index=%d, length=%d, capacity=%d", index, length, Capacity()));
+                    throw new IndexOutOfRangeException(string.Format("index=%d, length=%d, capacity=%d", index, length,
+                        Capacity()));
                 }
             }
         }

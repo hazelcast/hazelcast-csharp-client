@@ -2,7 +2,6 @@ using System;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Map
 {
@@ -20,7 +19,7 @@ namespace Hazelcast.Map
         }
     }
 
-    internal class SimpleEntryView : IdentifiedDataSerializable, IIdentifiedDataSerializable
+    internal class SimpleEntryView 
     {
         private object key;
         private object value;
@@ -35,28 +34,6 @@ namespace Hazelcast.Map
         private long version;
         private long evictionCriteriaNumber;
         private long ttl;
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void WriteData(IObjectDataOutput output)
-        {
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadData(IObjectDataInput input)
-        {
-            key = IOUtil.ReadObject<object>(input);
-            value = IOUtil.ReadObject<object>(input);
-            cost = input.ReadLong();
-            creationTime = input.ReadLong();
-            expirationTime = input.ReadLong();
-            hits = input.ReadLong();
-            lastAccessTime = input.ReadLong();
-            lastStoredTime = input.ReadLong();
-            lastUpdateTime = input.ReadLong();
-            version = input.ReadLong();
-            evictionCriteriaNumber = input.ReadLong();
-            ttl = input.ReadLong();
-        }
 
         public virtual object GetKey()
         {
@@ -106,16 +83,6 @@ namespace Hazelcast.Map
         public virtual long GetVersion()
         {
             return version;
-        }
-
-        public virtual int GetFactoryId()
-        {
-            return MapDataSerializerHook.FId;
-        }
-
-        public virtual int GetId()
-        {
-            return MapDataSerializerHook.EntryView;
         }
 
         public virtual void SetKey(object key)

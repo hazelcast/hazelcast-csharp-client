@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Client.Spi;
 using Hazelcast.IO.Serialization;
 
@@ -12,7 +11,7 @@ namespace Hazelcast.Util
     /// </summary>
     internal class ListenerUtil
     {
-        public static String Listen(ClientContext context, ClientMessage request, DecodeStartListenerResponse decodeListenerResponse, Object key, DistributedEventHandler handler)
+        public static String Listen(ClientContext context, IClientMessage request, DecodeStartListenerResponse decodeListenerResponse, Object key, DistributedEventHandler handler)
         {
             try {
                 Task<IClientMessage> task;

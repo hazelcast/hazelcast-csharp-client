@@ -2,9 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Hazelcast.Client.Connection;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Proxy;
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Transaction;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
@@ -247,11 +246,11 @@ namespace Hazelcast.Client
         {
             try
             {
-                var request = new GetDistributedObjectsRequest();
+                var request = ClientGetDistributedObjectCodec.EncodeRequest();
                 var task = invocationService.InvokeOnRandomTarget(request);
-                var serializableCollection =
-                    serializationService.ToObject<SerializableCollection>(ThreadUtil.GetResult(task));
-                foreach (var data in serializableCollection)
+                var response = ThreadUtil.GetResult(task);
+                var result = ClientGetDistributedObjectCodec.DecodeResponse(response).infoCollection;
+                foreach (var data in result)
                 {
                     var o = serializationService.ToObject<DistributedObjectInfo>(data);
                     GetDistributedObject<IDistributedObject>(o.GetServiceName(), o.GetName());
@@ -317,6 +316,7 @@ namespace Hazelcast.Client
             lifecycleService.SetStarted();
             try
             {
+                connectionManager.Start();
                 clusterService.Start();
             }
             catch (InvalidOperationException e)
@@ -375,7 +375,6 @@ namespace Hazelcast.Client
             Clients.TryRemove(id, out _out);
             executionService.Shutdown();
             partitionService.Stop();
-            clusterService.Stop();
             connectionManager.Shutdown();
             proxyManager.Destroy();
         }

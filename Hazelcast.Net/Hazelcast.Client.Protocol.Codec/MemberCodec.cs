@@ -28,12 +28,12 @@ namespace Hazelcast.Client.Protocol.Codec
 		{
 		}
 
-		public static Member Decode(ClientMessage clientMessage)
+		public static Member Decode(IClientMessage clientMessage)
 		{
 			Address address = AddressCodec.Decode(clientMessage);
 			string uuid = clientMessage.GetStringUtf8();
 			int attributeSize = clientMessage.GetInt();
-			IDictionary<string, object> attributes = new Dictionary<string, object>();
+            IDictionary<string, string> attributes = new Dictionary<string, string>();
 			for (int i = 0; i < attributeSize; i++)
 			{
 				string key = clientMessage.GetStringUtf8();
@@ -43,12 +43,12 @@ namespace Hazelcast.Client.Protocol.Codec
 			return new Member(address, uuid, attributes);
 		}
 
-		public static void Encode(Member member, ClientMessage clientMessage)
+		public static void Encode(IMember member, ClientMessage clientMessage)
 		{
 			//NOT REQUIRED ON CLIENT
 		}
 
-		public static int CalculateDataSize(Member member)
+		public static int CalculateDataSize(IMember member)
 		{
 			throw new NotSupportedException("should not be called on client side");
 		}

@@ -1,191 +1,101 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Security.Permissions;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Cluster;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
+using Hazelcast.Net.Ext;
+using Hazelcast.Security;
 using Hazelcast.Util;
+using ICredentials = Hazelcast.Security.ICredentials;
 
 namespace Hazelcast.Client.Spi
 {
-    /// <summary></summary>
-    internal class ClientClusterService : IClientClusterService
+    /// <summary>
+    ///     The
+    ///     <see cref="Hazelcast.Client.Spi.ClientClusterService" />
+    ///     implementation.
+    /// </summary>
+    internal class ClientClusterService : IClientClusterService, IConnectionListener, IConnectionHeartbeatListener
     {
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientClusterService));
-
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientClusterService));
         private readonly HazelcastClient _client;
 
-        private readonly ConcurrentDictionary<string, IMembershipListener> _listeners = new ConcurrentDictionary<string, IMembershipListener>();
+        private readonly ConcurrentDictionary<string, IMembershipListener> _listeners =
+            new ConcurrentDictionary<string, IMembershipListener>();
 
-        private readonly bool _redoOperation;
+        private readonly AtomicReference<IDictionary<Address, IMember>> _membersRef =
+            new AtomicReference<IDictionary<Address, IMember>>();
 
-        private volatile IDictionary<Address, IMember> _membersRef;
+        private ClientMembershipListener _clientMembershipListener;
+        private IClientConnectionManager _connectionManager;
+        private ICredentials _credentials;
+        private Address _ownerConnectionAddress;
+        private ClientPrincipal _principal;
 
-        private readonly Thread _thread;
-
-        private volatile ManualResetEventSlim _manualReset = new ManualResetEventSlim(false);
-
-        //private static int RetryWaitTime = 500;
-
-        /// <summary></summary>
-        /// <param name="client"></param>
         public ClientClusterService(HazelcastClient client)
         {
             _client = client;
-            ClientConfig config = client.GetClientConfig();
-            _redoOperation = config.GetNetworkConfig().IsRedoOperation();
 
-            IList<ListenerConfig> listenerConfigs = client.GetClientConfig().GetListenerConfigs();
-
-            if (listenerConfigs != null && listenerConfigs.Count > 0)
+            var listenerConfigs = client.GetClientConfig().GetListenerConfigs();
+            foreach (var listenerConfig in listenerConfigs)
             {
-                foreach (ListenerConfig listenerConfig in listenerConfigs)
+                var listener = listenerConfig.GetImplementation();
+                if (listener == null)
                 {
-                    IEventListener listener = listenerConfig.GetImplementation();
-                    if (listener == null)
+                    try
                     {
-                        try
+                        var className = listenerConfig.GetClassName();
+                        var type = Type.GetType(className);
+                        if (type != null)
                         {
-                            string className = listenerConfig.GetClassName();
-                            Type type = Type.GetType(className);
-                            if (type != null)
-                            {
-                                listener = Activator.CreateInstance(type) as IEventListener;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Severe(e);
+                            listener = Activator.CreateInstance(type) as IEventListener;
                         }
                     }
-                    var membershipListener = listener as IMembershipListener;
-                    if (membershipListener != null)
+                    catch (Exception e)
                     {
-                        _AddMembershipListener(membershipListener);
+                        Logger.Severe(e);
                     }
                 }
+                var membershipListener = listener as IMembershipListener;
+                if (membershipListener != null)
+                {
+                    AddMembershipListenerWithoutInit(membershipListener);
+                }
             }
-
-            _thread = new Thread(ClusterListenerLoop)
-            {
-                IsBackground = true,
-                Name = ("ClusterListener" + new Random().Next()).Substring(0, 20)
-            };
-
-        }
-
-        #region property def
-
-        internal ConcurrentDictionary<string, IMembershipListener> Listeners
-        {
-            get { return _listeners; }
-        }
-
-        internal IDictionary<Address, IMember> MembersRef
-        {
-            get { return _membersRef; }
-            set { Interlocked.Exchange(ref _membersRef, value); }
-        }
-
-        internal HazelcastClient Client
-        {
-            get { return _client; }
-        }
-
-        public bool RedoOperation
-        {
-            get
-            {
-                return _redoOperation;
-            }
-        }
-
-        #endregion
-
-        #region IClientClusterService Impl
-
-        public void Start()
-        {
-            _thread.Start();
-            _manualReset.Wait();
-
-            //while (_manualReset. && _thread.IsAlive)
-            //{
-            //    try
-            //    {
-            //        Thread.Sleep(100);
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        throw new HazelcastException(e);
-            //    }
-            //}
-            InitMembershipListener();
-        }
-
-        //[SecurityPermissionAttribute(SecurityAction.Demand, ControlThread = true)]
-        public void Stop()
-        {
-            _manualReset.Reset();
-            var conMan = _client.GetConnectionManager();
-            conMan.Shutdown();
-            _thread.Interrupt();
-            //_thread.Abort();
-            //_thread.Join();
         }
 
         public IMember GetMember(Address address)
         {
-            IDictionary<Address, IMember> members = _membersRef;
-            IMember val = null;
-            if (members != null)
-            {
-                members.TryGetValue(address, out val);
-            }
-            return val;
+            var members = _membersRef.Get();
+            return members != null ? members[address] : null;
         }
 
         public IMember GetMember(string uuid)
         {
-            ICollection<IMember> memberList = GetMemberList();
-            foreach (IMember member in memberList)
-            {
-                if (uuid.Equals(member.GetUuid()))
-                {
-                    return member;
-                }
-            }
-            return null;
+            var memberList = GetMemberList();
+            return memberList.FirstOrDefault(member => uuid.Equals(member.GetUuid()));
         }
 
         public ICollection<IMember> GetMemberList()
         {
-            IDictionary<Address, IMember> members = MembersRef;
+            var members = _membersRef.Get();
             return members != null ? members.Values : new HashSet<IMember>();
         }
 
         public Address GetMasterAddress()
         {
-            ICollection<IMember> memberList = GetMemberList();
-            IEnumerator<IMember> enumerator = memberList.GetEnumerator();
-            if (enumerator.MoveNext())
-            {
-                return enumerator.Current.GetAddress();
-            }
-            return null;
+            var master = GetMemberList().FirstOrDefault();
+            return master == null ? null : master.GetAddress();
         }
 
         public int GetSize()
@@ -200,297 +110,344 @@ namespace Hazelcast.Client.Spi
 
         public IClient GetLocalClient()
         {
-            var clientConnectionManager = _client.GetConnectionManager() as ClientConnectionManager;
-            return clientConnectionManager != null? clientConnectionManager.GetLocalClient():null;
+            var cm = (ClientConnectionManager) _client.GetConnectionManager();
+            var cp = GetPrincipal();
+            var ownerConnection = cm.GetConnection(_ownerConnectionAddress);
+
+            var socketAddress = ownerConnection != null ? ownerConnection.GetLocalSocketAddress() : null;
+            var uuid = cp != null ? cp.GetUuid() : null;
+            return new Client(uuid, socketAddress);
         }
 
-
-        public string MembersString()
+        public Address GetOwnerConnectionAddress()
         {
-            var ownerAddress = _client.GetConnectionManager().OwnerAddress();
+            return _ownerConnectionAddress;
+        }
+
+        public string AddMembershipListener(IMembershipListener listener)
+        {
+            if (listener == null)
+            {
+                throw new ArgumentNullException("listener can't be null");
+            }
+            var id = Guid.NewGuid().ToString();
+            _listeners[id] = listener;
+            if (listener is IInitialMembershipListener)
+            {
+                // TODO: needs sync with membership events...
+                var cluster = _client.GetCluster();
+                ((IInitialMembershipListener) listener).Init(new InitialMembershipEvent(cluster, cluster.GetMembers()));
+            }
+            return id;
+        }
+
+        public bool RemoveMembershipListener(string registrationId)
+        {
+            if (registrationId == null)
+            {
+                throw new ArgumentNullException("registrationId can't be null");
+            }
+            IMembershipListener removed;
+            return _listeners.TryRemove(registrationId, out removed);
+        }
+
+        public void HeartBeatStarted(ClientConnection connection)
+        {
+        }
+
+        public void HeartBeatStopped(ClientConnection connection)
+        {
+            if (connection.GetRemoteEndpoint().Equals(_ownerConnectionAddress))
+            {
+                _connectionManager.DestroyConnection(connection);
+            }
+        }
+
+        public void ConnectionAdded(ClientConnection connection)
+        {
+        }
+
+        public void ConnectionRemoved(ClientConnection connection)
+        {
+            ClientExecutionService executionService = (ClientExecutionService) _client.GetClientExecutionService();
+            if (Equals(connection.GetRemoteEndpoint(), _ownerConnectionAddress))
+            {
+                if (_client.GetLifecycleService().IsRunning())
+                {
+                    executionService.SubmitInternal(() =>
+                    {
+                        try {
+                            FireConnectionEvent(LifecycleEvent.LifecycleState.ClientDisconnected);
+                            ConnectToCluster();
+                        } catch (Exception e) {
+                            Logger.Warning("Could not re-connect to cluster shutting down the client", e);
+                            _client.GetLifecycleService().Shutdown();
+                        }
+                    });
+                }
+            }
+        }
+        
+        public ClientPrincipal GetPrincipal()
+        {
+            return _principal;
+        }
+
+        /// <exception cref="System.Exception" />
+        public virtual void Start()
+        {
+            Init();
+            ConnectToCluster();
+            InitMembershipListener();
+        }
+
+        internal virtual void FireMemberAttributeEvent(MemberAttributeEvent @event)
+        {
+            _client.GetClientExecutionService().Submit(() =>
+            {
+                foreach (var listener in _listeners.Values)
+                {
+                    listener.MemberAttributeChanged(@event);
+                }
+            });
+        }
+
+        internal virtual void FireMembershipEvent(MembershipEvent @event)
+        {
+            _client.GetClientExecutionService().Submit(() =>
+            {
+                foreach (var listener in _listeners.Values)
+                {
+                    if (@event.GetEventType() == MembershipEvent.MemberAdded)
+                    {
+                        listener.MemberAdded(@event);
+                    }
+                    else
+                    {
+                        listener.MemberRemoved(@event);
+                    }
+                }
+            });
+        }
+
+        internal virtual IDictionary<Address, IMember> GetMembersRef()
+        {
+            return _membersRef.Get();
+        }
+
+        internal virtual ISerializationService GetSerializationService()
+        {
+            return _client.GetSerializationService();
+        }
+
+        internal virtual string MembersString()
+        {
             var sb = new StringBuilder("\n\nMembers [");
-            ICollection<IMember> members = GetMemberList();
+            var members = GetMemberList();
             sb.Append(members != null ? members.Count : 0);
             sb.Append("] {");
             if (members != null)
             {
-                foreach (IMember member in members)
+                foreach (var member in members)
                 {
                     sb.Append("\n\t").Append(member);
-                    if (member.GetAddress().Equals(ownerAddress))
-                    {
-                        sb.Append(" [owner]");
-                    }
                 }
             }
             sb.Append("\n}\n");
             return sb.ToString();
         }
 
-        public string AddMembershipListener(IMembershipListener listener)
+        internal virtual void SetMembersRef(IDictionary<Address, IMember> map)
         {
-            string id = Guid.NewGuid().ToString();
-            var membershipListener = listener as IInitialMembershipListener;
-            if (membershipListener != null)
-            {
-                // TODO: needs sync with membership events...
-                ICluster cluster = _client.GetCluster();
-                membershipListener.Init(new InitialMembershipEvent(cluster, cluster.GetMembers()));
-            }
+            _membersRef.Set(map);
+        }
 
-            _listeners.TryAdd(id, listener);
+        private string AddMembershipListenerWithoutInit(IMembershipListener listener)
+        {
+            var id = Guid.NewGuid().ToString();
+            _listeners[id] = listener;
             return id;
         }
 
-        public bool RemoveMembershipListener(string registrationId)
+        /// <exception cref="System.Exception" />
+        private bool Connect(ICollection<IPEndPoint> triedAddresses)
         {
-            IMembershipListener removed;
-            return _listeners.TryRemove(registrationId, out removed);
-        }
-        #endregion
-
-        //#region privates
-        //#endregion
-
-        #region cluster listener
-
-        public void ClusterListenerLoop()
-        {
-            var conMan = (ClientConnectionManager) _client.GetConnectionManager();
-            conMan.Start();
-            while (_thread.IsAlive)
+            ICollection<IPEndPoint> socketAddresses = GetEndpoints();
+            foreach (var inetSocketAddress in socketAddresses)
             {
                 try
                 {
-                    if (!conMan.OwnerLive)
+                    triedAddresses.Add(inetSocketAddress);
+                    var address = new Address(inetSocketAddress);
+                    if (Logger.IsFinestEnabled())
                     {
-                        try
-                        {
-                            conMan.InitOwnerConnection();
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Severe("Error while connecting to cluster!", e);
-                            _client.GetLifecycleService().Shutdown();
-                            return;
-                        }
+                        Logger.Finest("Trying to connect to " + address);
                     }
-                    LoadInitialMemberList();
-                    //ready to goo
-                    _manualReset.Set();
-                    ListenMembershipEvents();
+                    var connection = _connectionManager.GetOrConnect(address, ManagerAuthenticator);
+                    FireConnectionEvent(LifecycleEvent.LifecycleState.ClientConnected);
+                    _ownerConnectionAddress = connection.GetRemoteEndpoint();
+                    return true;
                 }
                 catch (Exception e)
                 {
-                    if (_client.GetLifecycleService().IsRunning())
-                    {
-                        if (Logger.IsFinestEnabled())
-                        {
-                            Logger.Warning("Error while listening cluster events! -> ", e);
-                        }
-                        else
-                        {
-                            Logger.Warning("Error while listening cluster events! ->Error: " + e);
-                        }
-                    }
-                    //.Shutdown();
-                    conMan.FireConnectionEvent(true);
-                }
-                try
-                {
-                    Thread.Sleep(1000);
-                }
-                catch (Exception)
-                {
-                    break;
+                    var level = e is AuthenticationException ? LogLevel.Warning : LogLevel.Finest;
+                    Logger.Log(level, "Exception during initial connection to " + inetSocketAddress, e);
                 }
             }
+            return false;
         }
 
-        private string _AddMembershipListener(IMembershipListener listener)
+        private void ConnectToCluster()
         {
-            string id = Guid.NewGuid().ToString();
-            if (_listeners.TryAdd(id, listener))
+            ConnectToOne();
+            _clientMembershipListener.ListenMembershipEvents(_ownerConnectionAddress);
+            //_clientListenerService.TriggerFailedListeners(); //TODO: triggerfailedlisteners
+        }
+
+        private void ConnectToOne()
+        {
+            _ownerConnectionAddress = null;
+            var networkConfig = GetClientConfig().GetNetworkConfig();
+            var connAttemptLimit = networkConfig.GetConnectionAttemptLimit();
+            var connectionAttemptPeriod = networkConfig.GetConnectionAttemptPeriod();
+            var connectionAttemptLimit = connAttemptLimit == 0 ? int.MaxValue : connAttemptLimit;
+            var attempt = 0;
+            ICollection<IPEndPoint> triedAddresses = new HashSet<IPEndPoint>();
+            while (attempt < connectionAttemptLimit)
             {
-                return id;
+                if (!_client.GetLifecycleService().IsRunning())
+                {
+                    if (Logger.IsFinestEnabled())
+                    {
+                        Logger.Finest("Giving up on retrying to connect to cluster since client is shutdown");
+                    }
+                    break;
+                }
+                attempt++;
+                var nextTry = Clock.CurrentTimeMillis() + connectionAttemptPeriod;
+                var isConnected = Connect(triedAddresses);
+                if (isConnected)
+                {
+                    return;
+                }
+                var remainingTime = nextTry - Clock.CurrentTimeMillis();
+                Logger.Warning(
+                    string.Format("Unable to get alive cluster connection, try in {0} ms later, attempt {1} of {2}.",
+                        Math.Max(0, remainingTime), attempt, connectionAttemptLimit));
+                if (remainingTime > 0)
+                {
+                    try
+                    {
+                        Thread.Sleep((int) remainingTime);
+                    }
+                    catch (Exception)
+                    {
+                        break;
+                    }
+                }
             }
-            return null;
+            throw new InvalidOperationException("Unable to connect to any address in the config! " +
+                                                "The following addresses were tried:" + string.Join(", ", triedAddresses));
+        }
+
+        private void FireConnectionEvent(LifecycleEvent.LifecycleState state)
+        {
+            var lifecycleService = (LifecycleService) _client.GetLifecycleService();
+            lifecycleService.FireLifecycleEvent(state);
+        }
+
+        private ClientConfig GetClientConfig()
+        {
+            return _client.GetClientConfig();
+        }
+
+        private ICollection<IPEndPoint> GetConfigAddresses()
+        {
+            IEnumerable<IPEndPoint> socketAddresses = new List<IPEndPoint>();
+            foreach (var address in _client.GetClientConfig().GetNetworkConfig().GetAddresses())
+            {
+                var endPoints = AddressHelper.GetSocketAddresses(address);
+                socketAddresses = socketAddresses.Union(endPoints);
+            }
+            return socketAddresses.ToList();
+        }
+
+        private IList<IPEndPoint> GetEndpoints()
+        {
+            var memberList = _client.GetClientClusterService().GetMemberList();
+            var endpoints = memberList.Select(member => member.GetSocketAddress());
+            endpoints = endpoints.Union(GetConfigAddresses());
+
+            var r = new Random();
+            return endpoints.OrderBy(x => r.Next()).ToList();
+        }
+
+        private void Init()
+        {
+            _connectionManager = _client.GetConnectionManager();
+            _clientMembershipListener = new ClientMembershipListener(_client);
+            _connectionManager.AddConnectionHeartBeatListener(this);
+            _connectionManager.AddConnectionListener(this);
+            _credentials = _client.GetClientConfig().GetCredentials();
         }
 
         private void InitMembershipListener()
         {
-            foreach (IMembershipListener membershipListener in _listeners.Values)
+            foreach (var membershipListener in _listeners.Values)
             {
-                var listener = membershipListener as IInitialMembershipListener;
-                if (listener != null)
+                if (membershipListener is IInitialMembershipListener)
                 {
                     // TODO: needs sync with membership events...
-                    ICluster cluster = _client.GetCluster();
-                    listener.Init(new InitialMembershipEvent(cluster, cluster.GetMembers()));
+                    var cluster = _client.GetCluster();
+                    var @event = new InitialMembershipEvent(cluster, cluster.GetMembers());
+                    ((IInitialMembershipListener) membershipListener).Init(@event);
                 }
             }
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        private void LoadInitialMemberList()
+        private void ManagerAuthenticator(ClientConnection connection)
         {
-            var serializationService = _client.GetSerializationService();
-            var ccm = _client.GetConnectionManager();
-            var request = new AddMembershipListenerRequest();
-            var coll= (SerializableCollection)ccm.SendAndReceiveFromOwner(request);
-            
-            var members = new List<IMember>(GetMemberList());
-            IDictionary<string, IMember> prevMembers = new Dictionary<string, IMember>();
-            if (members.Count > 0)
+            var ss = _client.GetSerializationService();
+
+            string uuid = null;
+            string ownerUuid = null;
+            if (_principal != null)
             {
-                prevMembers = new Dictionary<string, IMember>(members.Count);
-                foreach (var member in members)
-                {
-                    prevMembers.Add(member.GetUuid(), member);
-                }
-                members.Clear();
+                uuid = _principal.GetUuid();
+                ownerUuid = _principal.GetOwnerUuid();
             }
-            foreach (IData d in coll.GetCollection())
+            ClientMessage request;
+            if (_credentials is UsernamePasswordCredentials)
             {
-                members.Add(serializationService.ToObject<Member>(d));
+                var usernamePasswordCr = (UsernamePasswordCredentials) _credentials;
+                request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
+                    usernamePasswordCr.GetPassword(), uuid, ownerUuid, true,
+                    ClientTypes.Csharp);
             }
-            UpdateMembersRef(members);
-            Logger.Info(MembersString());
-            var events = new List<MembershipEvent>();
-            ICollection<IMember> eventMembers = new ReadOnlyCollection<IMember>(members);
-            foreach (IMember member in members)
+            else
             {
-                if (!prevMembers.Remove(member.GetUuid()))
-                {
-                    events.Add(new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberAdded,eventMembers));
-                }
+                var data = ss.ToData(_credentials);
+                request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
+                    ClientTypes.Csharp);
             }
-            foreach (IMember member in prevMembers.Values)
+
+            connection.Init();
+            IClientMessage response;
+            try
             {
-                events.Add(new MembershipEvent(_client.GetCluster(), member,MembershipEvent.MemberRemoved, eventMembers));
+                response = connection.Send(request, -1).Result;
             }
-            foreach (MembershipEvent evnt in events)
+            catch (Exception e)
             {
-                FireMembershipEvent(evnt);
+                throw ExceptionUtil.Rethrow(e);
             }
+            var result = ClientAuthenticationCodec.DecodeResponse(response);
+            connection.SetRemoteEndpoint(result.address);
+            _principal = new ClientPrincipal(result.uuid, result.ownerUuid);
+
+            // add initial member
+            _clientMembershipListener.HandleMember(new Member(result.address, result.ownerUuid), MembershipEvent.MemberAdded);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        private void ListenMembershipEvents()
-        {
-            var serializationService = _client.GetSerializationService();
-            var ccm = _client.GetConnectionManager();
-            while (_thread.IsAlive)
-            {
-                var members = new List<IMember>(GetMemberList());
-                try
-                {
-                    var eventData = ccm.ReadFromOwner();
-                    var clientResponse = serializationService.ToObject<ClientResponse>(eventData);
-                    var eventObject = serializationService.ToObject<object>(clientResponse.Response);
-
-                    var cmEvent = eventObject as ClientMembershipEvent;
-                    var membersUpdated = false;
-                    if (cmEvent != null)
-                    {
-                        var member = cmEvent.GetMember();
-                        if (cmEvent.GetEventType() == MembershipEvent.MemberAdded)
-                        {
-                            members.Add(member);
-                            membersUpdated = true;
-                        }
-                        else if (cmEvent.GetEventType() == MembershipEvent.MemberRemoved)
-                        {
-                            members.Remove(member);
-                            membersUpdated = true;
-                        }
-                        else if (cmEvent.GetEventType() == MembershipEvent.MemberAttributeChanged)
-                        {
-                            var memberAttributeChange = cmEvent.GetMemberAttributeChange();
-                            var memberMap = _membersRef;
-                            if (memberMap != null) {
-                                foreach (Member target in memberMap.Values) {
-                                    if (target.GetUuid().Equals(memberAttributeChange.Uuid)) {
-                                        var operationType = memberAttributeChange.OperationType;
-                                        var key = memberAttributeChange.Key;
-                                        var value = memberAttributeChange.Value;
-                                        target.UpdateAttribute(operationType, key, value);
-                                        var memberAttributeEvent = new MemberAttributeEvent(_client.GetCluster(), target, operationType, key, value);
-                                        FireMemberAttributeEvent(memberAttributeEvent);
-                                        break;
-                                    }
-                                }
-                            }
-
-                        }
-                        if (membersUpdated)
-                        {
-                            ((ClientPartitionService)_client.GetClientPartitionService()).RefreshPartitions();
-                            UpdateMembersRef(members);
-                            Logger.Info(MembersString());
-                            ICollection<IMember> eventMembers = new ReadOnlyCollection<IMember>(members);
-                            var membershipEvent = new MembershipEvent(_client.GetCluster(), member, cmEvent.GetEventType(),eventMembers);
-                            FireMembershipEvent(membershipEvent);
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    Logger.Finest("Owner Connection error");
-                    throw;
-                }
-
-            }
-        }
-
-        private void FireMembershipEvent(MembershipEvent membershipEvent)
-        {
-            _client.GetClientExecutionService().Submit(() => _FireMembershipEvent(membershipEvent));
-        }
-        private void FireMemberAttributeEvent(MemberAttributeEvent memberAttributeEvent)
-        {
-            _client.GetClientExecutionService().Submit(() => _FireMemberAttributeEvent(memberAttributeEvent));
-        }
-
-        private void _FireMembershipEvent(MembershipEvent membershipEvent)
-        {
-            foreach (IMembershipListener listener in Listeners.Values)
-            {
-                if (membershipEvent.GetEventType() == MembershipEvent.MemberAdded)
-                {
-                    listener.MemberAdded(membershipEvent);
-                }
-                else if (membershipEvent.GetEventType() == MembershipEvent.MemberRemoved)
-                {
-                    listener.MemberRemoved(membershipEvent);
-                }
-            }
-            //delegate every event to connection manager
-            //_client.GetConnectionManager().HandleMembershipEvent(membershipEvent);
-        }
-        private void _FireMemberAttributeEvent(MemberAttributeEvent memberAttributeEvent)
-        {
-            foreach (IMembershipListener listener in Listeners.Values)
-            {
-                if (memberAttributeEvent.GetEventType() == MembershipEvent.MemberAttributeChanged)
-                {
-                    listener.MemberAdded(memberAttributeEvent);
-                }
-            }
-        }
-
-        private void UpdateMembersRef(ICollection<IMember> members)
-        {
-            IDictionary<Address, IMember> map = new Dictionary<Address, IMember>(members.Count);
-            foreach (IMember member in members)
-            {
-                map.Add(member.GetAddress(), member);
-            }
-            this.MembersRef = map;
-        }
-
-        #endregion
     }
-
-
 }

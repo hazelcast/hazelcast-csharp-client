@@ -2,111 +2,66 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class ListRemoveWithIndexCodec
-	{
-		public static readonly ListMessageType RequestType = ListMessageType.ListRemovewithindex;
+    internal sealed class ListRemoveWithIndexCodec
+    {
 
-		public const int ResponseType = 105;
+        public static readonly ListMessageType RequestType = ListMessageType.ListRemoveWithIndex;
+        public const int ResponseType = 105;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly ListMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly ListMessageType TYPE = RequestType;
+            public string name;
+            public int index;
 
-			public string name;
+            public static int CalculateDataSize(string name, int index)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += Bits.IntSizeInBytes;
+                return dataSize;
+            }
+        }
 
-			public int index;
+        public static ClientMessage EncodeRequest(string name, int index)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, index);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.Set(index);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name, int index)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				dataSize += Bits.IntSizeInBytes;
-				return dataSize;
-			}
-		}
+        //************************ RESPONSE *************************//
 
-		public static ClientMessage EncodeRequest(string name, int index)
-		{
-			int requiredDataSize = ListRemoveWithIndexCodec.RequestParameters.CalculateDataSize(name, index);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.Set(index);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
 
-		public static ListRemoveWithIndexCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			ListRemoveWithIndexCodec.RequestParameters parameters = new ListRemoveWithIndexCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			int index;
-			index = clientMessage.GetInt();
-			parameters.index = index;
-			return parameters;
-		}
+        public class ResponseParameters
+        {
+            public IData response;
+        }
 
-		public class ResponseParameters
-		{
-			public IData response;
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            IData response = null;
+            bool response_isNull = clientMessage.GetBoolean();
+            if (!response_isNull)
+            {
+            response = clientMessage.GetData();
+            parameters.response = response;
+            }
+            return parameters;
+        }
 
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize(IData response)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += Bits.BooleanSizeInBytes;
-				if (response != null)
-				{
-					dataSize += ParameterUtil.CalculateDataSize(response);
-				}
-				return dataSize;
-			}
-		}
-
-		public static ClientMessage EncodeResponse(IData response)
-		{
-			int requiredDataSize = ListRemoveWithIndexCodec.ResponseParameters.CalculateDataSize(response);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			bool response_isNull;
-			if (response == null)
-			{
-				response_isNull = true;
-				clientMessage.Set(response_isNull);
-			}
-			else
-			{
-				response_isNull = false;
-				clientMessage.Set(response_isNull);
-				clientMessage.Set(response);
-			}
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
-
-		public static ListRemoveWithIndexCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			ListRemoveWithIndexCodec.ResponseParameters parameters = new ListRemoveWithIndexCodec.ResponseParameters();
-			IData response;
-			response = null;
-			bool response_isNull = clientMessage.GetBoolean();
-			if (!response_isNull)
-			{
-				response = clientMessage.GetData();
-				parameters.response = response;
-			}
-			return parameters;
-		}
-	}
+    }
 }

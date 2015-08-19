@@ -1,76 +1,56 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
-using Hazelcast.Net.Ext;
+using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class LockForceUnlockCodec
-	{
-		public static readonly LockMessageType RequestType = LockMessageType.LockForceunlock;
+    internal sealed class LockForceUnlockCodec
+    {
 
-		public const int ResponseType = 100;
+        public static readonly LockMessageType RequestType = LockMessageType.LockForceUnlock;
+        public const int ResponseType = 100;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly LockMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly LockMessageType TYPE = RequestType;
+            public string name;
 
-			public string name;
+            public static int CalculateDataSize(string name)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                return dataSize;
+            }
+        }
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				return dataSize;
-			}
-		}
+        public static ClientMessage EncodeRequest(string name)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-		public static ClientMessage EncodeRequest(string name)
-		{
-			int requiredDataSize = LockForceUnlockCodec.RequestParameters.CalculateDataSize(name);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        //************************ RESPONSE *************************//
 
-		public static LockForceUnlockCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			LockForceUnlockCodec.RequestParameters parameters = new LockForceUnlockCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			return parameters;
-		}
 
-		public class ResponseParameters
-		{
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize()
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				return dataSize;
-			}
-		}
+        public class ResponseParameters
+        {
+        }
 
-		public static ClientMessage EncodeResponse()
-		{
-			int requiredDataSize = LockForceUnlockCodec.ResponseParameters.CalculateDataSize();
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            return parameters;
+        }
 
-		public static LockForceUnlockCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			LockForceUnlockCodec.ResponseParameters parameters = new LockForceUnlockCodec.ResponseParameters();
-			return parameters;
-		}
-	}
+    }
 }

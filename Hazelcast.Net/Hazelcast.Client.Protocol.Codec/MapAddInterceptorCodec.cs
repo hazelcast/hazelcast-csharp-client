@@ -1,93 +1,63 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class MapAddInterceptorCodec
-	{
-		public static readonly MapMessageType RequestType = MapMessageType.MapAddinterceptor;
+    internal sealed class MapAddInterceptorCodec
+    {
 
-		public const int ResponseType = 104;
+        public static readonly MapMessageType RequestType = MapMessageType.MapAddInterceptor;
+        public const int ResponseType = 104;
+        public const bool Retryable = false;
 
-		public const bool Retryable = false;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly MapMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly MapMessageType TYPE = RequestType;
+            public string name;
+            public IData interceptor;
 
-			public string name;
+            public static int CalculateDataSize(string name, IData interceptor)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += ParameterUtil.CalculateDataSize(interceptor);
+                return dataSize;
+            }
+        }
 
-			public IData interceptor;
+        public static ClientMessage EncodeRequest(string name, IData interceptor)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, interceptor);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.Set(interceptor);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name, IData interceptor)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				dataSize += ParameterUtil.CalculateDataSize(interceptor);
-				return dataSize;
-			}
-		}
+        //************************ RESPONSE *************************//
 
-		public static ClientMessage EncodeRequest(string name, IData interceptor)
-		{
-			int requiredDataSize = MapAddInterceptorCodec.RequestParameters.CalculateDataSize(name, interceptor);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.Set(interceptor);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
 
-		public static MapAddInterceptorCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			MapAddInterceptorCodec.RequestParameters parameters = new MapAddInterceptorCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			IData interceptor;
-			interceptor = null;
-			interceptor = clientMessage.GetData();
-			parameters.interceptor = interceptor;
-			return parameters;
-		}
+        public class ResponseParameters
+        {
+            public string response;
+        }
 
-		public class ResponseParameters
-		{
-			public string response;
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            string response = null;
+            response = clientMessage.GetStringUtf8();
+            parameters.response = response;
+            return parameters;
+        }
 
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize(string response)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(response);
-				return dataSize;
-			}
-		}
-
-		public static ClientMessage EncodeResponse(string response)
-		{
-			int requiredDataSize = MapAddInterceptorCodec.ResponseParameters.CalculateDataSize(response);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.Set(response);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
-
-		public static MapAddInterceptorCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			MapAddInterceptorCodec.ResponseParameters parameters = new MapAddInterceptorCodec.ResponseParameters();
-			string response;
-			response = null;
-			response = clientMessage.GetStringUtf8();
-			parameters.response = response;
-			return parameters;
-		}
-	}
+    }
 }

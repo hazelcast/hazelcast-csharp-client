@@ -3,8 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Proxy;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
@@ -179,7 +180,7 @@ namespace Hazelcast.Client.Spi
 
         private void Initialize(ClientProxy clientProxy)
         {
-            var request = new ClientCreateRequest(clientProxy.GetName(), clientProxy.GetServiceName());
+            var request = ClientCreateProxyCodec.EncodeRequest(clientProxy.GetName(), clientProxy.GetServiceName());
             try
             {
                 client.GetInvocationService().InvokeOnRandomTarget(request);
@@ -207,52 +208,51 @@ namespace Hazelcast.Client.Spi
 
         public string AddDistributedObjectListener(IDistributedObjectListener listener)
         {
-            var request = new DistributedObjectListenerRequest();
+            var request = ClientAddDistributedObjectListenerCodec.EncodeRequest();
             var context = new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
                 client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(), client.GetRemotingService(),
                 this, client.GetClientConfig());
             //EventHandler<PortableDistributedObjectEvent> eventHandler = new _EventHandler_211(this, listener);
 
-            DistributedEventHandler eventHandler = delegate(IData eventArgs)
+            DistributedEventHandler eventHandler = delegate(IClientMessage message)
             {
-                var e = client.GetSerializationService().ToObject<PortableDistributedObjectEvent>(eventArgs);
-                if (e != null)
-                {
-                    var ns = new ObjectNamespace(e.GetServiceName(), e.GetName());
-                    ClientProxy proxy = null;
-                    proxies.TryGetValue(ns, out proxy);
-                    if (proxy == null)
+                ClientAddDistributedObjectListenerCodec.AbstractEventHandler.Handle(message,
+                    (name, serviceName, type) =>
                     {
-                        proxy = GetProxy(e.GetServiceName(), e.GetName());
-                    }
-                    var _event = new DistributedObjectEvent(e.GetEventType(), e.GetServiceName(), proxy);
-                    if (DistributedObjectEvent.EventType.Created.Equals(e.GetEventType()))
-                    {
-                        listener.DistributedObjectCreated(_event);
-                    }
-                    else
-                    {
-                        if (DistributedObjectEvent.EventType.Destroyed.Equals(e.GetEventType()))
+                        var ns = new ObjectNamespace(serviceName, name);
+                        ClientProxy proxy = null;
+                        proxies.TryGetValue(ns, out proxy);
+                        if (proxy == null)
                         {
-                            listener.DistributedObjectDestroyed(_event);
+                            proxy = GetProxy(serviceName, name);
                         }
-                    }
-                    
-                }
-
+                        var _event = new DistributedObjectEvent(type, serviceName, proxy);
+                        if (DistributedObjectEvent.EventType.Created.Equals(type))
+                        {
+                            listener.DistributedObjectCreated(_event);
+                        }
+                        else
+                        {
+                            if (DistributedObjectEvent.EventType.Destroyed.Equals(type))
+                            {
+                                listener.DistributedObjectDestroyed(_event);
+                            }
+                        }
+    
+                    });
             };
             //PortableDistributedObjectEvent
-            return ListenerUtil.Listen(context, request, null, eventHandler);
+            return ListenerUtil.Listen(context, request, m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response, null, eventHandler);
         }
 
 
         public bool RemoveDistributedObjectListener(string id)
         {
-            var request = new RemoveDistributedObjectListenerRequest(id);
+            var request = ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id);
             var context = new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
                 client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(),
                 client.GetRemotingService(), this, client.GetClientConfig());
-            return ListenerUtil.StopListening(context, request, id);
+            return ListenerUtil.StopListening(context, request, m=> ClientRemoveDistributedObjectListenerCodec.DecodeResponse(m).response, id);
         }
     }
 }

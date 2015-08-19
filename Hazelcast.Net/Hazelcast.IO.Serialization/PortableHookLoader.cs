@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Logging;
-using Hazelcast.Serialization.Hook;
 using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
@@ -26,20 +25,7 @@ namespace Hazelcast.IO.Serialization
 			{
                 IPortableHook[] hooks =
                 {
-                    new SpiPortableHook(),//
-                    new PartitionPortableHook(),//
-                    new ClientPortableHook(),//
-                    new ClientTxnPortableHook(),//
-                    new MapPortableHook(),//
-                    new QueuePortableHook(),//
-                    new MultiMapPortableHook(),//
-                    new CollectionPortableHook(),//
-                    new ExecutorPortableHook(),//
-                    new TopicPortableHook(),//
-                    new LockPortableHook(),//
-                    new SemaphorePortableHook(),//
-                    new AtomicLongPortableHook(),//
-                    new CountDownLatchPortableHook()//
+                    
                 };
                 foreach (IPortableHook hook in hooks)
                 {

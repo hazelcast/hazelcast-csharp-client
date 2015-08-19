@@ -1,5 +1,4 @@
 using Hazelcast.IO.Serialization;
-using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client
 {

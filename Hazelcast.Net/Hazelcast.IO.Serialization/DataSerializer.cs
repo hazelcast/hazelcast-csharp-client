@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using Hazelcast.Core;
 using Hazelcast.Logging;
-using Hazelcast.Serialization.Hook;
 using Hazelcast.Transaction;
 using Hazelcast.Util;
 
@@ -40,20 +39,7 @@ namespace Hazelcast.IO.Serialization
             {
                 DataSerializerHook[] hooks =
                 {
-                    new ClusterDataSerializerHook(),
-                    new SpiDataSerializerHook(),
-                    new PartitionDataSerializerHook(),
-                    new ClientDataSerializerHook(),
-                    new MapDataSerializerHook(),
-                    new QueueDataSerializerHook(),
-                    new MultiMapDataSerializerHook(),
-                    new CollectionDataSerializerHook(),
-                    new ExecutorDataSerializerHook(),
-                    new TopicDataSerializerHook(),
-                    new LockDataSerializerHook(),
-                    new SemaphoreDataSerializerHook(),
-                    new AtomicLongDataSerializerHook(),
-                    new CountDownLatchDataSerializerHook()
+                    
                 };
                 foreach (DataSerializerHook hook in hooks)
                 {

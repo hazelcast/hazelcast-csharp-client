@@ -2,153 +2,123 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Logging;
-using Hazelcast.Net.Ext;
+using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class ListAddListenerCodec
-	{
-		public static readonly ListMessageType RequestType = ListMessageType.ListAddlistener;
+    internal sealed class ListAddListenerCodec
+    {
 
-		public const int ResponseType = 104;
+        public static readonly ListMessageType RequestType = ListMessageType.ListAddListener;
+        public const int ResponseType = 104;
+        public const bool Retryable = true;
 
-		public const bool Retryable = true;
+        //************************ REQUEST *************************//
 
-		public class RequestParameters
-		{
-			public static readonly ListMessageType Type = RequestType;
+        public class RequestParameters
+        {
+            public static readonly ListMessageType TYPE = RequestType;
+            public string name;
+            public bool includeValue;
 
-			public string name;
+            public static int CalculateDataSize(string name, bool includeValue)
+            {
+                int dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += Bits.BooleanSizeInBytes;
+                return dataSize;
+            }
+        }
 
-			public bool includeValue;
+        public static ClientMessage EncodeRequest(string name, bool includeValue)
+        {
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, includeValue);
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(name);
+            clientMessage.Set(includeValue);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			//************************ REQUEST *************************//
-			public static int CalculateDataSize(string name, bool includeValue)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(name);
-				dataSize += Bits.BooleanSizeInBytes;
-				return dataSize;
-			}
-		}
+        //************************ RESPONSE *************************//
 
-		public static ClientMessage EncodeRequest(string name, bool includeValue)
-		{
-			int requiredDataSize = ListAddListenerCodec.RequestParameters.CalculateDataSize(name, includeValue);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(RequestType.Id());
-			clientMessage.SetRetryable(Retryable);
-			clientMessage.Set(name);
-			clientMessage.Set(includeValue);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
 
-		public static ListAddListenerCodec.RequestParameters DecodeRequest(ClientMessage clientMessage)
-		{
-			ListAddListenerCodec.RequestParameters parameters = new ListAddListenerCodec.RequestParameters();
-			string name;
-			name = null;
-			name = clientMessage.GetStringUtf8();
-			parameters.name = name;
-			bool includeValue;
-			includeValue = clientMessage.GetBoolean();
-			parameters.includeValue = includeValue;
-			return parameters;
-		}
+        public class ResponseParameters
+        {
+            public string response;
+        }
 
-		public class ResponseParameters
-		{
-			public string response;
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            ResponseParameters parameters = new ResponseParameters();
+            string response = null;
+            response = clientMessage.GetStringUtf8();
+            parameters.response = response;
+            return parameters;
+        }
 
-			//************************ RESPONSE *************************//
-			public static int CalculateDataSize(string response)
-			{
-				int dataSize = ClientMessage.HeaderSize;
-				dataSize += ParameterUtil.CalculateStringDataSize(response);
-				return dataSize;
-			}
-		}
 
-		public static ClientMessage EncodeResponse(string response)
-		{
-			int requiredDataSize = ListAddListenerCodec.ResponseParameters.CalculateDataSize(response);
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-			clientMessage.SetMessageType(ResponseType);
-			clientMessage.Set(response);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+        //************************ EVENTS *************************//
 
-		public static ListAddListenerCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
-		{
-			ListAddListenerCodec.ResponseParameters parameters = new ListAddListenerCodec.ResponseParameters();
-			string response;
-			response = null;
-			response = clientMessage.GetStringUtf8();
-			parameters.response = response;
-			return parameters;
-		}
+        public static ClientMessage EncodeItemEvent(IData item, string uuid, int eventType)
+        {
+            int dataSize = ClientMessage.HeaderSize;
+                dataSize += Bits.BooleanSizeInBytes;
+                if (item != null)
+                {
+                dataSize += ParameterUtil.CalculateDataSize(item);
+                }
+                dataSize += ParameterUtil.CalculateDataSize(uuid);
+                dataSize += Bits.IntSizeInBytes;
 
-		//************************ EVENTS *************************//
-		public static ClientMessage EncodeItemEvent(IData item, string uuid, int eventType)
-		{
-			int dataSize = ClientMessage.HeaderSize;
-			dataSize += Bits.BooleanSizeInBytes;
-			if (item != null)
-			{
-				dataSize += ParameterUtil.CalculateDataSize(item);
-			}
-			dataSize += ParameterUtil.CalculateStringDataSize(uuid);
-			dataSize += Bits.IntSizeInBytes;
-			ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-			clientMessage.SetMessageType(EventMessageConst.EventItem);
-			clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
-			bool item_isNull;
-			if (item == null)
-			{
-				item_isNull = true;
-				clientMessage.Set(item_isNull);
-			}
-			else
-			{
-				item_isNull = false;
-				clientMessage.Set(item_isNull);
-				clientMessage.Set(item);
-			}
-			clientMessage.Set(uuid);
-			clientMessage.Set(eventType);
-			clientMessage.UpdateFrameLength();
-			return clientMessage;
-		}
+            ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
+            clientMessage.SetMessageType(EventMessageConst.EventItem);
+            clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
 
-		public abstract class AbstractEventHandler
-		{
-			public virtual void Handle(ClientMessage clientMessage)
-			{
-				int messageType = clientMessage.GetMessageType();
-				if (messageType == EventMessageConst.EventItem)
-				{
-					IData item;
-					item = null;
-					bool item_isNull = clientMessage.GetBoolean();
-					if (!item_isNull)
-					{
-						item = clientMessage.GetData();
-					}
-					string uuid;
-					uuid = null;
-					uuid = clientMessage.GetStringUtf8();
-					int eventType;
-					eventType = clientMessage.GetInt();
-					Handle(item, uuid, eventType);
-					return;
-				}
-				Logger.GetLogger(base.GetType()).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
-			}
+            bool item_isNull;
+            if (item == null)
+            {
+                item_isNull = true;
+                clientMessage.Set(item_isNull);
+            }
+            else
+            {
+                item_isNull= false;
+                clientMessage.Set(item_isNull);
+            clientMessage.Set(item);
+            }
+            clientMessage.Set(uuid);
+            clientMessage.Set(eventType);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
-			public abstract void Handle(IData item, string uuid, int eventType);
-		}
-	}
+        public abstract class AbstractEventHandler
+        {
+            public static void Handle(IClientMessage clientMessage, HandleItem handleItem)
+            {
+                int messageType = clientMessage.GetMessageType();
+                if (messageType == EventMessageConst.EventItem) {
+            IData item = null;
+            bool item_isNull = clientMessage.GetBoolean();
+            if (!item_isNull)
+            {
+            item = clientMessage.GetData();
+            }
+            string uuid = null;
+            uuid = clientMessage.GetStringUtf8();
+            int eventType ;
+            eventType = clientMessage.GetInt();
+                    handleItem(item, uuid, eventType);
+                    return;
+                }
+                Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
+            }
+
+            public delegate void HandleItem(IData item, string uuid, int eventType);
+       }
+
+    }
 }

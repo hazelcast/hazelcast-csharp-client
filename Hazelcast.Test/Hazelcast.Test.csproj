@@ -28,7 +28,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-	<keyfile>..\snkey\hazelcast.snk</keyfile>
+    <keyfile>..\snkey\hazelcast.snk</keyfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -76,7 +76,7 @@
   <ItemGroup>
     <Compile Include="ClientQueuePerformanceTest.cs" />
     <Compile Include="Hazelcast.Client.Model\Item.cs" />
-    <Compile Include="Hazelcast.Client.Test\BaseTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\HazelcastBaseTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientAtomicLongTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientCountDownLatchTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientIdGeneratorTest.cs" />

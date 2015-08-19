@@ -12,7 +12,7 @@ namespace Hazelcast.Client.Protocol.Codec
 		{
 		}
 
-		public static Address Decode(ClientMessage clientMessage)
+		public static Address Decode(IClientMessage clientMessage)
 		{
 			string host = clientMessage.GetStringUtf8();
 			int port = clientMessage.GetInt();
@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
 		public static int CalculateDataSize(Address address)
 		{
-			int dataSize = ParameterUtil.CalculateStringDataSize(address.GetHost());
+			int dataSize = ParameterUtil.CalculateDataSize(address.GetHost());
 			dataSize += Bits.IntSizeInBytes;
 			return dataSize;
 		}

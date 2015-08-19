@@ -16,7 +16,7 @@ namespace Hazelcast.Util
             return Thread.CurrentThread.ManagedThreadId;
         }
 
-        public static ClientMessage GetResult(Task<IClientMessage> task, int timeout)
+        public static IClientMessage GetResult(Task<IClientMessage> task, int timeout)
         {
             try
             {
@@ -31,10 +31,10 @@ namespace Hazelcast.Util
             {
                 ExceptionUtil.Rethrow(e);
             }
-            return (ClientMessage) task.Result;
+            return task.Result;
         } 
         
-        public static ClientMessage GetResult(Task<IClientMessage> task)
+        public static IClientMessage GetResult(Task<IClientMessage> task)
         {
             return GetResult(task, TaskOperationTimeOutMilliseconds);
         }

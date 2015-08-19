@@ -11,8 +11,11 @@ namespace Hazelcast.Client.Protocol.Util
     /// </summary>
     internal class ClientMessageBuilder
     {
-        private readonly Dictionary<int, BufferBuilder> builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
+        /// <summary>Implementers will be responsible to delegate the constructed message</summary>
+        public delegate void HandleMessageDelegate(ClientMessage message);
+
         private readonly HandleMessageDelegate _delegate;
+        private readonly Dictionary<int, BufferBuilder> builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
         private ClientMessage message = ClientMessage.Create();
 
         public ClientMessageBuilder(HandleMessageDelegate _delegate)
@@ -72,8 +75,5 @@ namespace Hazelcast.Client.Protocol.Util
             message.Index(message.GetDataOffset());
             _delegate(message);
         }
-
-        /// <summary>Implementers will be responsible to delegate the constructed message</summary>
-        public delegate void HandleMessageDelegate(ClientMessage message);
     }
 }

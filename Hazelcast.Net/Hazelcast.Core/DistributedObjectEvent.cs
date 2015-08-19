@@ -12,19 +12,20 @@ namespace Hazelcast.Core
     /// <seealso cref="IDistributedObjectListener">IDistributedObjectListener</seealso>
     public class DistributedObjectEvent
     {
-        public enum EventType
+        
+        public static class EventType
         {
-            Created,
-            Destroyed
+            public const string Created = "CREATED";
+            public const string Destroyed = "DESTROYED";
         }
 
         private readonly IDistributedObject distributedObject;
 
-        private readonly EventType eventType;
+        private readonly String eventType;
 
         private readonly string serviceName;
 
-        public DistributedObjectEvent(EventType eventType, string serviceName, IDistributedObject distributedObject)
+        public DistributedObjectEvent(String eventType, string serviceName, IDistributedObject distributedObject)
         {
             this.eventType = eventType;
             this.serviceName = serviceName;
@@ -38,7 +39,7 @@ namespace Hazelcast.Core
         ///     <see cref="EventType.Destroyed">EventType.Destroyed</see>
         /// </summary>
         /// <returns>eventType</returns>
-        public virtual EventType GetEventType()
+        public virtual String GetEventType()
         {
             return eventType;
         }
