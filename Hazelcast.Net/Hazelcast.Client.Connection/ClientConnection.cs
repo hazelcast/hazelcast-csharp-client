@@ -276,7 +276,7 @@ namespace Hazelcast.Client.Connection
                 return;
             }
             var callId = RegisterCall(task);
-            var clientRequest = (ClientMessage) taskData.Request; //TODO: fix accessibility
+            var clientRequest = taskData.Request;
             clientRequest.AddFlag(ClientMessage.BeginAndEndFlags);
             if (taskData.PartitionId != -1)
             {
@@ -285,7 +285,7 @@ namespace Hazelcast.Client.Connection
 
             //enqueue to write queue
             //Console.clientRequest("SENDING:"+callId);
-            if (!WriteAsync(clientRequest))
+            if (!WriteAsync((ISocketWritable)clientRequest))
             {
                 UnRegisterCall(callId);
                 UnRegisterEvent(callId);

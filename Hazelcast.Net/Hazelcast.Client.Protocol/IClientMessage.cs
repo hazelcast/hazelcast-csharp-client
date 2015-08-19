@@ -23,5 +23,6 @@ namespace Hazelcast.Client.Protocol
         /// <returns>The ClientMessage with the new correlation id field value.</returns>
         IClientMessage SetCorrelationId(int correlationId);
         IClientMessage AddFlag(short flags);
+        IClientMessage SetPartitionId(int partitionId);
     }
 }

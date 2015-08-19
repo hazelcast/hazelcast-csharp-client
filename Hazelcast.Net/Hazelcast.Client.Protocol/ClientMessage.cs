@@ -271,7 +271,7 @@ namespace Hazelcast.Client.Protocol
         /// <summary>Sets the partition id field.</summary>
         /// <param name="partitionId">The value to set in the partitions id field.</param>
         /// <returns>The ClientMessage with the new partitions id field value.</returns>
-        public virtual ClientMessage SetPartitionId(int partitionId)
+        public virtual IClientMessage SetPartitionId(int partitionId)
         {
             Int32Set(PartitionIdFieldOffset, partitionId);
             return this;
