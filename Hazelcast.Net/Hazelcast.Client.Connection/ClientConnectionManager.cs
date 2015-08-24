@@ -180,32 +180,22 @@ namespace Hazelcast.Client.Connection
             _heatHeartbeatListeners.Add(connectonHeartbeatListener);
         }
 
-        public Task<IClientMessage> Send(IClientMessage request)
-        {
-            return Send(request, null, -1);
-        }
-
-        public Task<IClientMessage> Send(IClientMessage request, Address target)
-        {
-            return Send(request, target, -1);
-        }
-
-        public Task<IClientMessage> Send(IClientMessage request, Address target, int partitionId)
+        public Task<IClientMessage> Send(IClientMessage request, Address target, int partitionId = -1, DistributedEventHandler handler = null)
         {
             var clientConnection = GetOrConnectWithRetry(target);
-            return clientConnection.Send(request, partitionId);
+            return clientConnection.Send(request, partitionId, handler);
         }
 
-        public Task<IClientMessage> SendAndHandle(IClientMessage request, DistributedEventHandler handler)
+        public Task<IClientMessage> Send(IClientMessage request, DistributedEventHandler handler = null)
         {
-            return SendAndHandle(request, null, handler);
+            var clientConnection = GetOrConnectWithRetry(null);
+            return clientConnection.Send(request, handler: handler);
         }
 
-        public Task<IClientMessage> SendAndHandle(IClientMessage request, Address target,
-            DistributedEventHandler handler)
+        public Task<IClientMessage> Send(IClientMessage request, IMember target, int partitionId = -1, DistributedEventHandler handler = null)
         {
-            var clientConnection = GetOrConnectWithRetry(target);
-            return clientConnection.Send(request, handler, -1);
+            var clientConnection = GetOrConnectWithRetry(target.GetAddress());
+            return clientConnection.Send(request, partitionId, handler, target.GetUuid());
         }
 
         public void RegisterListener(string registrationId, int callId)
@@ -376,7 +366,13 @@ namespace Hazelcast.Client.Connection
                 throw ExceptionUtil.Rethrow(e);
             }
             var rp = ClientAuthenticationCodec.DecodeResponse(response);
-            connection.SetRemoteEndpoint(rp.address);
+            var member = _client.GetClientClusterService().GetMember(rp.address);
+            if (member == null)
+            {
+                throw new HazelcastException("Node with address '" + rp.address + "' was not found in the member list");
+            }
+            connection.SetRemoteMember(member);
+
         }
 
         private void DestroyConnection(Address address)

@@ -16,7 +16,6 @@ namespace Hazelcast.Client.Protocol.Codec
         ClientAddDistributedObjectListener = 0xd,
         ClientRemoveDistributedObjectListener = 0xe,
         ClientPing = 0xf
-
     }
 
 }

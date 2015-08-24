@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
+using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Transaction;
 using Hazelcast.Util;
@@ -18,13 +19,13 @@ namespace Hazelcast.Client.Proxy
 
         private readonly HazelcastClient client;
 
-        private Address txOwner;
+        private IMember txOwner;
 
         private long startTime;
         private TransactionState state = TransactionState.NoTxn;
         private string txnId;
 
-        internal TransactionProxy(HazelcastClient client, TransactionOptions options, Address txOwner)
+        internal TransactionProxy(HazelcastClient client, TransactionOptions options, IMember txOwner)
         {
             this.options = options;
             this.client =  client;

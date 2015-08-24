@@ -8,47 +8,53 @@ namespace Hazelcast.Client.Proxy
 {
     internal class TransactionContextProxy : ITransactionContext
     {
-        internal const int txOwnerNodeTryCount = 5;
+        internal const int TxOwnerNodeTryCount = 5;
 
-        internal readonly HazelcastClient client;
+        internal readonly HazelcastClient Client;
 
-        internal Address _txnOwnerNode;
-        internal readonly TransactionProxy transaction;
+        internal IMember TxnOwnerNode;
+        internal readonly TransactionProxy Transaction;
 
         private readonly IDictionary<TransactionalObjectKey, ITransactionalObject> txnObjectMap =
             new Dictionary<TransactionalObjectKey, ITransactionalObject>(2);
 
         public TransactionContextProxy(HazelcastClient client, TransactionOptions options)
         {
-            this.client = client;
-            _txnOwnerNode = client.GetConnectionManager().BindToRandomAddress();
-
-            if (_txnOwnerNode == null)
+            this.Client = client;
+            var address = client.GetConnectionManager().BindToRandomAddress();
+            if (address == null)
             {
-                throw new HazelcastException("Could not obtain Connection!!!");
+                throw new HazelcastException("Could not obtain a new connection.");
             }
-            transaction = new TransactionProxy(client, options, _txnOwnerNode);
+            TxnOwnerNode = client.GetClientClusterService().GetMember(address);
+            if (TxnOwnerNode == null)
+            {
+                throw new HazelcastException("Could not find matching member for address " + address);
+            }
+
+
+            Transaction = new TransactionProxy(client, options, TxnOwnerNode);
         }
 
         public virtual string GetTxnId()
         {
-            return transaction.GetTxnId();
+            return Transaction.GetTxnId();
         }
 
         public virtual void BeginTransaction()
         {
-            transaction.Begin();
+            Transaction.Begin();
         }
 
         /// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
         public virtual void CommitTransaction()
         {
-            transaction.Commit(true);
+            Transaction.Commit(true);
         }
 
         public virtual void RollbackTransaction()
         {
-            transaction.Rollback();
+            Transaction.Rollback();
         }
 
         public virtual ITransactionalMap<K, V> GetMap<K, V>(string name)
@@ -78,7 +84,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual T GetTransactionalObject<T>(string serviceName, string name) where T : ITransactionalObject
         {
-            if (transaction.GetState() != TransactionState.Active)
+            if (Transaction.GetState() != TransactionState.Active)
             {
                 throw new TransactionNotActiveException("No transaction is found while accessing " +
                                                         "transactional object -> " + serviceName + "[" + name + "]!");
@@ -132,12 +138,12 @@ namespace Hazelcast.Client.Proxy
 
         public virtual HazelcastClient GetClient()
         {
-            return client;
+            return Client;
         }
 
         public Address TxnOwner
         {
-            get { return _txnOwnerNode; }
+            get { return TxnOwnerNode.GetAddress(); }
         }
 
     }

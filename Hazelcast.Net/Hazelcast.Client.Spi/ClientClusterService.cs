@@ -442,11 +442,13 @@ namespace Hazelcast.Client.Spi
                 throw ExceptionUtil.Rethrow(e);
             }
             var result = ClientAuthenticationCodec.DecodeResponse(response);
-            connection.SetRemoteEndpoint(result.address);
+
+            var member = new Member(result.address, result.ownerUuid);
             _principal = new ClientPrincipal(result.uuid, result.ownerUuid);
 
+            connection.SetRemoteMember(member);
             // add initial member
-            _clientMembershipListener.HandleMember(new Member(result.address, result.ownerUuid), MembershipEvent.MemberAdded);
+            _clientMembershipListener.HandleMember(member, MembershipEvent.MemberAdded);
         }
 
     }
