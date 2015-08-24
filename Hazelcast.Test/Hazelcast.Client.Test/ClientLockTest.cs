@@ -205,5 +205,12 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(latch2.Wait(TimeSpan.FromMinutes(1)));
 		}
 
+	    [Test]
+        [ExpectedException(typeof(SynchronizationLockException))]
+	    public void TestUnlockBeforeLock_ShouldThrowException()
+	    {
+	        l.Unlock();
+	    }
+
 	}
 }

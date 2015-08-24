@@ -29,13 +29,18 @@ namespace Hazelcast.Core
     public class QueryException : HazelcastException 
     {
 
-        public QueryException() {
-        }
-
+        public QueryException() { }
         public QueryException(String message) :base(message){}
-
         public QueryException(string message, Exception cause): base(message, cause){}
-
         public QueryException(Exception cause) : base(cause.Message) { }
+    }
+
+    public class DistributedObjectDestroyedException : HazelcastException
+    {
+        public DistributedObjectDestroyedException() {}
+        public DistributedObjectDestroyedException(String message) :base(message){}
+        public DistributedObjectDestroyedException(string message, Exception cause): base(message, cause){}
+        public DistributedObjectDestroyedException(Exception cause) : base(cause.Message) { }
+ 
     }
 }

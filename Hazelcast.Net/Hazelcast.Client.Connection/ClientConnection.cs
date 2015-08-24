@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.Config;
 using Hazelcast.IO;
@@ -199,7 +200,7 @@ namespace Hazelcast.Client.Connection
             clientRequest.AddFlag(ClientMessage.BeginAndEndFlags);
             var taskData = new TaskData(clientRequest, null, handler, partitionId);
             //create task
-            var task = new Task<IClientMessage>(taskObj => ResponseReady((TaskData) taskObj), taskData);
+            var task = new Task<IClientMessage>(d => taskData.ResponseReady(), taskData);
             Send(task);
             return task;
         }
@@ -474,16 +475,12 @@ namespace Hazelcast.Client.Connection
         private void HandleReceivedPacket(IClientMessage response)
         {
             var callId = response.GetCorrelationId();
-            //Console.WriteLine("HANDLING RECEIVED:"+callId);
-            //IData response = clientResponse.Response;
-            GenericError error = null;
+            Error error = null;
 
-            //TODO : error handling
-//            if (response.GetMessageType() == ExceptionResultCodec.Type)
-//            {
-//                var er = ExceptionResultCodec.Decode(clientResponse);
-//                error = new GenericError(er.className, er.message, er.stacktrace, 0);
-//            }
+            if (response.GetMessageType() == Error.Type)
+            {
+                error = Error.Decode(response);
+            }
             Task task;
             if (_requestTasks.TryRemove(callId, out task))
             {
@@ -495,7 +492,7 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private void HandleRequestTask(Task task, IClientMessage response, GenericError error)
+        private void HandleRequestTask(Task task, IClientMessage response, Error error)
         {
             if (task == null)
             {
@@ -510,12 +507,12 @@ namespace Hazelcast.Client.Connection
             }
             if (error != null)
             {
-                if (error.Name != null && error.Name.Contains("TargetNotMemberException"))
+                if (error.ErrorCode == (int)ClientProtocolErrorCodes.TargetNotMember)
                 {
                     if (_ReSend(task)) return;
                 }
-                if (error.Name != null && (error.Name.Contains("HazelcastInstanceNotActiveException") ||
-                                           error.Name.Contains("TargetDisconnectedException")))
+                if (error.ErrorCode == (int)ClientProtocolErrorCodes.HazelcastInstanceNotActive ||
+                                           error.ErrorCode == (int)ClientProtocolErrorCodes.TargetDisconnected)
                 {
                     if (taskData.Request.IsRetryable() || _redoOperations)
                     {
@@ -554,18 +551,17 @@ namespace Hazelcast.Client.Connection
 
         private void HandleRequestTaskAsFailed(Task task)
         {
-            GenericError responseGenericError;
+            Error responseError;
             if (_clientConnectionManager.Live)
             {
-                responseGenericError = new GenericError("TargetDisconnectedException",
-                    "Disconnected:" + GetRemoteEndpoint(), "", 0);
+                responseError = new Error((int)ClientProtocolErrorCodes.TargetDisconnected, "", "Disconnected:" + GetRemoteEndpoint(), null, null, null);
             }
             else
             {
-                responseGenericError = new GenericError("HazelcastException", "Client is shutting down!!!", "", 0);
+                responseError = new Error((int)ClientProtocolErrorCodes.Hazelcast, "", "Client is shutting down.", "", null, null);
             }
 
-            HandleRequestTask(task, null, responseGenericError);
+            HandleRequestTask(task, null, responseError);
         }
 
         private void HandleSocketException(Exception e)
@@ -657,21 +653,6 @@ namespace Hazelcast.Client.Connection
             //GetSocket().Close();
         }
 
-        /// <summary>
-        ///     Request Task Execute Function. When response ready. This Func is called and result is return as Task.Result
-        /// </summary>
-        /// <param name="taskData"></param>
-        /// <returns>response result to Task.Result</returns>
-        private IClientMessage ResponseReady(TaskData taskData)
-        {
-            if (taskData.Error != null)
-            {
-                ExceptionUtil.Rethrow(taskData.Error);
-            }
-            taskData.ResponseReady();
-            return taskData.Response;
-        }
-
         private void StartAsyncProcess()
         {
             BeginRead();
@@ -686,7 +667,7 @@ namespace Hazelcast.Client.Connection
             return _task;
         }
 
-        private static void UpdateResponse(Task task, IClientMessage response, GenericError error)
+        private static void UpdateResponse(Task task, IClientMessage response, Error error)
         {
             var taskData = task.AsyncState as TaskData;
             if (taskData != null)
@@ -783,7 +764,7 @@ namespace Hazelcast.Client.Connection
     internal class TaskData
     {
         private readonly object _mutex = new object();
-        private volatile GenericError _error;
+        private volatile Error _error;
         private volatile DistributedEventHandler _handler;
         private volatile int _partitionId;
         private volatile IClientMessage _request;
@@ -800,7 +781,7 @@ namespace Hazelcast.Client.Connection
             _partitionId = partitionId;
         }
 
-        internal GenericError Error
+        internal Error Error
         {
             get { return _error; }
             set { _error = value; }
@@ -835,11 +816,12 @@ namespace Hazelcast.Client.Connection
             set { _partitionId = value; }
         }
 
-        public void ResponseReady()
+        public IClientMessage ResponseReady()
         {
             Monitor.Enter(_mutex);
             Monitor.PulseAll(_mutex);
             Monitor.Exit(_mutex);
+            return Response;
         }
 
         public bool Wait()

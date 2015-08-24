@@ -104,6 +104,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchTrySetCountCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\DistributedObjectInfoCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\EntryViewCodec.cs" />
+    <Compile Include="Hazelcast.Client\Error.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllWithIndexCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddCodec.cs" />
@@ -261,6 +262,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\SetRemoveCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\SetRemoveListenerCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\SetSizeCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\StackTraceElementCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\TopicAddMessageListenerCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\TopicMessageType.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\TopicPublishCodec.cs" />
@@ -315,6 +317,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Util\ParameterUtil.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Util\SafeBuffer.cs" />
     <Compile Include="Hazelcast.Client.Protocol\ClientMessage.cs" />
+    <Compile Include="Hazelcast.Client.Protocol\ClientProtocolErrorCodes.cs" />
     <Compile Include="Hazelcast.Client.Protocol\EventMessageConst.cs" />
     <Compile Include="Hazelcast.Client.Protocol\IClientMessage.cs" />
     <Compile Include="Hazelcast.Client.Protocol\ResponseMessageConst.cs" />
@@ -415,7 +418,6 @@
     <Compile Include="Hazelcast.Client\ClientPrincipal.cs" />
     <Compile Include="Hazelcast.Client\ClientTypes.cs" />
     <Compile Include="Hazelcast.Client\DistributedObjectInfo.cs" />
-    <Compile Include="Hazelcast.Client\GenericError.cs" />
     <Compile Include="Hazelcast.Client\HazelcastClient.cs" />
     <Compile Include="Hazelcast.Client\HazelcastClientManagedContext.cs" />
     <Compile Include="Hazelcast.Client\HazelcastClientProxy.cs" />
@@ -573,10 +575,12 @@
     <Compile Include="Hazelcast.Transaction\TransactionNotActiveException.cs" />
     <Compile Include="Hazelcast.Transaction\TransactionOptions.cs" />
     <Compile Include="Hazelcast.Transaction\TransactionState.cs" />
+    <Compile Include="Hazelcast.Transaction\TransactionTimedOutException.cs" />
     <Compile Include="Hazelcast.Util\AbstractLoadBalancer.cs" />
     <Compile Include="Hazelcast.Util\AddressHelper.cs" />
     <Compile Include="Hazelcast.Util\AddressUtil.cs" />
     <Compile Include="Hazelcast.Util\ByteFlipperUtil.cs" />
+    <Compile Include="Hazelcast.Util\ClientExceptionFactory.cs" />
     <Compile Include="Hazelcast.Util\Delegates.cs" />
     <Compile Include="Hazelcast.Util\Clock.cs" />
     <Compile Include="Hazelcast.Util\ExceptionUtil.cs" />
@@ -587,6 +591,7 @@
     <Compile Include="Hazelcast.Util\QuickMath.cs" />
     <Compile Include="Hazelcast.Util\RandomLB.cs" />
     <Compile Include="Hazelcast.Util\RoundRobinLB.cs" />
+    <Compile Include="Hazelcast.Util\StackTraceElement.cs" />
     <Compile Include="Hazelcast.Util\StaticLB.cs" />
     <Compile Include="Hazelcast.Util\StripedTaskScheduler.cs" />
     <Compile Include="Hazelcast.Util\ThreadUtil.cs" />
