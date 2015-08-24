@@ -1,49 +1,15 @@
 using System;
-using System.IO;
-using System.Threading;
 using Hazelcast.Client;
-using Hazelcast.Client.Spi;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
-using Hazelcast.Logging;
-using Hazelcast.Transaction;
 
 namespace Hazelcast.Util
 {
-
-
-/*
-All Possioble Exceptions that are thrown at hazelcast-core:
-
-ConcurrentModificationException
-DuplicateInstanceNameException
-HazelcastException
-HazelcastSerializationException
-IllegalArgumentException
-IllegalMonitorStateException
-IllegalStateException
-IllegalThreadStateException
-IOException
-NegativeArraySizeException
-NoSuchElementException
-NullPointerException
-PartitionMigratingException
-QueryException
-ReflectionException
-RejectedExecutionException
-ResponseAlreadySentException
-RetryableHazelcastException
-RuntimeException
-TargetNotMemberException
-TimeoutException
-TransactionException
-TransactionNotActiveException
-UnsupportedOperationException
-UTFDataFormatException
-WrongTargetException
-*/
-    /// </summary>
     internal sealed class ExceptionUtil
     {
+
+        private static readonly ClientExceptionFactory ExceptionFactory = new ClientExceptionFactory();
+
         public static Exception Rethrow(Exception t, Type allowedType)
         {
             if (t is NotImplementedException)
@@ -58,42 +24,16 @@ WrongTargetException
                     Rethrow(exception);
                 }
             }
-            var e = t is GenericError ? ConvertGenericError((GenericError)t) : t;
-            if (allowedType != null && allowedType.IsInstanceOfType(e))
+            if (allowedType != null && allowedType.IsInstanceOfType(t))
             {
-                throw e;
+                throw t;
             }
             throw new HazelcastException(t);
         }
 
-        public static Exception ConvertGenericError(GenericError genericError)
+        public static Exception Rethrow(Error error)
         {
-            var name = genericError.Name.Substring(genericError.Name.LastIndexOf(".") + 1);
-            switch (name)
-            {
-                case "IllegalStateException":
-                    return new InvalidOperationException(genericError.Message);
-                case "IllegalMonitorStateException":
-                    return new SynchronizationLockException(genericError.Message);
-                case "IOException":
-                    return new IOException(genericError.Message);
-                case "TransactionException":
-                    return new TransactionException(genericError.Message);
-                case "TransactionNotActiveException":
-                    return new TransactionNotActiveException(genericError.Message);
-                case "HazelcastException":
-                    return new HazelcastException(genericError.Message);
-                case "NullPointerException":
-                    return new NullReferenceException(genericError.Message);
-                case "QueryException":
-                    return new QueryException(genericError.Message);
-                case "HazelcastInstanceNotActiveException":
-                    return new HazelcastInstanceNotActiveException();
-                case "TargetDisconnectedException":
-                    return new TargetDisconnectedException(genericError.Message);
-                default:
-                    return new HazelcastException(genericError.Message);
-            }
+            return Rethrow(ExceptionFactory.CreateException(error));
         }
 
         public static Exception Rethrow(Exception t)
@@ -110,14 +50,8 @@ WrongTargetException
                     Rethrow(exception);
                 }
             }
-            if (t is GenericError)
-            {
-
-                throw ConvertGenericError(t as GenericError);
-            }
             throw t;
         }
-
 
         //public static void FixRemoteStackTrace(Exception remoteCause, StackTraceElement[] localSideStackTrace)
         //{

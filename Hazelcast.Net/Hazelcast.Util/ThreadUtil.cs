@@ -21,10 +21,15 @@ namespace Hazelcast.Util
             try
             {
                 var taskData = task.AsyncState as TaskData;
+                
                 var responseReady = taskData.Wait();// task.Wait(TimeSpan.FromMilliseconds(TaskOperationTimeOutMilliseconds));
                 if (!responseReady)
                 {
                     throw new TimeoutException("Operation time-out! No response received from the server.");
+                }
+                if (taskData.Error != null)
+                {
+                    ExceptionUtil.Rethrow(taskData.Error);
                 }
             }
             catch (AggregateException e)
