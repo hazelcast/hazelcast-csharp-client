@@ -141,11 +141,6 @@ namespace Hazelcast.Client.Proxy
             return Client;
         }
 
-        public Address TxnOwner
-        {
-            get { return TxnOwnerNode.GetAddress(); }
-        }
-
     }
 
     internal class TransactionalObjectKey

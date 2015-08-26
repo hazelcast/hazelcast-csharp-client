@@ -18,7 +18,7 @@ namespace Hazelcast.Client.Test
        [SetUp]
         public void Init()
         {
-            set = client.GetSet<object>(Name);
+            set = Client.GetSet<object>(Name);
         }
 
         [TearDown]

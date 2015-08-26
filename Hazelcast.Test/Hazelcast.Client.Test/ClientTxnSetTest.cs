@@ -28,9 +28,9 @@ namespace Hazelcast.Client.Test
 		public virtual void TestAddRemove()
 		{
 		    var name = Name;
-            var s = client.GetSet<object>(name);
+            var s = Client.GetSet<object>(name);
 			s.Add("item1");
-			ITransactionContext context = client.NewTransactionContext();
+			ITransactionContext context = Client.NewTransactionContext();
 			context.BeginTransaction();
             ITransactionalSet<object> set = context.GetSet<object>(name);
 			NUnit.Framework.Assert.IsTrue(set.Add("item2"));

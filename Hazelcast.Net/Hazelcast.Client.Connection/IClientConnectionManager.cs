@@ -4,7 +4,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Connection
 {
-    internal interface IClientConnectionManager : IRemotingService
+    internal interface IClientConnectionManager
     {
         bool Live { get; }
 
@@ -16,6 +16,8 @@ namespace Hazelcast.Client.Connection
         /// <exception cref="System.IO.IOException"></exception>
         ClientConnection GetOrConnect(Address address, Authenticator authenticator);
 
+        //TODO: move to invocation service
+        bool RemoveEventHandler(int callId);
         bool Shutdown();
         void Start();
     }

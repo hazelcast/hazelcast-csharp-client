@@ -17,7 +17,7 @@ namespace Hazelcast.Client.Test
 
         public override void InitMoreFixture()
         {
-            l = client.GetLock(name);
+            l = Client.GetLock(name);
         }
 
         [SetUp]

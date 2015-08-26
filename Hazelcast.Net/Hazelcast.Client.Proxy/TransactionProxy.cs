@@ -132,10 +132,10 @@ namespace Hazelcast.Client.Proxy
 
         private IClientMessage Invoke(IClientMessage request)
         {
-            var rpc = client.GetRemotingService();
+            var rpc = client.GetInvocationService();
             try
             {
-                var task = rpc.Send(request, txOwner);
+                var task = rpc.InvokeOnMember(request, txOwner);
                 return ThreadUtil.GetResult(task);
             }
             catch (Exception e)

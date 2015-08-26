@@ -20,7 +20,7 @@ namespace Hazelcast.Client.Test
         public void Init()
         {
             //name = Name;
-            map = client.GetMap<object, object>(name);
+            map = Client.GetMap<object, object>(name);
         }
 
         [TearDown]
@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void TestPutGet()
 		{
-			ITransactionContext context = client.NewTransactionContext();
+			ITransactionContext context = Client.NewTransactionContext();
 			context.BeginTransaction();
             ITransactionalMap<object, object> txnMap = context.GetMap<object, object>(name);
 			Assert.IsNull(txnMap.Put("key1", "value1"));
@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Test
 		[Test]
         public void testPutWithTTL()
         {
-            ITransactionContext context = client.NewTransactionContext();
+            ITransactionContext context = Client.NewTransactionContext();
 			context.BeginTransaction();
             ITransactionalMap<object, object> txnMap = context.GetMap<object, object>(name);
 			Assert.IsNull(txnMap.Put("key1", "value1",5,TimeUnit.SECONDS));
@@ -68,7 +68,7 @@ namespace Hazelcast.Client.Test
 	    public void testGetForUpdate()
 	    {
 
-            ITransactionContext context = client.NewTransactionContext();
+            ITransactionContext context = Client.NewTransactionContext();
             context.BeginTransaction();
             ITransactionalMap<object, object> txnMap = context.GetMap<object, object>(name);
             txnMap.Put("key1", "value1");
@@ -123,7 +123,7 @@ namespace Hazelcast.Client.Test
             //var map = client.GetMap<object, object>(name);
 			map.Put("key1", "value1");
 			map.Put("key2", "value2");
-            ITransactionContext context = client.NewTransactionContext();
+            ITransactionContext context = Client.NewTransactionContext();
 			context.BeginTransaction();
             ITransactionalMap<object, object> txMap = context.GetMap<object, object>(name);
 			Assert.IsNull(txMap.Put("key3", "value3"));

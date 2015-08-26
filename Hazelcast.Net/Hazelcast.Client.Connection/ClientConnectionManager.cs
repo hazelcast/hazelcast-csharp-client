@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
@@ -19,7 +18,6 @@ namespace Hazelcast.Client.Connection
 {
     internal class ClientConnectionManager : IClientConnectionManager
     {
-        public const int DefaultEventThreadCount = 3;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientConnectionManager));
         public static int RetryCount = 20;
         public static int RetryWaitTime = 250;
@@ -39,35 +37,25 @@ namespace Hazelcast.Client.Connection
             new ConcurrentBag<IConnectionHeartbeatListener>();
 
         private readonly ClientNetworkConfig _networkConfig;
-        private readonly bool _redoOperation;
-
-        private readonly ConcurrentDictionary<string, string> _registrationAliasMap =
-            new ConcurrentDictionary<string, string>();
-
-        private readonly ConcurrentDictionary<string, int> _registrationMap = new ConcurrentDictionary<string, int>();
         private readonly Router _router;
-        private readonly bool _smartRouting;
         private readonly ISocketInterceptor _socketInterceptor;
-        private readonly StripedTaskScheduler _taskScheduler;
         private Thread _heartBeatThread;
         private volatile bool _live;
         private volatile int _nextConnectionId;
         private LinkedListNode<ClientConnection> _nextConnectionNode = null;
-        //private volatile int _whoisnextId;
 
         private volatile ClientPrincipal _principal;
 
-        public ClientConnectionManager(HazelcastClient client, LoadBalancer loadBalancer, bool smartRouting = true)
+        public ClientConnectionManager(HazelcastClient client, LoadBalancer loadBalancer)
         {
             _client = client;
             _router = new Router(loadBalancer);
-            _smartRouting = smartRouting;
 
             var config = client.GetClientConfig();
 
             _networkConfig = config.GetNetworkConfig();
 
-            _redoOperation = config.GetNetworkConfig().IsRedoOperation();
+            config.GetNetworkConfig().IsRedoOperation();
             _credentials = config.GetCredentials();
 
             //init socketInterceptor
@@ -79,30 +67,21 @@ namespace Hazelcast.Client.Connection
             }
             _socketInterceptor = null;
 
-            var eventTreadCount = ReadEnvironmentVar("hazelcast.client.event.thread.count");
-            eventTreadCount = eventTreadCount > 0 ? eventTreadCount : DefaultEventThreadCount;
-            _taskScheduler = new StripedTaskScheduler(eventTreadCount);
-
-            var timeout = ReadEnvironmentVar("hazelcast.client.request.timeout");
+            var timeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.timeout");
             if (timeout > 0)
             {
                 ThreadUtil.TaskOperationTimeOutMilliseconds = timeout;
             }
-            var retryCount = ReadEnvironmentVar("hazelcast.client.request.retry.count");
+            var retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count");
             if (retryCount > 0)
             {
                 RetryCount = retryCount;
             }
-            var retryWaitTime = ReadEnvironmentVar("hazelcast.client.request.retry.wait.time");
+            var retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time");
             if (retryWaitTime > 0)
             {
                 RetryWaitTime = retryWaitTime;
             }
-        }
-
-        public StripedTaskScheduler TaskScheduler
-        {
-            get { return _taskScheduler; }
         }
 
         public void Start()
@@ -148,8 +127,6 @@ namespace Hazelcast.Client.Connection
                         Logger.Finest("Exception during closing connection on shutdown");
                     }
                 }
-
-                _taskScheduler.Dispose();
             }
             catch (Exception e)
             {
@@ -180,56 +157,6 @@ namespace Hazelcast.Client.Connection
             _heatHeartbeatListeners.Add(connectonHeartbeatListener);
         }
 
-        public Task<IClientMessage> Send(IClientMessage request, Address target, int partitionId = -1, DistributedEventHandler handler = null)
-        {
-            var clientConnection = GetOrConnectWithRetry(target);
-            return clientConnection.Send(request, partitionId, handler);
-        }
-
-        public Task<IClientMessage> Send(IClientMessage request, DistributedEventHandler handler = null)
-        {
-            var clientConnection = GetOrConnectWithRetry(null);
-            return clientConnection.Send(request, handler: handler);
-        }
-
-        public Task<IClientMessage> Send(IClientMessage request, IMember target, int partitionId = -1, DistributedEventHandler handler = null)
-        {
-            var clientConnection = GetOrConnectWithRetry(target.GetAddress());
-            return clientConnection.Send(request, partitionId, handler, target.GetUuid());
-        }
-
-        public void RegisterListener(string registrationId, int callId)
-        {
-            _registrationAliasMap.TryAdd(registrationId, registrationId);
-            _registrationMap.TryAdd(registrationId, callId);
-        }
-
-        public bool UnregisterListener(string registrationId)
-        {
-            string uuid;
-            if (_registrationAliasMap.TryRemove(registrationId, out uuid))
-            {
-                int callId;
-                if (_registrationMap.TryRemove(registrationId, out callId))
-                {
-                    return RemoveEventHandler(callId);
-                }
-            }
-            return false;
-        }
-
-        public void ReRegisterListener(string uuidregistrationId, string alias, int callId)
-        {
-            string oldAlias = null;
-            if (_registrationAliasMap.TryRemove(uuidregistrationId, out oldAlias))
-            {
-                int removed;
-                _registrationMap.TryRemove(oldAlias, out removed);
-                _registrationMap.TryAdd(alias, callId);
-            }
-            _registrationAliasMap.TryAdd(uuidregistrationId, alias);
-        }
-
         public void DestroyConnection(ClientConnection clientConnection)
         {
             if (clientConnection != null && !clientConnection.Live)
@@ -244,11 +171,6 @@ namespace Hazelcast.Client.Connection
             if (address == null)
             {
                 throw new ArgumentException("address");
-            }
-            if (!_smartRouting)
-            {
-                //TODO: What to do here if smart routing is turned off?
-                //address = _ownerConnection.GetRemoteEndpoint();
             }
             lock (_connectionMutex)
             {
@@ -274,7 +196,6 @@ namespace Hazelcast.Client.Connection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        /// TODO: move logic to ClientInvocationService, single retry mechanism in invocation
         public ClientConnection GetOrConnectWithRetry(Address target)
         {
             var count = 0;
@@ -315,12 +236,16 @@ namespace Hazelcast.Client.Connection
             throw lastError;
         }
 
-        public void ReSend(Task task)
+        public bool RemoveEventHandler(int callId)
         {
-            var clientConnection = GetOrConnectWithRetry(null);
-            //Console.WriteLine("RESEND TO:"+clientConnection.GetSocket().RemoteEndPoint);
-            clientConnection.Send(task);
+            return _addresses.Values.Any(clientConnection => clientConnection.UnregisterEvent(callId));
         }
+
+//        public void ReSend(Task task)
+//        {
+//            var clientConnection = GetOrConnectWithRetry(null);
+//            clientConnection.Send(task);
+//        }
 
         /// <exception cref="HazelcastException"></exception>
         private void CheckLive()
@@ -359,7 +284,7 @@ namespace Hazelcast.Client.Connection
             IClientMessage response;
             try
             {
-                response = connection.Send(request, -1).Result;
+                response = connection.Send(new ClientInvocation(request)).Result;
             }
             catch (Exception e)
             {
@@ -372,7 +297,6 @@ namespace Hazelcast.Client.Connection
                 throw new HazelcastException("Node with address '" + rp.address + "' was not found in the member list");
             }
             connection.SetRemoteMember(member);
-
         }
 
         private void DestroyConnection(Address address)
@@ -384,9 +308,25 @@ namespace Hazelcast.Client.Connection
                     ClientConnection connection = null;
                     if (_addresses.TryRemove(address, out connection))
                     {
-                        FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));       
+                        FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
                     }
                 }
+            }
+        }
+
+        private void FireConnectionListenerEvent(Action<IConnectionListener> listenerAction)
+        {
+            foreach (var listener in _connectionListeners)
+            {
+                listenerAction(listener);
+            }
+        }
+
+        private void FireHeartBeatEvent(Action<IConnectionHeartbeatListener> listenerAction)
+        {
+            foreach (var listener in _heatHeartbeatListeners)
+            {
+                listenerAction(listener);
             }
         }
 
@@ -398,9 +338,8 @@ namespace Hazelcast.Client.Connection
                 try
                 {
                     var id = _nextConnectionId;
-                    connection = new ClientConnection(this, id, address, _networkConfig,
-                        _client.GetSerializationService(),
-                        _redoOperation);
+                    connection = new ClientConnection(this, (ClientListenerService) _client.GetListenerService(), id,
+                        address, _networkConfig);
                     if (_socketInterceptor != null)
                     {
                         _socketInterceptor.OnConnect(connection.GetSocket());
@@ -416,10 +355,9 @@ namespace Hazelcast.Client.Connection
                     {
                         connection.Close();
                     }
-                    ExceptionUtil.Rethrow(e, typeof (IOException));
+                    throw ExceptionUtil.Rethrow(e, typeof (IOException));
                 }
             }
-            return null;
         }
 
         private void HearthBeatLoop()
@@ -429,7 +367,7 @@ namespace Hazelcast.Client.Connection
                 foreach (var clientConnection in _addresses.Values)
                 {
                     var request = ClientPingCodec.EncodeRequest();
-                    var task = clientConnection.Send(request, -1);
+                    var task = clientConnection.Send(new ClientInvocation(request));
                     var remoteEndPoint = clientConnection.GetSocket() != null
                         ? clientConnection.GetSocket().RemoteEndPoint.ToString()
                         : "CLOSED";
@@ -456,49 +394,10 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private void FireHeartBeatEvent(Action<IConnectionHeartbeatListener> listenerAction) {
-            foreach (var listener in _heatHeartbeatListeners)
-            {
-                listenerAction(listener);
-            }
-        }
-
-        private void FireConnectionListenerEvent(Action<IConnectionListener> listenerAction)
-        {
-            foreach (var listener in _connectionListeners)
-            {
-                listenerAction(listener);
-            }
-        }
-
         private bool isMember(Address target)
         {
             var clientClusterService = _client.GetClientClusterService();
             return clientClusterService.GetMember(target) != null;
-        }
-
-        private int ReadEnvironmentVar(string var)
-        {
-            var p = 0;
-            var param = Environment.GetEnvironmentVariable(var);
-            try
-            {
-                if (param != null)
-                {
-                    p = Convert.ToInt32(param, 10);
-                }
-            }
-            catch (Exception)
-            {
-                Logger.Warning("Provided value is not a valid value : " + param);
-            }
-            return p;
-        }
-
-        private bool RemoveEventHandler(int callId)
-        {
-            return _addresses.Values.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
-            //return _clientConnections.Any(clientConnection => clientConnection.UnRegisterEvent(callId) != null);
         }
 
         /// <exception cref="System.IO.IOException"></exception>

@@ -14,43 +14,48 @@ namespace Hazelcast.Util
         {
             if (t is NotImplementedException)
             {
-                throw t;
+                return t;
             }
             if (t is AggregateException)
             {
                 var readOnlyCollection = ((AggregateException) t).InnerExceptions;
                 foreach (var exception in readOnlyCollection)
                 {
-                    Rethrow(exception);
+                    return Rethrow(exception);
                 }
             }
             if (allowedType != null && allowedType.IsInstanceOfType(t))
             {
-                throw t;
+                return t;
             }
-            throw new HazelcastException(t);
+            return new HazelcastException(t);
+        }
+
+        public static Exception ToException(Error error)
+        {
+            return ExceptionFactory.CreateException(error);
         }
 
         public static Exception Rethrow(Error error)
         {
-            return Rethrow(ExceptionFactory.CreateException(error));
+            return Rethrow(ToException(error));
         }
 
         public static Exception Rethrow(Exception t)
         {
             if (t is NotImplementedException)
             {
-                throw t;
+                return t;
             }
             if (t is AggregateException)
             {
                 var readOnlyCollection = ((AggregateException)t).InnerExceptions;
                 foreach (var exception in readOnlyCollection)
                 {
-                    Rethrow(exception);
+                    return Rethrow(exception);
                 }
             }
-            throw t;
+            return t;
         }
 
         //public static void FixRemoteStackTrace(Exception remoteCause, StackTraceElement[] localSideStackTrace)

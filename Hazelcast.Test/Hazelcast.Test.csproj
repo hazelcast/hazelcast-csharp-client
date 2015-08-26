@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="ClientQueuePerformanceTest.cs" />
     <Compile Include="Hazelcast.Client.Model\Item.cs" />
+    <Compile Include="Hazelcast.Client.Test\HazelcastNode.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastBaseTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientAtomicLongTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientCountDownLatchTest.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientSemaphoreTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientCustomSerializationTest .cs" />
     <Compile Include="Hazelcast.Client.Test\ClientLicenseTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\HazelcastTestClient.cs" />
     <Compile Include="Hazelcast.Client.Test\PortableSerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSetTest.cs" />
@@ -103,6 +105,7 @@
     <Compile Include="Hazelcast.Client.Test\DataSerializableType.cs" />
     <Compile Include="Hazelcast.Client.Test\GenericEvent.cs" />
     <Compile Include="Hazelcast.Client.Test\SerializationTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\TestSetup.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueueTest.cs" />

@@ -71,6 +71,7 @@
     <Compile Include="Hazelcast.Client.Connection\ClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionListener.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionHeartbeatListener.cs" />
+    <Compile Include="Hazelcast.Client.Spi\ClientInvocation.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AddressCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAddAndGetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAlterAndGetCodec.cs" />
@@ -104,6 +105,8 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchTrySetCountCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\DistributedObjectInfoCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\EntryViewCodec.cs" />
+    <Compile Include="Hazelcast.Client.Spi\ClientListenerService.cs" />
+    <Compile Include="Hazelcast.Client.Spi\IClientListenerService.cs" />
     <Compile Include="Hazelcast.Client\Error.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllWithIndexCodec.cs" />
@@ -326,7 +329,6 @@
     <Compile Include="Hazelcast.Client.Spi\MemberAttributeOperationType.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientMembershipListener.cs" />
     <Compile Include="Hazelcast.Client.Spi\IObjectNamespace.cs" />
-    <Compile Include="Hazelcast.Client.Spi\IRemotingService.cs" />
     <Compile Include="Hazelcast.Client.Spi\PacketManager.cs" />
     <Compile Include="Hazelcast.Client.Spi\Exception.cs" />
     <Compile Include="Hazelcast.Client.Proxy\PartitionServiceProxy.cs" />
@@ -583,6 +585,7 @@
     <Compile Include="Hazelcast.Util\ClientExceptionFactory.cs" />
     <Compile Include="Hazelcast.Util\Delegates.cs" />
     <Compile Include="Hazelcast.Util\Clock.cs" />
+    <Compile Include="Hazelcast.Util\EnvironmentUtil.cs" />
     <Compile Include="Hazelcast.Util\ExceptionUtil.cs" />
     <Compile Include="Hazelcast.Util\HashUtil.cs" />
     <Compile Include="Hazelcast.Util\IterationType.cs" />
@@ -604,7 +607,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="hazelcast.snk" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

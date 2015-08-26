@@ -187,10 +187,10 @@ namespace Hazelcast.Client.Spi
             }
             catch (Exception e)
             {
-                ExceptionUtil.Rethrow(e);
+                throw ExceptionUtil.Rethrow(e);
             }
             clientProxy.SetContext(new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
-                client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(), client.GetRemotingService(),
+                client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(), client.GetListenerService(),
                 this, client.GetClientConfig()));
             clientProxy.PostInit();
         }
@@ -210,7 +210,7 @@ namespace Hazelcast.Client.Spi
         {
             var request = ClientAddDistributedObjectListenerCodec.EncodeRequest();
             var context = new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
-                client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(), client.GetRemotingService(),
+                client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(), client.GetListenerService(),
                 this, client.GetClientConfig());
             //EventHandler<PortableDistributedObjectEvent> eventHandler = new _EventHandler_211(this, listener);
 
@@ -242,7 +242,7 @@ namespace Hazelcast.Client.Spi
                     });
             };
             //PortableDistributedObjectEvent
-            return ListenerUtil.Listen(context, request, m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response, null, eventHandler);
+            return context.GetListenerService().StartListening(request, m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response, eventHandler);
         }
 
 
@@ -251,8 +251,8 @@ namespace Hazelcast.Client.Spi
             var request = ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id);
             var context = new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
                 client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(),
-                client.GetRemotingService(), this, client.GetClientConfig());
-            return ListenerUtil.StopListening(context, request, m=> ClientRemoveDistributedObjectListenerCodec.DecodeResponse(m).response, id);
+                client.GetListenerService(), this, client.GetClientConfig());
+            return context.GetListenerService().StopListening(request, id, m=> ClientRemoveDistributedObjectListenerCodec.DecodeResponse(m).response);
         }
     }
 }

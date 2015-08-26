@@ -435,7 +435,7 @@ namespace Hazelcast.Client.Spi
             IClientMessage response;
             try
             {
-                response = connection.Send(request, -1).Result;
+                response = connection.Send(new ClientInvocation(request)).Result;
             }
             catch (Exception e)
             {

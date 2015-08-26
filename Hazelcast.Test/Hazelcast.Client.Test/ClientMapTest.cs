@@ -1,17 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using Hazelcast.Client;
 using Hazelcast.Client.Model;
-using Hazelcast.Client.Test;
 using Hazelcast.Core;
-using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
-using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -27,7 +19,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            map = client.GetMap<object, object>(Name);
+            map = Client.GetMap<object, object>(Name);
         }
 
         [TearDown]
@@ -236,7 +228,7 @@ namespace Hazelcast.Client.Test
 
             var t2 = new Thread(delegate(object o)
             {
-                bool result = ClientMapTest.map.TryRemove("key2", 1, TimeUnit.SECONDS);
+                bool result = map.TryRemove("key2", 1, TimeUnit.SECONDS);
                 if (!result)
                 {
                     latch.Signal();
@@ -790,19 +782,19 @@ namespace Hazelcast.Client.Test
             }
 
             latch.Wait(TimeSpan.FromSeconds(10));
-            Console.WriteLine(latch.CurrentCount);
+            //Console.WriteLine(latch.CurrentCount);
             latch.Wait(TimeSpan.FromSeconds(10));
-            Console.WriteLine(latch.CurrentCount);
+            //Console.WriteLine(latch.CurrentCount);
             latch.Wait(TimeSpan.FromSeconds(10));
-            Console.WriteLine(latch.CurrentCount);
+            //Console.WriteLine(latch.CurrentCount);
             latch.Wait(TimeSpan.FromSeconds(10));
-            Console.WriteLine(latch.CurrentCount);
+            //Console.WriteLine(latch.CurrentCount);
             latch.Wait(TimeSpan.FromSeconds(10));
-            Console.WriteLine(latch.CurrentCount);
+            //Console.WriteLine(latch.CurrentCount);
             latch.Wait(TimeSpan.FromSeconds(10));
-            Console.WriteLine(latch.CurrentCount);
+            //Console.WriteLine(latch.CurrentCount);
             latch.Wait(TimeSpan.FromSeconds(10));
-            Console.WriteLine(latch.CurrentCount);
+            //Console.WriteLine(latch.CurrentCount);
             Assert.True(latch.Wait(TimeSpan.FromSeconds(100)));
         }
 
@@ -876,7 +868,7 @@ namespace Hazelcast.Client.Test
         public void testListenerEventOrder()
         {
             const int maxSize = 10000; 
-            var map2 = client.GetMap<int, int>(Name);
+            var map2 = Client.GetMap<int, int>(Name);
             map2.Put(1, 0);
 
             var eventDataReceived = new Queue<int>();
@@ -1070,7 +1062,7 @@ namespace Hazelcast.Client.Test
         //    }
         //}
 
-        [System.Serializable]
+        [Serializable]
         internal class Deal
         {
             internal int id;

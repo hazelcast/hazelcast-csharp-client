@@ -16,7 +16,7 @@ namespace Hazelcast.Client.Test
         public void Init()
         {
 
-            list = client.GetList<object>(Name);
+            list = Client.GetList<object>(Name);
         }
 
         [TearDown]
