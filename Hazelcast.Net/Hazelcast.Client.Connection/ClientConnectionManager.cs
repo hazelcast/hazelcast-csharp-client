@@ -19,8 +19,8 @@ namespace Hazelcast.Client.Connection
     internal class ClientConnectionManager : IClientConnectionManager
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientConnectionManager));
-        public static int RetryCount = 20;
-        public static int RetryWaitTime = 250;
+        private readonly int _retryCount = 20;
+        private readonly int _retryWaitTime = 250;
 
         private readonly ConcurrentDictionary<Address, ClientConnection> _addresses =
             new ConcurrentDictionary<Address, ClientConnection>();
@@ -75,12 +75,12 @@ namespace Hazelcast.Client.Connection
             var retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count");
             if (retryCount > 0)
             {
-                RetryCount = retryCount;
+                _retryCount = retryCount;
             }
             var retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time");
             if (retryWaitTime > 0)
             {
-                RetryWaitTime = retryWaitTime;
+                _retryWaitTime = retryWaitTime;
             }
         }
 
@@ -144,7 +144,7 @@ namespace Hazelcast.Client.Connection
         {
             CheckLive();
             var address = _router.Next();
-            return GetOrConnectWithRetry(address).GetRemoteEndpoint();
+            return GetOrConnectWithRetry(address).GetAddress();
         }
 
         public void AddConnectionListener(IConnectionListener connectionListener)
@@ -161,7 +161,7 @@ namespace Hazelcast.Client.Connection
         {
             if (clientConnection != null && !clientConnection.Live)
             {
-                DestroyConnection(clientConnection.GetRemoteEndpoint());
+                DestroyConnection(clientConnection.GetAddress());
             }
         }
 
@@ -201,7 +201,7 @@ namespace Hazelcast.Client.Connection
             var count = 0;
             Exception lastError = null;
             var theTarget = target;
-            while (count < RetryCount)
+            while (count < _retryCount)
             {
                 try
                 {
@@ -227,7 +227,7 @@ namespace Hazelcast.Client.Connection
                 count++;
                 try
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(_retryWaitTime);
                 }
                 catch (Exception)
                 {
@@ -235,17 +235,6 @@ namespace Hazelcast.Client.Connection
             }
             throw lastError;
         }
-
-        public bool RemoveEventHandler(int callId)
-        {
-            return _addresses.Values.Any(clientConnection => clientConnection.UnregisterEvent(callId));
-        }
-
-//        public void ReSend(Task task)
-//        {
-//            var clientConnection = GetOrConnectWithRetry(null);
-//            clientConnection.Send(task);
-//        }
 
         /// <exception cref="HazelcastException"></exception>
         private void CheckLive()
@@ -284,7 +273,7 @@ namespace Hazelcast.Client.Connection
             IClientMessage response;
             try
             {
-                response = connection.Send(new ClientInvocation(request)).Result;
+                response = ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, connection).Result;
             }
             catch (Exception e)
             {
@@ -338,7 +327,8 @@ namespace Hazelcast.Client.Connection
                 try
                 {
                     var id = _nextConnectionId;
-                    connection = new ClientConnection(this, (ClientListenerService) _client.GetListenerService(), id,
+                    connection = new ClientConnection(this, (ClientInvocationService)_client.GetInvocationService(),
+                        id,
                         address, _networkConfig);
                     if (_socketInterceptor != null)
                     {
@@ -367,15 +357,17 @@ namespace Hazelcast.Client.Connection
                 foreach (var clientConnection in _addresses.Values)
                 {
                     var request = ClientPingCodec.EncodeRequest();
-                    var task = clientConnection.Send(new ClientInvocation(request));
+                    var task = ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, clientConnection);
                     var remoteEndPoint = clientConnection.GetSocket() != null
                         ? clientConnection.GetSocket().RemoteEndPoint.ToString()
                         : "CLOSED";
 
+                    Logger.Finest("Sending heartbeat request to " + remoteEndPoint);
                     //TODO: fire heartbeat stopped event if heartbeat times out
                     try
                     {
                         var result = ThreadUtil.GetResult(task);
+                        Logger.Finest("Got heartbeat response from " + remoteEndPoint);
                         //Console.WriteLine("PING:" + remoteEndPoint);
                     }
                     catch (Exception)

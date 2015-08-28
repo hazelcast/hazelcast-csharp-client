@@ -15,9 +15,8 @@ namespace Hazelcast.Client.Connection
 
         /// <exception cref="System.IO.IOException"></exception>
         ClientConnection GetOrConnect(Address address, Authenticator authenticator);
+        ClientConnection GetOrConnectWithRetry(Address address);
 
-        //TODO: move to invocation service
-        bool RemoveEventHandler(int callId);
         bool Shutdown();
         void Start();
     }

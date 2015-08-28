@@ -17,5 +17,7 @@ namespace Hazelcast.Client.Spi
         Task<IClientMessage> InvokeOnMember(IClientMessage request, IMember member, DistributedEventHandler handler = null);
         Task<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key, DistributedEventHandler handler = null);
         Task<IClientMessage> InvokeOnRandomTarget(IClientMessage request, DistributedEventHandler handler = null);
+
+        bool RemoveEventHandler(int correlationId);
     }
 }

@@ -5,7 +5,6 @@ namespace Hazelcast.Core
     /// <summary>
     /// Base Hazelcast exception.
     /// </summary>
-    [Serializable]
     public class HazelcastException : SystemException
     {
         public HazelcastException()
@@ -25,7 +24,6 @@ namespace Hazelcast.Core
         }
     }
 
-    [Serializable]
     public class QueryException : HazelcastException 
     {
 

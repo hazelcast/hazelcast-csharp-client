@@ -8,21 +8,16 @@ namespace Hazelcast.Client.Spi
 {
     internal class ClientListenerService : IClientListenerService
     {
-        public const int DefaultEventThreadCount = 3;
 
         private readonly ConcurrentDictionary<string, string> _registrationAliasMap =
             new ConcurrentDictionary<string, string>();
 
         private readonly ConcurrentDictionary<string, int> _registrationMap = new ConcurrentDictionary<string, int>();
 
-        private readonly StripedTaskScheduler _taskScheduler;
         private HazelcastClient _client;
 
         public ClientListenerService(HazelcastClient hazelcastClient)
         {
-            var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count");
-            eventTreadCount = eventTreadCount > 0 ? eventTreadCount : DefaultEventThreadCount;
-            _taskScheduler = new StripedTaskScheduler(eventTreadCount);
             _client = hazelcastClient;
         }
 
@@ -70,16 +65,6 @@ namespace Hazelcast.Client.Spi
             }
         }
       
-        public StripedTaskScheduler TaskScheduler
-        {
-            get { return _taskScheduler; }
-        }
-
-        public void Shutdown()
-        {
-            _taskScheduler.Dispose();
-        }
-
         private void RegisterListener(string registrationId, int callId)
         {
             _registrationAliasMap.TryAdd(registrationId, registrationId);
@@ -94,7 +79,7 @@ namespace Hazelcast.Client.Spi
                 int callId;
                 if (_registrationMap.TryRemove(registrationId, out callId))
                 {
-                    return _client.GetConnectionManager().RemoveEventHandler(callId);
+                    return _client.GetInvocationService().RemoveEventHandler(callId);
                 }
             }
             return false;
