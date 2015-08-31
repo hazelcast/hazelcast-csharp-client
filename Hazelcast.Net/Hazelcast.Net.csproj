@@ -426,7 +426,7 @@
     <Compile Include="Hazelcast.Client\HazelcastClientManagedContext.cs" />
     <Compile Include="Hazelcast.Client\HazelcastClientProxy.cs" />
     <Compile Include="Hazelcast.Client\LifecycleService.cs" />
-    <Compile Include="Hazelcast.Client\LoadBalancer.cs" />
+    <Compile Include="Hazelcast.Client\ILoadBalancer.cs" />
     <Compile Include="Hazelcast.Client\QueueIterator.cs" />
     <Compile Include="Hazelcast.Config\AbstractXmlConfigHelper.cs" />
     <Compile Include="Hazelcast.Config\ClientConfig.cs" />

@@ -5,7 +5,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ObjectDataOutputStream : OutputStream, IObjectDataOutput, IDisposable
+    public class ObjectDataOutputStream : OutputStream, IObjectDataOutput, IDisposable
     {
         private const int UTF_BUFFER_SIZE = 1024;
 

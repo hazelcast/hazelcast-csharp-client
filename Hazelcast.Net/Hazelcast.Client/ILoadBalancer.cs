@@ -4,7 +4,7 @@ using Hazelcast.Core;
 namespace Hazelcast.Client
 {
     /// <summary>
-    ///     <see cref="LoadBalancer">LoadBalancer</see>
+    ///     <see cref="ILoadBalancer">ILoadBalancer</see>
     ///     allows you to send operations to one of a number of endpoints(Members).
     ///     It is up to the implementation to use different load balancing policies. If IClient is
     ///     <see cref="ClientConfig#smart">ClientConfig#smart</see>
@@ -13,10 +13,10 @@ namespace Hazelcast.Client
     ///     If it is not
     ///     <see cref="ClientConfig#smart">ClientConfig#smart</see>
     ///     ,
-    ///     <see cref="LoadBalancer">LoadBalancer</see>
+    ///     <see cref="ILoadBalancer">ILoadBalancer</see>
     ///     will not be used.
     /// </summary>
-    public interface LoadBalancer
+    public interface ILoadBalancer
     {
         void Init(ICluster cluster, ClientConfig config);
 

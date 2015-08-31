@@ -4,7 +4,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Util
 {
-    internal class StaticLB : LoadBalancer
+    internal class StaticLB : ILoadBalancer
     {
         private readonly IMember member;
 

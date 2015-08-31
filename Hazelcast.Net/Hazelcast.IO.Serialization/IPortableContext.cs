@@ -3,7 +3,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal interface IPortableContext
+    public interface IPortableContext
     {
         int GetVersion();
         int GetClassVersion(int factoryId, int classId);
