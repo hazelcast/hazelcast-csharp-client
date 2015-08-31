@@ -106,7 +106,9 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\DistributedObjectInfoCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\EntryViewCodec.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientListenerService.cs" />
+    <Compile Include="Hazelcast.Client.Spi\IFuture.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientListenerService.cs" />
+    <Compile Include="Hazelcast.Client.Spi\SettableFuture.cs" />
     <Compile Include="Hazelcast.Client\Error.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllWithIndexCodec.cs" />

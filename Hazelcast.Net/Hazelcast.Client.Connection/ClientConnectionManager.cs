@@ -273,7 +273,8 @@ namespace Hazelcast.Client.Connection
             IClientMessage response;
             try
             {
-                response = ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, connection).Result;
+                var future = ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, connection);
+                response = ThreadUtil.GetResult(future);
             }
             catch (Exception e)
             {

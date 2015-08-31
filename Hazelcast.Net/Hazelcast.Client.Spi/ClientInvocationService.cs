@@ -52,21 +52,21 @@ namespace Hazelcast.Client.Spi
             _clientConnectionManager = (ClientConnectionManager) client.GetConnectionManager();
         }
 
-        public Task<IClientMessage> InvokeOnMember(IClientMessage request, IMember target,
+        public IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember target,
             DistributedEventHandler handler = null)
         {
             var clientConnection = GetConnection(target.GetAddress());
             return Send(clientConnection, new ClientInvocation(request, memberUuid: target.GetUuid(), handler: handler));
         }
 
-        public Task<IClientMessage> InvokeOnTarget(IClientMessage request, Address target,
+        public IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target,
             DistributedEventHandler handler = null)
         {
             var clientConnection = GetConnection(target);
             return Send(clientConnection, new ClientInvocation(request, handler: handler));
         }
 
-        public Task<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key,
+        public IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key,
             DistributedEventHandler handler = null)
         {
             var partitionService = (ClientPartitionService) _client.GetClientPartitionService();
@@ -80,7 +80,7 @@ namespace Hazelcast.Client.Spi
             return InvokeOnRandomTarget(request);
         }
 
-        public Task<IClientMessage> InvokeOnRandomTarget(IClientMessage request, DistributedEventHandler handler = null)
+        public IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request, DistributedEventHandler handler = null)
         {
             var clientConnection = GetConnection();
             return Send(clientConnection, new ClientInvocation(request, handler: handler));
@@ -106,7 +106,7 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        public Task<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
+        public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
         {
             return Send(connection, new ClientInvocation(request));
         }
@@ -116,16 +116,16 @@ namespace Hazelcast.Client.Spi
             _taskScheduler.Dispose();
         }
 
-        private void FailRequest(ClientConnection connection, TaskCompletionSource<IClientMessage> future)
+        private void FailRequest(ClientConnection connection, ClientInvocation future)
         {
             if (_client.GetConnectionManager().Live)
             {
-                future.SetException(
-                    new TargetDisconnectedException("Target was disconnected: " + connection.GetAddress()));
+                future.Future.Exception = 
+                    new TargetDisconnectedException("Target was disconnected: " + connection.GetAddress());
             }
             else
             {
-                future.SetException(new HazelcastException("Client is shutting down."));
+                future.Future.Exception = new HazelcastException("Client is shutting down.");
             }
         }
 
@@ -176,7 +176,7 @@ namespace Hazelcast.Client.Spi
                                     {
                                         Logger.Finest(
                                             "The member UUID on the invocation doesn't match the member UUID on the connection.");
-                                        invocation.Response.SetException(exception);
+                                        invocation.Future.Exception = exception;
                                         return;
                                     }
                                 }
@@ -187,12 +187,12 @@ namespace Hazelcast.Client.Spi
                     }
                     else
                     {
-                        invocation.Response.SetException(exception);
+                        invocation.Future.Exception = exception;
                     }
                 }
                 else
                 {
-                    invocation.Response.SetResult(response);
+                    invocation.Future.Result = response;
                 }
             }
             else
@@ -206,7 +206,7 @@ namespace Hazelcast.Client.Spi
             return Interlocked.Increment(ref _correlationIdCounter);
         }
 
-        private TaskCompletionSource<IClientMessage> RegisterInvocation(int correlationId, ClientInvocation request)
+        private void RegisterInvocation(int correlationId, ClientInvocation request)
         {
             _invocationRequests.TryAdd(correlationId, request);
 
@@ -214,8 +214,6 @@ namespace Hazelcast.Client.Spi
             {
                 _eventHandlers.TryAdd(correlationId, request.Handler);
             }
-
-            return request.Response;
         }
 
         private void RemoveEventHandlers()
@@ -249,7 +247,7 @@ namespace Hazelcast.Client.Spi
 //            }
         }
 
-        private Task<IClientMessage> Send(ClientConnection connection, ClientInvocation clientInvocation)
+        private IFuture<IClientMessage> Send(ClientConnection connection, ClientInvocation clientInvocation)
         {
             var correlationId = NextCorrelationId();
             clientInvocation.Message.SetCorrelationId(correlationId);
@@ -263,7 +261,7 @@ namespace Hazelcast.Client.Spi
                 //TODO: If MemberUUID different fail the request
             }
 
-            var future = RegisterInvocation(correlationId, clientInvocation);
+            RegisterInvocation(correlationId, clientInvocation);
 
             //enqueue to write queue
             if (!connection.WriteAsync((ISocketWritable) clientInvocation.Message))
@@ -271,9 +269,9 @@ namespace Hazelcast.Client.Spi
                 UnregisterCall(correlationId);
                 RemoveEventHandler(correlationId);
 
-                FailRequest(connection, future);
+                FailRequest(connection, clientInvocation);
             }
-            return future.Task;
+            return clientInvocation.Future;
         }
 
         private void UnregisterCall(int correlationId)

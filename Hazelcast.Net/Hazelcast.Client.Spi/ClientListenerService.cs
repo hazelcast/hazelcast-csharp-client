@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                Task<IClientMessage> task;
+                IFuture<IClientMessage> task;
                 if (key == null)
                 {
                     task = _client.GetInvocationService().InvokeOnRandomTarget(request, handler);

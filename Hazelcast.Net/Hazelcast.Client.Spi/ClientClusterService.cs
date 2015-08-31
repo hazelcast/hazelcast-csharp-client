@@ -436,7 +436,7 @@ namespace Hazelcast.Client.Spi
             try
             {
                 var invocationService = (ClientInvocationService) _client.GetInvocationService();
-                response = invocationService.InvokeOnConnection(request, connection).Result;
+                response = ThreadUtil.GetResult(invocationService.InvokeOnConnection(request, connection));
             }
             catch (Exception e)
             {
