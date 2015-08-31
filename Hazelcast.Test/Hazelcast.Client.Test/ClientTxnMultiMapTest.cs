@@ -32,10 +32,10 @@ namespace Hazelcast.Client.Test
             const string key = "key";
             const string value = "value";
 	        var name = Name;
-	        var multiMap = client.GetMultiMap<string, string>(name);
+	        var multiMap = Client.GetMultiMap<string, string>(name);
 
 	        multiMap.Put(key, value);
-            ITransactionContext tx = client.NewTransactionContext();
+            ITransactionContext tx = Client.NewTransactionContext();
 
             tx.BeginTransaction();
             tx.GetMultiMap<string,string>(name).Remove(key,value);
@@ -50,14 +50,14 @@ namespace Hazelcast.Client.Test
             const string key = "key";
             const string value = "value";
 	        var name = Name;
-            var multiMap = client.GetMultiMap<string, string>(name);
+            var multiMap = Client.GetMultiMap<string, string>(name);
 	        for (int i = 0; i < 10; i++)
 	        {
 	            multiMap.Put(key, value+i);
 	        }
                 
 
-            ITransactionContext tx = client.NewTransactionContext();
+            ITransactionContext tx = Client.NewTransactionContext();
 
             tx.BeginTransaction();
             tx.GetMultiMap<string,string>(name).Remove(key);
@@ -71,13 +71,13 @@ namespace Hazelcast.Client.Test
         public virtual void TestPutGetRemove()
         {
             var name = Name;
-            var mm = client.GetMultiMap<object, object>(name);
+            var mm = Client.GetMultiMap<object, object>(name);
 
             for (int i = 0; i < 10; i++)
             {
                 string key = i + "key";
-                client.GetMultiMap<object, object>(name).Put(key, "value");
-                ITransactionContext context = client.NewTransactionContext();
+                Client.GetMultiMap<object, object>(name).Put(key, "value");
+                ITransactionContext context = Client.NewTransactionContext();
                 context.BeginTransaction();
                 var multiMap = context.GetMultiMap<object, object>(name);
                 Assert.IsFalse(multiMap.Put(key, "value"));
@@ -95,10 +95,10 @@ namespace Hazelcast.Client.Test
 		public virtual void TestPutGetRemove2()
 		{
             var name = Name;
-			var mm = client.GetMultiMap<object,object>(name);
+			var mm = Client.GetMultiMap<object,object>(name);
             string key = "key";
-            client.GetMultiMap<object, object>(name).Put(key, "value");
-            ITransactionContext context = client.NewTransactionContext();
+            Client.GetMultiMap<object, object>(name).Put(key, "value");
+            ITransactionContext context = Client.NewTransactionContext();
 
             context.BeginTransaction();
 

@@ -18,7 +18,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            mm = client.GetMultiMap<object, object>(Name);
+            mm = Client.GetMultiMap<object, object>(Name);
         }
 
         [TearDown]

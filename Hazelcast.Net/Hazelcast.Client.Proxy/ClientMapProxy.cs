@@ -139,7 +139,7 @@ namespace Hazelcast.Client.Proxy
             try
             {
                 var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
-                var deserializeTask = task.ContinueWith(continueTask =>
+                var deserializeTask = task.ToTask().ContinueWith(continueTask =>
                 {
                     var responseMessage = ThreadUtil.GetResult(continueTask);
                     var result = MapGetAsyncCodec.DecodeResponse(responseMessage).response;
@@ -171,7 +171,7 @@ namespace Hazelcast.Client.Proxy
             try
             {
                 var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, keyData);
-                var deserializeTask = task.ContinueWith(continueTask =>
+                var deserializeTask = task.ToTask().ContinueWith(continueTask =>
                 {
                     InvalidateNearCacheEntry(keyData);
                     var clientMessage = ThreadUtil.GetResult(continueTask);
@@ -193,7 +193,7 @@ namespace Hazelcast.Client.Proxy
             try
             {
                 var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, keyData);
-                var deserializeTask = task.ContinueWith(continueTask =>
+                var deserializeTask = task.ToTask().ContinueWith(continueTask =>
                 {
                     InvalidateNearCacheEntry(keyData);
                     var clientMessage = ThreadUtil.GetResult(continueTask);

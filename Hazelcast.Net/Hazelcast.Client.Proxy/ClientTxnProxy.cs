@@ -42,10 +42,10 @@ namespace Hazelcast.Client.Proxy
 
         protected virtual IClientMessage Invoke(IClientMessage request)
         {
-            var rpc = Proxy.GetClient().GetRemotingService();
+            var rpc = Proxy.GetClient().GetInvocationService();
             try
             {
-                var task = rpc.Send(request, Proxy.TxnOwner);
+                var task = rpc.InvokeOnMember(request, Proxy.TxnOwnerNode);
                 return ThreadUtil.GetResult(task);
             }
             catch (Exception e)

@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
             //QueueConfig queueConfig = config.getQueueConfig(queueName);
             //queueConfig.setMaxSize(6);
             //
-            q = client.GetQueue<object>(queueName + Name);
+            q = Client.GetQueue<object>(queueName + Name);
         }
 
         [TearDown]
@@ -73,7 +73,7 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void TestListenerExtreme()
 		{
-		    var qX = client.GetQueue<object>(Name);
+		    var qX = Client.GetQueue<object>(Name);
 
 		    const int TestItemCount = 1 * 1000;
 

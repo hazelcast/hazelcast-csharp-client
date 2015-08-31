@@ -29,9 +29,9 @@ namespace Hazelcast.Client.Test
 		public virtual void TestAddRemove()
 		{
 		    var name = Name;
-            list = client.GetList<object>(name);
+            list = Client.GetList<object>(name);
 			list.Add("item1");
-			ITransactionContext context = client.NewTransactionContext();
+			ITransactionContext context = Client.NewTransactionContext();
 			context.BeginTransaction();
 			ITransactionalList<object> listTx = context.GetList<object>(name);
             Assert.IsTrue(listTx.Add("item2"));

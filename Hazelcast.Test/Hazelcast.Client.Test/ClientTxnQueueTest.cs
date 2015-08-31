@@ -31,14 +31,14 @@ namespace Hazelcast.Client.Test
 		public virtual void TestTransactionalOfferPoll1()
         {
             string name = Name;//"testTransactionalOfferPoll1";
-			ITransactionContext context = client.NewTransactionContext();
+			ITransactionContext context = Client.NewTransactionContext();
 			context.BeginTransaction();
             ITransactionalQueue<string> q = context.GetQueue<string>(name);
 			Assert.IsTrue(q.Offer("ali"));
 			string s = q.Poll();
 			Assert.AreEqual("ali", s);
 			context.CommitTransaction();
-            Assert.AreEqual(0, client.GetQueue<string>(name).Count);
+            Assert.AreEqual(0, Client.GetQueue<string>(name).Count);
 		}
 
 		/// <exception cref="System.Exception"></exception>
@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Test
                 string name1 = Name;//"defQueue1";
                 
                 var latch = new ManualResetEvent(false);
-                var queue = client.GetQueue<string>(name0);
+                var queue = Client.GetQueue<string>(name0);
                 var t = new Thread(delegate()
                 {
                     try
@@ -70,7 +70,7 @@ namespace Hazelcast.Client.Test
                 });
                 t.Start();
 
-                context = client.NewTransactionContext();
+                context = Client.NewTransactionContext();
                 context.BeginTransaction();
                 ITransactionalQueue<string> q0 = context.GetQueue<string>(name0);
                 string s = null;
@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Test
 		public virtual void TestTransactionalPeek()
 		{
             string name = Name;//"defQueue";
-			ITransactionContext context = client.NewTransactionContext();
+			ITransactionContext context = Client.NewTransactionContext();
 			context.BeginTransaction();
             ITransactionalQueue<string> q = context.GetQueue<string>(name);
 			Assert.IsTrue(q.Offer("ali"));
@@ -113,7 +113,7 @@ namespace Hazelcast.Client.Test
 			s = q.Peek();
 			Assert.AreEqual("ali", s);
 			context.CommitTransaction();
-            Assert.AreEqual(1, client.GetQueue<string>(name).Count);
+            Assert.AreEqual(1, Client.GetQueue<string>(name).Count);
 		}
 	}
 }

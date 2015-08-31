@@ -41,6 +41,7 @@ namespace Hazelcast.Client
         private readonly int id = ClientId.GetAndIncrement();
         private readonly string instanceName;
         private readonly ClientInvocationService invocationService;
+        private readonly ClientListenerService listenerService;
         //private readonly ThreadGroup threadGroup;
 
         private readonly LifecycleService lifecycleService;
@@ -95,10 +96,10 @@ namespace Hazelcast.Client
                 loadBalancer = new RoundRobinLB();
             }
 
-            connectionManager = new ClientConnectionManager(this, loadBalancer,
-                config.GetNetworkConfig().IsSmartRouting());
+            connectionManager = new ClientConnectionManager(this, loadBalancer);
 
             invocationService = new ClientInvocationService(this);
+            listenerService = new ClientListenerService(this);
             userContext = new ConcurrentDictionary<string, object>();
             loadBalancer.Init(GetCluster(), config);
             proxyManager.Init(config);
@@ -364,9 +365,9 @@ namespace Hazelcast.Client
             return invocationService;
         }
 
-        internal IRemotingService GetRemotingService()
+        internal IClientListenerService GetListenerService()
         {
-            return connectionManager;
+            return listenerService;
         }
 
         internal void DoShutdown()

@@ -26,7 +26,7 @@ namespace Hazelcast.Client.Test
 		public virtual void TestTxnRollback()
 		{
 		    var name = Name;
-			ITransactionContext context = client.NewTransactionContext();
+			ITransactionContext context = Client.NewTransactionContext();
             CountdownEvent latch = new CountdownEvent(1);
 			try
 			{
@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Test
 			}
 			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
 			//
-            IQueue<object> q = client.GetQueue<object>(name);
+            IQueue<object> q = Client.GetQueue<object>(name);
 			Assert.IsNull(q.Poll());
 			Assert.AreEqual(0, q.Count);
 		}

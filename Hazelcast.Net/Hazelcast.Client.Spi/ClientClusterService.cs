@@ -157,7 +157,7 @@ namespace Hazelcast.Client.Spi
 
         public void HeartBeatStopped(ClientConnection connection)
         {
-            if (connection.GetRemoteEndpoint().Equals(_ownerConnectionAddress))
+            if (connection.GetAddress().Equals(_ownerConnectionAddress))
             {
                 _connectionManager.DestroyConnection(connection);
             }
@@ -170,7 +170,7 @@ namespace Hazelcast.Client.Spi
         public void ConnectionRemoved(ClientConnection connection)
         {
             ClientExecutionService executionService = (ClientExecutionService) _client.GetClientExecutionService();
-            if (Equals(connection.GetRemoteEndpoint(), _ownerConnectionAddress))
+            if (Equals(connection.GetAddress(), _ownerConnectionAddress))
             {
                 if (_client.GetLifecycleService().IsRunning())
                 {
@@ -285,7 +285,7 @@ namespace Hazelcast.Client.Spi
                     }
                     var connection = _connectionManager.GetOrConnect(address, ManagerAuthenticator);
                     FireConnectionEvent(LifecycleEvent.LifecycleState.ClientConnected);
-                    _ownerConnectionAddress = connection.GetRemoteEndpoint();
+                    _ownerConnectionAddress = connection.GetAddress();
                     return true;
                 }
                 catch (Exception e)
@@ -435,18 +435,21 @@ namespace Hazelcast.Client.Spi
             IClientMessage response;
             try
             {
-                response = connection.Send(request, -1).Result;
+                var invocationService = (ClientInvocationService) _client.GetInvocationService();
+                response = ThreadUtil.GetResult(invocationService.InvokeOnConnection(request, connection));
             }
             catch (Exception e)
             {
                 throw ExceptionUtil.Rethrow(e);
             }
             var result = ClientAuthenticationCodec.DecodeResponse(response);
-            connection.SetRemoteEndpoint(result.address);
+
+            var member = new Member(result.address, result.ownerUuid);
             _principal = new ClientPrincipal(result.uuid, result.ownerUuid);
 
+            connection.SetRemoteMember(member);
             // add initial member
-            _clientMembershipListener.HandleMember(new Member(result.address, result.ownerUuid), MembershipEvent.MemberAdded);
+            _clientMembershipListener.HandleMember(member, MembershipEvent.MemberAdded);
         }
 
     }

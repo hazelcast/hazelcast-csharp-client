@@ -103,8 +103,8 @@ namespace Hazelcast.Client
                 {
                     throw new NotImplementedException("Near cache is not available for this type of data structure");
                 }
-                registrationId = ListenerUtil.Listen(context, request, 
-                    m => MapAddEntryListenerCodec.DecodeResponse(m).response, null, handler);
+                registrationId = context.GetListenerService().StartListening(request, 
+                    m => MapAddEntryListenerCodec.DecodeResponse(m).response, handler);
             }
             catch (Exception e)
             {
@@ -276,8 +276,7 @@ namespace Hazelcast.Client
                 {
                     throw new NotImplementedException("Near cache is not available for this type of data structure");
                 }
-                ListenerUtil.StopListening(context, request,
-                    m => MapRemoveEntryListenerCodec.DecodeResponse(m).response, registrationId);
+                context.GetListenerService().StopListening(request, registrationId, m => MapRemoveEntryListenerCodec.DecodeResponse(m).response);
             }
             cache.Clear();
         }
