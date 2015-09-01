@@ -5,7 +5,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal interface ISerializationService
+    public interface ISerializationService
     {
         IData ToData(object obj);
 

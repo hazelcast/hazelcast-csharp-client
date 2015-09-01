@@ -46,7 +46,7 @@ namespace Hazelcast.Client.Connection
 
         private volatile ClientPrincipal _principal;
 
-        public ClientConnectionManager(HazelcastClient client, LoadBalancer loadBalancer)
+        public ClientConnectionManager(HazelcastClient client, ILoadBalancer loadBalancer)
         {
             _client = client;
             _router = new Router(loadBalancer);
@@ -205,7 +205,7 @@ namespace Hazelcast.Client.Connection
             {
                 try
                 {
-                    if (theTarget == null || !isMember(theTarget))
+                    if (theTarget == null || !IsMember(theTarget))
                     {
                         theTarget = _router.Next();
                     }
@@ -387,7 +387,7 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private bool isMember(Address target)
+        private bool IsMember(Address target)
         {
             var clientClusterService = _client.GetClientClusterService();
             return clientClusterService.GetMember(target) != null;

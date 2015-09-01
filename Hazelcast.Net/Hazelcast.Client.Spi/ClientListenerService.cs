@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Util;
 

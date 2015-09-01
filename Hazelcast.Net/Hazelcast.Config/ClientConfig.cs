@@ -38,7 +38,7 @@ namespace Hazelcast.Config
         private ClientNetworkConfig networkConfig = new ClientNetworkConfig();
 
         /// <summary>Used to distribute the operations to multiple Endpoints.</summary>
-        private LoadBalancer loadBalancer = new RoundRobinLB();
+        private ILoadBalancer loadBalancer = new RoundRobinLB();
 
         /// <summary>List of listeners that Hazelcast will automatically add as a part of initialization process.</summary>
         /// <remarks>
@@ -165,16 +165,17 @@ namespace Hazelcast.Config
             return this;
         }
 
-        public virtual LoadBalancer GetLoadBalancer()
+        internal virtual ILoadBalancer GetLoadBalancer()
         {
             return loadBalancer;
         }
 
-        public virtual ClientConfig SetLoadBalancer(LoadBalancer loadBalancer)
+        internal virtual ClientConfig SetLoadBalancer(ILoadBalancer loadBalancer)
         {
             this.loadBalancer = loadBalancer;
             return this;
         }
+
         public virtual IManagedContext GetManagedContext()
         {
             return managedContext;

@@ -5,7 +5,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ObjectDataInputStream : InputStream, IObjectDataInput, IDisposable
+    public class ObjectDataInputStream : InputStream, IObjectDataInput, IDisposable
     {
         private const int UTFBufferSize = 1024;
 
