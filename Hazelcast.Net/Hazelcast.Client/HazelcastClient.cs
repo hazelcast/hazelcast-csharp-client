@@ -37,14 +37,14 @@ namespace Hazelcast.Client
         private readonly ClientClusterService clusterService;
         private readonly ClientConfig config;
         private readonly IClientConnectionManager connectionManager;
-        private readonly ClientExecutionService executionService;
+        private readonly IClientExecutionService executionService;
         private readonly int id = ClientId.GetAndIncrement();
         private readonly string instanceName;
-        private readonly ClientInvocationService invocationService;
-        private readonly ClientListenerService listenerService;
+        private readonly IClientInvocationService invocationService;
         //private readonly ThreadGroup threadGroup;
 
         private readonly LifecycleService lifecycleService;
+        private readonly ClientListenerService listenerService;
         private readonly ClientPartitionService partitionService;
         private readonly ProxyManager proxyManager;
         private readonly ISerializationService serializationService;
@@ -98,26 +98,13 @@ namespace Hazelcast.Client
 
             connectionManager = new ClientConnectionManager(this, loadBalancer);
 
-            invocationService = new ClientInvocationService(this);
+            invocationService = GetInvocationService(config);
             listenerService = new ClientListenerService(this);
             userContext = new ConcurrentDictionary<string, object>();
             loadBalancer.Init(GetCluster(), config);
             proxyManager.Init(config);
             partitionService = new ClientPartitionService(this);
         }
-
-        private static void BeforeStart(ClientConfig clientConfig)
-        {
-            var licenseKey = clientConfig.GetLicenseKey();
-            var list = new List<LicenseType>
-            {
-                LicenseType.ENTERPRISE
-              //  LicenseType.ENTERPRISE_SECURITY_ONLY
-            };
-            LicenseExtractor.CheckLicenseKey(licenseKey, list);
-        }
-
-        #region HazelcastInstance
 
         public string GetName()
         {
@@ -274,13 +261,6 @@ namespace Hazelcast.Client
             return proxyManager.RemoveDistributedObjectListener(registrationId);
         }
 
-        //    @Override
-        public IClientPartitionService GetPartitionService()
-        {
-            throw new NotSupportedException("not supported yet");
-            //return new PartitionServiceProxy(partitionService);
-        }
-
         public IClientService GetClientService()
         {
             throw new NotSupportedException();
@@ -308,81 +288,21 @@ namespace Hazelcast.Client
             GetLifecycleService().Shutdown();
         }
 
-        #endregion
-
-        #region HC
-
-        private void Start()
+        /// <summary>
+        ///     Gets all Hazelcast clients.
+        /// </summary>
+        /// <returns>ICollection&lt;IHazelcastInstance&gt;</returns>
+        public static ICollection<IHazelcastInstance> GetAllHazelcastClients()
         {
-            lifecycleService.SetStarted();
-            try
-            {
-                connectionManager.Start();
-                clusterService.Start();
-            }
-            catch (InvalidOperationException e)
-            {
-                //there was an authentication failure (todo: perhaps use an AuthenticationException
-                // ??)
-                lifecycleService.Shutdown();
-                throw;
-            }
-            partitionService.Start();
+            return (ICollection<IHazelcastInstance>) Clients.Values;
         }
 
-        internal ClientConfig GetClientConfig()
+        //    @Override
+        public IClientPartitionService GetPartitionService()
         {
-            return config;
+            throw new NotSupportedException("not supported yet");
+            //return new PartitionServiceProxy(partitionService);
         }
-
-        internal ISerializationService GetSerializationService()
-        {
-            return serializationService;
-        }
-
-        internal IClientConnectionManager GetConnectionManager()
-        {
-            return connectionManager;
-        }
-
-        internal IClientClusterService GetClientClusterService()
-        {
-            return clusterService;
-        }
-
-        internal IClientExecutionService GetClientExecutionService()
-        {
-            return executionService;
-        }
-
-        internal IClientPartitionService GetClientPartitionService()
-        {
-            return partitionService;
-        }
-
-        internal IClientInvocationService GetInvocationService()
-        {
-            return invocationService;
-        }
-
-        internal IClientListenerService GetListenerService()
-        {
-            return listenerService;
-        }
-
-        internal void DoShutdown()
-        {
-            HazelcastClientProxy _out;
-            Clients.TryRemove(id, out _out);
-            executionService.Shutdown();
-            partitionService.Stop();
-            connectionManager.Shutdown();
-            proxyManager.Destroy();
-        }
-
-        #endregion
-
-        #region statics
 
         /// <summary>
         ///     Creates a new hazelcast client using default configuration.
@@ -448,15 +368,6 @@ namespace Hazelcast.Client
         }
 
         /// <summary>
-        ///     Gets all Hazelcast clients.
-        /// </summary>
-        /// <returns>ICollection&lt;IHazelcastInstance&gt;</returns>
-        public static ICollection<IHazelcastInstance> GetAllHazelcastClients()
-        {
-            return (ICollection<IHazelcastInstance>) Clients.Values;
-        }
-
-        /// <summary>
         ///     Shutdowns all Hazelcast Clients .
         /// </summary>
         public static void ShutdownAll()
@@ -475,6 +386,90 @@ namespace Hazelcast.Client
             Clients.Clear();
         }
 
-        #endregion
+        internal void DoShutdown()
+        {
+            HazelcastClientProxy _out;
+            Clients.TryRemove(id, out _out);
+            executionService.Shutdown();
+            partitionService.Stop();
+            connectionManager.Shutdown();
+            proxyManager.Destroy();
+        }
+
+        internal IClientClusterService GetClientClusterService()
+        {
+            return clusterService;
+        }
+
+        internal ClientConfig GetClientConfig()
+        {
+            return config;
+        }
+
+        internal IClientExecutionService GetClientExecutionService()
+        {
+            return executionService;
+        }
+
+        internal IClientPartitionService GetClientPartitionService()
+        {
+            return partitionService;
+        }
+
+        internal IClientConnectionManager GetConnectionManager()
+        {
+            return connectionManager;
+        }
+
+        internal IClientInvocationService GetInvocationService()
+        {
+            return invocationService;
+        }
+
+        internal IClientListenerService GetListenerService()
+        {
+            return listenerService;
+        }
+
+        internal ISerializationService GetSerializationService()
+        {
+            return serializationService;
+        }
+
+        private IClientInvocationService GetInvocationService(ClientConfig config)
+        {
+            return config.GetNetworkConfig().IsSmartRouting()
+                ? (IClientInvocationService)new ClientSmartInvocationService(this)
+                : new ClientNonSmartInvocationService(this);
+        }
+
+        private static void BeforeStart(ClientConfig clientConfig)
+        {
+            var licenseKey = clientConfig.GetLicenseKey();
+            var list = new List<LicenseType>
+            {
+                LicenseType.ENTERPRISE
+                //  LicenseType.ENTERPRISE_SECURITY_ONLY
+            };
+            LicenseExtractor.CheckLicenseKey(licenseKey, list);
+        }
+
+        private void Start()
+        {
+            lifecycleService.SetStarted();
+            try
+            {
+                connectionManager.Start();
+                clusterService.Start();
+            }
+            catch (InvalidOperationException e)
+            {
+                //there was an authentication failure (todo: perhaps use an AuthenticationException
+                // ??)
+                lifecycleService.Shutdown();
+                throw;
+            }
+            partitionService.Start();
+        }
     }
 }
