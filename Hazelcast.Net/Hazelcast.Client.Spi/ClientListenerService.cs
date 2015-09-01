@@ -13,28 +13,28 @@ namespace Hazelcast.Client.Spi
 
         private readonly ConcurrentDictionary<string, int> _registrationMap = new ConcurrentDictionary<string, int>();
 
-        private HazelcastClient _client;
+        private readonly HazelcastClient _client;
 
         public ClientListenerService(HazelcastClient hazelcastClient)
         {
             _client = hazelcastClient;
         }
 
-        public string StartListening(IClientMessage request, DecodeStartListenerResponse decodeListenerResponse, DistributedEventHandler handler, Object key = null)
+        public string StartListening(IClientMessage request, DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder, object key = null)
         {
             try
             {
                 IFuture<IClientMessage> task;
                 if (key == null)
                 {
-                    task = _client.GetInvocationService().InvokeOnRandomTarget(request, handler);
+                    task = _client.GetInvocationService().InvokeListenerOnRandomTarget(request, handler, responseDecoder);
                 }
                 else
                 {
-                    task = _client.GetInvocationService().InvokeOnKeyOwner(request, key, handler);
+                    task = _client.GetInvocationService().InvokeListenerOnKeyOwner(request, key, handler, responseDecoder);
                 }
                 var clientMessage = ThreadUtil.GetResult(task);
-                var registrationId = decodeListenerResponse(clientMessage);
+                var registrationId = responseDecoder(clientMessage);
                 RegisterListener(registrationId, request.GetCorrelationId());
                 return registrationId;
             }
@@ -63,7 +63,19 @@ namespace Hazelcast.Client.Spi
                 throw ExceptionUtil.Rethrow(e);
             }
         }
-      
+
+        public void ReregisterListener(string uuid, string alias, int correlationId)
+        {
+            // re-register a listener with an alias.
+            _registrationAliasMap.AddOrUpdate(uuid, alias, (key, oldValue) =>
+            {
+                int ignored;
+                _registrationMap.TryRemove(oldValue, out ignored);
+                _registrationMap.TryAdd(alias, correlationId);
+                return alias;
+            });
+        }
+
         private void RegisterListener(string registrationId, int callId)
         {
             _registrationAliasMap.TryAdd(registrationId, registrationId);
@@ -82,18 +94,6 @@ namespace Hazelcast.Client.Spi
                 }
             }
             return false;
-        }
-
-        private void ReRegisterListener(string uuidregistrationId, string alias, int callId)
-        {
-            string oldAlias;
-            if (_registrationAliasMap.TryRemove(uuidregistrationId, out oldAlias))
-            {
-                int removed;
-                _registrationMap.TryRemove(oldAlias, out removed);
-                _registrationMap.TryAdd(alias, callId);
-            }
-            _registrationAliasMap.TryAdd(uuidregistrationId, alias);
         }
     }
 }
