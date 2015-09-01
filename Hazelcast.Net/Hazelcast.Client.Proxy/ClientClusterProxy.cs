@@ -7,9 +7,9 @@ namespace Hazelcast.Client.Proxy
 {
     internal class ClientClusterProxy : ICluster
     {
-        private readonly ClientClusterService clusterService;
+        private readonly IClientClusterService clusterService;
 
-        public ClientClusterProxy(ClientClusterService clusterService)
+        public ClientClusterProxy(IClientClusterService clusterService)
         {
             this.clusterService = clusterService;
         }

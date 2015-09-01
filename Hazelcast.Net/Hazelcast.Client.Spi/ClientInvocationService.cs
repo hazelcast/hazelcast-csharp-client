@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
@@ -13,18 +12,17 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    internal sealed class ClientInvocationService : IClientInvocationService, IConnectionListener
+    internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener
     {
         public const int DefaultEventThreadCount = 3;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientInvocationService));
         private readonly HazelcastClient _client;
-        private readonly ClientConnectionManager _clientConnectionManager;
-
-        private readonly ConcurrentDictionary<int, ClientListenerInvocation> _listenerInvocations =
-            new ConcurrentDictionary<int, ClientListenerInvocation>();
 
         private readonly ConcurrentDictionary<int, ClientInvocation> _invocations =
             new ConcurrentDictionary<int, ClientInvocation>();
+
+        private readonly ConcurrentDictionary<int, ClientListenerInvocation> _listenerInvocations =
+            new ConcurrentDictionary<int, ClientListenerInvocation>();
 
         private readonly bool _redoOperations;
         private readonly int _retryCount = 20;
@@ -51,67 +49,47 @@ namespace Hazelcast.Client.Spi
             {
                 _retryWaitTime = retryWaitTime;
             }
-            _clientConnectionManager = (ClientConnectionManager) client.GetConnectionManager();
-            _clientConnectionManager.AddConnectionListener(this);
+            var clientConnectionManager = (ClientConnectionManager) client.GetConnectionManager();
+            clientConnectionManager.AddConnectionListener(this);
         }
 
-        public IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember target)
-        {
-            var clientConnection = GetConnection(target.GetAddress());
-            return Send(clientConnection, new ClientInvocation(request, memberUuid: target.GetUuid()));
-        }
+        public abstract IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key,
+            DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder);
 
-        public IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target)
-        {
-            var clientConnection = GetConnection(target);
-            return Send(clientConnection, new ClientInvocation(request));
-        }
+        public abstract IFuture<IClientMessage> InvokeListenerOnRandomTarget(IClientMessage request,
+            DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder);
 
-        public IFuture<IClientMessage> InvokeListenerOnTarget(IClientMessage request, Address target, DistributedEventHandler handler,
-           DecodeStartListenerResponse responseDecoder)
-        {
-            var clientConnection = GetConnection(target);
-            return Send(clientConnection, new ClientListenerInvocation(request, handler, responseDecoder));
-        }
+        public abstract IFuture<IClientMessage> InvokeListenerOnTarget(IClientMessage request, Address target,
+            DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder);
 
-        public IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key)
-        {
-            var partitionService = (ClientPartitionService)_client.GetClientPartitionService();
-            var partitionId = partitionService.GetPartitionId(key);
-            var owner = partitionService.GetPartitionOwner(partitionId);
-            var connection = GetConnection(owner);
-
-            return Send(connection, new ClientInvocation(request, partitionId));
-        }
-
-        public IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key, DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder)
-        {
-            var partitionService = (ClientPartitionService)_client.GetClientPartitionService();
-            var partitionId = partitionService.GetPartitionId(key);
-            var owner = partitionService.GetPartitionOwner(partitionId);
-            var connection = GetConnection(owner);
-
-            return Send(connection, new ClientListenerInvocation(request, handler, responseDecoder, partitionId));
-        }
-
-        public IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request)
-        {
-            var clientConnection = GetConnection();
-            return Send(clientConnection, new ClientInvocation(request));
-        }
-
-        public IFuture<IClientMessage> InvokeListenerOnRandomTarget(IClientMessage request, DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder)
-        {
-            var clientConnection = GetConnection();
-            return Send(clientConnection, new ClientListenerInvocation(request, handler, responseDecoder));
-        }
+        public abstract IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
+        public abstract IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
+        public abstract IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
+        public abstract IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
 
         public bool RemoveEventHandler(int correlationId)
         {
             ClientListenerInvocation invocationWithHandler;
             return _listenerInvocations.TryRemove(correlationId, out invocationWithHandler);
+        }
+
+        public void ConnectionAdded(ClientConnection connection)
+        {
+            // noop
+        }
+
+        public void ConnectionRemoved(ClientConnection connection)
+        {
+            CleanUpConnectionResources(connection);
+        }
+
+        public void CleanUpConnectionResources(ClientConnection connection)
+        {
+            CleanupInvocations(connection);
+            CleanupEventHandlers(connection);
         }
 
         public void HandleClientMessage(IClientMessage message)
@@ -138,6 +116,88 @@ namespace Hazelcast.Client.Spi
             _taskScheduler.Dispose();
         }
 
+        protected HazelcastClient Client
+        {
+            get { return _client; }
+        }
+
+        protected virtual ClientConnection GetConnection(Address address = null)
+        {
+            return _client.GetConnectionManager().GetOrConnectWithRetry(address);
+        }
+
+        protected virtual IFuture<IClientMessage> Send(ClientConnection connection, ClientInvocation clientInvocation)
+        {
+            var correlationId = NextCorrelationId();
+            clientInvocation.Message.SetCorrelationId(correlationId);
+            clientInvocation.Message.AddFlag(ClientMessage.BeginAndEndFlags);
+            clientInvocation.SentConnection = connection;
+            if (clientInvocation.PartitionId != -1)
+            {
+                clientInvocation.Message.SetPartitionId(clientInvocation.PartitionId);
+            }
+            if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.GetMember().GetUuid())
+            {
+                clientInvocation.Future.Exception = new InvalidOperationException(
+                    "The member UUID on the invocation doesn't match the member UUID on the connection.");
+                return clientInvocation.Future;
+            }
+
+            RegisterInvocation(correlationId, clientInvocation);
+
+            //enqueue to write queue
+            if (!connection.WriteAsync((ISocketWritable) clientInvocation.Message))
+            {
+                UnregisterCall(correlationId);
+                RemoveEventHandler(correlationId);
+
+                FailRequest(connection, clientInvocation);
+            }
+            return clientInvocation.Future;
+        }
+
+        private void CleanupEventHandlers(ClientConnection connection)
+        {
+            var keys = new List<int>();
+            foreach (var entry in _listenerInvocations)
+            {
+                if (entry.Value.SentConnection == connection)
+                {
+                    keys.Add(entry.Key);
+                }
+            }
+
+            foreach (var key in keys)
+            {
+                ClientListenerInvocation invocation;
+                _listenerInvocations.TryRemove(key, out invocation);
+
+                if (invocation.Future.IsComplete && invocation.Future.Result != null)
+                {
+                    //re-register listener on a new node
+                    ReregisterListener(key, invocation);
+                }
+            }
+        }
+
+        private void CleanupInvocations(ClientConnection connection)
+        {
+            var keys = new List<int>();
+            foreach (var entry in _invocations)
+            {
+                if (entry.Value.SentConnection == connection)
+                {
+                    keys.Add(entry.Key);
+                }
+            }
+            foreach (var key in keys)
+            {
+                ClientInvocation invocation;
+                _invocations.TryRemove(key, out invocation);
+                FailRequest(connection, invocation);
+            }
+        }
+
         private void FailRequest(ClientConnection connection, ClientInvocation invocation)
         {
             if (_client.GetConnectionManager().Live)
@@ -149,11 +209,6 @@ namespace Hazelcast.Client.Spi
             {
                 invocation.Future.Exception = new HazelcastException("Client is shutting down.");
             }
-        }
-
-        private ClientConnection GetConnection(Address address = null)
-        {
-            return _client.GetConnectionManager().GetOrConnectWithRetry(address);
         }
 
         private void HandleEventMessage(IClientMessage eventMessage)
@@ -181,7 +236,7 @@ namespace Hazelcast.Client.Spi
                     var exception = ExceptionUtil.ToException(error);
 
                     // retry only specific exceptions  
-                    if (exception is RetryableHazelcastException )
+                    if (exception is RetryableHazelcastException)
                     {
                         if ((_redoOperations || invocation.Message.IsRetryable())
                             && invocation.IncrementAndGetRetryCount() < _retryCount)
@@ -205,7 +260,6 @@ namespace Hazelcast.Client.Spi
                                 Send(connection, invocation);
                             });
                         }
-
                     }
                     else
                     {
@@ -239,54 +293,6 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        public void CleanUpConnectionResources(ClientConnection connection)
-        {
-            CleanupInvocations(connection);
-            CleanupEventHandlers(connection);
-        }
-
-        private void CleanupInvocations(ClientConnection connection)
-        {
-            var keys = new List<int>();
-            foreach (var entry in _invocations)
-            {
-                if (entry.Value.SentConnection == connection)
-                {
-                    keys.Add(entry.Key);
-                }
-            }
-            foreach (var key in keys)
-            {
-                ClientInvocation invocation;
-                _invocations.TryRemove(key, out invocation);
-                FailRequest(connection, invocation);
-            }
-        }
-
-        private void CleanupEventHandlers(ClientConnection connection)
-        {
-            var keys = new List<int>();
-            foreach (var entry in _listenerInvocations)
-            {
-                if (entry.Value.SentConnection == connection)
-                {
-                    keys.Add(entry.Key);
-                }
-            }
-
-            foreach (var key in keys)
-            {
-                ClientListenerInvocation invocation;
-                _listenerInvocations.TryRemove(key, out invocation);
-
-                if (invocation.Future.IsComplete && invocation.Future.Result != null)
-                {
-                    //re-register listener on a new node
-                    ReregisterListener(key, invocation);
-                }
-            }
-        }
-
         private void ReregisterListener(int correlationId, ClientListenerInvocation invocation)
         {
             Task.Factory.StartNew(() =>
@@ -301,50 +307,10 @@ namespace Hazelcast.Client.Spi
             });
         }
 
-        private IFuture<IClientMessage> Send(ClientConnection connection, ClientInvocation clientInvocation)
-        {
-            var correlationId = NextCorrelationId();
-            clientInvocation.Message.SetCorrelationId(correlationId);
-            clientInvocation.Message.AddFlag(ClientMessage.BeginAndEndFlags);
-            clientInvocation.SentConnection = connection;
-            if (clientInvocation.PartitionId != -1)
-            {
-                clientInvocation.Message.SetPartitionId(clientInvocation.PartitionId);
-            }
-            if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.GetMember().GetUuid())
-            {
-                clientInvocation.Future.Exception = new InvalidOperationException(
-                    "The member UUID on the invocation doesn't match the member UUID on the connection.");
-                return clientInvocation.Future;
-            }
-
-            RegisterInvocation(correlationId, clientInvocation);
-
-            //enqueue to write queue
-            if (!connection.WriteAsync((ISocketWritable) clientInvocation.Message))
-            {
-                UnregisterCall(correlationId);
-                RemoveEventHandler(correlationId);
-
-                FailRequest(connection, clientInvocation);
-            }
-            return clientInvocation.Future;
-        }
-
         private void UnregisterCall(int correlationId)
         {
             ClientInvocation invocation;
             _invocations.TryRemove(correlationId, out invocation);
-        }
-
-        public void ConnectionAdded(ClientConnection connection)
-        {
-            // noop
-        }
-
-        public void ConnectionRemoved(ClientConnection connection)
-        {
-            CleanUpConnectionResources(connection);
         }
     }
 }

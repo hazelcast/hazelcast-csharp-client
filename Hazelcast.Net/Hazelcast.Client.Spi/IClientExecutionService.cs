@@ -15,5 +15,6 @@ namespace Hazelcast.Client.Spi
         Task<T> Submit<T>(Func<object, T> function, object state);
 
         Task<object> ScheduleWithFixedDelay(Runnable command, long initialDelay, long period, TimeUnit unit);
+        void Shutdown();
     }
 }
