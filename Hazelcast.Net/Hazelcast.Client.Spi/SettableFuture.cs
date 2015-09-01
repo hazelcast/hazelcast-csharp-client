@@ -8,8 +8,9 @@ namespace Hazelcast.Client.Spi
     {
         private readonly object _lock = new object();
         private readonly TaskCompletionSource<T> _taskSource = new TaskCompletionSource<T>();
-        private volatile Exception _exception;
-        private volatile object _result;
+        private Exception _exception;
+        private object _result;
+        private volatile int _isComplete;
 
         public Exception Exception
         {
@@ -20,10 +21,18 @@ namespace Hazelcast.Client.Spi
             }
             set
             {
-                //TODO: make sure result is not already set 
+                SetComplete();
                 _exception = value;
                 _taskSource.SetException(value);
                 Notify();
+            }
+        }
+
+        private void SetComplete()
+        {
+            if (Interlocked.CompareExchange(ref _isComplete, 1, 0) == 1)
+            {
+                throw new InvalidOperationException("The result is already set.");
             }
         }
 
@@ -36,11 +45,16 @@ namespace Hazelcast.Client.Spi
             }
             set
             {
-                //TODO: make sure result is not already set 
+                SetComplete();
                 _result = value;
                 _taskSource.SetResult(value);
                 Notify();
             }
+        }
+
+        public bool IsComplete
+        {
+            get { return _isComplete == 1; }
         }
 
         public Task<T> ToTask()
@@ -50,25 +64,13 @@ namespace Hazelcast.Client.Spi
             return task;
         }
 
-        public bool Wait()
-        {
-            var result = true;
-            Monitor.Enter(_lock);
-            if (_result == null && _exception == null)
-            {
-                result = Monitor.Wait(_lock);
-            }
-            Monitor.Exit(_lock);
-            return result;
-        }
-
         public T GetResult(int miliseconds)
         {
             var result = true;
             Monitor.Enter(_lock);
             try
             {
-                if (_result == null && _exception == null)
+                if (!IsComplete)
                 {
                     result = Monitor.Wait(_lock, miliseconds);
                 }
@@ -82,13 +84,25 @@ namespace Hazelcast.Client.Spi
             }
         }
 
+        public bool Wait()
+        {
+            var result = true;
+            Monitor.Enter(_lock);
+            if (!IsComplete)
+            {
+                result = Monitor.Wait(_lock);
+            }
+            Monitor.Exit(_lock);
+            return result;
+        }
+
         public bool Wait(int miliseconds)
         {
             var result = true;
             Monitor.Enter(_lock);
             try
             {
-                if (_result == null && _exception == null)
+                if (!IsComplete)
                 {
                     result = Monitor.Wait(_lock, miliseconds);
                 }

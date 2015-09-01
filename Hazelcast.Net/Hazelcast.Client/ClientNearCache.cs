@@ -103,8 +103,7 @@ namespace Hazelcast.Client
                 {
                     throw new NotImplementedException("Near cache is not available for this type of data structure");
                 }
-                registrationId = context.GetListenerService().StartListening(request, 
-                    m => MapAddEntryListenerCodec.DecodeResponse(m).response, handler);
+                registrationId = context.GetListenerService().StartListening(request, handler, m => MapAddEntryListenerCodec.DecodeResponse(m).response);
             }
             catch (Exception e)
             {

@@ -7,6 +7,7 @@ namespace Hazelcast.Client.Spi
     {
         Exception Exception { get; }
         T Result { get; }
+        bool IsComplete { get; }
         T GetResult(int miliseconds);
         bool Wait(int miliseconds);
         bool Wait();

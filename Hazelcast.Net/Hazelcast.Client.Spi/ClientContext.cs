@@ -19,7 +19,7 @@ namespace Hazelcast.Client.Spi
 
         internal ClientContext(ISerializationService serializationService, IClientClusterService clusterService,
             IClientPartitionService partitionService, IClientInvocationService invocationService,
-            IClientExecutionService executionService, IClientListenerService listenerService,ProxyManager proxyManager, ClientConfig clientConfig)
+            IClientExecutionService executionService, IClientListenerService listenerService, ProxyManager proxyManager, ClientConfig clientConfig)
         {
             this.serializationService = serializationService;
             this.clusterService = clusterService;

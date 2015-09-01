@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
@@ -19,8 +20,8 @@ namespace Hazelcast.Client.Spi
         private readonly HazelcastClient _client;
         private readonly ClientConnectionManager _clientConnectionManager;
 
-        private readonly ConcurrentDictionary<int, ClientInvocation> _invocationsWithHandlers =
-            new ConcurrentDictionary<int, ClientInvocation>();
+        private readonly ConcurrentDictionary<int, ClientListenerInvocation> _listenerInvocations =
+            new ConcurrentDictionary<int, ClientListenerInvocation>();
 
         private readonly ConcurrentDictionary<int, ClientInvocation> _invocations =
             new ConcurrentDictionary<int, ClientInvocation>();
@@ -54,44 +55,63 @@ namespace Hazelcast.Client.Spi
             _clientConnectionManager.AddConnectionListener(this);
         }
 
-        public IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember target,
-            DistributedEventHandler handler = null)
+        public IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember target)
         {
             var clientConnection = GetConnection(target.GetAddress());
-            return Send(clientConnection, new ClientInvocation(request, memberUuid: target.GetUuid(), handler: handler));
+            return Send(clientConnection, new ClientInvocation(request, memberUuid: target.GetUuid()));
         }
 
-        public IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target,
-            DistributedEventHandler handler = null)
+        public IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target)
         {
             var clientConnection = GetConnection(target);
-            return Send(clientConnection, new ClientInvocation(request, handler: handler));
+            return Send(clientConnection, new ClientInvocation(request));
         }
 
-        public IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key,
-            DistributedEventHandler handler = null)
+        public IFuture<IClientMessage> InvokeListenerOnTarget(IClientMessage request, Address target, DistributedEventHandler handler,
+           DecodeStartListenerResponse responseDecoder)
         {
-            var partitionService = (ClientPartitionService) _client.GetClientPartitionService();
+            var clientConnection = GetConnection(target);
+            return Send(clientConnection, new ClientListenerInvocation(request, handler, responseDecoder));
+        }
+
+        public IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key)
+        {
+            var partitionService = (ClientPartitionService)_client.GetClientPartitionService();
             var partitionId = partitionService.GetPartitionId(key);
             var owner = partitionService.GetPartitionOwner(partitionId);
-            if (owner != null)
-            {
-                var clientConnection = GetConnection(owner);
-                return Send(clientConnection, new ClientInvocation(request, partitionId: partitionId, handler: handler));
-            }
-            return InvokeOnRandomTarget(request);
+            var connection = GetConnection(owner);
+
+            return Send(connection, new ClientInvocation(request, partitionId));
         }
 
-        public IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request, DistributedEventHandler handler = null)
+        public IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key, DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder)
+        {
+            var partitionService = (ClientPartitionService)_client.GetClientPartitionService();
+            var partitionId = partitionService.GetPartitionId(key);
+            var owner = partitionService.GetPartitionOwner(partitionId);
+            var connection = GetConnection(owner);
+
+            return Send(connection, new ClientListenerInvocation(request, handler, responseDecoder, partitionId));
+        }
+
+        public IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request)
         {
             var clientConnection = GetConnection();
-            return Send(clientConnection, new ClientInvocation(request, handler: handler));
+            return Send(clientConnection, new ClientInvocation(request));
+        }
+
+        public IFuture<IClientMessage> InvokeListenerOnRandomTarget(IClientMessage request, DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder)
+        {
+            var clientConnection = GetConnection();
+            return Send(clientConnection, new ClientListenerInvocation(request, handler, responseDecoder));
         }
 
         public bool RemoveEventHandler(int correlationId)
         {
-            ClientInvocation invocationWithHandler;
-            return _invocationsWithHandlers.TryRemove(correlationId, out invocationWithHandler);
+            ClientListenerInvocation invocationWithHandler;
+            return _listenerInvocations.TryRemove(correlationId, out invocationWithHandler);
         }
 
         public void HandleClientMessage(IClientMessage message)
@@ -122,7 +142,7 @@ namespace Hazelcast.Client.Spi
         {
             if (_client.GetConnectionManager().Live)
             {
-                invocation.Future.Exception = 
+                invocation.Future.Exception =
                     new TargetDisconnectedException("Target was disconnected: " + connection.GetAddress());
             }
             else
@@ -139,8 +159,8 @@ namespace Hazelcast.Client.Spi
         private void HandleEventMessage(IClientMessage eventMessage)
         {
             var correlationId = eventMessage.GetCorrelationId();
-            ClientInvocation invocationWithHandler;
-            if (!_invocationsWithHandlers.TryGetValue(correlationId, out invocationWithHandler))
+            ClientListenerInvocation invocationWithHandler;
+            if (!_listenerInvocations.TryGetValue(correlationId, out invocationWithHandler))
             {
                 // no event handler found, could be that the event is already unregistered
                 Logger.Warning("No eventHandler for correlationId: " + correlationId + ", event: " + eventMessage);
@@ -212,9 +232,10 @@ namespace Hazelcast.Client.Spi
         {
             _invocations.TryAdd(correlationId, request);
 
-            if (request.Handler != null)
+            var listenerInvocation = request as ClientListenerInvocation;
+            if (listenerInvocation != null)
             {
-                _invocationsWithHandlers.TryAdd(correlationId, request);
+                _listenerInvocations.TryAdd(correlationId, listenerInvocation);
             }
         }
 
@@ -245,19 +266,39 @@ namespace Hazelcast.Client.Spi
         private void CleanupEventHandlers(ClientConnection connection)
         {
             var keys = new List<int>();
-            foreach (var entry in _invocationsWithHandlers)
+            foreach (var entry in _listenerInvocations)
             {
                 if (entry.Value.SentConnection == connection)
                 {
                     keys.Add(entry.Key);
                 }
             }
+
             foreach (var key in keys)
             {
-                ClientInvocation invocation;
-                _invocationsWithHandlers.TryRemove(key, out invocation);
-                //TODO: listener should be re-registered
+                ClientListenerInvocation invocation;
+                _listenerInvocations.TryRemove(key, out invocation);
+
+                if (invocation.Future.IsComplete && invocation.Future.Result != null)
+                {
+                    //re-register listener on a new node
+                    ReregisterListener(key, invocation);
+                }
             }
+        }
+
+        private void ReregisterListener(int correlationId, ClientListenerInvocation invocation)
+        {
+            Task.Factory.StartNew(() =>
+            {
+                var newConnection = GetConnection();
+                var oldRegistrationId = invocation.ResponseDecoder(invocation.Future.Result);
+                var resp = Send(newConnection,
+                    new ClientListenerInvocation(invocation.Message, invocation.Handler, invocation.ResponseDecoder,
+                        invocation.PartitionId, invocation.MemberUuid));
+                var newRegistrationId = invocation.ResponseDecoder(ThreadUtil.GetResult(resp));
+                _client.GetListenerService().ReregisterListener(oldRegistrationId, newRegistrationId, correlationId);
+            });
         }
 
         private IFuture<IClientMessage> Send(ClientConnection connection, ClientInvocation clientInvocation)

@@ -105,6 +105,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchTrySetCountCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\DistributedObjectInfoCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\EntryViewCodec.cs" />
+    <Compile Include="Hazelcast.Client.Spi\ClientListenerInvocation.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientListenerService.cs" />
     <Compile Include="Hazelcast.Client.Spi\IFuture.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientListenerService.cs" />

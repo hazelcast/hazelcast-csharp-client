@@ -125,7 +125,8 @@ namespace Hazelcast.Client.Spi
                 var clientMessage = ClientMembershipListenerCodec.EncodeRequest();
                 DistributedEventHandler handler = m => ClientMembershipListenerCodec.AbstractEventHandler
                     .Handle(m, HandleMember, HandleMemberCollection, HandleMemberAttributeChange);
-                var future = _client.GetInvocationService().InvokeOnTarget(clientMessage, ownerConnectionAddress, handler);
+                var future = _client.GetInvocationService().InvokeListenerOnTarget(clientMessage,
+                    ownerConnectionAddress, handler, m => ClientMembershipListenerCodec.DecodeResponse(m).response);
                 var response = ThreadUtil.GetResult(future);
 
                 //registraiton id is ignored as this listener will never be removed
