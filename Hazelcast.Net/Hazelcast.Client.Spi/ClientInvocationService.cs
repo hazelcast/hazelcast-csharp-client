@@ -12,7 +12,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener
+    internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener        
     {
         public const int DefaultEventThreadCount = 3;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientInvocationService));
@@ -35,22 +35,19 @@ namespace Hazelcast.Client.Spi
             _client = client;
             _redoOperations = client.GetClientConfig().GetNetworkConfig().IsRedoOperation();
 
-            var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count");
-            eventTreadCount = eventTreadCount > 0 ? eventTreadCount : DefaultEventThreadCount;
+            var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count")??DefaultEventThreadCount;
             _taskScheduler = new StripedTaskScheduler(eventTreadCount);
-
-            var retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count");
-            if (retryCount > 0)
-            {
-                _retryCount = retryCount;
-            }
-            var retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time");
-            if (retryWaitTime > 0)
-            {
-                _retryWaitTime = retryWaitTime;
-            }
+            
+            _retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count") ?? _retryCount;
+            _retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time") ?? _retryWaitTime;
+            
             var clientConnectionManager = (ClientConnectionManager) client.GetConnectionManager();
             clientConnectionManager.AddConnectionListener(this);
+        }
+
+        protected HazelcastClient Client
+        {
+            get { return _client; }
         }
 
         public abstract IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key,
@@ -114,11 +111,6 @@ namespace Hazelcast.Client.Spi
         public void Shutdown()
         {
             _taskScheduler.Dispose();
-        }
-
-        protected HazelcastClient Client
-        {
-            get { return _client; }
         }
 
         protected virtual ClientConnection GetConnection(Address address = null)
