@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -11,17 +12,17 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    internal sealed class ClientInvocationService : IClientInvocationService
+    internal sealed class ClientInvocationService : IClientInvocationService, IConnectionListener
     {
         public const int DefaultEventThreadCount = 3;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientInvocationService));
         private readonly HazelcastClient _client;
         private readonly ClientConnectionManager _clientConnectionManager;
 
-        private readonly ConcurrentDictionary<int, DistributedEventHandler> _eventHandlers =
-            new ConcurrentDictionary<int, DistributedEventHandler>();
+        private readonly ConcurrentDictionary<int, ClientInvocation> _invocationsWithHandlers =
+            new ConcurrentDictionary<int, ClientInvocation>();
 
-        private readonly ConcurrentDictionary<int, ClientInvocation> _invocationRequests =
+        private readonly ConcurrentDictionary<int, ClientInvocation> _invocations =
             new ConcurrentDictionary<int, ClientInvocation>();
 
         private readonly bool _redoOperations;
@@ -50,6 +51,7 @@ namespace Hazelcast.Client.Spi
                 _retryWaitTime = retryWaitTime;
             }
             _clientConnectionManager = (ClientConnectionManager) client.GetConnectionManager();
+            _clientConnectionManager.AddConnectionListener(this);
         }
 
         public IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember target,
@@ -88,8 +90,8 @@ namespace Hazelcast.Client.Spi
 
         public bool RemoveEventHandler(int correlationId)
         {
-            DistributedEventHandler handler;
-            return _eventHandlers.TryRemove(correlationId, out handler);
+            ClientInvocation invocationWithHandler;
+            return _invocationsWithHandlers.TryRemove(correlationId, out invocationWithHandler);
         }
 
         public void HandleClientMessage(IClientMessage message)
@@ -116,16 +118,16 @@ namespace Hazelcast.Client.Spi
             _taskScheduler.Dispose();
         }
 
-        private void FailRequest(ClientConnection connection, ClientInvocation future)
+        private void FailRequest(ClientConnection connection, ClientInvocation invocation)
         {
             if (_client.GetConnectionManager().Live)
             {
-                future.Future.Exception = 
+                invocation.Future.Exception = 
                     new TargetDisconnectedException("Target was disconnected: " + connection.GetAddress());
             }
             else
             {
-                future.Future.Exception = new HazelcastException("Client is shutting down.");
+                invocation.Future.Exception = new HazelcastException("Client is shutting down.");
             }
         }
 
@@ -137,21 +139,21 @@ namespace Hazelcast.Client.Spi
         private void HandleEventMessage(IClientMessage eventMessage)
         {
             var correlationId = eventMessage.GetCorrelationId();
-            DistributedEventHandler handler;
-            if (!_eventHandlers.TryGetValue(correlationId, out handler))
+            ClientInvocation invocationWithHandler;
+            if (!_invocationsWithHandlers.TryGetValue(correlationId, out invocationWithHandler))
             {
                 // no event handler found, could be that the event is already unregistered
                 Logger.Warning("No eventHandler for correlationId: " + correlationId + ", event: " + eventMessage);
                 return;
             }
-            handler(eventMessage);
+            invocationWithHandler.Handler(eventMessage);
         }
 
         private void HandleResponseMessage(IClientMessage response)
         {
             var correlationId = response.GetCorrelationId();
             ClientInvocation invocation;
-            if (_invocationRequests.TryRemove(correlationId, out invocation))
+            if (_invocations.TryRemove(correlationId, out invocation))
             {
                 if (response.GetMessageType() == Error.Type)
                 {
@@ -208,43 +210,54 @@ namespace Hazelcast.Client.Spi
 
         private void RegisterInvocation(int correlationId, ClientInvocation request)
         {
-            _invocationRequests.TryAdd(correlationId, request);
+            _invocations.TryAdd(correlationId, request);
 
             if (request.Handler != null)
             {
-                _eventHandlers.TryAdd(correlationId, request.Handler);
+                _invocationsWithHandlers.TryAdd(correlationId, request);
             }
-        }
-
-        private void RemoveEventHandlers()
-        {
-            _eventHandlers.Clear();
         }
 
         public void CleanUpConnectionResources(ClientConnection connection)
         {
-            foreach (var invocationRequest in _invocationRequests)
-            {
-                //TODO: delete invocations which belong a specific conneciton
-            }
+            CleanupInvocations(connection);
+            CleanupEventHandlers(connection);
+        }
 
-            foreach (var distributedEventHandler in _eventHandlers)
+        private void CleanupInvocations(ClientConnection connection)
+        {
+            var keys = new List<int>();
+            foreach (var entry in _invocations)
             {
-                //TODO: remove event handlers which belong a to a connection
+                if (entry.Value.SentConnection == connection)
+                {
+                    keys.Add(entry.Key);
+                }
+            }
+            foreach (var key in keys)
+            {
+                ClientInvocation invocation;
+                _invocations.TryRemove(key, out invocation);
+                FailRequest(connection, invocation);
             }
         }
 
-        private void RemoveInvocationRequests(int connectionId)
+        private void CleanupEventHandlers(ClientConnection connection)
         {
-//            Logger.Finest("RemoveInvocationRequests for connection id:" + connectionId + " COUNT:" + _invocationRequests.Count);
-//            foreach (var entry in _invocationRequests)
-//            {
-//                InvocationData data;
-//                if (_invocationRequests.TryRemove(entry.Key, out data))
-//                {
-//                    FailRequest(data.responseFuture);
-//                }
-//            }
+            var keys = new List<int>();
+            foreach (var entry in _invocationsWithHandlers)
+            {
+                if (entry.Value.SentConnection == connection)
+                {
+                    keys.Add(entry.Key);
+                }
+            }
+            foreach (var key in keys)
+            {
+                ClientInvocation invocation;
+                _invocationsWithHandlers.TryRemove(key, out invocation);
+                //TODO: listener should be re-registered
+            }
         }
 
         private IFuture<IClientMessage> Send(ClientConnection connection, ClientInvocation clientInvocation)
@@ -252,13 +265,16 @@ namespace Hazelcast.Client.Spi
             var correlationId = NextCorrelationId();
             clientInvocation.Message.SetCorrelationId(correlationId);
             clientInvocation.Message.AddFlag(ClientMessage.BeginAndEndFlags);
+            clientInvocation.SentConnection = connection;
             if (clientInvocation.PartitionId != -1)
             {
                 clientInvocation.Message.SetPartitionId(clientInvocation.PartitionId);
             }
             if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.GetMember().GetUuid())
             {
-                //TODO: If MemberUUID different fail the request
+                clientInvocation.Future.Exception = new InvalidOperationException(
+                    "The member UUID on the invocation doesn't match the member UUID on the connection.");
+                return clientInvocation.Future;
             }
 
             RegisterInvocation(correlationId, clientInvocation);
@@ -277,7 +293,17 @@ namespace Hazelcast.Client.Spi
         private void UnregisterCall(int correlationId)
         {
             ClientInvocation invocation;
-            _invocationRequests.TryRemove(correlationId, out invocation);
+            _invocations.TryRemove(correlationId, out invocation);
+        }
+
+        public void ConnectionAdded(ClientConnection connection)
+        {
+            // noop
+        }
+
+        public void ConnectionRemoved(ClientConnection connection)
+        {
+            CleanUpConnectionResources(connection);
         }
     }
 }

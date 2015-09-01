@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Util;
 
@@ -55,5 +56,9 @@ namespace Hazelcast.Client.Spi
             get { return _future; }
         }
 
+        /// <summary>
+        /// Connection that was used to execute this invocation
+        /// </summary>
+        public ClientConnection SentConnection { get; set; }
     }
 }
