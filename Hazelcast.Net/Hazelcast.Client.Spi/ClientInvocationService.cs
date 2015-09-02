@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
@@ -12,7 +13,8 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener        
+    internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener,
+        IConnectionHeartbeatListener
     {
         public const int DefaultEventThreadCount = 3;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientInvocationService));
@@ -35,12 +37,14 @@ namespace Hazelcast.Client.Spi
             _client = client;
             _redoOperations = client.GetClientConfig().GetNetworkConfig().IsRedoOperation();
 
-            var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count")??DefaultEventThreadCount;
+            var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count") ??
+                                  DefaultEventThreadCount;
             _taskScheduler = new StripedTaskScheduler(eventTreadCount);
-            
+
             _retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count") ?? _retryCount;
-            _retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time") ?? _retryWaitTime;
-            
+            _retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time") ??
+                             _retryWaitTime;
+
             var clientConnectionManager = (ClientConnectionManager) client.GetConnectionManager();
             clientConnectionManager.AddConnectionListener(this);
         }
@@ -71,6 +75,20 @@ namespace Hazelcast.Client.Spi
         {
             ClientListenerInvocation invocationWithHandler;
             return _listenerInvocations.TryRemove(correlationId, out invocationWithHandler);
+        }
+
+        public void HeartBeatStarted(ClientConnection connection)
+        {
+            // noop
+        }
+
+        public void HeartBeatStopped(ClientConnection connection)
+        {
+            var request = ClientRemoveAllListenersCodec.EncodeRequest();
+            var removeListenerInvocation = new ClientInvocation(request);
+            Send(connection, removeListenerInvocation);
+
+            CleanupEventHandlers(connection);
         }
 
         public void ConnectionAdded(ClientConnection connection)
@@ -167,7 +185,7 @@ namespace Hazelcast.Client.Spi
                 if (invocation.Future.IsComplete && invocation.Future.Result != null)
                 {
                     //re-register listener on a new node
-                    ReregisterListener(key, invocation);
+                    Task.Factory.StartNew(() => ReregisterListener(key, invocation));
                 }
             }
         }
@@ -287,16 +305,13 @@ namespace Hazelcast.Client.Spi
 
         private void ReregisterListener(int correlationId, ClientListenerInvocation invocation)
         {
-            Task.Factory.StartNew(() =>
-            {
-                var newConnection = GetConnection();
-                var oldRegistrationId = invocation.ResponseDecoder(invocation.Future.Result);
-                var resp = Send(newConnection,
-                    new ClientListenerInvocation(invocation.Message, invocation.Handler, invocation.ResponseDecoder,
-                        invocation.PartitionId, invocation.MemberUuid));
-                var newRegistrationId = invocation.ResponseDecoder(ThreadUtil.GetResult(resp));
-                _client.GetListenerService().ReregisterListener(oldRegistrationId, newRegistrationId, correlationId);
-            });
+            var newConnection = GetConnection();
+            var oldRegistrationId = invocation.ResponseDecoder(invocation.Future.Result);
+            var resp = Send(newConnection,
+                new ClientListenerInvocation(invocation.Message, invocation.Handler, invocation.ResponseDecoder,
+                    invocation.PartitionId, invocation.MemberUuid));
+            var newRegistrationId = invocation.ResponseDecoder(ThreadUtil.GetResult(resp));
+            _client.GetListenerService().ReregisterListener(oldRegistrationId, newRegistrationId, correlationId);
         }
 
         private void UnregisterCall(int correlationId)
