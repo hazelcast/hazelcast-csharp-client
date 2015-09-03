@@ -48,12 +48,13 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                var unregistered = UnregisterListener(registrationId);
+                var realRegistrationId = UnregisterListener(registrationId);
 
-                if (unregistered)
+                if (realRegistrationId == null)
                 {
                     return false;
                 }
+
                 var task = _client.GetInvocationService().InvokeOnRandomTarget(request);
                 var result = decodeListenerResponse(ThreadUtil.GetResult(task));
                 return result;
@@ -82,18 +83,18 @@ namespace Hazelcast.Client.Spi
             _registrationMap.TryAdd(registrationId, callId);
         }
 
-        private bool UnregisterListener(string registrationId)
+        private string UnregisterListener(string registrationId)
         {
             string uuid;
             if (_registrationAliasMap.TryRemove(registrationId, out uuid))
             {
-                int callId;
-                if (_registrationMap.TryRemove(registrationId, out callId))
+                int correlationId;
+                if (_registrationMap.TryRemove(registrationId, out correlationId))
                 {
-                    return _client.GetInvocationService().RemoveEventHandler(callId);
+                    _client.GetInvocationService().RemoveEventHandler(correlationId);
                 }
             }
-            return false;
+            return uuid;
         }
     }
 }

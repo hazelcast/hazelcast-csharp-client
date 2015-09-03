@@ -153,7 +153,7 @@ namespace Hazelcast.Client.Test
             var listener = new ClientListTest._ItemListener<object>(latch);
             string registrationId = tempSet.AddItemListener(listener, true);
 
-		    tempSet.RemoveItemListener(registrationId);
+		    Assert.IsTrue(tempSet.RemoveItemListener(registrationId));
 
             var t = new Thread(o => tempSet.Add("item"));
             t.Start();

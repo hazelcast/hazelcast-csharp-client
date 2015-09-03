@@ -154,7 +154,7 @@ namespace Hazelcast.Client.Test
 			mm.Put("key1", "value1");
 			Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(10)));
 
-		    mm.RemoveEntryListener(listenerId);
+		    Assert.IsTrue(mm.RemoveEntryListener(listenerId));
 		    Thread.Sleep(1000);
 			mm.Remove("key1");
             Assert.IsFalse(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
