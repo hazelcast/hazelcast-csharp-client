@@ -55,7 +55,6 @@ namespace Hazelcast.Client.Protocol.Codec
 
 
         //************************ EVENTS *************************//
-
         public static ClientMessage EncodeDistributedObjectEvent(string name, string serviceName, string eventType)
         {
             int dataSize = ClientMessage.HeaderSize;

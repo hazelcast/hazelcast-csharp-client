@@ -58,25 +58,6 @@ namespace Hazelcast.Client.Protocol.Codec
 
 
         //************************ EVENTS *************************//
-
-        public static ClientMessage EncodeTopicEvent(IData item, long publishTime, string uuid)
-        {
-            int dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(item);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += ParameterUtil.CalculateDataSize(uuid);
-
-            ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-            clientMessage.SetMessageType(EventMessageConst.EventTopic);
-            clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
-
-            clientMessage.Set(item);
-            clientMessage.Set(publishTime);
-            clientMessage.Set(uuid);
-            clientMessage.UpdateFrameLength();
-            return clientMessage;
-        }
-
         public abstract class AbstractEventHandler
         {
             public static void Handle(IClientMessage clientMessage, HandleTopic handleTopic)

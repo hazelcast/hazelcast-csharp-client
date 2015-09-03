@@ -50,19 +50,5 @@ namespace Hazelcast.Client.Protocol.Codec
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
-
-        //************************ RESPONSE *************************//
-
-
-        public class ResponseParameters
-        {
-        }
-
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
-        {
-            ResponseParameters parameters = new ResponseParameters();
-            return parameters;
-        }
-
     }
 }

@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Protocol.Codec
         {
             int requiredDataSize = RequestParameters.CalculateDataSize(transactionId, threadId, prepareAndCommit);
             ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int)RequestType);
+            clientMessage.SetMessageType((int) RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(transactionId);
             clientMessage.Set(threadId);
@@ -44,19 +44,5 @@ namespace Hazelcast.Client.Protocol.Codec
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
-
-        //************************ RESPONSE *************************//
-
-
-        public class ResponseParameters
-        {
-        }
-
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
-        {
-            ResponseParameters parameters = new ResponseParameters();
-            return parameters;
-        }
-
     }
 }

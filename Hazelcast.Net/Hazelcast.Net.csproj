@@ -72,6 +72,7 @@
     <Compile Include="Hazelcast.Client.Connection\IConnectionListener.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionHeartbeatListener.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientRemoveAllListenersCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapEvictAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientInvocation.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AddressCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAddAndGetCodec.cs" />
@@ -159,12 +160,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapEntriesWithPagingPredicateCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapEntriesWithPredicateCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapEntrySetCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\MapEvictAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapEvictCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnAllKeysCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnKeyCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnKeysCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteWithPredicateCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapFlushCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapForceUnlockCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapGetAllCodec.cs" />
@@ -174,7 +170,6 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapIsEmptyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapIsLockedCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapKeySetCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\MapKeySetWithPagingPredicateCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapKeySetWithPredicateCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapLoadAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapLoadGivenKeysCodec.cs" />
@@ -195,7 +190,6 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapReplaceIfSameCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapSetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapSizeCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\MapSubmitToKeyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapTryLockCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapTryPutCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapTryRemoveCodec.cs" />

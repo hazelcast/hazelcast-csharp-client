@@ -57,55 +57,6 @@ namespace Hazelcast.Client.Protocol.Codec
 
         //************************ EVENTS *************************//
 
-        public static ClientMessage EncodeMemberEvent(Core.IMember member, int eventType)
-        {
-            int dataSize = ClientMessage.HeaderSize;
-                dataSize += MemberCodec.CalculateDataSize(member);
-                dataSize += Bits.IntSizeInBytes;
-
-            ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-            clientMessage.SetMessageType(EventMessageConst.EventMember);
-            clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
-
-            MemberCodec.Encode(member, clientMessage);
-            clientMessage.Set(eventType);
-            clientMessage.UpdateFrameLength();
-            return clientMessage;
-        }
-        public static ClientMessage EncodeMemberSetEvent(ISet<Core.IMember> members)
-        {
-            int dataSize = ClientMessage.HeaderSize;
-                dataSize += Bits.IntSizeInBytes;
-                foreach (var members_item in members )
-                {
-                dataSize += MemberCodec.CalculateDataSize(members_item);
-                }
-
-            ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-            clientMessage.SetMessageType(EventMessageConst.EventMemberSet);
-            clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
-
-            clientMessage.Set(members.Count);
-            foreach (var members_item in members) {
-            MemberCodec.Encode(members_item, clientMessage);
-            }
-            clientMessage.UpdateFrameLength();
-            return clientMessage;
-        }
-        public static ClientMessage EncodeMemberAttributeChangeEvent(MemberAttributeChange memberAttributeChange)
-        {
-            int dataSize = ClientMessage.HeaderSize;
-                dataSize += MemberAttributeChangeCodec.CalculateDataSize(memberAttributeChange);
-
-            ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-            clientMessage.SetMessageType(EventMessageConst.EventMemberAttributeChange);
-            clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
-
-            MemberAttributeChangeCodec.Encode(memberAttributeChange, clientMessage);
-            clientMessage.UpdateFrameLength();
-            return clientMessage;
-        }
-
         public abstract class AbstractEventHandler
         {
             public static void Handle(IClientMessage clientMessage, HandleMember handleMember, HandleMemberSet handleMemberSet, HandleMemberAttributeChange handleMemberAttributeChange)
