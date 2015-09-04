@@ -570,8 +570,8 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
 
-            map.RemoveEntryListener(reg1);
-            map.RemoveEntryListener(reg2);
+            Assert.IsTrue(map.RemoveEntryListener(reg1));
+            Assert.IsTrue(map.RemoveEntryListener(reg2));
         }
 
         [Test]
@@ -737,7 +737,7 @@ namespace Hazelcast.Client.Test
             var reg1 = map.AddEntryListener(listener1, false);
 
             Thread.Sleep(1000);
-            map.RemoveEntryListener(reg1);
+            Assert.IsTrue(map.RemoveEntryListener(reg1));
 
             Thread.Sleep(1000);
 
