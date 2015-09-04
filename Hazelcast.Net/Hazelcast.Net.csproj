@@ -71,6 +71,7 @@
     <Compile Include="Hazelcast.Client.Connection\ClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionListener.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionHeartbeatListener.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientRemoveAllListenersCodec.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientInvocation.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AddressCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAddAndGetCodec.cs" />

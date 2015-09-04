@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -21,6 +20,8 @@ namespace Hazelcast.Client.Connection
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientConnectionManager));
         private readonly int _retryCount = 20;
         private readonly int _retryWaitTime = 250;
+        private readonly int _heartBeatTimeout = 60000;
+        private readonly int _heartBeatInterval = 5000;
 
         private readonly ConcurrentDictionary<Address, ClientConnection> _addresses =
             new ConcurrentDictionary<Address, ClientConnection>();
@@ -42,9 +43,6 @@ namespace Hazelcast.Client.Connection
         private Thread _heartBeatThread;
         private volatile bool _live;
         private volatile int _nextConnectionId;
-        private LinkedListNode<ClientConnection> _nextConnectionNode = null;
-
-        private volatile ClientPrincipal _principal;
 
         public ClientConnectionManager(HazelcastClient client, ILoadBalancer loadBalancer)
         {
@@ -70,18 +68,13 @@ namespace Hazelcast.Client.Connection
             var timeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.timeout");
             if (timeout > 0)
             {
-                ThreadUtil.TaskOperationTimeOutMilliseconds = timeout;
+                ThreadUtil.TaskOperationTimeOutMilliseconds = timeout.Value;
             }
-            var retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count");
-            if (retryCount > 0)
-            {
-                _retryCount = retryCount;
-            }
-            var retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time");
-            if (retryWaitTime > 0)
-            {
-                _retryWaitTime = retryWaitTime;
-            }
+
+            _retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count") ?? _retryCount;
+            _retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time") ?? _retryWaitTime;
+            _heartBeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ?? _heartBeatTimeout;
+            _heartBeatInterval = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.interval") ?? _heartBeatInterval;
         }
 
         public void Start()
@@ -362,23 +355,24 @@ namespace Hazelcast.Client.Connection
                     var remoteEndPoint = clientConnection.GetSocket() != null
                         ? clientConnection.GetSocket().RemoteEndPoint.ToString()
                         : "CLOSED";
-
+                    
                     Logger.Finest("Sending heartbeat request to " + remoteEndPoint);
-                    //TODO: fire heartbeat stopped event if heartbeat times out
                     try
                     {
-                        var result = ThreadUtil.GetResult(task);
+                        var response = ThreadUtil.GetResult(task, _heartBeatTimeout);
+                        var result = ClientPingCodec.DecodeResponse(response);
                         Logger.Finest("Got heartbeat response from " + remoteEndPoint);
-                        //Console.WriteLine("PING:" + remoteEndPoint);
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
-                        //Console.WriteLine("PING ERROR:" + remoteEndPoint);
+                        Logger.Warning(string.Format("Error getting heartbeat from {0}: {1}", remoteEndPoint, e));
+                        var connection = clientConnection;
+                        FireHeartBeatEvent((listener) => listener.HeartBeatStopped(connection));
                     }
                 }
                 try
                 {
-                    Thread.Sleep(5000);
+                    Thread.Sleep(_heartBeatInterval);
                 }
                 catch (Exception)
                 {
