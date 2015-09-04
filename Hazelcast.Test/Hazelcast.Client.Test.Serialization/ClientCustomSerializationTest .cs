@@ -35,13 +35,28 @@ namespace Hazelcast.Client.Test.Serialization
     [Serializable]
     class CustomSerializableType
     {
-        private String value;
-
-        public String Value
+        public string Value
         {
             get; set;
         }
 
+        protected bool Equals(CustomSerializableType other)
+        {
+            return string.Equals(Value, other.Value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((CustomSerializableType) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Value != null ? Value.GetHashCode() : 0);
+        }
     }
 
     class CustomSerializer : IStreamSerializer<CustomSerializableType>

@@ -4,8 +4,8 @@ namespace Hazelcast.Client.Test.Serialization
 {
     internal class NamedPortable : IPortable
     {
-        private int k;
-        private string name;
+        internal int k;
+        internal string name;
 
         public NamedPortable()
         {

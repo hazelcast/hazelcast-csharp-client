@@ -16,7 +16,12 @@ namespace Hazelcast.Client.Test.Serialization
             ByteOrder.NativeOrder()
         };
 
-        private static ISerializationService CreateSerializationService(int version, ByteOrder order)
+        internal static ISerializationService CreateSerializationService(int version)
+        {
+            return CreateSerializationService(version, ByteOrder.BigEndian);
+        }
+
+        internal static ISerializationService CreateSerializationService(int version, ByteOrder order)
         {
             return new SerializationServiceBuilder()
                 .SetUseNativeByteOrder(false).SetByteOrder(order).SetVersion(version)
@@ -25,7 +30,7 @@ namespace Hazelcast.Client.Test.Serialization
                     new TestDataSerializableFactory()).Build();
         }
 
-        private static IClassDefinition CreateNamedPortableClassDefinition()
+        internal static IClassDefinition CreateNamedPortableClassDefinition()
         {
             var builder = new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID,
                 TestSerializationConstants.NAMED_PORTABLE);
@@ -146,21 +151,7 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public class PortableFactoryFunc : IPortableFactory
-        {
-            private readonly Func<int, IPortable> _func;
-
-            public PortableFactoryFunc(Func<int, IPortable> func)
-            {
-                _func = func;
-            }
-
-            public IPortable Create(int classId)
-            {
-                return _func(classId);
-            }
-        }
-
+        
         //https://github.com/hazelcast/hazelcast/issues/1096
         [Test]
         public void Test_1096_ByteArrayContentSame()
@@ -363,6 +354,27 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
+        public void TestWriteObjectWithCustomSerializable()
+        {
+            var config = new SerializationConfig();
+            var sc = new SerializerConfig()
+                .SetImplementation(new CustomSerializer())
+                .SetTypeClass(typeof (CustomSerializableType));
+            config.AddSerializerConfig(sc);
+            var serializationService =
+                new SerializationServiceBuilder().SetVersion(1)
+                    .AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID, new TestPortableFactory())
+                    .SetConfig(config).Build();
+
+            var foo = new CustomSerializableType {Value = "foo"};
+
+            var objectCarryingPortable1 = new ObjectCarryingPortable(foo);
+            var data = serializationService.ToData(objectCarryingPortable1);
+            var objectCarryingPortable2 = serializationService.ToObject<ObjectCarryingPortable>(data);
+            Assert.AreEqual(objectCarryingPortable1, objectCarryingPortable2);
+        }
+
+        [Test]
         public void TestWriteObjectWithIdentifiedDataSerializable()
         {
             var serializationService = CreateSerializationService(1, ByteOrder.NativeOrder());
@@ -425,6 +437,21 @@ namespace Hazelcast.Client.Test.Serialization
             var obj = ss2.ToObject<object>(data);
             Assert.IsNotNull(obj);
             Assert.IsInstanceOf<TestObject1>(obj);
+        }
+    }
+
+    public class PortableFactoryFunc : IPortableFactory
+    {
+        private readonly Func<int, IPortable> _func;
+
+        public PortableFactoryFunc(Func<int, IPortable> func)
+        {
+            _func = func;
+        }
+
+        public IPortable Create(int classId)
+        {
+            return _func(classId);
         }
     }
 }
