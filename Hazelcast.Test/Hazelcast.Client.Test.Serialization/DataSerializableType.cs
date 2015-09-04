@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
-namespace Hazelcast.Client.Test
+namespace Hazelcast.Client.Test.Serialization
 {
     class DataSerializableType:IIdentifiedDataSerializable
     {

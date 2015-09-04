@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -77,6 +77,20 @@
     <Compile Include="ClientQueuePerformanceTest.cs" />
     <Compile Include="Hazelcast.Client.Model\Item.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientDistributedObjectTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\ByteArrayDataSerializable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\ComplexDataSerializable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\DataDataSerializable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\InnerPortable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\InvalidRawDataPortable2.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\InvalidRawDataPortable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\MainPortable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\NamedPortableV2.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\NamedPortable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\ObjectCarryingPortable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\PortableSerializationTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\SampleIdentifiedDataSerializable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\TestSerializationConstants.cs" />
+    <Compile Include="Hazelcast.Client.Test\HazelcastCluster.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastNode.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastBaseTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientAtomicLongTest.cs" />
@@ -89,11 +103,10 @@
     <Compile Include="Hazelcast.Client.Test\ClientNearCacheTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientQueueTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSemaphoreTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientCustomSerializationTest .cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\ClientCustomSerializationTest .cs" />
     <Compile Include="Hazelcast.Client.Test\ClientLicenseTest.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastTestClient.cs" />
-    <Compile Include="Hazelcast.Client.Test\PortableSerializationTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientSerializationTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\ClientSerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSetTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTopicTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTxnListTest.cs" />
@@ -103,9 +116,10 @@
     <Compile Include="Hazelcast.Client.Test\ClientTxnSetTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTxnTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientXmlTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\DataSerializableType.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\DataSerializableType.cs" />
     <Compile Include="Hazelcast.Client.Test\GenericEvent.cs" />
-    <Compile Include="Hazelcast.Client.Test\SerializationTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\SerializationTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\RawDataPortable.cs" />
     <Compile Include="Hazelcast.Client.Test\TestSetup.cs" />
     <Compile Include="Hazelcast.Client.Test\TestSupport.cs" />
     <Compile Include="Program.cs" />

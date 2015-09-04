@@ -1,20 +1,16 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization.Formatters.Soap;
 using Hazelcast.Config;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using NUnit.Framework;
 
-namespace Hazelcast.Client.Test
+namespace Hazelcast.Client.Test.Serialization
 {
     [TestFixture]
-    public class ClientCustomSerializationTest //:HazelcastBaseTest
+    public class ClientCustomSerializationTest 
     {
-        
-       
         [Test]
         public virtual void TestCustomSerialize()
         {
@@ -34,7 +30,6 @@ namespace Hazelcast.Client.Test
         
             Assert.AreEqual(newFoo.Value, foo.Value);
         }
-
     }
 
     [Serializable]

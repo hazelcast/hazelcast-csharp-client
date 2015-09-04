@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Hazelcast.Client.Example;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Test
+namespace Hazelcast.Client.Test.Serialization
 {
     class SerializationTest
     {

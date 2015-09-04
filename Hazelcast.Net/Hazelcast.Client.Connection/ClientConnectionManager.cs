@@ -234,7 +234,7 @@ namespace Hazelcast.Client.Connection
         {
             if (!_live)
             {
-                throw new HazelcastException("ConnectionManager is not active!!!");
+                throw new HazelcastException("ConnectionManager is not active");
             }
         }
 

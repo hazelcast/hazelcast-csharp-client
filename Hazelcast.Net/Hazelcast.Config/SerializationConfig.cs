@@ -192,7 +192,7 @@ namespace Hazelcast.Config
 
         public virtual SerializationConfig AddClassDefinition(IClassDefinition classDefinition)
         {
-            if (!GetClassDefinitions().Contains(classDefinition))
+            if (GetClassDefinitions().Contains(classDefinition))
             {
                 throw new ArgumentException("IClassDefinition for class-id[" + classDefinition.GetClassId() +
                                             "] already exists!");

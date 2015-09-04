@@ -29,11 +29,6 @@ namespace Hazelcast.Security
             return GetPrincipal();
         }
 
-        public virtual byte[] GetRawPassword()
-        {
-            return password;
-        }
-
         public virtual string GetPassword()
         {
             return password == null ? string.Empty : Encoding.UTF8.GetString(password);

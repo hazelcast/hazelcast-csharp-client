@@ -1,18 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.Remoting;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization.Formatters.Soap;
-using System.Text;
-using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using NUnit.Framework;
 
-namespace Hazelcast.Client.Test
+namespace Hazelcast.Client.Test.Serialization
 {
     [TestFixture]
     public class ClientSerializationTest//:HazelcastBaseTest
