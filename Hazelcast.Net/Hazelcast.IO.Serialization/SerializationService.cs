@@ -322,13 +322,13 @@ namespace Hazelcast.IO.Serialization
             if (e is OutOfMemoryException)
             {
                 //OutOfMemoryErrorDispatcher.OnOutOfMemory((OutOfMemoryException)e);
-                throw e;
+                return e;
             }
             if (e is HazelcastSerializationException)
             {
-                throw e;
+                return e;
             }
-            throw new HazelcastSerializationException(e);
+            return new HazelcastSerializationException(e);
         }
 
         protected internal IBufferObjectDataOutput Pop()

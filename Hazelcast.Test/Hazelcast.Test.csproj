@@ -80,6 +80,7 @@
     <Compile Include="Hazelcast.Client.Test.Serialization\ByteArrayDataSerializable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\ComplexDataSerializable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\DataDataSerializable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\DataInputOutputTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\InnerPortable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\InvalidRawDataPortable2.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\InvalidRawDataPortable.cs" />
@@ -87,8 +88,10 @@
     <Compile Include="Hazelcast.Client.Test.Serialization\NamedPortableV2.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\NamedPortable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\ObjectCarryingPortable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\PortableClassVersionTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\PortableSerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\SampleIdentifiedDataSerializable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\SerializationConcurrencyTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\TestSerializationConstants.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastCluster.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastNode.cs" />
