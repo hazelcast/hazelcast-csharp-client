@@ -28,6 +28,25 @@ namespace Hazelcast.Client.Spi
             return Send(clientConnection, new ClientInvocation(request));
         }
 
+        public override IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId)
+        {
+            var partitionService = (ClientPartitionService)Client.GetClientPartitionService();
+            var owner = partitionService.GetPartitionOwner(partitionId);
+            var connection = GetConnection(owner);
+
+            return Send(connection, new ClientInvocation(request, partitionId));
+        }
+
+        public override IFuture<IClientMessage> InvokeListenerOnPartition(IClientMessage request, int partitionId, DistributedEventHandler handler,
+           DecodeStartListenerResponse responseDecoder)
+        {
+            var partitionService = (ClientPartitionService)Client.GetClientPartitionService();
+            var owner = partitionService.GetPartitionOwner(partitionId);
+            var connection = GetConnection(owner);
+
+            return Send(connection, new ClientListenerInvocation(request, handler, responseDecoder, partitionId));
+        }
+
         public override IFuture<IClientMessage> InvokeListenerOnTarget(IClientMessage request, Address target, DistributedEventHandler handler,
            DecodeStartListenerResponse responseDecoder)
         {

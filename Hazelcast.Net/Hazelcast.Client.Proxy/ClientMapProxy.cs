@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
@@ -558,15 +559,31 @@ namespace Hazelcast.Client.Proxy
 
         public void PutAll(IDictionary<K, V> m)
         {
-            IDictionary<IData, IData> map = new Dictionary<IData, IData>();
-            foreach (var entry in m)
+            var partitionService = GetContext().GetPartitionService();
+            var partitions = new Dictionary<int, IDictionary<IData, IData>>(partitionService.GetPartitionCount());
+
+            foreach (var kvp in m)
             {
-                var keyData = ToData(entry.Key);
+                var keyData = ToData(kvp.Key);
                 InvalidateNearCacheEntry(keyData);
-                map[keyData] = ToData(entry.Value);
+                var partitionId = partitionService.GetPartitionId(keyData);
+                IDictionary<IData, IData> partition = null;
+                if (!partitions.TryGetValue(partitionId, out partition))
+                {
+                    partition = new Dictionary<IData, IData>();
+                    partitions[partitionId] = partition;
+                }
+                partition[keyData] = ToData(kvp.Value);
             }
-            var request = MapPutAllCodec.EncodeRequest(GetName(), map);
-            Invoke(request);
+
+            var futures = new List<IFuture<IClientMessage>>(partitions.Count);
+            foreach (var kvp in partitions)
+            {
+                var request = MapPutAllCodec.EncodeRequest(GetName(), kvp.Value);
+                var future = GetContext().GetInvocationService().InvokeOnPartition(request, kvp.Key);
+                futures.Add(future);
+            }
+            ThreadUtil.GetResult(futures);
         }
 
         public void Clear()

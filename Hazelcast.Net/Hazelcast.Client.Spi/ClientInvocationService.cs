@@ -66,10 +66,15 @@ namespace Hazelcast.Client.Spi
             DistributedEventHandler handler,
             DecodeStartListenerResponse responseDecoder);
 
+        public abstract IFuture<IClientMessage> InvokeListenerOnPartition(IClientMessage request, int partitionId,
+            DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder);
+
         public abstract IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
         public abstract IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
         public abstract IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
         public abstract IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
+        public abstract IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId); 
 
         public bool RemoveEventHandler(int correlationId)
         {
