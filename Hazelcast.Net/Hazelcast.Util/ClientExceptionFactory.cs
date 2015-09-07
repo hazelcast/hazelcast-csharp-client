@@ -35,6 +35,8 @@ namespace Hazelcast.Util
                 {ClientProtocolErrorCodes.HazelcastOverload, (m, c) => new HazelcastException(m)},
                 {ClientProtocolErrorCodes.HazelcastSerialization, (m, c) => new HazelcastException(m, c)},
                 {ClientProtocolErrorCodes.Io, (m, c) => new IOException(m, c)},
+                {ClientProtocolErrorCodes.IllegalAccessError, (m, c) => new AccessViolationException(m)},
+                {ClientProtocolErrorCodes.IllegalAccessException, (m, c) => new AccessViolationException(m)},
                 {ClientProtocolErrorCodes.IllegalArgument, (m, c) => new ArgumentException(m, c)},
                 {ClientProtocolErrorCodes.IllegalMonitorState, (m, c) => new SynchronizationLockException(m)},
                 {ClientProtocolErrorCodes.IllegalState, (m, c) => new InvalidOperationException(m)},
