@@ -28,7 +28,6 @@ namespace Hazelcast.Client.Spi
 
         public ProxyManager(HazelcastClient client)
         {
-            //import com.hazelcast.client.proxy.ClientExecutorServiceProxy;
             this.client = client;
             IList<ListenerConfig> listenerConfigs = client.GetClientConfig().GetListenerConfigs();
             if (listenerConfigs != null && listenerConfigs.Count > 0)
@@ -195,10 +194,9 @@ namespace Hazelcast.Client.Spi
             clientProxy.PostInit();
         }
 
-        public ICollection<T> GetDistributedObjects<T>() where T : IDistributedObject
+        public ICollection<IDistributedObject> GetDistributedObjects()
         {
-            var lst = new ReadOnlyCollection<ClientProxy>(proxies.Values.ToList());
-            return lst as ICollection<T>;
+            return new ReadOnlyCollection<IDistributedObject>(proxies.Values.ToList<IDistributedObject>());
         }
 
         public void Destroy()
