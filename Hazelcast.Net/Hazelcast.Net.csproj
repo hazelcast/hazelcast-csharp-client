@@ -76,13 +76,9 @@
     <Compile Include="Hazelcast.Client.Spi\ClientInvocation.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AddressCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAddAndGetCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAlterAndGetCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAlterCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongApplyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongCompareAndSetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongDecrementAndGetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongGetAndAddCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongGetAndAlterCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongGetAndIncrementCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongGetAndSetCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongGetCodec.cs" />
