@@ -1,61 +1,9 @@
-﻿using Hazelcast.Client.Model;
-using Hazelcast.IO.Serialization;
-using Hazelcast.Net.Ext;
-using NUnit.Framework;
+﻿using Hazelcast.IO.Serialization;
 
-namespace Hazelcast.Client.Test
+namespace Hazelcast.Client.Test.Serialization
 {
-    [TestFixture]
-    public class PortableSerializationTest //:HazelcastBaseTest
-    {
-        internal static readonly int FACTORY_ID = 1;
-
-        [Test]
-        public void testBasicPortable()
-        {
-            var ss = createSerializationService(1, ByteOrder.BigEndian);
-
-            var main = new MainPortable(113, true, 'x', -500, 56789, -50992225L, 900.5678f, -897543.3678909d,
-                "this is main portable object created for testing!");
-
-            var data = ss.ToData(main);
-            Assert.AreEqual(main, ss.ToObject<MainPortable>(data));
-        }
-
-        private static ISerializationService createSerializationService(int version, ByteOrder order)
-        {
-            return new SerializationServiceBuilder()
-                .SetUseNativeByteOrder(false).SetByteOrder(order).SetVersion(version)
-                .AddPortableFactory(FACTORY_ID, new TestPortableFactory()).Build();
-        }
-    }
-
-    internal class TestPortableFactory : IPortableFactory
-    {
-        public IPortable Create(int classId)
-        {
-            switch (classId)
-            {
-                case MainPortable.CLASS_ID:
-                    return new MainPortable();
-                //case InnerPortable.CLASS_ID:
-                //    return new InnerPortable();
-                //case NamedPortable.CLASS_ID:
-                //    return new NamedPortable();
-                //case RawDataPortable.CLASS_ID:
-                //    return new RawDataPortable();
-                //case InvalidRawDataPortable.CLASS_ID:
-                //    return new InvalidRawDataPortable();
-                //case InvalidRawDataPortable2.CLASS_ID:
-                //    return new InvalidRawDataPortable2();
-            }
-            return null;
-        }
-    }
-
     internal class MainPortable : IPortable
     {
-        internal const short CLASS_ID = 1;
         private byte b;
         private byte[] bb;
         private bool bo;
@@ -64,6 +12,7 @@ namespace Hazelcast.Client.Test
         private float f;
         private int i;
         private long l;
+        private InnerPortable p;
         private short s;
         private string str;
 
@@ -71,7 +20,8 @@ namespace Hazelcast.Client.Test
         {
         }
 
-        internal MainPortable(byte b, bool bo, char c, short s, int i, long l, float f, double d, string str)
+        internal MainPortable(byte b, bool bo, char c, short s, int i, long l, float f, double d, string str,
+            InnerPortable p)
         {
             this.b = b;
             this.bo = bo;
@@ -82,16 +32,17 @@ namespace Hazelcast.Client.Test
             this.f = f;
             this.d = d;
             this.str = str;
+            this.p = p;
         }
 
         public int GetFactoryId()
         {
-            return PortableSerializationTest.FACTORY_ID;
+            return TestSerializationConstants.PORTABLE_FACTORY_ID;
         }
 
         public int GetClassId()
         {
-            return CLASS_ID;
+            return TestSerializationConstants.MAIN_PORTABLE;
         }
 
         public void WritePortable(IPortableWriter writer)
@@ -105,6 +56,15 @@ namespace Hazelcast.Client.Test
             writer.WriteFloat("f", f);
             writer.WriteDouble("d", d);
             writer.WriteUTF("str", str);
+            if (p != null)
+            {
+                writer.WritePortable("p", p);
+            }
+            else
+            {
+                writer.WriteNullPortable("p", TestSerializationConstants.PORTABLE_FACTORY_ID,
+                    TestSerializationConstants.INNER_PORTABLE);
+            }
         }
 
         public void ReadPortable(IPortableReader reader)
@@ -118,12 +78,7 @@ namespace Hazelcast.Client.Test
             f = reader.ReadFloat("f");
             d = reader.ReadDouble("d");
             str = reader.ReadUTF("str");
-        }
-
-        protected bool Equals(MainPortable other)
-        {
-            return b == other.b && Equals(bb, other.bb) && bo.Equals(other.bo) && c == other.c && d.Equals(other.d) &&
-                   f.Equals(other.f) && i == other.i && l == other.l && s == other.s && string.Equals(str, other.str);
+            p = reader.ReadPortable<InnerPortable>("p");
         }
 
         public override bool Equals(object obj)
@@ -148,8 +103,22 @@ namespace Hazelcast.Client.Test
                 hashCode = (hashCode*397) ^ l.GetHashCode();
                 hashCode = (hashCode*397) ^ s.GetHashCode();
                 hashCode = (hashCode*397) ^ (str != null ? str.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (p != null ? p.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        public override string ToString()
+        {
+            return string.Format("B: {0}, Bb: {1}, Bo: {2}, C: {3}, D: {4}, F: {5}, L: {6}, S: {7}, Str: {8}, P: {9}", b,
+                bb, bo, c, d, f, l, s, str, p);
+        }
+
+        protected bool Equals(MainPortable other)
+        {
+            return b == other.b && Equals(bb, other.bb) && bo == other.bo && c == other.c && d.Equals(other.d) &&
+                   f.Equals(other.f) && i == other.i && l == other.l && s == other.s && string.Equals(str, other.str) &&
+                   Equals(p, other.p);
         }
     }
 }

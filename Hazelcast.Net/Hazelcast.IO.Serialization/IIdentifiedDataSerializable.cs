@@ -28,8 +28,4 @@ namespace Hazelcast.IO.Serialization
 		/// <returns>type id</returns>
 		int GetId();
 	}
-    public class IdentifiedDataSerializable
-    {
-        public string GetJavaClassName() { throw new NotSupportedException();}
-    }
 }

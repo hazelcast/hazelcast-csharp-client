@@ -328,8 +328,6 @@
     <Compile Include="Hazelcast.Client.Spi\MemberAttributeChange.cs" />
     <Compile Include="Hazelcast.Client.Spi\MemberAttributeOperationType.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientMembershipListener.cs" />
-    <Compile Include="Hazelcast.Client.Spi\IObjectNamespace.cs" />
-    <Compile Include="Hazelcast.Client.Spi\PacketManager.cs" />
     <Compile Include="Hazelcast.Client.Spi\Exception.cs" />
     <Compile Include="Hazelcast.Client.Proxy\PartitionServiceProxy.cs" />
     <Compile Include="Hazelcast.Config\ClientNetworkConfig.cs" />
@@ -395,14 +393,11 @@
     <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
     <Compile Include="Hazelcast.IO.Serialization\DefaultData.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IData.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\IDataSerializerHook.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializationServiceBuilder.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializerHook.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IVersionedPortable.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\PortableHookLoader.cs" />
     <Compile Include="Hazelcast.IO.Serialization\PortableVersionHelper.cs" />
     <Compile Include="Hazelcast.IO\Bits.cs" />
-    <Compile Include="Hazelcast.IO\DynamicByteBuffer.cs" />
     <Compile Include="Hazelcast.IO\IDataInput.cs" />
     <Compile Include="Hazelcast.IO\IDataOutput.cs" />
     <Compile Include="Hazelcast.IO\ISocketReadable.cs" />

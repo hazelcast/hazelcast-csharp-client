@@ -2,7 +2,6 @@ using System;
 using Hazelcast.IO;
 
 namespace Hazelcast.Core
-
 {
 	/// <summary>
 	/// SQL Predicate

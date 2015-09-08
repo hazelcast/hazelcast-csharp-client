@@ -8,16 +8,16 @@ namespace Hazelcast.IO.Serialization
     public class ObjectDataInputStream : InputStream, IObjectDataInput, IDisposable
     {
         private const int UTFBufferSize = 1024;
-
         private readonly BinaryReader _binaryReader;
-        private readonly ByteOrder byteOrder;
-        private readonly ISerializationService serializationService;
-        private byte[] utfBuffer;
+        private readonly ByteOrder _byteOrder;
+        private readonly ISerializationService _serializationService;
+        private byte[] _utfBuffer;
 
         public ObjectDataInputStream(BinaryReader binaryReader, ISerializationService serializationService)
         {
-            this.serializationService = serializationService;
-            byteOrder = serializationService.GetByteOrder();
+            _binaryReader = binaryReader;
+            _serializationService = serializationService;
+            _byteOrder = serializationService.GetByteOrder();
         }
 
         public void Dispose()
@@ -34,7 +34,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public long Skip(long n)
         {
-            long remaining = n;
+            var remaining = n;
             int nr;
             if (n <= 0)
             {
@@ -110,10 +110,10 @@ namespace Hazelcast.IO.Serialization
             {
                 throw new IndexOutOfRangeException();
             }
-            int n = 0;
+            var n = 0;
             while (n < len)
             {
-                int count = _binaryReader.Read(b, off + n, len - n);
+                var count = _binaryReader.Read(b, off + n, len - n);
                 if (count < 0)
                     throw new EndOfStreamException();
                 n += count;
@@ -123,8 +123,8 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int SkipBytes(int n)
         {
-            int total = 0;
-            int cur = 0;
+            var total = 0;
+            var cur = 0;
             while ((total < n) && ((cur = (int) Skip(n - total)) > 0))
             {
                 total += cur;
@@ -153,56 +153,56 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual short ReadShort()
         {
-            short v = _binaryReader.ReadInt16();
+            var v = _binaryReader.ReadInt16();
             return !IsBigEndian() ? v : BitConverter.ToInt16(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int ReadUnsignedShort()
         {
-            ushort v = _binaryReader.ReadUInt16();
+            var v = _binaryReader.ReadUInt16();
             return !IsBigEndian() ? v : BitConverter.ToUInt16(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual char ReadChar()
         {
-            char v = _binaryReader.ReadChar();
+            var v = _binaryReader.ReadChar();
             return !IsBigEndian() ? v : BitConverter.ToChar(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int ReadInt()
         {
-            int v = _binaryReader.ReadInt32();
+            var v = _binaryReader.ReadInt32();
             return !IsBigEndian() ? v : BitConverter.ToInt32(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual long ReadLong()
         {
-            long v = _binaryReader.ReadInt64();
+            var v = _binaryReader.ReadInt64();
             return !IsBigEndian() ? v : BitConverter.ToInt64(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual float ReadFloat()
         {
-            float v = _binaryReader.ReadSingle();
+            var v = _binaryReader.ReadSingle();
             return !IsBigEndian() ? v : BitConverter.ToSingle(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual double ReadDouble()
         {
-            double v = _binaryReader.ReadSingle();
+            var v = _binaryReader.ReadDouble();
             return !IsBigEndian() ? v : BitConverter.ToDouble(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual byte[] ReadByteArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len > 0)
             {
                 var b = new byte[len];
@@ -215,11 +215,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual char[] ReadCharArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len > 0)
             {
                 var values = new char[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadChar();
                 }
@@ -231,11 +231,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int[] ReadIntArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len > 0)
             {
                 var values = new int[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadInt();
                 }
@@ -247,11 +247,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual long[] ReadLongArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len > 0)
             {
                 var values = new long[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadLong();
                 }
@@ -263,11 +263,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual double[] ReadDoubleArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len > 0)
             {
                 var values = new double[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadDouble();
                 }
@@ -279,11 +279,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual float[] ReadFloatArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len > 0)
             {
                 var values = new float[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadFloat();
                 }
@@ -295,11 +295,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual short[] ReadShortArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len > 0)
             {
                 var values = new short[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadShort();
                 }
@@ -311,33 +311,33 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual string ReadUTF()
         {
-            if (utfBuffer == null)
+            if (_utfBuffer == null)
             {
-                utfBuffer = new byte[UTFBufferSize];
+                _utfBuffer = new byte[UTFBufferSize];
             }
-            return UTFEncoderDecoder.ReadUTF(this, utfBuffer);
+            return UTFEncoderDecoder.ReadUTF(this, _utfBuffer);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual IData ReadData()
         {
-            return serializationService.ReadData(this);
+            return _serializationService.ReadData(this);
         }
 
         public virtual ByteOrder GetByteOrder()
         {
-            return byteOrder;
+            return _byteOrder;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public T ReadObject<T>()
         {
-            return serializationService.ReadObject<T>(this);
+            return _serializationService.ReadObject<T>(this);
         }
 
         private bool IsBigEndian()
         {
-            return byteOrder == ByteOrder.BigEndian;
+            return _byteOrder == ByteOrder.BigEndian;
         }
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Net.Ext;

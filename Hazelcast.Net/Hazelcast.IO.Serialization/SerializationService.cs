@@ -39,29 +39,12 @@ namespace Hazelcast.IO.Serialization
             this.globalPartitioningStrategy = partitionStrategy;
             this.outputBufferSize = initialOutputBufferSize;
             dataOutputQueue = new ThreadLocalOutputCache(this);
-            var loader = new PortableHookLoader(portableFactories);
             portableContext = new PortableContext(this, version);
-            foreach (IClassDefinition cd in loader.GetDefinitions())
-            {
-                portableContext.RegisterClassDefinition(cd);
-            }
             dataSerializerAdapter = CreateSerializerAdapterByGeneric<IDataSerializable>(new DataSerializer(dataSerializableFactories));
-            portableSerializer = new PortableSerializer(portableContext, loader.GetFactories());
+            portableSerializer = new PortableSerializer(portableContext, portableFactories);
             portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(portableSerializer);
             RegisterConstantSerializers();
-            //RegisterJvmTypeSerializers(enableCompression, enableSharedObject);
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
-        }
-
-        private void RegisterJvmTypeSerializers(bool enableCompression, bool enableSharedObject)
-        {
-            //SafeRegister(typeof(DateTime), new DefaultSerializers.DateSerializer());
-            //SafeRegister(typeof(BigInteger), new DefaultSerializers.BigIntegerSerializer());
-            //SafeRegister(typeof(BigDecimal), new DefaultSerializers.BigDecimalSerializer());
-            //SafeRegister(typeof(IExternalizable), new DefaultSerializers.Externalizer(enableCompression));
-            //SafeRegister(typeof(ISerializable), new DefaultSerializers.ObjectSerializer(enableSharedObject, enableCompression));
-            //SafeRegister(typeof(Type), new DefaultSerializers.ClassSerializer());
-            //SafeRegister(typeof(Enum), new DefaultSerializers.EnumSerializer());
         }
 
         private void RegisterConstantSerializers()
@@ -168,7 +151,6 @@ namespace Hazelcast.IO.Serialization
             {
                 Push(@out);
             }
-
         }
 
         protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)
@@ -340,13 +322,13 @@ namespace Hazelcast.IO.Serialization
             if (e is OutOfMemoryException)
             {
                 //OutOfMemoryErrorDispatcher.OnOutOfMemory((OutOfMemoryException)e);
-                throw e;
+                return e;
             }
             if (e is HazelcastSerializationException)
             {
-                throw e;
+                return e;
             }
-            throw new HazelcastSerializationException(e);
+            return new HazelcastSerializationException(e);
         }
 
         protected internal IBufferObjectDataOutput Pop()

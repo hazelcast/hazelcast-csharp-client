@@ -61,7 +61,6 @@ namespace Hazelcast.Client.Spi
             return context.GetListenerService().StopListening(registrationRequest, registrationId, decodeListenerResponse);
         }
 
-
         protected virtual ClientContext GetContext()
         {
             ClientContext ctx = context;

@@ -1,13 +1,27 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using Hazelcast.Logging;
 
 namespace Hazelcast.Client.Test
 {
     public class HazelcastNode
     {
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(HazelcastNode));
+        private readonly int _id;
         private Process _process;
         private const string HazelcastJar = "hazelcast.jar";
+
+
+        public HazelcastNode(int id)
+        {
+            _id = id;
+        }
+
+        public int Id
+        {
+            get { return _id; }
+        }
 
         public void Start()
         {
@@ -30,6 +44,7 @@ namespace Hazelcast.Client.Test
             _process.StartInfo.Arguments = String.Join(" ", arguments);
             _process.StartInfo.FileName = Path.Combine(javaHome, "bin", "java");
 
+            Logger.Info("Starting Hazelcast instance with id " + Id);
             if (!_process.Start())
             {
                 throw new Exception("Could not start hazelcast insance.");
@@ -38,6 +53,7 @@ namespace Hazelcast.Client.Test
 
         public void Stop()
         {
+            Logger.Info("Stopping Hazelcast instance with id " + Id);
             _process.Kill();
         }
     }
