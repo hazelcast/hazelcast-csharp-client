@@ -24,6 +24,12 @@ namespace Hazelcast.Client.Spi
             return SendToOwner(new ClientListenerInvocation(request, handler, responseDecoder, partitionId));
         }
 
+        public override IFuture<IClientMessage> InvokeListenerOnPartition(IClientMessage request, int partitionId, DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder)
+        {
+            return SendToOwner(new ClientListenerInvocation(request, handler, responseDecoder, partitionId));
+        }
+
         public override IFuture<IClientMessage> InvokeListenerOnRandomTarget(IClientMessage request, DistributedEventHandler handler,
             DecodeStartListenerResponse responseDecoder)
         {
@@ -47,6 +53,11 @@ namespace Hazelcast.Client.Spi
         public override IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member)
         {
             return SendToOwner(new ClientInvocation(request, memberUuid:member.GetUuid()));
+        }
+
+        public override IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId)
+        {
+            return SendToOwner(new ClientInvocation(request, partitionId));
         }
 
         public override IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request)

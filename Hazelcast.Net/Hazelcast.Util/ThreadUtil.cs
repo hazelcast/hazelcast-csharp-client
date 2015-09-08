@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
@@ -10,14 +12,15 @@ namespace Hazelcast.Util
     {
         public static int TaskOperationTimeOutMilliseconds = 250*1000;
 
-        public static IClientMessage GetResult(IFuture<IClientMessage> future, int timeout)
+        public static IList<IClientMessage> GetResult(IEnumerable<IFuture<IClientMessage>> futures)
         {
-            return future.GetResult(timeout);
+            return futures.Select(future => GetResult(future)).ToList();
         }
 
-        public static IClientMessage GetResult(IFuture<IClientMessage> future)
+        public static IClientMessage GetResult(IFuture<IClientMessage> future, int? timeout = null)
         {
-            return GetResult(future, TaskOperationTimeOutMilliseconds);
+            if (timeout.HasValue) return future.GetResult(timeout.Value);
+            return future.GetResult(TaskOperationTimeOutMilliseconds);
         }
 
         public static IClientMessage GetResult(Task<IClientMessage> task)
