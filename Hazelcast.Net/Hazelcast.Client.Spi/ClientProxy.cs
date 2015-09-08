@@ -41,14 +41,7 @@ namespace Hazelcast.Client.Spi
         {
             OnDestroy();
             var request = ClientDestroyProxyCodec.EncodeRequest(objectName, GetServiceName());
-            try
-            {
-                context.GetInvocationService().InvokeOnRandomTarget(request);
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
+            Invoke(request);
             context.RemoveProxy(this);
             context = null;
         }

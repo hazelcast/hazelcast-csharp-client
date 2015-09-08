@@ -243,7 +243,7 @@ namespace Hazelcast.Client
                     var o = serializationService.ToObject<DistributedObjectInfo>(data);
                     GetDistributedObject<IDistributedObject>(o.GetServiceName(), o.GetName());
                 }
-                return proxyManager.GetDistributedObjects<IDistributedObject>();
+                return proxyManager.GetDistributedObjects();
             }
             catch (Exception e)
             {
@@ -274,7 +274,6 @@ namespace Hazelcast.Client
         public T GetDistributedObject<T>(string serviceName, string name) where T : IDistributedObject
         {
             var clientProxy = proxyManager.GetOrCreateProxy<T>(serviceName, name);
-
             return (T) (clientProxy as IDistributedObject);
         }
 
