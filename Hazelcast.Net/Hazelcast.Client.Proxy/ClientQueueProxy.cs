@@ -66,7 +66,9 @@ namespace Hazelcast.Client.Proxy
 
         public void Put(E e)
         {
-            Offer(e, -1, TimeUnit.MILLISECONDS);
+            var data = ToData(e);
+            var request = QueuePutCodec.EncodeRequest(GetName(), data);
+            Invoke(request);
         }
 
         public E Take()
@@ -194,7 +196,8 @@ namespace Hazelcast.Client.Proxy
 
         public bool IsEmpty()
         {
-            return Size() == 0;
+            var request = QueueIsEmptyCodec.EncodeRequest(GetName());
+            return Invoke(request, m => QueueIsEmptyCodec.DecodeResponse(m).response);
         }
 
         public IEnumerator<E> GetEnumerator()
@@ -311,9 +314,9 @@ namespace Hazelcast.Client.Proxy
             return dataList;
         }
 
-        protected override T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
+        protected override IClientMessage Invoke(IClientMessage request)
         {
-            return base.Invoke(request, GetPartitionKey(), decodeResponse);
+            return base.Invoke(request, GetPartitionKey());
         }
     }
 }
