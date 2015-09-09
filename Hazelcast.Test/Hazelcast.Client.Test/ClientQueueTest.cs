@@ -49,7 +49,7 @@ namespace Hazelcast.Client.Test
 		{
 			Assert.AreEqual(0, q.Count);
 			CountdownEvent latch = new CountdownEvent(5);
-            var listener = new ClientListTest._ItemListener<object>(latch);
+            var listener = new ClientListTest.Listener<object>(latch);
 			string id = q.AddItemListener(listener, true);
 
             Thread.Sleep(500);

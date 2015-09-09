@@ -89,6 +89,16 @@ namespace Hazelcast.Client.Test
 			Assert.IsTrue(set.ContainsAll(l));
 		}
 
+	    [Test]
+	    public void TestIsEmpty()
+	    {
+	        Assert.IsTrue(set.IsEmpty());
+	        set.Add("item1");
+            Assert.IsFalse(set.IsEmpty());
+	        set.Clear();
+            Assert.IsTrue(set.IsEmpty());
+	    }
+
 		[Test]
 		public virtual void RemoveRetainAll()
 		{
@@ -129,7 +139,7 @@ namespace Hazelcast.Client.Test
 
             CountdownEvent latch = new CountdownEvent(6);
 
-            var listener = new ClientListTest._ItemListener<object>(latch);
+            var listener = new ClientListTest.Listener<object>(latch);
             string registrationId = tempSet.AddItemListener(listener, true);
 
             var t = new Thread(delegate(object o)
@@ -150,7 +160,7 @@ namespace Hazelcast.Client.Test
             var tempSet = set;
             CountdownEvent latch = new CountdownEvent(1);
 
-            var listener = new ClientListTest._ItemListener<object>(latch);
+            var listener = new ClientListTest.Listener<object>(latch);
             string registrationId = tempSet.AddItemListener(listener, true);
 
 		    Assert.IsTrue(tempSet.RemoveItemListener(registrationId));
