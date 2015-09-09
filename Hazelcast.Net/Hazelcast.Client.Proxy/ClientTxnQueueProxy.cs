@@ -73,6 +73,13 @@ namespace Hazelcast.Client.Proxy
             return ToObject<E>(result);
         }
 
+        public E Take()
+        {
+            var request = TransactionalQueueTakeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
+            var result = Invoke(request, m => TransactionalQueueTakeCodec.DecodeResponse(m).response);
+            return ToObject<E>(result);
+        }
+
         public virtual int Size()
         {
             var request = TransactionalQueueSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());

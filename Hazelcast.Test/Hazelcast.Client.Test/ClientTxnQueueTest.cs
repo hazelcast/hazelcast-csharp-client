@@ -1,59 +1,63 @@
 using System;
 using System.Threading;
-using Hazelcast.Client.Test;
 using Hazelcast.Core;
-using Hazelcast.Net.Ext;
 using Hazelcast.Transaction;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
-	[TestFixture]
-	public class ClientTxnQueueTest:HazelcastBaseTest
-	{
-        //internal const string name = "ClientTxnQueueTest";
-
+    [TestFixture]
+    public class ClientTxnQueueTest : HazelcastBaseTest
+    {
         [SetUp]
         public void Init()
         {
-            //map = client.GetMap<object, object>(name);
+            _name = Name;
         }
 
         [TearDown]
         public static void Destroy()
         {
-            //map.Clear();
-            //client.GetLifecycleService().Shutdown();
+        }
+
+        private string _name;
+
+        [Test]
+        public void TestQueueSizeAfterTxnOfferPoll()
+        {
+            var item = "offered";
+            var context = Client.NewTransactionContext();
+            context.BeginTransaction();
+            var txnQueue = context.GetQueue<object>(_name);
+            Assert.IsTrue(txnQueue.Offer(item));
+            Assert.AreEqual(1, txnQueue.Size());
+            Assert.AreEqual(item, txnQueue.Take());
+            context.CommitTransaction();
         }
 
         /// <exception cref="System.Exception"></exception>
-		[Test]
-		public virtual void TestTransactionalOfferPoll1()
+        [Test]
+        public virtual void TestTransactionalOfferPoll1()
         {
-            string name = Name;//"testTransactionalOfferPoll1";
-			ITransactionContext context = Client.NewTransactionContext();
-			context.BeginTransaction();
-            ITransactionalQueue<string> q = context.GetQueue<string>(name);
-			Assert.IsTrue(q.Offer("ali"));
-			string s = q.Poll();
-			Assert.AreEqual("ali", s);
-			context.CommitTransaction();
-            Assert.AreEqual(0, Client.GetQueue<string>(name).Count);
-		}
+            var context = Client.NewTransactionContext();
+            context.BeginTransaction();
+            var q = context.GetQueue<string>(_name);
+            Assert.IsTrue(q.Offer("ali"));
+            var s = q.Poll();
+            Assert.AreEqual("ali", s);
+            context.CommitTransaction();
+            Assert.AreEqual(0, Client.GetQueue<string>(_name).Count);
+        }
 
-		/// <exception cref="System.Exception"></exception>
-		[Test]
-		public virtual void TestTransactionalOfferPoll2()
-		{
-		    ITransactionContext context=null;
+        /// <exception cref="System.Exception"></exception>
+        [Test]
+        public virtual void TestTransactionalOfferPoll2()
+        {
+            ITransactionContext context = null;
             try
             {
-                //string name0 = "qqq";
-                string name0 = Name;//"defQueue0";
-                string name1 = Name;//"defQueue1";
-                
                 var latch = new ManualResetEvent(false);
-                var queue = Client.GetQueue<string>(name0);
+                var queue = Client.GetQueue<string>(_name);
                 var t = new Thread(delegate()
                 {
                     try
@@ -61,7 +65,6 @@ namespace Hazelcast.Client.Test
                         latch.WaitOne();
                         //Thread.Sleep(3000);
                         queue.Offer("item0");
-                        
                     }
                     catch (Exception e)
                     {
@@ -72,7 +75,7 @@ namespace Hazelcast.Client.Test
 
                 context = Client.NewTransactionContext();
                 context.BeginTransaction();
-                ITransactionalQueue<string> q0 = context.GetQueue<string>(name0);
+                var q0 = context.GetQueue<string>(_name);
                 string s = null;
                 latch.Set();
                 t.Join();
@@ -95,25 +98,36 @@ namespace Hazelcast.Client.Test
                 {
                     context.RollbackTransaction();
                 }
-
             }
-		}
+        }
 
-		/// <exception cref="System.Exception"></exception>
-		[Test]
-		public virtual void TestTransactionalPeek()
-		{
-            string name = Name;//"defQueue";
-			ITransactionContext context = Client.NewTransactionContext();
-			context.BeginTransaction();
-            ITransactionalQueue<string> q = context.GetQueue<string>(name);
-			Assert.IsTrue(q.Offer("ali"));
-			string s = q.Peek();
-			Assert.AreEqual("ali", s);
-			s = q.Peek();
-			Assert.AreEqual("ali", s);
-			context.CommitTransaction();
-            Assert.AreEqual(1, Client.GetQueue<string>(name).Count);
-		}
-	}
+        [Test]
+        public void TestTransactionalOfferTake()
+        {
+            var item = "offered";
+            var context = Client.NewTransactionContext();
+            context.BeginTransaction();
+            var txnQueue = context.GetQueue<object>(_name);
+            Assert.IsTrue(txnQueue.Offer(item));
+            Assert.AreEqual(1, txnQueue.Size());
+            Assert.AreEqual(item, txnQueue.Take());
+            context.CommitTransaction();
+        }
+
+        /// <exception cref="System.Exception"></exception>
+        [Test]
+        public virtual void TestTransactionalPeek()
+        {
+            var context = Client.NewTransactionContext();
+            context.BeginTransaction();
+            var q = context.GetQueue<string>(_name);
+            Assert.IsTrue(q.Offer("ali"));
+            var s = q.Peek();
+            Assert.AreEqual("ali", s);
+            s = q.Peek();
+            Assert.AreEqual("ali", s);
+            context.CommitTransaction();
+            Assert.AreEqual(1, Client.GetQueue<string>(_name).Count);
+        }
+    }
 }

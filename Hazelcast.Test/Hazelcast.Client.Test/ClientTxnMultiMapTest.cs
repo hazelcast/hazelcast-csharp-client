@@ -1,23 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Hazelcast.Client.Test;
-using Hazelcast.Core;
-using Hazelcast.Net.Ext;
-using Hazelcast.Transaction;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
-	[TestFixture]
-	public class ClientTxnMultiMapTest:HazelcastBaseTest
-	{
-        //internal const string name = "ClientTxnMultiMapTest";
+    [TestFixture]
+    public class ClientTxnMultiMapTest : HazelcastBaseTest
+    {
+        private string _name;
 
         [SetUp]
         public void Init()
         {
+            _name = Name;
         }
 
         [TearDown]
@@ -25,61 +21,19 @@ namespace Hazelcast.Client.Test
         {
         }
 
-
-	    [Test]
-	    public virtual void TestRemove()
-	    {
-            const string key = "key";
-            const string value = "value";
-	        var name = Name;
-	        var multiMap = Client.GetMultiMap<string, string>(name);
-
-	        multiMap.Put(key, value);
-            ITransactionContext tx = Client.NewTransactionContext();
-
-            tx.BeginTransaction();
-            tx.GetMultiMap<string,string>(name).Remove(key,value);
-            tx.CommitTransaction();
-
-            Assert.AreEqual(new List<string>(), multiMap.Get(key));
-	    }
-
-	    [Test]
-	    public virtual void TestRemoveAll()
-	    {
-            const string key = "key";
-            const string value = "value";
-	        var name = Name;
-            var multiMap = Client.GetMultiMap<string, string>(name);
-	        for (int i = 0; i < 10; i++)
-	        {
-	            multiMap.Put(key, value+i);
-	        }
-                
-
-            ITransactionContext tx = Client.NewTransactionContext();
-
-            tx.BeginTransaction();
-            tx.GetMultiMap<string,string>(name).Remove(key);
-            tx.CommitTransaction();
-
-            Assert.AreEqual(new List<string>(), multiMap.Get(key));
-	    }
-
         /// <exception cref="System.Exception"></exception>
         [Test]
         public virtual void TestPutGetRemove()
         {
-            var name = Name;
-            var mm = Client.GetMultiMap<object, object>(name);
+            var mm = Client.GetMultiMap<object, object>(_name);
 
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
-                string key = i + "key";
-                Client.GetMultiMap<object, object>(name).Put(key, "value");
-                ITransactionContext context = Client.NewTransactionContext();
+                var key = i + "key";
+                Client.GetMultiMap<object, object>(_name).Put(key, "value");
+                var context = Client.NewTransactionContext();
                 context.BeginTransaction();
-                var multiMap = context.GetMultiMap<object, object>(name);
+                var multiMap = context.GetMultiMap<object, object>(_name);
                 Assert.IsFalse(multiMap.Put(key, "value"));
                 Assert.IsTrue(multiMap.Put(key, "value1"));
                 Assert.IsTrue(multiMap.Put(key, "value2"));
@@ -87,35 +41,110 @@ namespace Hazelcast.Client.Test
                 context.CommitTransaction();
                 Assert.AreEqual(3, mm.Get(key).Count);
             }
-            
         }
 
-		/// <exception cref="System.Exception"></exception>
-		[Test]
-		public virtual void TestPutGetRemove2()
-		{
-            var name = Name;
-			var mm = Client.GetMultiMap<object,object>(name);
-            string key = "key";
-            Client.GetMultiMap<object, object>(name).Put(key, "value");
-            ITransactionContext context = Client.NewTransactionContext();
+        /// <exception cref="System.Exception"></exception>
+        [Test]
+        public virtual void TestPutGetRemove2()
+        {
+            var mm = Client.GetMultiMap<object, object>(_name);
+            var key = "key";
+            Client.GetMultiMap<object, object>(_name).Put(key, "value");
+            var context = Client.NewTransactionContext();
 
             context.BeginTransaction();
 
-            var multiMap = context.GetMultiMap<object, object>(name);
-            
+            var multiMap = context.GetMultiMap<object, object>(_name);
+
             Assert.IsFalse(multiMap.Put(key, "value"));
             Assert.IsTrue(multiMap.Put(key, "value1"));
             Assert.IsTrue(multiMap.Put(key, "value2"));
             Assert.AreEqual(3, multiMap.Get(key).Count);
-            
+
             context.CommitTransaction();
-            
+
             Assert.AreEqual(3, mm.Get(key).Count);
+        }
 
-		}
+        [Test]
+        public virtual void TestRemove()
+        {
+            const string key = "key";
+            const string value = "value";
+
+            var multiMap = Client.GetMultiMap<string, string>(_name);
+
+            multiMap.Put(key, value);
+            var tx = Client.NewTransactionContext();
+
+            tx.BeginTransaction();
+            tx.GetMultiMap<string, string>(_name).Remove(key, value);
+            tx.CommitTransaction();
+
+            Assert.AreEqual(new List<string>(), multiMap.Get(key));
+        }
+
+        [Test]
+        public virtual void TestRemoveAll()
+        {
+            const string key = "key";
+            const string value = "value";
+            var name = Name;
+            var multiMap = Client.GetMultiMap<string, string>(name);
+            for (var i = 0; i < 10; i++)
+            {
+                multiMap.Put(key, value + i);
+            }
 
 
+            var tx = Client.NewTransactionContext();
 
-	}
+            tx.BeginTransaction();
+            tx.GetMultiMap<string, string>(name).Remove(key);
+            tx.CommitTransaction();
+
+            Assert.AreEqual(new List<string>(), multiMap.Get(key));
+        }
+
+        [Test]
+        public void TestSize()
+        {
+            var key = "key";
+            var value = "value";
+
+            var mm = Client.GetMultiMap<object, object>(_name);
+            mm.Put(key, value);
+
+            var tx = Client.NewTransactionContext();
+            tx.BeginTransaction();
+            var txMultiMap = tx.GetMultiMap<object, object>(_name);
+
+            txMultiMap.Put(key, "newValue");
+            txMultiMap.Put("newKey", value);
+
+            Assert.AreEqual(3, txMultiMap.Size());
+
+            tx.CommitTransaction();
+        }
+
+        [Test]
+        public void TestValueCount()
+        {
+            var key = "key";
+            var value = "value";
+
+            var mm = Client.GetMultiMap<object, object>(_name);
+            mm.Put(key, value);
+
+            var tx = Client.NewTransactionContext();
+            tx.BeginTransaction();
+            var txMultiMap = tx.GetMultiMap<object, object>(_name);
+
+            txMultiMap.Put(key, "newValue");
+
+            Assert.AreEqual(2, txMultiMap.ValueCount(key));
+
+            tx.CommitTransaction();
+        }
+    }
 }
