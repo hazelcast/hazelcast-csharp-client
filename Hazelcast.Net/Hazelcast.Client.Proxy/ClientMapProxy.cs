@@ -402,13 +402,13 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(keyK);
             var request = MapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue);
             DistributedEventHandler handler =
-                eventData => MapAddEntryListenerCodec.AbstractEventHandler.Handle(eventData,
+                eventData => MapAddEntryListenerToKeyCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, includeValue, listener);
                     });
 
-            return Listen(request, message => MapAddEntryListenerCodec.DecodeResponse(message).response, keyData,
+            return Listen(request, message => MapAddEntryListenerToKeyCodec.DecodeResponse(message).response, keyData,
                 handler);
         }
 
@@ -447,6 +447,12 @@ namespace Hazelcast.Client.Proxy
             var response = Invoke(request, keyData);
             var resultParameters = MapEvictCodec.DecodeResponse(response);
             return resultParameters.response;
+        }
+
+        public void EvictAll()
+        {
+            var request = MapEvictAllCodec.EncodeRequest(GetName());
+            var response = Invoke(request);
         }
 
         public ISet<K> KeySet()
@@ -619,13 +625,13 @@ namespace Hazelcast.Client.Proxy
             var predicateData = ToData(predicate);
             var request = MapAddEntryListenerWithPredicateCodec.EncodeRequest(GetName(), predicateData, includeValue);
             DistributedEventHandler handler =
-                eventData => MapAddEntryListenerToKeyWithPredicateCodec.AbstractEventHandler.Handle(eventData,
+                eventData => MapAddEntryListenerWithPredicateCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, includeValue, listener);
                     });
 
-            return Listen(request, message => MapAddEntryListenerCodec.DecodeResponse(message).response, null,
+            return Listen(request, message => MapAddEntryListenerWithPredicateCodec.DecodeResponse(message).response, null,
                 handler);
         }
 

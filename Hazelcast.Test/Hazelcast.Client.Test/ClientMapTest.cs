@@ -4,6 +4,9 @@ using System.Linq;
 using System.Threading;
 using Hazelcast.Client.Model;
 using Hazelcast.Core;
+using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
+using Hazelcast.Map;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -27,60 +30,7 @@ namespace Hazelcast.Client.Test
         //internal const string name = "test";
 
         internal static IMap<object, object> map;
-        ///// <exception cref="System.Exception"></exception>
-        //[Test]
-        //public void testPredicateListenerWithPortableKey() throws InterruptedException {
-        //    //var tradeMap = client.getMap("tradeMap");
-        //    //final CountdownEvent CountdownEvent = new CountdownEvent(1);
-        //    //final AtomicInteger atomicInteger = new AtomicInteger(0);
-
-        //    var countdownEvent = new CountdownEvent(1);
-        //    EntryAdapter<object,object> listener=new EntryAdapter<object, object>(
-        //        delegate(EntryEvent<object, object> @event) { countdownEvent.Signal(); },
-        //        delegate(EntryEvent<object, object> @event) {  }, 
-        //        delegate(EntryEvent<object, object> @event) {  },
-        //        delegate(EntryEvent<object, object> @event) {  }  ); 
-
-        //    //EntryListener listener = new EntryListener() {
-        //    //    @Override
-        //    //    public void entryAdded(EntryEvent event) {
-        //    //        atomicInteger.incrementAndGet();
-        //    //        countdownEvent.Signal();
-        //    //    }
-
-        //    //    @Override
-        //    //    public void entryRemoved(EntryEvent event) {
-        //    //    }
-
-        //    //    @Override
-        //    //    public void entryUpdated(EntryEvent event) {
-        //    //    }
-
-        //    //    @Override
-        //    //    public void entryEvicted(EntryEvent event) {
-        //    //    }
-        //    //};
-        //    var key = new AuthenticationRequest(new UsernamePasswordCredentials("a", "b"));
-        //    tradeMap.addEntryListener(listener, key, true);
-
-        //    var key2 = new AuthenticationRequest(new UsernamePasswordCredentials("a", "c"));
-        //    tradeMap.put(key2, 1);
-
-        //    Assert.assertFalse(CountdownEvent.await(15, TimeUnit.SECONDS));
-        //    Assert.assertEquals(0,atomicInteger.get());
-        //}
-
-        //    @Test
-        //    public void testBasicPredicate() {
-        //        fillMap();
-        //        final Collection collection = map.values(new SqlPredicate("this == value1"));
-        //        Assert.assertEquals("value1", collection.iterator().next());
-        //        final Set set = map.keySet(new SqlPredicate("this == value1"));
-        //        Assert.assertEquals("key1", set.iterator().next());
-        //        final Set<Map.Entry<String, String>> set1 = map.entrySet(new SqlPredicate("this == value1"));
-        //        Assert.assertEquals("key1", set1.iterator().next().getKey());
-        //        Assert.assertEquals("value1", set1.iterator().next().getValue());
-        //    }
+     
         private void FillMap()
         {
             for (var i = 0; i < 10; i++)
@@ -88,106 +38,6 @@ namespace Hazelcast.Client.Test
                 map.Put("key" + i, "value" + i);
             }
         }
-
-        ///// <summary>Issue #923</summary>
-        //[Test]
-        //public virtual void TestPartitionAwareKey()
-        //{
-        //    string name = "testPartitionAwareKey";
-        //    PartitionAwareKey key = new PartitionAwareKey("key", "123");
-        //    string value = "value";
-        //    IMap<object, object> map1 = server.GetMap(name);
-        //    map1.Put(key, value);
-        //    Assert.AreEqual(value, map1.Get(key));
-        //    IMap<object, object> map2 = client.GetMap(name);
-        //    Assert.AreEqual(value, map2.Get(key));
-        //}
-
-        //[System.Serializable]
-        //private class PartitionAwareKey : IPartitionAware
-        //{
-        //    private readonly string key;
-
-        //    private readonly string pk;
-
-        //    public PartitionAwareKey(string key, string pk)
-        //    {
-        //        this.key = key;
-        //        this.pk = pk;
-        //    }
-
-        //    public virtual object GetPartitionKey()
-        //    {
-        //        return pk;
-        //    }
-        //}
-
-        ///// <summary>Issue #996</summary>
-        ///// <exception cref="System.Exception"></exception>
-        //[Test]
-        //public virtual void TestEntryListener()
-        //{
-        //    CountdownEvent gateAdd = new CountdownEvent(2);
-        //    CountdownEvent gateRemove = new CountdownEvent(1);
-        //    CountdownEvent gateEvict = new CountdownEvent(1);
-        //    CountdownEvent gateUpdate = new CountdownEvent(1);
-        //    string mapName = "testEntryListener";
-        //    IMap<object, object> serverMap = server.GetMap(mapName);
-        //    serverMap.Put(3, new ClientMapTest.Deal(3));
-        //    IMap<object, object> clientMap = client.GetMap(mapName);
-        //    Assert.AreEqual(1, clientMap.Size());
-        //    EntryListener listener = new ClientMapTest.EntListener(gateAdd, gateRemove, gateEvict, gateUpdate);
-        //    //        clientMap.addEntryListener(listener, new SqlPredicate("id=1"), 2, true);
-        //    clientMap.Put(2, new ClientMapTest.Deal(1));
-        //    clientMap.Put(2, new ClientMapTest.Deal(1));
-        //    Sharpen.Collections.Remove(clientMap, 2);
-        //    clientMap.Put(2, new ClientMapTest.Deal(1));
-        //    clientMap.Evict(2);
-        //    Assert.IsTrue(gateAdd.Await(10, TimeUnit.Seconds));
-        //    Assert.IsTrue(gateRemove.Await(10, TimeUnit.Seconds));
-        //    Assert.IsTrue(gateEvict.Await(10, TimeUnit.Seconds));
-        //    Assert.IsTrue(gateUpdate.Await(10, TimeUnit.Seconds));
-        //}
-
-        //[System.Serializable]
-        //internal class EntListener : EntryListener<int, ClientMapTest.Deal>
-        //{
-        //    private readonly CountdownEvent _gateAdd;
-
-        //    private readonly CountdownEvent _gateRemove;
-
-        //    private readonly CountdownEvent _gateEvict;
-
-        //    private readonly CountdownEvent _gateUpdate;
-
-        //    internal EntListener(CountdownEvent gateAdd, CountdownEvent gateRemove, CountdownEvent gateEvict, CountdownEvent gateUpdate)
-        //    {
-        //        _gateAdd = gateAdd;
-        //        _gateRemove = gateRemove;
-        //        _gateEvict = gateEvict;
-        //        _gateUpdate = gateUpdate;
-        //    }
-
-        //    public virtual void EntryAdded(EntryEvent<int, ClientMapTest.Deal> arg0)
-        //    {
-        //        _gateAdd.Signal();
-        //    }
-
-        //    public virtual void EntryEvicted(EntryEvent<int, ClientMapTest.Deal> arg0)
-        //    {
-        //        _gateEvict.Signal();
-        //    }
-
-        //    public virtual void EntryRemoved(EntryEvent<int, ClientMapTest.Deal> arg0)
-        //    {
-        //        _gateRemove.Signal();
-        //    }
-
-        //    public virtual void EntryUpdated(EntryEvent<int, ClientMapTest.Deal> arg0)
-        //    {
-        //        _gateUpdate.Signal();
-        //    }
-        //}
 
         [Serializable]
         internal class Deal
@@ -365,6 +215,22 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        public void TestEvictAll()
+        {
+            map.Put("key1", "value1");
+            map.Put("key2", "value2");
+            map.Put("key3", "value3");
+
+            Assert.AreEqual(3, map.Size());
+
+            map.Lock("key3");
+            map.EvictAll();
+
+            Assert.AreEqual(1, map.Size());
+            Assert.AreEqual("value3", map.Get("key3"));
+        }
+
+        [Test]
         public virtual void TestFlush()
         {
             map.Flush();
@@ -495,40 +361,6 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("key1", enumerator.Current);
         }
-
-        //    @Test
-        //    public void testSubmitToKey() throws Exception {
-        //        map.put(1,1);
-        //        Future f = map.submitToKey(1, new IncrementorEntryProcessor());
-        //        Assert.assertEquals(2,f.get());
-        //        Assert.assertEquals(2,map.get(1));
-        //    }
-        //    @Test
-        //    public void testSubmitToNonExistentKey() throws Exception {
-        //        Future f = map.submitToKey(11, new IncrementorEntryProcessor());
-        //        Assert.assertEquals(1,f.get());
-        //        Assert.assertEquals(1,map.get(11));
-        //    }
-        //    @Test
-        //    public void testSubmitToKeyWithCallback() throws  Exception
-        //    {
-        //        map.put(1,1);
-        //        final CountdownEvent latch = new CountdownEvent(1);
-        //        ExecutionCallback executionCallback = new ExecutionCallback() {
-        //            @Override
-        //            public void onResponse(Object response) {
-        //                latch.Signal();
-        //            }
-        //
-        //            @Override
-        //            public void onFailure(Throwable t) {
-        //            }
-        //        };
-        //
-        //        map.submitToKey(1,new IncrementorEntryProcessor(),executionCallback);
-        //        Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
-        //        Assert.assertEquals(2,map.get(1));
-        //    }
 
         [Test]
         public void TestListener()
@@ -725,7 +557,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void testListenerRemove()
+        public void TestListenerRemove()
         {
             var latch1Add = new CountdownEvent(1);
             var listener1 = new EntryAdapter<object, object>(
@@ -851,19 +683,6 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(value, map.Get(key));
         }
 
-        ///// <exception cref="System.Exception"></exception>
-        //[Test]
-        //public virtual void TestPutIfAbsentTtl()
-        //{
-        //    Assert.IsNull(map.PutIfAbsent("key1", "value1", 1, TimeUnit.SECONDS));
-        //    Thread.Sleep(2000);
-        //    Assert.AreEqual("value1", map.PutIfAbsent("key1", "value3", 1, TimeUnit.SECONDS));
-        //    Thread.Sleep(2000);
-        //    Assert.IsNull(map.PutIfAbsent("key1", "value3", 1, TimeUnit.SECONDS));
-        //    Assert.AreEqual("value3", map.PutIfAbsent("key1", "value4", 1, TimeUnit.SECONDS));
-        //    Thread.Sleep(2000);
-        //}
-
         [Test]
         public void TestPutIfAbsentTtl()
         {
@@ -877,7 +696,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void testPutIfAbsentTTL_whenExpire()
+        public void TestPutIfAbsentTTL_whenExpire()
         {
             object key = "Key";
             object value = "Value";
@@ -1063,6 +882,66 @@ namespace Hazelcast.Client.Test
             var enumerator = values.GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("value1", enumerator.Current);
+        }
+
+        [Test, ExpectedException(typeof(HazelcastException))]
+        public void TestAddInterceptor()
+        {
+            //TODO: not currently possible to test this
+
+            String id = map.AddInterceptor(new Interceptor());
+        }
+
+        [Test]
+        public void TestRemoveInterceptor()
+        {
+            map.RemoveInterceptor("interceptor");
+        }
+
+        class Interceptor : IMapInterceptor, IDataSerializable
+        {
+            public object InterceptGet(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AfterGet(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public object InterceptPut(object oldValue, object newValue)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AfterPut(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public object InterceptRemove(object removedValue)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AfterRemove(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void WriteData(IObjectDataOutput output)
+            {
+            }
+
+            public void ReadData(IObjectDataInput input)
+            {
+            }
+
+            public string GetJavaClassName()
+            {
+                return "MapInterceptor";
+            }
         }
     }
 }

@@ -1082,5 +1082,16 @@ namespace Hazelcast.Core
         /// <param name="key">key to evict</param>
         /// <returns><c>true</c> if the key is evicted, <c>false</c> otherwise.</returns>
         bool Evict(K key);
+
+        /// <summary>Evicts all keys from this map except the locked ones.</summary>
+        /// <remarks>
+        /// Evicts all keys from this map except the locked ones.
+        /// <p/>
+        /// <see cref="IMap{K, V}.Clear()"/>
+        /// method.
+        /// <p/>
+        /// The EVICT_ALL event is fired for any registered listeners.
+        /// </remarks>
+        void EvictAll();
     }
 }
