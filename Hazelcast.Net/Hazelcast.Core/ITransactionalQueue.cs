@@ -16,6 +16,8 @@ namespace Hazelcast.Core
 
         E Peek(long timeout, TimeUnit unit);
 
+        E Take();
+
         int Size();
     }
 }

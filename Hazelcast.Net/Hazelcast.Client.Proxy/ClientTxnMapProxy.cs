@@ -138,22 +138,13 @@ namespace Hazelcast.Client.Proxy
             return ToSet<K>(dataKeySet);
         }
 
-        //public virtual ICollection<K> KeySet(IPredicate predicate)
-        //{
-        //    if (predicate == null)
-        //    {
-        //        throw new ArgumentNullException("IPredicate should not be null!");
-        //    }
-        //    var request = new TxnMapRequest<K,V>(GetName(), AbstractTxnMapRequest.TxnMapRequestType.KeysetByPredicate, predicate);
-        //    MapKeySet result = Invoke(request);
-        //    ICollection<Data> dataKeySet = result.GetKeySet();
-        //    HashSet<K> keySet = new HashSet<K>(dataKeySet.Count);
-        //    foreach (Data data in dataKeySet)
-        //    {
-        //        keySet.Add((K)ToObject(data));
-        //    }
-        //    return keySet;
-        //}
+        public ICollection<K> KeySet(IPredicate<K, V> predicate)
+        {
+            var data = ToData(predicate);
+            var request = TransactionalMapKeySetWithPredicateCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), data);
+            var dataKeySet = Invoke(request, m => TransactionalMapKeySetWithPredicateCodec.DecodeResponse(m).set);
+            return ToSet<K>(dataKeySet);
+        }
 
         public virtual ICollection<V> Values()
         {
@@ -162,22 +153,13 @@ namespace Hazelcast.Client.Proxy
             return ToList<V>(dataValues);
         }
 
-        //public virtual ICollection<V> Values(IPredicate predicate)
-        //{
-        //    if (predicate == null)
-        //    {
-        //        throw new ArgumentNullException("IPredicate should not be null!");
-        //    }
-        //    var request = new TxnMapRequest<K,V>(GetName(), AbstractTxnMapRequest.TxnMapRequestType.ValuesByPredicate, predicate);
-        //    MapValueCollection result = Invoke(request);
-        //    ICollection<Data> dataValues = result.GetValues();
-        //    HashSet<V> values = new HashSet<V>(dataValues.Count);
-        //    foreach (Data value in dataValues)
-        //    {
-        //        values.Add((V)ToObject(value));
-        //    }
-        //    return values;
-        //}
+        public ICollection<V> Values(IPredicate<K, V> predicate)
+        {
+            var data = ToData(predicate);
+            var request = TransactionalMapValuesWithPredicateCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), data);
+            var dataValues = Invoke(request, m => TransactionalMapValuesWithPredicateCodec.DecodeResponse(m).list);
+            return ToList<V>(dataValues);
+        }
 
         public override string GetServiceName()
         {
