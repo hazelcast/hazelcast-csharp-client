@@ -24,12 +24,13 @@
 
         internal static long ReverseBytes(long i)
         {
-            i = (i & 0x00ff00ff00ff00ffL) << 8 | ((long) (((ulong) i) >> 8)) & 0x00ff00ff00ff00ffL;
-            return
-                (i << 48) |
-                ((i & 0xffff0000L) << 16) |
-                ((long) ((((ulong) i) >> 16)) & 0xffff0000L) |
-                ((long) (((ulong) i)) >> 48);
+            var v = (ulong) i;
+            //first swap every 1-8th with every 9-16th bit
+            v = (v & 0x00FF00FF00FF00FFL) << 8  | ((v >> 8) & 0x00FF00FF00FF00FFL);
+		    //then swap every 1-16th with every 17-32nd
+		    v = (v & 0x0000FFFF0000FFFFL) << 16 | ((v >> 16) & 0x0000FFFF0000FFFFL);
+		    //then swap 1-32nd with 33-64th
+		    return (long)((v  << 32) | (v >> 32));
         }
     }
 }

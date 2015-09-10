@@ -397,7 +397,6 @@
     <Compile Include="Hazelcast.Logging\TraceLogFactory.cs" />
     <Compile Include="Hazelcast.Net.Ext\ByteBuffer.cs" />
     <Compile Include="Hazelcast.Net.Ext\ByteOrder.cs" />
-    <Compile Include="Hazelcast.Net.Ext\Extensions.cs" />
     <Compile Include="Hazelcast.Net.Ext\InputOutputStreams.cs" />
     <Compile Include="Hazelcast.Core\TimeUnit.cs" />
     <Compile Include="Hazelcast.Client\Client.cs" />
@@ -471,8 +470,6 @@
     <Compile Include="Hazelcast.Core\IPartitioningStrategy.cs" />
     <Compile Include="Hazelcast.Core\IPredicate.cs" />
     <Compile Include="Hazelcast.Core\TerminatedLifecycleService.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\ArrayDataSerializableFactory.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\ArrayPortableFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ByteArrayInputOutputFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ByteArrayObjectDataInput.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ByteArrayObjectDataOutput.cs" />
@@ -491,7 +488,6 @@
     <Compile Include="Hazelcast.IO.Serialization\DefaultPortableWriter.cs" />
     <Compile Include="Hazelcast.IO.Serialization\DefaultSerializers.cs" />
     <Compile Include="Hazelcast.IO.Serialization\EmptyObjectDataOutput.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\FactoryIdHelper.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IFieldDefinition.cs" />
     <Compile Include="Hazelcast.IO.Serialization\FieldDefinition.cs" />
     <Compile Include="Hazelcast.IO.Serialization\FieldType.cs" />
@@ -534,7 +530,6 @@
     <Compile Include="Hazelcast.Logging\ILogger.cs" />
     <Compile Include="Hazelcast.Logging\Logger.cs" />
     <Compile Include="Hazelcast.Logging\LoggerFactory.cs" />
-    <Compile Include="Hazelcast.Logging\LoggerFactorySupport.cs" />
     <Compile Include="Hazelcast.Logging\LoggingService.cs" />
     <Compile Include="Hazelcast.Logging\LogListener.cs" />
     <Compile Include="Hazelcast.Logging\NoLogFactory.cs" />

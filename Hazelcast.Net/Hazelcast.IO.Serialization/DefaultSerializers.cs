@@ -7,6 +7,7 @@ namespace Hazelcast.IO.Serialization
     {
         public sealed class DateSerializer : SingletonSerializer<DateTime>
         {
+            private readonly static DateTime Epoch = new DateTime(1970,1,1, 0,0,0, DateTimeKind.Utc);
             public override int GetTypeId()
             {
                 return SerializationConstants.DefaultTypeDate;
@@ -15,13 +16,23 @@ namespace Hazelcast.IO.Serialization
             /// <exception cref="System.IO.IOException"></exception>
             public override DateTime Read(IObjectDataInput input)
             {
-                return new DateTime().CreateDateTime(input.ReadLong());
+                return FromEpochTime(input.ReadLong());
             }
 
             /// <exception cref="System.IO.IOException"></exception>
             public override void Write(IObjectDataOutput output, DateTime obj)
             {
-                output.WriteLong(obj.Subtract(obj.EpoxDateTime()).Ticks);
+                output.WriteLong(ToEpochDateTime(obj));
+            }
+
+            private static DateTime FromEpochTime(long sinceEpoxMillis)
+            {
+                return Epoch.AddMilliseconds(sinceEpoxMillis);
+            }
+
+            private static long ToEpochDateTime(DateTime dateTime)
+            {
+                return (long)dateTime.Subtract(Epoch).TotalMilliseconds;
             }
         }
 

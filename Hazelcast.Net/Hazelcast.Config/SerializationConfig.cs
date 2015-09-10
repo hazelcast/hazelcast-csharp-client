@@ -148,9 +148,8 @@ namespace Hazelcast.Config
 
         public virtual SerializationConfig AddPortableFactoryClass(int factoryId, Type portableFactoryClass)
         {
-            //TODO portableFactoryClass paramtere extends ??? IPortableFactory
             string portableFactoryClassName =
-                ValidationUtil.IsNotNull(portableFactoryClass, "portableFactoryClass").FullName;
+                ValidationUtil.IsNotNull(portableFactoryClass, "portableFactoryClass").AssemblyQualifiedName;
             return AddPortableFactoryClass(factoryId, portableFactoryClassName);
         }
 
