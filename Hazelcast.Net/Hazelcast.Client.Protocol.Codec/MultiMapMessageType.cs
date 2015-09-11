@@ -14,7 +14,7 @@ namespace Hazelcast.Client.Protocol.Codec
         MultiMapContainsEntry = 0x0209,
         MultiMapSize = 0x020a,
         MultiMapClear = 0x020b,
-        MultiMapCount = 0x020c,
+        MultiMapValueCount = 0x020c,
         MultiMapAddEntryListenerToKey = 0x020d,
         MultiMapAddEntryListener = 0x020e,
         MultiMapRemoveEntryListener = 0x020f,
@@ -24,8 +24,6 @@ namespace Hazelcast.Client.Protocol.Codec
         MultiMapUnlock = 0x0213,
         MultiMapForceUnlock = 0x0214,
         MultiMapRemoveEntry = 0x0215,
-        MultiMapValueCount = 0x0216
-
     }
 
 }
