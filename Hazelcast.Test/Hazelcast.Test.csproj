@@ -93,6 +93,7 @@
     <Compile Include="Hazelcast.Client.Test.Serialization\SampleIdentifiedDataSerializable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\SerializationConcurrencyTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\TestSerializationConstants.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientIpV6AddressTest.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastCluster.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastNode.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastBaseTest.cs" />
