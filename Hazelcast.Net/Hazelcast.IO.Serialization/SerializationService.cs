@@ -44,7 +44,13 @@ namespace Hazelcast.IO.Serialization
             portableSerializer = new PortableSerializer(portableContext, portableFactories);
             portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(portableSerializer);
             RegisterConstantSerializers();
+            RegisterDefaultSerializers();
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
+        }
+
+        private void RegisterDefaultSerializers()
+        {
+            SafeRegister(typeof(DateTime), new DefaultSerializers.DateSerializer());
         }
 
         private void RegisterConstantSerializers()
@@ -356,14 +362,14 @@ namespace Hazelcast.IO.Serialization
             return inputOutputFactory.CreateOutput(size, this);
         }
 
-        public ObjectDataOutputStream CreateObjectDataOutputStream(BinaryWriter binaryWriter)
+        public ObjectDataOutputStream CreateObjectDataOutputStream(Stream outputStream)
         {
-            return new ObjectDataOutputStream(binaryWriter, this);
+            return new ObjectDataOutputStream(outputStream, this);
         }
 
-        public ObjectDataInputStream CreateObjectDataInputStream(BinaryReader binaryReader)
+        public ObjectDataInputStream CreateObjectDataInputStream(Stream inputSream)
         {
-            return new ObjectDataInputStream(binaryReader, this);
+            return new ObjectDataInputStream(inputSream, this);
         }
 
         public void Register(Type type, ISerializer serializer)

@@ -72,9 +72,6 @@ namespace Hazelcast.IO.Serialization
 
 		public const int Hibernate4TypeHibernateCacheEntry = -203;
 
-		public SerializationConstants()
-		{
-		}
 		// WARNING: DON'T CHANGE VALUES!
 		// WARNING: DON'T ADD ANY NEW CONSTANT SERIALIZER!
 		// NUMBER OF CONSTANT SERIALIZERS...

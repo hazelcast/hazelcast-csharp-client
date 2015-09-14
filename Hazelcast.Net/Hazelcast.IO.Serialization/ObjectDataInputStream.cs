@@ -13,9 +13,9 @@ namespace Hazelcast.IO.Serialization
         private readonly ISerializationService _serializationService;
         private byte[] _utfBuffer;
 
-        public ObjectDataInputStream(BinaryReader binaryReader, ISerializationService serializationService)
+        public ObjectDataInputStream(Stream inputStream, ISerializationService serializationService)
         {
-            _binaryReader = binaryReader;
+            _binaryReader = new BinaryReader(inputStream);
             _serializationService = serializationService;
             _byteOrder = serializationService.GetByteOrder();
         }
@@ -167,8 +167,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual char ReadChar()
         {
-            var v = _binaryReader.ReadChar();
-            return !IsBigEndian() ? v : BitConverter.ToChar(BitConverter.GetBytes(v).Reverse().ToArray(), 0);
+            return (char) ReadShort();
         }
 
         /// <exception cref="System.IO.IOException"></exception>

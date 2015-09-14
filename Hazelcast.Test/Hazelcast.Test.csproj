@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -76,6 +76,9 @@
   <ItemGroup>
     <Compile Include="ClientQueuePerformanceTest.cs" />
     <Compile Include="Hazelcast.Client.Model\Item.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\ConstantSerializerTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\KitchenSinkDataSerializable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\KitchenSinkPortable.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientDistributedObjectTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\ByteArrayDataSerializable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\ComplexDataSerializable.cs" />
@@ -110,7 +113,6 @@
     <Compile Include="Hazelcast.Client.Test.Serialization\ClientCustomSerializationTest .cs" />
     <Compile Include="Hazelcast.Client.Test\ClientLicenseTest.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastTestClient.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\ClientSerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSetTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTopicTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTxnListTest.cs" />

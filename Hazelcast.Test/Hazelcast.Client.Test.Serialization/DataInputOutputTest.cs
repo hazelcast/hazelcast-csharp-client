@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Text;
+using Hazelcast.Config;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
@@ -8,38 +10,68 @@ namespace Hazelcast.Client.Test.Serialization
 {
     internal class DataInputOutputTest
     {
-        private readonly Person person = new Person(111, 123L,
-            89.56d, "test-person", new Address("street", 987));
-
-        [Test]
-        public virtual void TestDataStreamsBigEndian()
+        private static readonly ByteOrder[] ByteOrders =
         {
-            TestDataStreams(person, ByteOrder.BigEndian);
+            ByteOrder.BigEndian, ByteOrder.LittleEndian,
+            ByteOrder.NativeOrder()
+        };
+
+        [TestCaseSource("ByteOrders")]
+        public virtual void TestDataInputOutputWithPortable(ByteOrder byteOrder)
+        {
+            var portable = KitchenSinkPortable.Generate();
+
+            var config = new SerializationConfig();
+            config.AddPortableFactoryClass(KitchenSinkPortableFactory.FactoryId, typeof (KitchenSinkPortableFactory));
+
+            var ss = new SerializationServiceBuilder().SetConfig(config).
+                SetUseNativeByteOrder(false).SetByteOrder(byteOrder).Build();
+
+            IObjectDataOutput output = ss.CreateObjectDataOutput(1024);
+            output.WriteObject(portable);
+            var data = output.ToByteArray();
+
+            IObjectDataInput input = ss.CreateObjectDataInput(data);
+            var readObject = input.ReadObject<IPortable>();
+
+            Assert.AreEqual(portable, readObject);
+
+            ss.Destroy();
         }
 
-        [Test]
-        public virtual void TestDataStreamsLittleEndian()
+        [TestCaseSource("ByteOrders")]
+        public virtual void TestInputOutputWithPortableReader(ByteOrder byteOrder)
         {
-            TestDataStreams(person, ByteOrder.LittleEndian);
-        }
+            var portable = KitchenSinkPortable.Generate();
 
-        [Test]
-        public virtual void TestDataStreamsNativeOrder()
-        {
-            TestDataStreams(person, ByteOrder.NativeOrder());
-        }
+            var config = new SerializationConfig();
+            config.AddPortableFactoryClass(KitchenSinkPortableFactory.FactoryId, typeof(KitchenSinkPortableFactory));
 
-        protected internal virtual SerializationServiceBuilder CreateSerializationServiceBuilder()
-        {
-            return new SerializationServiceBuilder();
-        }
+            var ss = new SerializationServiceBuilder().SetConfig(config).
+                SetUseNativeByteOrder(false).SetByteOrder(byteOrder).Build();
 
-        private void TestDataStreams(object obj, ByteOrder byteOrder)
+            var data = ss.ToData(portable);
+            var reader  = ss.CreatePortableReader(data);
+
+            var actual = new KitchenSinkPortable();
+            actual.ReadPortable(reader);
+
+            Assert.AreEqual(portable, actual);
+
+            ss.Destroy();
+        }
+        
+
+        [TestCaseSource("ByteOrders")]
+        public virtual void TestDataStreamsWithDataSerializable(ByteOrder byteOrder)
         {
-            var ss = CreateSerializationServiceBuilder().SetUseNativeByteOrder(false).SetByteOrder(byteOrder).Build();
+            var obj = KitchenSinkDataSerializable.Generate();
+            obj.Serializable = KitchenSinkDataSerializable.Generate();
+
+            var ss = new SerializationServiceBuilder().SetUseNativeByteOrder(false).SetByteOrder(byteOrder).Build();
+            
             var stream = new MemoryStream();
-            var writer = new BinaryWriter(stream);
-            IObjectDataOutput output = ss.CreateObjectDataOutputStream(writer);
+            IObjectDataOutput output = ss.CreateObjectDataOutputStream(stream);
             output.WriteObject(obj);
             var data1 = stream.ToArray();
             IObjectDataOutput out2 = ss.CreateObjectDataOutput(1024);
@@ -48,13 +80,14 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(data1.Length, data2.Length);
             Assert.AreEqual(data1, data2);
 
-            var bin = new BinaryReader(new MemoryStream(data2));
-            IObjectDataInput input = ss.CreateObjectDataInputStream(bin);
+            IObjectDataInput input = ss.CreateObjectDataInputStream(new MemoryStream(data2));
             var object1 = input.ReadObject<object>();
             IObjectDataInput in2 = ss.CreateObjectDataInput(data1);
             var object2 = in2.ReadObject<object>();
             Assert.AreEqual(obj, object1);
             Assert.AreEqual(obj, object2);
+
+            ss.Destroy();
         }
     }
 }

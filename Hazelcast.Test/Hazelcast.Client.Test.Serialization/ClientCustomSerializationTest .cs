@@ -9,47 +9,58 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test.Serialization
 {
     [TestFixture]
-    public class ClientCustomSerializationTest 
+    public class ClientCustomSerializationTest
     {
         [Test]
         public virtual void TestCustomSerialize()
         {
             var config = new SerializationConfig();
-        
+
             var sc = new SerializerConfig()
                 .SetImplementation(new CustomSerializer())
                 .SetTypeClass(typeof (CustomSerializableType));
-        
+
             config.AddSerializerConfig(sc);
             var ss = new SerializationServiceBuilder().SetConfig(config).Build();
-            
+
             var foo = new CustomSerializableType {Value = "fooooo"};
 
             var d = ss.ToData(foo);
             var newFoo = ss.ToObject<CustomSerializableType>(d);
-        
+
+            Assert.AreEqual(newFoo.Value, foo.Value);
+        }
+
+        [Test]
+        public void TestGlobalSerializer()
+        {
+            var config = new SerializationConfig();
+            var globalConfig = new GlobalSerializerConfig();
+
+            globalConfig.SetClassName(typeof (GlobalSerializer).AssemblyQualifiedName);
+            config.SetGlobalSerializerConfig(globalConfig);
+
+            var ss = new SerializationServiceBuilder().SetConfig(config).Build();
+
+            var foo = new CustomSerializableType {Value = "fooooo"};
+
+            var d = ss.ToData(foo);
+            var newFoo = ss.ToObject<CustomSerializableType>(d);
+
             Assert.AreEqual(newFoo.Value, foo.Value);
         }
     }
 
     [Serializable]
-    class CustomSerializableType
+    internal class CustomSerializableType
     {
-        public string Value
-        {
-            get; set;
-        }
-
-        protected bool Equals(CustomSerializableType other)
-        {
-            return string.Equals(Value, other.Value);
-        }
+        public string Value { get; set; }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((CustomSerializableType) obj);
         }
 
@@ -57,9 +68,15 @@ namespace Hazelcast.Client.Test.Serialization
         {
             return (Value != null ? Value.GetHashCode() : 0);
         }
+
+        protected bool Equals(CustomSerializableType other)
+        {
+            return string.Equals(Value, other.Value);
+        }
     }
 
-    class CustomSerializer : IStreamSerializer<CustomSerializableType>
+
+    internal class CustomSerializer : IStreamSerializer<CustomSerializableType>
     {
         public int GetTypeId()
         {
@@ -78,7 +95,7 @@ namespace Hazelcast.Client.Test.Serialization
             using (var ms = new MemoryStream())
             {
                 bf.Serialize(ms, t);
-                array = ms.ToArray();                
+                array = ms.ToArray();
             }
 
             output.WriteInt(array.Length);
@@ -96,10 +113,33 @@ namespace Hazelcast.Client.Test.Serialization
             CustomSerializableType result = null;
             using (var ms = new MemoryStream(buffer))
             {
-                result = (CustomSerializableType)bf.Deserialize(ms);
+                result = (CustomSerializableType) bf.Deserialize(ms);
             }
             return result;
         }
     }
 
+    public class GlobalSerializer : IStreamSerializer<object>
+    {
+        public int GetTypeId()
+        {
+            return 20;
+        }
+
+        public void Destroy()
+        {
+        }
+
+        public void Write(IObjectDataOutput output, object obj)
+        {
+            if (!(obj is CustomSerializableType)) throw new ArgumentException("Unexpected type " + obj.GetType());
+            
+            new CustomSerializer().Write(output, (CustomSerializableType)obj);
+        }
+
+        public object Read(IObjectDataInput input)
+        {
+            return new CustomSerializer().Read(input);
+        }
+    }
 }
