@@ -11,14 +11,9 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public void TearDown()
         {
-            if (HazelcastBaseTest.Client != null)
-            {
-                HazelcastBaseTest.Client.Shutdown();
-            }
             if (HazelcastBaseTest.Cluster != null)
             {
-                HazelcastBaseTest.Cluster.Shutdown();
-                
+                HazelcastBaseTest.Cluster.Shutdown();       
             }
         }
 

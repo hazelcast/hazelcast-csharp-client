@@ -26,7 +26,20 @@ namespace Hazelcast.Client.Test
             {
                 node.Start();
             }
-            //wait for instances to start up
+        }
+
+        public void Stop(int id)
+        {
+            _nodes[id].Stop();
+        }
+
+        public int AddNode()
+        {
+            var id = _nextNodeId++;
+            var node = new HazelcastNode(id);
+            _nodes[id] = node;
+            node.Start();
+            return id;
         }
 
         public void Shutdown()
@@ -35,6 +48,17 @@ namespace Hazelcast.Client.Test
             {
                 node.Stop();
             }
+        }
+
+        public void RemoveNode()
+        {
+            var key = _nodes.Keys.First();
+            RemoveNode(key);
+        }
+        public void RemoveNode(int id)
+        {
+            _nodes[id].Stop();
+            _nodes.Remove(id);
         }
     }
 }

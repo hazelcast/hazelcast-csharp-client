@@ -13,7 +13,8 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    internal sealed class ClientPartitionService : IClientPartitionService
+    internal sealed class 
+        ClientPartitionService : IClientPartitionService
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientPartitionService));
         private readonly HazelcastClient _client;
@@ -21,6 +22,7 @@ namespace Hazelcast.Client.Spi
         private readonly AtomicBoolean _updating = new AtomicBoolean(false);
         private volatile int _partitionCount;
         private Thread _partitionThread;
+        private volatile bool _isLive;
 
         public ClientPartitionService(HazelcastClient client)
         {
@@ -39,7 +41,8 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                _partitionThread.Abort();
+                _isLive = false;
+                _partitionThread.Interrupt();
             }
             catch (Exception e)
             {
@@ -58,7 +61,7 @@ namespace Hazelcast.Client.Spi
 
         private void RefreshPartitionsWithFixedDelay()
         {
-            while (Thread.CurrentThread.IsAlive)
+            while (_isLive)
             {
                 try
                 {

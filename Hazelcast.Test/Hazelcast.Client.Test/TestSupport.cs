@@ -1,13 +1,35 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     internal static class TestSupport
     {
-        private const int TimeoutSeconds = 120;
+        private const int TimeoutSeconds = 30;
         private static readonly Random Random = new Random();
+
+        public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds, string taskName = "")
+        {
+            Assert.IsTrue(task.Wait(timeoutSeconds*1000), "Task " + taskName + " did not complete in " + timeoutSeconds + " seconds");
+        }
+
+        public static void AssertTrueEventually(Func<bool> assertFunc, int timeoutSeconds = TimeoutSeconds, string assertion = null)
+        {
+            Stopwatch stopWatch= new Stopwatch();
+            stopWatch.Start();
+
+            while (stopWatch.ElapsedMilliseconds < timeoutSeconds*1000)
+            {
+                if (assertFunc()) return;
+                Thread.Sleep(250);
+            }
+
+            Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds");
+        }
 
         public static void AssertOpenEventually(CountdownEvent latch, int timeoutSeconds = TimeoutSeconds, string message = null)
         {
@@ -26,6 +48,25 @@ namespace Hazelcast.Client.Test
                         timeoutSeconds,
                         latch.CurrentCount));
             }
+        }
+
+        public static Task<bool> WaitForClientState(IHazelcastInstance instance, LifecycleEvent.LifecycleState state)
+        {
+            var task = new TaskCompletionSource<bool>();
+            var regId = instance.GetLifecycleService().AddLifecycleListener(new LifecycleListener(l =>
+            {
+                if (l.GetState() == state)
+                {
+                    task.TrySetResult(true);
+                }
+            }));
+
+            task.Task.ContinueWith(f =>
+            {
+                instance.GetLifecycleService().RemoveLifecycleListener(regId);
+            });
+
+            return task.Task;
         }
 
         public static string RandomString()
@@ -90,5 +131,7 @@ namespace Hazelcast.Client.Test
         {
             return Random.NextDouble();
         }
+
+        
     }
 }

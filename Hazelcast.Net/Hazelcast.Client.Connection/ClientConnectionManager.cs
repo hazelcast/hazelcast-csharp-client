@@ -18,8 +18,6 @@ namespace Hazelcast.Client.Connection
     internal class ClientConnectionManager : IClientConnectionManager
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientConnectionManager));
-        private readonly int _retryCount = 20;
-        private readonly int _retryWaitTime = 250;
         private readonly int _heartBeatTimeout = 60000;
         private readonly int _heartBeatInterval = 5000;
 
@@ -71,8 +69,6 @@ namespace Hazelcast.Client.Connection
                 ThreadUtil.TaskOperationTimeOutMilliseconds = timeout.Value;
             }
 
-            _retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count") ?? _retryCount;
-            _retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time") ?? _retryWaitTime;
             _heartBeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ?? _heartBeatTimeout;
             _heartBeatInterval = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.interval") ?? _heartBeatInterval;
         }
@@ -133,13 +129,6 @@ namespace Hazelcast.Client.Connection
             get { return _live; }
         }
 
-        public Address BindToRandomAddress()
-        {
-            CheckLive();
-            var address = _router.Next();
-            return GetOrConnectWithRetry(address).GetAddress();
-        }
-
         public void AddConnectionListener(IConnectionListener connectionListener)
         {
             _connectionListeners.Add(connectionListener);
@@ -167,18 +156,21 @@ namespace Hazelcast.Client.Connection
             }
             lock (_connectionMutex)
             {
-                var clientConnection = _addresses.GetOrAdd(address,
-                    address1 =>
-                    {
-                        var connection = TryGetNewConnection(address, authenticator);
-                        FireConnectionListenerEvent(f => f.ConnectionAdded(connection));
-                        return connection;
-                    });
-                if (clientConnection == null)
+                ClientConnection connection;
+                if (!_addresses.ContainsKey(address))
+                {
+                    connection = TryGetNewConnection(address, authenticator);
+                    FireConnectionListenerEvent(f => f.ConnectionAdded(connection));
+                    _addresses.TryAdd(connection.GetAddress(), connection);
+                }
+                else
+                    connection = _addresses[address];
+
+                if (connection == null)
                 {
                     Logger.Severe("CONNECTION Cannot be NULL here");
                 }
-                return clientConnection;
+                return connection;
             }
         }
 
@@ -189,44 +181,20 @@ namespace Hazelcast.Client.Connection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public ClientConnection GetOrConnectWithRetry(Address target)
+        public ClientConnection GetOrConnect(Address target)
         {
             var count = 0;
             Exception lastError = null;
-            var theTarget = target;
-            while (count < _retryCount)
+            if (target == null || !IsMember(target))
             {
-                try
-                {
-                    if (theTarget == null || !IsMember(theTarget))
-                    {
-                        theTarget = _router.Next();
-                    }
-                    if (theTarget == null)
-                    {
-                        Logger.Severe("Address cannot be null here...");
-                    }
-                    return GetOrConnect(theTarget, ClusterAuthenticator);
-                }
-                catch (IOException e)
-                {
-                    lastError = e;
-                }
-                catch (HazelcastInstanceNotActiveException e)
-                {
-                    lastError = e;
-                }
-                theTarget = null;
-                count++;
-                try
-                {
-                    Thread.Sleep(_retryWaitTime);
-                }
-                catch (Exception)
-                {
-                }
+                target = _router.Next();
             }
-            throw lastError;
+            if (target == null)
+            {
+                throw new HazelcastException("The requested address " + target + " is not a member of the cluster.");
+            }
+
+            return GetOrConnect(target, ClusterAuthenticator);
         }
 
         /// <exception cref="HazelcastException"></exception>
@@ -284,6 +252,7 @@ namespace Hazelcast.Client.Connection
 
         private void DestroyConnection(Address address)
         {
+            Logger.Finest("Destroying connection for " + address);
             lock (_connectionMutex)
             {
                 if (address != null)
@@ -321,6 +290,7 @@ namespace Hazelcast.Client.Connection
                 try
                 {
                     var id = _nextConnectionId;
+                    Logger.Finest("Creating new connection for " + address + " with id " + id);
                     connection = new ClientConnection(this, (ClientInvocationService)_client.GetInvocationService(),
                         id,
                         address, _networkConfig);
@@ -352,20 +322,16 @@ namespace Hazelcast.Client.Connection
                 {
                     var request = ClientPingCodec.EncodeRequest();
                     var task = ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, clientConnection);
-                    var remoteEndPoint = clientConnection.GetSocket() != null
-                        ? clientConnection.GetSocket().RemoteEndPoint.ToString()
-                        : "CLOSED";
-                    
-                    Logger.Finest("Sending heartbeat request to " + remoteEndPoint);
+                    Logger.Finest("Sending heartbeat request to " +  clientConnection.GetAddress());
                     try
                     {
                         var response = ThreadUtil.GetResult(task, _heartBeatTimeout);
                         var result = ClientPingCodec.DecodeResponse(response);
-                        Logger.Finest("Got heartbeat response from " + remoteEndPoint);
+                        Logger.Finest("Got heartbeat response from " + clientConnection.GetAddress());
                     }
                     catch (Exception e)
                     {
-                        Logger.Warning(string.Format("Error getting heartbeat from {0}: {1}", remoteEndPoint, e));
+                        Logger.Warning(string.Format("Error getting heartbeat from {0}: {1}", clientConnection.GetAddress(), e));
                         var connection = clientConnection;
                         FireHeartBeatEvent((listener) => listener.HeartBeatStopped(connection));
                     }

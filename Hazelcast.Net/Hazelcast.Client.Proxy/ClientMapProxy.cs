@@ -393,8 +393,8 @@ namespace Hazelcast.Client.Proxy
 
         public bool RemoveEntryListener(string id)
         {
-            var request = MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id);
-            return StopListening(request, message => MapRemoveEntryListenerCodec.DecodeResponse(message).response, id);
+            return StopListening(s => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), s),
+                message => MapRemoveEntryListenerCodec.DecodeResponse(message).response, id);
         }
 
         public string AddEntryListener(IEntryListener<K, V> listener, K keyK, bool includeValue)

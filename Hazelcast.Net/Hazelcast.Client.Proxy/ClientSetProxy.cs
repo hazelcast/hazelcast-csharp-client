@@ -25,8 +25,8 @@ namespace Hazelcast.Client.Proxy
 
         public override bool RemoveItemListener(string registrationId)
         {
-            var request = SetRemoveListenerCodec.EncodeRequest(GetName(), registrationId);
-            return StopListening(request, message => SetRemoveListenerCodec.DecodeResponse(message).response,
+            return StopListening(s => SetRemoveListenerCodec.EncodeRequest(GetName(), s),
+                message => SetRemoveListenerCodec.DecodeResponse(message).response,
                 registrationId);
         }
 

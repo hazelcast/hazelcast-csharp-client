@@ -30,7 +30,7 @@ namespace Hazelcast.Core
             ClientDisconnected
         }
 
-        internal readonly LifecycleState state;
+        private readonly LifecycleState state;
 
         public LifecycleEvent(LifecycleState state)
         {

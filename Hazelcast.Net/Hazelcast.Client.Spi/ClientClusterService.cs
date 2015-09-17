@@ -92,6 +92,12 @@ namespace Hazelcast.Client.Spi
             return members != null ? members.Values : new HashSet<IMember>();
         }
 
+        public IMember GetRandomMember()
+        {
+            var rand = new Random();
+            return GetMemberList().OrderBy(m => rand.Next()).FirstOrDefault();
+        }
+
         public Address GetMasterAddress()
         {
             var master = GetMemberList().FirstOrDefault();
@@ -407,6 +413,7 @@ namespace Hazelcast.Client.Spi
 
         private void ManagerAuthenticator(ClientConnection connection)
         {
+            Logger.Finest("Authenticating against the owner node");
             var ss = _client.GetSerializationService();
 
             string uuid = null;

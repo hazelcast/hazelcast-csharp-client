@@ -1,4 +1,5 @@
-﻿using Hazelcast.Client.Connection;
+﻿using System;
+using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -25,5 +26,6 @@ namespace Hazelcast.Util
 
     public delegate string DecodeStartListenerResponse(IClientMessage requestMessage);
     public delegate bool DecodeStopListenerResponse(IClientMessage requestMessage);
+    public delegate IClientMessage EncodeStopListenerRequest(string registrationId);
 
 }

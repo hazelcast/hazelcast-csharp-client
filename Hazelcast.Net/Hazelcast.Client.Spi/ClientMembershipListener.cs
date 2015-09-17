@@ -119,6 +119,7 @@ namespace Hazelcast.Client.Spi
 
         internal virtual void ListenMembershipEvents(Address ownerConnectionAddress)
         {
+            Logger.Finest("Starting to listen for membership events from " + ownerConnectionAddress);
             _initialListFetched = new ManualResetEventSlim();
             try
             {

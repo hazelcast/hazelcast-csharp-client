@@ -136,6 +136,7 @@ namespace Hazelcast.Client.Spi
         //    Initialize(clientProxy);
         //    return proxies.GetOrAdd(ns, clientProxy);
         //}
+
         public ClientProxy GetOrCreateProxy<T>(string service, string id)
         {
             var ns = new ObjectNamespace(service, id);
@@ -182,7 +183,7 @@ namespace Hazelcast.Client.Spi
             var request = ClientCreateProxyCodec.EncodeRequest(clientProxy.GetName(), clientProxy.GetServiceName());
             try
             {
-                client.GetInvocationService().InvokeOnRandomTarget(request);
+                ThreadUtil.GetResult(client.GetInvocationService().InvokeOnRandomTarget(request));
             }
             catch (Exception e)
             {
@@ -250,7 +251,8 @@ namespace Hazelcast.Client.Spi
             var context = new ClientContext(client.GetSerializationService(), client.GetClientClusterService(),
                 client.GetClientPartitionService(), client.GetInvocationService(), client.GetClientExecutionService(),
                 client.GetListenerService(), this, client.GetClientConfig());
-            return context.GetListenerService().StopListening(request, id, m=> ClientRemoveDistributedObjectListenerCodec.DecodeResponse(m).response);
+            return context.GetListenerService().StopListening(
+                ClientRemoveDistributedObjectListenerCodec.EncodeRequest, m=> ClientRemoveDistributedObjectListenerCodec.DecodeResponse(m).response, id);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Transaction;
@@ -21,18 +22,13 @@ namespace Hazelcast.Client.Proxy
         public TransactionContextProxy(HazelcastClient client, TransactionOptions options)
         {
             this.Client = client;
-            var address = client.GetConnectionManager().BindToRandomAddress();
-            if (address == null)
-            {
-                throw new HazelcastException("Could not obtain a new connection.");
-            }
-            TxnOwnerNode = client.GetClientClusterService().GetMember(address);
+
+            var clusterService = (ClientClusterService) client.GetClientClusterService();
+            TxnOwnerNode = clusterService.GetRandomMember();
             if (TxnOwnerNode == null)
             {
-                throw new HazelcastException("Could not find matching member for address " + address);
+                throw new HazelcastException("Could not find matching member");
             }
-
-
             Transaction = new TransactionProxy(client, options, TxnOwnerNode);
         }
 

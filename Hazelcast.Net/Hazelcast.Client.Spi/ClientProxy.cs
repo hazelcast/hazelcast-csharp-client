@@ -46,19 +46,19 @@ namespace Hazelcast.Client.Spi
             context = null;
         }
 
-        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse decodeListenerResponse, object partitionKey, DistributedEventHandler handler)
+        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse responseDecoder, object partitionKey, DistributedEventHandler handler)
         {
-            return context.GetListenerService().StartListening(registrationRequest, handler, decodeListenerResponse, partitionKey);
+            return context.GetListenerService().StartListening(registrationRequest, handler, responseDecoder, partitionKey);
         }
 
-        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse decodeListenerResponse, DistributedEventHandler handler)
+        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse responseDecoder, DistributedEventHandler handler)
         {
-            return context.GetListenerService().StartListening(registrationRequest, handler, decodeListenerResponse);
+            return context.GetListenerService().StartListening(registrationRequest, handler, responseDecoder);
         }
 
-        protected virtual bool StopListening(ClientMessage registrationRequest, DecodeStopListenerResponse decodeListenerResponse, string registrationId)
+        protected virtual bool StopListening(EncodeStopListenerRequest responseEncoder, DecodeStopListenerResponse responseDecoder, string registrationId)
         {
-            return context.GetListenerService().StopListening(registrationRequest, registrationId, decodeListenerResponse);
+            return context.GetListenerService().StopListening(responseEncoder, responseDecoder, registrationId);
         }
 
         protected virtual ClientContext GetContext()
