@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using Hazelcast.Client.Protocol;
+using Hazelcast.Logging;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
@@ -13,6 +14,7 @@ namespace Hazelcast.Client.Spi
 
         private readonly ConcurrentDictionary<string, int> _registrationMap = new ConcurrentDictionary<string, int>();
 
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientListenerService));
         private readonly HazelcastClient _client;
 
         public ClientListenerService(HazelcastClient hazelcastClient)
@@ -44,7 +46,7 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        public bool StopListening(IClientMessage request, string registrationId, DecodeStopListenerResponse decodeListenerResponse)
+        public bool StopListening(EncodeStopListenerRequest requestEncoder, DecodeStopListenerResponse responseDecoder, string registrationId)
         {
             try
             {
@@ -52,11 +54,13 @@ namespace Hazelcast.Client.Spi
 
                 if (realRegistrationId == null)
                 {
+                    Logger.Warning("Could not find the registration id alias for " + registrationId);
                     return false;
                 }
 
+                var request = requestEncoder(realRegistrationId);
                 var task = _client.GetInvocationService().InvokeOnRandomTarget(request);
-                var result = decodeListenerResponse(ThreadUtil.GetResult(task));
+                var result = responseDecoder(ThreadUtil.GetResult(task));
                 return result;
             }
             catch (Exception e)
@@ -65,15 +69,15 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        public void ReregisterListener(string uuid, string alias, int correlationId)
+        public void ReregisterListener(string originalRegistrationId, string newRegistrationId, int correlationId)
         {
             // re-register a listener with an alias.
-            _registrationAliasMap.AddOrUpdate(uuid, alias, (key, oldValue) =>
+            _registrationAliasMap.AddOrUpdate(originalRegistrationId, newRegistrationId, (key, oldValue) =>
             {
                 int ignored;
                 _registrationMap.TryRemove(oldValue, out ignored);
-                _registrationMap.TryAdd(alias, correlationId);
-                return alias;
+                _registrationMap.TryAdd(newRegistrationId, correlationId);
+                return newRegistrationId;
             });
         }
 
@@ -89,7 +93,7 @@ namespace Hazelcast.Client.Spi
             if (_registrationAliasMap.TryRemove(registrationId, out uuid))
             {
                 int correlationId;
-                if (_registrationMap.TryRemove(registrationId, out correlationId))
+                if (_registrationMap.TryRemove(uuid, out correlationId))
                 {
                     _client.GetInvocationService().RemoveEventHandler(correlationId);
                 }

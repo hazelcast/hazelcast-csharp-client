@@ -268,7 +268,7 @@ namespace Hazelcast.Client.Connection
 
                 if (socketError != SocketError.Success)
                 {
-                    Logger.Warning("Operation System Level Socket error code:" + socketError);
+                    LogSocketError(socketError);
                     Close();
                     return;
                 }
@@ -297,13 +297,18 @@ namespace Hazelcast.Client.Connection
             }
         }
 
+        private static void LogSocketError(SocketError socketError)
+        {
+            Logger.Warning(string.Format("Got socket error: {0}", socketError));
+        }
+
         private void HandleSocketException(Exception e)
         {
             var se = e as SocketException;
             if (se != null)
             {
                 var errorCode = se.ErrorCode;
-                Logger.Warning("Operation System Level Socket error code:" + errorCode);
+                LogSocketError(se.SocketErrorCode);
             }
             else
             {
@@ -404,7 +409,7 @@ namespace Hazelcast.Client.Connection
 
                         if (socketError != SocketError.Success)
                         {
-                            Logger.Warning("Operation System Level Socket error code:" + socketError);
+                            LogSocketError(socketError);
                             Close();
                             return;
                         }

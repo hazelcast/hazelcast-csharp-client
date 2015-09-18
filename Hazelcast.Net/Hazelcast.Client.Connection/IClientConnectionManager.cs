@@ -10,12 +10,11 @@ namespace Hazelcast.Client.Connection
 
         void AddConnectionHeartBeatListener(IConnectionHeartbeatListener connectonHeartbeatListener);
         void AddConnectionListener(IConnectionListener connectionListener);
-        Address BindToRandomAddress();
         void DestroyConnection(ClientConnection clientConnection);
 
         /// <exception cref="System.IO.IOException"></exception>
         ClientConnection GetOrConnect(Address address, Authenticator authenticator);
-        ClientConnection GetOrConnectWithRetry(Address address);
+        ClientConnection GetOrConnect(Address address);
 
         bool Shutdown();
         void Start();

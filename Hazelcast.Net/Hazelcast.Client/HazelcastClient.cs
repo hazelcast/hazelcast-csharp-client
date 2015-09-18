@@ -393,6 +393,7 @@ namespace Hazelcast.Client
             partitionService.Stop();
             connectionManager.Shutdown();
             proxyManager.Destroy();
+            invocationService.Shutdown();
         }
 
         internal IClientClusterService GetClientClusterService()

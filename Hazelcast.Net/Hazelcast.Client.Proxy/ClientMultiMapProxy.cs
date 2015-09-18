@@ -128,8 +128,8 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool RemoveEntryListener(string registrationId)
         {
-            var request = MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), registrationId);
-            return StopListening(request, m => MultiMapRemoveEntryListenerCodec.DecodeResponse(m).response, registrationId);
+            return StopListening(s => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), s),
+                m => MultiMapRemoveEntryListenerCodec.DecodeResponse(m).response, registrationId);
         }
 
         public virtual string AddEntryListener(IEntryListener<K, V> listener, K key, bool includeValue)

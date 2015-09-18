@@ -392,6 +392,7 @@
     <Compile Include="Hazelcast.IO\IDataOutput.cs" />
     <Compile Include="Hazelcast.IO\ISocketReadable.cs" />
     <Compile Include="Hazelcast.IO\ISocketWritable.cs" />
+    <Compile Include="Hazelcast.IO\UTFUtil.cs" />
     <Compile Include="Hazelcast.Logging\LogLevel.cs" />
     <Compile Include="Hazelcast.Logging\ConsoleLogFactory.cs" />
     <Compile Include="Hazelcast.Logging\TraceLogFactory.cs" />
@@ -525,7 +526,6 @@
     <Compile Include="Hazelcast.IO\IObjectDataOutput.cs" />
     <Compile Include="Hazelcast.IO\Protocols.cs" />
     <Compile Include="Hazelcast.IO\ISocketInterceptor.cs" />
-    <Compile Include="Hazelcast.IO\UTFUtil.cs" />
     <Compile Include="Hazelcast.Logging\AbstractLogger.cs" />
     <Compile Include="Hazelcast.Logging\ILogger.cs" />
     <Compile Include="Hazelcast.Logging\Logger.cs" />

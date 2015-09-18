@@ -26,5 +26,6 @@ namespace Hazelcast.Client.Spi
         IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
         IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
         bool RemoveEventHandler(int correlationId);
+        void Shutdown();
     }
 }
