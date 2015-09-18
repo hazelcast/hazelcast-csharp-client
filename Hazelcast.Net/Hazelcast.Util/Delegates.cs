@@ -1,4 +1,6 @@
-﻿using Hazelcast.Client.Connection;
+﻿using System;
+using Hazelcast.Client.Connection;
+using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
@@ -20,7 +22,10 @@ namespace Hazelcast.Util
 
     internal delegate void Authenticator(ClientConnection connection);
 
-    //public delegate void DistributedEventHandler(object _event);
-    public delegate void DistributedEventHandler(IData _eventData);
-    
+    public delegate void DistributedEventHandler(IClientMessage eventMessage);
+
+    public delegate string DecodeStartListenerResponse(IClientMessage requestMessage);
+    public delegate bool DecodeStopListenerResponse(IClientMessage requestMessage);
+    public delegate IClientMessage EncodeStopListenerRequest(string registrationId);
+
 }

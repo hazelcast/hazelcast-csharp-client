@@ -44,9 +44,10 @@ namespace Hazelcast.Util
                 for (int i = 0; i < portTryCount; i++)
                 {
                     IPAddress _ipAddress;
-                    IPAddress.TryParse(scopedAddress, out _ipAddress);
-
-                    socketAddresses.Add(new IPEndPoint(_ipAddress, port + i));
+                    if (IPAddress.TryParse(scopedAddress, out _ipAddress))
+                    {
+                        socketAddresses.Add(new IPEndPoint(_ipAddress, port + i));
+                    }
                 }
             }
             else

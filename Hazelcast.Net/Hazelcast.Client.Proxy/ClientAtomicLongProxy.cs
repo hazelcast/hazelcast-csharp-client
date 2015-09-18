@@ -1,5 +1,5 @@
-using Hazelcast.Client.Request.Base;
-using Hazelcast.Client.Request.Concurrent.Atomiclong;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
@@ -8,104 +8,80 @@ namespace Hazelcast.Client.Proxy
 {
     internal class ClientAtomicLongProxy : ClientProxy, IAtomicLong
     {
-        private readonly string name;
-        private volatile IData key;
+        private readonly string _name;
+        private volatile IData _key;
 
         public ClientAtomicLongProxy(string serviceName, string objectId) : base(serviceName, objectId)
         {
-            name = objectId;
+            _name = objectId;
         }
 
         public virtual long AddAndGet(long delta)
         {
-            var request = new AddAndGetRequest(name, delta);
-            var result = Invoke<long>(request);
-            return result;
+            var request = AtomicLongAddAndGetCodec.EncodeRequest(_name, delta);
+            return Invoke(request, m => AtomicLongAddAndGetCodec.DecodeResponse(m).response);
         }
 
         public virtual bool CompareAndSet(long expect, long update)
         {
-            var request = new CompareAndSetRequest(name, expect, update);
-            var result = Invoke<bool>(request);
-            return result;
+            var request = AtomicLongCompareAndSetCodec.EncodeRequest(_name, expect, update);
+            return Invoke(request, m => AtomicLongCompareAndSetCodec.DecodeResponse(m).response);
         }
 
         public virtual long DecrementAndGet()
         {
-            return AddAndGet(-1);
+            var request = AtomicLongDecrementAndGetCodec.EncodeRequest(_name);
+            return Invoke(request, m => AtomicLongDecrementAndGetCodec.DecodeResponse(m).response);
         }
 
         public virtual long Get()
         {
-            return GetAndAdd(0);
+            var request = AtomicLongGetCodec.EncodeRequest(_name);
+            return Invoke(request, m => AtomicLongGetCodec.DecodeResponse(m).response);
         }
 
         public virtual long GetAndAdd(long delta)
         {
-            var request = new GetAndAddRequest(name, delta);
-            var result = Invoke<long>(request);
-            return result;
+            var request = AtomicLongGetAndAddCodec.EncodeRequest(_name, delta);
+            return Invoke(request, m => AtomicLongGetAndAddCodec.DecodeResponse(m).response);
         }
 
         public virtual long GetAndSet(long newValue)
         {
-            var request = new GetAndSetRequest(name, newValue);
-            var result = Invoke<long>(request);
-            return result;
+            var request = AtomicLongGetAndSetCodec.EncodeRequest(_name, newValue);
+            return Invoke(request, m => AtomicLongGetAndSetCodec.DecodeResponse(m).response);
         }
 
         public virtual long IncrementAndGet()
         {
-            return AddAndGet(1);
+            var request = AtomicLongIncrementAndGetCodec.EncodeRequest(_name);
+            return Invoke(request, m => AtomicLongIncrementAndGetCodec.DecodeResponse(m).response);
         }
 
         public virtual long GetAndIncrement()
         {
-            return GetAndAdd(1);
+            var request = AtomicLongGetAndIncrementCodec.EncodeRequest(_name);
+            return Invoke(request, m => AtomicLongGetAndIncrementCodec.DecodeResponse(m).response);
         }
 
         public virtual void Set(long newValue)
         {
-            var request = new SetRequest(name, newValue);
-            Invoke<object>(request);
+            var request = AtomicLongSetCodec.EncodeRequest(_name, newValue);
+            Invoke(request);
         }
 
-        //public void Alter(Func<long, long> function)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public long AlterAndGet(Func<long, long> function)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public long GetAndAlter(Func<long, long> function)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public R Apply<R>(Func<long, R> function)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        protected override void OnDestroy()
+        protected override IClientMessage Invoke(IClientMessage request)
         {
-        }
-
-        protected override T Invoke<T>(ClientRequest req)
-        {
-            return Invoke<T>(req, GetKey());
+            return Invoke(request, GetKey());
         }
 
         private IData GetKey()
         {
-            if (key == null)
+            if (_key == null)
             {
-                key = ToData(name);
+                _key = ToData(_name);
             }
-            return key;
+            return _key;
         }
     }
 }

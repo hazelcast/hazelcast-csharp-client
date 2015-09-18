@@ -142,6 +142,37 @@ namespace Hazelcast.Core
         /// <exception cref="System.Exception"></exception>
         bool TryLock(K key, long time, TimeUnit timeunit);
 
+        /// <summary>Tries to acquire the lock for the specified key for the specified lease time.</summary>
+        /// <remarks>
+        /// Tries to acquire the lock for the specified key for the specified lease time.
+        /// <p>After lease time, the lock will be released.
+        /// <p/>
+        /// <p>If the lock is not available, then
+        /// the current thread becomes disabled for thread scheduling
+        /// purposes and lies dormant until one of two things happens:
+        /// <ul>
+        /// <li>the lock is acquired by the current thread, or
+        /// <li>the specified waiting time elapses.
+        /// </ul>
+        /// <p/>
+        /// <p><b>Warning:</b></p>
+        /// This method uses <tt>hashCode</tt> and <tt>equals</tt> of the binary form of
+        /// the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
+        /// defined in the <tt>key</tt>'s class.
+        /// </remarks>
+        /// <param name="key">key to lock in this map.</param>
+        /// <param name="time">maximum time to wait for the lock.</param>
+        /// <param name="timeunit">time unit of the <tt>time</tt> argument.</param>
+        /// <param name="leaseTime">time to wait before releasing the lock.</param>
+        /// <param name="leaseTimeunit">unit of time to specify lease time.</param>
+        /// <returns>
+        /// <tt>true</tt> if the lock was acquired and <tt>false</tt>
+        /// if the waiting time elapsed before the lock was acquired.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">if the specified key is null.</exception>
+        /// <exception cref="System.Exception"/>
+        bool TryLock(K key, long time, TimeUnit timeunit, long leaseTime, TimeUnit leaseTimeunit);
+
         /// <summary>Releases the lock for the specified key.</summary>
         /// <param name="key">key to lock.</param>
         void Unlock(K key);

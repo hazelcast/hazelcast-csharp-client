@@ -1,26 +1,38 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Client.Connection;
-using Hazelcast.IO.Serialization;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Spi;
 
 namespace Hazelcast.Util
 {
     internal sealed class ThreadUtil
     {
-        public static int TaskOperationTimeOutMilliseconds = 250 * 1000;
+        public static int TaskOperationTimeOutMilliseconds = 250*1000;
 
-        public static long GetThreadId()
+        public static IList<IClientMessage> GetResult(IEnumerable<IFuture<IClientMessage>> futures)
         {
-            return Thread.CurrentThread.ManagedThreadId;
+            return futures.Select(future => GetResult(future)).ToList();
         }
 
-        public static IData GetResult(Task<IData> task, int timeout)
+        public static IClientMessage GetResult(IFuture<IClientMessage> future, int? timeout = null)
+        {
+            if (timeout.HasValue) return future.GetResult(timeout.Value);
+            return future.GetResult(TaskOperationTimeOutMilliseconds);
+        }
+
+        public static IClientMessage GetResult(Task<IClientMessage> task)
+        {
+            return GetResult(task, TaskOperationTimeOutMilliseconds);
+        }
+
+        public static IClientMessage GetResult(Task<IClientMessage> task, int timeout)
         {
             try
             {
-                var taskData = task.AsyncState as TaskData;
-                var responseReady = taskData.Wait();// task.Wait(TimeSpan.FromMilliseconds(TaskOperationTimeOutMilliseconds));
+                var responseReady = task.Wait(TimeSpan.FromMilliseconds(TaskOperationTimeOutMilliseconds));
                 if (!responseReady)
                 {
                     throw new TimeoutException("Operation time-out! No response received from the server.");
@@ -28,14 +40,14 @@ namespace Hazelcast.Util
             }
             catch (AggregateException e)
             {
-                ExceptionUtil.Rethrow(e);
+                throw ExceptionUtil.Rethrow(e);
             }
             return task.Result;
-        } 
-        
-        public static IData GetResult(Task<IData> task)
+        }
+
+        public static long GetThreadId()
         {
-            return GetResult(task, TaskOperationTimeOutMilliseconds);
+            return Thread.CurrentThread.ManagedThreadId;
         }
     }
 }

@@ -5,9 +5,9 @@ namespace Hazelcast.Client.Connection
 {
     internal class Router
     {
-        private readonly LoadBalancer _loadBalancer;
+        private readonly ILoadBalancer _loadBalancer;
 
-        internal Router(LoadBalancer loadBalancer)
+        internal Router(ILoadBalancer loadBalancer)
         {
             _loadBalancer = loadBalancer;
         }

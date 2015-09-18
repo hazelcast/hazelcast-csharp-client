@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Net.Ext;
@@ -344,24 +343,20 @@ namespace Hazelcast.IO.Serialization
                     throw new ArgumentException("IPortableFactory with factoryId '" + factoryId +
                                                 "' is already registered!");
                 }
-                IPortableFactory factory;
-                try
+
+                var type = Type.GetType(factoryClassName);
+                if (type == null)
                 {
-                    //TODO CLASSLOAD
-                    factory = null;
-                    //ClassLoaderUtil.newInstance(cl, factoryClassName);
-                    Type type = Type.GetType(factoryClassName);
-                    if (type != null)
-                    {
-                        factory = Activator.CreateInstance(type) as IPortableFactory;
-                    }
+                    throw new HazelcastSerializationException("Unable to find type " + factoryClassName);
                 }
-                catch (Exception e)
+                if (!typeof (IPortableFactory).IsAssignableFrom(type))
                 {
-                    throw new HazelcastSerializationException(e);
+                    throw new HazelcastSerializationException("Type " + type + " does not implement IPortableFactory");
                 }
+                var factory = Activator.CreateInstance(type) as IPortableFactory;
                 portableFactories.Add(factoryId, factory);
             }
+
             foreach (IPortableFactory f in portableFactories.Values)
             {
                 if (f is IHazelcastInstanceAware)

@@ -1,10 +1,9 @@
 using System.Text;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Client
 {
-    internal sealed class ClientPrincipal : IPortable
+    internal sealed class ClientPrincipal 
     {
         private string ownerUuid;
         private string uuid;
@@ -17,30 +16,6 @@ namespace Hazelcast.Client
         {
             this.uuid = uuid;
             this.ownerUuid = ownerUuid;
-        }
-
-        public int GetFactoryId()
-        {
-            return ClientPortableHook.Id;
-        }
-
-        public int GetClassId()
-        {
-            return ClientPortableHook.Principal;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("uuid", uuid);
-            writer.WriteUTF("ownerUuid", ownerUuid);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadPortable(IPortableReader reader)
-        {
-            uuid = reader.ReadUTF("uuid");
-            ownerUuid = reader.ReadUTF("ownerUuid");
         }
 
         public string GetUuid()

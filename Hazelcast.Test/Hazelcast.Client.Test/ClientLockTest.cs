@@ -17,7 +17,7 @@ namespace Hazelcast.Client.Test
 
         public override void InitMoreFixture()
         {
-            l = client.GetLock(name);
+            l = Client.GetLock(name);
         }
 
         [SetUp]
@@ -204,6 +204,13 @@ namespace Hazelcast.Client.Test
 
             Assert.IsTrue(latch2.Wait(TimeSpan.FromMinutes(1)));
 		}
+
+	    [Test]
+        [ExpectedException(typeof(SynchronizationLockException))]
+	    public void TestUnlockBeforeLock_ShouldThrowException()
+	    {
+	        l.Unlock();
+	    }
 
 	}
 }

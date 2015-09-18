@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
             //QueueConfig queueConfig = config.getQueueConfig(queueName);
             //queueConfig.setMaxSize(6);
             //
-            q = client.GetQueue<object>(queueName + Name);
+            q = Client.GetQueue<object>(queueName + Name);
         }
 
         [TearDown]
@@ -49,7 +49,7 @@ namespace Hazelcast.Client.Test
 		{
 			Assert.AreEqual(0, q.Count);
 			CountdownEvent latch = new CountdownEvent(5);
-            var listener = new ClientListTest._ItemListener<object>(latch);
+            var listener = new ClientListTest.Listener<object>(latch);
 			string id = q.AddItemListener(listener, true);
 
             Thread.Sleep(500);
@@ -73,7 +73,7 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void TestListenerExtreme()
 		{
-		    var qX = client.GetQueue<object>(Name);
+		    var qX = Client.GetQueue<object>(Name);
 
 		    const int TestItemCount = 1 * 1000;
 

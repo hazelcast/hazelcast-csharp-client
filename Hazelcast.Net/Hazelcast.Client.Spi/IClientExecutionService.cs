@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Net.Ext;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
@@ -15,10 +14,7 @@ namespace Hazelcast.Client.Spi
         Task<T> Submit<T>(Func<object, T> function);
         Task<T> Submit<T>(Func<object, T> function, object state);
 
-        //Task<object> Schedule(Runnable command, long delay, TimeUnit unit);
-
-        //Task<object> ScheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit);
-
         Task<object> ScheduleWithFixedDelay(Runnable command, long initialDelay, long period, TimeUnit unit);
+        void Shutdown();
     }
 }

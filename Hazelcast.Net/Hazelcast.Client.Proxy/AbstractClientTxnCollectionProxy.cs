@@ -1,5 +1,4 @@
 using System;
-using Hazelcast.Client.Request.Transaction;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -12,11 +11,6 @@ namespace Hazelcast.Client.Proxy
 
         internal override void OnDestroy()
         {
-        }
-
-        public override string GetName()
-        {
-            return (string) GetId();
         }
 
         protected internal virtual void ThrowExceptionIfNull(object o)

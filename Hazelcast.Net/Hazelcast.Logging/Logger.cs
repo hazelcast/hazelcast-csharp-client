@@ -35,7 +35,6 @@ namespace Hazelcast.Logging
         public static ILoggerFactory NewLoggerFactory(string loggerType)
         {
             ILoggerFactory _loggerFactory = null;
-            //string loggerClass = Environment.GetEnvironmentVariable("hazelcast.logging.class");
             if ("console".Equals(loggerType))
             {
                 _loggerFactory = new ConsoleLogFactory();

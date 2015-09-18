@@ -13,7 +13,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            i = client.GetIdGenerator(Name);
+            i = Client.GetIdGenerator(Name);
         }
 
         [TearDown]

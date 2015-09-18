@@ -1,5 +1,4 @@
 using System;
-using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Security
 {
@@ -11,7 +10,6 @@ namespace Hazelcast.Security
     internal abstract class AbstractCredentials : ICredentials
     {
         private string endpoint;
-
         private string principal;
 
         public AbstractCredentials()
@@ -36,39 +34,6 @@ namespace Hazelcast.Security
         public virtual string GetPrincipal()
         {
             return principal;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void WritePortable(IPortableWriter writer)
-        {
-            writer.WriteUTF("principal", principal);
-            writer.WriteUTF("endpoint", endpoint);
-            WritePortableInternal(writer);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadPortable(IPortableReader reader)
-        {
-            principal = reader.ReadUTF("principal");
-            endpoint = reader.ReadUTF("endpoint");
-            ReadPortableInternal(reader);
-        }
-
-        public abstract int GetClassId();
-
-        public abstract int GetFactoryId();
-
-        public virtual void SetPrincipal(string principal)
-        {
-            this.principal = principal;
-        }
-
-        public override int GetHashCode()
-        {
-            int prime = 31;
-            int result = 1;
-            result = prime*result + ((principal == null) ? 0 : principal.GetHashCode());
-            return result;
         }
 
         public override bool Equals(object obj)
@@ -103,10 +68,17 @@ namespace Hazelcast.Security
             return true;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        protected internal abstract void WritePortableInternal(IPortableWriter writer);
+        public override int GetHashCode()
+        {
+            var prime = 31;
+            var result = 1;
+            result = prime*result + ((principal == null) ? 0 : principal.GetHashCode());
+            return result;
+        }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        protected internal abstract void ReadPortableInternal(IPortableReader reader);
+        public virtual void SetPrincipal(string principal)
+        {
+            this.principal = principal;
+        }
     }
 }

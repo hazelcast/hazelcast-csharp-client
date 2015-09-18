@@ -1,26 +1,26 @@
 using System;
 using System.IO;
+using System.Text;
 using Hazelcast.Net.Ext;
 using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ObjectDataOutputStream : OutputStream, IObjectDataOutput, IDisposable
+    public class ObjectDataOutputStream : OutputStream, IObjectDataOutput, IDisposable
     {
         private const int UTF_BUFFER_SIZE = 1024;
-
-        //BinaryWriter is always LittleEndian
-        private readonly BinaryWriter _binaryWriter;
 
         private readonly ByteOrder byteOrder;
         private readonly ISerializationService serializationService;
 
         private byte[] utfBuffer;
+        //BinaryWriter is always LittleEndian
+        private BinaryWriter _binaryWriter;
 
-        public ObjectDataOutputStream(BinaryWriter binaryWriter, ISerializationService serializationService)
+        public ObjectDataOutputStream(Stream stream, ISerializationService serializationService)
         {
             this.serializationService = serializationService;
-            _binaryWriter = binaryWriter;
+            _binaryWriter = new BinaryWriter(stream, Encoding.Unicode);
             byteOrder = serializationService.GetByteOrder();
         }
 
@@ -38,7 +38,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteByte(int v)
         {
-            _binaryWriter.Write(v);
+            _binaryWriter.Write((byte)v);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -57,14 +57,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteChar(int v)
         {
-            if (!IsBigEndian())
-            {
-                _binaryWriter.Write((char) v);
-            }
-            else
-            {
-                _binaryWriter.Write(ByteFlipperUtil.ReverseBytes((char) v));
-            }
+            WriteShort((short) v);
         }
 
         /// <exception cref="System.IO.IOException"></exception>

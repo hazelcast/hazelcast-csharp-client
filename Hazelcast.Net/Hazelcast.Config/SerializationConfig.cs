@@ -148,9 +148,8 @@ namespace Hazelcast.Config
 
         public virtual SerializationConfig AddPortableFactoryClass(int factoryId, Type portableFactoryClass)
         {
-            //TODO portableFactoryClass paramtere extends ??? IPortableFactory
             string portableFactoryClassName =
-                ValidationUtil.IsNotNull(portableFactoryClass, "portableFactoryClass").FullName;
+                ValidationUtil.IsNotNull(portableFactoryClass, "portableFactoryClass").AssemblyQualifiedName;
             return AddPortableFactoryClass(factoryId, portableFactoryClassName);
         }
 
@@ -192,7 +191,7 @@ namespace Hazelcast.Config
 
         public virtual SerializationConfig AddClassDefinition(IClassDefinition classDefinition)
         {
-            if (!GetClassDefinitions().Contains(classDefinition))
+            if (GetClassDefinitions().Contains(classDefinition))
             {
                 throw new ArgumentException("IClassDefinition for class-id[" + classDefinition.GetClassId() +
                                             "] already exists!");

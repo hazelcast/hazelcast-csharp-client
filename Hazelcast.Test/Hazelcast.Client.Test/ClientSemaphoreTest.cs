@@ -16,7 +16,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            s = client.GetSemaphore(Name);
+            s = Client.GetSemaphore(Name);
 
             s.ReducePermits(100);
             s.Release(9);
@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Test
 	    [Test]
 	    public void TestInit()
 	    {
-	        var semInit = client.GetSemaphore(Name);
+	        var semInit = Client.GetSemaphore(Name);
 	        semInit.Init(2);
 	        Assert.AreEqual(2, semInit.AvailablePermits());
 	        semInit.Destroy();
@@ -101,7 +101,7 @@ namespace Hazelcast.Client.Test
         [ExpectedException(typeof(ArgumentException))]
 	    public void TestInitNeg()
         {
-            var semInit = client.GetSemaphore(Name);
+            var semInit = Client.GetSemaphore(Name);
             semInit.Init(-2);
             semInit.Destroy();
         }

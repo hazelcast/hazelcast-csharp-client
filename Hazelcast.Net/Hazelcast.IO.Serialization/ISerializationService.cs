@@ -5,7 +5,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal interface ISerializationService
+    public interface ISerializationService
     {
         IData ToData(object obj);
 
@@ -29,9 +29,9 @@ namespace Hazelcast.IO.Serialization
 
 		IBufferObjectDataOutput CreateObjectDataOutput(int size);
 
-        ObjectDataOutputStream CreateObjectDataOutputStream(BinaryWriter binaryWriter);
+        ObjectDataOutputStream CreateObjectDataOutputStream(Stream outputStream);
 
-        ObjectDataInputStream CreateObjectDataInputStream(BinaryReader binaryReader);
+        ObjectDataInputStream CreateObjectDataInputStream(Stream inputStream);
 
 		void Register(Type type, ISerializer serializer);
 

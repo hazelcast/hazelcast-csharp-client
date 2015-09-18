@@ -1,131 +1,59 @@
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Hazelcast.Client.Request.Base;
 using Hazelcast.Core;
 using Hazelcast.IO;
 
 namespace Hazelcast.Client.Spi
 {
-    /// <summary>
-    ///     Client Cluster Service
-    /// </summary>
+    /// <author>mdogan 5/16/13</author>
     public interface IClientClusterService
     {
-        /// <summary>
-        ///     start service
-        /// </summary>
-        void Start();
-
-        /// <summary>
-        ///     stop service
-        /// </summary>
-        void Stop();
-
-        /// <summary>
-        ///     get member for address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        IMember GetMember(Address address);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="uuid"></param>
-        /// <returns></returns>
-        IMember GetMember(string uuid);
-
-        /// <summary>
-        ///     memberlist
-        /// </summary>
-        /// <returns></returns>
-        ICollection<IMember> GetMemberList();
-
-        /// <summary>
-        ///     master Address
-        /// </summary>
-        /// <returns></returns>
-        Address GetMasterAddress();
-
-        /// <summary>
-        ///     cluster size
-        /// </summary>
-        /// <returns></returns>
-        int GetSize();
-
-        /// <summary>
-        ///     cluster time
-        /// </summary>
-        /// <returns></returns>
-        long GetClusterTime();
-
-        /// <summary>
-        ///     local client
-        /// </summary>
-        /// <returns></returns>
+        /// <returns>The client interface representing the local client.</returns>
         IClient GetLocalClient();
 
-        /// <summary>
-        ///     member string
-        /// </summary>
-        /// <returns></returns>
-        string MembersString();
+        /// <summary>Gets the member for the given address.</summary>
+        /// <param name="address">The address of the member to look up.</param>
+        /// <returns>The member that was found, or null if not found. If address is null, null is returned.</returns>
+        IMember GetMember(Address address);
 
-        /// <summary>
-        /// </summary>
-        /// <param name="listener"></param>
-        /// <returns></returns>
+        /// <summary>Gets the member with the given uuid.</summary>
+        /// <param name="uuid">The uuid of the member.</param>
+        /// <returns>The member that was found, or null if not found. If uuid is null, null is returned.</returns>
+        IMember GetMember(string uuid);
+
+        /// <summary>Gets the collection of members.</summary>
+        /// <returns>The collection of members. Null will never be returned.</returns>
+        ICollection<IMember> GetMemberList();
+
+        /// <summary>Returns the address of the master member.</summary>
+        /// <returns>The address of the master member. Could be null if the master is not yet known.</returns>
+        Address GetMasterAddress();
+
+        /// <summary>Gets the current number of members.</summary>
+        /// <returns>The current number of members.</returns>
+        int GetSize();
+
+        /// <summary>Returns the cluster-time.</summary>
+        /// <remarks>
+        /// Returns the cluster-time.
+        /// <p/>
+        /// </remarks>
+        /// <returns>The cluster-time.</returns>
+        long GetClusterTime();
+
+        /// <param name="listener">The listener to be registered.</param>
+        /// <returns>The registration id.</returns>
         string AddMembershipListener(IMembershipListener listener);
 
-        /// <summary>
-        /// </summary>
-        /// <param name="registrationId"></param>
-        /// <returns></returns>
+        /// <param name="registrationId">The registrationId of the listener to be removed.</param>
+        /// <returns>true if successfully removed, false otherwise.</returns>
         bool RemoveMembershipListener(string registrationId);
 
-
-        ///// <summary>
-        ///// </summary>
-        ///// <param name="request"></param>
-        ///// <typeparam name="T"></typeparam>
-        ///// <returns></returns>
-        //Task<T> Send<T>(ClientRequest request);
-
-        ///// <summary>
-        ///// </summary>
-        ///// <param name="request"></param>
-        ///// <param name="target"></param>
-        ///// <typeparam name="T"></typeparam>
-        ///// <returns></returns>
-        //Task<T> Send<T>(ClientRequest request, Address target);
-
-        ///// <summary>
-        ///// </summary>
-        ///// <param name="request"></param>
-        ///// <param name="handler"></param>
-        ///// <typeparam name="T"></typeparam>
-        ///// <returns></returns>
-        //Task<T> SendAndHandle<T>(ClientRequest request, EventHandler<T> handler) where T : EventArgs;
-
-        ///// <summary>
-        ///// </summary>
-        ///// <param name="request"></param>
-        ///// <param name="target"></param>
-        ///// <param name="handler"></param>
-        ///// <typeparam name="T"></typeparam>
-        ///// <returns></returns>
-        //Task<T> SendAndHandle<T>(ClientRequest request, Address target, EventHandler<T> handler) where T : EventArgs;
-
-        ///// <summary>
-        ///// </summary>
-        ///// <param name="uuid"></param>
-        ///// <param name="callId"></param>
-        //void RegisterListener(string uuid, long callId);
-
-        ///// <summary>
-        ///// </summary>
-        ///// <param name="uuid"></param>
-        ///// <returns></returns>
-        //bool UnregisterListener(string uuid);
+        /// <summary>The owner connection is opened to owner member of the client in the cluster.</summary>
+        /// <remarks>
+        /// The owner connection is opened to owner member of the client in the cluster.
+        /// If the owner member dies, other members of the cluster assumes this client is dead.
+        /// </remarks>
+        /// <returns>The address of the owner connection.</returns>
+        Address GetOwnerConnectionAddress();
     }
 }

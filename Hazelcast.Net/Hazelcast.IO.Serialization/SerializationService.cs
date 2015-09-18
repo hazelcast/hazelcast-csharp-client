@@ -39,29 +39,18 @@ namespace Hazelcast.IO.Serialization
             this.globalPartitioningStrategy = partitionStrategy;
             this.outputBufferSize = initialOutputBufferSize;
             dataOutputQueue = new ThreadLocalOutputCache(this);
-            var loader = new PortableHookLoader(portableFactories);
             portableContext = new PortableContext(this, version);
-            foreach (IClassDefinition cd in loader.GetDefinitions())
-            {
-                portableContext.RegisterClassDefinition(cd);
-            }
             dataSerializerAdapter = CreateSerializerAdapterByGeneric<IDataSerializable>(new DataSerializer(dataSerializableFactories));
-            portableSerializer = new PortableSerializer(portableContext, loader.GetFactories());
+            portableSerializer = new PortableSerializer(portableContext, portableFactories);
             portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(portableSerializer);
             RegisterConstantSerializers();
-            //RegisterJvmTypeSerializers(enableCompression, enableSharedObject);
+            RegisterDefaultSerializers();
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
         }
 
-        private void RegisterJvmTypeSerializers(bool enableCompression, bool enableSharedObject)
+        private void RegisterDefaultSerializers()
         {
-            //SafeRegister(typeof(DateTime), new DefaultSerializers.DateSerializer());
-            //SafeRegister(typeof(BigInteger), new DefaultSerializers.BigIntegerSerializer());
-            //SafeRegister(typeof(BigDecimal), new DefaultSerializers.BigDecimalSerializer());
-            //SafeRegister(typeof(IExternalizable), new DefaultSerializers.Externalizer(enableCompression));
-            //SafeRegister(typeof(ISerializable), new DefaultSerializers.ObjectSerializer(enableSharedObject, enableCompression));
-            //SafeRegister(typeof(Type), new DefaultSerializers.ClassSerializer());
-            //SafeRegister(typeof(Enum), new DefaultSerializers.EnumSerializer());
+            SafeRegister(typeof(DateTime), new DefaultSerializers.DateSerializer());
         }
 
         private void RegisterConstantSerializers()
@@ -168,7 +157,6 @@ namespace Hazelcast.IO.Serialization
             {
                 Push(@out);
             }
-
         }
 
         protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)
@@ -191,7 +179,7 @@ namespace Hazelcast.IO.Serialization
         {
             if (!(@object is IData))
             {
-                return (T)@object;
+                return @object == null ? default(T) : (T) @object;
             }
             IData data = (IData)@object;
             if (IsNullData(data))
@@ -340,13 +328,13 @@ namespace Hazelcast.IO.Serialization
             if (e is OutOfMemoryException)
             {
                 //OutOfMemoryErrorDispatcher.OnOutOfMemory((OutOfMemoryException)e);
-                throw e;
+                return e;
             }
             if (e is HazelcastSerializationException)
             {
-                throw e;
+                return e;
             }
-            throw new HazelcastSerializationException(e);
+            return new HazelcastSerializationException(e);
         }
 
         protected internal IBufferObjectDataOutput Pop()
@@ -374,14 +362,14 @@ namespace Hazelcast.IO.Serialization
             return inputOutputFactory.CreateOutput(size, this);
         }
 
-        public ObjectDataOutputStream CreateObjectDataOutputStream(BinaryWriter binaryWriter)
+        public ObjectDataOutputStream CreateObjectDataOutputStream(Stream outputStream)
         {
-            return new ObjectDataOutputStream(binaryWriter, this);
+            return new ObjectDataOutputStream(outputStream, this);
         }
 
-        public ObjectDataInputStream CreateObjectDataInputStream(BinaryReader binaryReader)
+        public ObjectDataInputStream CreateObjectDataInputStream(Stream inputSream)
         {
-            return new ObjectDataInputStream(binaryReader, this);
+            return new ObjectDataInputStream(inputSream, this);
         }
 
         public void Register(Type type, ISerializer serializer)

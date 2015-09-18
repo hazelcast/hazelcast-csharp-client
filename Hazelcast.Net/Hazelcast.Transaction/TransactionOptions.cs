@@ -6,15 +6,14 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Transaction
 {
-    /// <summary>Contains the configuration for a </summary>
-    /// <remarks>Contains the configuration for a </remarks>
-    [Serializable]
-    public sealed class TransactionOptions : IDataSerializable
+    /// <summary>Contains the configuration for a transaction</summary>
+    public sealed class TransactionOptions
     {
         public enum TransactionType
         {
-            TwoPhase,
-            Local
+            TwoPhase = 1,
+            [Obsolete("Use OnePhase instead")] Local = 2,
+            OnePhase = 2
         }
 
         private int durability;
@@ -30,27 +29,6 @@ namespace Hazelcast.Transaction
         public TransactionOptions()
         {
             SetTimeout(2, TimeUnit.MINUTES).SetDurability(1).SetTransactionType(TransactionType.TwoPhase);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void WriteData(IObjectDataOutput output)
-        {
-            output.WriteLong(timeoutMillis);
-            output.WriteInt(durability);
-            output.WriteInt((int) transactionType);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadData(IObjectDataInput input)
-        {
-            timeoutMillis = input.ReadLong();
-            durability = input.ReadInt();
-            transactionType = (TransactionType) input.ReadInt();
-        }
-
-        public string GetJavaClassName()
-        {
-            return "com.hazelcast.transaction.TransactionOptions";
         }
 
         /// <summary>

@@ -15,7 +15,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            t = client.GetTopic<object>(Name);
+            t = Client.GetTopic<object>(Name);
         }
 
         [TearDown]
@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Test
 			var listener = new _MessageListener(latch);
 		    string id = t.AddMessageListener(listener);
             Thread.Sleep(1000);
-		    t.RemoveMessageListener(id);
+		    Assert.IsTrue(t.RemoveMessageListener(id));
             Thread.Sleep(1000);
 
             t.Publish("naber");

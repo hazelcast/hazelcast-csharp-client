@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Serialization.Hook;
 
 namespace Hazelcast.Security
 {
@@ -30,11 +29,6 @@ namespace Hazelcast.Security
             return GetPrincipal();
         }
 
-        public virtual byte[] GetRawPassword()
-        {
-            return password;
-        }
-
         public virtual string GetPassword()
         {
             return password == null ? string.Empty : Encoding.UTF8.GetString(password);
@@ -48,28 +42,6 @@ namespace Hazelcast.Security
         public virtual void SetPassword(string password)
         {
             this.password = Encoding.UTF8.GetBytes(password);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        protected internal override void WritePortableInternal(IPortableWriter writer)
-        {
-            writer.WriteByteArray("pwd", password);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        protected internal override void ReadPortableInternal(IPortableReader reader)
-        {
-            password = reader.ReadByteArray("pwd");
-        }
-
-        public override int GetFactoryId()
-        {
-            return SpiPortableHook.Id;
-        }
-
-        public override int GetClassId()
-        {
-            return SpiPortableHook.UsernamePwdCred;
         }
 
         public override string ToString()

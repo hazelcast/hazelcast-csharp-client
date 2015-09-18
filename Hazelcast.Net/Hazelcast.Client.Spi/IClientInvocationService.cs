@@ -1,34 +1,31 @@
-using System;
-using System.Threading.Tasks;
-using Hazelcast.Client.Request.Base;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Core;
 using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
     /// <summary>
-    /// invocation service
+    ///     invocation service
     /// </summary>
     public interface IClientInvocationService
     {
-        /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnRandomTarget(ClientRequest request);
+        IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key,
+            DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder);
+        IFuture<IClientMessage> InvokeListenerOnPartition(IClientMessage request, int partitionId,
+            DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder);
+        IFuture<IClientMessage> InvokeListenerOnRandomTarget(IClientMessage request,
+            DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder);
+        IFuture<IClientMessage> InvokeListenerOnTarget(IClientMessage request, Address target,
+            DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder);
 
-        /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnTarget(ClientRequest request, Address target);
-
-        /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnKeyOwner(ClientRequest request, object key);
-
-        /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnRandomTarget(ClientRequest request, DistributedEventHandler handler);
-
-        /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnTarget(ClientRequest request, Address target, DistributedEventHandler handler);
-
-        /// <exception cref="System.Exception"></exception>
-        Task<IData> InvokeOnKeyOwner(ClientRequest request, object key, DistributedEventHandler handler);
-
+        IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
+        IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
+        IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId);
+        IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
+        IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
+        bool RemoveEventHandler(int correlationId);
+        void Shutdown();
     }
 }

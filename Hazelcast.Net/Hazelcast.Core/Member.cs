@@ -3,51 +3,41 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using Hazelcast.Client.Request.Cluster;
+using Hazelcast.Client.Spi;
 using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
-using Hazelcast.Serialization.Hook;
-using Hazelcast.Util;
 
 namespace Hazelcast.Core
 {
-    [Serializable]
-    internal sealed class Member :IdentifiedDataSerializable, IMember, IIdentifiedDataSerializable
+    internal sealed class Member : IMember
     {
-        private readonly bool localMember;
-
-        private Address address;
-
+        private readonly ConcurrentDictionary<string, string> _attributes = new ConcurrentDictionary<string, string>();
+        private readonly Address address;
+        private readonly string uuid;
         private volatile ILogger logger;
-        
-        private string uuid;
 
-        private readonly ConcurrentDictionary<string,object> _attributes= new ConcurrentDictionary<string, object>(); 
         public Member()
         {
         }
 
-        public Member(Address address, bool localMember) : this(address, localMember, null)
+        public Member(Address address)
+            : this(address, null, new Dictionary<string, string>())
         {
         }
 
-        public Member(Address address, bool localMember, string uuid) : this()
+        public Member(Address address, string uuid)
+            : this(address, uuid, new Dictionary<string, string>())
         {
-            this.localMember = localMember;
+        }
+
+        public Member(Address address, string uuid, IDictionary<string, string> attributes)
+        {
             this.address = address;
-            //lastRead = Clock.CurrentTimeMillis();
             this.uuid = uuid;
-        }
-
-        public int GetFactoryId()
-        {
-            return ClusterDataSerializerHook.FId;
-        }
-
-        public int GetId()
-        {
-            return ClusterDataSerializerHook.Member;
+            foreach (var kv in attributes)
+            {
+                _attributes.TryAdd(kv.Key, kv.Value);
+            }
         }
 
         public Address GetAddress()
@@ -71,43 +61,21 @@ namespace Hazelcast.Core
             }
         }
 
-        public bool LocalMember()
-        {
-            return localMember;
-        }
-
         public string GetUuid()
         {
             return uuid;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public void ReadData(IObjectDataInput input)
+        public IDictionary<string, string> GetAttributes()
         {
-            address = new Address();
-            address.ReadData(input);
-            uuid = input.ReadUTF();
-            int size = input.ReadInt();
-            for (int i = 0; i < size; i++)
-            {
-                string key = input.ReadUTF();
-                object value = IOUtil.ReadAttributeValue(input);
-                _attributes.TryAdd(key, value);
-            }
+            return _attributes;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public void WriteData(IObjectDataOutput output)
+        public string GetAttribute(string key)
         {
-            address.WriteData(output);
-            output.WriteUTF(uuid);
-            output.WriteInt(_attributes.Count);
-            foreach (var entry in _attributes)
-            {
-                output.WriteUTF(entry.Key);
-                IOUtil.WriteAttributeValue(entry.Value,output);
-            }
-
+            string _out;
+            _attributes.TryGetValue(key, out _out);
+            return _out;
         }
 
         public override string ToString()
@@ -117,17 +85,13 @@ namespace Hazelcast.Core
             sb.Append("]");
             sb.Append(":");
             sb.Append(address.GetPort());
-            if (localMember)
-            {
-                sb.Append(" this");
-            }
             return sb.ToString();
         }
 
         public override int GetHashCode()
         {
-            int Prime = 31;
-            int result = 1;
+            var Prime = 31;
+            var result = 1;
             result = Prime*result + ((address == null) ? 0 : address.GetHashCode());
             return result;
         }
@@ -164,8 +128,7 @@ namespace Hazelcast.Core
             return true;
         }
 
-
-        public void UpdateAttribute(MemberAttributeOperationType operationType, String key, Object value)
+        internal void UpdateAttribute(MemberAttributeOperationType operationType, string key, string value)
         {
             switch (operationType)
             {
@@ -173,60 +136,10 @@ namespace Hazelcast.Core
                     _attributes.TryAdd(key, value);
                     break;
                 case MemberAttributeOperationType.REMOVE:
-                    object _out;
-                    _attributes.TryRemove(key,out _out);
+                    string _out;
+                    _attributes.TryRemove(key, out _out);
                     break;
             }
         }
-        public IDictionary<string, object> GetAttributes()
-        {
-            return _attributes;
-        }
-
-        public object GetAttribute(string key)
-        {
-            object _out;
-            _attributes.TryGetValue(key,out _out);
-            return _out;
-        }
-
-        public T GetAttribute<T>(string key)
-        {
-            object _out;
-            _attributes.TryGetValue(key,out _out);
-            return (T)_out;
-        }
-
-        public void SetAttribute<T>(string key, T value)
-        {
-            if (!localMember)
-            {
-                throw new NotSupportedException("Attributes on remote members must not be changed");
-            }
-            if (key == null)
-            {
-                throw new ArgumentNullException("key");
-            }
-            if (value == null)
-            {
-                throw new ArgumentNullException("value");
-            }
-            (_attributes as IDictionary<string,object>).Add(key,value);
-        }
-
-        public void RemoveAttribute(string key)
-        {
-            if (!localMember)
-            {
-                throw new NotSupportedException("Attributes on remote members must not be changed");
-            }
-            if (key == null)
-            {
-                throw new ArgumentNullException("key");
-            }
-            object removed;
-            _attributes.TryRemove(key, out removed);
-        }
-
     }
 }

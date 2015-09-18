@@ -5,25 +5,23 @@ namespace Hazelcast.Logging
 {
     internal class ConsoleLogFactory : ILoggerFactory
     {
-        internal readonly ILogger logger;
 
         public ConsoleLogFactory()
         {
-            logger = new ConsoleLogger(this);
         }
 
         public virtual ILogger GetLogger(string name)
         {
-            return logger;
+            return new ConsoleLogger(name);
         }
 
         internal class ConsoleLogger : AbstractLogger
         {
-            private readonly ConsoleLogFactory _enclosing;
+            private readonly string _name;
 
-            internal ConsoleLogger(ConsoleLogFactory _enclosing)
+            internal ConsoleLogger(string name)
             {
-                this._enclosing = _enclosing;
+                _name = name;
             }
 
             public override bool IsLoggable(LogLevel arg1)
@@ -33,22 +31,28 @@ namespace Hazelcast.Logging
 
             public override void Log(LogLevel arg1, string message)
             {
-                Console.WriteLine(message);
+                Console.WriteLine(GetDateFormat(arg1) + " " + message);
             }
 
             public override void Log(LogLevel arg1, string message, Exception ex)
             {
-                Console.WriteLine(message + "----"+ ex.StackTrace);
+                Console.WriteLine(GetDateFormat(arg1) + message + " ---- " + ex.StackTrace);
+            }
+
+            private string GetDateFormat(LogLevel logLevel)
+            {
+                return DateTime.Now.ToString("HH:mm:ss.fff") + " [" + logLevel.ToString().ToUpper() + "] - " + _name +
+                       ": ";
             }
 
             public override void Log(TraceEventType logEvent)
             {
-                throw new NotImplementedException();
+                
             }
 
             public override LogLevel GetLogLevel()
             {
-                throw new NotImplementedException();
+                return LogLevel.Info;
             }
         }
     }

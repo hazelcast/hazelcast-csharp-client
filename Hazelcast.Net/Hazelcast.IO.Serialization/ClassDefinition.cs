@@ -33,7 +33,8 @@ namespace Hazelcast.IO.Serialization
 
         public virtual IFieldDefinition GetField(string name)
         {
-            return fieldDefinitionsMap[name];
+            IFieldDefinition val;
+            return fieldDefinitionsMap.TryGetValue(name, out val) ? val : null;
         }
 
         public virtual IFieldDefinition GetField(int fieldIndex)

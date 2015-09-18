@@ -1,9 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using Hazelcast.Core;
 using Hazelcast.Logging;
-using Hazelcast.Serialization.Hook;
 using Hazelcast.Transaction;
 using Hazelcast.Util;
 
@@ -25,49 +25,21 @@ namespace Hazelcast.IO.Serialization
     /// </remarks>
     internal sealed class DataSerializer : IStreamSerializer<IDataSerializable>
     {
-        private readonly IDictionary<string, Type> class2Type = new Dictionary<string, Type>
+        private readonly ConcurrentDictionary<string, Type> class2Type = new ConcurrentDictionary<string, Type>
         {
-            {"com.hazelcast.query.SqlPredicate", typeof (SqlPredicate)},
-            {"com.hazelcast.transaction.TransactionOptions", typeof (TransactionOptions)}
+            
         };
+
+
 
         private readonly IDictionary<int, IDataSerializableFactory> factories =
             new Dictionary<int, IDataSerializableFactory>();
 
         internal DataSerializer(IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories)
         {
-            try
-            {
-                DataSerializerHook[] hooks =
-                {
-                    new ClusterDataSerializerHook(),
-                    new SpiDataSerializerHook(),
-                    new PartitionDataSerializerHook(),
-                    new ClientDataSerializerHook(),
-                    new MapDataSerializerHook(),
-                    new QueueDataSerializerHook(),
-                    new MultiMapDataSerializerHook(),
-                    new CollectionDataSerializerHook(),
-                    new ExecutorDataSerializerHook(),
-                    new TopicDataSerializerHook(),
-                    new LockDataSerializerHook(),
-                    new SemaphoreDataSerializerHook(),
-                    new AtomicLongDataSerializerHook(),
-                    new CountDownLatchDataSerializerHook()
-                };
-                foreach (DataSerializerHook hook in hooks)
-                {
-                    IDataSerializableFactory factory = hook.CreateFactory();
-                    if (factory != null)
-                    {
-                        Register(hook.GetFactoryId(), factory);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
+            class2Type.TryAdd("com.hazelcast.query.SqlPredicate", typeof (SqlPredicate));
+            class2Type.TryAdd("com.hazelcast.transaction.TransactionOptions", typeof (TransactionOptions));
+            
             if (dataSerializableFactories != null)
             {
                 foreach (var entry in dataSerializableFactories)
@@ -155,10 +127,8 @@ namespace Hazelcast.IO.Serialization
             else
             {
                 string javaClassName = obj.GetJavaClassName();
-                if (!class2Type.ContainsKey(javaClassName))
-                {
-                    class2Type.Add(javaClassName, obj.GetType());
-                }
+
+                class2Type.AddOrUpdate(javaClassName, obj.GetType(), (s, type) => obj.GetType());
                 output.WriteUTF(javaClassName);
             }
             obj.WriteData(output);
