@@ -96,9 +96,9 @@ namespace Hazelcast.Client.Test
             return bytes;
         }
 
-        public static T[] RandomArray<T>(Func<T> randFunc)
+        public static T[] RandomArray<T>(Func<T> randFunc, int size = 0)
         {
-            var array = new T[Random.Next(5) +1];
+            var array = new T[size == 0 ? Random.Next(5)+1 : size];
             for (var i = 0; i < array.Length; i++)
             {
                 array[i] = randFunc();

@@ -78,4 +78,26 @@ namespace Hazelcast.Client.Test
             }
         }
     }
+
+    public class MembershipListener : IMembershipListener
+    {
+        public Action<MembershipEvent> MemberAddedAction { get; set; }
+        public Action<MembershipEvent> MemberRemovedAction { get; set; }
+        public Action<MemberAttributeEvent> MemberAttributeChangedAction { get; set; }
+        public void MemberAdded(MembershipEvent membershipEvent)
+        {
+            if (MemberAddedAction != null) MemberAddedAction(membershipEvent);
+        }
+
+        public void MemberRemoved(MembershipEvent membershipEvent)
+        {
+            if (MemberRemovedAction != null) MemberRemovedAction(membershipEvent);
+        }
+
+        public void MemberAttributeChanged(MemberAttributeEvent memberAttributeEvent)
+        {
+            if (MemberAttributeChangedAction != null) 
+                MemberAttributeChangedAction(memberAttributeEvent);
+        }
+    }
 }

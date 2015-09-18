@@ -92,12 +92,6 @@ namespace Hazelcast.Client.Spi
             return members != null ? members.Values : new HashSet<IMember>();
         }
 
-        public IMember GetRandomMember()
-        {
-            var rand = new Random();
-            return GetMemberList().OrderBy(m => rand.Next()).FirstOrDefault();
-        }
-
         public Address GetMasterAddress()
         {
             var master = GetMemberList().FirstOrDefault();
@@ -175,17 +169,20 @@ namespace Hazelcast.Client.Spi
 
         public void ConnectionRemoved(ClientConnection connection)
         {
-            ClientExecutionService executionService = (ClientExecutionService) _client.GetClientExecutionService();
+            var executionService = (ClientExecutionService) _client.GetClientExecutionService();
             if (Equals(connection.GetAddress(), _ownerConnectionAddress))
             {
                 if (_client.GetLifecycleService().IsRunning())
                 {
                     executionService.SubmitInternal(() =>
                     {
-                        try {
+                        try
+                        {
                             FireConnectionEvent(LifecycleEvent.LifecycleState.ClientDisconnected);
                             ConnectToCluster();
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e)
+                        {
                             Logger.Warning("Could not re-connect to cluster shutting down the client", e);
                             _client.GetLifecycleService().Shutdown();
                         }
@@ -193,10 +190,16 @@ namespace Hazelcast.Client.Spi
                 }
             }
         }
-        
+
         public ClientPrincipal GetPrincipal()
         {
             return _principal;
+        }
+
+        public IMember GetRandomMember()
+        {
+            var rand = new Random();
+            return GetMemberList().OrderBy(m => rand.Next()).FirstOrDefault();
         }
 
         /// <exception cref="System.Exception" />
@@ -220,20 +223,21 @@ namespace Hazelcast.Client.Spi
 
         internal virtual void FireMembershipEvent(MembershipEvent @event)
         {
-            _client.GetClientExecutionService().Submit(() =>
-            {
-                foreach (var listener in _listeners.Values)
+            _client.GetClientExecutionService().Submit(
+                (() =>
                 {
-                    if (@event.GetEventType() == MembershipEvent.MemberAdded)
+                    foreach (var listener in _listeners.Values)
                     {
-                        listener.MemberAdded(@event);
+                        if (@event.GetEventType() == MembershipEvent.MemberAdded)
+                        {
+                            listener.MemberAdded(@event);
+                        }
+                        else
+                        {
+                            listener.MemberRemoved(@event);
+                        }
                     }
-                    else
-                    {
-                        listener.MemberRemoved(@event);
-                    }
-                }
-            });
+                }));
         }
 
         internal virtual IDictionary<Address, IMember> GetMembersRef()
@@ -353,7 +357,8 @@ namespace Hazelcast.Client.Spi
                 }
             }
             throw new InvalidOperationException("Unable to connect to any address in the config! " +
-                                                "The following addresses were tried:" + string.Join(", ", triedAddresses));
+                                                "The following addresses were tried:" +
+                                                string.Join(", ", triedAddresses));
         }
 
         private void FireConnectionEvent(LifecycleEvent.LifecycleState state)
@@ -458,6 +463,5 @@ namespace Hazelcast.Client.Spi
             // add initial member
             _clientMembershipListener.HandleMember(member, MembershipEvent.MemberAdded);
         }
-
     }
 }

@@ -11,11 +11,6 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     internal class ClientIpV6AddressTest : HazelcastBaseTest
     {
-        protected override bool SuppressDefaultClient
-        {
-            get { return true; }
-        }
-
         [Test]
         public void TestIpV6Address()
         {
@@ -30,12 +25,10 @@ namespace Hazelcast.Client.Test
 
         private static void AssertClientWithAddress(string address)
         {
-            var config = new ClientConfig();
-            config.GetNetworkConfig().AddAddress(address);
-            config.AddNearCacheConfig("nearCachedMap*", new NearCacheConfig().SetInMemoryFormat(InMemoryFormat.Object));
-            config.GetSerializationConfig().AddPortableFactory(1, new PortableFactory());
-            config.SetLicenseKey(HazelcastTestClient.UNLIMITED_LICENSE);
-            var client = HazelcastClient.NewHazelcastClient(config);
+            var client = new HazelcastClientFactory().CreateClient(config =>
+            {
+                config.GetNetworkConfig().AddAddress(address);
+            });
 
             var map = client.GetMap<string, string>("ipv6");
             map.Put("key", "val");
