@@ -11,17 +11,13 @@ namespace Hazelcast.Client
 {
     internal sealed class HazelcastClientProxy : IHazelcastInstance
     {
-        internal volatile HazelcastClient client;
+        private volatile HazelcastClient _client;
 
         internal HazelcastClientProxy(HazelcastClient client)
         {
-            //import com.hazelcast.core.PartitionService;
-            this.client = client;
+            _client = client;
         }
 
-        //    public Config getConfig() {
-        //        return getClient().getConfig();
-        //    }
         public string GetName()
         {
             return GetClient().GetName();
@@ -72,11 +68,6 @@ namespace Hazelcast.Client
             return GetClient().GetLocalEndpoint();
         }
 
-        //public IExecutorService GetExecutorService(string name)
-        //{
-        //    return GetClient().GetExecutorService(name);
-        //}
-
         public ITransactionContext NewTransactionContext()
         {
             return GetClient().NewTransactionContext();
@@ -112,7 +103,6 @@ namespace Hazelcast.Client
             return GetClient().GetDistributedObjects();
         }
 
-
         public string AddDistributedObjectListener(IDistributedObjectListener distributedObjectListener)
         {
             return GetClient().AddDistributedObjectListener(distributedObjectListener);
@@ -123,20 +113,14 @@ namespace Hazelcast.Client
             return GetClient().RemoveDistributedObjectListener(registrationId);
         }
 
-        //    public PartitionService getPartitionService() {
-        //        return getClient().getPartitionService();
-        //    }
         public IClientService GetClientService()
         {
             return GetClient().GetClientService();
         }
 
-        //    public LoggingService getLoggingService() {
-        //        return getClient().getLoggingService();
-        //    }
         public ILifecycleService GetLifecycleService()
         {
-            HazelcastClient hz = client;
+            HazelcastClient hz = _client;
             return hz != null ? hz.GetLifecycleService() : new TerminatedLifecycleService();
         }
 
@@ -144,12 +128,6 @@ namespace Hazelcast.Client
         {
             return GetClient().GetDistributedObject<T>(serviceName, name);
         }
-
-        //[Obsolete]
-        //public T GetDistributedObject<T>(string serviceName, object id) where T:IDistributedObject
-        //{
-        //    return GetClient().GetDistributedObject(serviceName, id);
-        //}
 
         public ConcurrentDictionary<string, object> GetUserContext()
         {
@@ -171,9 +149,9 @@ namespace Hazelcast.Client
             return GetClient().GetSerializationService();
         }
 
-        private HazelcastClient GetClient()
+        internal HazelcastClient GetClient()
         {
-            HazelcastClient c = client;
+            HazelcastClient c = _client;
             if (c == null || !c.GetLifecycleService().IsRunning())
             {
                 throw new HazelcastInstanceNotActiveException();

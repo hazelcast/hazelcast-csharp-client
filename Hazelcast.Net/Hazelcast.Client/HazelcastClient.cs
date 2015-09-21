@@ -375,12 +375,11 @@ namespace Hazelcast.Client
             {
                 try
                 {
-                    proxy.client.GetLifecycleService().Shutdown();
+                    proxy.GetClient().GetLifecycleService().Shutdown();
                 }
                 catch (Exception)
                 {
                 }
-                proxy.client = null;
             }
             Clients.Clear();
         }

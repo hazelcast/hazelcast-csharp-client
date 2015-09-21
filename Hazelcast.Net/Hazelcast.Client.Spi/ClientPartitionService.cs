@@ -31,8 +31,8 @@ namespace Hazelcast.Client.Spi
 
         public void Start()
         {
+            _isLive = true;
             GetInitialPartitions();
-
             _partitionThread = new Thread(RefreshPartitionsWithFixedDelay) {IsBackground = true};
             _partitionThread.Start();
         }

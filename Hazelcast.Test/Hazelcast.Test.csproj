@@ -128,6 +128,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientNearCacheTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientPartitionTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientQueueTest.cs">
       <SubType>Code</SubType>
     </Compile>
