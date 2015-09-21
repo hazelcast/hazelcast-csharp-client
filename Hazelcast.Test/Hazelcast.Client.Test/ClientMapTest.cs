@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Hazelcast.Client.Model;
+using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -14,7 +15,12 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientMapTest : HazelcastBaseTest
     {
-        //
+        protected override void ConfigureClient(ClientConfig config)
+        {
+            base.ConfigureClient(config);
+            config.GetSerializationConfig().AddPortableFactory(1, new PortableFactory());
+        }
+
         [SetUp]
         public void Init()
         {

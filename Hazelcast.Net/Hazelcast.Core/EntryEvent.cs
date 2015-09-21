@@ -11,9 +11,9 @@ namespace Hazelcast.Core
     [Serializable]
     public class EntryEvent<K, V> : AbstractMapEvent
     {
-        protected internal K key;
-        protected internal V oldValue;
-        protected internal V value;
+        private K key;
+        private V oldValue;
+        private V value;
 
         public EntryEvent(object source, IMember member, EntryEventType eventType, K key, V value)
             : this(source, member, eventType, key, default(V), value)

@@ -9,6 +9,7 @@ namespace Hazelcast.Util
 {
     internal class StripedTaskScheduler : TaskScheduler, IDisposable
     {
+        private static readonly Random random = new Random();
         private readonly List<Thread> _threads;
         private IDictionary<int,BlockingCollection<Task>> _tasks;
 
@@ -94,16 +95,25 @@ namespace Hazelcast.Util
         protected override void QueueTask(Task task)
         {
             var state = task.AsyncState as ValueType;
+
+            BlockingCollection<Task> blockingTasks;
+            int threadId;
+            // if task has a partitionId, use that to assign to the correct queue, if not 
+            // randomly assign it
             if (state is int)
             {
-                BlockingCollection<Task> blockingTasks;
-                var partitionId = Math.Abs((int)state);
-                var threadId = partitionId % _numberOfThreads;
-                _tasks.TryGetValue(threadId, out blockingTasks);
-                if (blockingTasks != null && !blockingTasks.IsAddingCompleted)
-                {
-                    blockingTasks.Add(task);
-                }
+                var partitionId = Math.Abs((int) state);
+                threadId = partitionId%_numberOfThreads;
+            }
+            else
+            {
+                threadId = random.Next(_numberOfThreads);
+            }
+
+            _tasks.TryGetValue(threadId, out blockingTasks);
+            if (blockingTasks != null && !blockingTasks.IsAddingCompleted)
+            {
+                blockingTasks.Add(task);
             }
         }
 
