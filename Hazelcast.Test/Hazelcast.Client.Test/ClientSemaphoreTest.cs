@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Test
 		    });
             t.Start();
 
-            Thread.Sleep(1000);
+            Thread.Sleep(100);
 			s.Release(2);
 			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
 			Assert.AreEqual(1, s.AvailablePermits());

@@ -44,15 +44,14 @@ namespace Hazelcast.Client.Test
 		//        q = hz.getQueue(queueName);
 		//    }
 		/// <exception cref="System.Exception"></exception>
-		[Test]
+		
+        [Test]
 		public virtual void TestListener()
 		{
 			Assert.AreEqual(0, q.Count);
 			CountdownEvent latch = new CountdownEvent(5);
             var listener = new ClientListTest.Listener<object>(latch);
 			string id = q.AddItemListener(listener, true);
-
-            Thread.Sleep(500);
 
 		    var t1 = new Thread(delegate(object o)
 		    {
@@ -75,23 +74,18 @@ namespace Hazelcast.Client.Test
 		{
 		    var qX = Client.GetQueue<object>(Name);
 
-		    const int TestItemCount = 1 * 1000;
+		    const int TestItemCount = 1 * 100;
 
             Assert.AreEqual(0, qX.Count);
 
 		    for (int i = 0; i < TestItemCount; i++)
 		    {
                 qX.Offer("ali");
-
 		    }
-
-            Thread.Sleep(1000);
 
             Assert.AreEqual(TestItemCount, qX.Count);
 
-
             var latch = new CountdownEvent(TestItemCount * TestItemCount);
-            
             for (var j = 0; j < TestItemCount; j++)
 		    {
                 var listener = new ItemListener<object>(null, latch);
@@ -99,23 +93,6 @@ namespace Hazelcast.Client.Test
                 string id = qX.AddItemListener(listener, true);
                 Assert.NotNull(id);		        
 		    }
-
-
-
-            //var t1 = new Thread(delegate(object o)
-            //{
-            //    for (int i = 0; i < TestItemCount; i++)
-            //    {
-            //        qX.Poll();
-            //    }
-            //});
-            //t1.Start();
-
-            //for (int i = 0; i < TestItemCount; i++)
-            //{
-            //    qX.Remove();
-
-            //}
             
             qX.Clear();
 
@@ -145,7 +122,7 @@ namespace Hazelcast.Client.Test
             {
                 try
                 {
-                    Thread.Sleep(2 * 1000);
+                    Thread.Sleep(100);
                 }
                 catch (Exception e)
                 {
@@ -154,7 +131,7 @@ namespace Hazelcast.Client.Test
             });
             t1.Start();
 
-			bool result_1 = q.Offer("item", 5, TimeUnit.SECONDS);
+			bool result_1 = q.Offer("item", 200, TimeUnit.MILLISECONDS);
 			Assert.IsTrue(result_1);
 			for (int i_1 = 0; i_1 < 10; i_1++)
 			{
@@ -175,7 +152,7 @@ namespace Hazelcast.Client.Test
             {
                 try
                 {
-                    Thread.Sleep(2 * 1000);
+                    Thread.Sleep(200);
                 }
                 catch (Exception e)
                 {
@@ -184,7 +161,7 @@ namespace Hazelcast.Client.Test
             });
             t2.Start();
 
-            object o_1 = q.Poll(5, TimeUnit.SECONDS);
+            object o_1 = q.Poll(300, TimeUnit.MILLISECONDS);
 			Assert.AreEqual("item1", o_1);
 			t1.Join(10000);
 			t2.Join(10000);
