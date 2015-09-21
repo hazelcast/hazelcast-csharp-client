@@ -110,12 +110,16 @@ namespace Hazelcast.Client.Test
                 delegate { latch.Signal(); }
                 ), true);
 
-            var f1 = map.PutAsync("key", "value1", 3, TimeUnit.SECONDS);
+            var f1 = map.PutAsync("key", "value1", 100, TimeUnit.MILLISECONDS);
             Assert.IsNull(f1.Result);
             Assert.AreEqual("value1", map.Get("key"));
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
-            Assert.IsNull(map.Get("key"));
+
+            TestSupport.AssertTrueEventually(() =>
+            {
+                Assert.IsNull(map.Get("key"));
+            });
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -390,20 +394,16 @@ namespace Hazelcast.Client.Test
             var reg1 = map.AddEntryListener(listener1, false);
             var reg2 = map.AddEntryListener(listener2, "key3", true);
 
-            Thread.Sleep(1000);
 
             map.Put("key1", "value1");
             map.Put("key2", "value2");
             map.Put("key3", "value3");
             map.Put("key4", "value4");
             map.Put("key5", "value5");
-
-            Thread.Sleep(10000);
-
             map.Remove("key1");
             map.Remove("key3");
 
-            Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(1000)));
+            Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
@@ -459,11 +459,8 @@ namespace Hazelcast.Client.Test
             {
                 map2.Put(1, i);
             }
-            while (eventDataReceived.Count != maxSize - 1)
-            {
-                Thread.Sleep(100);
-            }
-            Assert.AreEqual(maxSize - 1, eventDataReceived.Count);
+
+            TestSupport.AssertTrueEventually(() => Assert.AreEqual(maxSize - 1, eventDataReceived.Count));
 
             var oldEventData = -1;
             foreach (var eventData in eventDataReceived)
@@ -489,10 +486,7 @@ namespace Hazelcast.Client.Test
                 map.Put("key" + i, new[] {byte.MaxValue});
             }
 
-            while (map.Size() < TestItemCount)
-            {
-                Thread.Sleep(1000);
-            }
+            Assert.AreEqual(map.Size(), TestItemCount);
 
             for (var i = 0; i < TestItemCount; i++)
             {
@@ -543,15 +537,11 @@ namespace Hazelcast.Client.Test
             map.AddEntryListener(listener1, new SqlPredicate("this == value1"), false);
             map.AddEntryListener(listener2, new SqlPredicate("this == value3"), "key3", true);
 
-            Thread.Sleep(1000);
-
             map.Put("key1", "value1");
             map.Put("key2", "value2");
             map.Put("key3", "value3");
             map.Put("key4", "value4");
             map.Put("key5", "value5");
-
-            Thread.Sleep(1000);
 
             map.Remove("key1");
             map.Remove("key3");
@@ -574,16 +564,11 @@ namespace Hazelcast.Client.Test
 
             var reg1 = map.AddEntryListener(listener1, false);
 
-            Thread.Sleep(1000);
             Assert.IsTrue(map.RemoveEntryListener(reg1));
-
-            Thread.Sleep(1000);
 
             map.Put("key1", "value1");
 
-            Thread.Sleep(1000);
-
-            Assert.IsFalse(latch1Add.Wait(TimeSpan.FromSeconds(5)));
+            Assert.IsFalse(latch1Add.Wait(TimeSpan.FromSeconds(1)));
         }
 
         //TODO mapstore
@@ -613,14 +598,14 @@ namespace Hazelcast.Client.Test
         {
             map.Put("key1", "value1");
             Assert.AreEqual("value1", map.Get("key1"));
-            map.Lock("key1", 2, TimeUnit.SECONDS);
+            var leaseTime = 500;
+            map.Lock("key1", leaseTime, TimeUnit.MILLISECONDS);
             var latch = new CountdownEvent(1);
             var t1 = new Thread(delegate(object o)
             {
-                map.TryPut("key1", "value2", 5, TimeUnit.SECONDS);
+                map.TryPut("key1", "value2", 2000, TimeUnit.MILLISECONDS);
                 latch.Signal();
             });
-
             t1.Start();
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsFalse(map.IsLocked("key1"));
@@ -632,7 +617,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestLockTtl2()
         {
-            map.Lock("key1", 3, TimeUnit.SECONDS);
+            map.Lock("key1", 1, TimeUnit.SECONDS);
             var latch = new CountdownEvent(2);
             var t1 = new Thread(delegate(object o)
             {
@@ -642,7 +627,7 @@ namespace Hazelcast.Client.Test
                 }
                 try
                 {
-                    if (map.TryLock("key1", 5, TimeUnit.SECONDS))
+                    if (map.TryLock("key1", 2, TimeUnit.SECONDS))
                     {
                         latch.Signal();
                     }
@@ -707,11 +692,13 @@ namespace Hazelcast.Client.Test
             object key = "Key";
             object value = "Value";
 
-            var result = map.PutIfAbsent(key, value, 1, TimeUnit.SECONDS);
-            Thread.Sleep(2000);
+            var ttl = 100;
+            var result = map.PutIfAbsent(key, value, ttl, TimeUnit.MILLISECONDS);
 
-            Assert.AreEqual(null, result);
-            Assert.AreEqual(null, map.Get(key));
+            TestSupport.AssertTrueEventually(() => {
+                Assert.AreEqual(null, result);
+                Assert.AreEqual(null, map.Get(key));
+            });
         }
 
         [Test]
@@ -744,23 +731,29 @@ namespace Hazelcast.Client.Test
         public virtual void TestPutTransient()
         {
             Assert.AreEqual(0, map.Size());
+            var ttl = 100;
 
-            map.PutTransient("key1", "value1", 2, TimeUnit.SECONDS);
+            map.PutTransient("key1", "value1", 100, TimeUnit.MILLISECONDS);
             Assert.AreEqual("value1", map.Get("key1"));
-
-            Thread.Sleep(TimeSpan.FromSeconds(3));
-
-            Assert.AreNotEqual("value1", map.Get("key1"));
+           
+            TestSupport.AssertTrueEventually(() =>
+            {
+                Assert.AreNotEqual("value1", map.Get("key1"));
+            });
         }
 
         /// <exception cref="System.Exception"></exception>
         [Test]
         public virtual void TestPutTtl()
         {
-            map.Put("key1", "value1", 1, TimeUnit.SECONDS);
+            var ttl = 100;
+            map.Put("key1", "value1", ttl, TimeUnit.MILLISECONDS);
             Assert.IsNotNull(map.Get("key1"));
-            Thread.Sleep(2000);
-            Assert.IsNull(map.Get("key1"));
+
+            TestSupport.AssertTrueEventually(() =>
+            {
+                Assert.IsNull(map.Get("key1"));
+            });
         }
 
         [Test]
@@ -810,10 +803,10 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual("value1", map.Get("key1"));
             map.Set("key1", "value2");
             Assert.AreEqual("value2", map.Get("key1"));
-            map.Set("key1", "value3", 1, TimeUnit.SECONDS);
+            map.Set("key1", "value3", 100, TimeUnit.MILLISECONDS);
             Assert.AreEqual("value3", map.Get("key1"));
-            Thread.Sleep(2000);
-            Assert.IsNull(map.Get("key1"));
+
+            TestSupport.AssertTrueEventually(() => Assert.IsNull(map.Get("key1")));
         }
 
         /// <exception cref="System.Exception"></exception>

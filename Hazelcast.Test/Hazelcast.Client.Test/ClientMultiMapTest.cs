@@ -119,8 +119,6 @@ namespace Hazelcast.Client.Test
 			mm.AddEntryListener(listener1, true);
 			mm.AddEntryListener(listener2, "key3", true);
 
-            Thread.Sleep(1000);
-
 			mm.Put("key1", "value1");
 			mm.Put("key1", "value2");
 			mm.Put("key1", "value3");
@@ -149,13 +147,11 @@ namespace Hazelcast.Client.Test
                 delegate(EntryEvent<object, object> @event) {  }  );
 
 		    var listenerId = mm.AddEntryListener(listener1, true);
-		    Thread.Sleep(1000);
 
 			mm.Put("key1", "value1");
 			Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(10)));
 
 		    Assert.IsTrue(mm.RemoveEntryListener(listenerId));
-		    Thread.Sleep(1000);
 			mm.Remove("key1");
             Assert.IsFalse(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
 		}
@@ -184,7 +180,7 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void TestLockTtl()
 		{
-			mm.Lock("key1", 3, TimeUnit.SECONDS);
+			mm.Lock("key1", 1, TimeUnit.SECONDS);
             CountdownEvent latch = new CountdownEvent(2);
             var t = new Thread(delegate(object o)
             {
@@ -194,7 +190,7 @@ namespace Hazelcast.Client.Test
                 }
                 try
                 {
-                    if (mm.TryLock("key1", 5, TimeUnit.SECONDS))
+                    if (mm.TryLock("key1", 2, TimeUnit.SECONDS))
                     {
                         latch.Signal();
                     }
@@ -213,13 +209,13 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void TestTryLock()
 		{
-			Assert.IsTrue(mm.TryLock("key1", 2, TimeUnit.SECONDS));
+			Assert.IsTrue(mm.TryLock("key1", 200, TimeUnit.MILLISECONDS));
             CountdownEvent latch = new CountdownEvent(1);
             var t = new Thread(delegate(object o)
             {
                 try
                 {
-                    if (!ClientMultiMapTest.mm.TryLock("key1", 2, TimeUnit.SECONDS))
+                    if (!ClientMultiMapTest.mm.TryLock("key1", 200, TimeUnit.MILLISECONDS))
                     {
                         latch.Signal();
                     }
@@ -231,7 +227,7 @@ namespace Hazelcast.Client.Test
             t.Start();
 
 
-			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(100)));
+			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
 			Assert.IsTrue(mm.IsLocked("key1"));
 
 
@@ -252,11 +248,11 @@ namespace Hazelcast.Client.Test
             });
             t2.Start();
 
-			Thread.Sleep(1000);
+			Thread.Sleep(100);
 			mm.Unlock("key1");
 
 
-			Assert.IsTrue(latch2.Wait(TimeSpan.FromSeconds(100)));
+			Assert.IsTrue(latch2.Wait(TimeSpan.FromSeconds(10)));
 			Assert.IsTrue(mm.IsLocked("key1"));
 			mm.ForceUnlock("key1");
 		}

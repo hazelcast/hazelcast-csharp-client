@@ -79,14 +79,14 @@ namespace Hazelcast.Client.Test
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnMap = context.GetMap<object, object>(_name);
-            Assert.IsNull(txnMap.Put("key1", "value1", 500, TimeUnit.MILLISECONDS));
+            var ttlMillis = 100;
+            Assert.IsNull(txnMap.Put("key1", "value1", ttlMillis, TimeUnit.MILLISECONDS));
             Assert.AreEqual("value1", txnMap.Get("key1"));
+         
             context.CommitTransaction();
-
+            
             Assert.AreEqual("value1", _map.Get("key1"));
-            Thread.Sleep(5000);
-            Assert.AreEqual(0, _map.Size());
-            Assert.IsNull(_map.Get("key1"));
+            TestSupport.AssertTrueEventually(() => Assert.IsNull(_map.Get("key1")));
         }
 
         [Test]

@@ -14,21 +14,43 @@ namespace Hazelcast.Client.Test
 
         public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds, string taskName = "")
         {
-            Assert.IsTrue(task.Wait(timeoutSeconds*1000), "Task " + taskName + " did not complete in " + timeoutSeconds + " seconds");
+            Assert.IsTrue(task.Wait(timeoutSeconds * 1000), "Task " + taskName + " did not complete in " + timeoutSeconds + " seconds");
         }
 
         public static void AssertTrueEventually(Func<bool> assertFunc, int timeoutSeconds = TimeoutSeconds, string assertion = null)
         {
-            Stopwatch stopWatch= new Stopwatch();
+            Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            while (stopWatch.ElapsedMilliseconds < timeoutSeconds*1000)
+            while (stopWatch.ElapsedMilliseconds < timeoutSeconds * 1000)
             {
                 if (assertFunc()) return;
                 Thread.Sleep(250);
             }
 
             Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds");
+        }
+
+        public static void AssertTrueEventually(Action asserAction, int timeoutSeconds = TimeoutSeconds, String assertion = null)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            Exception last = null;
+            while (stopWatch.ElapsedMilliseconds < timeoutSeconds * 1000)
+            {
+                try
+                {
+                    asserAction();
+                    return;
+                }
+                catch (AssertionException e)
+                {
+                    Thread.Sleep(250);
+                    last = e;
+                }
+            }
+            Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds: " + last);
         }
 
         public static void AssertOpenEventually(CountdownEvent latch, int timeoutSeconds = TimeoutSeconds, string message = null)
@@ -81,12 +103,12 @@ namespace Hazelcast.Client.Test
 
         public static short RandomShort()
         {
-            return (short) Random.Next();
+            return (short)Random.Next();
         }
 
         public static byte RandomByte()
         {
-            return (byte) Random.Next();
+            return (byte)Random.Next();
         }
 
         public static byte[] RandomBytes()
@@ -98,13 +120,13 @@ namespace Hazelcast.Client.Test
 
         public static T[] RandomArray<T>(Func<T> randFunc, int size = 0)
         {
-            var array = new T[size == 0 ? Random.Next(5)+1 : size];
+            var array = new T[size == 0 ? Random.Next(5) + 1 : size];
             for (var i = 0; i < array.Length; i++)
             {
                 array[i] = randFunc();
             }
             return array;
-        } 
+        }
 
         public static bool RandomBool()
         {
@@ -124,7 +146,7 @@ namespace Hazelcast.Client.Test
 
         public static float RandomFloat()
         {
-            return (float) Random.NextDouble();
+            return (float)Random.NextDouble();
         }
 
         public static double RandomDouble()
@@ -132,6 +154,6 @@ namespace Hazelcast.Client.Test
             return Random.NextDouble();
         }
 
-        
+
     }
 }

@@ -44,9 +44,7 @@ namespace Hazelcast.Client.Test
             var latch = new CountdownEvent(1);
 			var listener = new _MessageListener(latch);
 		    string id = t.AddMessageListener(listener);
-            Thread.Sleep(1000);
 		    Assert.IsTrue(t.RemoveMessageListener(id));
-            Thread.Sleep(1000);
 
             t.Publish("naber");
 		    Assert.IsFalse(latch.Wait(TimeSpan.FromSeconds(5)));

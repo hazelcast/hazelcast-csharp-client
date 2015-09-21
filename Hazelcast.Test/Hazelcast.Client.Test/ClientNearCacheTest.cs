@@ -84,8 +84,10 @@ namespace Hazelcast.Client.Test
             var mapImpl = map as ClientMapProxy<object, object>;
             var clientNearCache = mapImpl.NearCache;
 
-            Thread.Sleep(1000);
-            Assert.AreEqual(1, clientNearCache.cache.Count);
+            TestSupport.AssertTrueEventually(() =>
+            {
+                Assert.AreEqual(1, clientNearCache.cache.Count);
+            });
 
             val = map.GetAsync("key");
             result = val.Result;
