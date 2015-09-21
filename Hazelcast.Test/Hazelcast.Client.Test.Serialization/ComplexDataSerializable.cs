@@ -3,7 +3,8 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Test.Serialization
 {
-    internal class ComplexDataSerializable : IDataSerializable
+
+    public class ComplexDataSerializable : IDataSerializable
     {
         private IDataSerializable ds;
         private IDataSerializable ds2;
@@ -37,6 +38,30 @@ namespace Hazelcast.Client.Test.Serialization
             output.WriteObject(ds);
             output.WriteObject(portable);
             output.WriteObject(ds2);
+        }
+
+        protected bool Equals(ComplexDataSerializable other)
+        {
+            return Equals(ds, other.ds) && Equals(ds2, other.ds2) && Equals(portable, other.portable);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ComplexDataSerializable) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (ds != null ? ds.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (ds2 != null ? ds2.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (portable != null ? portable.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

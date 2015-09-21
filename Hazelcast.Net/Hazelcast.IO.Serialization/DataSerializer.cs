@@ -2,6 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Transaction;
@@ -25,21 +27,16 @@ namespace Hazelcast.IO.Serialization
     /// </remarks>
     internal sealed class DataSerializer : IStreamSerializer<IDataSerializable>
     {
-        private readonly ConcurrentDictionary<string, Type> class2Type = new ConcurrentDictionary<string, Type>
-        {
-            
-        };
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (DataSerializer));
 
-
+        private readonly ConcurrentDictionary<string, Type> class2Type = new ConcurrentDictionary<string, Type>();
 
         private readonly IDictionary<int, IDataSerializableFactory> factories =
             new Dictionary<int, IDataSerializableFactory>();
 
         internal DataSerializer(IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories)
         {
-            class2Type.TryAdd("com.hazelcast.query.SqlPredicate", typeof (SqlPredicate));
-            class2Type.TryAdd("com.hazelcast.transaction.TransactionOptions", typeof (TransactionOptions));
-            
+            ScanAssemblyForSerializables();
             if (dataSerializableFactories != null)
             {
                 foreach (var entry in dataSerializableFactories)
@@ -147,8 +144,7 @@ namespace Hazelcast.IO.Serialization
             {
                 if (current.Equals(factory))
                 {
-                    Logger.GetLogger(GetType())
-                        .Warning("DataSerializableFactory[" + factoryId + "] is already registered! Skipping " + factory);
+                    Logger.Warning("DataSerializableFactory[" + factoryId + "] is already registered! Skipping " + factory);
                 }
                 else
                 {
@@ -159,6 +155,25 @@ namespace Hazelcast.IO.Serialization
             else
             {
                 factories.Add(factoryId, factory);
+            }
+        }
+
+        private void ScanAssemblyForSerializables()
+        {
+            var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(m => m.GetTypes())
+                .Where(t => typeof(IDataSerializable).IsAssignableFrom(t) && t.IsClass && t.IsPublic && !t.IsAbstract);
+
+            foreach (var type in types)
+            {
+                try
+                {
+                    var instance = (IDataSerializable)Activator.CreateInstance(type);
+                    class2Type.AddOrUpdate(instance.GetJavaClassName(), type, (s, ignored) => type);
+                }
+                catch (MissingMethodException e)
+                {
+                    Logger.Warning("Could not find a suitable empty constructor for type " + type);
+                }
             }
         }
     }

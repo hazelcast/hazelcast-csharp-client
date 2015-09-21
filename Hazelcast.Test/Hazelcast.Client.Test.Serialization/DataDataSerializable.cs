@@ -3,7 +3,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Test.Serialization
 {
-    internal class DataDataSerializable : IDataSerializable
+    public class DataDataSerializable : IDataSerializable
     {
         internal IData Data;
 

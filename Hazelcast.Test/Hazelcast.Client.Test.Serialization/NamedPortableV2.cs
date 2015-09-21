@@ -42,6 +42,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() == typeof(NamedPortable)) return base.Equals((NamedPortable)obj);
             if (obj.GetType() != this.GetType()) return false;
             return Equals((NamedPortableV2) obj);
         }
