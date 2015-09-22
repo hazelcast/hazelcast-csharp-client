@@ -15,6 +15,11 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientNearCacheTest : HazelcastBaseTest
     {
+        protected override void ConfigureClient(ClientConfig config)
+        {
+            base.ConfigureClient(config);
+            config.AddNearCacheConfig("nearCachedMap*", new NearCacheConfig().SetInMemoryFormat(InMemoryFormat.Object));
+        }
 
         internal static IMap<object, object> map;
 

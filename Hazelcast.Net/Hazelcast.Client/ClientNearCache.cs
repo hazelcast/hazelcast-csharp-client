@@ -76,11 +76,11 @@ namespace Hazelcast.Client
                 DistributedEventHandler handler = null;
                 if (cacheType == ClientNearCacheType.Map)
                 {
-                    request = MapAddEntryListenerCodec.EncodeRequest(mapName, false);
+                    request = MapAddNearCacheEntryListenerCodec.EncodeRequest(mapName, false);
 
                     handler = message =>
                     {
-                        MapAddEntryListenerCodec.AbstractEventHandler.Handle(message,
+                        MapAddNearCacheEntryListenerCodec.AbstractEventHandler.Handle(message,
                             (key, value, oldValue, mergingValue, type, uuid, entries) =>
                             {
                                 CacheRecord removed;
@@ -88,22 +88,13 @@ namespace Hazelcast.Client
                             });
                     };
                 }
-                else if (cacheType == ClientNearCacheType.ReplicatedMap)
-                {
-                    //TODO REPLICATED NEARCACHE
-
-                    //request = new ClientReplicatedMapAddEntryListenerRequest(mapName, null, null);
-                    //handler = new EventHandler<PortableEntryEvent>() {
-                    //    public void handle(PortableEntryEvent event) {
-                    //        cache.remove(event.getKey());
-                    //    }
-                    //};
-                }
                 else
                 {
                     throw new NotImplementedException("Near cache is not available for this type of data structure");
                 }
-                registrationId = context.GetListenerService().StartListening(request, handler, m => MapAddEntryListenerCodec.DecodeResponse(m).response);
+
+                registrationId = context.GetListenerService().StartListening(request,
+                    handler, m => MapAddNearCacheEntryListenerCodec.DecodeResponse(m).response);
             }
             catch (Exception e)
             {
