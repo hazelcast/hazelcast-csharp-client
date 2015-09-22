@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Hazelcast.Config;
+using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
 using NUnit.Framework;
@@ -327,7 +328,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(p, serializationService.ToObject<RawDataPortable>(data));
         }
 
-        [Test, Ignore] //TODO: FixDataSerializable
+        [Test]
         public void TestWriteDataWithPortable()
         {
             var ss = new SerializationServiceBuilder()
@@ -386,7 +387,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(objectCarryingPortable1, objectCarryingPortable2);
         }
 
-        [Test, Ignore] //TODO: Fix DataSerializable
+        [Test]
         public void TestWriteObjectWithPortable()
         {
             var ss = new SerializationServiceBuilder()

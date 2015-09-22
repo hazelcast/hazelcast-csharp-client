@@ -9,8 +9,12 @@ namespace Hazelcast.Core
 	public class SqlPredicate: IPredicate<object,object>
 	{
 		private String sql;
-		
-		public SqlPredicate (String sql)
+
+	    public SqlPredicate()
+	    {
+	    }
+
+	    public SqlPredicate (String sql)
 		{
 			this.sql = sql;
 		}
