@@ -12,50 +12,17 @@ namespace Hazelcast.Client.Test
         private const int TimeoutSeconds = 30;
         private static readonly Random Random = new Random();
 
-        public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds, string taskName = "")
+        public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds,
+            string taskName = "")
         {
-            Assert.IsTrue(task.Wait(timeoutSeconds * 1000), "Task " + taskName + " did not complete in " + timeoutSeconds + " seconds");
+            Assert.IsTrue(task.Wait(timeoutSeconds*1000),
+                "Task " + taskName + " did not complete in " + timeoutSeconds + " seconds");
         }
 
-        public static void AssertTrueEventually(Func<bool> assertFunc, int timeoutSeconds = TimeoutSeconds, string assertion = null)
+        public static void AssertOpenEventually(CountdownEvent latch, int timeoutSeconds = TimeoutSeconds,
+            string message = null)
         {
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            while (stopWatch.ElapsedMilliseconds < timeoutSeconds * 1000)
-            {
-                if (assertFunc()) return;
-                Thread.Sleep(250);
-            }
-
-            Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds");
-        }
-
-        public static void AssertTrueEventually(Action asserAction, int timeoutSeconds = TimeoutSeconds, String assertion = null)
-        {
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            Exception last = null;
-            while (stopWatch.ElapsedMilliseconds < timeoutSeconds * 1000)
-            {
-                try
-                {
-                    asserAction();
-                    return;
-                }
-                catch (AssertionException e)
-                {
-                    Thread.Sleep(250);
-                    last = e;
-                }
-            }
-            Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds: " + last);
-        }
-
-        public static void AssertOpenEventually(CountdownEvent latch, int timeoutSeconds = TimeoutSeconds, string message = null)
-        {
-            var completed = latch.Wait(timeoutSeconds * 1000);
+            var completed = latch.Wait(timeoutSeconds*1000);
             if (message == null)
             {
                 Assert.IsTrue(completed,
@@ -72,50 +39,42 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        public static Task<bool> WaitForClientState(IHazelcastInstance instance, LifecycleEvent.LifecycleState state)
+        public static void AssertTrueEventually(Func<bool> assertFunc, int timeoutSeconds = TimeoutSeconds,
+            string assertion = null)
         {
-            var task = new TaskCompletionSource<bool>();
-            var regId = instance.GetLifecycleService().AddLifecycleListener(new LifecycleListener(l =>
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            while (stopWatch.ElapsedMilliseconds < timeoutSeconds*1000)
             {
-                if (l.GetState() == state)
+                if (assertFunc()) return;
+                Thread.Sleep(250);
+            }
+
+            Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds");
+        }
+
+        public static void AssertTrueEventually(Action asserAction, int timeoutSeconds = TimeoutSeconds,
+            string assertion = null)
+        {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            Exception last = null;
+            while (stopWatch.ElapsedMilliseconds < timeoutSeconds*1000)
+            {
+                try
                 {
-                    task.TrySetResult(true);
+                    asserAction();
+                    return;
                 }
-            }));
-
-            task.Task.ContinueWith(f =>
-            {
-                instance.GetLifecycleService().RemoveLifecycleListener(regId);
-            });
-
-            return task.Task;
-        }
-
-        public static string RandomString()
-        {
-            return Guid.NewGuid().ToString();
-        }
-
-        public static char RandomChar()
-        {
-            return RandomString()[0];
-        }
-
-        public static short RandomShort()
-        {
-            return (short)Random.Next();
-        }
-
-        public static byte RandomByte()
-        {
-            return (byte)Random.Next();
-        }
-
-        public static byte[] RandomBytes()
-        {
-            var bytes = new byte[10];
-            Random.NextBytes(bytes);
-            return bytes;
+                catch (AssertionException e)
+                {
+                    Thread.Sleep(250);
+                    last = e;
+                }
+            }
+            Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds: " + last);
         }
 
         public static T[] RandomArray<T>(Func<T> randFunc, int size = 0)
@@ -133,20 +92,21 @@ namespace Hazelcast.Client.Test
             return Random.Next() > 0;
         }
 
-        public static int RandomInt()
+        public static byte RandomByte()
         {
-            return Random.Next();
-        }
-        public static long RandomLong()
-        {
-            byte[] buffer = new byte[8];
-            Random.NextBytes(buffer);
-            return BitConverter.ToInt64(buffer, 0);
+            return (byte) Random.Next();
         }
 
-        public static float RandomFloat()
+        public static byte[] RandomBytes()
         {
-            return (float)Random.NextDouble();
+            var bytes = new byte[10];
+            Random.NextBytes(bytes);
+            return bytes;
+        }
+
+        public static char RandomChar()
+        {
+            return RandomString()[0];
         }
 
         public static double RandomDouble()
@@ -154,6 +114,47 @@ namespace Hazelcast.Client.Test
             return Random.NextDouble();
         }
 
+        public static float RandomFloat()
+        {
+            return (float) Random.NextDouble();
+        }
 
+        public static int RandomInt()
+        {
+            return Random.Next();
+        }
+
+        public static long RandomLong()
+        {
+            var buffer = new byte[8];
+            Random.NextBytes(buffer);
+            return BitConverter.ToInt64(buffer, 0);
+        }
+
+        public static short RandomShort()
+        {
+            return (short) Random.Next();
+        }
+
+        public static string RandomString()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
+        public static Task<bool> WaitForClientState(IHazelcastInstance instance, LifecycleEvent.LifecycleState state)
+        {
+            var task = new TaskCompletionSource<bool>();
+            var regId = instance.GetLifecycleService().AddLifecycleListener(new LifecycleListener(l =>
+            {
+                if (l.GetState() == state)
+                {
+                    task.TrySetResult(true);
+                }
+            }));
+
+            task.Task.ContinueWith(f => { instance.GetLifecycleService().RemoveLifecycleListener(regId); });
+
+            return task.Task;
+        }
     }
 }

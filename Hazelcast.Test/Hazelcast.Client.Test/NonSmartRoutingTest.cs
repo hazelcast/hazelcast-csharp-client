@@ -12,6 +12,8 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class NonSmartRoutingTest : HazelcastBaseTest
     {
+        private int _nodeId;
+
         protected override void ConfigureClient(ClientConfig config)
         {
             base.ConfigureClient(config);
@@ -21,27 +23,13 @@ namespace Hazelcast.Client.Test
         [TestFixtureSetUp]
         public void Setup()
         {
-            var resetEvent = new ManualResetEventSlim();
-            var regId = Client.GetCluster().AddMembershipListener(new MembershipListener
-            {
-                MemberAddedAction = @event => resetEvent.Set()
-            });
-            Cluster.AddNode();
-            Assert.IsTrue(resetEvent.Wait(30*1000), "The member did not get added in 30 seconds");
-            Assert.IsTrue(Client.GetCluster().RemoveMembershipListener(regId));
+            _nodeId = AddNodeAndWait();
         }
 
         [TestFixtureTearDown]
         public void TearDown()
         {
-            var resetEvent = new ManualResetEventSlim();
-            var regId = Client.GetCluster().AddMembershipListener(new MembershipListener
-            {
-                MemberRemovedAction = @event => resetEvent.Set()
-            });
-            Cluster.RemoveNode();
-            Assert.IsTrue(resetEvent.Wait(300 * 1000), "The member did not get removed in 30 seconds");
-            Assert.IsTrue(Client.GetCluster().RemoveMembershipListener(regId));
+            RemoveNodeAndWait(_nodeId);
         }
 
         [Test]
