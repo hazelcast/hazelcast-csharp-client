@@ -191,7 +191,8 @@ namespace Hazelcast.Client.Connection
             }
             if (target == null)
             {
-                throw new HazelcastException("The requested address " + target + " is not a member of the cluster.");
+                //no suitable instance found, instance not active?
+                throw new HazelcastInstanceNotActiveException();
             }
 
             return GetOrConnect(target, ClusterAuthenticator);

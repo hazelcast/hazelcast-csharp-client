@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Spi
 
         private void __RefreshPartitions()
         {
-            Logger.Finest("Refresh Partitions at " + DateTime.Now.ToLocalTime());
+            Logger.Finest("Refreshing partitions");
             if (_updating.CompareAndSet(false, true))
             {
                 try

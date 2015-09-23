@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
+using Hazelcast.IO;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
@@ -10,22 +11,40 @@ namespace Hazelcast.Client.Spi
     internal class ClientInvocation
     {
         private readonly string _memberUuid;
+        private readonly ClientConnection _boundConnection;
         private readonly IClientMessage _message;
-        private readonly int _partitionId;
+        private readonly int _partitionId = -1;
         private readonly SettableFuture<IClientMessage> _future;
 
         private int _retryCount;
+        private Address _address;
 
-        public ClientInvocation(IClientMessage message, int partitionId = -1,
-            string memberUuid = null)
+        public ClientInvocation(IClientMessage message)
         {
-            _memberUuid = memberUuid;
-            _partitionId = partitionId;
             _message = message;
             _future = new SettableFuture<IClientMessage>();
         }
 
-        
+        public ClientInvocation(IClientMessage message, int partitionId) : this(message)
+        {
+            _partitionId = partitionId;
+        }
+
+        public ClientInvocation(IClientMessage message, string memberUuid) : this(message)
+        {
+            _memberUuid = memberUuid;
+        }
+
+        public ClientInvocation(IClientMessage message, Address address) : this(message)
+        {
+            _address = address;
+        }
+
+        public ClientInvocation(IClientMessage message, ClientConnection boundConnection)
+            : this(message)
+        {
+            _boundConnection = boundConnection;
+        }
 
         public string MemberUuid
         {
@@ -56,5 +75,15 @@ namespace Hazelcast.Client.Spi
         /// Connection that was used to execute this invocation
         /// </summary>
         public ClientConnection SentConnection { get; set; }
+
+        public ClientConnection BoundConnection
+        {
+            get { return _boundConnection; }
+        }
+
+        public Address Address
+        {
+            get { return _address; }
+        }
     }
 }

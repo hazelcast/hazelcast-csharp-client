@@ -18,23 +18,19 @@ namespace Hazelcast.Client.Spi
 
         public override IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember target)
         {
-            var clientConnection = GetConnection(target.GetAddress());
-            return Send(clientConnection, new ClientInvocation(request, memberUuid: target.GetUuid()));
+            return Invoke(new ClientInvocation(request, target.GetUuid()), target.GetAddress());
         }
 
         public override IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target)
         {
-            var clientConnection = GetConnection(target);
-            return Send(clientConnection, new ClientInvocation(request));
+            return Invoke(new ClientInvocation(request, target), target);
         }
 
         public override IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId)
         {
             var partitionService = (ClientPartitionService)Client.GetClientPartitionService();
             var owner = partitionService.GetPartitionOwner(partitionId);
-            var connection = GetConnection(owner);
-
-            return Send(connection, new ClientInvocation(request, partitionId));
+            return Invoke(new ClientInvocation(request, partitionId), owner);
         }
 
         public override IFuture<IClientMessage> InvokeListenerOnPartition(IClientMessage request, int partitionId, DistributedEventHandler handler,
@@ -42,16 +38,13 @@ namespace Hazelcast.Client.Spi
         {
             var partitionService = (ClientPartitionService)Client.GetClientPartitionService();
             var owner = partitionService.GetPartitionOwner(partitionId);
-            var connection = GetConnection(owner);
-
-            return Send(connection, new ClientListenerInvocation(request, handler, responseDecoder, partitionId));
+            return Invoke(new ClientListenerInvocation(request, handler, responseDecoder, partitionId), owner);
         }
 
         public override IFuture<IClientMessage> InvokeListenerOnTarget(IClientMessage request, Address target, DistributedEventHandler handler,
            DecodeStartListenerResponse responseDecoder)
         {
-            var clientConnection = GetConnection(target);
-            return Send(clientConnection, new ClientListenerInvocation(request, handler, responseDecoder));
+            return Invoke(new ClientListenerInvocation(request, handler, responseDecoder, target), target);
         }
 
         public override IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key)
@@ -59,9 +52,7 @@ namespace Hazelcast.Client.Spi
             var partitionService = (ClientPartitionService)Client.GetClientPartitionService();
             var partitionId = partitionService.GetPartitionId(key);
             var owner = partitionService.GetPartitionOwner(partitionId);
-            var connection = GetConnection(owner);
-
-            return Send(connection, new ClientInvocation(request, partitionId));
+            return Invoke(new ClientInvocation(request, partitionId), owner);
         }
 
         public override IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key, DistributedEventHandler handler,
@@ -70,22 +61,19 @@ namespace Hazelcast.Client.Spi
             var partitionService = (ClientPartitionService)Client.GetClientPartitionService();
             var partitionId = partitionService.GetPartitionId(key);
             var owner = partitionService.GetPartitionOwner(partitionId);
-            var connection = GetConnection(owner);
 
-            return Send(connection, new ClientListenerInvocation(request, handler, responseDecoder, partitionId));
+            return Invoke(new ClientListenerInvocation(request, handler, responseDecoder, partitionId), owner);
         }
 
         public override IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request)
         {
-            var clientConnection = GetConnection();
-            return Send(clientConnection, new ClientInvocation(request));
+            return Invoke(new ClientInvocation(request));
         }
 
         public override IFuture<IClientMessage> InvokeListenerOnRandomTarget(IClientMessage request, DistributedEventHandler handler,
             DecodeStartListenerResponse responseDecoder)
         {
-            var clientConnection = GetConnection();
-            return Send(clientConnection, new ClientListenerInvocation(request, handler, responseDecoder));
+            return Invoke(new ClientListenerInvocation(request, handler, responseDecoder));
         }
     }
 }

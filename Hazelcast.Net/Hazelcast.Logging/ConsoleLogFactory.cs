@@ -31,12 +31,12 @@ namespace Hazelcast.Logging
 
             public override void Log(LogLevel arg1, string message)
             {
-                Console.WriteLine(GetDateFormat(arg1) + " " + message);
+                Console.WriteLine(GetDateFormat(arg1) + message);
             }
 
             public override void Log(LogLevel arg1, string message, Exception ex)
             {
-                Console.WriteLine(GetDateFormat(arg1) + message + " ---- " + ex.StackTrace);
+                Console.WriteLine(GetDateFormat(arg1) + message + " ---- " + ex);
             }
 
             private string GetDateFormat(LogLevel logLevel)

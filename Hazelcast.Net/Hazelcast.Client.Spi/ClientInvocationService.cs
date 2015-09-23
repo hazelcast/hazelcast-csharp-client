@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
@@ -21,6 +22,8 @@ namespace Hazelcast.Client.Spi
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientInvocationService));
         private readonly HazelcastClient _client;
         private readonly ClientConnectionManager _clientConnectionManager;
+        private readonly int _connectionAttemptLimit;
+        private readonly int _connectionAttemptPeriod;
 
         private readonly ConcurrentDictionary<int, ClientInvocation> _invocations =
             new ConcurrentDictionary<int, ClientInvocation>();
@@ -29,13 +32,11 @@ namespace Hazelcast.Client.Spi
             new ConcurrentDictionary<int, ClientListenerInvocation>();
 
         private readonly bool _redoOperations;
-        private readonly int _retryCount = 20;
-        private readonly int _retryWaitTime = 250;
+        private readonly int _retryCount = 120;
+        private readonly int _retryWaitTime = 1000;
         private readonly StripedTaskScheduler _taskScheduler;
         private int _correlationIdCounter = 1;
         private volatile bool _isShutDown;
-        private readonly int _connectionAttemptPeriod;
-        private readonly int _connectionAttemptLimit;
 
         public ClientInvocationService(HazelcastClient client)
         {
@@ -45,7 +46,8 @@ namespace Hazelcast.Client.Spi
             var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count") ??
                                   DefaultEventThreadCount;
             _taskScheduler = new StripedTaskScheduler(eventTreadCount);
-
+            
+            // TODO: These should be consoliated with the way it's done in the Java client
             _retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count") ?? _retryCount;
             _retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time") ??
                              _retryWaitTime;
@@ -102,6 +104,12 @@ namespace Hazelcast.Client.Spi
             return _listenerInvocations.TryRemove(correlationId, out invocationWithHandler);
         }
 
+        public void Shutdown()
+        {
+            _isShutDown = true;
+            _taskScheduler.Dispose();
+        }
+
         public void HeartBeatStarted(ClientConnection connection)
         {
             // noop
@@ -138,10 +146,7 @@ namespace Hazelcast.Client.Spi
             if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
             {
                 object state = message.GetPartitionId();
-                var eventTask = new Task(o =>
-                {
-                    HandleEventMessage(message);
-                }, state);
+                var eventTask = new Task(o => { HandleEventMessage(message); }, state);
                 eventTask.Start(_taskScheduler);
             }
             else
@@ -159,46 +164,18 @@ namespace Hazelcast.Client.Spi
 
         public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
         {
-            return Send(connection, new ClientInvocation(request));
+            var clientInvocation = new ClientInvocation(request, boundConnection: connection);
+            Send(connection, clientInvocation);
+            return clientInvocation.Future;
         }
 
-        public void Shutdown()
+        private ClientConnection GetConnection(Address address = null)
         {
-            _isShutDown = true;
-            _taskScheduler.Dispose();
+            EnsureOwnerConnectionAvailable();
+            return _client.GetConnectionManager().GetOrConnect(address);
         }
 
-        protected virtual ClientConnection GetConnection(Address address = null)
-        {
-            var numAttempts = 0;
-            while (numAttempts++ < _connectionAttemptLimit)
-            {
-                var nextTry = Clock.CurrentTimeMillis() + _connectionAttemptPeriod;
-                try
-                {
-                    EnsureOwnerConnectionAvailable();
-                    return _client.GetConnectionManager().GetOrConnect(address);
-                }
-                catch (Exception e)
-                {
-                    var remainingTime = nextTry - Clock.CurrentTimeMillis();
-                    Logger.Warning(
-                       string.Format("Could not connect to {0}, attempt #{1} of {2}. Next try in {3}ms",
-                       address, numAttempts, _connectionAttemptLimit, Math.Max(0, remainingTime)),
-                       e);
-
-                    if (remainingTime > 0)
-                    {
-                        Thread.Sleep((int)remainingTime);
-                    }
-                   
-                    Thread.Sleep(_connectionAttemptPeriod);
-                }
-            }
-            throw new HazelcastException("Could not connect to address " + address + " after " + _connectionAttemptLimit + " attempts.");
-        }
-
-        protected virtual IFuture<IClientMessage> Send(ClientConnection connection, ClientInvocation clientInvocation)
+        protected virtual void Send(ClientConnection connection, ClientInvocation clientInvocation)
         {
             var correlationId = NextCorrelationId();
             clientInvocation.Message.SetCorrelationId(correlationId);
@@ -210,9 +187,8 @@ namespace Hazelcast.Client.Spi
             }
             if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.GetMember().GetUuid())
             {
-                clientInvocation.Future.Exception = new InvalidOperationException(
-                    "The member UUID on the invocation doesn't match the member UUID on the connection.");
-                return clientInvocation.Future;
+                HandleException(clientInvocation,
+                    new TargetNotMemberException("The member UUID on the invocation doesn't match the member UUID on the connection."));
             }
 
             if (_isShutDown)
@@ -231,7 +207,6 @@ namespace Hazelcast.Client.Spi
                     FailRequest(connection, clientInvocation);
                 }
             }
-            return clientInvocation.Future;
         }
 
         private void CleanupEventHandlers(ClientConnection connection)
@@ -301,22 +276,29 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        private void FailRequestDueToShutdown(ClientInvocation invocation)
-        {
-            invocation.Future.Exception = new HazelcastException("Client is shutting down.");
-        }
         private void FailRequest(ClientConnection connection, ClientInvocation invocation)
         {
             if (_client.GetConnectionManager().Live)
             {
-                invocation.Future.Exception =
-                    new TargetDisconnectedException("Target was disconnected: " + connection.GetAddress());
+                HandleException(invocation,
+                    new TargetDisconnectedException("Target was disconnected: " + connection.GetAddress()));
             }
             else
             {
                 FailRequestDueToShutdown(invocation);
-
             }
+        }
+
+        private void FailRequestDueToShutdown(ClientInvocation invocation)
+        {
+            invocation.Future.Exception = new HazelcastException("Client is shutting down.");
+        }
+
+        private static string GetRegistrationIdFromResponse(ClientListenerInvocation invocation)
+        {
+            var originalResponse = (ClientMessage) invocation.Future.Result;
+            originalResponse.Index(originalResponse.GetDataOffset());
+            return invocation.ResponseDecoder(originalResponse);
         }
 
         private void HandleEventMessage(IClientMessage eventMessage)
@@ -343,21 +325,12 @@ namespace Hazelcast.Client.Spi
                     var error = Error.Decode(response);
                     var exception = ExceptionUtil.ToException(error);
 
-                    // retry only specific exceptions  
-                    if (exception is RetryableHazelcastException)
-                    {
-                        if ((_redoOperations || invocation.Message.IsRetryable())
-                            && invocation.IncrementAndGetRetryCount() < _retryCount)
-                        {
-                            RetryRequest(invocation, exception);
-                        }
-                    }
-                    else
+                    // retry only specific exceptions
+                    if (!HandleException(invocation, exception))
                     {
                         invocation.Future.Exception = exception;
                     }
                 }
-
                 // if this was a re-registration operation, then we will throw away the response and just store the alias
                 else if (invocation is ClientListenerInvocation && invocation.Future.IsComplete &&
                          invocation.Future.Result != null)
@@ -365,10 +338,13 @@ namespace Hazelcast.Client.Spi
                     var listenerInvocation = (ClientListenerInvocation) invocation;
                     var originalRegistrationId = GetRegistrationIdFromResponse(listenerInvocation);
                     var newRegistrationId = listenerInvocation.ResponseDecoder(response);
-                    _client.GetListenerService().ReregisterListener(originalRegistrationId, newRegistrationId, invocation.Message.GetCorrelationId());
+                    _client.GetListenerService()
+                        .ReregisterListener(originalRegistrationId, newRegistrationId,
+                            invocation.Message.GetCorrelationId());
                     Logger.Finest("Re-registered listener for " + originalRegistrationId);
                 }
-                else {
+                else
+                {
                     invocation.Future.Result = response;
                 }
             }
@@ -378,33 +354,42 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        private void RetryRequest(ClientInvocation invocation, Exception exception)
+        private bool HandleException(ClientInvocation invocation, Exception exception)
         {
-            Logger.Finest("Retrying request " + invocation.Message);
-            // retry the task by sending it to a random node
+            if (exception is IOException
+                || exception is HazelcastInstanceNotActiveException
+                || exception is AuthenticationException) {
+                return RetryRequest(invocation, exception);
+            }
+
+            if (exception is RetryableHazelcastException)
+            {
+                if (_redoOperations || invocation.Message.IsRetryable())                 
+                {
+                    return RetryRequest(invocation, exception);
+                }
+            }
+            return false;
+        }
+
+        protected IFuture<IClientMessage> Invoke(ClientInvocation invocation, Address address = null)
+        {
             Task.Factory.StartNew(() =>
             {
-                Thread.Sleep(_retryWaitTime);
-
-                //TODO: Find a way to shutdown the task factory instead
-                if (_isShutDown) FailRequestDueToShutdown(invocation);
-                else
+                try
                 {
-                    var connection = GetConnection();
-                    if (invocation.MemberUuid != null)
-                    {
-                        var member = connection.GetMember();
-                        if (member == null || member.GetUuid() != invocation.MemberUuid)
-                        {
-                            Logger.Finest(
-                                "The member UUID on the invocation doesn't match the member UUID on the connection.");
-                            invocation.Future.Exception = exception;
-                            return;
-                        }
-                    }
+                    var connection = GetConnection(address);
                     Send(connection, invocation);
                 }
-            });
+                catch (Exception e)
+                {
+                    if (!HandleException(invocation, e))
+                    {
+                        invocation.Future.Exception = e;
+                    }
+                }
+           });
+           return invocation.Future;
         }
 
         private int NextCorrelationId()
@@ -426,15 +411,66 @@ namespace Hazelcast.Client.Spi
         private void ReregisterListener(ClientListenerInvocation invocation)
         {
             Logger.Finest("Re-registering listener for " + invocation.Message);
-            var newConnection = GetConnection();
-            Send(newConnection, invocation);           
+            Invoke(invocation);
         }
 
-        private static string GetRegistrationIdFromResponse(ClientListenerInvocation invocation)
+        private bool RetryRequest(ClientInvocation invocation, Exception exception)
         {
-            var originalResponse = (ClientMessage) invocation.Future.Result;
-            originalResponse.Index(originalResponse.GetDataOffset());
-            return invocation.ResponseDecoder(originalResponse);
+            var retryNr = invocation.IncrementAndGetRetryCount();
+            if (retryNr > _retryCount) return false;
+
+            Logger.Finest("Retry #" + retryNr + " for request " + invocation.Message);
+            Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(_retryWaitTime);
+
+                //TODO: Find a way to shutdown the task factory instead
+                if (_isShutDown) FailRequestDueToShutdown(invocation);
+                else
+                {
+                    // get the appropriate connection for retry
+                    var connection = GetConnectionForInvocation(invocation);
+                    Send(connection, invocation);
+                }
+            }).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    var innerException = t.Exception.InnerExceptions.First();
+                    Logger.Finest("Retry of request " + invocation.Message + " failed with ", innerException);
+                    if (!HandleException(invocation, innerException))
+                    {
+                        invocation.Future.Exception = innerException;
+                    }
+                }
+            });
+            return true;
+        }
+
+        private ClientConnection GetConnectionForInvocation(ClientInvocation invocation)
+        {
+            if (invocation.BoundConnection != null) return invocation.BoundConnection;
+
+            Address address = null;
+            if (invocation.Address != null)
+            {
+                address = invocation.Address;
+            }
+            else if (invocation.MemberUuid != null)
+            {
+                var member = _client.GetClientClusterService().GetMember(invocation.MemberUuid);
+                if (member == null)
+                {
+                    throw new InvalidOperationException("Could not find a member with UUID " + invocation.MemberUuid);
+                }
+                address = member.GetAddress();
+            }
+            
+            else if (invocation.PartitionId != -1)
+            {
+                address = _client.GetClientPartitionService().GetPartitionOwner(invocation.PartitionId);
+            }
+            return GetConnection(address);
         }
 
         private void UnregisterCall(int correlationId)

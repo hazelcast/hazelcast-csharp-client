@@ -1,4 +1,5 @@
 ﻿using Hazelcast.Client.Protocol;
+using Hazelcast.IO;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
@@ -9,8 +10,32 @@ namespace Hazelcast.Client.Spi
         private readonly DistributedEventHandler _handler;
 
         public ClientListenerInvocation(IClientMessage message, DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder, int partitionId = -1, string memberUuid = null)
-            : base(message, partitionId, memberUuid)
+            DecodeStartListenerResponse responseDecoder)
+            : base(message)
+        {
+            _responseDecoder = responseDecoder;
+            _handler = handler;
+        }
+
+        public ClientListenerInvocation(IClientMessage message, DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder, int partitionId)
+            : base(message, partitionId)
+        {
+            _responseDecoder = responseDecoder;
+            _handler = handler;
+        }
+
+        public ClientListenerInvocation(IClientMessage message, DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder, string memberUuid)
+            : base(message, memberUuid)
+        {
+            _responseDecoder = responseDecoder;
+            _handler = handler;
+        }
+
+        public ClientListenerInvocation(IClientMessage message, DistributedEventHandler handler,
+            DecodeStartListenerResponse responseDecoder, Address address)
+            : base(message, address)
         {
             _responseDecoder = responseDecoder;
             _handler = handler;
