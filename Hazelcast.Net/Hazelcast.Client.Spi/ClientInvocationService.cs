@@ -22,8 +22,6 @@ namespace Hazelcast.Client.Spi
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientInvocationService));
         private readonly HazelcastClient _client;
         private readonly ClientConnectionManager _clientConnectionManager;
-        private readonly int _connectionAttemptLimit;
-        private readonly int _connectionAttemptPeriod;
 
         private readonly ConcurrentDictionary<int, ClientInvocation> _invocations =
             new ConcurrentDictionary<int, ClientInvocation>();
@@ -51,10 +49,6 @@ namespace Hazelcast.Client.Spi
             _retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count") ?? _retryCount;
             _retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time") ??
                              _retryWaitTime;
-
-            var connAttemptLimit = client.GetClientConfig().GetNetworkConfig().GetConnectionAttemptLimit();
-            _connectionAttemptPeriod = client.GetClientConfig().GetNetworkConfig().GetConnectionAttemptPeriod();
-            _connectionAttemptLimit = connAttemptLimit == 0 ? int.MaxValue : connAttemptLimit;
 
             _clientConnectionManager = (ClientConnectionManager) client.GetConnectionManager();
             _clientConnectionManager.AddConnectionListener(this);
@@ -270,7 +264,7 @@ namespace Hazelcast.Client.Spi
             {
                 if (_isShutDown)
                 {
-                    throw new HazelcastException("Client is shutting down!");
+                    throw new HazelcastException("Client is shut down.");
                 }
                 throw new IOException("Owner connection was not live.");
             }
@@ -281,7 +275,7 @@ namespace Hazelcast.Client.Spi
             if (_client.GetConnectionManager().Live)
             {
                 HandleException(invocation,
-                    new TargetDisconnectedException("Target was disconnected: " + connection.GetAddress()));
+                    new TargetDisconnectedException(connection.GetAddress()));
             }
             else
             {
@@ -291,7 +285,18 @@ namespace Hazelcast.Client.Spi
 
         private void FailRequestDueToShutdown(ClientInvocation invocation)
         {
-            invocation.Future.Exception = new HazelcastException("Client is shutting down.");
+            if (Logger.IsFinestEnabled())
+            {
+                var connectionId = invocation.SentConnection == null
+                    ? "unknown"
+                    : invocation.SentConnection.Id.ToString();
+                Logger.Finest("Aborting request on connection " + connectionId + ": " + invocation.Message +
+                              " due to shutdown.");
+            }
+            if (!invocation.Future.IsComplete)
+            {
+                invocation.Future.Exception = new HazelcastException("Client is shutting down.");
+            }
         }
 
         private static string GetRegistrationIdFromResponse(ClientListenerInvocation invocation)
@@ -326,10 +331,8 @@ namespace Hazelcast.Client.Spi
                     var exception = ExceptionUtil.ToException(error);
 
                     // retry only specific exceptions
-                    if (!HandleException(invocation, exception))
-                    {
-                        invocation.Future.Exception = exception;
-                    }
+                    HandleException(invocation, exception);
+
                 }
                 // if this was a re-registration operation, then we will throw away the response and just store the alias
                 else if (invocation is ClientListenerInvocation && invocation.Future.IsComplete &&
@@ -354,41 +357,37 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        private bool HandleException(ClientInvocation invocation, Exception exception)
+        private void HandleException(ClientInvocation invocation, Exception exception)
         {
             if (exception is IOException
                 || exception is HazelcastInstanceNotActiveException
-                || exception is AuthenticationException) {
-                return RetryRequest(invocation, exception);
+                || exception is AuthenticationException)
+            {
+                if (RetryRequest(invocation, exception)) return;
             }
 
             if (exception is RetryableHazelcastException)
             {
-                if (_redoOperations || invocation.Message.IsRetryable())                 
+                if (_redoOperations || invocation.Message.IsRetryable())
                 {
-                    return RetryRequest(invocation, exception);
+                    if (RetryRequest(invocation, exception))
+                        return;
                 }
             }
-            return false;
+            invocation.Future.Exception = exception;
         }
 
         protected IFuture<IClientMessage> Invoke(ClientInvocation invocation, Address address = null)
         {
-            Task.Factory.StartNew(() =>
+            try
             {
-                try
-                {
-                    var connection = GetConnection(address);
-                    Send(connection, invocation);
-                }
-                catch (Exception e)
-                {
-                    if (!HandleException(invocation, e))
-                    {
-                        invocation.Future.Exception = e;
-                    }
-                }
-           });
+                var connection = GetConnection(address);
+                Send(connection, invocation);
+            }
+            catch (Exception e)
+            {
+                HandleException(invocation, e);
+            }
            return invocation.Future;
         }
 
@@ -438,10 +437,7 @@ namespace Hazelcast.Client.Spi
                 {
                     var innerException = t.Exception.InnerExceptions.First();
                     Logger.Finest("Retry of request " + invocation.Message + " failed with ", innerException);
-                    if (!HandleException(invocation, innerException))
-                    {
-                        invocation.Future.Exception = innerException;
-                    }
+                    HandleException(invocation, innerException);
                 }
             });
             return true;

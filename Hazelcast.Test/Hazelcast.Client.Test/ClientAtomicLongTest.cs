@@ -13,7 +13,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            l = Client.GetAtomicLong(Name);
+            l = Client.GetAtomicLong(TestSupport.RandomString());
             l.Set(0);
         }
 

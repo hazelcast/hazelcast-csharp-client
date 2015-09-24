@@ -13,7 +13,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            _name = Name;
+            _name = TestSupport.RandomString();
         }
 
         [TearDown]
@@ -89,7 +89,7 @@ namespace Hazelcast.Client.Test
         {
             const string key = "key";
             const string value = "value";
-            var name = Name;
+            var name = TestSupport.RandomString();
             var multiMap = Client.GetMultiMap<string, string>(name);
             for (var i = 0; i < 10; i++)
             {

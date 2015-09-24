@@ -140,6 +140,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientSetTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientShutdownTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTopicTest.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -156,9 +157,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Hazelcast.Client.Test\ClientTxnSetTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientTxnTest.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Hazelcast.Client.Test\ClientXmlTest.cs">

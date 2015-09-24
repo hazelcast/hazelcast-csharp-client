@@ -27,7 +27,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            map = Client.GetMap<object, object>("nearCachedMap-" + Name);
+            map = Client.GetMap<object, object>("nearCachedMap-" + TestSupport.RandomString());
         }
 
         [TearDown]

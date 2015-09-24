@@ -456,6 +456,7 @@ namespace Hazelcast.Client
             {
                 connectionManager.Start();
                 clusterService.Start();
+                partitionService.Start();
             }
             catch (InvalidOperationException e)
             {
@@ -464,7 +465,6 @@ namespace Hazelcast.Client
                 lifecycleService.Shutdown();
                 throw;
             }
-            partitionService.Start();
         }
 
         public ILoadBalancer GetLoadBalancer()

@@ -14,7 +14,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestListenerReconnect()
         {
-            var name = Name;
+            var name = TestSupport.RandomString();
             var key = "key";
             var map = Client.GetMap<string, string>(name);
             int eventCount = 0;
@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestReconnect()
         {
-            var name = Name;
+            var name = TestSupport.RandomString();
             var map = Client.GetMap<string, string>(name);
             map.Put("key", "value");
             Assert.AreEqual("value", map.Get("key"));

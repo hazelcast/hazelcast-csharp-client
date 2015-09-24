@@ -10,7 +10,7 @@ namespace Hazelcast.Util
 
         private static readonly ClientExceptionFactory ExceptionFactory = new ClientExceptionFactory();
 
-        public static Exception Rethrow(Exception t, Type allowedType)
+        public static Exception Rethrow(Exception t, params Type[] allowedTypes)
         {
             if (t is NotImplementedException)
             {
@@ -24,9 +24,13 @@ namespace Hazelcast.Util
                     return Rethrow(exception);
                 }
             }
-            if (allowedType != null && allowedType.IsInstanceOfType(t))
+
+            foreach (var allowedType in allowedTypes)
             {
-                return t;
+                if (allowedType != null && allowedType.IsInstanceOfType(t))
+                {
+                    return t;
+                }
             }
             return new HazelcastException(t);
         }

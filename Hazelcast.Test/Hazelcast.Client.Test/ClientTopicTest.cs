@@ -15,7 +15,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            t = Client.GetTopic<object>(Name);
+            t = Client.GetTopic<object>(TestSupport.RandomString());
         }
 
         [TearDown]
