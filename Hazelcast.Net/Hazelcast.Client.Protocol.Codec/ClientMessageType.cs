@@ -12,7 +12,7 @@ namespace Hazelcast.Client.Protocol.Codec
         ClientRemoveAllListeners = 0x9,
         ClientAddPartitionLostListener = 0xa,
         ClientRemovePartitionLostListener = 0xb,
-        ClientGetDistributedObject = 0xc,
+        ClientGetDistributedObjects = 0xc,
         ClientAddDistributedObjectListener = 0xd,
         ClientRemoveDistributedObjectListener = 0xe,
         ClientPing = 0xf

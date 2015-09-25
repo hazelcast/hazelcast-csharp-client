@@ -6,10 +6,10 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ClientGetDistributedObjectCodec
+    internal sealed class ClientGetDistributedObjectsCodec
     {
 
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientGetDistributedObject;
+        public static readonly ClientMessageType RequestType = ClientMessageType.ClientGetDistributedObjects;
         public const int ResponseType = 110;
         public const bool Retryable = false;
 

@@ -234,10 +234,10 @@ namespace Hazelcast.Client
         {
             try
             {
-                var request = ClientGetDistributedObjectCodec.EncodeRequest();
+                var request = ClientGetDistributedObjectsCodec.EncodeRequest();
                 var task = invocationService.InvokeOnRandomTarget(request);
                 var response = ThreadUtil.GetResult(task);
-                var result = ClientGetDistributedObjectCodec.DecodeResponse(response).infoCollection;
+                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).infoCollection;
                 foreach (var data in result)
                 {
                     var o = serializationService.ToObject<DistributedObjectInfo>(data);

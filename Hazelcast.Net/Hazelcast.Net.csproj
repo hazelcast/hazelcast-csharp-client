@@ -92,7 +92,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientAuthenticationCustomCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientCreateProxyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientDestroyProxyCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientGetDistributedObjectCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientGetDistributedObjectsCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientGetPartitionsCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientMembershipListenerCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientMessageType.cs" />
@@ -188,7 +188,6 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapUnlockCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapValuesCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapValuesWithPredicateCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\MemberAttributeChangeCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MemberCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MultiMapAddEntryListenerCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MultiMapAddEntryListenerToKeyCodec.cs" />
