@@ -320,7 +320,11 @@
     <Compile Include="Hazelcast.Client.Spi\Exception.cs" />
     <Compile Include="Hazelcast.Client.Proxy\PartitionServiceProxy.cs" />
     <Compile Include="Hazelcast.Config\ClientNetworkConfig.cs" />
+    <Compile Include="Hazelcast.Config\ConfigurationException.cs" />
+    <Compile Include="Hazelcast.Config\IConfigPatternMatcher.cs" />
+    <Compile Include="Hazelcast.Config\MatchingPointConfigPatternMatcher.cs" />
     <Compile Include="Hazelcast.Config\NearCacheConfigReadOnly.cs" />
+    <Compile Include="Hazelcast.Config\SocketOptions.cs" />
     <Compile Include="Hazelcast.Core\EntryAdapter.cs" />
     <Compile Include="Hazelcast.Core\IAtomicLong.cs" />
     <Compile Include="Hazelcast.Core\IIdGenerator.cs" />
@@ -421,7 +425,6 @@
     <Compile Include="Hazelcast.Config\SerializationConfig.cs" />
     <Compile Include="Hazelcast.Config\SerializerConfig.cs" />
     <Compile Include="Hazelcast.Config\SocketInterceptorConfig.cs" />
-    <Compile Include="Hazelcast.Config\SocketOptions.cs" />
     <Compile Include="Hazelcast.Config\XmlClientConfigBuilder.cs" />
     <Compile Include="Hazelcast.Core\IClient.cs" />
     <Compile Include="Hazelcast.Core\IClientListener.cs" />
@@ -541,7 +544,6 @@
     <Compile Include="Hazelcast.Net.Ext\AtomicInteger.cs" />
     <Compile Include="Hazelcast.Net.Ext\AtomicLong.cs" />
     <Compile Include="Hazelcast.Net.Ext\AtomicReference.cs" />
-    <Compile Include="Hazelcast.Net.Ext\AtomicReferenceArray.cs" />
     <Compile Include="Hazelcast.Partition.Strategy\DefaultPartitioningStrategy.cs" />
     <Compile Include="Hazelcast.Partition.Strategy\StringPartitioningStrategy.cs" />
     <Compile Include="Hazelcast.Security\AbstractCredentials.cs" />

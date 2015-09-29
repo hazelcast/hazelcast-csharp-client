@@ -43,7 +43,7 @@ namespace Hazelcast.Config
             this.inMemoryFormat = inMemoryFormat;
         }
 
-        public NearCacheConfig(Hazelcast.Config.NearCacheConfig config)
+        public NearCacheConfig(NearCacheConfig config)
         {
             name = config.GetName();
             evictionPolicy = config.GetEvictionPolicy();
@@ -68,14 +68,20 @@ namespace Hazelcast.Config
         {
         }
 
+        public NearCacheConfig(string name)
+        {
+            this.name = name;
+        }
+
         public virtual string GetName()
         {
             return name;
         }
 
-        public virtual void SetName(string name)
+        public virtual NearCacheConfig SetName(string name)
         {
             this.name = name;
+            return this;
         }
 
         public virtual int GetTimeToLiveSeconds()
@@ -175,5 +181,7 @@ namespace Hazelcast.Config
             sb.Append('}');
             return sb.ToString();
         }
+
+
     }
 }

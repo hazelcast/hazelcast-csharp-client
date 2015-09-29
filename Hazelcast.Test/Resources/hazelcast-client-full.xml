@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 
-<hazelcast-client xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.2.xsd"
+<hazelcast-client xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.5.xsd"
            xmlns="http://www.hazelcast.com/schema/client-config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
@@ -31,13 +31,23 @@
         </cluster-members>
         <smart-routing>true</smart-routing>
         <redo-operation>true</redo-operation>
-
-        <socket-interceptor enabled="false">
+        <connection-timeout>60000</connection-timeout>
+        <connection-attempt-period>3000</connection-attempt-period>
+        <connection-attempt-limit>2</connection-attempt-limit>
+        <socket-interceptor enabled="true">
             <class-name>com.hazelcast.examples.MySocketInterceptor</class-name>
             <properties>
                 <property name="foo">bar</property>
             </properties>
         </socket-interceptor>
+        <socket-options>
+          <tcp-no-delay>false</tcp-no-delay>
+          <keep-alive>true</keep-alive>
+          <reuse-address>true</reuse-address>
+          <linger-seconds>3</linger-seconds>
+          <timeout>-1</timeout>
+          <buffer-size>32</buffer-size>
+        </socket-options>
 
     </network>
 
@@ -46,6 +56,10 @@
 
     <security>
         <credentials>com.hazelcast.security.UsernamePasswordCredentials</credentials>
+        <login-credentials>
+          <username>dev-user</username>
+          <password>pass123</password>
+        </login-credentials>
     </security>
 
     <listeners>
@@ -55,9 +69,12 @@
     </listeners>
 
     <serialization>
-        <portable-version>0</portable-version>
+        <portable-version>3</portable-version>
         <use-native-byte-order>true</use-native-byte-order>
         <byte-order>BIG_ENDIAN</byte-order>
+        <enable-shared-object>true</enable-shared-object>
+        <check-class-def-errors>true</check-class-def-errors>
+        <enable-compression>true</enable-compression>>
         <data-serializable-factories>
             <data-serializable-factory factory-id="1">com.hazelcast.examples.DataSerializableFactory</data-serializable-factory>
         </data-serializable-factories>
@@ -73,7 +90,7 @@
 
     <proxy-factories>
         <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ1" service="sampleService1" />
-        <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ2" service="sampleService1" />
+        <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ2" service="sampleService2" />
         <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ3" service="sampleService3" />
 
     </proxy-factories>

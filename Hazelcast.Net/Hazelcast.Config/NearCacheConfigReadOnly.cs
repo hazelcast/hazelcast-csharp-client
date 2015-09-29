@@ -8,7 +8,7 @@ namespace Hazelcast.Config
 		{
 		}
 
-		public override void SetName(string name)
+		public override NearCacheConfig SetName(string name)
 		{
 			throw new NotSupportedException("This config is read-only");
 		}

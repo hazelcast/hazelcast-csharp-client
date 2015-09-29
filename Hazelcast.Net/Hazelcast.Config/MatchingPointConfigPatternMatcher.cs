@@ -1,0 +1,61 @@
+﻿using System.Collections.Generic;
+
+namespace Hazelcast.Config
+{
+    internal class MatchingPointConfigPatternMatcher : IConfigPatternMatcher
+    {
+        /// <exception cref="Hazelcast.Config.ConfigurationException" />
+        public virtual string Matches(IEnumerable<string> configPatterns, string itemName)
+        {
+            string candidate = null;
+            string duplicate = null;
+            var lastMatchingPoint = -1;
+            foreach (var pattern in configPatterns)
+            {
+                var matchingPoint = GetMatchingPoint(pattern, itemName);
+                if (matchingPoint > -1 && matchingPoint >= lastMatchingPoint)
+                {
+                    if (matchingPoint == lastMatchingPoint)
+                    {
+                        duplicate = candidate;
+                    }
+                    else
+                    {
+                        duplicate = null;
+                    }
+                    lastMatchingPoint = matchingPoint;
+                    candidate = pattern;
+                }
+            }
+            if (duplicate != null)
+            {
+                throw new ConfigurationException(itemName, candidate, duplicate);
+            }
+            return candidate;
+        }
+
+        /// <summary>This method returns higher values the better the matching is.</summary>
+        /// <param name="pattern">configuration pattern to match with</param>
+        /// <param name="itemName">item name to match</param>
+        /// <returns>-1 if name does not match at all, zero or positive otherwise</returns>
+        private int GetMatchingPoint(string pattern, string itemName)
+        {
+            var index = pattern.IndexOf('*');
+            if (index == -1)
+            {
+                return -1;
+            }
+            var firstPart = pattern.Substring(0, index);
+            if (!itemName.StartsWith(firstPart))
+            {
+                return -1;
+            }
+            var secondPart = pattern.Substring(index + 1);
+            if (!itemName.EndsWith(secondPart))
+            {
+                return -1;
+            }
+            return firstPart.Length + secondPart.Length;
+        }
+    }
+}

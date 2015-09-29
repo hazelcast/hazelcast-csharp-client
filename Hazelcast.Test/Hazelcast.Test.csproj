@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -76,6 +76,8 @@
   <ItemGroup>
     <Compile Include="ClientQueuePerformanceTest.cs" />
     <Compile Include="Hazelcast.Client.Model\Item.cs" />
+    <Compile Include="Hazelcast.Client.Test.Config\ClientXmlConfigTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Config\MatchingPointConfigPatternMatcherTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\ConstantSerializerTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\KitchenSinkDataSerializable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\KitchenSinkPortable.cs" />
@@ -125,6 +127,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientMultiMapTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Hazelcast.Client.Test.Config\ClientNearCacheConfigTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientNearCacheTest.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -159,7 +162,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientTxnSetTest.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientXmlTest.cs">
+    <Compile Include="Hazelcast.Client.Test.Config\ClientXmlTest.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Hazelcast.Client.Test\HazelcastCluster.cs" />
@@ -177,6 +180,11 @@
     <Compile Include="Hazelcast.Client.Test\TestSupport.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="QueueTest.cs" />
     <Compile Include="SimpleExample1.cs" />
     <Compile Include="SimpleMapTestFromClient.cs" />
@@ -194,12 +202,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="hazelcast-client.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <Folder Include="bin\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="bin\" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hazelcast-client-full.xml" />
   </ItemGroup>
   <PropertyGroup>
     <NUnitResultsFile>$(OutputPath)nunit-result.xml</NUnitResultsFile>
