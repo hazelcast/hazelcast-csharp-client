@@ -13,20 +13,6 @@ namespace Hazelcast.Partition.Strategy
             return null;
         }
 
-        public static string GetBaseName(string name)
-        {
-            if (name == null)
-            {
-                return null;
-            }
-            int indexOf = name.IndexOf('@');
-            if (indexOf == -1)
-            {
-                return name;
-            }
-            return name.Substring(0, indexOf);
-        }
-
         public static string GetPartitionKey(string key)
         {
             if (key == null)

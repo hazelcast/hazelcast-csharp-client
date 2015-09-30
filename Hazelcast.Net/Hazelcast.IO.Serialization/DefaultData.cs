@@ -137,11 +137,6 @@ namespace Hazelcast.IO.Serialization
             return HashUtil.MurmurHash3_x86_32(data, DataOffset, DataSize());
         }
 
-        public long Hash64()
-        {
-            return HashUtil.MurmurHash3_x64_64(data, DataOffset, DataSize());
-        }
-
         public bool IsPortable()
         {
             return SerializationConstants.ConstantTypePortable == GetTypeId();

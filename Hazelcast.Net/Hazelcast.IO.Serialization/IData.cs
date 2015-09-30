@@ -51,10 +51,6 @@ namespace Hazelcast.IO.Serialization
         /// <returns>true if Data has partition hash, false otherwise.</returns>
         bool HasPartitionHash();
 
-        /// <summary>Returns 64-bit hash code for this Data object.</summary>
-        /// <returns>64-bit hash code</returns>
-        long Hash64();
-
         /// <summary>
         /// Returns true if this Data is created from a
         /// <see cref="IPortable"/>
