@@ -166,13 +166,12 @@ namespace Hazelcast.Client.Spi
         private void MemberRemoved(IMember member)
         {
             _members.Remove(member);
+            ApplyMemberListChanges();
             var connection = _connectionManager.GetConnection(member.GetAddress());
             if (connection != null)
             {
                 _connectionManager.DestroyConnection(connection);
             }
-            ApplyMemberListChanges();
-
             var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, GetMembers());
             _clusterService.FireMembershipEvent(@event);
         }

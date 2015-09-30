@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public static readonly QueueMessageType RequestType = QueueMessageType.QueueRemoveListener;
         public const int ResponseType = 101;
-        public const bool Retryable = false;
+        public const bool Retryable = true;
 
         //************************ REQUEST *************************//
 

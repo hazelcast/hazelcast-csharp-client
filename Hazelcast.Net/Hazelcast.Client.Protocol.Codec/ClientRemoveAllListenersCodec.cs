@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public static readonly ClientMessageType RequestType = ClientMessageType.ClientRemoveAllListeners;
         public const int ResponseType = 100;
-        public const bool Retryable = false;
+        public const bool Retryable = true;
 
         //************************ REQUEST *************************//
 
