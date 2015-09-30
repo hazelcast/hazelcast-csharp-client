@@ -60,8 +60,12 @@ namespace Hazelcast.Client.Spi
 
                 var request = requestEncoder(realRegistrationId);
                 var task = _client.GetInvocationService().InvokeOnRandomTarget(request);
-                var result = responseDecoder(ThreadUtil.GetResult(task));
-                return result;
+                var actualResult = responseDecoder(ThreadUtil.GetResult(task));
+                if (Logger.IsFinestEnabled() && !actualResult)
+                {
+                    Logger.Finest("Remove listener response returned false from server for registration id " + registrationId);
+                }
+                return true;
             }
             catch (Exception e)
             {
