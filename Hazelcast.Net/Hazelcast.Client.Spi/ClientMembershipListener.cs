@@ -82,26 +82,20 @@ namespace Hazelcast.Client.Spi
             _initialListFetched.Set();
         }
 
-        public void HandleMemberAttributeChange(MemberAttributeChange memberAttributeChange)
+        public void HandleMemberAttributeChange(string uuid, string key, int operationType, string value)
         {
             var memberMap = _clusterService.GetMembersRef();
             if (memberMap == null)
             {
                 return;
             }
-            if (memberAttributeChange == null)
-            {
-                return;
-            }
             foreach (var target in memberMap.Values)
             {
-                if (target.GetUuid().Equals(memberAttributeChange.Uuid))
+                if (target.GetUuid().Equals(uuid))
                 {
-                    var operationType = memberAttributeChange.OperationType;
-                    var key = memberAttributeChange.Key;
-                    var value = memberAttributeChange.Value;
-                    ((Member) target).UpdateAttribute(operationType, key, value);
-                    var memberAttributeEvent = new MemberAttributeEvent(_client.GetCluster(), target, operationType, key,
+                    var type = (MemberAttributeOperationType) operationType;
+                    ((Member) target).UpdateAttribute(type, key, value);
+                    var memberAttributeEvent = new MemberAttributeEvent(_client.GetCluster(), target, type, key,
                         value);
                     _clusterService.FireMemberAttributeEvent(memberAttributeEvent);
                     break;
