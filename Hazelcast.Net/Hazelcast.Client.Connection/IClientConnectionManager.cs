@@ -13,6 +13,7 @@ namespace Hazelcast.Client.Connection
         void DestroyConnection(ClientConnection clientConnection);
 
         /// <exception cref="System.IO.IOException"></exception>
+        ClientConnection GetConnection(Address initializationTarget);
         ClientConnection GetOrConnect(Address address, Authenticator authenticator);
         ClientConnection GetOrConnect(Address address);
 

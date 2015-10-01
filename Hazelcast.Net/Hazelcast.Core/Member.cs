@@ -14,6 +14,7 @@ namespace Hazelcast.Core
         private readonly ConcurrentDictionary<string, string> _attributes = new ConcurrentDictionary<string, string>();
         private readonly Address address;
         private readonly string uuid;
+        private readonly bool _liteMember;
         private volatile ILogger logger;
 
         public Member()
@@ -21,23 +22,29 @@ namespace Hazelcast.Core
         }
 
         public Member(Address address)
-            : this(address, null, new Dictionary<string, string>())
+            : this(address, null)
         {
         }
 
         public Member(Address address, string uuid)
-            : this(address, uuid, new Dictionary<string, string>())
+            : this(address, uuid, new Dictionary<string, string>(), false)
         {
         }
 
-        public Member(Address address, string uuid, IDictionary<string, string> attributes)
+        public Member(Address address, string uuid, IDictionary<string, string> attributes, bool liteMember)
         {
             this.address = address;
             this.uuid = uuid;
+            _liteMember = liteMember;
             foreach (var kv in attributes)
             {
                 _attributes.TryAdd(kv.Key, kv.Value);
             }
+        }
+
+        public bool IsLiteMember
+        {
+            get { return _liteMember; }
         }
 
         public Address GetAddress()
@@ -85,6 +92,10 @@ namespace Hazelcast.Core
             sb.Append("]");
             sb.Append(":");
             sb.Append(address.GetPort());
+            if (IsLiteMember)
+            {
+                sb.Append(" lite");
+            }
             return sb.ToString();
         }
 

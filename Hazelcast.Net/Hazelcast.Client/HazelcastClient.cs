@@ -41,6 +41,8 @@ namespace Hazelcast.Client
         private readonly int id = ClientId.GetAndIncrement();
         private readonly string instanceName;
         private readonly IClientInvocationService invocationService;
+        private readonly ILoadBalancer loadBalancer;
+
         //private readonly ThreadGroup threadGroup;
 
         private readonly LifecycleService lifecycleService;
@@ -90,14 +92,8 @@ namespace Hazelcast.Client
             //TODO EXECUTION SERVICE
             executionService = new ClientExecutionService(instanceName, config.GetExecutorPoolSize());
             clusterService = new ClientClusterService(this);
-            var loadBalancer = config.GetLoadBalancer();
-            if (loadBalancer == null)
-            {
-                loadBalancer = new RoundRobinLB();
-            }
-
+            loadBalancer = config.GetLoadBalancer() ?? new RoundRobinLB();
             connectionManager = new ClientConnectionManager(this, loadBalancer);
-
             invocationService = GetInvocationService(config);
             listenerService = new ClientListenerService(this);
             userContext = new ConcurrentDictionary<string, object>();
@@ -469,6 +465,11 @@ namespace Hazelcast.Client
                 throw;
             }
             partitionService.Start();
+        }
+
+        public ILoadBalancer GetLoadBalancer()
+        {
+            return loadBalancer;
         }
     }
 }

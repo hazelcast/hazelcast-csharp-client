@@ -37,5 +37,11 @@ namespace Hazelcast.Core
 
         string GetAttribute(string key);
 
+        // <summary>Returns true if this member is a lite member.</summary>
+        /// <returns>
+        /// <tt>true</tt> if this member is a lite member, <tt>false</tt> otherwise.
+        /// Lite members do not own any partition.
+        /// </returns>
+        bool IsLiteMember { get; }
     }
 }

@@ -64,6 +64,16 @@ namespace Hazelcast.Client.Spi
             get { return _client; }
         }
 
+        internal int InvocationRetryCount
+        {
+            get { return _retryCount; }
+        }
+
+        internal int InvocationRetryWaitTime
+        {
+            get { return _retryWaitTime; }
+        }
+
         public abstract IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key,
             DistributedEventHandler handler,
             DecodeStartListenerResponse responseDecoder);
