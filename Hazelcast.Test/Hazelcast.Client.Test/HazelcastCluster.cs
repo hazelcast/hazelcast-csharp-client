@@ -20,6 +20,11 @@ namespace Hazelcast.Client.Test
             _nextNodeId = initialNodeCount;
         }
 
+        public int Size
+        {
+            get { return _nodes.Count; }
+        }
+
         public void Start()
         {
             foreach (var node in _nodes.Values)

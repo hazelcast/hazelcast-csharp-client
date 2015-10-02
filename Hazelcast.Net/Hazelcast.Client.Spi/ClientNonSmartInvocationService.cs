@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Spi
         {
             var clusterService = Client.GetClientClusterService();
             var address = clusterService.GetOwnerConnectionAddress();
-            return Send(GetConnection(address), invocation);
+            return Invoke(invocation, address);
         } 
     }
 }
