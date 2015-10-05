@@ -380,7 +380,8 @@ namespace Hazelcast.Client.Proxy
 
         public string AddEntryListener(IEntryListener<K, V> listener, bool includeValue)
         {
-            var request = MapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue);
+            var listenerFlags = GetListenerFlags(listener);
+            var request = MapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, listenerFlags);
             DistributedEventHandler handler =
                 eventData => MapAddEntryListenerCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -389,6 +390,17 @@ namespace Hazelcast.Client.Proxy
                     });
 
             return Listen(request, message => MapAddEntryListenerCodec.DecodeResponse(message).response, handler);
+        }
+
+        private int GetListenerFlags(IEntryListener<K, V> listener)
+        {
+            //TODO: implement various listener interfaces and check which ones are implemented, like in the Java client.
+            var flags = 0;
+            foreach (EntryEventType value in Enum.GetValues(typeof(EntryEventType)))
+            {
+                flags |= (int)value;
+            }
+            return flags;
         }
 
         public bool RemoveEntryListener(string id)
@@ -400,7 +412,8 @@ namespace Hazelcast.Client.Proxy
         public string AddEntryListener(IEntryListener<K, V> listener, K keyK, bool includeValue)
         {
             var keyData = ToData(keyK);
-            var request = MapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue);
+            var flags = GetListenerFlags(listener);
+            var request = MapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, flags);
             DistributedEventHandler handler =
                 eventData => MapAddEntryListenerToKeyCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -607,8 +620,9 @@ namespace Hazelcast.Client.Proxy
         {
             var keyData = ToData(_key);
             var predicateData = ToData(predicate);
+            var flags = GetListenerFlags(listener);
             var request = MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(GetName(), keyData, predicateData,
-                includeValue);
+                includeValue, flags);
             DistributedEventHandler handler =
                 eventData => MapAddEntryListenerToKeyWithPredicateCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -623,7 +637,8 @@ namespace Hazelcast.Client.Proxy
         public string AddEntryListener(IEntryListener<K, V> listener, IPredicate<K, V> predicate, bool includeValue)
         {
             var predicateData = ToData(predicate);
-            var request = MapAddEntryListenerWithPredicateCodec.EncodeRequest(GetName(), predicateData, includeValue);
+            var flags = GetListenerFlags(listener);
+            var request = MapAddEntryListenerWithPredicateCodec.EncodeRequest(GetName(), predicateData, includeValue, flags);
             DistributedEventHandler handler =
                 eventData => MapAddEntryListenerWithPredicateCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
