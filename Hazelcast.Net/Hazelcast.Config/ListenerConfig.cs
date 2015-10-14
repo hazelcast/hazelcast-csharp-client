@@ -11,9 +11,8 @@ namespace Hazelcast.Config
     /// </summary>
     public class ListenerConfig
     {
-        protected internal string className = null;
-
-        protected internal IEventListener implementation = null;
+        private string className;
+        private IEventListener implementation;
 
         /// <summary>Creates a ListenerConfig without className/implementation.</summary>
         /// <remarks>Creates a ListenerConfig without className/implementation.</remarks>
@@ -48,6 +47,25 @@ namespace Hazelcast.Config
             return className;
         }
 
+        /// <summary>Returns the IEventListener implementation.</summary>
+        /// <remarks>Returns the IEventListener implementation. If none has been specified, null is returned.</remarks>
+        /// <returns>the IEventListener implementation.</returns>
+        /// <seealso cref="SetImplementation(IEventListener)" />
+        public virtual IEventListener GetImplementation()
+        {
+            return implementation;
+        }
+
+        public virtual bool IsIncludeValue()
+        {
+            return true;
+        }
+
+        public virtual bool IsLocal()
+        {
+            return false;
+        }
+
         /// <summary>Sets the class name of the IEventListener.</summary>
         /// <remarks>
         ///     Sets the class name of the IEventListener.
@@ -56,22 +74,13 @@ namespace Hazelcast.Config
         /// <param name="className">the name of the class of the IEventListener.</param>
         /// <returns>the updated ListenerConfig.</returns>
         /// <exception cref="System.ArgumentException">if className is null or an empty String.</exception>
-        /// <seealso cref="SetImplementation(IEventListener)"/>
+        /// <seealso cref="SetImplementation(IEventListener)" />
         /// <seealso cref="GetClassName()">GetClassName()</seealso>
         public ListenerConfig SetClassName(string className)
         {
             this.className = ValidationUtil.HasText(className, "className");
             implementation = null;
             return this;
-        }
-
-        /// <summary>Returns the IEventListener implementation.</summary>
-        /// <remarks>Returns the IEventListener implementation. If none has been specified, null is returned.</remarks>
-        /// <returns>the IEventListener implementation.</returns>
-        /// <seealso cref="SetImplementation(IEventListener)"/>
-        public virtual IEventListener GetImplementation()
-        {
-            return implementation;
         }
 
         /// <summary>Sets the IEventListener implementation.</summary>
@@ -89,16 +98,6 @@ namespace Hazelcast.Config
             this.implementation = ValidationUtil.IsNotNull(implementation, "implementation");
             className = null;
             return this;
-        }
-
-        public virtual bool IsIncludeValue()
-        {
-            return true;
-        }
-
-        public virtual bool IsLocal()
-        {
-            return false;
         }
 
         public override string ToString()

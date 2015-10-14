@@ -61,7 +61,7 @@ namespace Hazelcast.Config
                     }
                     else
                     {
-                         input = new StringReader(Properties.Resources.hazelcast_client_default);
+                        input = new StringReader(Properties.Resources.hazelcast_client_default);
                         logger.Info("Using Default configuration file");
                     }
                 }
@@ -150,7 +150,7 @@ namespace Hazelcast.Config
         private void HandleNearCache(XmlNode node)
         {
             string name = node.Attributes.GetNamedItem("name").Value;
-            var nearCacheConfig = new NearCacheConfig();
+            var nearCacheConfig = new NearCacheConfig(name);
             foreach (XmlNode child in node.ChildNodes)
             {
                 string nodeName = CleanNodeName(child);
@@ -225,7 +225,7 @@ namespace Hazelcast.Config
                         HandleSocketOptions(child, clientNetworkConfig);
                         break;
                     case "socket-interceptor":
-                        HandleSocketInterceptorConfig(node);
+                        HandleSocketInterceptorConfig(child);
                         break;
                 }
             }

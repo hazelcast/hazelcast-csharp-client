@@ -18,7 +18,8 @@ namespace Hazelcast.Client.Test
         protected override void ConfigureClient(ClientConfig config)
         {
             base.ConfigureClient(config);
-            config.AddNearCacheConfig("nearCachedMap*", new NearCacheConfig().SetInMemoryFormat(InMemoryFormat.Object));
+            var nearCacheConfig = new NearCacheConfig().SetInMemoryFormat(InMemoryFormat.Object);
+            config.AddNearCacheConfig("nearCachedMap*", nearCacheConfig);
         }
 
         internal static IMap<object, object> map;
@@ -38,7 +39,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void testNearCache() 
+        public void TestNearCache() 
         {
             for (int i = 0; i < 100; i++) 
             {
@@ -75,7 +76,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void testNearCacheGetAsync() 
+        public void TestNearCacheGetAsync() 
         {
              
             map.Put("key", "value");
@@ -103,7 +104,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void testNearCacheLocalInvalidations() 
+        public void TestNearCacheLocalInvalidations() 
         {
              
             map.Put("key", "value");

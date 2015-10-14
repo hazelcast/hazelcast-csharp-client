@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Hazelcast.Client;
 using Hazelcast.Core;
+using Hazelcast.Logging;
 using Hazelcast.Security;
 using Hazelcast.Util;
 
@@ -60,7 +61,10 @@ namespace Hazelcast.Config
 
         private IDictionary<string, NearCacheConfig> nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
 
+        private IConfigPatternMatcher configPatternMatcher = new MatchingPointConfigPatternMatcher();
+
         private string licenseKey;
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientConfig));
 
         public virtual string GetLicenseKey()
         {
@@ -91,6 +95,12 @@ namespace Hazelcast.Config
         public virtual void SetNetworkConfig(ClientNetworkConfig networkConfig)
         {
             this.networkConfig = networkConfig;
+        }
+
+        public virtual ClientConfig AddNearCacheConfig(NearCacheConfig nearCacheConfig)
+        {
+            nearCacheConfigMap.Add(nearCacheConfig.GetName(), nearCacheConfig);
+            return this;
         }
 
         public virtual ClientConfig AddNearCacheConfig(string mapName, NearCacheConfig nearCacheConfig)
@@ -220,40 +230,27 @@ namespace Hazelcast.Config
             return this;
         }
 
-        private static T LookupByPattern<T>(IDictionary<string, T> map, string name)
+        private T LookupByPattern<T>(IDictionary<string, T> map, string name)
         {
             T t;
-            if (!map.TryGetValue(name, out t))
+            if (map.TryGetValue(name, out t))
             {
-                foreach (KeyValuePair<string, T> entry in map)
-                {
-                    string pattern = entry.Key;
-                    T value = entry.Value;
-                    if (NameMatches(name, pattern))
-                    {
-                        return value;
-                    }
-                }
+                return t;
             }
-            return t;
+
+            var key = configPatternMatcher.Matches(map.Keys, name);
+            if (key != null) return map[key];
+
+            if ("default" != name && !name.StartsWith("hz:"))
+            {
+                Logger.Finest("No configuration found for " + name + ", using default config.");
+            }
+            return default(T);
         }
 
-        private static bool NameMatches(string name, string pattern)
+        public void SetConfigPatternMatcher(IConfigPatternMatcher matchingPointConfigPatternMatcher)
         {
-            int index = pattern.IndexOf('*');
-            if (index == -1)
-            {
-                return name.Equals(pattern);
-            }
-            string firstPart = pattern.Substring(0, index);
-            int indexFirstPart = name.IndexOf(firstPart, 0);
-            if (indexFirstPart == -1)
-            {
-                return false;
-            }
-            string secondPart = pattern.Substring(index + 1);
-            int indexSecondPart = name.IndexOf(secondPart, index + 1);
-            return indexSecondPart != -1;
+            this.configPatternMatcher = matchingPointConfigPatternMatcher;
         }
     }
 }

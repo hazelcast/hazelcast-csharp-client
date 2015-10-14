@@ -75,9 +75,9 @@ namespace Properties {
         ///  ~ distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
         ///  ~ WITHOUT WARRANTI [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string hazelcast_client_default {
+        internal static string hazelcast_config_full {
             get {
-                return ResourceManager.GetString("hazelcast_client_default", resourceCulture);
+                return ResourceManager.GetString("hazelcast_config_full", resourceCulture);
             }
         }
     }

@@ -66,7 +66,6 @@ namespace Hazelcast.Config
 		/// <summary>Enabling ssl for client</summary>
         //private SSLConfig sslConfig = null;
 
-		//TODO heartbeat
 		public virtual bool IsSmartRouting()
 		{
 			return smartRouting;
