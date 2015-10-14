@@ -22,5 +22,8 @@ namespace Hazelcast.Client.Protocol
         public const int JobProcessInfo = 112;
         public const int SetData = 113;
         public const int SetEntry = 114;
+        public const int ReadResultSet = 115;
+        public const int CacheKeyIteratorResult = 116;
+        public const int ListEntry = 117;
     }
 }
