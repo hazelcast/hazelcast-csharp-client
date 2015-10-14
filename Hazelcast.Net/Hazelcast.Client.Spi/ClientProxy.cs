@@ -153,11 +153,11 @@ namespace Hazelcast.Client.Spi
 
         protected IList<IData> ToDataList<T>(ICollection<T> c)
         {
-            ThrowExceptionIfNull(c);
+            ThrowExceptionIfNull(c, "Collection cannot be null.");
             var values = new List<IData>(c.Count);
             foreach (var o in c)
             {
-                ThrowExceptionIfNull(o);
+                ThrowExceptionIfNull(o, "Collection cannot contain null items.");
                 values.Add(ToData(o));
             }
             return values;
@@ -200,14 +200,21 @@ namespace Hazelcast.Client.Spi
             return entrySet;
         }
 
-        protected internal virtual void ThrowExceptionIfNull(object o)
+        protected internal virtual void ThrowExceptionIfNull(object o, String message = null)
         {
             if (o == null)
             {
-                throw new ArgumentNullException("o");
+                throw new ArgumentNullException(message);
             }
         }
 
+        protected internal virtual void ThrowExceptionIfTrue(bool expression, String message)
+        {
+            if (expression)
+            {
+                throw new ArgumentException(message);
+            }
+        }
         internal virtual void PostInit(){}
 
     }

@@ -31,6 +31,8 @@ namespace Hazelcast.Core
         public const string ClientEngine = "hz:impl:clientEngineService";
 
         public const string DistributedExecutor = "hz:impl:distributedExecutorService";
+
+        public const string Ringbuffer = "hz:impl:ringbufferService";
         //FIXME REFACTOR BURAYI DUZELT
     }
 }

@@ -26,6 +26,11 @@ namespace Hazelcast.Core
         /// <remarks>Returns the distributed queue instance with the specified name.</remarks>
         IQueue<E> GetQueue<E>(string name);
 
+        /// <summary>Returns the distributed Ringbuffer instance with the specified name.</summary>
+        /// <param name="name">name of the distributed Ringbuffer</param>
+        /// <returns>distributed RingBuffer instance with the specified name</returns>
+        IRingbuffer<E> GetRingbuffer<E>(string name);
+
         /// <summary>Returns the distributed topic instance with the specified name.</summary>
         /// <remarks>Returns the distributed topic instance with the specified name.</remarks>
         /// <typeparam name="E">The type of elements in the Topic</typeparam>

@@ -112,6 +112,11 @@ namespace Hazelcast.Client
             return GetDistributedObject<IQueue<E>>(ServiceNames.Queue, name);
         }
 
+        public IRingbuffer<E> GetRingbuffer<E>(string name)
+        {
+            return GetDistributedObject<IRingbuffer<E>>(ServiceNames.Ringbuffer, name);
+        }
+
         public ITopic<E> GetTopic<E>(string name)
         {
             return GetDistributedObject<ITopic<E>>(ServiceNames.Topic, name);
