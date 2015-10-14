@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            map = Client.GetMap<object, object>(Name);
+            map = Client.GetMap<object, object>(TestSupport.RandomString());
         }
 
         [TearDown]
@@ -442,7 +442,7 @@ namespace Hazelcast.Client.Test
         public void TestListenerEventOrder()
         {
             const int maxSize = 10000;
-            var map2 = Client.GetMap<int, int>(Name);
+            var map2 = Client.GetMap<int, int>(TestSupport.RandomString());
             map2.Put(1, 0);
 
             var eventDataReceived = new Queue<int>();

@@ -12,7 +12,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            _name = Name;
+            _name = TestSupport.RandomString();
         }
 
         [TearDown]

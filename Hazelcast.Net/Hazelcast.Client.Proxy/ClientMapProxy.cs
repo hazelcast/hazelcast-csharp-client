@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
@@ -169,44 +170,25 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
             var request = MapPutAsyncCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(),
                 timeunit.ToMillis(ttl));
-            try
+            InvalidateNearCacheEntry(keyData);
+           
+            return InvokeAsync(request, keyData, m =>
             {
-                var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, keyData);
-                var deserializeTask = task.ToTask().ContinueWith(continueTask =>
-                {
-                    InvalidateNearCacheEntry(keyData);
-                    var clientMessage = ThreadUtil.GetResult(continueTask);
-                    var responseParameters = MapPutAsyncCodec.DecodeResponse(clientMessage);
-                    return ToObject<V>(responseParameters.response);
-                });
-                return deserializeTask;
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
+                var response = MapPutAsyncCodec.DecodeResponse(m).response;
+                return ToObject<V>(response);
+            });
         }
 
         public Task<V> RemoveAsync(K key)
         {
             var keyData = ToData(key);
             var request = MapRemoveAsyncCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
-            try
+            InvalidateNearCacheEntry(keyData);
+            return InvokeAsync(request, keyData, m =>
             {
-                var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, keyData);
-                var deserializeTask = task.ToTask().ContinueWith(continueTask =>
-                {
-                    InvalidateNearCacheEntry(keyData);
-                    var clientMessage = ThreadUtil.GetResult(continueTask);
-                    var responseParameters = MapRemoveAsyncCodec.DecodeResponse(clientMessage);
-                    return ToObject<V>(responseParameters.response);
-                });
-                return deserializeTask;
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
+                var response = MapRemoveAsyncCodec.DecodeResponse(m).response;
+                return ToObject<V>(response);
+            });
         }
 
         public bool TryRemove(K key, long timeout, TimeUnit timeunit)

@@ -11,7 +11,7 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientLockTest:HazelcastBaseTest
 	{
-        internal static string name = Name;
+        internal static string name = TestSupport.RandomString();
 
 		internal static ILock l;
 

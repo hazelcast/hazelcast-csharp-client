@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
@@ -97,6 +99,23 @@ namespace Hazelcast.Client.Spi
         {
             var response = Invoke(request, key);
             return decodeResponse(response);
+        }
+
+        public virtual Task<T> InvokeAsync<T>(IClientMessage request, object key,
+            Func<IClientMessage, T> decodeResponse)
+        {
+            var future = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
+            var continueTask = future.ToTask().ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    var exception = t.Exception;
+                    throw exception.InnerExceptions.First();
+                }
+                var clientMessage = ThreadUtil.GetResult(t);
+                return decodeResponse(clientMessage);
+            });
+            return continueTask;
         }
 
         protected virtual IClientMessage Invoke(IClientMessage request)

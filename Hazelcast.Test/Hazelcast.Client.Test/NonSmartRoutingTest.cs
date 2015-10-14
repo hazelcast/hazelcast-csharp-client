@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestPutAllWithNonSmartRouting()
         {
-            var map = Client.GetMap<string, string>(Name);
+            var map = Client.GetMap<string, string>(TestSupport.RandomString());
             int n = 1000;
             Dictionary<string, string> toInsert = new Dictionary<string, string>();
             for (int i = 0; i < n; i++)
@@ -52,7 +52,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestListenerWithNonSmartRouting()
         {
-            var map = Client.GetMap<string, string>(Name);
+            var map = Client.GetMap<string, string>(TestSupport.RandomString());
             int n = 4;
 
             var keys = TestSupport.RandomArray(TestSupport.RandomString, 10);

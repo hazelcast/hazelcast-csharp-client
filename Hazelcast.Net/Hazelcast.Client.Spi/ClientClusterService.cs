@@ -77,7 +77,8 @@ namespace Hazelcast.Client.Spi
         public IMember GetMember(Address address)
         {
             var members = _membersRef.Get();
-            return members != null ? members[address] : null;
+            if (members == null) return null;
+            return members.ContainsKey(address) ? members[address] : null;
         }
 
         public IMember GetMember(string uuid)

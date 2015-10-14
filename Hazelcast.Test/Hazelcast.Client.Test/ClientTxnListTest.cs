@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Test
 		[Test]
 		public virtual void TestAddRemove()
 		{
-		    var name = Name;
+		    var name = TestSupport.RandomString();
             list = Client.GetList<object>(name);
 			list.Add("item1");
 			ITransactionContext context = Client.NewTransactionContext();

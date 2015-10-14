@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Hazelcast.Core;
 using NUnit.Framework;
@@ -12,7 +13,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            list = Client.GetList<object>(Name);
+            list = Client.GetList<object>(TestSupport.RandomString());
         }
 
         [TearDown]

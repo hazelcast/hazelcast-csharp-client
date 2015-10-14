@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Config;
 using NUnit.Framework;
 
@@ -10,7 +12,7 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientRetryTest : HazelcastBaseTest
     {
-        private readonly int Count = 5000;
+        private readonly int Count = 1000;
 
         protected override void ConfigureClient(ClientConfig config)
         {
@@ -22,7 +24,7 @@ namespace Hazelcast.Client.Test
         public void TestRetryRequestsWhenInstanceIsShutdown()
         {
             var nodeId = AddNodeAndWait();
-            var map = Client.GetMap<int,string>(Name);
+            var map = Client.GetMap<int,string>(TestSupport.RandomString());
             for (int i = 0; i < Count; i++)
             {
                 map.Put(i, TestSupport.RandomString());
@@ -43,13 +45,35 @@ namespace Hazelcast.Client.Test
             }, timeoutSeconds: 60);
         }
 
+        [Test]
+        public void TestRetryAsyncRequest()
+        {
+            int count = 100;
+            var nodeId = AddNodeAndWait();
+            var map = Client.GetMap<int, string>(TestSupport.RandomString());
+            for (var i = 0; i < count; i++)
+            {
+                map.PutAsync(i, TestSupport.RandomString());
+            }
+            Cluster.RemoveNode(nodeId);
+            TestSupport.AssertTrueEventually(() =>
+            {
+                var keys = map.KeySet();
+                for (var i = 0; i < count; i++)
+                {
+                    Assert.IsTrue(keys.Contains(i), "Key " + i + " was not found");
+                }
+                Assert.AreEqual(count, map.Size());
+            }, timeoutSeconds: 60);
+        }
+
         [Test, ExpectedException(typeof(InvalidOperationException))]
         public void ClientTransactionRetry()
         {
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
 
-            var map = context.GetMap<int, string>(Name);
+            var map = context.GetMap<int, string>(TestSupport.RandomString());
 
             Cluster.RemoveNode();
             Cluster.AddNode();

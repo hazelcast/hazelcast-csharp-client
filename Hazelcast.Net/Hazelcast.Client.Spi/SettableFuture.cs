@@ -41,6 +41,7 @@ namespace Hazelcast.Client.Spi
             get
             {
                 Wait();
+                if (_exception != null) throw _exception;
                 return (T) _result;
             }
             set
@@ -59,9 +60,7 @@ namespace Hazelcast.Client.Spi
 
         public Task<T> ToTask()
         {
-            var task = new Task<T>(() => Result);
-            task.Start();
-            return task;
+            return _taskSource.Task;
         }
 
         public T GetResult(int miliseconds)

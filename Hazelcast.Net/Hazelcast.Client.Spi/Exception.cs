@@ -21,20 +21,10 @@ namespace Hazelcast.Client.Spi
         {
         }
 
-        public TargetNotMemberException(Address target, int partitionId, String operationName, String serviceName)
-            : base(
-                "Not Member! target:" + target + ", partitionId: " + partitionId + ", operation: " + operationName +
-                ", service: " + serviceName)
-        {
-        }
     }
 
     internal class TargetDisconnectedException : RetryableHazelcastException
     {
-        public TargetDisconnectedException()
-        {
-        }
-
         public TargetDisconnectedException(Address address) : base("Target[" + address + "] disconnected.")
         {
         }

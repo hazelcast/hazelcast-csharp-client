@@ -131,7 +131,14 @@ namespace Hazelcast.Client.Connection
 
         public IPEndPoint GetLocalSocketAddress()
         {
-            return _clientSocket != null ? (IPEndPoint) _clientSocket.LocalEndPoint : null;
+            try
+            {
+                return _clientSocket != null ? (IPEndPoint) _clientSocket.LocalEndPoint : null;
+            }
+            catch (ObjectDisposedException)
+            {
+                return null;
+            }
         }
 
         public Address GetAddress()
@@ -268,8 +275,7 @@ namespace Hazelcast.Client.Connection
 
                 if (socketError != SocketError.Success)
                 {
-                    LogSocketError(socketError);
-                    Close();
+                    HandleSocketException(new SocketException((int)socketError));
                     return;
                 }
                 _receiveBuffer.Position += receivedByteSize;
@@ -297,24 +303,18 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private static void LogSocketError(SocketError socketError)
-        {
-            Logger.Warning(string.Format("Got socket error: {0}", socketError));
-        }
-
         private void HandleSocketException(Exception e)
         {
             var se = e as SocketException;
             if (se != null)
             {
-                var errorCode = se.ErrorCode;
-                LogSocketError(se.SocketErrorCode);
+                Logger.Warning(string.Format("Got socket error: {0}", se.SocketErrorCode));
             }
             else
             {
                 Logger.Warning(e.Message, e);
             }
-            Close();
+            _clientConnectionManager.DestroyConnection(this);
         }
        
         /// <exception cref="System.IO.IOException"></exception>
@@ -340,11 +340,6 @@ namespace Hazelcast.Client.Connection
             _clientSocket.Close();
 
             _clientSocket = null;
-
-            if (_id > -1)
-            {
-                _clientConnectionManager.DestroyConnection(this);
-            }
         }
 
         private void StartAsyncProcess()
@@ -409,8 +404,7 @@ namespace Hazelcast.Client.Connection
 
                         if (socketError != SocketError.Success)
                         {
-                            LogSocketError(socketError);
-                            Close();
+                            HandleSocketException(new SocketException((int)socketError));
                             return;
                         }
 

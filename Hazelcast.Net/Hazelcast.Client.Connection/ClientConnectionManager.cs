@@ -109,7 +109,7 @@ namespace Hazelcast.Client.Connection
                 {
                     try
                     {
-                        kvPair.Value.Close();
+                        DestroyConnection(kvPair.Value);
                     }
                     catch (Exception)
                     {
@@ -137,14 +137,6 @@ namespace Hazelcast.Client.Connection
         public void AddConnectionHeartBeatListener(IConnectionHeartbeatListener connectonHeartbeatListener)
         {
             _heatHeartbeatListeners.Add(connectonHeartbeatListener);
-        }
-
-        public void DestroyConnection(ClientConnection clientConnection)
-        {
-            if (clientConnection != null && !clientConnection.Live)
-            {
-                DestroyConnection(clientConnection.GetAddress());
-            }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -251,16 +243,18 @@ namespace Hazelcast.Client.Connection
             connection.SetRemoteMember(member);
         }
 
-        private void DestroyConnection(Address address)
+        public void DestroyConnection(ClientConnection connection)
         {
-            Logger.Finest("Destroying connection for " + address);
+            var address = connection.GetAddress();
+            Logger.Finest("Destroying connection " + connection);
             lock (_connectionMutex)
             {
                 if (address != null)
                 {
-                    ClientConnection connection = null;
-                    if (_addresses.TryRemove(address, out connection))
+                    ClientConnection conn;
+                    if(_addresses.TryRemove(address, out conn))
                     {
+                        connection.Close();
                         FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
                     }
                 }

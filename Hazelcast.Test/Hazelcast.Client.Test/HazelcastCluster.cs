@@ -57,9 +57,11 @@ namespace Hazelcast.Client.Test
 
         public void RemoveNode()
         {
-            var key = _nodes.Keys.First();
+            // remove node with largest id
+            var key = _nodes.Keys.Max();
             RemoveNode(key);
         }
+
         public void RemoveNode(int id)
         {
             _nodes[id].Stop();

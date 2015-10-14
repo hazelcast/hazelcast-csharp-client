@@ -16,7 +16,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            l = Client.GetCountDownLatch(Name);
+            l = Client.GetCountDownLatch(TestSupport.RandomString());
             
         }
 
