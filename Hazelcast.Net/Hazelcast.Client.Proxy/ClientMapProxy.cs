@@ -453,15 +453,9 @@ namespace Hazelcast.Client.Proxy
         public ISet<K> KeySet()
         {
             var request = MapKeySetCodec.EncodeRequest(GetName());
-            var result = Invoke(request, m => MapKeySetCodec.DecodeResponse(m).set);
+            var result = Invoke(request, m => MapKeySetCodec.DecodeResponse(m).list);
 
-            ISet<K> keySet = new HashSet<K>();
-            foreach (var data in result)
-            {
-                var key = ToObject<K>(data);
-                keySet.Add(key);
-            }
-            return keySet;
+            return ToSet<K>(result);
         }
 
         public IDictionary<K, V> GetAll(ICollection<K> keys)
@@ -640,14 +634,8 @@ namespace Hazelcast.Client.Proxy
             //    return KeySetWithPagingPredicate((PagingPredicate)predicate);
             //}
             var request = MapKeySetWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
-            var keys = Invoke(request, m => MapKeySetWithPredicateCodec.DecodeResponse(m).set);
-            var keySet = new HashSet<K>();
-            foreach (var item in keys)
-            {
-                var key = ToObject<K>(item);
-                keySet.Add(key);
-            }
-            return keySet;
+            var keys = Invoke(request, m => MapKeySetWithPredicateCodec.DecodeResponse(m).list);
+            return ToSet<K>(keys);
         }
 
         public ISet<KeyValuePair<K, V>> EntrySet(IPredicate<K, V> predicate)

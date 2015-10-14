@@ -10,7 +10,7 @@ namespace Hazelcast.Client.Protocol.Codec
     {
 
         public static readonly MapMessageType RequestType = MapMessageType.MapEntrySet;
-        public const int ResponseType = 114;
+        public const int ResponseType = 117;
         public const bool Retryable = false;
 
         //************************ REQUEST *************************//
@@ -44,18 +44,19 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public class ResponseParameters
         {
-            public ISet<KeyValuePair<IData,IData>> entrySet;
+            public IList<KeyValuePair<IData, IData>> entrySet;
         }
 
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             ResponseParameters parameters = new ResponseParameters();
-            ISet<KeyValuePair<IData,IData>> entrySet = null;
+            IList<KeyValuePair<IData, IData>> entrySet = null;
             int entrySet_size = clientMessage.GetInt();
-            entrySet = new HashSet<KeyValuePair<IData,IData>>();
-            for (int entrySet_index = 0; entrySet_index<entrySet_size; entrySet_index++) {
-                KeyValuePair<IData,IData> entrySet_item;
-            entrySet_item = clientMessage.GetMapEntry();
+            entrySet = new List<KeyValuePair<IData, IData>>();
+            for (int entrySet_index = 0; entrySet_index < entrySet_size; entrySet_index++)
+            {
+                KeyValuePair<IData, IData> entrySet_item;
+                entrySet_item = clientMessage.GetMapEntry();
                 entrySet.Add(entrySet_item);
             }
             parameters.entrySet = entrySet;
