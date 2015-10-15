@@ -20,6 +20,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3A7C7799-9A87-4D78-9797-81A5FDDBFFF8}"
 	ProjectSection(SolutionItems) = preProject
 		build.bat = build.bat
+		server\hazelcast.xml = server\hazelcast.xml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{1CE633B4-743D-4C57-8709-3A7E939509E3}"

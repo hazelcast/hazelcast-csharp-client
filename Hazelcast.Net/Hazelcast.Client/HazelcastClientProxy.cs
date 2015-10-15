@@ -28,6 +28,11 @@ namespace Hazelcast.Client
             return GetClient().GetQueue<E>(name);
         }
 
+        public IRingbuffer<E> GetRingbuffer<E>(string name)
+        {
+            return GetClient().GetRingbuffer<E>(name);
+        }
+
         public ITopic<E> GetTopic<E>(string name)
         {
             return GetClient().GetTopic<E>(name);

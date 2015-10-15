@@ -75,6 +75,18 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapAddInterceptorCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapEvictAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapRemoveInterceptorCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferAddAllAsyncCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferAddAsyncCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferAddCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferCapacityCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferHeadSequenceCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferMessageType.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferReadManyAsyncCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferReadOneCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferRemainingCapacityCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferSizeCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferTailSequenceCodec.cs" />
+    <Compile Include="Hazelcast.Client.Proxy\ClientRingbufferProxy.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientInvocation.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AddressCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AtomicLongAddAndGetCodec.cs" />
@@ -333,6 +345,7 @@
     <Compile Include="Hazelcast.Core\IMultiMap.cs" />
     <Compile Include="Hazelcast.Core\IQueue.cs" />
     <Compile Include="Hazelcast.Core\IHSet.cs" />
+    <Compile Include="Hazelcast.Core\IRingbuffer.cs" />
     <Compile Include="Hazelcast.Core\ITopic.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalList.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalMap.cs" />
@@ -383,6 +396,7 @@
     <Compile Include="Hazelcast.Core\MapEvent.cs" />
     <Compile Include="Hazelcast.Core\MapOperationType.cs" />
     <Compile Include="Hazelcast.Core\MemberAttributeEvent.cs" />
+    <Compile Include="Hazelcast.Core\OverflowPolicy.cs" />
     <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
     <Compile Include="Hazelcast.IO.Serialization\DefaultData.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IData.cs" />

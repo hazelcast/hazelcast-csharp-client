@@ -149,6 +149,8 @@ namespace Hazelcast.Client.Spi
                 (type, id) => ProxyFactory(typeof (ClientCountDownLatchProxy), type, ServiceNames.CountDownLatch, id));
             Register(ServiceNames.Semaphore,
                 (type, id) => ProxyFactory(typeof (ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
+            Register(ServiceNames.Ringbuffer,
+                (type, id) => ProxyFactory(typeof (ClientRingbufferProxy<>), type, ServiceNames.Ringbuffer, id));
 
             Register(ServiceNames.IdGenerator, delegate(Type type, string id)
             {
