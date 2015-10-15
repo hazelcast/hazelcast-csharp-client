@@ -117,6 +117,13 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException" />
+        public virtual void WriteBooleanArray(string fieldName, bool[] values)
+        {
+            SetPosition(fieldName, FieldType.BooleanArray);
+            @out.WriteBooleanArray(values);
+        }
+
+        /// <exception cref="System.IO.IOException" />
         public virtual void WriteByteArray(string fieldName, byte[] values)
         {
             SetPosition(fieldName, FieldType.ByteArray);
@@ -166,10 +173,17 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException" />
+        public virtual void WriteUTFArray(string fieldName, string[] values)
+        {
+            SetPosition(fieldName, FieldType.UtfArray);
+            @out.WriteUTFArray(values);
+        }
+
+        /// <exception cref="System.IO.IOException" />
         public virtual void WritePortableArray(string fieldName, IPortable[] portables)
         {
             var fd = SetPosition(fieldName, FieldType.PortableArray);
-            var len = portables == null ? 0 : portables.Length;
+            var len = portables == null ? Bits.NullArray : portables.Length;
             @out.WriteInt(len);
             @out.WriteInt(fd.GetFactoryId());
             @out.WriteInt(fd.GetClassId());

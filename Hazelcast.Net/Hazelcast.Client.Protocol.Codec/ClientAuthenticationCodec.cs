@@ -24,8 +24,9 @@ namespace Hazelcast.Client.Protocol.Codec
             public string ownerUuid;
             public bool isOwnerConnection;
             public string clientType;
+            public byte serializationVersion;
 
-            public static int CalculateDataSize(string username, string password, string uuid, string ownerUuid, bool isOwnerConnection, string clientType)
+            public static int CalculateDataSize(string username, string password, string uuid, string ownerUuid, bool isOwnerConnection, string clientType, byte serializationVersion)
             {
                 int dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(username);
@@ -33,22 +34,23 @@ namespace Hazelcast.Client.Protocol.Codec
                 dataSize += Bits.BooleanSizeInBytes;
                 if (uuid != null)
                 {
-                dataSize += ParameterUtil.CalculateDataSize(uuid);
+                    dataSize += ParameterUtil.CalculateDataSize(uuid);
                 }
                 dataSize += Bits.BooleanSizeInBytes;
                 if (ownerUuid != null)
                 {
-                dataSize += ParameterUtil.CalculateDataSize(ownerUuid);
+                    dataSize += ParameterUtil.CalculateDataSize(ownerUuid);
                 }
                 dataSize += Bits.BooleanSizeInBytes;
                 dataSize += ParameterUtil.CalculateDataSize(clientType);
+                dataSize += Bits.ByteSizeInBytes;
                 return dataSize;
             }
         }
 
-        public static ClientMessage EncodeRequest(string username, string password, string uuid, string ownerUuid, bool isOwnerConnection, string clientType)
+        public static ClientMessage EncodeRequest(string username, string password, string uuid, string ownerUuid, bool isOwnerConnection, string clientType, byte serializationVersion)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize(username, password, uuid, ownerUuid, isOwnerConnection, clientType);
+            int requiredDataSize = RequestParameters.CalculateDataSize(username, password, uuid, ownerUuid, isOwnerConnection, clientType, serializationVersion);
             ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int)RequestType);
             clientMessage.SetRetryable(Retryable);
@@ -62,9 +64,9 @@ namespace Hazelcast.Client.Protocol.Codec
             }
             else
             {
-                uuid_isNull= false;
+                uuid_isNull = false;
                 clientMessage.Set(uuid_isNull);
-            clientMessage.Set(uuid);
+                clientMessage.Set(uuid);
             }
             bool ownerUuid_isNull;
             if (ownerUuid == null)
@@ -74,12 +76,13 @@ namespace Hazelcast.Client.Protocol.Codec
             }
             else
             {
-                ownerUuid_isNull= false;
+                ownerUuid_isNull = false;
                 clientMessage.Set(ownerUuid_isNull);
-            clientMessage.Set(ownerUuid);
+                clientMessage.Set(ownerUuid);
             }
             clientMessage.Set(isOwnerConnection);
             clientMessage.Set(clientType);
+            clientMessage.Set(serializationVersion);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
@@ -89,23 +92,43 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public class ResponseParameters
         {
+            public byte status;
             public Address address;
             public string uuid;
             public string ownerUuid;
+            public byte serializationVersion;
         }
 
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             ResponseParameters parameters = new ResponseParameters();
+            byte status;
+            status = clientMessage.GetByte();
+            parameters.status = status;
             Address address = null;
-            address = AddressCodec.Decode(clientMessage);
-            parameters.address = address;
+            bool address_isNull = clientMessage.GetBoolean();
+            if (!address_isNull)
+            {
+                address = AddressCodec.Decode(clientMessage);
+                parameters.address = address;
+            }
             string uuid = null;
-            uuid = clientMessage.GetStringUtf8();
-            parameters.uuid = uuid;
+            bool uuid_isNull = clientMessage.GetBoolean();
+            if (!uuid_isNull)
+            {
+                uuid = clientMessage.GetStringUtf8();
+                parameters.uuid = uuid;
+            }
             string ownerUuid = null;
-            ownerUuid = clientMessage.GetStringUtf8();
-            parameters.ownerUuid = ownerUuid;
+            bool ownerUuid_isNull = clientMessage.GetBoolean();
+            if (!ownerUuid_isNull)
+            {
+                ownerUuid = clientMessage.GetStringUtf8();
+                parameters.ownerUuid = ownerUuid;
+            }
+            byte serializationVersion;
+            serializationVersion = clientMessage.GetByte();
+            parameters.serializationVersion = serializationVersion;
             return parameters;
         }
 

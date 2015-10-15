@@ -88,6 +88,13 @@ namespace Hazelcast.IO.Serialization
 		/// <exception cref="System.IO.IOException">System.IO.IOException</exception>
 		void WriteNullPortable(string fieldName, int factoryId, int classId);
 
+        /// <summary>Writes a primitive boolean-array.</summary>
+        /// <remarks>Writes a primitive boolean-array.</remarks>
+        /// <param name="fieldName">name of the field</param>
+        /// <param name="bools">boolean array to be written</param>
+        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        void WriteBooleanArray(string fieldName, bool[] bools);
+
 		/// <summary>Writes a primitive byte-array.</summary>
 		/// <remarks>Writes a primitive byte-array.</remarks>
 		/// <param name="fieldName">name of the field</param>
@@ -136,6 +143,13 @@ namespace Hazelcast.IO.Serialization
 		/// <param name="values">short array to be written</param>
 		/// <exception cref="System.IO.IOException">System.IO.IOException</exception>
 		void WriteShortArray(string fieldName, short[] values);
+
+        /// <summary>Writes a primitive string-array.</summary>
+        /// <remarks>Writes a primitive string-array.</remarks>
+        /// <param name="fieldName">name of the field</param>
+        /// <param name="strings">string array to be written</param>
+        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        void WriteUTFArray(string fieldName, string[] strings);
 
 		/// <summary>Writes a an array of Portables.</summary>
 		/// <remarks>Writes a an array of Portables.</remarks>

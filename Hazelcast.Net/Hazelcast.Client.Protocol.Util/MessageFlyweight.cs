@@ -120,6 +120,13 @@ namespace Hazelcast.Client.Protocol.Util
             return result != 0;
         }
 
+        public virtual byte GetByte()
+        {
+            var result = buffer.GetByte(index + offset);
+            index += Bits.ByteSizeInBytes;
+            return result;
+        }
+
         public virtual int GetInt()
         {
             var result = buffer.GetInt(index + offset);
@@ -154,7 +161,7 @@ namespace Hazelcast.Client.Protocol.Util
 
         public virtual IData GetData()
         {
-            return new DefaultData(GetByteArray());
+            return new HeapData(GetByteArray());
         }
 
         public virtual IList<IData> GetDataList()

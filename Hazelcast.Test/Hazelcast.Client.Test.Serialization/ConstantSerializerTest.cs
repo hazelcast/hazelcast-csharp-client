@@ -16,7 +16,7 @@ namespace Hazelcast.Client.Test.Serialization
         private ISerializationService CreateSerializationService(ByteOrder order)
         {
             return new SerializationServiceBuilder().
-                SetByteOrder(order).SetUseNativeByteOrder(false).SetVersion(1).Build();
+                SetByteOrder(order).SetUseNativeByteOrder(false).SetPortableVersion(1).Build();
 
         }
         
@@ -24,6 +24,12 @@ namespace Hazelcast.Client.Test.Serialization
         public void TestBoolean(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomBool(), order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestBooleanArray(ByteOrder order)
+        {
+            AssertSerialization(TestSupport.RandomArray(TestSupport.RandomBool), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
@@ -109,6 +115,19 @@ namespace Hazelcast.Client.Test.Serialization
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomShort), order);
         }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestString(ByteOrder order)
+        {
+            AssertSerialization(TestSupport.RandomString(), order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestStringArray(ByteOrder order)
+        {
+            AssertSerialization(TestSupport.RandomArray(TestSupport.RandomString), order);
+        }
+
         private void AssertSerialization<T>(T obj, ByteOrder order)
         {
             var ss = CreateSerializationService(order);

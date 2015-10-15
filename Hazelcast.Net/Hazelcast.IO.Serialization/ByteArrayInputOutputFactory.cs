@@ -13,7 +13,7 @@ namespace Hazelcast.IO.Serialization
 
         public IBufferObjectDataInput CreateInput(IData data, ISerializationService service)
         {
-            return new ByteArrayObjectDataInput(data.ToByteArray(), DefaultData.DataOffset, service, byteOrder);
+            return new ByteArrayObjectDataInput(data.ToByteArray(), HeapData.DataOffset, service, byteOrder);
         }
 
         public IBufferObjectDataInput CreateInput(byte[] buffer, ISerializationService service)

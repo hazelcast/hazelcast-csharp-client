@@ -8,6 +8,7 @@ namespace Hazelcast.Client.Protocol
     {
         int GetMessageType();
         bool GetBoolean();
+        byte GetByte();
         IData GetData();
         string GetStringUtf8();
         int GetInt();

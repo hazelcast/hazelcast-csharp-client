@@ -6,7 +6,8 @@ namespace Hazelcast.IO.Serialization
 {
 	internal interface ISerializationServiceBuilder
 	{
-		ISerializationServiceBuilder SetVersion(int version);
+		ISerializationServiceBuilder SetVersion(byte version);
+	    ISerializationServiceBuilder SetPortableVersion(int version);
 		ISerializationServiceBuilder SetConfig(SerializationConfig config);
 		ISerializationServiceBuilder AddDataSerializableFactory(int id, IDataSerializableFactory factory);
 		ISerializationServiceBuilder AddPortableFactory(int id, IPortableFactory factory);

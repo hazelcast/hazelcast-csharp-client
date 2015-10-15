@@ -144,6 +144,22 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
+        public virtual bool[] ReadBooleanArray(string fieldName)
+        {
+            int currentPos = @in.Position();
+            try
+            {
+                int pos = ReadPosition(fieldName, FieldType.BooleanArray);
+                @in.Position(pos);
+                return @in.ReadBooleanArray();
+            }
+            finally
+            {
+                @in.Position(currentPos);
+            }
+        }
+
+        /// <exception cref="System.IO.IOException"/>
         public virtual byte[] ReadByteArray(string fieldName)
         {
             int currentPos = @in.Position();
@@ -256,6 +272,22 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
+        public virtual string[] ReadUTFArray(string fieldName)
+        {
+            int currentPos = @in.Position();
+            try
+            {
+                int pos = ReadPosition(fieldName, FieldType.UtfArray);
+                @in.Position(pos);
+                return @in.ReadUTFArray();
+            }
+            finally
+            {
+                @in.Position(currentPos);
+            }
+        }
+
+        /// <exception cref="System.IO.IOException"/>
         public virtual P ReadPortable<P>(string fieldName) where P:IPortable
         {
             int currentPos = @in.Position();
@@ -308,6 +340,9 @@ namespace Hazelcast.IO.Serialization
                 int len = @in.ReadInt();
                 int factoryId = @in.ReadInt();
                 int classId = @in.ReadInt();
+
+                if (len == Bits.NullArray) return null;
+
                 CheckFactoryAndClass(fd, factoryId, classId);
                 IPortable[] portables = new IPortable[len];
                 if (len > 0)

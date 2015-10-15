@@ -102,6 +102,13 @@ namespace Hazelcast.IO.Serialization
             return this;
         }
 
+        public ClassDefinitionBuilder AddBooleanArrayField(string fieldName)
+        {
+            Check();
+            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.BooleanArray));
+            return this;
+        }
+
         public ClassDefinitionBuilder AddByteArrayField(string fieldName)
         {
             Check();
@@ -149,6 +156,13 @@ namespace Hazelcast.IO.Serialization
         {
             Check();
             fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.ShortArray));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddUTFArrayField(string fieldName)
+        {
+            Check();
+            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.UtfArray));
             return this;
         }
 
