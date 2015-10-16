@@ -39,8 +39,9 @@ namespace Hazelcast.Client.Protocol.Codec
             public IData predicate;
             public bool includeValue;
             public int listenerFlags;
+            public bool localOnly;
 
-            public static int CalculateDataSize(string name, IData key, IData predicate, bool includeValue, int listenerFlags)
+            public static int CalculateDataSize(string name, IData key, IData predicate, bool includeValue, int listenerFlags, bool localOnly)
             {
                 int dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
@@ -48,13 +49,14 @@ namespace Hazelcast.Client.Protocol.Codec
                 dataSize += ParameterUtil.CalculateDataSize(predicate);
                 dataSize += Bits.BooleanSizeInBytes;
                 dataSize += Bits.IntSizeInBytes;
+                dataSize += Bits.BooleanSizeInBytes;
                 return dataSize;
             }
         }
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData predicate, bool includeValue, int listenerFlags)
+        public static ClientMessage EncodeRequest(string name, IData key, IData predicate, bool includeValue, int listenerFlags, bool localOnly)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize(name, key, predicate, includeValue, listenerFlags);
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, key, predicate, includeValue, listenerFlags, localOnly);
             ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int)RequestType);
             clientMessage.SetRetryable(Retryable);
@@ -63,6 +65,7 @@ namespace Hazelcast.Client.Protocol.Codec
             clientMessage.Set(predicate);
             clientMessage.Set(includeValue);
             clientMessage.Set(listenerFlags);
+            clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }

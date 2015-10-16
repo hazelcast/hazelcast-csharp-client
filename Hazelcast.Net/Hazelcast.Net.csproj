@@ -106,7 +106,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientDestroyProxyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientGetDistributedObjectsCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientGetPartitionsCodec.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientMembershipListenerCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientAddMembershipListenerCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientMessageType.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientPingCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ClientRemoveDistributedObjectListenerCodec.cs" />

@@ -14,16 +14,18 @@
 * limitations under the License.
 */
 
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Util;
+using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 using System.Collections.Generic;
-using Hazelcast.Core;
-using Hazelcast.Logging;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ClientMembershipListenerCodec
+    internal sealed class ClientAddMembershipListenerCodec
     {
 
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientMembershipListener;
+        public static readonly ClientMessageType RequestType = ClientMessageType.ClientAddMembershipListener;
         public const int ResponseType = 104;
         public const bool Retryable = false;
 
@@ -32,20 +34,23 @@ namespace Hazelcast.Client.Protocol.Codec
         public class RequestParameters
         {
             public static readonly ClientMessageType TYPE = RequestType;
+            public bool localOnly;
 
-            public static int CalculateDataSize()
+            public static int CalculateDataSize(bool localOnly)
             {
                 int dataSize = ClientMessage.HeaderSize;
+                dataSize += Bits.BooleanSizeInBytes;
                 return dataSize;
             }
         }
 
-        public static ClientMessage EncodeRequest()
+        public static ClientMessage EncodeRequest(bool localOnly)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize();
+            int requiredDataSize = RequestParameters.CalculateDataSize(localOnly);
             ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int)RequestType);
             clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
@@ -76,7 +81,7 @@ namespace Hazelcast.Client.Protocol.Codec
                 int messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventMember)
                 {
-                    IMember member = null;
+                    Core.IMember member = null;
                     member = MemberCodec.Decode(clientMessage);
                     int eventType;
                     eventType = clientMessage.GetInt();
@@ -85,12 +90,12 @@ namespace Hazelcast.Client.Protocol.Codec
                 }
                 if (messageType == EventMessageConst.EventMemberSet)
                 {
-                    ISet<IMember> members = null;
+                    ISet<Core.IMember> members = null;
                     int members_size = clientMessage.GetInt();
-                    members = new HashSet<IMember>();
+                    members = new HashSet<Core.IMember>();
                     for (int members_index = 0; members_index < members_size; members_index++)
                     {
-                        IMember members_item;
+                        Core.IMember members_item;
                         members_item = MemberCodec.Decode(clientMessage);
                         members.Add(members_item);
                     }
@@ -114,11 +119,11 @@ namespace Hazelcast.Client.Protocol.Codec
                     handleMemberAttributeChange(uuid, key, operationType, value);
                     return;
                 }
-                Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
+                Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
             }
 
-            public delegate void HandleMember(IMember member, int eventType);
-            public delegate void HandleMemberSet(ISet<IMember> members);
+            public delegate void HandleMember(Core.IMember member, int eventType);
+            public delegate void HandleMemberSet(ISet<Core.IMember> members);
             public delegate void HandleMemberAttributeChange(string uuid, string key, int operationType, string value);
         }
 
