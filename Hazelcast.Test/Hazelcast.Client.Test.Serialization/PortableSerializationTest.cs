@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Test.Serialization
         internal static ISerializationService CreateSerializationService(int version, ByteOrder order)
         {
             return new SerializationServiceBuilder()
-                .SetUseNativeByteOrder(false).SetByteOrder(order).SetVersion(version)
+                .SetUseNativeByteOrder(false).SetByteOrder(order).SetPortableVersion(version)
                 .AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID, new TestPortableFactory())
                 .AddDataSerializableFactory(TestSerializationConstants.DATA_SERIALIZABLE_FACTORY_ID,
                     new TestDataSerializableFactory()).Build();
@@ -339,7 +339,7 @@ namespace Hazelcast.Client.Test.Serialization
             var ss2 = new SerializationServiceBuilder()
                 .AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID,
                     new PortableFactoryFunc(i => new NamedPortable()))
-                .SetVersion(5)
+                .SetPortableVersion(5)
                 .Build();
 
             IPortable p1 = new NamedPortableV2("test", 456);
@@ -363,7 +363,7 @@ namespace Hazelcast.Client.Test.Serialization
                 .SetTypeClass(typeof (CustomSerializableType));
             config.AddSerializerConfig(sc);
             var serializationService =
-                new SerializationServiceBuilder().SetVersion(1)
+                new SerializationServiceBuilder().SetPortableVersion(1)
                     .AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID, new TestPortableFactory())
                     .SetConfig(config).Build();
 
@@ -398,7 +398,7 @@ namespace Hazelcast.Client.Test.Serialization
             var ss2 = new SerializationServiceBuilder()
                 .AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID,
                     new PortableFactoryFunc(i => new NamedPortable()))
-                .SetVersion(5)
+                .SetPortableVersion(5)
                 .Build();
 
             var o1 = new ComplexDataSerializable(new NamedPortableV2("test", 123),

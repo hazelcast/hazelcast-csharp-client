@@ -214,13 +214,13 @@ namespace Hazelcast.Client.Connection
                 var usernamePasswordCr = (UsernamePasswordCredentials) _credentials;
                 request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
                     usernamePasswordCr.GetPassword(), uuid, ownerUuid, false,
-                    ClientTypes.Csharp);
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion());
             }
             else
             {
                 var data = ss.ToData(_credentials);
                 request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
-                    ClientTypes.Csharp);
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion());
             }
 
             connection.Init();

@@ -28,58 +28,24 @@ namespace Hazelcast.IO.Serialization
 
 		public const int ConstantTypeByteArray = -12;
 
-		public const int ConstantTypeCharArray = -13;
+		public const int ConstantTypeBooleanArray = -13;
 
-		public const int ConstantTypeShortArray = -14;
+		public const int ConstantTypeCharArray = -14;
 
-		public const int ConstantTypeIntegerArray = -15;
+		public const int ConstantTypeShortArray = -15;
 
-		public const int ConstantTypeLongArray = -16;
+		public const int ConstantTypeIntegerArray = -16;
 
-		public const int ConstantTypeFloatArray = -17;
+		public const int ConstantTypeLongArray = -17;
 
-		public const int ConstantTypeDoubleArray = -18;
+		public const int ConstantTypeFloatArray = -18;
 
-		public const int ConstantSerializersLength = 18;
+		public const int ConstantTypeDoubleArray = -19;
 
-		public const int DefaultTypeClass = -19;
+        public const int ConstantTypeStringArray = -20;
 
-		public const int DefaultTypeDate = -20;
+		public const int ConstantSerializersLength = 21;
 
-		public const int DefaultTypeBigInteger = -21;
-
-		public const int DefaultTypeBigDecimal = -22;
-
-		public const int DefaultTypeObject = -23;
-
-		public const int DefaultTypeExternalizable = -24;
-
-		public const int DefaultTypeEnum = -25;
-
-		public const int AutoTypeArrayList = -100;
-
-		public const int AutoTypeJobPartitionState = -101;
-
-		public const int AutoTypeJobPartitionStateArray = -102;
-
-		public const int AutoTypeLinkedList = -103;
-
-		public const int Hibernate3TypeHibernateCacheKey = -200;
-
-		public const int Hibernate3TypeHibernateCacheEntry = -201;
-
-		public const int Hibernate4TypeHibernateCacheKey = -202;
-
-		public const int Hibernate4TypeHibernateCacheEntry = -203;
-
-		// WARNING: DON'T CHANGE VALUES!
-		// WARNING: DON'T ADD ANY NEW CONSTANT SERIALIZER!
-		// NUMBER OF CONSTANT SERIALIZERS...
-		// ------------------------------------------------------------
-		// DEFAULT SERIALIZERS
-		// ------------------------------------------------------------
-		// AUTOMATICALLY REGISTERED SERIALIZERS
-		// ------------------------------------------------------------
-		// HIBERNATE SERIALIZERS
+		public const int DefaultTypeDate = -101;
 	}
 }

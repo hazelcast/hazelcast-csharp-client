@@ -6,37 +6,38 @@ using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class DefaultData : IData
+    public sealed class HeapData : IData
     {
         internal const int TypeOffset = 0;
 
-        internal const int PartitionHashBitOffset = 4;
-
-        internal const int DataOffset = 5;
+        internal const int DataOffset = 4;
 
         private const int ArrayHeaderSizeInBytes = 16;
 
+        //first 4 byte is type id + last 4 byte is partition hash code
+        private const int HeapDataOverHead = DataOffset + Bits.IntSizeInBytes;
+
         private byte[] data;
 
-        public DefaultData()
+        public HeapData()
         {
         }
 
-        public DefaultData(byte[] data)
+        public HeapData(byte[] data)
         {
             // type and partition_hash are always written with BIG_ENDIAN byte-order
             // will use a byte to store partition_hash bit
             // array (12: array header, 4: length)
-            if (data != null && data.Length > 0 && data.Length < DataOffset)
+            if (data != null && data.Length > 0 && data.Length < HeapDataOverHead)
             {
-                throw new ArgumentException("Data should be either empty or should contain more than " + DefaultData.DataOffset);
+                throw new ArgumentException("Data should be either empty or should contain more than " + HeapDataOverHead);
             }
             this.data = data;
         }
 
         public int DataSize()
         {
-            return Math.Max(TotalSize() - DataOffset, 0);
+            return Math.Max(TotalSize() - HeapDataOverHead, 0);
         }
 
         public int TotalSize()
@@ -55,7 +56,8 @@ namespace Hazelcast.IO.Serialization
 
         public bool HasPartitionHash()
         {
-            return TotalSize() != 0 && data[PartitionHashBitOffset] != 0;
+            return data != null && data.Length > HeapDataOverHead
+                    && Bits.ReadInt(data, data.Length - Bits.IntSizeInBytes, true) != 0;
         }
 
         public byte[] ToByteArray()

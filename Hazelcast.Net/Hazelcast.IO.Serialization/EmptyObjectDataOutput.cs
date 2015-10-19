@@ -5,6 +5,10 @@ namespace Hazelcast.IO.Serialization
 {
     internal sealed class EmptyObjectDataOutput : IObjectDataOutput
     {
+        public void WriteUTFArray(string[] values)
+        {
+        }
+
         /// <exception cref="System.IO.IOException"></exception>
         public void WriteObject(object @object)
         {
@@ -83,6 +87,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public void WriteUTF(string s)
         {
+        }
+
+        public void WriteBooleanArray(bool[] booleans)
+        {
+            
         }
 
         /// <exception cref="System.IO.IOException"></exception>

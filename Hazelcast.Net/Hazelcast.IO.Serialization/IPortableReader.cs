@@ -78,6 +78,11 @@ namespace Hazelcast.IO.Serialization
 		/// <exception cref="System.IO.IOException">System.IO.IOException</exception>
 		P ReadPortable<P>(string fieldName) where P:IPortable;
 
+        /// <param name="fieldName">name of the field</param>
+        /// <returns>the boolean array value read</returns>
+        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        bool[] ReadBooleanArray(string fieldName);
+
 		/// <param name="fieldName">name of the field</param>
 		/// <returns>the byte array value read</returns>
 		/// <exception cref="System.IO.IOException">System.IO.IOException</exception>
@@ -112,6 +117,11 @@ namespace Hazelcast.IO.Serialization
 		/// <returns>the short array value read</returns>
 		/// <exception cref="System.IO.IOException">System.IO.IOException</exception>
 		short[] ReadShortArray(string fieldName);
+
+        /// <param name="fieldName">name of the field</param>
+        /// <returns>the string array value read</returns>
+        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        string[] ReadUTFArray(string fieldName);
 
 		/// <param name="fieldName">name of the field</param>
 		/// <returns>the portabke value read</returns>

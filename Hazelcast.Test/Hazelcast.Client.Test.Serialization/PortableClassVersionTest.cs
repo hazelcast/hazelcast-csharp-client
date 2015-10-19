@@ -13,11 +13,11 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestDifferentClassAndServiceVersions()
         {
             var serializationService =
-                new SerializationServiceBuilder().SetVersion(1)
+                new SerializationServiceBuilder().SetPortableVersion(1)
                     .AddPortableFactory(FactoryId, new PortableFactoryFunc(i => new NamedPortable()))
                     .Build();
             var serializationService2 =
-                new SerializationServiceBuilder().SetVersion(2)
+                new SerializationServiceBuilder().SetPortableVersion(2)
                     .AddPortableFactory(FactoryId, new PortableFactoryFunc(i => new NamedPortableV2()))
                     .Build();
             TestDifferentClassVersions(serializationService, serializationService2);
@@ -28,11 +28,11 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestDifferentClassAndServiceVersionsUsingDataWriteAndRead()
         {
             var serializationService =
-                new SerializationServiceBuilder().SetVersion(1)
+                new SerializationServiceBuilder().SetPortableVersion(1)
                     .AddPortableFactory(FactoryId, new PortableFactoryFunc(i => new NamedPortable()))
                     .Build();
             var serializationService2 =
-                new SerializationServiceBuilder().SetVersion(2)
+                new SerializationServiceBuilder().SetPortableVersion(2)
                     .AddPortableFactory(FactoryId, new PortableFactoryFunc(i => new NamedPortableV2()))
                     .Build();
             TestDifferentClassVersionsUsingDataWriteAndRead(serializationService, serializationService2);

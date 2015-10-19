@@ -22,6 +22,26 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
+        internal sealed class BooleanArraySerializer : SingletonSerializer<bool[]>
+        {
+            public override int GetTypeId()
+            {
+                return SerializationConstants.ConstantTypeBooleanArray;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override bool[] Read(IObjectDataInput input)
+            {
+                return input.ReadBooleanArray();
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override void Write(IObjectDataOutput output, bool[] obj)
+            {
+                output.WriteBooleanArray(obj);
+            }
+        }
+
         internal sealed class ByteSerializer : SingletonSerializer<byte>
         {
             public override int GetTypeId()
@@ -315,7 +335,27 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        internal sealed class TheByteArraySerializer : IByteArraySerializer<byte[]>
+        internal sealed class StringArraySerializer : SingletonSerializer<string[]>
+        {
+            public override int GetTypeId()
+            {
+                return SerializationConstants.ConstantTypeStringArray;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override string[] Read(IObjectDataInput input)
+            {
+                return input.ReadUTFArray();
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override void Write(IObjectDataOutput output, string[] obj)
+            {
+                output.WriteUTFArray(obj);
+            }
+        }
+
+        internal sealed class ByteArraySerializer : IByteArraySerializer<byte[]>
         {
             public int GetTypeId()
             {

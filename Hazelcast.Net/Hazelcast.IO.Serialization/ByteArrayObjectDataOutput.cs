@@ -11,7 +11,6 @@ namespace Hazelcast.IO.Serialization
         internal readonly ISerializationService service;
         internal byte[] buffer;
         internal int pos;
-        private byte[] utfBuffer;
 
         internal ByteArrayObjectDataOutput(int size, ISerializationService service, ByteOrder byteOrder)
         {
@@ -221,17 +220,22 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteUTF(string str)
         {
-            if (utfBuffer == null)
+            int len = (str != null) ? str.Length : Bits.NullArray;
+            WriteInt(len);
+            if (len > 0)
             {
-                utfBuffer = new byte[UTFEncoderDecoder.UTF_BUFFER_SIZE];
-            }
-            UTFEncoderDecoder.WriteUTF(this, str, utfBuffer);
+                EnsureAvailable(len * 3);
+                for (int i = 0; i < len; i++)
+                {
+                    pos += Bits.WriteUtf8Char(buffer, pos, str[i]);
+                }
+            } 
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteByteArray(byte[] bytes)
         {
-            var len = (bytes == null) ? 0 : bytes.Length;
+            var len = (bytes != null) ? bytes.Length : Bits.NullArray;
             WriteInt(len);
             if (len > 0)
             {
@@ -240,9 +244,23 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteBooleanArray(bool[] bools)
+        {
+            var len = (bools != null) ? bools.Length : Bits.NullArray;
+            WriteInt(len);
+            if (len > 0)
+            {
+                foreach (var b in bools)
+                {
+                    WriteBoolean(b);
+                }
+            }
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteCharArray(char[] chars)
         {
-            var len = chars != null ? chars.Length : 0;
+            var len = (chars != null) ? chars.Length : Bits.NullArray;
             WriteInt(len);
             if (len > 0)
             {
@@ -256,7 +274,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteIntArray(int[] ints)
         {
-            var len = ints != null ? ints.Length : 0;
+            var len = (ints != null) ? ints.Length : Bits.NullArray;
             WriteInt(len);
             if (len > 0)
             {
@@ -270,7 +288,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteLongArray(long[] longs)
         {
-            var len = longs != null ? longs.Length : 0;
+            var len = (longs != null) ? longs.Length : Bits.NullArray;
             WriteInt(len);
             if (len > 0)
             {
@@ -284,7 +302,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteDoubleArray(double[] doubles)
         {
-            var len = doubles != null ? doubles.Length : 0;
+            var len = (doubles != null) ? doubles.Length : Bits.NullArray;
             WriteInt(len);
             if (len > 0)
             {
@@ -298,7 +316,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteFloatArray(float[] floats)
         {
-            var len = floats != null ? floats.Length : 0;
+            var len = (floats != null) ? floats.Length : Bits.NullArray;
             WriteInt(len);
             if (len > 0)
             {
@@ -312,7 +330,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteShortArray(short[] shorts)
         {
-            var len = shorts != null ? shorts.Length : 0;
+            var len = (shorts != null) ? shorts.Length : Bits.NullArray;
             WriteInt(len);
             if (len > 0)
             {
@@ -324,6 +342,19 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
+        public virtual void WriteUTFArray(string[] strings)
+        {
+            var len = (strings != null) ? strings.Length : Bits.NullArray;
+            WriteInt(len);
+            if (len > 0)
+            {
+                foreach (var s in strings)
+                {
+                    WriteUTF(s);
+                }
+            }
+        }
+        /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteObject(object @object)
         {
             service.WriteObject(this, @object);
@@ -332,7 +363,8 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteData(IData data)
         {
-            service.WriteData(this, data);
+            byte[] payload = data != null ? data.ToByteArray() : null;
+            WriteByteArray(payload);
         }
 
         /// <summary>Returns this buffer's position.</summary>

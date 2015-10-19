@@ -81,6 +81,7 @@ namespace Hazelcast.Client
                         config.GetManagedContext()))
                         .SetConfig(config.GetSerializationConfig())
                         .SetPartitioningStrategy(partitioningStrategy)
+                        .SetVersion(SerializationService.SerializerVersion)
                         .Build();
             }
             catch (Exception e)

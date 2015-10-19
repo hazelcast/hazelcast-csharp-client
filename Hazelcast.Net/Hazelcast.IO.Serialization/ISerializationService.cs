@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using Hazelcast.Core;
 using Hazelcast.Net.Ext;
 
@@ -7,45 +5,23 @@ namespace Hazelcast.IO.Serialization
 {
     public interface ISerializationService
     {
-        IData ToData(object obj);
+        IBufferObjectDataInput CreateObjectDataInput(byte[] data);
+        IBufferObjectDataInput CreateObjectDataInput(IData data);
+        IBufferObjectDataOutput CreateObjectDataOutput(int size);
 
-		IData ToData(object obj, IPartitioningStrategy strategy);
+        /// <exception cref="System.IO.IOException"></exception>
+        IPortableReader CreatePortableReader(IData data);
 
-		T ToObject<T>(object data);
-
-        void WriteObject(IObjectDataOutput output, object obj);
-
+        void Destroy();
+        void DisposeData(IData data);
+        ByteOrder GetByteOrder();
+        IManagedContext GetManagedContext();
+        IPortableContext GetPortableContext();
+        byte GetVersion();
         T ReadObject<T>(IObjectDataInput input);
-
-		void WriteData(IObjectDataOutput output, IData data);
-
-        IData ReadData(IObjectDataInput input);
-
-		void DisposeData(IData data);
-
-		IBufferObjectDataInput CreateObjectDataInput(byte[] data);
-
-		IBufferObjectDataInput CreateObjectDataInput(IData data);
-
-		IBufferObjectDataOutput CreateObjectDataOutput(int size);
-
-        ObjectDataOutputStream CreateObjectDataOutputStream(Stream outputStream);
-
-        ObjectDataInputStream CreateObjectDataInputStream(Stream inputStream);
-
-		void Register(Type type, ISerializer serializer);
-
-		void RegisterGlobal(ISerializer serializer);
-
-		IPortableContext GetPortableContext();
-
-		/// <exception cref="System.IO.IOException"></exception>
-		IPortableReader CreatePortableReader(IData data);
-
-		IManagedContext GetManagedContext();
-
-		ByteOrder GetByteOrder();
-
-		void Destroy();
-	}
+        IData ToData(object obj);
+        IData ToData(object obj, IPartitioningStrategy strategy);
+        T ToObject<T>(object data);
+        void WriteObject(IObjectDataOutput output, object obj);
+    }
 }

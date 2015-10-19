@@ -9,7 +9,7 @@ namespace Hazelcast.Client.Test.Serialization
     internal class KitchenSinkDataSerializable : IDataSerializable
     {
         private static readonly Random Random = new Random();
-        //public bool[] BoolArray { get; set; }
+        public bool[] BoolArray { get; set; }
         public bool Bool { get; set; }
         public byte[] ByteArray { get; set; }
         public byte Byte { get; set; }
@@ -26,19 +26,19 @@ namespace Hazelcast.Client.Test.Serialization
         public double[] DoubleArray { get; set; }
         public double Double { get; set; }
         public string Chars { get; set; }
-        public string StringUTF8 { get; set; }
-        //public string[] StringArray { get; set; }
+        public string String { get; set; }
+        public string[] StringArray { get; set; }
         public IDataSerializable Serializable { get; set; }
         //public IDataSerializable[] SerializableArray { get; set; }
         public IPortable Portable { get; set; }
-        //public IPortable[] PortableArray { get; set; }
+        public IPortable[] PortableArray { get; set; }
         public IData Data { get; set; }
         public DateTime DateTime { get; set; }
 
         public void WriteData(IObjectDataOutput output)
         {
             output.WriteBoolean(Bool);
-            // output.WriteBooleanArray(BoolArray);
+            output.WriteBooleanArray(BoolArray);
             output.WriteByte(Byte);
             output.WriteByteArray(ByteArray);
             output.WriteChar(Char);
@@ -59,13 +59,15 @@ namespace Hazelcast.Client.Test.Serialization
             //output.WriteObject(PortableArray);
             output.WriteInt(Chars.Length);
             output.WriteChars(Chars);
-            output.WriteUTF(StringUTF8);
+            output.WriteUTF(String);
+            output.WriteUTFArray(StringArray);
             output.WriteObject(DateTime);
         }
 
         public void ReadData(IObjectDataInput input)
         {
             Bool = input.ReadBoolean();
+            BoolArray = input.ReadBooleanArray();
             Byte = input.ReadByte();
             ByteArray = input.ReadByteArray();
             Char = input.ReadChar();
@@ -91,7 +93,8 @@ namespace Hazelcast.Client.Test.Serialization
                 chars[i] = input.ReadChar();
             }
             Chars = new string(chars);
-            StringUTF8 = input.ReadUTF();
+            String = input.ReadUTF();
+            StringArray = input.ReadUTFArray();
             DateTime = input.ReadObject<DateTime>();
         }
 
@@ -118,6 +121,7 @@ namespace Hazelcast.Client.Test.Serialization
             return new KitchenSinkDataSerializable
             {
                 Bool = TestSupport.RandomBool(),
+                BoolArray = TestSupport.RandomArray(TestSupport.RandomBool),
                 Byte = TestSupport.RandomByte(),
                 ByteArray = TestSupport.RandomBytes(),
                 Char = (char) Random.Next(),
@@ -134,37 +138,9 @@ namespace Hazelcast.Client.Test.Serialization
                 LongArray = TestSupport.RandomArray(TestSupport.RandomLong),
                 Short = TestSupport.RandomShort(),
                 ShortArray = TestSupport.RandomArray(TestSupport.RandomShort),
-                StringUTF8 = TestSupport.RandomString()
+                String = TestSupport.RandomString(),
+                StringArray = TestSupport.RandomArray(TestSupport.RandomString)
             };
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = Bool.GetHashCode();
-                hashCode = (hashCode*397) ^ (ByteArray != null ? ByteArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Byte.GetHashCode();
-                hashCode = (hashCode*397) ^ (CharArray != null ? CharArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Char.GetHashCode();
-                hashCode = (hashCode*397) ^ (ShortArray != null ? ShortArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Short.GetHashCode();
-                hashCode = (hashCode*397) ^ (IntArray != null ? IntArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Int;
-                hashCode = (hashCode*397) ^ (LongArray != null ? LongArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Long.GetHashCode();
-                hashCode = (hashCode*397) ^ (FloatArray != null ? FloatArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Float.GetHashCode();
-                hashCode = (hashCode*397) ^ (DoubleArray != null ? DoubleArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Double.GetHashCode();
-                hashCode = (hashCode*397) ^ (Chars != null ? Chars.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (StringUTF8 != null ? StringUTF8.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Serializable != null ? Serializable.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Portable != null ? Portable.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Data != null ? Data.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ DateTime.GetHashCode();
-                return hashCode;
-            }
         }
 
         public override string ToString()
@@ -173,12 +149,13 @@ namespace Hazelcast.Client.Test.Serialization
                 string.Format(
                     "Bool: {0}, ByteArray: {1}, Byte: {2}, CharArray: {3}, Char: {4}, ShortArray: {5}, Short: {6}, IntArray: {7}, Int: {8}, LongArray: {9}, Long: {10}, FloatArray: {11}, Float: {12}, DoubleArray: {13}, Double: {14}, Chars: {15}, StringUTF8: {16}, Serializable: {17}, Portable: {18}, Data: {19}, DateTime: {20}",
                     Bool, ByteArray, Byte, CharArray, Char, ShortArray, Short, IntArray, Int, LongArray, Long,
-                    FloatArray, Float, DoubleArray, Double, Chars, StringUTF8, Serializable, Portable, Data, DateTime);
+                    FloatArray, Float, DoubleArray, Double, Chars, String, Serializable, Portable, Data, DateTime);
         }
 
         protected bool Equals(KitchenSinkDataSerializable other)
         {
-            return Bool == other.Bool && ByteArray.SequenceEqual(other.ByteArray) && Byte == other.Byte &&
+            return BoolArray.SequenceEqual(other.BoolArray) && Bool == other.Bool && 
+                   ByteArray.SequenceEqual(other.ByteArray) && Byte == other.Byte &&
                    CharArray.SequenceEqual(other.CharArray) && Char == other.Char &&
                    ShortArray.SequenceEqual(other.ShortArray) &&
                    Short == other.Short && IntArray.SequenceEqual(other.IntArray) && Int == other.Int &&
@@ -186,7 +163,8 @@ namespace Hazelcast.Client.Test.Serialization
                    FloatArray.SequenceEqual(other.FloatArray) &&
                    Float.Equals(other.Float) && DoubleArray.SequenceEqual(other.DoubleArray) &&
                    Double.Equals(other.Double) &&
-                   string.Equals(Chars, other.Chars) && string.Equals(StringUTF8, other.StringUTF8) &&
+                   string.Equals(Chars, other.Chars) && string.Equals(String, other.String) &&
+                   StringArray.SequenceEqual(other.StringArray) &&
                    Equals(Serializable, other.Serializable) && Equals(Portable, other.Portable) &&
                    Equals(Data, other.Data) && DateTime.Equals(other.DateTime);
         }

@@ -6,6 +6,10 @@ namespace Hazelcast.IO
     /// <summary>Provides serialization methods for arrays by extending DataOutput</summary>
     public interface IObjectDataOutput : IDataOutput
     {
+        /// <param name="booleans">boolean array to be written</param>
+        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        void WriteBooleanArray(bool[] booleans);
+
         /// <param name="bytes">byte array to be written</param>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
         void WriteByteArray(byte[] bytes);
@@ -33,6 +37,10 @@ namespace Hazelcast.IO
         /// <param name="values">short to be written</param>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
         void WriteShortArray(short[] values);
+
+        /// <param name="values">string array to be written</param>
+        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        void WriteUTFArray(string[] values);
 
         /// <param name="object">object to be written</param>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>

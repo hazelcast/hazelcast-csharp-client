@@ -14,11 +14,13 @@ namespace Hazelcast.IO.Serialization
         Utf = 9,
         PortableArray = 10,
         ByteArray = 11,
-        CharArray = 12,
-        ShortArray = 13,
-        IntArray = 14,
-        LongArray = 15,
-        FloatArray = 16,
-        DoubleArray = 17
+        BooleanArray = 12,
+        CharArray = 13,
+        ShortArray = 14,
+        IntArray = 15,
+        LongArray = 16,
+        FloatArray = 17,
+        DoubleArray = 18,
+        UtfArray = 19
     }
 }

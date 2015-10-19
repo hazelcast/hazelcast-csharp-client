@@ -6,6 +6,12 @@ namespace Hazelcast.IO
     /// <summary>Provides serialization methods for arrays of primitive types</summary>
     public interface IObjectDataInput : IDataInput
     {
+        /// <returns>the boolean array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
+        bool[] ReadBooleanArray();
+
         /// <returns>the byte array read</returns>
         /// <exception cref="System.IO.IOException">
         ///     if it reaches end of file before finish reading
@@ -47,6 +53,12 @@ namespace Hazelcast.IO
         ///     if it reaches end of file before finish reading
         /// </exception>
         short[] ReadShortArray();
+
+        /// <returns>String array read</returns>
+        /// <exception cref="System.IO.IOException">
+        ///     if it reaches end of file before finish reading
+        /// </exception>
+        string[] ReadUTFArray();
 
         /// <returns>object array read</returns>
         /// <exception cref="System.IO.IOException">

@@ -398,7 +398,7 @@
     <Compile Include="Hazelcast.Core\MemberAttributeEvent.cs" />
     <Compile Include="Hazelcast.Core\OverflowPolicy.cs" />
     <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\DefaultData.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\HeapData.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IData.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializationServiceBuilder.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializerHook.cs" />
@@ -409,7 +409,6 @@
     <Compile Include="Hazelcast.IO\IDataOutput.cs" />
     <Compile Include="Hazelcast.IO\ISocketReadable.cs" />
     <Compile Include="Hazelcast.IO\ISocketWritable.cs" />
-    <Compile Include="Hazelcast.IO\UTFUtil.cs" />
     <Compile Include="Hazelcast.Logging\LogLevel.cs" />
     <Compile Include="Hazelcast.Logging\ConsoleLogFactory.cs" />
     <Compile Include="Hazelcast.Logging\TraceLogFactory.cs" />
@@ -512,8 +511,6 @@
     <Compile Include="Hazelcast.IO.Serialization\IIdentifiedDataSerializable.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IInputOutputFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\MorphingPortableReader.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\ObjectDataInputStream.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\ObjectDataOutputStream.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IPortable.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IPortableFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IPortableHook.cs" />

@@ -60,32 +60,21 @@ namespace Hazelcast.Client.Test.Serialization
 
             ss.Destroy();
         }
-        
 
         [TestCaseSource("ByteOrders")]
-        public virtual void TestDataStreamsWithDataSerializable(ByteOrder byteOrder)
+        public virtual void TestReadWrite(ByteOrder byteOrder)
         {
             var obj = KitchenSinkDataSerializable.Generate();
             obj.Serializable = KitchenSinkDataSerializable.Generate();
 
             var ss = new SerializationServiceBuilder().SetUseNativeByteOrder(false).SetByteOrder(byteOrder).Build();
             
-            var stream = new MemoryStream();
-            IObjectDataOutput output = ss.CreateObjectDataOutputStream(stream);
+            IObjectDataOutput output = ss.CreateObjectDataOutput(1024);
             output.WriteObject(obj);
-            var data1 = stream.ToArray();
-            IObjectDataOutput out2 = ss.CreateObjectDataOutput(1024);
-            out2.WriteObject(obj);
-            var data2 = out2.ToByteArray();
-            Assert.AreEqual(data1.Length, data2.Length);
-            Assert.AreEqual(data1, data2);
 
-            IObjectDataInput input = ss.CreateObjectDataInputStream(new MemoryStream(data2));
-            var object1 = input.ReadObject<object>();
-            IObjectDataInput in2 = ss.CreateObjectDataInput(data1);
-            var object2 = in2.ReadObject<object>();
-            Assert.AreEqual(obj, object1);
-            Assert.AreEqual(obj, object2);
+            IObjectDataInput input = ss.CreateObjectDataInput(output.ToByteArray());
+            var readObj = input.ReadObject<object>();
+            Assert.AreEqual(obj, readObj);
 
             ss.Destroy();
         }

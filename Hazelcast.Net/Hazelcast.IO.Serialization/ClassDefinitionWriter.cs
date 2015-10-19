@@ -71,6 +71,12 @@ namespace Hazelcast.IO.Serialization
 			builder.AddShortField(fieldName);
 		}
 
+        /// <exception cref="System.IO.IOException"></exception>
+        public void WriteBooleanArray(string fieldName, bool[] bools)
+        {
+            builder.AddBooleanArrayField(fieldName);
+        }
+
 		/// <exception cref="System.IO.IOException"></exception>
 		public void WriteByteArray(string fieldName, byte[] bytes)
 		{
@@ -112,6 +118,12 @@ namespace Hazelcast.IO.Serialization
 		{
 			builder.AddShortArrayField(fieldName);
 		}
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public void WriteUTFArray(string fieldName, string[] strings)
+        {
+            builder.AddUTFArrayField(fieldName);
+        }
 
 		/// <exception cref="System.IO.IOException"></exception>
 		public void WritePortable(string fieldName, IPortable portable)

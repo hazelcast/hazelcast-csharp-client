@@ -8,6 +8,7 @@ namespace Hazelcast.Client.Test.Serialization
     {
         private static readonly Random Random = new Random();
         public bool Bool { get; set; }
+        public bool[] BoolArray { get; set; }
         public byte[] ByteArray { get; set; }
         public byte Byte { get; set; }
         public char[] CharArray { get; set; }
@@ -22,7 +23,8 @@ namespace Hazelcast.Client.Test.Serialization
         public float Float { get; set; }
         public double[] DoubleArray { get; set; }
         public double Double { get; set; }
-        public string StringUTF8 { get; set; }
+        public string String { get; set; }
+        public string[] StringArray { get; set; }
         public IDataSerializable Serializable { get; set; }
 
         public int GetFactoryId()
@@ -38,6 +40,7 @@ namespace Hazelcast.Client.Test.Serialization
         public void WritePortable(IPortableWriter writer)
         {
             writer.WriteBoolean("bool", Bool);
+            writer.WriteBooleanArray("boolArray", BoolArray);
             writer.WriteByte("byte", Byte);
             writer.WriteByteArray("byteArray", ByteArray);
             writer.WriteChar("char", Char);
@@ -52,12 +55,14 @@ namespace Hazelcast.Client.Test.Serialization
             writer.WriteFloatArray("floatArray", FloatArray);
             writer.WriteDouble("double", Double);
             writer.WriteDoubleArray("doubleArray", DoubleArray);
-            writer.WriteUTF("stringUTF8", StringUTF8);
+            writer.WriteUTF("string", String);
+            writer.WriteUTFArray("stringArray", StringArray);
         }
 
         public void ReadPortable(IPortableReader reader)
         {
             Bool = reader.ReadBoolean("bool");
+            BoolArray = reader.ReadBooleanArray("boolArray");
             Byte = reader.ReadByte("byte");
             ByteArray = reader.ReadByteArray("byteArray");
             Char = reader.ReadChar("char");
@@ -72,7 +77,8 @@ namespace Hazelcast.Client.Test.Serialization
             FloatArray = reader.ReadFloatArray("floatArray");
             Double = reader.ReadDouble("double");
             DoubleArray = reader.ReadDoubleArray("doubleArray");
-            StringUTF8 = reader.ReadUTF("stringUTF8");
+            String = reader.ReadUTF("string");
+            StringArray = reader.ReadUTFArray("stringArray");
         }
 
         public override bool Equals(object obj)
@@ -80,7 +86,7 @@ namespace Hazelcast.Client.Test.Serialization
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((KitchenSinkPortable)obj);
+            return Equals((KitchenSinkPortable) obj);
         }
 
         public static KitchenSinkPortable Generate()
@@ -88,6 +94,7 @@ namespace Hazelcast.Client.Test.Serialization
             return new KitchenSinkPortable
             {
                 Bool = TestSupport.RandomBool(),
+                BoolArray = TestSupport.RandomArray(TestSupport.RandomBool),
                 Byte = TestSupport.RandomByte(),
                 ByteArray = TestSupport.RandomBytes(),
                 Char = (char) Random.Next(),
@@ -102,55 +109,32 @@ namespace Hazelcast.Client.Test.Serialization
                 LongArray = TestSupport.RandomArray(TestSupport.RandomLong),
                 Short = TestSupport.RandomShort(),
                 ShortArray = TestSupport.RandomArray(TestSupport.RandomShort),
-                StringUTF8 = TestSupport.RandomString()
+                String = TestSupport.RandomString(),
+                StringArray = TestSupport.RandomArray(TestSupport.RandomString)
             };
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = Bool.GetHashCode();
-                hashCode = (hashCode*397) ^ (ByteArray != null ? ByteArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Byte.GetHashCode();
-                hashCode = (hashCode*397) ^ (CharArray != null ? CharArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Char.GetHashCode();
-                hashCode = (hashCode*397) ^ (ShortArray != null ? ShortArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Short.GetHashCode();
-                hashCode = (hashCode*397) ^ (IntArray != null ? IntArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Int;
-                hashCode = (hashCode*397) ^ (LongArray != null ? LongArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Long.GetHashCode();
-                hashCode = (hashCode*397) ^ (FloatArray != null ? FloatArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Float.GetHashCode();
-                hashCode = (hashCode*397) ^ (DoubleArray != null ? DoubleArray.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Double.GetHashCode();
-                hashCode = (hashCode*397) ^ (StringUTF8 != null ? StringUTF8.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Serializable != null ? Serializable.GetHashCode() : 0);
-                return hashCode;
-            }
         }
 
         public override string ToString()
         {
             return
                 string.Format(
-                    "Bool: {0}, ByteArray: {1}, Byte: {2}, CharArray: {3}, Char: {4}, ShortArray: {5}, Short: {6}, IntArray: {7}, Int: {8}, LongArray: {9}, Long: {10}, FloatArray: {11}, Float: {12}, DoubleArray: {13}, Double: {14}, StringUTF8: {15}, Serializable: {16}, Portable: {17}, PortableArray: {18}",
-                    Bool, ByteArray, Byte, CharArray, Char, ShortArray, Short, IntArray, Int, LongArray, Long,
-                    FloatArray, Float, DoubleArray, Double, StringUTF8, Serializable);
+                    "Bool: {0}, BoolArray: {1}, ByteArray: {2}, Byte: {3}, CharArray: {4}, Char: {5}, ShortArray: {6}, Short: {7}, IntArray: {8}, Int: {9}, LongArray: {10}, Long: {11}, FloatArray: {12}, Float: {13}, DoubleArray: {14}, Double: {15}, String: {16}, StringArray: {17}, Serializable: {18}",
+                    Bool, BoolArray, ByteArray, Byte, CharArray, Char, ShortArray, Short, IntArray, Int, LongArray, Long,
+                    FloatArray, Float, DoubleArray, Double, String, StringArray, Serializable);
         }
 
         protected bool Equals(KitchenSinkPortable other)
         {
-            return Bool == other.Bool && ByteArray.SequenceEqual(other.ByteArray) && Byte == other.Byte &&
+            return Bool == other.Bool && BoolArray.SequenceEqual(other.BoolArray) &&
+                   ByteArray.SequenceEqual(other.ByteArray) && Byte == other.Byte &&
                    CharArray.SequenceEqual(other.CharArray) && Char == other.Char &&
                    ShortArray.SequenceEqual(other.ShortArray) &&
                    Short == other.Short && IntArray.SequenceEqual(other.IntArray) && Int == other.Int &&
                    LongArray.SequenceEqual(other.LongArray) && Long == other.Long &&
                    FloatArray.SequenceEqual(other.FloatArray) &&
                    Float.Equals(other.Float) && DoubleArray.SequenceEqual(other.DoubleArray) &&
-                   Double.Equals(other.Double) 
-                   && string.Equals(StringUTF8, other.StringUTF8) &&
+                   Double.Equals(other.Double)
+                   && string.Equals(String, other.String) && StringArray.SequenceEqual(other.StringArray) &&
                    Equals(Serializable, other.Serializable)
                 ;
         }
@@ -158,11 +142,11 @@ namespace Hazelcast.Client.Test.Serialization
 
     public class KitchenSinkPortableFactory : IPortableFactory
     {
+        public const int FactoryId = 1;
+
         public IPortable Create(int classId)
         {
             return new KitchenSinkPortable();
         }
-
-        public const int FactoryId = 1;
     }
 }
