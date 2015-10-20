@@ -12,7 +12,25 @@ The docs for the C# client can be reached at [http://docs.hazelcast.org/docs/lat
 
 Hazelcast C# Client is developed using VS2013 Community Edition, which can be [downloaded](https://www.visualstudio.com/en-us/news/vs2013-community-vs.aspx) for free from Microsoft.
 
-## How to run tests
+### Strong name generation
+
+Hazelcast assemblies are signed using a [strong name key](https://msdn.microsoft.com/en-us/library/wd40t7ad.aspx). To be able to build the project, you will need to 
+create your own strong name key.
+
+This can be done using the sn.exe tools which ships with .NET framework.
+
+    sn -k hazelcast.snk
+
+Furthermore, you will need to update `Hazelcast.Net/Properties/AssemblyInfo.cs` with the new public key. 
+
+    [assembly: System.Runtime.CompilerServices.InternalsVisibleTo(@"Hazelcast.Test, PublicKey=00240000049e....b3")]
+
+To get the new public key, use the following commands:
+
+    sn -p hazelcast.snk hazelcast.key
+    sn -tp hazelcast.key
+
+## How to run tests
 
 All the tests use NUnit, and require a hazelcast.jar and JVM to run the hazelcast instance. The script `build.bat` will attempt to download hazelcast.jar for the latest snapshot from Maven Central and will run the tests using the downloaded jar. 
 
