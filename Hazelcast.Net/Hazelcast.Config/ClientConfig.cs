@@ -63,19 +63,7 @@ namespace Hazelcast.Config
 
         private IConfigPatternMatcher configPatternMatcher = new MatchingPointConfigPatternMatcher();
 
-        private string licenseKey;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientConfig));
-
-        public virtual string GetLicenseKey()
-        {
-            return licenseKey;
-        }
-
-        public virtual ClientConfig SetLicenseKey(string licenseKey)
-        {
-            this.licenseKey = licenseKey;
-            return this;
-        }
 
         //public virtual ClientSecurityConfig GetSecurityConfig()
         //{
