@@ -319,7 +319,6 @@ namespace Hazelcast.IO.Serialization
                 IDataSerializableFactory factory = null;
                 try
                 {
-                    //TODO CLASSLOAD
                     Type type = Type.GetType(factoryClassName);
                     if (type != null)
                     {

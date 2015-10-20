@@ -169,7 +169,6 @@ namespace Hazelcast.IO.Serialization
                     }
                     fieldFactoryId = @in.ReadInt();
                     fieldClassId = @in.ReadInt();
-                    // TODO: what there's a null inner Portable field
                     if (register)
                     {
                         var fieldVersion = @in.ReadInt();
@@ -183,7 +182,6 @@ namespace Hazelcast.IO.Serialization
                         var k_1 = @in.ReadInt();
                         fieldFactoryId = @in.ReadInt();
                         fieldClassId = @in.ReadInt();
-                        // TODO: what there's a null inner Portable field
                         if (k_1 > 0)
                         {
                             var p = @in.ReadInt();

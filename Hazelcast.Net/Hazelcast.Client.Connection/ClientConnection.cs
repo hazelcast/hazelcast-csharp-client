@@ -87,9 +87,6 @@ namespace Hazelcast.Client.Connection
                 _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lingerOption);
                 _clientSocket.NoDelay = socketOptions.IsTcpNoDelay();
 
-                //TODO BURASI NOLCAK
-                //clientSocket.ExclusiveAddressUse SetReuseAddress(options.IsReuseAddress());
-
                 _clientSocket.ReceiveTimeout = socketOptions.GetTimeout() > 0 ? socketOptions.GetTimeout() : -1;
 
                 var bufferSize = socketOptions.GetBufferSize()*1024;

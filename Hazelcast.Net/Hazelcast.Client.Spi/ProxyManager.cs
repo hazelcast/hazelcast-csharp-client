@@ -177,8 +177,6 @@ namespace Hazelcast.Client.Spi
             });
 
 
-            //TODO EXECUTOR
-
             foreach (var proxyFactoryConfig in config.GetProxyFactoryConfigs())
             {
                 try

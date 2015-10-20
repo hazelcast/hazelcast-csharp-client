@@ -173,50 +173,6 @@ namespace Hazelcast.Client
             return clusterService.GetLocalClient();
         }
 
-        //public IExecutorService GetExecutorService(string name)
-        //{
-        //    //TODO FIXME
-        //    throw new NotSupportedException("Not implemented yet");
-        //    //return GetDistributedObject<ClientE>(ServiceNames.DistributedExecutor, name);
-        //}
-
-        ///// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
-        //public T ExecuteTransaction<T>(ITransactionalTask<T> task)
-        //{
-        //    return ExecuteTransaction(TransactionOptions.GetDefault(), task);
-        //}
-
-        ///// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
-        //public T ExecuteTransaction<T>(TransactionOptions options, ITransactionalTask<T> task)
-        //{
-        //    ITransactionContext context = NewTransactionContext(options);
-        //    context.BeginTransaction();
-        //    try
-        //    {
-        //        T value = task.Execute(context);
-        //        context.CommitTransaction();
-        //        return value;
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        context.RollbackTransaction();
-        //        //TODO FIX EXEPTION
-        //        if (e is TransactionException)
-        //        {
-        //            throw e;
-        //        }
-        //        if (e.InnerException is TransactionException)
-        //        {
-        //            throw e.InnerException;
-        //        }
-        //        if (e is SystemException)
-        //        {
-        //            throw e;
-        //        }
-        //        throw new TransactionException(e);
-        //    }
-        //}
-
         public ITransactionContext NewTransactionContext()
         {
             return NewTransactionContext(TransactionOptions.GetDefault());

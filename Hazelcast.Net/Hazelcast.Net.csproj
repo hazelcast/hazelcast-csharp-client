@@ -357,7 +357,6 @@
     <Compile Include="Hazelcast.Client.Connection\DefaultSocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Connection\Router.cs" />
     <Compile Include="Hazelcast.Client.Connection\ISocketFactory.cs" />
-    <Compile Include="Hazelcast.Client.Connection\SSLSocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Proxy\AbstractClientTxnCollectionProxy.cs" />
     <Compile Include="Hazelcast.Client.Proxy\ClientAtomicLongProxy.cs" />
     <Compile Include="Hazelcast.Client.Proxy\ClientClusterProxy.cs" />
@@ -549,7 +548,6 @@
     <Compile Include="Hazelcast.Map\IEntryBackupProcessor.cs" />
     <Compile Include="Hazelcast.Map\IEntryProcessor.cs" />
     <Compile Include="Hazelcast.Map\IMapInterceptor.cs" />
-    <Compile Include="Hazelcast.Map\RecordStatistics.cs" />
     <Compile Include="Hazelcast.Map\SimpleEntryView.cs" />
     <Compile Include="Hazelcast.Net.Ext\AtomicBoolean.cs" />
     <Compile Include="Hazelcast.Net.Ext\AtomicInteger.cs" />

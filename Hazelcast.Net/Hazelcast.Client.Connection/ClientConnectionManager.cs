@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Connection
             var sic = config.GetNetworkConfig().GetSocketInterceptorConfig();
             if (sic != null && sic.IsEnabled())
             {
-                //TODO SOCKET INTERCEPTOR
+                //TODO Socket interceptor
                 throw new NotImplementedException("Socket Interceptor not yet implemented.");
             }
             _socketInterceptor = null;
