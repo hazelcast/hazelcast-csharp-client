@@ -21,7 +21,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         ClientAuthentication = 0x2,
         ClientAuthenticationCustom = 0x3,
-        ClientMembershipListener = 0x4,
+        ClientAddMembershipListener = 0x4,
         ClientCreateProxy = 0x5,
         ClientDestroyProxy = 0x6,
         ClientGetPartitions = 0x8,

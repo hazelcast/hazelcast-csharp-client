@@ -133,15 +133,15 @@ namespace Hazelcast.Client.Spi
             _initialListFetched = new ManualResetEventSlim();
             try
             {
-                var clientMessage = ClientMembershipListenerCodec.EncodeRequest();
-                DistributedEventHandler handler = m => ClientMembershipListenerCodec.AbstractEventHandler
+                var clientMessage = ClientAddMembershipListenerCodec.EncodeRequest(false);
+                DistributedEventHandler handler = m => ClientAddMembershipListenerCodec.AbstractEventHandler
                     .Handle(m, HandleMember, HandleMemberCollection, HandleMemberAttributeChange);
                 var future = _client.GetInvocationService().InvokeListenerOnTarget(clientMessage,
-                    ownerConnectionAddress, handler, m => ClientMembershipListenerCodec.DecodeResponse(m).response);
+                    ownerConnectionAddress, handler, m => ClientAddMembershipListenerCodec.DecodeResponse(m).response);
                 var response = ThreadUtil.GetResult(future);
 
                 //registraiton id is ignored as this listener will never be removed
-                var registirationId = ClientMembershipListenerCodec.DecodeResponse(response).response;
+                var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
 
                 WaitInitialMemberListFetched();
             }

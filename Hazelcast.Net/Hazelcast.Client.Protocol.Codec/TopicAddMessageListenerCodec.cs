@@ -35,22 +35,25 @@ namespace Hazelcast.Client.Protocol.Codec
         {
             public static readonly TopicMessageType TYPE = RequestType;
             public string name;
+            public bool localOnly;
 
-            public static int CalculateDataSize(string name)
+            public static int CalculateDataSize(string name, bool localOnly)
             {
                 int dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += Bits.BooleanSizeInBytes;
                 return dataSize;
             }
         }
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, bool localOnly)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize(name);
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, localOnly);
             ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int)RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
+            clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
@@ -79,13 +82,14 @@ namespace Hazelcast.Client.Protocol.Codec
             public static void Handle(IClientMessage clientMessage, HandleTopic handleTopic)
             {
                 int messageType = clientMessage.GetMessageType();
-                if (messageType == EventMessageConst.EventTopic) {
-            IData item = null;
-            item = clientMessage.GetData();
-            long publishTime ;
-            publishTime = clientMessage.GetLong();
-            string uuid = null;
-            uuid = clientMessage.GetStringUtf8();
+                if (messageType == EventMessageConst.EventTopic)
+                {
+                    IData item = null;
+                    item = clientMessage.GetData();
+                    long publishTime;
+                    publishTime = clientMessage.GetLong();
+                    string uuid = null;
+                    uuid = clientMessage.GetStringUtf8();
                     handleTopic(item, publishTime, uuid);
                     return;
                 }
@@ -93,7 +97,7 @@ namespace Hazelcast.Client.Protocol.Codec
             }
 
             public delegate void HandleTopic(IData item, long publishTime, string uuid);
-       }
+        }
 
     }
 }

@@ -20,8 +20,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
+using Hazelcast.Client.Proxy;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
+using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
@@ -92,7 +94,7 @@ namespace Hazelcast.Client
                 DistributedEventHandler handler = null;
                 if (cacheType == ClientNearCacheType.Map)
                 {
-                    request = MapAddNearCacheEntryListenerCodec.EncodeRequest(mapName, false);
+                    request = MapAddNearCacheEntryListenerCodec.EncodeRequest(mapName, false, (int)EntryEventType.All, false);
 
                     handler = message =>
                     {
@@ -117,7 +119,6 @@ namespace Hazelcast.Client
                 Logger.Severe("-----------------\n Near Cache is not initialized!!! \n-----------------", e);
             }
         }
-
 
         public virtual void Put(IData key, object @object)
         {

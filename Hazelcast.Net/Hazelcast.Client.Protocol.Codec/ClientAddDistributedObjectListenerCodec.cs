@@ -34,20 +34,23 @@ namespace Hazelcast.Client.Protocol.Codec
         public class RequestParameters
         {
             public static readonly ClientMessageType TYPE = RequestType;
+            public bool localOnly;
 
-            public static int CalculateDataSize()
+            public static int CalculateDataSize(bool localOnly)
             {
                 int dataSize = ClientMessage.HeaderSize;
+                dataSize += Bits.BooleanSizeInBytes;
                 return dataSize;
             }
         }
 
-        public static ClientMessage EncodeRequest()
+        public static ClientMessage EncodeRequest(bool localOnly)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize();
+            int requiredDataSize = RequestParameters.CalculateDataSize(localOnly);
             ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int)RequestType);
             clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
@@ -71,36 +74,19 @@ namespace Hazelcast.Client.Protocol.Codec
 
 
         //************************ EVENTS *************************//
-        public static ClientMessage EncodeDistributedObjectEvent(string name, string serviceName, string eventType)
-        {
-            int dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(serviceName);
-                dataSize += ParameterUtil.CalculateDataSize(eventType);
-
-            ClientMessage clientMessage = ClientMessage.CreateForEncode(dataSize);
-            clientMessage.SetMessageType(EventMessageConst.EventDistributedObject);
-            clientMessage.AddFlag(ClientMessage.ListenerEventFlag);
-
-            clientMessage.Set(name);
-            clientMessage.Set(serviceName);
-            clientMessage.Set(eventType);
-            clientMessage.UpdateFrameLength();
-            return clientMessage;
-        }
-
         public abstract class AbstractEventHandler
         {
             public static void Handle(IClientMessage clientMessage, HandleDistributedObject handleDistributedObject)
             {
                 int messageType = clientMessage.GetMessageType();
-                if (messageType == EventMessageConst.EventDistributedObject) {
-            string name = null;
-            name = clientMessage.GetStringUtf8();
-            string serviceName = null;
-            serviceName = clientMessage.GetStringUtf8();
-            string eventType = null;
-            eventType = clientMessage.GetStringUtf8();
+                if (messageType == EventMessageConst.EventDistributedObject)
+                {
+                    string name = null;
+                    name = clientMessage.GetStringUtf8();
+                    string serviceName = null;
+                    serviceName = clientMessage.GetStringUtf8();
+                    string eventType = null;
+                    eventType = clientMessage.GetStringUtf8();
                     handleDistributedObject(name, serviceName, eventType);
                     return;
                 }
@@ -108,7 +94,7 @@ namespace Hazelcast.Client.Protocol.Codec
             }
 
             public delegate void HandleDistributedObject(string name, string serviceName, string eventType);
-       }
+        }
 
     }
 }

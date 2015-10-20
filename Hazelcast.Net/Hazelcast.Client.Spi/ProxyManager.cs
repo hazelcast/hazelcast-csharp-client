@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Spi
 
         public string AddDistributedObjectListener(IDistributedObjectListener listener)
         {
-            var request = ClientAddDistributedObjectListenerCodec.EncodeRequest();
+            var request = ClientAddDistributedObjectListenerCodec.EncodeRequest(false);
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
                 _client.GetListenerService(),

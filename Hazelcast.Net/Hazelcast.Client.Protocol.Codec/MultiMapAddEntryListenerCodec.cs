@@ -36,24 +36,27 @@ namespace Hazelcast.Client.Protocol.Codec
             public static readonly MultiMapMessageType TYPE = RequestType;
             public string name;
             public bool includeValue;
+            public bool localOnly;
 
-            public static int CalculateDataSize(string name, bool includeValue)
+            public static int CalculateDataSize(string name, bool includeValue, bool localOnly)
             {
                 int dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += Bits.BooleanSizeInBytes;
                 dataSize += Bits.BooleanSizeInBytes;
                 return dataSize;
             }
         }
 
-        public static ClientMessage EncodeRequest(string name, bool includeValue)
+        public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize(name, includeValue);
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, includeValue, localOnly);
             ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int)RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
             clientMessage.Set(includeValue);
+            clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
@@ -82,37 +85,38 @@ namespace Hazelcast.Client.Protocol.Codec
             public static void Handle(IClientMessage clientMessage, HandleEntry handleEntry)
             {
                 int messageType = clientMessage.GetMessageType();
-                if (messageType == EventMessageConst.EventEntry) {
-            IData key = null;
-            bool key_isNull = clientMessage.GetBoolean();
-            if (!key_isNull)
-            {
-            key = clientMessage.GetData();
-            }
-            IData value = null;
-            bool value_isNull = clientMessage.GetBoolean();
-            if (!value_isNull)
-            {
-            value = clientMessage.GetData();
-            }
-            IData oldValue = null;
-            bool oldValue_isNull = clientMessage.GetBoolean();
-            if (!oldValue_isNull)
-            {
-            oldValue = clientMessage.GetData();
-            }
-            IData mergingValue = null;
-            bool mergingValue_isNull = clientMessage.GetBoolean();
-            if (!mergingValue_isNull)
-            {
-            mergingValue = clientMessage.GetData();
-            }
-            int eventType ;
-            eventType = clientMessage.GetInt();
-            string uuid = null;
-            uuid = clientMessage.GetStringUtf8();
-            int numberOfAffectedEntries ;
-            numberOfAffectedEntries = clientMessage.GetInt();
+                if (messageType == EventMessageConst.EventEntry)
+                {
+                    IData key = null;
+                    bool key_isNull = clientMessage.GetBoolean();
+                    if (!key_isNull)
+                    {
+                        key = clientMessage.GetData();
+                    }
+                    IData value = null;
+                    bool value_isNull = clientMessage.GetBoolean();
+                    if (!value_isNull)
+                    {
+                        value = clientMessage.GetData();
+                    }
+                    IData oldValue = null;
+                    bool oldValue_isNull = clientMessage.GetBoolean();
+                    if (!oldValue_isNull)
+                    {
+                        oldValue = clientMessage.GetData();
+                    }
+                    IData mergingValue = null;
+                    bool mergingValue_isNull = clientMessage.GetBoolean();
+                    if (!mergingValue_isNull)
+                    {
+                        mergingValue = clientMessage.GetData();
+                    }
+                    int eventType;
+                    eventType = clientMessage.GetInt();
+                    string uuid = null;
+                    uuid = clientMessage.GetStringUtf8();
+                    int numberOfAffectedEntries;
+                    numberOfAffectedEntries = clientMessage.GetInt();
                     handleEntry(key, value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
                     return;
                 }
@@ -120,7 +124,7 @@ namespace Hazelcast.Client.Protocol.Codec
             }
 
             public delegate void HandleEntry(IData key, IData value, IData oldValue, IData mergingValue, int eventType, string uuid, int numberOfAffectedEntries);
-       }
+        }
 
     }
 }

@@ -36,24 +36,27 @@ namespace Hazelcast.Client.Protocol.Codec
             public static readonly SetMessageType TYPE = RequestType;
             public string name;
             public bool includeValue;
+            public bool localOnly;
 
-            public static int CalculateDataSize(string name, bool includeValue)
+            public static int CalculateDataSize(string name, bool includeValue, bool localOnly)
             {
                 int dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += Bits.BooleanSizeInBytes;
                 dataSize += Bits.BooleanSizeInBytes;
                 return dataSize;
             }
         }
 
-        public static ClientMessage EncodeRequest(string name, bool includeValue)
+        public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize(name, includeValue);
+            int requiredDataSize = RequestParameters.CalculateDataSize(name, includeValue, localOnly);
             ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int)RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
             clientMessage.Set(includeValue);
+            clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
@@ -82,17 +85,18 @@ namespace Hazelcast.Client.Protocol.Codec
             public static void Handle(IClientMessage clientMessage, HandleItem handleItem)
             {
                 int messageType = clientMessage.GetMessageType();
-                if (messageType == EventMessageConst.EventItem) {
-            IData item = null;
-            bool item_isNull = clientMessage.GetBoolean();
-            if (!item_isNull)
-            {
-            item = clientMessage.GetData();
-            }
-            string uuid = null;
-            uuid = clientMessage.GetStringUtf8();
-            int eventType ;
-            eventType = clientMessage.GetInt();
+                if (messageType == EventMessageConst.EventItem)
+                {
+                    IData item = null;
+                    bool item_isNull = clientMessage.GetBoolean();
+                    if (!item_isNull)
+                    {
+                        item = clientMessage.GetData();
+                    }
+                    string uuid = null;
+                    uuid = clientMessage.GetStringUtf8();
+                    int eventType;
+                    eventType = clientMessage.GetInt();
                     handleItem(item, uuid, eventType);
                     return;
                 }
@@ -100,7 +104,7 @@ namespace Hazelcast.Client.Protocol.Codec
             }
 
             public delegate void HandleItem(IData item, string uuid, int eventType);
-       }
+        }
 
     }
 }
