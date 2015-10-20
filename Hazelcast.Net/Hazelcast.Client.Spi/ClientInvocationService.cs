@@ -161,7 +161,6 @@ namespace Hazelcast.Client.Spi
             }
             else
             {
-                //TODO: find a way to shutdown the task factory
                 Task.Factory.StartNew(() =>
                 {
                     if (!_isShutDown)
@@ -240,7 +239,6 @@ namespace Hazelcast.Client.Spi
                     //re-register listener on a new node
                     Task.Factory.StartNew(() =>
                     {
-                        //TODO: Find a way to shutdown the task factory.
                         if (!_isShutDown)
                         {
                             ReregisterListener(invocation);
@@ -439,7 +437,6 @@ namespace Hazelcast.Client.Spi
             {
                 Thread.Sleep(_retryWaitTime);
 
-                //TODO: Find a way to shutdown the task factory instead
                 if (_isShutDown) FailRequestDueToShutdown(invocation);
                 else
                 {

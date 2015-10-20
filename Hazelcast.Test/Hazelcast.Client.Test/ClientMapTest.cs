@@ -311,7 +311,6 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(dictionary.Count, keycount);
         }
 
-        //TODO map store
         [Test]
         public virtual void TestGetAllPutAll()
         {
@@ -587,7 +586,6 @@ namespace Hazelcast.Client.Test
             Assert.IsFalse(latch1Add.Wait(TimeSpan.FromSeconds(1)));
         }
 
-        //TODO mapstore
         /// <exception cref="System.Exception"></exception>
         [Test]
         public virtual void TestLock()

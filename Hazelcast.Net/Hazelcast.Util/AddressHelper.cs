@@ -77,8 +77,6 @@ namespace Hazelcast.Util
                 }
                 else
                 {
-                    //TODO IPv6 support should be checked.
-                    //throw new NotSupportedException("IPv6 not supported yet");
                     ICollection<IPAddress> addresses = AddressUtil.GetPossibleInetAddressesFor(ipAddress);
                     foreach (IPAddress ipa in addresses)
                     {
