@@ -140,9 +140,6 @@ namespace Hazelcast.Config
                     case "near-cache":
                         HandleNearCache(node);
                         break;
-                    case "license-key":
-                        clientConfig.SetLicenseKey(GetTextContent(node));
-                        break;
                 }
             }
         }

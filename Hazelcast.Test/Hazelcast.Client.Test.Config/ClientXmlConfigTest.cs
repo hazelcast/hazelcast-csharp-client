@@ -51,12 +51,6 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestLicenseKey()
-        {
-            Assert.That(_clientConfig.GetLicenseKey(), Is.EqualTo("ENTERPRISE_KEY"));
-        }
-
-        [Test]
         public void TestGroupConfig()
         {
             Assert.That(_clientConfig.GetGroupConfig(), Is.EqualTo(new GroupConfig("dev", "dev-pass")));

@@ -581,7 +581,6 @@
     <Compile Include="Hazelcast.Util\ExceptionUtil.cs" />
     <Compile Include="Hazelcast.Util\HashUtil.cs" />
     <Compile Include="Hazelcast.Util\IterationType.cs" />
-    <Compile Include="Hazelcast.Util\License.cs" />
     <Compile Include="Hazelcast.Util\ListenerUtil.cs" />
     <Compile Include="Hazelcast.Util\QuickMath.cs" />
     <Compile Include="Hazelcast.Util\RandomLB.cs" />

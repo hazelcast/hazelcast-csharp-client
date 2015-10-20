@@ -58,7 +58,6 @@ namespace Hazelcast.Client
             var groupConfig = config.GetGroupConfig();
             instanceName = "hz.client_" + id + (groupConfig != null ? "_" + groupConfig.GetName() : string.Empty);
 
-            BeforeStart(config);
             //threadGroup = new ThreadGroup(instanceName);
             lifecycleService = new LifecycleService(this);
             try
@@ -443,18 +442,6 @@ namespace Hazelcast.Client
                 ? (IClientInvocationService)new ClientSmartInvocationService(this)
                 : new ClientNonSmartInvocationService(this);
         }
-
-        private static void BeforeStart(ClientConfig clientConfig)
-        {
-            var licenseKey = clientConfig.GetLicenseKey();
-            var list = new List<LicenseType>
-            {
-                LicenseType.ENTERPRISE
-                //  LicenseType.ENTERPRISE_SECURITY_ONLY
-            };
-            LicenseExtractor.CheckLicenseKey(licenseKey, list);
-        }
-
         private void Start()
         {
             lifecycleService.SetStarted();

@@ -112,9 +112,6 @@
     <Compile Include="Hazelcast.Client.Test\ClientIpV6AddressTest.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientLicenseTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Hazelcast.Client.Test\ClientListTest.cs">
       <SubType>Code</SubType>
     </Compile>
