@@ -71,6 +71,20 @@ namespace Hazelcast.Client.Spi
             return _taskFactory.StartNew(function, state);
         }
 
+        public Task SubmitWithDelay(Action action, int delayMilliseconds)
+        {
+            var tcs = new TaskCompletionSource<object>();
+            var continueTask = tcs.Task.ContinueWith(t =>
+            {
+                if (t.IsCompleted)
+                {
+                    action();
+                }
+            });
+            new Timer(o => tcs.SetResult(null)).Change(delayMilliseconds, Timeout.Infinite);
+            return continueTask;
+        }
+
         internal Task SubmitInternal(Action action)
         {
             //TODO: should use different thread pool

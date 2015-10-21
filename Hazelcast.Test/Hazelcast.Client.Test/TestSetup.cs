@@ -14,7 +14,8 @@
 * limitations under the License.
 */
 
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -23,6 +24,11 @@ namespace Hazelcast.Client.Test
     [SetUpFixture]
     public class TestSetup
     {
+        [SetUp]
+        public void SetupLogging()
+        {
+            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+        }
        
         [TearDown]
         public void TearDown()

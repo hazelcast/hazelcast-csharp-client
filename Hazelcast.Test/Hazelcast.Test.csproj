@@ -106,6 +106,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientDistributedObjectTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientHeartBeatTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientIdGeneratorTest.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -173,6 +174,7 @@
     <Compile Include="Hazelcast.Client.Test.Serialization\SerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\RawDataPortable.cs" />
     <Compile Include="Hazelcast.Client.Test\NonSmartRoutingTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ProcessUtil.cs" />
     <Compile Include="Hazelcast.Client.Test\TestListenerSupport.cs" />
     <Compile Include="Hazelcast.Client.Test\TestSetup.cs" />
     <Compile Include="Hazelcast.Client.Test\TestSupport.cs" />

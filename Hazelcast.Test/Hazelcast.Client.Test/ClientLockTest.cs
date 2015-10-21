@@ -27,21 +27,18 @@ namespace Hazelcast.Client.Test
 	[TestFixture]
 	public class ClientLockTest:HazelcastBaseTest
 	{
-        internal static string name = TestSupport.RandomString();
-
 		internal static ILock l;
 
-        public override void InitMoreFixture()
+        [SetUp]
+        public void Setup()
         {
-            l = Client.GetLock(name);
+            l = Client.GetLock(TestSupport.RandomString());
         }
 
-        [SetUp]
         [TearDown]
         public static void Destroy()
         {
-            l.ForceUnlock();
-            //l.Destroy();
+            l.Destroy();
         }
 
 		/// <exception cref="System.Exception"></exception>
@@ -93,7 +90,6 @@ namespace Hazelcast.Client.Test
 			Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
 			l.ForceUnlock();
 		}
-
 
 	    [Test]
 	    public virtual void TestIsLock()

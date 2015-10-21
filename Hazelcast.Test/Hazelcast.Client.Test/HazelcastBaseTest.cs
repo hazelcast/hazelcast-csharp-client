@@ -54,7 +54,6 @@ namespace Hazelcast.Client.Test
                 Assert.AreEqual(1, Cluster.Size);
             }
             Client = CreateClient();
-            InitMoreFixture();
         }
 
         [SetUp]
@@ -62,18 +61,20 @@ namespace Hazelcast.Client.Test
         {
             logger.Finest("Running test " + TestContext.CurrentContext.Test.Name);
         }
-        public virtual void InitMoreFixture()
+
+        [TearDown]
+        public void TearDown()
         {
+            
         }
 
         [TestFixtureTearDown]
-        public void TearDown()
+        public void FixtureTearDown()
         {
             if (Client != null)
             {
                 Client.Shutdown();
             }
-
             //try to rebalance the cluster size
             if (Cluster.Size > 1)
             {
@@ -92,7 +93,7 @@ namespace Hazelcast.Client.Test
 
         protected virtual void ConfigureClient(ClientConfig config)
         {
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
+            config.GetNetworkConfig().AddAddress("127.0.0.1:5701");
             config.GetNetworkConfig().SetConnectionAttemptLimit(20);
             config.GetNetworkConfig().SetConnectionAttemptPeriod(2000);
         }

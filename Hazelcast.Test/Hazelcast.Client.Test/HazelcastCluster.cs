@@ -14,11 +14,8 @@
 * limitations under the License.
 */
 
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using Hazelcast.Logging;
 
 namespace Hazelcast.Client.Test
@@ -26,7 +23,7 @@ namespace Hazelcast.Client.Test
     public class HazelcastCluster
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (HazelcastCluster));
-        private readonly Dictionary<int, HazelcastNode> _nodes = new Dictionary<int, HazelcastNode>();
+        private readonly Dictionary<int, HazelcastNode> _nodes;
         private int _nextNodeId;
 
         public HazelcastCluster(int initialNodeCount)
@@ -39,6 +36,41 @@ namespace Hazelcast.Client.Test
         public int Size
         {
             get { return _nodes.Count; }
+        }
+
+        public int AddNode()
+        {
+            var id = _nextNodeId++;
+            var node = new HazelcastNode(id);
+            _nodes[id] = node;
+            node.Start();
+            return id;
+        }
+
+        public void RemoveNode()
+        {
+            // remove node with largest id
+            var key = _nodes.Keys.Max();
+            RemoveNode(key);
+        }
+
+        public void RemoveNode(int id)
+        {
+            _nodes[id].Stop();
+            _nodes.Remove(id);
+        }
+
+        public void ResumeNode(int id)
+        {
+            _nodes[id].Resume();
+        }
+
+        public void Shutdown()
+        {
+            foreach (var node in _nodes.Values)
+            {
+                node.Stop();
+            }
         }
 
         public void Start()
@@ -54,34 +86,14 @@ namespace Hazelcast.Client.Test
             _nodes[id].Stop();
         }
 
-        public int AddNode()
+        public void SuspendNode(int id)
         {
-            var id = _nextNodeId++;
-            var node = new HazelcastNode(id);
-            _nodes[id] = node;
-            node.Start();
-            return id;
+            _nodes[id].Suspend();
         }
 
-        public void Shutdown()
+        public ICollection<int> NodeIds
         {
-            foreach (var node in _nodes.Values)
-            {
-                node.Stop();
-            }
-        }
-
-        public void RemoveNode()
-        {
-            // remove node with largest id
-            var key = _nodes.Keys.Max();
-            RemoveNode(key);
-        }
-
-        public void RemoveNode(int id)
-        {
-            _nodes[id].Stop();
-            _nodes.Remove(id);
+            get { return _nodes.Keys; }
         }
     }
 }

@@ -17,6 +17,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using Hazelcast.Logging;
 
 namespace Hazelcast.Client.Test
@@ -26,8 +27,8 @@ namespace Hazelcast.Client.Test
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(HazelcastNode));
         private readonly int _id;
         private Process _process;
+        private StreamWriter _stderr;
         private const string HazelcastJar = "hazelcast.jar";
-
 
         public HazelcastNode(int id)
         {
@@ -46,7 +47,9 @@ namespace Hazelcast.Client.Test
             
             var hzhome = Environment.GetEnvironmentVariable("HAZELCAST_HOME");
             if (hzhome == null) throw new Exception("HAZELCAST_HOME must be defined in order to run the unit tests.");
-            
+
+            var redirectOutput = Environment.GetEnvironmentVariable("HAZELCAST_REDIRECT_OUTPUT") != null;
+
             string[] arguments =
             {
                 "-cp", Path.Combine(hzhome, HazelcastJar),
@@ -60,17 +63,53 @@ namespace Hazelcast.Client.Test
             _process.StartInfo.Arguments = String.Join(" ", arguments);
             _process.StartInfo.FileName = Path.Combine(javaHome, "bin", "java");
 
+            if (redirectOutput)
+            {
+                _process.StartInfo.RedirectStandardOutput = true;
+                _process.StartInfo.RedirectStandardError = true;
+                _stderr = new StreamWriter("hz-" + _id + "-err.txt", false);
+                _process.ErrorDataReceived += (sender, args) => _stderr.WriteLine(args.Data);
+            }
+
             Logger.Info("Starting Hazelcast instance with id " + Id);
             if (!_process.Start())
             {
                 throw new Exception("Could not start hazelcast insance.");
             }
+
+            if (redirectOutput)
+            {
+                _process.BeginOutputReadLine();
+                _process.BeginErrorReadLine();
+            }
         }
 
         public void Stop()
         {
+            if (_stderr != null)
+            {
+                _stderr.WriteLine(DateTime.Now + ": Stopping instance.");
+            }
+
             Logger.Info("Stopping Hazelcast instance with id " + Id);
             _process.Kill();
+            _process.WaitForExit();
+            if (_stderr != null)
+            {
+                _stderr.Flush();
+            }
+        }
+
+        public void Suspend()
+        {
+            Logger.Info("Suspending Hazelcast instance with id " + Id);
+            ProcessUtil.Suspend(_process);
+        }
+
+        public void Resume()
+        {
+            Logger.Info("Resuming Hazelcast instance with id " + Id);
+            ProcessUtil.Resume(_process);
         }
     }
 }

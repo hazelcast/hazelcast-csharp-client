@@ -297,6 +297,7 @@ namespace Hazelcast.Client.Spi
                 }
                 catch (Exception e)
                 {
+                    Logger.Warning("Got error initializing proxy", e);
                     if (IsRetryable(e))
                     {
                         try

@@ -41,6 +41,7 @@ namespace Hazelcast.Client.Connection
         public const int BufferSize = 1 << 15; //32k
         public const int SocketReceiveBufferSize = 1 << 15; //32k
         public const int SocketSendBufferSize = 1 << 15; //32k
+        private const int ConnectionTimeout = 30000;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConnection));
         private readonly ClientMessageBuilder _builder;
         private readonly ClientConnectionManager _clientConnectionManager;
@@ -102,15 +103,14 @@ namespace Hazelcast.Client.Connection
 
                 var connectionTimeout = clientNetworkConfig.GetConnectionTimeout() > -1
                     ? clientNetworkConfig.GetConnectionTimeout()
-                    : -1;
+                    : ConnectionTimeout;
                 var socketResult = _clientSocket.BeginConnect(address.GetHost(), address.GetPort(), null, null);
 
-                socketResult.AsyncWaitHandle.WaitOne(connectionTimeout, true);
-                if (!_clientSocket.Connected)
+                if (!socketResult.AsyncWaitHandle.WaitOne(connectionTimeout, true) || !_clientSocket.Connected)
                 {
                     // NOTE, MUST CLOSE THE SOCKET
                     _clientSocket.Close();
-                    throw new IOException("Failed to connect server.");
+                    throw new IOException("Failed to connect to " + address);
                 }
                 _sendBuffer = ByteBuffer.Allocate(BufferSize);
                 _receiveBuffer = ByteBuffer.Allocate(BufferSize);
@@ -186,7 +186,7 @@ namespace Hazelcast.Client.Connection
             var localSocketAddress = GetLocalSocketAddress();
             if (localSocketAddress != null)
             {
-                return "Connection [" + _member + " -> " + localSocketAddress + "]";
+                return "Connection[" + Id + "][" + _member + " -> " + localSocketAddress + "]";
             }
             return "Connection [" + _member + " -> CLOSED ]";
         }

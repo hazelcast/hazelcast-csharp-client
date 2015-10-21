@@ -24,12 +24,11 @@ namespace Hazelcast.Client.Spi
     public interface IClientExecutionService
     {
         Task Submit(Action action);
-
+        Task SubmitWithDelay(Action action, int delayMilliseconds);
         Task Submit(Action<object> action, object state);
 
         Task<T> Submit<T>(Func<object, T> function);
         Task<T> Submit<T>(Func<object, T> function, object state);
-
         Task<object> ScheduleWithFixedDelay(Runnable command, long initialDelay, long period, TimeUnit unit);
         void Shutdown();
     }

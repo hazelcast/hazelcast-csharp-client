@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
@@ -127,10 +128,7 @@ namespace Hazelcast.Client.Spi
 
         public void HeartBeatStopped(ClientConnection connection)
         {
-            var request = ClientRemoveAllListenersCodec.EncodeRequest();
-            var removeListenerInvocation = new ClientInvocation(request);
-            Send(connection, removeListenerInvocation);
-
+            CleanupInvocations(connection);
             CleanupEventHandlers(connection);
         }
 
@@ -156,7 +154,13 @@ namespace Hazelcast.Client.Spi
             if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
             {
                 object state = message.GetPartitionId();
-                var eventTask = new Task(o => { HandleEventMessage(message); }, state);
+                var eventTask = new Task(o =>
+                {
+                    if (!_isShutDown)
+                    {
+                        HandleEventMessage(message);
+                    }
+                }, state);
                 eventTask.Start(_taskScheduler);
             }
             else
@@ -173,7 +177,14 @@ namespace Hazelcast.Client.Spi
 
         public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
         {
-            var clientInvocation = new ClientInvocation(request, boundConnection: connection);
+            var clientInvocation = new ClientInvocation(request, connection);
+            Send(connection, clientInvocation);
+            return clientInvocation.Future;
+        }
+
+        public IFuture<IClientMessage> InvokeListenerOnConnection(IClientMessage request, DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder, ClientConnection connection)
+        {
+            var clientInvocation = new ClientListenerInvocation(request, handler, responseDecoder, connection);
             Send(connection, clientInvocation);
             return clientInvocation.Future;
         }
@@ -223,7 +234,7 @@ namespace Hazelcast.Client.Spi
             var keys = new List<int>();
             foreach (var entry in _listenerInvocations)
             {
-                if (entry.Value.SentConnection == connection)
+                if (entry.Value.SentConnection == connection && entry.Value.BoundConnection == null)
                 {
                     keys.Add(entry.Key);
                 }
@@ -358,7 +369,7 @@ namespace Hazelcast.Client.Spi
                     _client.GetListenerService()
                         .ReregisterListener(originalRegistrationId, newRegistrationId,
                             invocation.Message.GetCorrelationId());
-                    Logger.Finest("Re-registered listener for " + originalRegistrationId);
+                    Logger.Finest(string.Format("Re-registered listener for {0} of type {1:X}", originalRegistrationId, listenerInvocation.Message.GetMessageType()));
                 }
                 else
                 {
@@ -373,7 +384,9 @@ namespace Hazelcast.Client.Spi
 
         private void HandleException(ClientInvocation invocation, Exception exception)
         {
+            Logger.Finest("Got exception for request " + invocation.Message + ":" + exception);
             if (exception is IOException
+                || exception is SocketException
                 || exception is HazelcastInstanceNotActiveException
                 || exception is AuthenticationException)
             {
@@ -433,10 +446,9 @@ namespace Hazelcast.Client.Spi
             if (retryNr > _retryCount) return false;
 
             Logger.Finest("Retry #" + retryNr + " for request " + invocation.Message);
-            Task.Factory.StartNew(() =>
-            {
-                Thread.Sleep(_retryWaitTime);
 
+            _client.GetClientExecutionService().SubmitWithDelay(() =>
+            {
                 if (_isShutDown) FailRequestDueToShutdown(invocation);
                 else
                 {
@@ -444,7 +456,7 @@ namespace Hazelcast.Client.Spi
                     var connection = GetConnectionForInvocation(invocation);
                     Send(connection, invocation);
                 }
-            }).ContinueWith(t =>
+            }, _retryWaitTime).ContinueWith(t =>
             {
                 if (t.IsFaulted)
                 {
@@ -458,7 +470,14 @@ namespace Hazelcast.Client.Spi
 
         private ClientConnection GetConnectionForInvocation(ClientInvocation invocation)
         {
-            if (invocation.BoundConnection != null) return invocation.BoundConnection;
+            if (invocation.BoundConnection != null)
+            {
+                if (!invocation.BoundConnection.Live)
+                {
+                    throw new HazelcastException(invocation.BoundConnection + " is no longer available");
+                }
+                return invocation.BoundConnection;
+            }
 
             Address address = null;
             if (invocation.Address != null)

@@ -477,8 +477,6 @@ namespace Hazelcast.Client.Spi
             _principal = new ClientPrincipal(result.uuid, result.ownerUuid);
 
             connection.SetRemoteMember(member);
-            // add initial member
-            _clientMembershipListener.HandleMember(member, MembershipEvent.MemberAdded);
         }
     }
 }

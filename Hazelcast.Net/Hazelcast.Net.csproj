@@ -392,6 +392,7 @@
     <Compile Include="Hazelcast.Client.Spi\ObjectNamespace.cs" />
     <Compile Include="Hazelcast.Client.Spi\ProxyManager.cs" />
     <Compile Include="Hazelcast.Client\AuthenticationException.cs" />
+    <Compile Include="Hazelcast.Core\LifecycleListener.cs" />
     <Compile Include="Hazelcast.Core\MapEvent.cs" />
     <Compile Include="Hazelcast.Core\MapOperationType.cs" />
     <Compile Include="Hazelcast.Core\MemberAttributeEvent.cs" />

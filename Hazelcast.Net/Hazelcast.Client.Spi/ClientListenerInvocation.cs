@@ -14,7 +14,8 @@
 * limitations under the License.
 */
 
-﻿using Hazelcast.Client.Protocol;
+﻿using Hazelcast.Client.Connection;
+using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
 using Hazelcast.Util;
 
@@ -36,6 +37,14 @@ namespace Hazelcast.Client.Spi
         public ClientListenerInvocation(IClientMessage message, DistributedEventHandler handler,
             DecodeStartListenerResponse responseDecoder, int partitionId)
             : base(message, partitionId)
+        {
+            _responseDecoder = responseDecoder;
+            _handler = handler;
+        }
+
+        public ClientListenerInvocation(IClientMessage message, DistributedEventHandler handler,
+           DecodeStartListenerResponse responseDecoder, ClientConnection connection)
+            : base(message, connection)
         {
             _responseDecoder = responseDecoder;
             _handler = handler;

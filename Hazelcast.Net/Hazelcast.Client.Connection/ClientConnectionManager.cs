@@ -18,6 +18,7 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
@@ -117,7 +118,7 @@ namespace Hazelcast.Client.Connection
             if (_heartBeatThread.IsAlive)
             {
                 _heartBeatThread.Interrupt();
-                //_heartBeatThread.Join();
+                _heartBeatThread.Join();
             }
             try
             {
@@ -270,8 +271,16 @@ namespace Hazelcast.Client.Connection
                     ClientConnection conn;
                     if(_addresses.TryRemove(address, out conn))
                     {
-                        connection.Close();
-                        FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
+                        if (conn == connection)
+                        {
+                            connection.Close();
+                            FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
+                        }
+                        else
+                        {
+                            Logger.Warning(connection + " is already destroyed.");
+                            _addresses.TryAdd(address, conn);
+                        }
                     }
                 }
             }
@@ -298,9 +307,9 @@ namespace Hazelcast.Client.Connection
             ClientConnection connection = null;
             lock (_connectionMutex)
             {
+                var id = _nextConnectionId;
                 try
                 {
-                    var id = _nextConnectionId;
                     Logger.Finest("Creating new connection for " + address + " with id " + id);
                     connection = new ClientConnection(this, (ClientInvocationService)_client.GetInvocationService(),
                         id,
@@ -312,22 +321,24 @@ namespace Hazelcast.Client.Connection
                     connection.SwitchToNonBlockingMode();
                     authenticator(connection);
                     Interlocked.Increment(ref _nextConnectionId);
+                    Logger.Finest("Authenticated to " + connection);
                     return connection;
                 }
                 catch (Exception e)
                 {
+                    Logger.Severe("Error connecting to " + address + " with id " + id, e);
                     if (connection != null)
                     {
                         connection.Close();
                     }
-                    throw ExceptionUtil.Rethrow(e, typeof (IOException));
+                    throw ExceptionUtil.Rethrow(e, typeof (IOException), typeof(SocketException));
                 }
             }
         }
 
         private void HearthBeatLoop()
         {
-            while (_heartBeatThread.IsAlive)
+            while (_live)
             {
                 foreach (var clientConnection in _addresses.Values)
                 {

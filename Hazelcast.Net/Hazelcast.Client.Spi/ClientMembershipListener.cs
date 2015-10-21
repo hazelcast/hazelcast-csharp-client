@@ -14,12 +14,12 @@
 * limitations under the License.
 */
 
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
-using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
 using Hazelcast.IO;
@@ -69,6 +69,7 @@ namespace Hazelcast.Client.Spi
                     break;
                 }
             }
+
             _partitionService.RefreshPartitions();
         }
 
@@ -136,14 +137,28 @@ namespace Hazelcast.Client.Spi
                 var clientMessage = ClientAddMembershipListenerCodec.EncodeRequest(false);
                 DistributedEventHandler handler = m => ClientAddMembershipListenerCodec.AbstractEventHandler
                     .Handle(m, HandleMember, HandleMemberCollection, HandleMemberAttributeChange);
-                var future = _client.GetInvocationService().InvokeListenerOnTarget(clientMessage,
-                    ownerConnectionAddress, handler, m => ClientAddMembershipListenerCodec.DecodeResponse(m).response);
-                var response = ThreadUtil.GetResult(future);
 
-                //registraiton id is ignored as this listener will never be removed
-                var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
-
-                WaitInitialMemberListFetched();
+                try
+                {
+                    var connection = _connectionManager.GetConnection(ownerConnectionAddress);
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException(
+                                "Can not load initial members list because owner connection is null. Address "
+                                        + ownerConnectionAddress);
+                    }
+                    var invocationService = (ClientInvocationService)_client.GetInvocationService();
+                    var response = ThreadUtil.GetResult(invocationService.InvokeListenerOnConnection(clientMessage, handler,
+                        m => ClientAddMembershipListenerCodec.DecodeResponse(m).response, connection));
+                    //registraiton id is ignored as this listener will never be removed
+                    var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
+                    WaitInitialMemberListFetched();
+                }
+                catch (Exception e)
+                {
+                    throw ExceptionUtil.Rethrow(e);
+                }
+               
             }
             catch (Exception e)
             {

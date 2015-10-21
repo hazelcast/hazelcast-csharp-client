@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Hazelcast.Logging
 {
@@ -57,7 +58,8 @@ namespace Hazelcast.Logging
 
             private string GetDateFormat(LogLevel logLevel)
             {
-                return DateTime.Now.ToString("HH:mm:ss.fff") + " [" + logLevel.ToString().ToUpper() + "] - " + _name +
+                return DateTime.Now.ToString("HH:mm:ss.fff") + " [" + logLevel.ToString().ToUpper() + "] - [" + Thread.CurrentThread.Name + ":" + 
+                    Thread.CurrentThread.ManagedThreadId + "] " + _name + 
                        ": ";
             }
 

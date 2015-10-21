@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
@@ -67,6 +68,7 @@ namespace Hazelcast.Client.Spi
             {
                 _isLive = false;
                 _partitionThread.Interrupt();
+                _partitionThread.Join();
             }
             catch (Exception e)
             {
@@ -99,7 +101,13 @@ namespace Hazelcast.Client.Spi
                     Logger.Finest("Updating partition list.");
                     var clusterService = _client.GetClientClusterService();
                     var ownerAddress = clusterService.GetOwnerConnectionAddress();
-                    var response = GetPartitionsFrom(ownerAddress);
+                    var connection = _client.GetConnectionManager().GetConnection(ownerAddress);
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Owner connection is not available, could not get partitions.");
+                    }
+                    var response = GetPartitionsFrom(connection);
                     var result = ProcessPartitionResponse(response);
                     Logger.Finest("Partition list updated");
                     return result;
@@ -119,10 +127,10 @@ namespace Hazelcast.Client.Spi
             return false;
         }
         
-        private ClientGetPartitionsCodec.ResponseParameters GetPartitionsFrom(Address address)
+        private ClientGetPartitionsCodec.ResponseParameters GetPartitionsFrom(ClientConnection connection)
         {
             var request = ClientGetPartitionsCodec.EncodeRequest();
-            var task = _client.GetInvocationService().InvokeOnTarget(request, address);
+            var task = ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, connection);
             var result = ThreadUtil.GetResult(task, PartitionTimeout);
             return ClientGetPartitionsCodec.DecodeResponse(result);
         }
@@ -189,7 +197,7 @@ namespace Hazelcast.Client.Spi
 
         internal int GetPartitionId(IData key)
         {
-            var pc = _partitionCount;
+            var pc = GetPartitionCount();
             if (pc <= 0)
             {
                 return 0;
