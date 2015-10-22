@@ -1,18 +1,13 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.IO;
@@ -23,16 +18,13 @@ namespace Hazelcast.IO.Serialization
 {
     internal class ByteArrayObjectDataInput : InputStream, IBufferObjectDataInput
     {
-
         private readonly bool bigEndian;
         internal readonly ISerializationService service;
-
-        internal readonly int size;
+        internal char[] charBuffer;
         internal byte[] data;
-        private char[] charBuffer;
-
         internal int mark;
         internal int pos;
+        internal int size;
 
         internal ByteArrayObjectDataInput(byte[] data, ISerializationService service, ByteOrder byteOrder)
             : this(data, 0, service, byteOrder)
@@ -44,82 +36,8 @@ namespace Hazelcast.IO.Serialization
             this.data = data;
             size = data != null ? data.Length : 0;
             this.service = service;
-            this.pos = offset;
-            bigEndian = byteOrder == ByteOrder.BigEndian;  
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual int Read()
-        {
-            return (pos < size) ? (data[pos++] & unchecked(0xff)) : -1;
-        }
-
-        public virtual int Read(byte[] b)
-        {
-            return Read(b, 0, b.Length);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public int Read(byte[] b, int off, int len)
-        {
-            if (b == null)
-            {
-                throw new ArgumentNullException();
-            }
-            if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
-            {
-                throw new IndexOutOfRangeException();
-            }
-            if (len <= 0)
-            {
-                return 0;
-            }
-            if (pos >= size)
-            {
-                return -1;
-            }
-            if (pos + len > size)
-            {
-                len = size - pos;
-            }
-            Array.Copy(data, pos, b, off, len);
-            pos += len;
-            return len;
-        }
-
-        public long Skip(long n)
-        {
-            if (n <= 0 || n >= int.MaxValue)
-            {
-                return 0L;
-            }
-            return SkipBytes((int) n);
-        }
-
-        public int Available()
-        {
-            return size - pos;
-        }
-
-        public bool MarkSupported()
-        {
-            return true;
-        }
-
-        public void Mark(int readlimit)
-        {
-            mark = pos;
-        }
-
-        public void Reset()
-        {
-            pos = mark;
-        }
-
-        public void Close()
-        {
-            data = null;
-            charBuffer = null;
+            pos = offset;
+            bigEndian = byteOrder == ByteOrder.BigEndian;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -131,7 +49,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual bool ReadBoolean()
         {
-            int ch = Read();
+            var ch = Read();
             if (ch < 0)
             {
                 throw new EndOfStreamException();
@@ -139,15 +57,10 @@ namespace Hazelcast.IO.Serialization
             return (ch != 0);
         }
 
-        public long ReadLong(int position, ByteOrder byteOrder)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <exception cref="System.IO.IOException"></exception>
         public virtual bool ReadBoolean(int position)
         {
-            int ch = Read(position);
+            var ch = Read(position);
             if (ch < 0)
             {
                 throw new EndOfStreamException();
@@ -175,7 +88,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
         public virtual byte ReadByte()
         {
-            int ch = Read();
+            var ch = Read();
             if (ch < 0)
             {
                 throw new EndOfStreamException();
@@ -186,7 +99,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual byte ReadByte(int position)
         {
-            int ch = Read(position);
+            var ch = Read(position);
             if (ch < 0)
             {
                 throw new EndOfStreamException();
@@ -212,7 +125,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
         public virtual char ReadChar()
         {
-            char c = ReadChar(pos);
+            var c = ReadChar(pos);
             pos += Bits.CharSizeInBytes;
             return c;
         }
@@ -256,12 +169,12 @@ namespace Hazelcast.IO.Serialization
 
         public double ReadDouble(ByteOrder byteOrder)
         {
-            throw new NotImplementedException();
+            return BitConverter.Int64BitsToDouble(ReadLong(byteOrder));
         }
 
         public double ReadDouble(int position, ByteOrder byteOrder)
         {
-            throw new NotImplementedException();
+            return BitConverter.Int64BitsToDouble(ReadLong(position, byteOrder));
         }
 
         /// <summary>
@@ -350,7 +263,7 @@ namespace Hazelcast.IO.Serialization
         /// <seealso cref="java.io.FilterInputStream#in">java.io.FilterInputStream#in</seealso>
         public virtual int ReadInt()
         {
-            int i = ReadInt(pos);
+            var i = ReadInt(pos);
             pos += Bits.IntSizeInBytes;
             return i;
         }
@@ -364,7 +277,7 @@ namespace Hazelcast.IO.Serialization
 
         public int ReadInt(ByteOrder byteOrder)
         {
-            int i = ReadInt(pos, byteOrder);
+            var i = ReadInt(pos, byteOrder);
             pos += Bits.IntSizeInBytes;
             return i;
         }
@@ -397,7 +310,7 @@ namespace Hazelcast.IO.Serialization
         /// <seealso cref="java.io.FilterInputStream#in">java.io.FilterInputStream#in</seealso>
         public virtual long ReadLong()
         {
-            long l = ReadLong(pos);
+            var l = ReadLong(pos);
             pos += Bits.LongSizeInBytes;
             return l;
         }
@@ -411,7 +324,15 @@ namespace Hazelcast.IO.Serialization
 
         public long ReadLong(ByteOrder byteOrder)
         {
-            long l = ReadLong(pos, byteOrder);
+            var l = ReadLong(pos, byteOrder);
+            pos += Bits.LongSizeInBytes;
+            return l;
+        }
+
+        public long ReadLong(int position, ByteOrder byteOrder)
+        {
+            CheckAvailable(position, Bits.LongSizeInBytes);
+            long l = Bits.ReadLong(data, position, byteOrder == ByteOrder.BigEndian); ;
             pos += Bits.LongSizeInBytes;
             return l;
         }
@@ -438,7 +359,7 @@ namespace Hazelcast.IO.Serialization
         /// <seealso cref="java.io.FilterInputStream#in">java.io.FilterInputStream#in</seealso>
         public virtual short ReadShort()
         {
-            short s = ReadShort(pos);
+            var s = ReadShort(pos);
             pos += Bits.ShortSizeInBytes;
             return s;
         }
@@ -452,7 +373,7 @@ namespace Hazelcast.IO.Serialization
 
         public short ReadShort(ByteOrder byteOrder)
         {
-            short s = ReadShort(pos, byteOrder);
+            var s = ReadShort(pos, byteOrder);
             pos += Bits.ShortSizeInBytes;
             return s;
         }
@@ -466,7 +387,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual byte[] ReadByteArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len == Bits.NullArray) return null;
 
             if (len > 0)
@@ -480,13 +401,13 @@ namespace Hazelcast.IO.Serialization
 
         public virtual bool[] ReadBooleanArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len == Bits.NullArray) return null;
 
             if (len > 0)
             {
                 var values = new bool[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadBoolean();
                 }
@@ -498,13 +419,13 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual char[] ReadCharArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len == Bits.NullArray) return null;
 
             if (len > 0)
             {
                 var values = new char[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadChar();
                 }
@@ -516,13 +437,13 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int[] ReadIntArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len == Bits.NullArray) return null;
 
             if (len > 0)
             {
                 var values = new int[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadInt();
                 }
@@ -534,13 +455,13 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual long[] ReadLongArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len == Bits.NullArray) return null;
 
             if (len > 0)
             {
                 var values = new long[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadLong();
                 }
@@ -552,13 +473,13 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual double[] ReadDoubleArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len == Bits.NullArray) return null;
 
             if (len > 0)
             {
                 var values = new double[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadDouble();
                 }
@@ -570,13 +491,13 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual float[] ReadFloatArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len == Bits.NullArray) return null;
 
             if (len > 0)
             {
                 var values = new float[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadFloat();
                 }
@@ -588,13 +509,13 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual short[] ReadShortArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len == Bits.NullArray) return null;
 
             if (len > 0)
             {
                 var values = new short[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadShort();
                 }
@@ -605,13 +526,13 @@ namespace Hazelcast.IO.Serialization
 
         public virtual string[] ReadUTFArray()
         {
-            int len = ReadInt();
+            var len = ReadInt();
             if (len == Bits.NullArray) return null;
 
             if (len > 0)
             {
                 var values = new string[len];
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     values[i] = ReadUTF();
                 }
@@ -699,7 +620,7 @@ namespace Hazelcast.IO.Serialization
         /// </seealso>
         public virtual string ReadUTF()
         {
-            int charCount = ReadInt();
+            var charCount = ReadInt();
             if (charCount == Bits.NullArray)
             {
                 return null;
@@ -708,7 +629,7 @@ namespace Hazelcast.IO.Serialization
             {
                 charBuffer = new char[charCount];
             }
-            for (int i = 0; i < charCount; i++)
+            for (var i = 0; i < charCount; i++)
             {
                 var b = ReadByte();
                 if (b > 127)
@@ -717,7 +638,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 else
                 {
-                    charBuffer[i] = (char)b;
+                    charBuffer[i] = (char) b;
                 }
             }
             return new string(charBuffer, 0, charCount);
@@ -726,7 +647,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public IData ReadData()
         {
-            byte[] bytes = ReadByteArray();
+            var bytes = ReadByteArray();
             var data = bytes != null ? new HeapData(bytes) : null;
             return data;
         }
@@ -737,8 +658,8 @@ namespace Hazelcast.IO.Serialization
             {
                 return 0;
             }
-            int skip = n;
-            int pos = Position();
+            var skip = n;
+            var pos = Position();
             if (pos + skip > size)
             {
                 skip = size - pos;
@@ -777,11 +698,115 @@ namespace Hazelcast.IO.Serialization
             Close();
         }
 
+        public virtual void Init(byte[] data, int offset)
+        {
+            this.data = data;
+            size = data != null ? data.Length : 0;
+            pos = offset;
+        }
+
+        public virtual void Clear()
+        {
+            data = null;
+            pos = 0;
+            size = 0;
+            mark = 0;
+            if (charBuffer != null && charBuffer.Length > BufferObjectDataInputConstants.UtfBufferSize*8)
+            {
+                charBuffer = new char[BufferObjectDataInputConstants.UtfBufferSize*8];
+            }
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public virtual int Read()
+        {
+            return (pos < size) ? (data[pos++] & unchecked(0xff)) : -1;
+        }
+
+        public virtual int Read(byte[] b)
+        {
+            return Read(b, 0, b.Length);
+        }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public int Read(byte[] b, int off, int len)
+        {
+            if (b == null)
+            {
+                throw new ArgumentNullException();
+            }
+            if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
+            {
+                throw new IndexOutOfRangeException();
+            }
+            if (len <= 0)
+            {
+                return 0;
+            }
+            if (pos >= size)
+            {
+                return -1;
+            }
+            if (pos + len > size)
+            {
+                len = size - pos;
+            }
+            Array.Copy(data, pos, b, off, len);
+            pos += len;
+            return len;
+        }
+
+        public long Skip(long n)
+        {
+            if (n <= 0 || n >= int.MaxValue)
+            {
+                return 0L;
+            }
+            return SkipBytes((int) n);
+        }
+
+        public int Available()
+        {
+            return size - pos;
+        }
+
+        public bool MarkSupported()
+        {
+            return true;
+        }
+
+        public void Mark(int readlimit)
+        {
+            mark = pos;
+        }
+
+        public void Reset()
+        {
+            pos = mark;
+        }
+
+        public void Close()
+        {
+            data = null;
+            charBuffer = null;
+        }
+
         /// <exception cref="System.IO.IOException"></exception>
         [Obsolete]
         public string ReadLine()
         {
             throw new NotSupportedException();
+        }
+
+        public virtual string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append("ByteArrayObjectDataInput");
+            sb.Append("{size=").Append(size);
+            sb.Append(", pos=").Append(pos);
+            sb.Append(", mark=").Append(mark);
+            sb.Append('}');
+            return sb.ToString();
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -795,17 +820,6 @@ namespace Hazelcast.IO.Serialization
             {
                 throw new EndOfStreamException("Cannot read " + k + " bytes!");
             }
-        }
-
-        public virtual string ToString()
-        {
-            var sb = new StringBuilder();
-            sb.Append("ByteArrayObjectDataInput");
-            sb.Append("{size=").Append(size);
-            sb.Append(", pos=").Append(pos);
-            sb.Append(", mark=").Append(mark);
-            sb.Append('}');
-            return sb.ToString();
         }
     }
 }

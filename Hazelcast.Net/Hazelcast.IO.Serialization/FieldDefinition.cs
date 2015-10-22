@@ -74,45 +74,30 @@ namespace Hazelcast.IO.Serialization
             return type == FieldType.Portable || type == FieldType.PortableArray;
         }
 
-        //CHECKSTYLE:OFF
-        //Generated equals method has too high NPath Complexity
-        public override bool Equals(object o)
+        protected bool Equals(FieldDefinition other)
         {
-            if (this == o)
-            {
-                return true;
-            }
-            if (o == null || GetType() != o.GetType())
-            {
-                return false;
-            }
-            var that = (FieldDefinition) o;
-            if (classId != that.classId)
-            {
-                return false;
-            }
-            if (factoryId != that.factoryId)
-            {
-                return false;
-            }
-            if (fieldName != null ? !fieldName.Equals(that.fieldName) : that.fieldName != null)
-            {
-                return false;
-            }
-            if (type != that.type)
-            {
-                return false;
-            }
-            return true;
+            return classId == other.classId && factoryId == other.factoryId && string.Equals(fieldName, other.fieldName) && index == other.index && type == other.type;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((FieldDefinition) obj);
         }
 
         public override int GetHashCode()
         {
-            var result = fieldName != null ? fieldName.GetHashCode() : 0;
-            result = 31*result + (type != null ? type.GetHashCode() : 0);
-            result = 31*result + classId;
-            result = 31*result + factoryId;
-            return result;
+            unchecked
+            {
+                var hashCode = classId;
+                hashCode = (hashCode*397) ^ factoryId;
+                hashCode = (hashCode*397) ^ (fieldName != null ? fieldName.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ index;
+                hashCode = (hashCode*397) ^ (int) type;
+                return hashCode;
+            }
         }
 
         public override string ToString()

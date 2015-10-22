@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Hazelcast.Net.Ext;
 
@@ -132,42 +133,19 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public override bool Equals(object o)
+        protected bool Equals(ClassDefinition other)
         {
-            if (this == o)
-            {
-                return true;
-            }
-            if (o == null || GetType() != o.GetType())
-            {
-                return false;
-            }
-            ClassDefinition that = (ClassDefinition)o;
-            if (classId != that.classId)
-            {
-                return false;
-            }
-            if (version != that.version)
-            {
-                return false;
-            }
-            if (GetFieldCount() != that.GetFieldCount())
-            {
-                return false;
-            }
-            foreach (IFieldDefinition fd in fieldDefinitionsMap.Values)
-            {
-                IFieldDefinition fd2 = that.GetField(fd.GetName());
-                if (fd2 == null)
-                {
-                    return false;
-                }
-                if (!fd.Equals(fd2))
-                {
-                    return false;
-                }
-            }
-            return true;
+            return factoryId == other.factoryId && classId == other.classId && version == other.version && 
+                fieldDefinitionsMap.Count == other.fieldDefinitionsMap.Count && 
+                !fieldDefinitionsMap.Except(other.fieldDefinitionsMap).Any();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ClassDefinition) obj);
         }
 
         public override int GetHashCode()

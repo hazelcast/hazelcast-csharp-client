@@ -120,7 +120,7 @@ namespace Hazelcast.Config
             Type dataSerializableFactoryClass)
         {
             string factoryClassName =
-                ValidationUtil.IsNotNull(dataSerializableFactoryClass, "dataSerializableFactoryClass").FullName;
+                ValidationUtil.IsNotNull(dataSerializableFactoryClass, "dataSerializableFactoryClass").AssemblyQualifiedName;
             return AddDataSerializableFactoryClass(factoryId, factoryClassName);
         }
 

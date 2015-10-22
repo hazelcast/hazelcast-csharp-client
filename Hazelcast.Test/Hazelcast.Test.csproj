@@ -78,6 +78,9 @@
     <Compile Include="Hazelcast.Client.Model\Item.cs" />
     <Compile Include="Hazelcast.Client.Test.Config\ClientXmlConfigTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Config\MatchingPointConfigPatternMatcherTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\ByteArrayObjectDataInputTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\ByteArrayObjectDataOutputTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\ClassAndFieldDefinitionTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\ConstantSerializerTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\KitchenSinkDataSerializable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\KitchenSinkPortable.cs" />
@@ -89,6 +92,8 @@
     <Compile Include="Hazelcast.Client.Test.Serialization\InvalidRawDataPortable2.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\InvalidRawDataPortable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\MainPortable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\MorphingPortable.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\MorphingPortableReaderTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\NamedPortableV2.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\NamedPortable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\ObjectCarryingPortable.cs" />
@@ -96,6 +101,8 @@
     <Compile Include="Hazelcast.Client.Test.Serialization\PortableSerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\SampleIdentifiedDataSerializable.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\SerializationConcurrencyTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\SerializationServiceBuilderTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\StringSerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\TestSerializationConstants.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientAtomicLongTest.cs">
       <SubType>Code</SubType>
@@ -171,7 +178,6 @@
     <Compile Include="Hazelcast.Client.Test\HazelcastClientFactory.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\DataSerializableType.cs" />
     <Compile Include="Hazelcast.Client.Test\GenericEvent.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\SerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\RawDataPortable.cs" />
     <Compile Include="Hazelcast.Client.Test\NonSmartRoutingTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ProcessUtil.cs" />

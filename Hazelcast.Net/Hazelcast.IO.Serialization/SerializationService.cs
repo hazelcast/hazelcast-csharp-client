@@ -689,5 +689,10 @@ namespace Hazelcast.IO.Serialization
                 return null;
             }
         }
+
+        internal PortableSerializer GetPortableSerializer()
+        {
+            return portableSerializer;
+        }
     }
 }

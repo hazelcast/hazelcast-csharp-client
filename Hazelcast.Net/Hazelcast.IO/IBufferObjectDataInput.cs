@@ -83,6 +83,8 @@ namespace Hazelcast.IO
         void Position(int newPos);
 
         void Reset();
+        void Init(byte[] data, int offset);
+        void Clear();
     }
 
     public static class BufferObjectDataInputConstants

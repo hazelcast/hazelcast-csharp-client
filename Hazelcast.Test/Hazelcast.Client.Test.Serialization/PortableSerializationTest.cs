@@ -1,23 +1,17 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using System.Text;
 using Hazelcast.Config;
-using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
 using NUnit.Framework;
@@ -168,7 +162,6 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        
         //https://github.com/hazelcast/hazelcast/issues/1096
         [Test]
         public void Test_1096_ByteArrayContentSame()
@@ -345,6 +338,26 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
+        public void TestSerializationService_CreatePortableReader()
+        {
+            var serializationService = new SerializationServiceBuilder().Build();
+
+            var timestamp1 = TestSupport.RandomLong();
+            var child = new ChildPortableObject(timestamp1);
+            var timestamp2 = TestSupport.RandomLong();
+            var parent = new ParentPortableObject(timestamp2, child);
+            var timestamp3 = timestamp1 + timestamp2;
+            var grandParent = new GrandParentPortableObject(timestamp3, parent);
+
+            var data = serializationService.ToData(grandParent);
+            var reader = serializationService.CreatePortableReader(data);
+
+            Assert.AreEqual(grandParent.timestamp, reader.ReadLong("timestamp"));
+            Assert.AreEqual(parent.timestamp, reader.ReadLong("child.timestamp"));
+            Assert.AreEqual(child.timestamp, reader.ReadLong("child.child.timestamp"));
+        }
+
+        [Test]
         public void TestWriteDataWithPortable()
         {
             var ss = new SerializationServiceBuilder()
@@ -469,6 +482,122 @@ namespace Hazelcast.Client.Test.Serialization
         public IPortable Create(int classId)
         {
             return _func(classId);
+        }
+    }
+
+    public class GrandParentPortableObject : IPortable
+    {
+        internal ParentPortableObject child;
+        internal long timestamp;
+
+        public GrandParentPortableObject(long timestamp)
+        {
+            this.timestamp = timestamp;
+            child = new ParentPortableObject(timestamp);
+        }
+
+        public GrandParentPortableObject(long timestamp, ParentPortableObject child)
+        {
+            this.timestamp = timestamp;
+            this.child = child;
+        }
+
+        public virtual int GetFactoryId()
+        {
+            return 1;
+        }
+
+        public virtual int GetClassId()
+        {
+            return 1;
+        }
+
+        /// <exception cref="System.IO.IOException"/>
+        public virtual void ReadPortable(IPortableReader reader)
+        {
+            timestamp = reader.ReadLong("timestamp");
+            child = reader.ReadPortable<ParentPortableObject>("child");
+        }
+
+        /// <exception cref="System.IO.IOException"/>
+        public virtual void WritePortable(IPortableWriter writer)
+        {
+            writer.WriteLong("timestamp", timestamp);
+            writer.WritePortable("child", child);
+        }
+    }
+
+    public class ParentPortableObject : IPortable
+    {
+        internal ChildPortableObject child;
+        internal long timestamp;
+
+        public ParentPortableObject(long timestamp)
+        {
+            this.timestamp = timestamp;
+            child = new ChildPortableObject(timestamp);
+        }
+
+        public ParentPortableObject(long timestamp, ChildPortableObject child)
+        {
+            this.timestamp = timestamp;
+            this.child = child;
+        }
+
+        public virtual int GetFactoryId()
+        {
+            return 2;
+        }
+
+        public virtual int GetClassId()
+        {
+            return 2;
+        }
+
+        /// <exception cref="System.IO.IOException"/>
+        public virtual void ReadPortable(IPortableReader reader)
+        {
+            timestamp = reader.ReadLong("timestamp");
+            child = reader.ReadPortable<ChildPortableObject>("child");
+        }
+
+        /// <exception cref="System.IO.IOException"/>
+        public virtual void WritePortable(IPortableWriter writer)
+        {
+            writer.WriteLong("timestamp", timestamp);
+            writer.WritePortable("child", child);
+        }
+    }
+
+    public class ChildPortableObject : IPortable
+    {
+        internal long timestamp;
+
+        public ChildPortableObject(long timestamp)
+        {
+            this.timestamp = timestamp;
+        }
+
+        public virtual int GetFactoryId()
+        {
+            return 3;
+        }
+
+        public virtual int GetClassId()
+        {
+            return 3;
+        }
+
+        /// <exception cref="System.IO.IOException"/>
+        public virtual void ReadPortable(IPortableReader reader)
+        {
+            timestamp = reader.ReadLong("timestamp");
+        }
+
+        /// <exception cref="System.IO.IOException"/>
+        public virtual void WritePortable(IPortableWriter writer)
+        {
+            writer.WriteLong("timestamp", timestamp);
         }
     }
 }
