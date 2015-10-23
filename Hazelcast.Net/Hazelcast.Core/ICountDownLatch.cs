@@ -14,8 +14,6 @@
 * limitations under the License.
 */
 
-using Hazelcast.Net.Ext;
-
 namespace Hazelcast.Core
 {
     /// <summary>
@@ -112,6 +110,7 @@ namespace Hazelcast.Core
         ///             is returned.  If the time is less than or equal to zero, the method
         ///             will not wait at all.
         ///         </p>
+        ///     </p>
         /// </remarks>
         /// <param name="timeout">the maximum time to wait</param>
         /// <param name="unit">

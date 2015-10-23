@@ -15,6 +15,7 @@
 */
 
 using System;
+using Hazelcast.Util;
 
 namespace Hazelcast.Core
 {
@@ -26,25 +27,15 @@ namespace Hazelcast.Core
     ///     IExecutionCallback allows to asynchronously get notified when the execution is completed,
     ///     either successfully or with error.
     /// </remarks>
-    /// <seealso cref="IExecutorService.Submit{T}(Hazelcast.Net.Ext.Callable{V}, IExecutionCallback{V})">
-    ///     IExecutorService.Submit
-    ///     &lt;T&gt;(Hazelcast.Net.Ext.Callable&lt;V&gt;, IExecutionCallback&lt;V&gt;)
-    /// </seealso>
-    /// <seealso cref="IExecutorService.SubmitToMember{T}(Hazelcast.Net.Ext.Callable{V}, IMember, IExecutionCallback{V})">
-    ///     IExecutorService.SubmitToMember
-    ///     &lt;T&gt;(Hazelcast.Net.Ext.Callable&lt;V&gt;, IMember, IExecutionCallback&lt;V&gt;)
-    /// </seealso>
-    /// <seealso cref="IExecutorService.SubmitToKeyOwner{T}(Hazelcast.Net.Ext.Callable{V}, object, IExecutionCallback{V})">
-    ///     IExecutorService.SubmitToKeyOwner
-    ///     &lt;T&gt;(Hazelcast.Net.Ext.Callable&lt;V&gt;, object, IExecutionCallback&lt;V&gt;)
-    /// </seealso>
-    /// <?></?>
-    public interface IExecutionCallback<V>
+    /// <seealso cref="IExecutorService.Submit{T}(Callable{T}, IExecutionCallback{T})" />
+    /// <seealso cref="IExecutorService.SubmitToMember{T}(Callable{T}, IMember, IExecutionCallback{T})" />
+    /// <seealso cref="IExecutorService.SubmitToKeyOwner{T}(Callable{T}, object, IExecutionCallback{T})" />
+    public interface IExecutionCallback<T>
     {
         /// <summary>Called when an execution is completed successfully.</summary>
         /// <remarks>Called when an execution is completed successfully.</remarks>
         /// <param name="response">result of execution</param>
-        void OnResponse(V response);
+        void OnResponse(T response);
 
         /// <summary>Called when an execution is completed with an error.</summary>
         /// <remarks>Called when an execution is completed with an error.</remarks>

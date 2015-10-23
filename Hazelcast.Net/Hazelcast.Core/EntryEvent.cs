@@ -20,23 +20,23 @@ namespace Hazelcast.Core
 {
     /// <summary>Map Entry event.</summary>
     /// <remarks>Map Entry event.</remarks>
-    /// <typeparam name="K">type of key</typeparam>
-    /// <typeparam name="V">type of value</typeparam>
-    /// <seealso cref="IEntryListener{K,V}" />
-    /// <seealso cref="IMap{K,V}.AddEntryListener(IEntryListener{K,V}, bool)" />
+    /// <typeparam name="TKey">type of key</typeparam>
+    /// <typeparam name="TValue">type of value</typeparam>
+    /// <seealso cref="IEntryListener{TKey,TValue}" />
+    /// <seealso cref="IMap{TKey,TValue}.AddEntryListener(IEntryListener{TKey,TValue}, bool)" />
     [Serializable]
-    public class EntryEvent<K, V> : AbstractMapEvent
+    public class EntryEvent<TKey, TValue> : AbstractMapEvent
     {
-        private K key;
-        private V oldValue;
-        private V value;
+        private TKey key;
+        private TValue oldValue;
+        private TValue value;
 
-        public EntryEvent(object source, IMember member, EntryEventType eventType, K key, V value)
-            : this(source, member, eventType, key, default(V), value)
+        public EntryEvent(object source, IMember member, EntryEventType eventType, TKey key, TValue value)
+            : this(source, member, eventType, key, default(TValue), value)
         {
         }
 
-        public EntryEvent(object source, IMember member, EntryEventType eventType, K key, V oldValue, V value)
+        public EntryEvent(object source, IMember member, EntryEventType eventType, TKey key, TValue oldValue, TValue value)
             : base(source, member,eventType)
         {
             this.key = key;
@@ -51,21 +51,21 @@ namespace Hazelcast.Core
 
         /// <summary>Returns the key of the entry event</summary>
         /// <returns>the key</returns>
-        public virtual K GetKey()
+        public virtual TKey GetKey()
         {
             return key;
         }
 
         /// <summary>Returns the old value of the entry event</summary>
         /// <returns>the old value</returns>
-        public virtual V GetOldValue()
+        public virtual TValue GetOldValue()
         {
             return oldValue;
         }
 
         /// <summary>Returns the value of the entry event</summary>
         /// <returns>the valueS</returns>
-        public virtual V GetValue()
+        public virtual TValue GetValue()
         {
             return value;
         }

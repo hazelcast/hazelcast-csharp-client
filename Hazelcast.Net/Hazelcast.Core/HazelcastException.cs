@@ -49,12 +49,18 @@ namespace Hazelcast.Core
         public QueryException(Exception cause) : base(cause.Message) { }
     }
 
+    /// <summary>
+    /// A
+    /// <see cref="Hazelcast.Core.HazelcastException"/>
+    /// that indicates that a
+    /// <see cref="Hazelcast.Core.IDistributedObject"/>
+    /// access was attempted, but the object is destroyed.
+    /// </summary>
     public class DistributedObjectDestroyedException : HazelcastException
     {
         public DistributedObjectDestroyedException() {}
         public DistributedObjectDestroyedException(String message) :base(message){}
         public DistributedObjectDestroyedException(string message, Exception cause): base(message, cause){}
         public DistributedObjectDestroyedException(Exception cause) : base(cause.Message) { }
- 
     }
 }

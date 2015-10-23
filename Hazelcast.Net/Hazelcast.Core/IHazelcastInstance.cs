@@ -36,46 +36,46 @@ namespace Hazelcast.Core
         /// <summary>
         /// Returns the distributed queue instance with the specified name.
         /// </summary>
-        /// <typeparam name="E">The type of elements in the queue.</typeparam>
+        /// <typeparam name="T">The type of elements in the queue.</typeparam>
         /// <param name="name">name of the distributed queue</param>
         /// <returns>distributed queue instance with the specified name</returns>
         /// <remarks>Returns the distributed queue instance with the specified name.</remarks>
-        IQueue<E> GetQueue<E>(string name);
+        IQueue<T> GetQueue<T>(string name);
 
         /// <summary>Returns the distributed Ringbuffer instance with the specified name.</summary>
         /// <param name="name">name of the distributed Ringbuffer</param>
         /// <returns>distributed RingBuffer instance with the specified name</returns>
-        IRingbuffer<E> GetRingbuffer<E>(string name);
+        IRingbuffer<T> GetRingbuffer<T>(string name);
 
         /// <summary>Returns the distributed topic instance with the specified name.</summary>
         /// <remarks>Returns the distributed topic instance with the specified name.</remarks>
-        /// <typeparam name="E">The type of elements in the Topic</typeparam>
+        /// <typeparam name="T">The type of elements in the Topic</typeparam>
         /// <param name="name">name of the distributed topic</param>
         /// <returns>distributed topic instance with the specified name</returns>
-        ITopic<E> GetTopic<E>(string name);
+        ITopic<T> GetTopic<T>(string name);
 
         /// <summary>Returns the distributed set instance with the specified name.</summary>
         /// <remarks>Returns the distributed set instance with the specified name.</remarks>
-        /// <typeparam name="E">The type of elements in the set</typeparam>
+        /// <typeparam name="T">The type of elements in the set</typeparam>
         /// <param name="name">name of the distributed set</param>
         /// <returns>distributed set instance with the specified name</returns>
-        IHSet<E> GetSet<E>(string name);
+        IHSet<T> GetSet<T>(string name);
 
         /// <summary>Returns the distributed list instance with the specified name.</summary>
         /// <remarks>
         ///     Returns the distributed list instance with the specified name.
         ///     Index based operations on the list are not supported.
         /// </remarks>
-        /// <typeparam name="E">The type of elements in the list</typeparam>
+        /// <typeparam name="T">The type of elements in the list</typeparam>
         /// <param name="name">name of the distributed list</param>
         /// <returns>distributed list instance with the specified name</returns>
-        IHList<E> GetList<E>(string name);
+        IHList<T> GetList<T>(string name);
 
         /// <summary>
         /// Returns the distributed map instance with the specified name.
         /// </summary>
-        /// <typeparam name="K">The type of the keys in the map</typeparam>
-        /// <typeparam name="V">The type of the values in the map</typeparam>
+        /// <typeparam name="TKey">The type of the keys in the map</typeparam>
+        /// <typeparam name="TValue">The type of the values in the map</typeparam>
         /// <param name="name">name of the distributed map</param>
         /// <returns>distributed map instance with the specified name</returns>
         /// <remarks>Returns the distributed map instance with the specified name.</remarks>
@@ -87,15 +87,15 @@ namespace Hazelcast.Core
         ///     //value==10
         /// </code>
         /// </example>
-        IMap<K, V> GetMap<K, V>(string name);
+        IMap<TKey, TValue> GetMap<TKey, TValue>(string name);
 
         /// <summary>Returns the distributed multimap instance with the specified name.</summary>
         /// <remarks>Returns the distributed multimap instance with the specified name.</remarks>
-        /// <typeparam name="K">The type of the keys in the multimap</typeparam>
-        /// <typeparam name="V">The type of the values in the multimap</typeparam>
+        /// <typeparam name="TKey">The type of the keys in the multimap</typeparam>
+        /// <typeparam name="TValue">The type of the values in the multimap</typeparam>
         /// <param name="name">name of the distributed multimap</param>
         /// <returns>distributed multimap instance with the specified name</returns>
-        IMultiMap<K, V> GetMultiMap<K, V>(string name);
+        IMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name);
 
         /// <summary>Returns the distributed lock instance for the specified key object.</summary>
         /// <remarks>

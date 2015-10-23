@@ -14,7 +14,6 @@
 * limitations under the License.
 */
 
-using Hazelcast.Net.Ext;
 using Hazelcast.Transaction;
 
 namespace Hazelcast.Core

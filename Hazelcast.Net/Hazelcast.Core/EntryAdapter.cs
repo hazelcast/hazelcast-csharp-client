@@ -47,7 +47,6 @@ namespace Hazelcast.Core
             this.fClearAll = fClearAll;
         }
 
-
         public void EntryAdded(EntryEvent<K, V> @event)
         {
             fAdded(@event);

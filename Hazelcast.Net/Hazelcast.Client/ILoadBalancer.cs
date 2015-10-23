@@ -34,6 +34,7 @@ namespace Hazelcast.Client
     /// </summary>
     public interface ILoadBalancer
     {
+       
         void Init(ICluster cluster, ClientConfig config);
 
         /// <summary>Returns the next member to route to</summary>

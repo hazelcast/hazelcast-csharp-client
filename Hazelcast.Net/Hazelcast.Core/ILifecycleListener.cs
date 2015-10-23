@@ -22,7 +22,7 @@ namespace Hazelcast.Core
     public interface ILifecycleListener : IEventListener
     {
         /// <summary>Called when instance's state changes</summary>
-        /// <param name="event">Lifecycle event</param>
+        /// <param name="lifecycleEvent">Lifecycle event</param>
         void StateChanged(LifecycleEvent lifecycleEvent);
     }
 }

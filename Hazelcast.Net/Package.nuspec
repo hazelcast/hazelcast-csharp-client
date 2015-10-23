@@ -2,6 +2,7 @@
 <package >
   <metadata>
     <id>Hazelcast.Net</id>
+	<title>Hazelcast .NET Client</title>
     <version>3.6.0-RC1</version>
     <authors>Hazelcast</authors>
     <projectUrl>https://github.com/hazelcast/hazelcast-csharp-client</projectUrl>
@@ -9,7 +10,7 @@
 	<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <iconUrl>https://s3.amazonaws.com/hazelcast/logo/HazelcastLogo-Orange_Dark_NoText_200w.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Open source C# client for Hazelcast, the open source in memory distributed computing platform.	
+    <description>Open source .NET/C# client for Hazelcast, the open source in memory distributed computing platform.	
 	</description>
     <releaseNotes></releaseNotes>
     <copyright>Copyright (c) 2008-2015, Hazelcast, Inc.</copyright>
@@ -17,5 +18,6 @@
   </metadata>
   <files>
     <file src="bin\Release\AnyCpu\*.dll" target="lib\net40" />
+    <file src="bin\Release\AnyCpu\*.xml" target="lib\net40" />
   </files>
 </package>

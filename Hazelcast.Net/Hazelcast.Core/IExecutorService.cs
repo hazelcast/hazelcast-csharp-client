@@ -26,11 +26,10 @@ namespace Hazelcast.Core
     ///     on a specific member, on a member who is owner of a specific key,
     ///     executing a tasks on multiple members and listening execution result using a callback.
     /// </summary>
-    /// <seealso cref="IIExecutionCallback{V}">IExecutionCallback&lt;V&gt;</seealso>
-    /// <seealso cref="IMultiExecutionCallback">IMultiExecutionCallback</seealso>
-    public interface IExecutorService : /*ExecutorService,*/ IDistributedObject
+    /// <seealso cref="IExecutionCallback{T}" />
+    /// <seealso cref="IMultiExecutionCallback" />
+    public interface IExecutorService : IDistributedObject
     {
-        //import com.hazelcast.monitor.LocalExecutorStats;
         /// <summary>Executes task on owner of the specified key</summary>
         /// <param name="command">task</param>
         /// <param name="key">key</param>
@@ -96,72 +95,60 @@ namespace Hazelcast.Core
         /// <summary>Submits task to a random member.</summary>
         /// <remarks>
         ///     Submits task to a random member. Caller will be notified for the result of the task by
-        ///     <see cref="IIExecutionCallback{V}.OnResponse(object)">IExecutionCallback&lt;V&gt;.OnResponse(object)</see>
+        ///     <see cref="IExecutionCallback{T}.OnResponse(T)" />
         ///     or
-        ///     <see cref="IIExecutionCallback{V}.OnFailure(System.Exception)">
-        ///         IExecutionCallback&lt;V&gt;
-        ///         .OnFailure(System.Exception)
-        ///     </see>
+        ///     <see cref="IExecutionCallback{T}.OnFailure(System.Exception)" />
         ///     .
         /// </remarks>
         /// <param name="task">task</param>
         /// <param name="callback">callback</param>
-        void Submit<V>(Runnable task, IExecutionCallback<V> callback);
+        void Submit<T>(Runnable task, IExecutionCallback<T> callback);
 
         /// <summary>Submits task to owner of the specified key.</summary>
         /// <remarks>
         ///     Submits task to owner of the specified key. Caller will be notified for the result of the task by
-        ///     <see cref="IIExecutionCallback{V}.OnResponse(object)">IExecutionCallback&lt;V&gt;.OnResponse(object)</see>
+        ///     <see cref="IExecutionCallback{T}.OnResponse(T)" />
         ///     or
-        ///     <see cref="IIExecutionCallback{V}.OnFailure(System.Exception)">
-        ///         IExecutionCallback&lt;V&gt;
-        ///         .OnFailure(System.Exception)
-        ///     </see>
+        ///     <see cref="IExecutionCallback{T}.OnFailure(System.Exception)" />
         ///     .
         /// </remarks>
         /// <param name="task">task</param>
+        /// <param name="key">the specified key</param>
         /// <param name="callback">callback</param>
-        void SubmitToKeyOwner<V>(Runnable task, object key, IExecutionCallback<V> callback);
+        void SubmitToKeyOwner<T>(Runnable task, object key, IExecutionCallback<T> callback);
 
         /// <summary>Submits task to the specified member.</summary>
         /// <remarks>
         ///     Submits task to the specified member. Caller will be notified for the result of the task by
-        ///     <see cref="IIExecutionCallback{V}.OnResponse(object)">IExecutionCallback&lt;V&gt;.OnResponse(object)</see>
+        ///     <see cref="IExecutionCallback{T}.OnResponse(T)" />
         ///     or
-        ///     <see cref="IIExecutionCallback{V}.OnFailure(System.Exception)">
-        ///         IExecutionCallback&lt;V&gt;
-        ///         .OnFailure(System.Exception)
-        ///     </see>
+        ///     <see cref="IExecutionCallback{T}.OnFailure(System.Exception)" />
         ///     .
         /// </remarks>
         /// <param name="task">task</param>
+        /// <param name="member">the specified member</param>
         /// <param name="callback">callback</param>
-        void SubmitToMember<V>(Runnable task, IMember member, IExecutionCallback<V> callback);
+        void SubmitToMember<T>(Runnable task, IMember member, IExecutionCallback<T> callback);
 
         /// <summary>Submits task to the specified members.</summary>
         /// <remarks>
         ///     Submits task to the specified members. Caller will be notified for the result of the each task by
-        ///     <see cref="IMultiExecutionCallback.OnResponse(IMember, object)">IMultiExecutionCallback.OnResponse(IMember, object)</see>
+        ///     <see cref="IMultiExecutionCallback.OnResponse(IMember, object)"/>
         ///     , and when all tasks are completed,
-        ///     <see cref="IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary{K, V})">
-        ///         IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary
-        ///         &lt;K, V&gt;)
-        ///     </see>
+        ///     <see cref="IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary{IMember, object})" />
         ///     will be called.
         /// </remarks>
         /// <param name="task">task</param>
+        /// <param name="members">the specified members</param>
         /// <param name="callback">callback</param>
         void SubmitToMembers(Runnable task, ICollection<IMember> members, IMultiExecutionCallback callback);
 
         /// <summary>Submits task to the all cluster members.</summary>
         /// <remarks>
         ///     Submits task to the all cluster members. Caller will be notified for the result of the each task by
-        ///     <see cref="IMultiExecutionCallback.OnResponse(IMember, object)">IMultiExecutionCallback.OnResponse(IMember, object)</see>
+        ///     <see cref="IMultiExecutionCallback.OnResponse(IMember, object)"  />
         ///     , and when all tasks are completed,
-        ///     <see cref="IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary{K, V})">
-        ///         IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary
-        ///         &lt;K, V&gt;)
-        ///     </see>
+        ///     <see cref="IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary{IMember, object})" />
         ///     will be called.
         /// </remarks>
         /// <param name="task">task</param>
@@ -171,12 +158,9 @@ namespace Hazelcast.Core
         /// <summary>Submits task to a random member.</summary>
         /// <remarks>
         ///     Submits task to a random member. Caller will be notified for the result of the task by
-        ///     <see cref="IIExecutionCallback{V}.OnResponse(object)">IExecutionCallback&lt;V&gt;.OnResponse(object)</see>
+        ///     <see cref="IExecutionCallback{T}.OnResponse(T)" />
         ///     or
-        ///     <see cref="IIExecutionCallback{V}.OnFailure(System.Exception)">
-        ///         IExecutionCallback&lt;V&gt;
-        ///         .OnFailure(System.Exception)
-        ///     </see>
+        ///     <see cref="IExecutionCallback{T}.OnFailure(System.Exception)" />
         ///     .
         /// </remarks>
         /// <param name="task">task</param>
@@ -186,30 +170,26 @@ namespace Hazelcast.Core
         /// <summary>Submits task to owner of the specified key.</summary>
         /// <remarks>
         ///     Submits task to owner of the specified key. Caller will be notified for the result of the task by
-        ///     <see cref="IIExecutionCallback{V}.OnResponse(object)">IExecutionCallback&lt;V&gt;.OnResponse(object)</see>
+        ///     <see cref="IExecutionCallback{T}.OnResponse(T)"/>
         ///     or
-        ///     <see cref="IIExecutionCallback{V}.OnFailure(System.Exception)">
-        ///         IExecutionCallback&lt;V&gt;
-        ///         .OnFailure(System.Exception)
-        ///     </see>
+        ///     <see cref="IExecutionCallback{T}.OnFailure(System.Exception)" />
         ///     .
         /// </remarks>
         /// <param name="task">task</param>
+        /// <param name="key">key to execute on</param>
         /// <param name="callback">callback</param>
         void SubmitToKeyOwner<T>(Callable<T> task, object key, IExecutionCallback<T> callback);
 
         /// <summary>Submits task to the specified member.</summary>
         /// <remarks>
         ///     Submits task to the specified member. Caller will be notified for the result of the task by
-        ///     <see cref="IIExecutionCallback{V}.OnResponse(object)">IExecutionCallback&lt;V&gt;.OnResponse(object)</see>
+        ///     <see cref="IExecutionCallback{T}.OnResponse(T)" />
         ///     or
-        ///     <see cref="IIExecutionCallback{V}.OnFailure(System.Exception)">
-        ///         IExecutionCallback&lt;V&gt;
-        ///         .OnFailure(System.Exception)
-        ///     </see>
+        ///     <see cref="IExecutionCallback{T}.OnFailure(System.Exception)" />
         ///     .
         /// </remarks>
         /// <param name="task">task</param>
+        /// <param name="member">Member to execute tasks on</param>
         /// <param name="callback">callback</param>
         void SubmitToMember<T>(Callable<T> task, IMember member, IExecutionCallback<T> callback);
 
@@ -218,31 +198,27 @@ namespace Hazelcast.Core
         ///     Submits task to the specified members. Caller will be notified for the result of the each task by
         ///     <see cref="IMultiExecutionCallback.OnResponse(IMember, object)">IMultiExecutionCallback.OnResponse(IMember, object)</see>
         ///     , and when all tasks are completed,
-        ///     <see cref="IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary{K, V})">
+        ///     <see cref="IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary{IMember, object})">
         ///         IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary
-        ///         &lt;K, V&gt;)
+        ///         &lt;IMember, object&gt;)
         ///     </see>
         ///     will be called.
         /// </remarks>
         /// <param name="task">task</param>
+        /// <param name="members">List of members to execute on</param>
         /// <param name="callback">callback</param>
         void SubmitToMembers<T>(Callable<T> task, ICollection<IMember> members, IMultiExecutionCallback callback);
 
         /// <summary>Submits task to the all cluster members.</summary>
         /// <remarks>
         ///     Submits task to the all cluster members. Caller will be notified for the result of the each task by
-        ///     <see cref="IMultiExecutionCallback.OnResponse(IMember, object)">IMultiExecutionCallback.OnResponse(IMember, object)</see>
+        ///     <see cref="IMultiExecutionCallback.OnResponse(IMember, object)" />
         ///     , and when all tasks are completed,
-        ///     <see cref="IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary{K, V})">
-        ///         IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary
-        ///         &lt;K, V&gt;)
-        ///     </see>
+        ///     <see cref="IMultiExecutionCallback.OnComplete(System.Collections.Generic.IDictionary{IMember, object})" />
         ///     will be called.
         /// </remarks>
         /// <param name="task">task</param>
         /// <param name="callback">callback</param>
         void SubmitToAllMembers<T>(Callable<T> task, IMultiExecutionCallback callback);
-
-        //    LocalExecutorStats getLocalExecutorStats();
     }
 }

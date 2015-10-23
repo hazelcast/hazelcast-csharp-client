@@ -362,6 +362,7 @@ namespace Hazelcast.Core
         ///         then <see cref="System.Exception">System.Exception</see>
         ///         is thrown and the current thread's
         ///         interrupted status is cleared.
+        ///     </p>
         /// </remarks>
         /// <param name="permits">the number of permits to acquire</param>
         /// <param name="timeout">the maximum time to wait for the permits</param>

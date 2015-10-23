@@ -14,8 +14,6 @@
 * limitations under the License.
 */
 
-using System;
-
 namespace Hazelcast.Core
 {
     /// <summary>Base interface for all distributed objects.</summary>
@@ -27,7 +25,7 @@ namespace Hazelcast.Core
     /// <seealso cref="ILock">ILock</seealso>
     /// <seealso cref="IExecutorService">IExecutorService</seealso>
     /// <seealso cref="ITransactionalMap{K,V}">ITransactionalMap&lt;K, V&gt;</seealso>
-    /// <seealso cref="IITransactionalQueue{E}">ITransactionalQueue&lt;E&gt;</seealso>
+    /// <seealso cref="ITransactionalQueue{E}">ITransactionalQueue&lt;E&gt;</seealso>
     /// <seealso cref="ITransactionalMultiMap{K,V}">ITransactionalMultiMap&lt;K, V&gt;</seealso>
     public interface IDistributedObject
     {
