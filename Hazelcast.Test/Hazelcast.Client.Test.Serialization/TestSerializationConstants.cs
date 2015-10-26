@@ -26,6 +26,7 @@
         public const int MAIN_PORTABLE = 5;
         public const int NAMED_PORTABLE = 6;
         public const int OBJECT_CARRYING_PORTABLE = 7;
+        public const int MORPHING_PORTABLE_ID = 9;
         public const int DATA_SERIALIZABLE_FACTORY_ID = 1;
         public const int SAMPLE_IDENTIFIED_DATA_SERIALIZABLE = 1;
     }

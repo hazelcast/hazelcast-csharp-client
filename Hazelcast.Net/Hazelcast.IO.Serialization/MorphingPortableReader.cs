@@ -296,7 +296,7 @@ namespace Hazelcast.IO.Serialization
 			IFieldDefinition fd = cd.GetField(fieldName);
 			if (fd == null)
 			{
-				return new byte[0];
+				return null;
 			}
             if (fd.GetFieldType() != FieldType.ByteArray)
 			{
@@ -311,7 +311,7 @@ namespace Hazelcast.IO.Serialization
             IFieldDefinition fd = cd.GetField(fieldName);
 			if (fd == null)
 			{
-				return new char[0];
+				return null;
 			}
             if (fd.GetFieldType() != FieldType.CharArray)
 			{
@@ -326,7 +326,7 @@ namespace Hazelcast.IO.Serialization
 			IFieldDefinition fd = cd.GetField(fieldName);
 			if (fd == null)
 			{
-				return new int[0];
+				return null;
 			}
             if (fd.GetFieldType() != FieldType.IntArray)
 			{
@@ -341,7 +341,7 @@ namespace Hazelcast.IO.Serialization
 			IFieldDefinition fd = cd.GetField(fieldName);
 			if (fd == null)
 			{
-				return new long[0];
+				return null;
 			}
             if (fd.GetFieldType() != FieldType.LongArray)
 			{
@@ -356,7 +356,7 @@ namespace Hazelcast.IO.Serialization
 			IFieldDefinition fd = cd.GetField(fieldName);
 			if (fd == null)
 			{
-				return new double[0];
+				return null;
 			}
             if (fd.GetFieldType() != FieldType.DoubleArray)
 			{
@@ -371,7 +371,7 @@ namespace Hazelcast.IO.Serialization
 			IFieldDefinition fd = cd.GetField(fieldName);
 			if (fd == null)
 			{
-				return new float[0];
+				return null;
 			}
             if (fd.GetFieldType() != FieldType.FloatArray)
 			{
@@ -386,7 +386,7 @@ namespace Hazelcast.IO.Serialization
 			IFieldDefinition fd = cd.GetField(fieldName);
 			if (fd == null)
 			{
-				return new short[0];
+				return null;
 			}
             if (fd.GetFieldType() != FieldType.ShortArray)
 			{
@@ -416,7 +416,7 @@ namespace Hazelcast.IO.Serialization
 			IFieldDefinition fd = cd.GetField(fieldName);
 			if (fd == null)
 			{
-				return new IPortable[0];
+				return null;
 			}
             if (fd.GetFieldType() != FieldType.PortableArray)
 			{

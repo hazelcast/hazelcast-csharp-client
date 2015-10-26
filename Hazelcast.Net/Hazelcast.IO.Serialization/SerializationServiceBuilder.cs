@@ -327,7 +327,6 @@ namespace Hazelcast.IO.Serialization
                 }
                 catch (Exception e)
                 {
-                    //ClassLoaderUtil.newInstance(cl, factoryClassName);
                     throw new HazelcastSerializationException(e);
                 }
                 dataSerializableFactories.Add(factoryId, factory);

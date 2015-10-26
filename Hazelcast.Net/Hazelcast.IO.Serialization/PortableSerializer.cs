@@ -160,6 +160,18 @@ namespace Hazelcast.IO.Serialization
             return reader;
         }
 
+        internal DefaultPortableReader CreateMorphingReader(IBufferObjectDataInput input)
+        {
+            int factoryId = input.ReadInt();
+            int classId = input.ReadInt();
+            int version = input.ReadInt();
+
+            IPortable portable = CreateNewPortableInstance(factoryId, classId);
+            int portableVersion = FindPortableVersion(factoryId, classId, portable);
+
+            return CreateReader(input, factoryId, classId, version, portableVersion);
+        }
+
         public void Destroy()
         {
             factories.Clear();

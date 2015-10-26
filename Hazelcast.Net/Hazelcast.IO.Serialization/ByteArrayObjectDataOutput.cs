@@ -198,13 +198,13 @@ namespace Hazelcast.IO.Serialization
         public void WriteLong(long v, ByteOrder byteOrder)
         {
             EnsureAvailable(Bits.LongSizeInBytes);
-            Bits.WriteLong(buffer, pos, v, isBigEndian);
+            Bits.WriteLong(buffer, pos, v, byteOrder == ByteOrder.BigEndian);
             pos += Bits.LongSizeInBytes;
         }
 
         public void WriteLong(int position, long v, ByteOrder byteOrder)
         {
-            Bits.WriteLong(buffer, position, v, isBigEndian);
+            Bits.WriteLong(buffer, position, v, byteOrder == ByteOrder.BigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
