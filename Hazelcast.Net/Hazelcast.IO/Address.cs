@@ -100,13 +100,11 @@ namespace Hazelcast.IO
             return host;
         }
 
-        /// <exception cref="Hazelcast.Net.Ext.UnknownHostException"></exception>
         public IPAddress GetInetAddress()
         {
             return GetAddressByName(GetScopedHost());
         }
 
-        /// <exception cref="Hazelcast.Net.Ext.UnknownHostException"></exception>
         public IPEndPoint GetInetSocketAddress()
         {
             return new IPEndPoint(GetInetAddress(), port);

@@ -17,18 +17,17 @@
 namespace Hazelcast.Core
 {
     /// <summary>IEntryView represents a readonly view of a map entry.</summary>
-    /// <?></?>
-    public interface IEntryView<K, V>
+    public interface IEntryView<TKey, TValue>
     {
         /// <summary>Returns the key of the entry.</summary>
         /// <remarks>Returns the key of the entry.</remarks>
         /// <returns>key</returns>
-        K GetKey();
+        TKey GetKey();
 
         /// <summary>Returns the value of the entry.</summary>
         /// <remarks>Returns the value of the entry.</remarks>
         /// <returns>value</returns>
-        V GetValue();
+        TValue GetValue();
 
         /// <summary>Returns the cost (in bytes) of the entry.</summary>
         /// <remarks>

@@ -14,19 +14,14 @@
 * limitations under the License.
 */
 
+using Hazelcast.Client.Connection;
 using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO
 {
 	/// <summary>
 	/// Represents something that can be written to a
-	/// <see cref="com.hazelcast.nio.Connection">com.hazelcast.nio.Connection</see>
-	/// .
-	/// todo:
-	/// Perhaps this class should be renamed to ConnectionWritable since it is written to a
-	/// <see cref="com.hazelcast.nio.Connection#write(SocketWritable)">com.hazelcast.nio.Connection#write(SocketWritable)
-	/// 	</see>
-	/// . This aligns the names.
+	/// <see cref="ClientConnection">Clientconnection</see>.
 	/// </summary>
 	internal interface ISocketWritable
 	{

@@ -15,12 +15,11 @@
 */
 
 using System.Collections.Generic;
-using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Core
 {
     /// <summary>Concurrent, blocking, distributed, observable queue.</summary>
-    public interface IQueue<E> : IHCollection<E>
+    public interface IQueue<T> : IHCollection<T>
     {
         bool Contains(object o);
 
@@ -41,7 +40,7 @@ namespace Hazelcast.Core
         /// <c>true</c> if the element was added to this queue, else
         /// <c>false</c>
         /// </returns>
-        bool Offer(E e);
+        bool Offer(T e);
 
         /// <summary>
         /// Inserts the specified element into this queue, waiting up to the
@@ -65,8 +64,8 @@ namespace Hazelcast.Core
         /// the specified waiting time elapses before space is available
         /// </returns>
         /// <exception cref="System.Exception">if interrupted while waiting</exception>
-        bool Offer(E e, long timeout, TimeUnit unit);
-        E Peek();
+        bool Offer(T e, long timeout, TimeUnit unit);
+        T Peek();
 
         /// <summary>
         /// Retrieves and removes the head of this queue,
@@ -77,7 +76,7 @@ namespace Hazelcast.Core
         /// or returns <c>null</c> if this queue is empty.
         /// </remarks>
         /// <returns>the head of this queue, or <c>null</c> if this queue is empty</returns>
-        E Poll();
+        T Poll();
 
         /// <summary>
         /// Retrieves and removes the head of this queue, waiting up to the
@@ -99,13 +98,13 @@ namespace Hazelcast.Core
         /// the head of this queue, or <c>null</c> if the
         /// specified waiting time elapses before an element is available
         /// </returns>
-        E Poll(long timeout, TimeUnit unit);
+        T Poll(long timeout, TimeUnit unit);
 
         /// <summary>
         /// Inserts the specified element into this queue, waiting if necessary for space to become available.
         /// </summary>
         /// <param name="e">the element to add</param>
-        void Put(E e);
+        void Put(T e);
 
         /// <summary>
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
@@ -114,7 +113,7 @@ namespace Hazelcast.Core
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
         /// </remarks>
         /// <returns>the head of this queue</returns>
-        E Take();
+        T Take();
 
         /// <summary>
         /// Removes a single instance of the specified element from this queue, if it is present
@@ -129,7 +128,7 @@ namespace Hazelcast.Core
         /// queue is empty.
         /// </summary>
         /// <returns>the head of this queue</returns>
-        E Remove();
+        T Remove();
 
         /// <summary>
         /// Removes all available elements from this queue and adds them
@@ -143,10 +142,10 @@ namespace Hazelcast.Core
         /// this operation is undefined if the specified collection is
         /// modified while the operation is in progress.
         /// </summary>
-        /// <typeparam name="T">type of elements</typeparam>
+        /// <typeparam name="TE">type of elements</typeparam>
         /// <param name="c">the collection to transfer elements into</param>
         /// <returns>the number of elements transferred</returns>
-        int DrainTo<T>(ICollection<T> c) where T : E;
+        int DrainTo<TE>(ICollection<TE> c) where TE : T;
 
         /// <summary>
         /// Removes at most the given number of available elements from
@@ -159,11 +158,11 @@ namespace Hazelcast.Core
         /// this operation is undefined if the specified collection is
         /// modified while the operation is in progress.
         /// </summary>
-        /// <typeparam name="T">type of elements</typeparam>
+        /// <typeparam name="TE">type of elements</typeparam>
         /// <param name="c">the collection to transfer elements into</param>
         /// <param name="maxElements">the maximum number of elements to transfer</param>
         /// <returns>the number of elements transferred</returns>
-        int DrainTo<T>(ICollection<T> c, int maxElements) where T : E;
+        int DrainTo<TE>(ICollection<TE> c, int maxElements) where TE : T;
 
         /// <summary>
         /// Returns the number of additional elements that this queue can ideally
@@ -186,7 +185,7 @@ namespace Hazelcast.Core
         /// if this queue is empty.
         /// </summary>
         /// <returns>the head of this queue</returns>
-        E Element();
+        T Element();
 
     }
 }

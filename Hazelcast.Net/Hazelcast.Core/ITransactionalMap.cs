@@ -28,10 +28,9 @@ namespace Hazelcast.Core
     {
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.Contains(object)"/>
-        /// .
+        /// <see cref="IMap{K, V}.ContainsKey(object)"/>
         /// </summary>
-        /// <seealso cref="IMap{K, V}.Contains(object)"/>
+        /// <seealso cref="IMap{K, V}.ContainsKey(object)"/>
         bool ContainsKey(object key);
 
         /// <summary>
@@ -52,88 +51,88 @@ namespace Hazelcast.Core
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="BaseMap{K, V}.Size()"/>
+        /// <see cref="IMap{K, V}.Size()"/>
         /// .
         /// </summary>
-        /// <seealso cref="BaseMap{K, V}.Size()"/>
+        /// <seealso cref="IMap{K, V}.Size()"/>
         int Size();
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="BaseMap{K, V}.IsEmpty()"/>
+        /// <see cref="IMap{K, V}.IsEmpty()"/>
         /// .
         /// </summary>
-        /// <seealso cref="BaseMap{K, V}.IsEmpty()"/>
+        /// <seealso cref="IMap{K, V}.IsEmpty()"/>
         bool IsEmpty();
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.Put(object, object)"/>
+        /// <see cref="IMap{K, V}.Put(K, V)"/>
         /// .
         /// <p/>
         /// The object to be put will be accessible only in the current transaction context till transaction is committed.
         /// </summary>
-        /// <seealso cref="IMap{K, V}.Put(object, object)"/>
+        /// <seealso cref="IMap{K, V}.Put(K, V)"/>
         V Put(K key, V value);
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.Put(object, object, long, Hazelcast.Net.Ext.TimeUnit)"/>
+        /// <see cref="IMap{K, V}.Put(K, V, long, TimeUnit)"/>
         /// .
         /// <p/>
         /// The object to be put will be accessible only in the current transaction context till transaction is committed.
         /// </summary>
-        /// <seealso cref="IMap{K, V}.Put(object, object, long, Hazelcast.Net.Ext.TimeUnit)"/>
+        /// <seealso cref="IMap{K, V}.Put(K, V, long, TimeUnit)"/>
         V Put(K key, V value, long ttl, TimeUnit timeunit);
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.Set(object, object)"/>
+        /// <see cref="IMap{K, V}.Set(K, V)"/>
         /// .
         /// <p/>
         /// The object to be set will be accessible only in the current transaction context till transaction is committed.
         /// </summary>
-        /// <seealso cref="IMap{K, V}.Set(object, object)"/>
+        /// <seealso cref="IMap{K, V}.Set(K, V)"/>
         void Set(K key, V value);
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.PutIfAbsent(object, object)"/>
+        /// <see cref="IMap{K, V}.PutIfAbsent(K, V)"/>
         /// .
         /// <p/>
         /// The object to be put will be accessible only in the current transaction context until the transaction is committed.
         /// </summary>
-        /// <seealso cref="IMap{K, V}.PutIfAbsent(object, object)"/>
+        /// <seealso cref="IMap{K, V}.PutIfAbsent(K, V)"/>
         V PutIfAbsent(K key, V value);
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.Replace(object, object)"/>
+        /// <see cref="IMap{K, V}.Replace(K, V)"/>
         /// .
         /// <p/>
         /// The object to be replaced will be accessible only in the current transaction context until the transaction is committed.
         /// </summary>
-        /// <seealso cref="IMap{K, V}.Replace(object, object)"/>
+        /// <seealso cref="IMap{K, V}.Replace(K, V)"/>
         V Replace(K key, V value);
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.Replace(object, object, object)"/>
+        /// <see cref="IMap{K, V}.Replace(K, V, V)"/>
         /// .
         /// <p/>
         /// The object to be replaced will be accessible only in the current transaction context until the transaction is committed.
         /// </summary>
-        /// <seealso cref="IMap{K, V}.Replace(object, object, object)"/>
+        /// <seealso cref="IMap{K, V}.Replace(K, V, V)"/>
         bool Replace(K key, V oldValue, V newValue);
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="Sharpen.Collections.Remove(object)"/>
+        /// <see cref="IMap{K,V}.Remove(object)"/>
         /// .
         /// <p/>
         /// The object to be removed will be removed from only the current transaction context until the transaction is committed.
         /// </summary>
-        /// <seealso cref="Sharpen.Collections.Remove(object)"/>
+        /// <seealso cref="IMap{K,V}.Remove(object)"/>
         V Remove(object key);
 
         /// <summary>
@@ -158,18 +157,18 @@ namespace Hazelcast.Core
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.Keys()"/>
+        /// <see cref="IMap{K, V}.KeySet()"/>
         /// .
         /// </summary>
-        /// <seealso cref="IMap{K, V}.Keys()"/>
+        /// <seealso cref="IMap{K, V}.KeySet()"/>
         ICollection<K> KeySet();
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.KeySet(Hazelcast.Query.Predicate{K, V})"/>
+        /// <see cref="IMap{K, V}.KeySet(IPredicate{K, V})"/>
         /// .
         /// </summary>
-        /// <seealso cref="IMap{K, V}.KeySet(Hazelcast.Query.Predicate{K, V})"/>
+        /// <seealso cref="IMap{K, V}.KeySet(IPredicate{K, V})"/>
         ICollection<K> KeySet(IPredicate<K,V> predicate);
 
         /// <summary>
@@ -182,10 +181,10 @@ namespace Hazelcast.Core
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.Values(Hazelcast.Query.Predicate{K, V})"/>
+        /// <see cref="IMap{K, V}.Values(IPredicate{K, V})"/>
         /// .
         /// </summary>
-        /// <seealso cref="IMap{K, V}.Values(Hazelcast.Query.Predicate{K, V})"/>
+        /// <seealso cref="IMap{K, V}.Values(IPredicate{K, V})"/>
         ICollection<V> Values(IPredicate<K,V> predicate);
     }
 }

@@ -20,16 +20,13 @@ namespace Hazelcast.IO.Serialization
 	/// <summary>Portable provides an alternative serialization method.</summary>
 	/// <remarks>
 	/// Portable provides an alternative serialization method. Instead of relying on reflection, each Portable is
-	/// created by a registered
-	/// <see cref="IPortableFactory">IPortableFactory</see>
-	/// .
-	/// <p>
+	/// created by a registere <see cref="IPortableFactory" />.
+	/// <p />
 	/// Portable serialization that have the following advantages:
 	/// <ul>
 	/// <li>Support multiversion of the same object type.
 	/// (See
-	/// <see cref="Hazelcast.Config.SerializationConfig.SetPortableVersion(int)">Hazelcast.Config.SerializationConfig.SetPortableVersion(int)
-	/// 	</see>
+	/// <see cref="Hazelcast.Config.SerializationConfig.SetPortableVersion(int)" />
 	/// )</li>
 	/// <li>Fetching individual fields without having to rely on reflection.</li>
 	/// <li>Querying and indexing support without de-serialization and/or reflection.</li>

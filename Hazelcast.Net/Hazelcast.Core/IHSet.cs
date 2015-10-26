@@ -27,7 +27,7 @@ namespace Hazelcast.Core
     ///         compares the serialized byte version of the objects.
     ///     </b>
     /// </remarks>
-    public interface IHSet<E> : /*ISet<E>,*/ IHCollection<E>
+    public interface IHSet<T> : /*ISet<E>,*/ IHCollection<T>
     {
     }
 }

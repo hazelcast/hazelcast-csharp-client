@@ -15,12 +15,11 @@
 */
 
 using System.Collections.Generic;
-using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Core
 {
     /// <summary>A specialized Concurrent, distributed map whose keys can be associated with multiple values.</summary>
-    public interface IMultiMap<K, V> : IDistributedObject
+    public interface IMultiMap<TKey, TValue> : IDistributedObject
     {
 
         /// <summary>Stores a key-value pair in the multimap.</summary>
@@ -30,12 +29,12 @@ namespace Hazelcast.Core
         ///     true if size of the multimap is increased, false if the multimap
         ///     already contains the key-value pair.
         /// </returns>
-        bool Put(K key, V value);
+        bool Put(TKey key, TValue value);
 
         /// <summary>Returns the collection of values associated with the key.</summary>
         /// <param name="key">the key whose associated values are to be returned</param>
         /// <returns>the collection of the values associated with the key.</returns>
-        ICollection<V> Get(K key);
+        ICollection<TValue> Get(TKey key);
 
         /// <summary>Removes the given key value pair from the multimap.</summary>
         /// <param name="key">the key of the entry to remove</param>
@@ -49,33 +48,33 @@ namespace Hazelcast.Core
         ///     the collection of removed values associated with the given key. Returned collection
         ///     might be modifiable but it has no effect on the multimap
         /// </returns>
-        ICollection<V> Remove(object key);
+        ICollection<TValue> Remove(object key);
 
         /// <summary>Returns the set of keys in the multimap.</summary>
         /// <returns>
         ///     the set of keys in the multimap. Returned set might be modifiable
         ///     but it has no effect on the multimap
         /// </returns>
-        ISet<K> KeySet();
+        ISet<TKey> KeySet();
 
         /// <summary>Returns the collection of values in the multimap.</summary>
         /// <returns>
         ///     the collection of values in the multimap. Returned collection might be modifiable
         ///     but it has no effect on the multimap
         /// </returns>
-        ICollection<V> Values();
+        ICollection<TValue> Values();
 
         /// <summary>Returns the set of key-value pairs in the multimap.</summary>
         /// <returns>
         ///     the set of key-value pairs in the multimap. Returned set might be modifiable
         ///     but it has no effect on the multimap
         /// </returns>
-        ISet<KeyValuePair<K, V>> EntrySet();
+        ISet<KeyValuePair<TKey, TValue>> EntrySet();
 
         /// <summary>Returns whether the multimap contains an entry with the key.</summary>
         /// <param name="key">the key whose existence is checked.</param>
         /// <returns>true if the multimap contains an entry with the key, false otherwise.</returns>
-        bool ContainsKey(K key);
+        bool ContainsKey(TKey key);
 
         /// <summary>Returns whether the multimap contains an entry with the value.</summary>
         /// <param name="value">the value whose existence is checked.</param>
@@ -86,7 +85,7 @@ namespace Hazelcast.Core
         /// <param name="key">the key whose existence is checked.</param>
         /// <param name="value">the value whose existence is checked.</param>
         /// <returns>true if the multimap contains the key-value pair, false otherwise.</returns>
-        bool ContainsEntry(K key, V value);
+        bool ContainsEntry(TKey key, TValue value);
 
         /// <summary>Returns the number of key-value pairs in the multimap.</summary>
         /// <returns>the number of key-value pairs in the multimap.</returns>
@@ -99,7 +98,7 @@ namespace Hazelcast.Core
         /// <summary>Returns number of values matching to given key in the multimap.</summary>
         /// <param name="key">the key whose values count are to be returned</param>
         /// <returns>number of values matching to given key in the multimap.</returns>
-        int ValueCount(K key);
+        int ValueCount(TKey key);
 
         /// <summary>Adds an entry listener for this multimap.</summary>
         /// <param name="listener">entry listener</param>
@@ -108,7 +107,7 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id.</returns>
-        string AddEntryListener(IEntryListener<K, V> listener, bool includeValue);
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue);
 
         /// <summary>
         ///     Removes the specified entry listener
@@ -126,29 +125,30 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id.</returns>
-        string AddEntryListener(IEntryListener<K, V> listener, K key, bool includeValue);
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue);
 
         /// <summary>Acquires the lock for the specified key.</summary>
         /// <param name="key">key to lock.</param>
-        void Lock(K key);
+        void Lock(TKey key);
 
         /// <summary>Acquires the lock for the specified key for the specified lease time.</summary>
         /// <param name="key">key to lock.</param>
         /// <param name="leaseTime">time to wait before releasing the lock.</param>
         /// <param name="timeUnit">unit of time to specify lease time.</param>
-        void Lock(K key, long leaseTime, TimeUnit timeUnit);
+        void Lock(TKey key, long leaseTime, TimeUnit timeUnit);
 
         /// <summary>Checks the lock for the specified key.</summary>
         /// <param name="key">key to lock to be checked.</param>
         /// <returns><c>true</c> if lock is acquired, <c>false</c> otherwise.</returns>
-        bool IsLocked(K key);
+        bool IsLocked(TKey key);
 
         /// <summary>Tries to acquire the lock for the specified key.</summary>
         /// <param name="key">key to lock.</param>
         /// <returns><c>true</c> if lock is acquired, <c>false</c> otherwise.</returns>
-        bool TryLock(K key);
+        bool TryLock(TKey key);
 
         /// <summary>Tries to acquire the lock for the specified key.</summary>
+        /// <param name="key">the key to lock</param>
         /// <param name="time">the maximum time to wait for the lock</param>
         /// <param name="timeunit">the time unit of the <c>time</c> argument.</param>
         /// <returns>
@@ -156,7 +156,7 @@ namespace Hazelcast.Core
         ///     if the waiting time elapsed before the lock was acquired.
         /// </returns>
         /// <exception cref="System.Exception"></exception>
-        bool TryLock(K key, long time, TimeUnit timeunit);
+        bool TryLock(TKey key, long time, TimeUnit timeunit);
 
         /// <summary>Tries to acquire the lock for the specified key for the specified lease time.</summary>
         /// <remarks>
@@ -165,11 +165,12 @@ namespace Hazelcast.Core
         /// <p/>
         /// <p>If the lock is not available, then
         /// the current thread becomes disabled for thread scheduling
-        /// purposes and lies dormant until one of two things happens:
+        /// purposes and lies dormant until one of two things happens:</p>
         /// <ul>
-        /// <li>the lock is acquired by the current thread, or
-        /// <li>the specified waiting time elapses.
+        /// <li>the lock is acquired by the current thread, or</li>
+        /// <li>the specified waiting time elapses.</li>
         /// </ul>
+        /// </p>
         /// <p/>
         /// <p><b>Warning:</b></p>
         /// This method uses <tt>hashCode</tt> and <tt>equals</tt> of the binary form of
@@ -187,14 +188,14 @@ namespace Hazelcast.Core
         /// </returns>
         /// <exception cref="System.ArgumentNullException">if the specified key is null.</exception>
         /// <exception cref="System.Exception"/>
-        bool TryLock(K key, long time, TimeUnit timeunit, long leaseTime, TimeUnit leaseTimeunit);
+        bool TryLock(TKey key, long time, TimeUnit timeunit, long leaseTime, TimeUnit leaseTimeunit);
 
         /// <summary>Releases the lock for the specified key.</summary>
         /// <param name="key">key to lock.</param>
-        void Unlock(K key);
+        void Unlock(TKey key);
 
         /// <summary>Releases the lock for the specified key regardless of the lock owner.</summary>
         /// <param name="key">key to lock.</param>
-        void ForceUnlock(K key);
+        void ForceUnlock(TKey key);
     }
 }

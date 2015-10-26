@@ -30,8 +30,8 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="listener">item listener</param>
         /// <param name="includeValue">
-        /// <tt>true</tt> updated item should be passed
-        /// to the item listener, <tt>false</tt> otherwise.
+        /// <TE>true</TE> updated item should be passed
+        /// to the item listener, <TE>false</TE> otherwise.
         /// </param>
         /// <returns>returns registration id.</returns>
         string AddItemListener(IItemListener<T> listener, bool includeValue);
@@ -76,28 +76,28 @@ namespace Hazelcast.Core
         /// Returns an array containing all of the elements in this collection 
         /// the runtime type of the returned array is that of the specified array
         /// </summary>
-        /// <typeparam name="T">return array type</typeparam>
+        /// <typeparam name="TE">return array type</typeparam>
         /// <param name="a">the array into which the elements of this collection are to be 
         /// stored, if it is big enough; otherwise, a new array of the same 
         /// runtime type is allocated for this purpose</param>
         /// <returns>an array containing all of the elements in this collection</returns>
-        T[] ToArray<T>(T[] a);
+        TE[] ToArray<TE>(TE[] a);
 
         /// <summary>
         /// Determines whether this collection contains all of the elements in the specified collection.
         /// </summary>
-        /// <typeparam name="T">type of elements</typeparam>
+        /// <typeparam name="TE">type of elements</typeparam>
         /// <param name="c">The collection</param>
         /// <returns><c>true</c> if this collection contains all of the elements in the specified collection; otherwise, <c>false</c>.</returns>
-        bool ContainsAll<T>(ICollection<T> c);
+        bool ContainsAll<TE>(ICollection<TE> c);
 
         /// <summary>
         /// Removes all of the elements in the specified collection from this collection.
         /// </summary>
-        /// <typeparam name="T">type of elements</typeparam>
+        /// <typeparam name="TE">type of elements</typeparam>
         /// <param name="c">element collection to be removed</param>
         /// <returns><c>true</c> if all removed, <c>false</c> otherwise.</returns>
-        bool RemoveAll<T>(ICollection<T> c);
+        bool RemoveAll<TE>(ICollection<TE> c);
 
         /// <summary>
         /// Retains only the elements in this collection that are contained in the specified collection (optional operation).
@@ -106,18 +106,18 @@ namespace Hazelcast.Core
         /// Retains only the elements in this collection that are contained in the specified collection (optional operation).
         /// In other words, removes from this collection all of its elements that are not contained in the specified collection
         /// </remarks>
-        /// <typeparam name="T">type of elements</typeparam>
+        /// <typeparam name="TE">type of elements</typeparam>
         /// <param name="c">The c.</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        bool RetainAll<T>(ICollection<T> c);
+        bool RetainAll<TE>(ICollection<TE> c);
 
         /// <summary>
         /// Adds all.
         /// </summary>
-        /// <typeparam name="T">type of elements</typeparam>
-        /// <param name="c">element collection/param>
+        /// <typeparam name="TE">type of elements</typeparam>
+        /// <param name="c">element collection</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        bool AddAll<T>(ICollection<T> c);
+        bool AddAll<TE>(ICollection<TE> c);
     }
 
 }

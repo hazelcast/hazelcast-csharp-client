@@ -32,7 +32,7 @@ namespace Hazelcast.Core
     ///     m1, m2, m3...mn to a topic T, then Hazelcast makes sure that all of the subscribers of topic T will receive
     ///     and process m1, m2, m3...mn in order.
     /// </remarks>
-    public interface ITopic<E> : IDistributedObject
+    public interface ITopic<T> : IDistributedObject
     {
         /// <summary>Returns the name of this ITopic instance</summary>
         /// <returns>name of this instance</returns>
@@ -40,7 +40,7 @@ namespace Hazelcast.Core
 
         /// <summary>Publishes the message to all subscribers of this topic</summary>
         /// <param name="message"></param>
-        void Publish(E message);
+        void Publish(T message);
 
         /// <summary>Subscribes to this topic.</summary>
         /// <remarks>
@@ -50,7 +50,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="listener"></param>
         /// <returns>returns registration id.</returns>
-        string AddMessageListener(IMessageListener<E> listener);
+        string AddMessageListener(IMessageListener<T> listener);
 
         /// <summary>Stops receiving messages for the given message listener.</summary>
         /// <remarks>

@@ -25,14 +25,11 @@ namespace Hazelcast.Core
     /// <remarks>
     ///     IMultiExecutionCallback allows to get notified when an execution is completed on each member
     ///     which task is submitted to. After all executions are completed on all submitted members,
-    ///     <see cref="OnComplete(System.Collections.Generic.IDictionary{K, V})">
-    ///         OnComplete(System.Collections.Generic.IDictionary
-    ///         &lt;K, V&gt;)
-    ///     </see>
+    ///     <see cref="OnComplete(System.Collections.Generic.IDictionary{IMember, object})" />
     ///     method is called with map of all results.
     /// </remarks>
-    /// <seealso cref="IExecutorService">IExecutorService</seealso>
-    /// <seealso cref="IIExecutionCallback{V}">IExecutionCallback&lt;V&gt;</seealso>
+    /// <seealso cref="IExecutorService" />
+    /// <seealso cref="IExecutionCallback{T}" />
     public interface IMultiExecutionCallback
     {
         /// <summary>Called when an execution is completed on a member.</summary>

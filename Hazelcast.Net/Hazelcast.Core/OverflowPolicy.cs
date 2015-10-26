@@ -14,7 +14,9 @@
 * limitations under the License.
 */
 
-﻿namespace Hazelcast.Core
+using System.Collections.Generic;
+
+namespace Hazelcast.Core
 {
     /// <summary>
     /// Using this policy one can control the behavior what should to be done when an item is about to be added to the ringbuffer,
@@ -25,8 +27,8 @@
     /// but there is 0 remaining capacity.
     /// Overflowing happens when a time-to-live is set and the oldest item in the ringbuffer (the head) is not old enough to expire.
     /// </remarks>
-    /// <seealso cref="Ringbuffer{E}.AddAsync(object, OverflowPolicy)"/>
-    /// <seealso cref="Ringbuffer{E}.AddAllAsync(System.Collections.ICollection{E}, OverflowPolicy)"/>
+    /// <seealso cref="IRingbuffer{T}.AddAsync(T, OverflowPolicy)"/>
+    /// <seealso cref="IRingbuffer{T}.AddAllAsync{TE}(ICollection{TE}, OverflowPolicy)"/>
     public enum OverflowPolicy
     {
         /// <summary>Using this policy the oldest item is overwritten no matter it is not old enough to retire.</summary>

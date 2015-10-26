@@ -62,9 +62,9 @@ namespace Hazelcast.Core
     ///         </ul>
     ///     </p>
     /// </remarks>
-    /// <typeparam name="K">type of the Key</typeparam>
-    /// <typeparam name="V">type of the Value</typeparam>
-    public interface IMap<K, V> : IDistributedObject
+    /// <typeparam name="TKey">type of the Key</typeparam>
+    /// <typeparam name="TValue">type of the Value</typeparam>
+    public interface IMap<TKey, TValue> : IDistributedObject
     {
         /// <summary>Adds an interceptor for this map.</summary>
         /// <remarks>
@@ -91,7 +91,7 @@ namespace Hazelcast.Core
         /// <param name="listener">entry listener</param>
         /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<K, V> listener, bool includeValue);
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue);
 
         /// <summary>
         ///     Removes the specified entry listener
@@ -125,7 +125,7 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<K, V> listener, K key, bool includeValue);
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
@@ -140,7 +140,7 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<K, V> listener, IPredicate<K, V> predicate, K key, bool includeValue);
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate, TKey key, bool includeValue);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
@@ -154,7 +154,7 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<K, V> listener, IPredicate<K, V> predicate, bool includeValue);
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate, bool includeValue);
 
         /// <summary>
         ///     Adds an index to this map for the specified entries so
@@ -274,7 +274,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="key">key</param>
         /// <returns>value</returns>
-        V Get(object key);
+        TValue Get(object key);
 
         /// <summary>Asynchronously gets the given key.</summary>
         /// <remarks>
@@ -311,7 +311,7 @@ namespace Hazelcast.Core
         /// <param name="key">the key of the map entry</param>
         /// <returns>Task&lt;V&gt; from which the value of the key can be retrieved.</returns>
         /// <seealso cref="Task{V}" />
-        Task<V> GetAsync(K key);
+        Task<TValue> GetAsync(TKey key);
 
         /// <summary>Returns the entries for the given keys.</summary>
         /// <remarks>
@@ -332,7 +332,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="keys">keys to get</param>
         /// <returns>map of entries</returns>
-        IDictionary<K, V> GetAll(ICollection<K> keys);
+        IDictionary<TKey, TValue> GetAll(ICollection<TKey> keys);
 
         /// <summary>
         ///     Associates the specified value with the specified key in this map
@@ -369,7 +369,7 @@ namespace Hazelcast.Core
         ///     <c>key</c>
         ///     .
         /// </returns>
-        V Put(K key, V value);
+        TValue Put(TKey key, TValue value);
 
         /// <summary>Puts an entry into this map with a given ttl (time to live) value.</summary>
         /// <remarks>
@@ -397,7 +397,7 @@ namespace Hazelcast.Core
         /// <param name="ttl">maximum time for this entry to stay in the map, 0 means infinite.</param>
         /// <param name="timeunit"><see cref="TimeUnit" />for the ttl</param>
         /// <returns>old value of the entry</returns>
-        V Put(K key, V value, long ttl, TimeUnit timeunit);
+        TValue Put(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
         /// <summary>Asynchronously puts the given key and value.</summary>
         /// <remarks>
@@ -436,7 +436,7 @@ namespace Hazelcast.Core
         /// <param name="value">the new value of the map entry</param>
         /// <returns>Task&lt;V&gt; from which the old value of the key can be retrieved.</returns>
         /// <seealso cref="Task{V}" />
-        Task<V> PutAsync(K key, V value);
+        Task<TValue> PutAsync(TKey key, TValue value);
 
         /// <summary>Asynchronously puts the given key and value into this map with a given ttl (time to live) value.</summary>
         /// <remarks>
@@ -480,7 +480,7 @@ namespace Hazelcast.Core
         /// <param name="timeunit">time unit for the ttl</param>
         /// <returns>Task&lt;V&gt; from which the old value of the key can be retrieved.</returns>
         /// <seealso cref="Task{V}" />
-        Task<V> PutAsync(K key, V value, long ttl, TimeUnit timeunit);
+        Task<TValue> PutAsync(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
         /// <summary>
         ///     If the specified key is not already associated
@@ -516,7 +516,7 @@ namespace Hazelcast.Core
         /// <param name="key">key</param>
         /// <param name="value">value</param>
         /// <returns> previous value associated with <c>key</c> or <c>null</c> if there was no mapping for <c>key</c> .</returns>
-        V PutIfAbsent(K key, V value);
+        TValue PutIfAbsent(TKey key, TValue value);
 
         /// <summary>
         ///     Puts an entry into this map with a given ttl (time to live) value
@@ -547,7 +547,7 @@ namespace Hazelcast.Core
         /// <param name="ttl">maximum time for this entry to stay in the map</param>
         /// <param name="timeunit"><see cref="TimeUnit" /> for the timeout</param>
         /// <returns>old value of the entry</returns>
-        V PutIfAbsent(K key, V value, long ttl, TimeUnit timeunit);
+        TValue PutIfAbsent(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
         /// <summary>
         ///     Tries to put the given key, value into this map within specified timeout value.
@@ -570,16 +570,16 @@ namespace Hazelcast.Core
         /// <param name="timeout">maximum time to wait</param>
         /// <param name="timeunit"><see cref="TimeUnit" /> for the timeout</param>
         /// <returns> <c>true</c> if the put is successful, <c>false</c> otherwise. </returns>
-        bool TryPut(K key, V value, long timeout, TimeUnit timeunit);
+        bool TryPut(TKey key, TValue value, long timeout, TimeUnit timeunit);
 
         /// <summary>
-        ///     Same as <see cref="IMap{K, V}.Put(K, V, long, TimeUnit)" />
+        ///     Same as <see cref="IMap{K, V}.Put(TKey, TValue, long, TimeUnit)" />
         ///     but MapStore, if defined,
         ///     will not be called to store/persist the entry.  If ttl is 0, then
         ///     the entry lives forever.
         /// </summary>
         /// <remarks>
-        ///     Same as <see cref="IMap{K, V}.Put(K, V, long, TimeUnit)" />
+        ///     Same as <see cref="IMap{K, V}.Put(TKey, TValue, long, TimeUnit)" />
         ///     but MapStore, if defined,
         ///     will not be called to store/persist the entry.  If ttl is 0, then
         ///     the entry lives forever.
@@ -598,13 +598,13 @@ namespace Hazelcast.Core
         ///     0 means infinite.
         /// </param>
         /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
-        void PutTransient(K key, V value, long ttl, TimeUnit timeunit);
+        void PutTransient(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
         /// <summary>
         ///     Copies all of the mappings from the specified map to this map
         /// </summary>
         /// <param name="m">mappings to be stored in this map</param>
-        void PutAll(IDictionary<K, V> m);
+        void PutAll(IDictionary<TKey, TValue> m);
 
         /// <summary>Replaces the entry for a key only if currently mapped to some value.</summary>
         /// <remarks>
@@ -628,7 +628,7 @@ namespace Hazelcast.Core
         /// <param name="key">key</param>
         /// <param name="value">value</param>
         /// <returns> previous value associated with <c>key</c> or <c>null</c> if there was no mapping for <c>key</c> . </returns>
-        V Replace(K key, V value);
+        TValue Replace(TKey key, TValue value);
 
         /// <summary>Replaces the entry for a key only if currently mapped to a given value.</summary>
         /// <remarks>
@@ -644,7 +644,7 @@ namespace Hazelcast.Core
         /// <param name="oldValue">old value</param>
         /// <param name="newValue">new value</param>
         /// <returns><c>true</c> if the value was replaced </returns>
-        bool Replace(K key, V oldValue, V newValue);
+        bool Replace(TKey key, TValue oldValue, TValue newValue);
 
         /// <summary>
         ///     Tries to remove the entry with the given key from this map
@@ -675,7 +675,7 @@ namespace Hazelcast.Core
         /// <param name="timeout"> maximum time to wait for acquiring the lock for the key </param>
         /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
         /// <returns> <c>true</c> if the remove is successful, <c>false</c> otherwise. </returns>
-        bool TryRemove(K key, long timeout, TimeUnit timeunit);
+        bool TryRemove(TKey key, long timeout, TimeUnit timeunit);
 
         /// <summary>Removes the mapping for a key from this map if it is present.</summary>
         /// <remarks>
@@ -689,7 +689,7 @@ namespace Hazelcast.Core
         ///     previous value associated with <c>key</c> or <c>null</c>
         ///     if there was no mapping for <c>key</c> .
         /// </returns>
-        V Remove(object key);
+        TValue Remove(object key);
 
         /// <summary>Removes the entry for a key only if currently mapped to a given value.</summary>
         /// <remarks>
@@ -720,12 +720,12 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="key">The key of the map entry to remove.</param>
         /// <returns>Task&lt;V&gt; from which the value removed from the map can be retrieved.</returns>
-        Task<V> RemoveAsync(K key);
+        Task<TValue> RemoveAsync(TKey key);
 
         /// <summary>Puts an entry into this map.</summary>
         /// <remarks>
         ///     Puts an entry into this map.
-        ///     Similar to <see cref="Put(K,V)" /> operation except that <c>Set</c>
+        ///     Similar to <see cref="Put(TKey,TValue)" /> operation except that <c>Set</c>
         ///     doesn't return the old value which is more efficient.
         ///     <p />
         ///     <p>
@@ -737,7 +737,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="key">key of the entry</param>
         /// <param name="value">value of the entry</param>
-        void Set(K key, V value);
+        void Set(TKey key, TValue value);
 
         /// <summary>Puts an entry into this map with a given ttl (time to live) value.</summary>
         /// <remarks>
@@ -756,7 +756,7 @@ namespace Hazelcast.Core
         /// <param name="value">value of the entry</param>
         /// <param name="ttl"> maximum time to wait for acquiring the lock for the key </param>
         /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
-        void Set(K key, V value, long ttl, TimeUnit timeunit);
+        void Set(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
         /// <summary>Acquires the lock for the specified key.</summary>
         /// <remarks>
@@ -780,7 +780,7 @@ namespace Hazelcast.Core
         ///     defined in <c>key</c>'s class.
         /// </remarks>
         /// <param name="key">key to lock.</param>
-        void Lock(K key);
+        void Lock(TKey key);
 
         /// <summary>Acquires the lock for the specified key for the specified lease time.</summary>
         /// <remarks>
@@ -808,7 +808,7 @@ namespace Hazelcast.Core
         /// <param name="key">key to lock.</param>
         /// <param name="leaseTime">time to wait before releasing the lock.</param>
         /// <param name="timeUnit"><see cref="TimeUnit" /> for the ttl</param>
-        void Lock(K key, long leaseTime, TimeUnit timeUnit);
+        void Lock(TKey key, long leaseTime, TimeUnit timeUnit);
 
         /// <summary>Checks the lock for the specified key.</summary>
         /// <remarks>
@@ -825,7 +825,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="key">key to lock to be checked.</param>
         /// <returns><c>true</c> if lock is acquired, <c>false</c> otherwise.</returns>
-        bool IsLocked(K key);
+        bool IsLocked(TKey key);
 
         /// <summary>Tries to acquire the lock for the specified key.</summary>
         /// <remarks>
@@ -843,7 +843,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="key">key to lock.</param>
         /// <returns><c>true</c> if lock is acquired, <c>false</c> otherwise.</returns>
-        bool TryLock(K key);
+        bool TryLock(TKey key);
 
         /// <summary>Tries to acquire the lock for the specified key.</summary>
         /// <remarks>
@@ -868,7 +868,7 @@ namespace Hazelcast.Core
         /// <param name="time">maximum time to wait for the lock</param>
         /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
         /// <returns><c>true</c> if lock is acquired, <c>false</c> otherwise.</returns>
-        bool TryLock(K key, long time, TimeUnit timeunit);
+        bool TryLock(TKey key, long time, TimeUnit timeunit);
 
         /// <summary>Tries to acquire the lock for the specified key for the specified lease time.</summary>
         /// <remarks>
@@ -882,8 +882,8 @@ namespace Hazelcast.Core
         ///             purposes and lies dormant until one of two things happens:
         ///             <ul>
         ///                 <li>
-        ///                     the lock is acquired by the current thread, or
-        ///                     <li>the specified waiting time elapses.
+        ///                     the lock is acquired by the current thread, or</li>
+        ///                     <li>the specified waiting time elapses.</li>
         ///             </ul>
         ///             <p />
         ///             <p>
@@ -892,6 +892,8 @@ namespace Hazelcast.Core
         ///             This method uses <tt>hashCode</tt> and <tt>equals</tt> of the binary form of
         ///             the <tt>key</tt>, not the actual implementations of <tt>hashCode</tt> and <tt>equals</tt>
         ///             defined in the <tt>key</tt>'s class.
+        ///         </p>
+        ///     </p>
         /// </remarks>
         /// <param name="key">key to lock in this map.</param>
         /// <param name="time">maximum time to wait for the lock.</param>
@@ -904,7 +906,7 @@ namespace Hazelcast.Core
         /// </returns>
         /// <exception cref="System.ArgumentNullException">if the specified key is null.</exception>
         /// <exception cref="System.Exception" />
-        bool TryLock(K key, long time, TimeUnit timeunit, long leaseTime, TimeUnit leaseTimeunit);
+        bool TryLock(TKey key, long time, TimeUnit timeunit, long leaseTime, TimeUnit leaseTimeunit);
 
         /// <summary>Releases the lock for the specified key.</summary>
         /// <remarks>
@@ -927,7 +929,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="key">key to lock.</param>
         /// <exception cref="SynchronizationLockException">if the current thread does not hold this lock</exception>
-        void Unlock(K key);
+        void Unlock(TKey key);
 
         /// <summary>Releases the lock for the specified key regardless of the lock owner.</summary>
         /// <remarks>
@@ -943,7 +945,7 @@ namespace Hazelcast.Core
         ///     defined in <c>key</c>'s class.
         /// </remarks>
         /// <param name="key">key to lock.</param>
-        void ForceUnlock(K key);
+        void ForceUnlock(TKey key);
 
         /// <summary>
         ///     Returns a
@@ -953,7 +955,7 @@ namespace Hazelcast.Core
         ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
         /// </summary>
         /// <returns>a <see cref="ISet{E}" /> clone of the keys mappings in this map</returns>
-        ISet<KeyValuePair<K, V>> EntrySet();
+        ISet<KeyValuePair<TKey, TValue>> EntrySet();
 
         /// <summary>
         ///     Queries the map based on the specified predicate and
@@ -973,7 +975,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="predicate">query criteria</param>
         /// <returns>result entry <see cref="ISet{E}" /> of the query</returns>
-        ISet<KeyValuePair<K, V>> EntrySet(IPredicate<K, V> predicate);
+        ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate<TKey, TValue> predicate);
 
         /// <summary>Returns a set clone of the keys contained in this map.</summary>
         /// <remarks>
@@ -982,7 +984,7 @@ namespace Hazelcast.Core
         ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
         /// </remarks>
         /// <returns>a <see cref="ISet{E}" /> clone of the keys contained in this map</returns>
-        ISet<K> KeySet();
+        ISet<TKey> KeySet();
 
         /// <summary>
         ///     Queries the map based on the specified predicate and
@@ -1002,7 +1004,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="predicate">query criteria</param>
         /// <returns>result key <see cref="ISet{E}" /> of the query</returns>
-        ISet<K> KeySet(IPredicate<K, V> predicate);
+        ISet<TKey> KeySet(IPredicate<TKey, TValue> predicate);
 
         /// <summary>Returns a collection clone of the values contained in this map.</summary>
         /// <remarks>
@@ -1011,7 +1013,7 @@ namespace Hazelcast.Core
         ///     so changes to the map are <b>NOT</b> reflected in the collection, and vice-versa.
         /// </remarks>
         /// <returns>a collection clone of the values contained in this map</returns>
-        ICollection<V> Values();
+        ICollection<TValue> Values();
 
         /// <summary>
         ///     Queries the map based on the specified predicate and
@@ -1031,7 +1033,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="predicate">query criteria</param>
         /// <returns>result value collection of the query</returns>
-        ICollection<V> Values(IPredicate<K, V> predicate);
+        ICollection<TValue> Values(IPredicate<TKey, TValue> predicate);
 
         /// <summary>Returns the <c>EntryView</c> for the specified key.</summary>
         /// <remarks>
@@ -1055,7 +1057,7 @@ namespace Hazelcast.Core
         /// <param name="key">key of the entry</param>
         /// <returns><c>EntryView</c> of the specified key</returns>
         /// <seealso cref="IEntryView{K, V}" />
-        IEntryView<K, V> GetEntryView(K key);
+        IEntryView<TKey, TValue> GetEntryView(TKey key);
 
         /// <summary>
         ///     Removes all of the mappings from this map (optional operation).
@@ -1097,7 +1099,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="key">key to evict</param>
         /// <returns><c>true</c> if the key is evicted, <c>false</c> otherwise.</returns>
-        bool Evict(K key);
+        bool Evict(TKey key);
 
         /// <summary>Evicts all keys from this map except the locked ones.</summary>
         /// <remarks>
