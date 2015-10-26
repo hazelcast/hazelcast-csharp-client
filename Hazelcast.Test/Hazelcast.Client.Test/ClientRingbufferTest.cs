@@ -102,6 +102,16 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(Capacity, _ringBuffer.HeadSequence());
         }
 
+        [Test, ExpectedException(typeof(StaleSequenceException))]
+        public void TestStaleSequence()
+        {
+            for (int k = 0; k < Capacity * 2; k++)
+            {
+                _ringBuffer.Add("foo");
+            }
+            _ringBuffer.ReadOne(_ringBuffer.HeadSequence() -1);
+        }
+
         [Test, ExpectedException(typeof (ArgumentException))]
         public void TestInvalidReadCount()
         {

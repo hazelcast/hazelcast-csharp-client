@@ -68,6 +68,7 @@ namespace Hazelcast.Util
                 {ClientProtocolErrorCodes.QueryResultSizeExceeded, (m, c) => new QueryException(m)},
                 {ClientProtocolErrorCodes.Security, (m, c) => new SecurityException(m)},
                 {ClientProtocolErrorCodes.Socket, (m, c) => new IOException(m)},
+                {ClientProtocolErrorCodes.StaleSequence, (m, c) => new StaleSequenceException(m)},
                 {ClientProtocolErrorCodes.TargetDisconnected, (m, c) => new TargetDisconnectedException(m)},
                 {ClientProtocolErrorCodes.TargetNotMember, (m, c) => new TargetNotMemberException(m)},
                 {ClientProtocolErrorCodes.Timeout, (m, c) => new TimeoutException(m)},

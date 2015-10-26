@@ -57,4 +57,20 @@ namespace Hazelcast.Core
         public DistributedObjectDestroyedException(Exception cause) : base(cause.Message) { }
  
     }
+
+    /// <summary>
+    /// An exception that is thrown when accessing an item in the <see cref="IRingbuffer{E}">IRingbuffer</see> using a 
+    /// sequence that is smaller than the current head sequence. This means that the and old item is read, 
+    /// but it isn't available anymore in the ringbuffer.
+    /// </summary>
+    public class StaleSequenceException : HazelcastException
+    {
+        public StaleSequenceException()
+        {
+        }
+
+        public StaleSequenceException(string message) : base(message)
+        {
+        }
+    }
 }
