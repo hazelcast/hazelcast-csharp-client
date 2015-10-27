@@ -21,6 +21,6 @@ namespace Hazelcast.Config
     {
         Binary,
         Object,
-        Offheap
+        // Offheap
     }
 }
