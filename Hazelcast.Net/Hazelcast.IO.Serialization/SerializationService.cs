@@ -96,10 +96,10 @@ namespace Hazelcast.IO.Serialization
             try
             {
                 var serializer = SerializerFor(obj.GetType());
-                @out.WriteInt(serializer.GetTypeId(), ByteOrder.BigEndian);
-                serializer.Write(@out, obj);
                 var partitionHash = CalculatePartitionHash(obj, strategy);
                 @out.WriteInt(partitionHash, ByteOrder.BigEndian);
+                @out.WriteInt(serializer.GetTypeId(), ByteOrder.BigEndian);
+                serializer.Write(@out, obj);
                 return new HeapData(@out.ToByteArray());
             }
             catch (Exception e)
@@ -618,12 +618,6 @@ namespace Hazelcast.IO.Serialization
                 throw new HazelcastInstanceNotActiveException();
             }
             return serializer;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        private void WriteDataInternal(IObjectDataOutput output, IData data)
-        {
-            output.WriteByteArray(data.ToByteArray());
         }
 
         private sealed class ThreadLocalOutputCache

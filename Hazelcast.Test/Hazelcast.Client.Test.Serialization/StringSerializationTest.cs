@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
 using NUnit.Framework;
@@ -119,10 +120,11 @@ namespace Hazelcast.Client.Test.Serialization
             var expected = Encoding.UTF8.GetBytes(allstr);
             var bytes = _serializationService.ToData(allstr).ToByteArray();
 
-            // - heap data overhead - type id - partitionHash
-            var length = bytes.Length - 4 - 8;
+            // data offset + length
+            var offset = HeapData.DataOffset + Bits.IntSizeInBytes;
+            var length = bytes.Length - offset;
             var actual = new byte[length];
-            Array.Copy(bytes, 8, actual, 0, length);
+            Array.Copy(bytes, offset, actual, 0, length);
             Assert.AreEqual(expected, actual);
         }
 
@@ -156,14 +158,14 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(expected, actual);
         }
 
-        private byte[] ToDataByte(byte[] input, int length)
+        private static byte[] ToDataByte(byte[] input, int length)
         {
-            //the first 4 byte of type id, 4 byte string length and last 4 byte of partition hashCode
+            //the first 4 byte of hashCode, 4 bytes of type id, 4 byte string length
             var bf = ByteBuffer.Allocate(input.Length + 8 + 4);
+            bf.PutInt(0);
             bf.PutInt(SerializationConstants.ConstantTypeString);
             bf.PutInt(length);
             bf.Put(input);
-            bf.PutInt(0);
             return bf.Array();
         }
     }
