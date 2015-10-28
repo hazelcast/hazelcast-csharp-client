@@ -45,33 +45,25 @@ namespace Hazelcast.Client
             return name;
         }
 
-        public override bool Equals(object o)
+        protected bool Equals(DistributedObjectInfo other)
         {
-            if (this == o)
-            {
-                return true;
-            }
-            if (o == null || GetType() != o.GetType())
-            {
-                return false;
-            }
-            var that = (DistributedObjectInfo) o;
-            if (name != null ? !name.Equals(that.name) : that.name != null)
-            {
-                return false;
-            }
-            if (serviceName != null ? !serviceName.Equals(that.serviceName) : that.serviceName != null)
-            {
-                return false;
-            }
-            return true;
+            return string.Equals(name, other.name) && string.Equals(serviceName, other.serviceName);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((DistributedObjectInfo) obj);
         }
 
         public override int GetHashCode()
         {
-            int result = serviceName != null ? serviceName.GetHashCode() : 0;
-            result = 31*result + (name != null ? name.GetHashCode() : 0);
-            return result;
+            unchecked
+            {
+                return ((name != null ? name.GetHashCode() : 0)*397) ^ (serviceName != null ? serviceName.GetHashCode() : 0);
+            }
         }
     }
 }

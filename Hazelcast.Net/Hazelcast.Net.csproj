@@ -55,7 +55,6 @@
     <Compile Include="Hazelcast.Client.Connection\ClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionListener.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionHeartbeatListener.cs" />
-    <Compile Include="Hazelcast.Client.Protocol.Codec\ClientRemoveAllListenersCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapAddInterceptorCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapEvictAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapRemoveInterceptorCodec.cs" />
@@ -543,7 +542,6 @@
     <Compile Include="Hazelcast.Security\ICredentialsFactory.cs" />
     <Compile Include="Hazelcast.Security\UsernamePasswordCredentials.cs" />
     <Compile Include="Hazelcast.Transaction\ITransactionalObject.cs" />
-    <Compile Include="Hazelcast.Transaction\ITransactionalTask.cs" />
     <Compile Include="Hazelcast.Transaction\ITransactionalTaskContext.cs" />
     <Compile Include="Hazelcast.Transaction\ITransactionContext.cs" />
     <Compile Include="Hazelcast.Transaction\TransactionException.cs" />

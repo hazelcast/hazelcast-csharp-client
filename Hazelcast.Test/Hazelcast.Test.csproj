@@ -113,6 +113,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientAtomicLongTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientClusterServiceTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientCountDownLatchTest.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -177,6 +178,7 @@
     <Compile Include="Hazelcast.Client.Test.Config\ClientXmlTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientTxnTest.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastCluster.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastNode.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastBaseTest.cs" />
@@ -201,7 +203,6 @@
     <Compile Include="SimpleExample1.cs" />
     <Compile Include="SimpleMapTestFromClient.cs" />
     <Compile Include="ListenerApp.cs" />
-    <Compile Include="WindowsApp.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

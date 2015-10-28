@@ -21,12 +21,8 @@ using Hazelcast.Map;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class EntryViewCodec
+    internal static class EntryViewCodec
     {
-        private EntryViewCodec()
-        {
-        }
-
         public static SimpleEntryView<IData, IData> Decode(IClientMessage clientMessage)
         {
             var dataEntryView = new SimpleEntryView<IData, IData>();
@@ -43,43 +39,6 @@ namespace Hazelcast.Client.Protocol.Codec
             dataEntryView.SetEvictionCriteriaNumber(clientMessage.GetLong());
             dataEntryView.SetTtl(clientMessage.GetLong());
             return dataEntryView;
-        }
-
-        public static void Encode(SimpleEntryView<IData, IData> dataEntryView, ClientMessage clientMessage)
-        {
-            var key = dataEntryView.GetKey();
-            var value = dataEntryView.GetValue();
-            var cost = dataEntryView.GetCost();
-            var creationTime = dataEntryView.GetCreationTime();
-            var expirationTime = dataEntryView.GetExpirationTime();
-            var hits = dataEntryView.GetHits();
-            var lastAccessTime = dataEntryView.GetLastAccessTime();
-            var lastStoredTime = dataEntryView.GetLastStoredTime();
-            var lastUpdateTime = dataEntryView.GetLastUpdateTime();
-            var version = dataEntryView.GetVersion();
-            var ttl = dataEntryView.GetTtl();
-            var evictionCriteriaNumber = dataEntryView.GetEvictionCriteriaNumber();
-            clientMessage.Set(key)
-                .Set(value)
-                .Set(cost)
-                .Set(creationTime)
-                .Set(expirationTime)
-                .Set(hits)
-                .Set(lastAccessTime)
-                .Set(lastStoredTime)
-                .Set(lastUpdateTime)
-                .Set(version)
-                .Set(evictionCriteriaNumber)
-                .Set(ttl);
-        }
-
-        public static int CalculateDataSize(SimpleEntryView<IData, IData> entryView)
-        {
-            var dataSize = ClientMessage.HeaderSize;
-            var key = entryView.GetKey();
-            var value = entryView.GetValue();
-            return dataSize + ParameterUtil.CalculateDataSize(key) + ParameterUtil.CalculateDataSize(value) +
-                   Bits.LongSizeInBytes*10;
         }
     }
 }

@@ -22,12 +22,8 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-	internal sealed class AddressCodec
+	internal static class AddressCodec
 	{
-		private AddressCodec()
-		{
-		}
-
 		public static Address Decode(IClientMessage clientMessage)
 		{
 			string host = clientMessage.GetStringUtf8();
