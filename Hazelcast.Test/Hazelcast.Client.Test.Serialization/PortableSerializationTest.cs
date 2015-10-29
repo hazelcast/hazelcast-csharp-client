@@ -273,7 +273,7 @@ namespace Hazelcast.Client.Test.Serialization
                 new SerializationServiceBuilder().SetConfig(serializationConfig).Build();
                 Assert.Fail("Should throw HazelcastSerializationException!");
             }
-            catch (HazelcastSerializationException e)
+            catch (HazelcastSerializationException)
             {
             }
 

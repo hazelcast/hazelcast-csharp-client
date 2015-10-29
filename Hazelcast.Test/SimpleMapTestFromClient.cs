@@ -152,7 +152,7 @@ namespace Hazelcast.Test
             {
                 var random = new Random();
                 IMap<string, byte[]> map = hz.GetMap<String, byte[]>("default");
-                int i = 0;
+                //int i = 0;
                 while (true)
                 {
                     //i++;

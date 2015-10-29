@@ -255,7 +255,7 @@ namespace Hazelcast.Client
                 CacheRecord record = null;
                 cache.TryRemove(key, out record);
             }
-            catch (ArgumentNullException e)
+            catch (ArgumentNullException)
             {
             }
         }

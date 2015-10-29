@@ -21,8 +21,6 @@ namespace Hazelcast.Client.Protocol.Util
     ///     Interface for buffer to be used in client protocol.
     ///     Implemented by
     ///     <see cref="SafeBuffer" />
-    ///     and
-    ///     <see cref="UnsafeBuffer" />
     /// </remarks>
     internal interface IClientProtocolBuffer
     {

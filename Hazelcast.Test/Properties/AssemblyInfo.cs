@@ -10,4 +10,3 @@ using System.Runtime.InteropServices;
 [assembly: Guid("6677ec55-89bb-4ec2-b85c-4e37f7a816e6")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: AssemblyKeyFile(@"..\hazelcast.snk")]

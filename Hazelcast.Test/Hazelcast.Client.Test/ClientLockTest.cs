@@ -81,7 +81,7 @@ namespace Hazelcast.Client.Test
 		                latch.Signal();
 		            }
 		        }
-		        catch (Exception e)
+		        catch
 		        {
                     
 		        }
@@ -174,7 +174,7 @@ namespace Hazelcast.Client.Test
                     l.ForceUnlock();
                     latch.Signal();
                 }
-                catch (Exception e)
+                catch
                 {
                 }
             });

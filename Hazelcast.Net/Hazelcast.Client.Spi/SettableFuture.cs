@@ -26,7 +26,7 @@ namespace Hazelcast.Client.Spi
         private readonly TaskCompletionSource<T> _taskSource = new TaskCompletionSource<T>();
         private Exception _exception;
         private object _result;
-        private volatile int _isComplete;
+        private int _isComplete;
 
         public Exception Exception
         {

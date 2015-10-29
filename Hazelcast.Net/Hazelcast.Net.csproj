@@ -37,6 +37,9 @@
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Release\AnyCPU\Hazelcast.Net.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
     <MSBuildCommunityTasksPath>..\.build</MSBuildCommunityTasksPath>

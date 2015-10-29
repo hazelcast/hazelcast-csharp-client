@@ -14,8 +14,6 @@
 * limitations under the License.
 */
 
-using System;
-
 namespace Hazelcast.Core
 {
     /// <summary>
@@ -26,7 +24,6 @@ namespace Hazelcast.Core
     ///     IPartitioningStrategy allows keys to be located on the same member
     ///     This makes related data to be stored in the same location. (See data-affinity.)
     /// </remarks>
-    /// <?></?>
     public interface IPartitioningStrategy
     {
         /// <summary>Returns the key object that will be used by Hazelcast to specify the partition.</summary>

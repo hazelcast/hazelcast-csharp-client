@@ -304,7 +304,7 @@ namespace Hazelcast.Client.Spi
                         {
                             Thread.Sleep(clientInvocationService.InvocationRetryWaitTime);
                         }
-                        catch (ThreadInterruptedException ignored)
+                        catch (ThreadInterruptedException)
                         {
                         }
                     }

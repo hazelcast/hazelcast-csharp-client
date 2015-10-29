@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Proxy
 
         private long GetTimeInMillis(long time, TimeUnit timeunit)
         {
-            return timeunit != null ? timeunit.ToMillis(time) : time;
+            return timeunit.ToMillis(time);
         }
     }
 }

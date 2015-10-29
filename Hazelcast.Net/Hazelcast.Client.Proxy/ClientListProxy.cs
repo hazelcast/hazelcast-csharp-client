@@ -209,22 +209,5 @@ namespace Hazelcast.Client.Proxy
             var result = Invoke(request, m=> ListGetAllCodec.DecodeResponse(m).list);
             return ToList<E>(result);
         }
-
-        private void HandleItemListener(IData itemData, String uuid, ItemEventType eventType, IItemListener<E> listener, bool includeValue)
-        {
-            var item = includeValue
-                ? ToObject<E>(itemData)
-                : default(E);
-            var member = GetContext().GetClusterService().GetMember(uuid);
-            var itemEvent = new ItemEvent<E>(GetName(), eventType, item, member);
-            if (eventType == ItemEventType.Added)
-            {
-                listener.ItemAdded(itemEvent);
-            }
-            else
-            {
-                listener.ItemRemoved(itemEvent);
-            }
-        }
     }
 }

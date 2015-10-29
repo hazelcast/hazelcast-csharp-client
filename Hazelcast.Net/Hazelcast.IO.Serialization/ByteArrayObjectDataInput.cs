@@ -201,12 +201,6 @@ namespace Hazelcast.IO.Serialization
         ///     bytes.
         /// </exception>
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        /// <seealso cref="System.IO.DataInputStream.ReadInt()">
-        ///     System.IO.DataInputStream.ReadInt()
-        /// </seealso>
-        /// <seealso cref="Sharpen.Runtime.IntBitsToFloat(int)">
-        ///     Sharpen.Runtime.IntBitsToFloat(int)
-        /// </seealso>
         public virtual float ReadFloat()
         {
             return BitConverter.ToSingle(BitConverter.GetBytes(ReadInt()), 0);
@@ -611,13 +605,10 @@ namespace Hazelcast.IO.Serialization
         ///     the bytes.
         /// </exception>
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        /// <exception cref="System.IO.UTFDataFormatException">
+        /// <exception cref="System.IO.InvalidDataException">
         ///     if the bytes do not represent a valid modified UTF-8
         ///     encoding of a string.
         /// </exception>
-        /// <seealso cref="System.IO.DataInputStream.ReadUTF(System.IO.IDataInput)">
-        ///     System.IO.DataInputStream.ReadUTF(System.IO.IDataInput)
-        /// </seealso>
         public virtual string ReadUTF()
         {
             var charCount = ReadInt();
@@ -798,7 +789,7 @@ namespace Hazelcast.IO.Serialization
             throw new NotSupportedException();
         }
 
-        public virtual string ToString()
+        public override string ToString()
         {
             var sb = new StringBuilder();
             sb.Append("ByteArrayObjectDataInput");

@@ -31,7 +31,6 @@ namespace Hazelcast.Client.Test
         public void TestListenerReconnect()
         {
             var name = TestSupport.RandomString();
-            var key = "key";
             var map = Client.GetMap<string, string>(name);
             int eventCount = 0;
             var count = 2;

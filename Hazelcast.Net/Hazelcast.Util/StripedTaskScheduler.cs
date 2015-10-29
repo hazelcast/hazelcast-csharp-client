@@ -67,7 +67,7 @@ namespace Hazelcast.Util
                     var task = blockingTasks.Take();
                     TryExecuteTask(task);
                 }
-                catch (InvalidOperationException e)
+                catch (InvalidOperationException)
                 {
                     //BlockingCollection is empty, just ignore it
                 }

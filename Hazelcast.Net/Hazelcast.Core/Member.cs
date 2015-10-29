@@ -31,7 +31,7 @@ namespace Hazelcast.Core
         private readonly Address address;
         private readonly string uuid;
         private readonly bool _liteMember;
-        private volatile ILogger logger;
+        private readonly ILogger logger;
 
         public Member()
         {
@@ -49,6 +49,7 @@ namespace Hazelcast.Core
 
         public Member(Address address, string uuid, IDictionary<string, string> attributes, bool liteMember)
         {
+            this.logger = Logger.GetLogger(typeof(Member) + ":" + address);
             this.address = address;
             this.uuid = uuid;
             _liteMember = liteMember;

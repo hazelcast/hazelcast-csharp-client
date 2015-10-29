@@ -506,11 +506,6 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(theInt, readInt);
         }
 
-        public virtual void TestReadLine()
-        {
-            _input.ReadLine();
-        }
-
         [Test]
         public virtual void TestReadLong()
         {

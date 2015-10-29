@@ -128,7 +128,7 @@ namespace Hazelcast.Client.Test
                         Thread.Sleep(10*1000);
                     }
                 }
-                catch (Exception e)
+                catch
                 {
                 }
             }

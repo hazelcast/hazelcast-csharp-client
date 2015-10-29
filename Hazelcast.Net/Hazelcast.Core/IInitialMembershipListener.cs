@@ -34,7 +34,7 @@ namespace Hazelcast.Core
     {
         /// <summary>Is called when this listener is registered.</summary>
         /// <remarks>Is called when this listener is registered.</remarks>
-        /// <param name="event">the MembershipInitializeEvent</param>
+        /// <param name="membershipEvent">the MembershipInitializeEvent</param>
         void Init(InitialMembershipEvent membershipEvent);
     }
 }

@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Test.Config
         [SetUp]
         public void ReadConfig()
         {
-            _clientConfig = XmlClientConfigBuilder.Build(new StringReader(Resources.hazelcast_config_full));
+            _clientConfig = XmlClientConfigBuilder.Build(new StringReader(Hazelcast.Test.Resources.hazelcast_config_full));
         }
 
         [Test]

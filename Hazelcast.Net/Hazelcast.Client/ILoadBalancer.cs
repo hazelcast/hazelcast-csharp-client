@@ -23,11 +23,11 @@ namespace Hazelcast.Client
     ///     <see cref="ILoadBalancer">ILoadBalancer</see>
     ///     allows you to send operations to one of a number of endpoints(Members).
     ///     It is up to the implementation to use different load balancing policies. If IClient is
-    ///     <see cref="ClientConfig#smart">ClientConfig#smart</see>
+    ///     <see cref="ClientNetworkConfig.SetSmartRouting">is in smart routing mode</see>
     ///     ,
     ///     only the operations that are not key based will be router to the endpoint returned by the Load Balancer.
     ///     If it is not
-    ///     <see cref="ClientConfig#smart">ClientConfig#smart</see>
+    ///     <see cref="ClientNetworkConfig.SetSmartRouting">in smart routing mode</see>
     ///     ,
     ///     <see cref="ILoadBalancer">ILoadBalancer</see>
     ///     will not be used.

@@ -36,7 +36,7 @@ namespace Hazelcast.Core
     {
         /// <summary>Returns the name of this ITopic instance</summary>
         /// <returns>name of this instance</returns>
-        string GetName();
+        new string GetName();
 
         /// <summary>Publishes the message to all subscribers of this topic</summary>
         /// <param name="message"></param>

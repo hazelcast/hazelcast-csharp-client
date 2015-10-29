@@ -211,7 +211,7 @@ namespace Hazelcast.Client.Test
                         latch.Signal();
                     }
                 }
-                catch (Exception e)
+                catch
                 {
                 }
             });
@@ -231,12 +231,12 @@ namespace Hazelcast.Client.Test
             {
                 try
                 {
-                    if (!ClientMultiMapTest.mm.TryLock("key1", 200, TimeUnit.MILLISECONDS))
+                    if (!mm.TryLock("key1", 200, TimeUnit.MILLISECONDS))
                     {
                         latch.Signal();
                     }
                 }
-                catch (Exception e)
+                catch
                 {
                 }
             });
@@ -258,7 +258,7 @@ namespace Hazelcast.Client.Test
                         latch2.Signal();
                     }
                 }
-                catch (Exception e)
+                catch
                 {
                 }
             });

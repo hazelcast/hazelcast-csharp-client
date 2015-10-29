@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Test
         }
 
         [TearDown]
-        public void TearDown()
+        public new void TearDown()
         {
             Cluster.RemoveNode();
             Cluster.AddNode();

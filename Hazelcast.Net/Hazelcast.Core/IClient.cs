@@ -30,14 +30,6 @@ namespace Hazelcast.Core
     /// <seealso cref="IClientListener">IClientListener</seealso>
     public interface IClient : IEndpoint
     {
-        /// <summary>Returns unique uuid for this client</summary>
-        /// <returns>unique uuid for this client</returns>
-        string GetUuid();
-
-        /// <summary>Returns socket address of this client</summary>
-        /// <returns>socket address of this client</returns>
-        IPEndPoint GetSocketAddress();
-
         /// <summary>Returns type of this client</summary>
         /// <returns>type of this client</returns>
         ClientType GetClientType();

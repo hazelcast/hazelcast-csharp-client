@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Test
         }
 
         [TestFixtureTearDown]
-        public void TearDown()
+        public new void TearDown()
         {
             RemoveNodeAndWait(_nodeId);
         }
@@ -69,7 +69,6 @@ namespace Hazelcast.Client.Test
         public void TestListenerWithNonSmartRouting()
         {
             var map = Client.GetMap<string, string>(TestSupport.RandomString());
-            int n = 4;
 
             var keys = TestSupport.RandomArray(TestSupport.RandomString, 10);
             var registrations = new List<String>();

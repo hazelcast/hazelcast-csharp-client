@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Test
                         //Thread.Sleep(3000);
                         queue.Offer("item0");
                     }
-                    catch (Exception e)
+                    catch
                     {
                         Assert.Fail();
                     }

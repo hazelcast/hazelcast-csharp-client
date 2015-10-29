@@ -20,7 +20,7 @@ namespace Hazelcast.Net.Ext
 {
     internal class AtomicBoolean
     {
-        private volatile int value;
+        private int value;
 
         public AtomicBoolean()
         {
