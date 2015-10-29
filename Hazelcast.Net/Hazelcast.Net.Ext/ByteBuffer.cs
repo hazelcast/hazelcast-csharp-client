@@ -264,11 +264,6 @@ namespace Hazelcast.Net.Ext
             return new ByteBuffer(buf, start, len);
         }
 
-        public ByteBuffer AsReadOnlyBuffer()
-        {
-            return new ByteBufferReadOnly(this.buffer, this.capacity, this.index, this.limit, this.mark, this._bigEndian);
-        }
-
         protected virtual int ReadInt()
         {
             CheckGetLimit(Bits.IntSizeInBytes);
@@ -296,58 +291,6 @@ namespace Hazelcast.Net.Ext
             CheckPutLimit(Bits.ShortSizeInBytes);
             Bits.WriteShort(buffer, index, v, _bigEndian);
             index += Bits.ShortSizeInBytes;
-        }
-    }
-
-    internal class ByteBufferReadOnly : ByteBuffer
-    {
-        internal ByteBufferReadOnly(byte[] buffer, int capacity, int index, int limit, int mark, bool bigEndian) : base(buffer, capacity, index, limit, mark, bigEndian)
-        {
-        }
-
-        public override void Compact()
-        {
-            ReadonlyException();
-        }
-
-        public override void Put(byte[] data)
-        {
-            ReadonlyException();
-        }
-
-        public override void Put(byte data)
-        {
-            ReadonlyException();
-        }
-
-        public override void Put(byte[] data, int start, int len)
-        {
-            ReadonlyException();
-        }
-
-        public override void PutInt(int i)
-        {
-            ReadonlyException();
-        }
-
-        public override void PutShort(short i)
-        {
-            ReadonlyException();
-        }
-
-        protected override void WriteInt(int v)
-        {
-            ReadonlyException();
-        }
-
-        protected override void WriteShort(short v)
-        {
-            ReadonlyException();
-        }
-
-        private static void ReadonlyException()
-        {
-            throw new NotSupportedException("ByteBuffer is read only");
         }
     }
 }

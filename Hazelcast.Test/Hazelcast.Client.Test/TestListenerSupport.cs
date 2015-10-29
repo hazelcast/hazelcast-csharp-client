@@ -22,21 +22,6 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Client.Test
 {
-    public class LifecycleListener : ILifecycleListener
-    {
-        private readonly Action<LifecycleEvent> _action;
-
-        public LifecycleListener(Action<LifecycleEvent> action)
-        {
-            _action = action;
-        }
-
-        public void StateChanged(LifecycleEvent lifecycleEvent)
-        {
-            _action(lifecycleEvent);
-        }
-    }
-
     public class EntryListener<K, V> : IEntryListener<K, V>
     {
         public Action<EntryEvent<K, V>> EntryAddedAction { get; set; }

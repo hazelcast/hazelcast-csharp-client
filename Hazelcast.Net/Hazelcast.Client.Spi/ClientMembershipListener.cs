@@ -193,7 +193,7 @@ namespace Hazelcast.Client.Spi
             _members.Remove(member);
             ApplyMemberListChanges();
             var connection = _connectionManager.GetConnection(member.GetAddress());
-            if (connection != null)
+            if (connection !=  null)
             {
                 _connectionManager.DestroyConnection(connection);
             }
