@@ -24,8 +24,7 @@ using Hazelcast.Util;
 namespace Hazelcast.Client.Protocol
 {
     /// <summary>
-    ///     <p>
-    ///         Client Message is the carrier framed data as defined below.
+    ///     Client Message is the carrier framed data as defined below.
     /// </summary>
     /// <remarks>
     ///     <p>

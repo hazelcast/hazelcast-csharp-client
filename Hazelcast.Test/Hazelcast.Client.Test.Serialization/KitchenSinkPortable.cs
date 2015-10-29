@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using Hazelcast.IO.Serialization;
+#pragma warning disable 659 //No need for GetHashCode()
 
 namespace Hazelcast.Client.Test.Serialization
 {

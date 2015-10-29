@@ -423,7 +423,7 @@ namespace Hazelcast.Client
                 clusterService.Start();
                 partitionService.Start();
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException)
             {
                 //there was an authentication failure (todo: perhaps use an AuthenticationException
                 // ??)

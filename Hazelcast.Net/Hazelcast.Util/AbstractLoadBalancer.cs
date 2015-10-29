@@ -26,7 +26,7 @@ namespace Hazelcast.Util
     internal abstract class AbstractLoadBalancer : ILoadBalancer, IMembershipListener
     {
         private volatile ICluster _clusterRef;
-        private volatile IMember[] _members;
+        private IMember[] _members;
 
         public IMember[] Members
         {

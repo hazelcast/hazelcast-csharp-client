@@ -18,6 +18,7 @@
 using System.Linq;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
+#pragma warning disable 659 //No need for GetHashCode()
 
 namespace Hazelcast.Client.Test.Serialization
 {
@@ -126,6 +127,7 @@ namespace Hazelcast.Client.Test.Serialization
             if (obj.GetType() != GetType()) return false;
             return Equals((KitchenSinkDataSerializable) obj);
         }
+
 
         public static KitchenSinkDataSerializable Generate()
         {

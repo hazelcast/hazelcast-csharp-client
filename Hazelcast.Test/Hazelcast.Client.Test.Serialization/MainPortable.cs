@@ -21,7 +21,7 @@ namespace Hazelcast.Client.Test.Serialization
     internal class MainPortable : IPortable
     {
         private byte b;
-        private byte[] bb;
+        private byte[] bb = null;
         private bool bo;
         private char c;
         private double d;

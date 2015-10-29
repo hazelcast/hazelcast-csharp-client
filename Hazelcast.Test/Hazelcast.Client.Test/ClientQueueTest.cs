@@ -140,7 +140,7 @@ namespace Hazelcast.Client.Test
                 {
                     Thread.Sleep(100);
                 }
-                catch (Exception e)
+                catch
                 {
                 }
                 q.Poll();
@@ -170,7 +170,7 @@ namespace Hazelcast.Client.Test
                 {
                     Thread.Sleep(200);
                 }
-                catch (Exception e)
+                catch
                 {
                 }
                 q.Offer("item1");

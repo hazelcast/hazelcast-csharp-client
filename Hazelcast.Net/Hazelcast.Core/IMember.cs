@@ -32,16 +32,6 @@ namespace Hazelcast.Core
     {
         Address GetAddress();
 
-        /// <summary>Returns the socket address of this member.</summary>
-        /// <remarks>Returns the socket address of this member.</remarks>
-        /// <returns>socket address of this member</returns>
-        IPEndPoint GetSocketAddress();
-
-        /// <summary>Returns UUID of this member.</summary>
-        /// <remarks>Returns UUID of this member.</remarks>
-        /// <returns>UUID of this member.</returns>
-        string GetUuid();
-
         /// <summary>
         /// Returns configured attributes for this member.<br/>
         /// <b>This method might not be available on all native clients.</b>

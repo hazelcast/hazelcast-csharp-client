@@ -33,7 +33,6 @@ namespace Hazelcast.Client.Proxy
     {
         private readonly AtomicBoolean _nearCacheInitialized = new AtomicBoolean();
         private volatile ClientNearCache _nearCache;
-        private string _nearCacheListenerId;
 
         public ClientMapProxy(string serviceName, string name) : base(serviceName, name)
         {

@@ -25,7 +25,7 @@ namespace Hazelcast.IO.Serialization
     /// <see cref="ClassDefinitionBuilder"/>
     /// or ondemand during serialization phase.
     /// </remarks>
-    /// <seealso cref="Portable"/>
+    /// <seealso cref="IPortable"/>
     /// <seealso cref="ClassDefinitionBuilder"/>
     public interface IClassDefinition
     {

@@ -646,7 +646,7 @@ namespace Hazelcast.Client.Test
                         latch.Signal();
                     }
                 }
-                catch (Exception e)
+                catch
                 {
                 }
             });
@@ -745,8 +745,6 @@ namespace Hazelcast.Client.Test
         public virtual void TestPutTransient()
         {
             Assert.AreEqual(0, map.Size());
-            var ttl = 100;
-
             map.PutTransient("key1", "value1", 100, TimeUnit.MILLISECONDS);
             Assert.AreEqual("value1", map.Get("key1"));
            

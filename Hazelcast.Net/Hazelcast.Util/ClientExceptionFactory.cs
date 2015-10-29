@@ -16,7 +16,6 @@
 
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Security;
@@ -24,7 +23,8 @@ using System.Threading;
 using Hazelcast.Client;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Spi;
-using Hazelcast.Core;
+﻿using Hazelcast.Config;
+﻿using Hazelcast.Core;
 using Hazelcast.Transaction;
 
 namespace Hazelcast.Util

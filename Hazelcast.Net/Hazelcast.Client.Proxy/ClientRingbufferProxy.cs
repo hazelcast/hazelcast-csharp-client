@@ -24,10 +24,10 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Client.Proxy
 {
-    internal class ClientRingbufferProxy<E> : ClientProxy, IRingbuffer<E>
+    internal class ClientRingbufferProxy<T> : ClientProxy, IRingbuffer<T>
     {
         /// <summary>
-        ///     The maximum number of items that can be retrieved in 1 go using the  <see cref="Ringbuffer{E}.ReadManyAsync" />
+        ///     The maximum number of items that can be retrieved in 1 go using the  <see cref="IRingbuffer{T}.ReadManyAsync" />
         ///     method.
         /// </summary>
         public const int MaxBatchSize = 1000;
@@ -71,7 +71,7 @@ namespace Hazelcast.Client.Proxy
             return Invoke(request, m => RingbufferRemainingCapacityCodec.DecodeResponse(m).response);
         }
 
-        public long Add(E item)
+        public long Add(T item)
         {
             ThrowExceptionIfNull(item, "Item cannot be null");
 
@@ -79,7 +79,7 @@ namespace Hazelcast.Client.Proxy
             return Invoke(request, m => RingbufferAddCodec.DecodeResponse(m).response);
         }
 
-        public Task<long> AddAsync(E item, OverflowPolicy overflowPolicy)
+        public Task<long> AddAsync(T item, OverflowPolicy overflowPolicy)
         {
             ThrowExceptionIfNull(item, "Item cannot be null");
 
@@ -87,16 +87,16 @@ namespace Hazelcast.Client.Proxy
             return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddAsyncCodec.DecodeResponse(m).response);
         }
 
-        public E ReadOne(long sequence)
+        public T ReadOne(long sequence)
         {
             CheckSequence(sequence);
 
             var request = RingbufferReadOneCodec.EncodeRequest(GetName(), sequence);
             var response = Invoke(request, m => RingbufferReadOneCodec.DecodeResponse(m).response);
-            return ToObject<E>(response);
+            return ToObject<T>(response);
         }
 
-        public Task<long> AddAllAsync<T>(ICollection<T> collection, OverflowPolicy overflowPolicy) where T : E
+        public Task<long> AddAllAsync<TE>(ICollection<TE> collection, OverflowPolicy overflowPolicy) where TE : T
         {
             ThrowExceptionIfTrue(collection.Count == 0, "Collection cannot be empty");
 
@@ -105,7 +105,7 @@ namespace Hazelcast.Client.Proxy
             return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddAllAsyncCodec.DecodeResponse(m).response);
         }
 
-        public Task<IList<E>> ReadManyAsync(long startSequence, int minCount, int maxCount)
+        public Task<IList<T>> ReadManyAsync(long startSequence, int minCount, int maxCount)
         {
             CheckSequence(startSequence);
             ThrowExceptionIfTrue(minCount < 0, "minCount can't be smaller than 0");
@@ -116,7 +116,7 @@ namespace Hazelcast.Client.Proxy
             var request = RingbufferReadManyAsyncCodec.EncodeRequest(GetName(), startSequence, minCount, maxCount, null);
 
             return InvokeAsync(request, GetPartitionKey(),
-                m => ToList<E>(RingbufferReadManyAsyncCodec.DecodeResponse(m).items));
+                m => ToList<T>(RingbufferReadManyAsyncCodec.DecodeResponse(m).items));
         }
 
         protected override IClientMessage Invoke(IClientMessage request)

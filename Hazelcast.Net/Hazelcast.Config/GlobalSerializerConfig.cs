@@ -51,11 +51,11 @@ namespace Hazelcast.Config
         //    return this;
         //}
 
-        //public virtual GlobalSerializerConfig SetImplementation(IStreamSerializer<> implementation)
-        //{
-        //    this.implementation = implementation;
-        //    return this;
-        //}
+        public virtual GlobalSerializerConfig SetImplementation<T>(IStreamSerializer<T> implementation)
+        {
+            this.implementation = implementation;
+            return this;
+        }
 
         public override string ToString()
         {

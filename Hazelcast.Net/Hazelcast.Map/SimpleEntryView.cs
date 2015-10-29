@@ -14,52 +14,37 @@
 * limitations under the License.
 */
 
-using System;
 using Hazelcast.Core;
-using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Map
 {
-
-    internal class SimpleEntryView<K, V> : SimpleEntryView,IEntryView<K, V>
+    internal class SimpleEntryView<TKey, TValue> : SimpleEntryView, IEntryView<TKey, TValue>
     {
-        public K GetKey()
+        public new TKey GetKey()
         {
-            return (K)base.GetKey();
+            return (TKey) base.GetKey();
         }
 
-        public V GetValue()
+        public new TValue GetValue()
         {
-            return (V)base.GetValue();
+            return (TValue) base.GetValue();
         }
     }
 
-    internal class SimpleEntryView 
+    internal class SimpleEntryView
     {
-        private object key;
-        private object value;
-
         private long cost;
         private long creationTime;
+        private long evictionCriteriaNumber;
         private long expirationTime;
         private long hits;
+        private object key;
         private long lastAccessTime;
         private long lastStoredTime;
         private long lastUpdateTime;
-        private long version;
-        private long evictionCriteriaNumber;
         private long ttl;
-
-        public virtual object GetKey()
-        {
-            return key;
-        }
-
-        public virtual object GetValue()
-        {
-            return value;
-        }
+        private object value;
+        private long version;
 
         public virtual long GetCost()
         {
@@ -71,6 +56,11 @@ namespace Hazelcast.Map
             return creationTime;
         }
 
+        public long GetEvictionCriteriaNumber()
+        {
+            return evictionCriteriaNumber;
+        }
+
         public virtual long GetExpirationTime()
         {
             return expirationTime;
@@ -79,6 +69,11 @@ namespace Hazelcast.Map
         public virtual long GetHits()
         {
             return hits;
+        }
+
+        public virtual object GetKey()
+        {
+            return key;
         }
 
         public virtual long GetLastAccessTime()
@@ -96,19 +91,19 @@ namespace Hazelcast.Map
             return lastUpdateTime;
         }
 
+        public long GetTtl()
+        {
+            return ttl;
+        }
+
+        public virtual object GetValue()
+        {
+            return value;
+        }
+
         public virtual long GetVersion()
         {
             return version;
-        }
-
-        public virtual void SetKey(object key)
-        {
-            this.key = key;
-        }
-
-        public virtual void SetValue(object value)
-        {
-            this.value = value;
         }
 
         public virtual void SetCost(long cost)
@@ -121,6 +116,11 @@ namespace Hazelcast.Map
             this.creationTime = creationTime;
         }
 
+        public void SetEvictionCriteriaNumber(long evictionCriteriaNumber)
+        {
+            this.evictionCriteriaNumber = evictionCriteriaNumber;
+        }
+
         public virtual void SetExpirationTime(long expirationTime)
         {
             this.expirationTime = expirationTime;
@@ -129,6 +129,11 @@ namespace Hazelcast.Map
         public virtual void SetHits(long hits)
         {
             this.hits = hits;
+        }
+
+        public virtual void SetKey(object key)
+        {
+            this.key = key;
         }
 
         public virtual void SetLastAccessTime(long lastAccessTime)
@@ -146,30 +151,19 @@ namespace Hazelcast.Map
             this.lastUpdateTime = lastUpdateTime;
         }
 
-        public virtual void SetVersion(long version)
-        {
-            this.version = version;
-        }
-
-        public long GetEvictionCriteriaNumber()
-        {
-            return evictionCriteriaNumber;
-        }
-
-        public void SetEvictionCriteriaNumber(long evictionCriteriaNumber)
-        {
-            this.evictionCriteriaNumber = evictionCriteriaNumber;
-        }
-
-        public long GetTtl()
-        {
-            return ttl;
-        }
-
         public void SetTtl(long ttl)
         {
             this.ttl = ttl;
         }
 
+        public virtual void SetValue(object value)
+        {
+            this.value = value;
+        }
+
+        public virtual void SetVersion(long version)
+        {
+            this.version = version;
+        }
     }
 }

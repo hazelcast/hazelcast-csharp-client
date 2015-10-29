@@ -33,12 +33,7 @@ namespace Hazelcast.IO.Serialization
     /// </summary>
     /// <remarks>
     ///     This class is the default serializer for all types that are serialized using Hazelcast
-    ///     internal methods. Due to the operation responding on deserialization errors this class
-    ///     has a dependency to
-    ///     <see cref="Hazelcast.IO.IOUtil.ExtractOperationCallId(IData, ISerializationService)">
-    ///         Hazelcast.IO.IOUtil.ExtractOperationCallId(IData, ISerializationService)
-    ///     </see>
-    ///     .
+    ///     internal methods. 
     ///     If the way the DataSerializer serializes values is changed the extract method needs to be changed too!
     /// </remarks>
     internal sealed class DataSerializer : IStreamSerializer<IDataSerializable>
@@ -186,7 +181,7 @@ namespace Hazelcast.IO.Serialization
                     var instance = (IDataSerializable)Activator.CreateInstance(type);
                     class2Type.AddOrUpdate(instance.GetJavaClassName(), type, (s, ignored) => type);
                 }
-                catch (MissingMethodException e)
+                catch (MissingMethodException)
                 {
                     Logger.Warning("Could not find a suitable empty constructor for type " + type);
                 }

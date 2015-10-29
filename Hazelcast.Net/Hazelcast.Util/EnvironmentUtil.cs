@@ -28,7 +28,6 @@ namespace Hazelcast.Util
 
         public static int? ReadEnvironmentVar(string var)
         {
-            var p = 0;
             var param = Environment.GetEnvironmentVariable(var);
             try
             {

@@ -27,7 +27,8 @@ using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
-using Hazelcast.Security;
+﻿using Hazelcast.Net.Ext;
+﻿using Hazelcast.Security;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Connection
@@ -57,7 +58,7 @@ namespace Hazelcast.Client.Connection
         private readonly ISocketInterceptor _socketInterceptor;
         private Thread _heartBeatThread;
         private volatile bool _live;
-        private volatile int _nextConnectionId;
+        private int _nextConnectionId;
 
         public ClientConnectionManager(HazelcastClient client, ILoadBalancer loadBalancer)
         {
@@ -192,8 +193,6 @@ namespace Hazelcast.Client.Connection
         /// <exception cref="System.IO.IOException"></exception>
         public ClientConnection GetOrConnect(Address target)
         {
-            var count = 0;
-            Exception lastError = null;
             if (target == null || !IsMember(target))
             {
                 target = _router.Next();

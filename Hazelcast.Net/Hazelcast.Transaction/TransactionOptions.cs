@@ -72,10 +72,6 @@ namespace Hazelcast.Transaction
         /// <seealso cref="SetDurability(int)">SetDurability(int)</seealso>
         public TransactionOptions SetTransactionType(TransactionType transactionType)
         {
-            if (transactionType == null)
-            {
-                throw new ArgumentException("transactionType can't be null");
-            }
             this.transactionType = transactionType;
             return this;
         }
@@ -105,10 +101,6 @@ namespace Hazelcast.Transaction
             if (timeout <= 0)
             {
                 throw new ArgumentException("Timeout must be positive!");
-            }
-            if (timeUnit == null)
-            {
-                throw new ArgumentException("timeunit can't be null");
             }
             timeoutMillis = timeUnit.ToMillis(timeout);
             return this;

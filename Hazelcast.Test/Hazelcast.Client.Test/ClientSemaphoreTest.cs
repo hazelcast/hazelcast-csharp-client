@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Test
                     s.Acquire();
                     latch.Signal();
                 }
-                catch (Exception e)
+                catch
                 {
                 }
 		    });
@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Test
                         latch.Signal();
                     }
                 }
-                catch (Exception e)
+                catch
                 {
                 }
             });

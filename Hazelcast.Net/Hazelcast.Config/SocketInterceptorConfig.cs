@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hazelcast.IO;
 
 namespace Hazelcast.Config
 {
@@ -31,7 +32,7 @@ namespace Hazelcast.Config
 
         /// <summary>
         ///     Returns the name of the
-        ///     <see cref="Hazelcast.IO.SocketInterceptor">Hazelcast.IO.SocketInterceptor</see>
+        ///     <see cref="ISocketInterceptor"/>
         ///     implementation class
         /// </summary>
         /// <returns>name of the class</returns>
@@ -42,12 +43,12 @@ namespace Hazelcast.Config
 
         /// <summary>
         ///     Sets the name for the
-        ///     <see cref="Hazelcast.IO.SocketInterceptor">Hazelcast.IO.SocketInterceptor</see>
+        ///     <see cref="ISocketInterceptor" />
         ///     implementation class
         /// </summary>
         /// <param name="className">
         ///     the name of the
-        ///     <see cref="Hazelcast.IO.SocketInterceptor">Hazelcast.IO.SocketInterceptor</see>
+        ///     <see cref="ISocketInterceptor" />
         ///     implementation class to set
         /// </param>
         /// <returns>this SocketInterceptorConfig instance</returns>
@@ -59,7 +60,7 @@ namespace Hazelcast.Config
 
         /// <summary>
         ///     Sets the
-        ///     <see cref="Hazelcast.IO.SocketInterceptor">Hazelcast.IO.SocketInterceptor</see>
+        ///     <see cref="ISocketInterceptor" />
         ///     implementation object
         /// </summary>
         /// <param name="implementation">implementation object</param>
@@ -72,7 +73,7 @@ namespace Hazelcast.Config
 
         /// <summary>
         ///     Returns the
-        ///     <see cref="Hazelcast.IO.SocketInterceptor">Hazelcast.IO.SocketInterceptor</see>
+        ///     <see cref="ISocketInterceptor" />
         ///     implementation object
         /// </summary>
         /// <returns>SocketInterceptor implementation object</returns>

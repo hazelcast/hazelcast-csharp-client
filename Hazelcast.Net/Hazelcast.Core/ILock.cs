@@ -47,8 +47,8 @@ namespace Hazelcast.Core
         ///     Tries to acquires the lock for the specified lease time.
         ///     <p>After lease time, lock will be released.</p>
         /// </remarks>
-        /// <param name="leaseTime">time to wait before releasing the lock.</param>
-        /// <param name="timeUnit">unit of time to specify lease time.</param>
+        /// <param name="time">time to wait before releasing the lock.</param>
+        /// <param name="unit">unit of time to specify lease time.</param>
         bool TryLock(long time, TimeUnit? unit);
 
         /// <summary>Releases the lock.</summary>

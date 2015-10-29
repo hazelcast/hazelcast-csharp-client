@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Test
                     {
                         Thread.Sleep(60);
                     }
-                    catch (Exception e)
+                    catch
                     {
                         
                     }

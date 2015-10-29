@@ -112,7 +112,7 @@ namespace Hazelcast.Client.Spi
                     Logger.Finest("Partition list updated");
                     return result;
                 }
-                catch (HazelcastInstanceNotActiveException ignored)
+                catch (HazelcastInstanceNotActiveException)
                 {
                 }
                 catch (Exception e)
