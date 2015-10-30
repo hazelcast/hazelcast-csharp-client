@@ -522,8 +522,6 @@
     <Compile Include="Hazelcast.Logging\ILogger.cs" />
     <Compile Include="Hazelcast.Logging\Logger.cs" />
     <Compile Include="Hazelcast.Logging\LoggerFactory.cs" />
-    <Compile Include="Hazelcast.Logging\LoggingService.cs" />
-    <Compile Include="Hazelcast.Logging\LogListener.cs" />
     <Compile Include="Hazelcast.Logging\NoLogFactory.cs" />
     <Compile Include="Hazelcast.Map\IEntryBackupProcessor.cs" />
     <Compile Include="Hazelcast.Map\IEntryProcessor.cs" />

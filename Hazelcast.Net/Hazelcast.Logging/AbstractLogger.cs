@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Diagnostics;
 
 namespace Hazelcast.Logging
 {
@@ -25,7 +24,7 @@ namespace Hazelcast.Logging
     ///     implementation that provides implementations for the convenience methods like
     ///     finest,info,warning and severe.
     /// </summary>
-    internal abstract class AbstractLogger : ILogger
+    public abstract class AbstractLogger : ILogger
     {
         public virtual void Finest(string message)
         {
@@ -82,17 +81,11 @@ namespace Hazelcast.Logging
             Log(LogLevel.Warning, message, thrown);
         }
 
-        public LogLevel GetLevel()
-        {
-            throw new NotImplementedException();
-        }
-
         public abstract bool IsLoggable(LogLevel arg1);
 
         public abstract void Log(LogLevel arg1, string arg2);
 
         public abstract void Log(LogLevel arg1, string arg2, Exception arg3);
-        public abstract void Log(TraceEventType logEvent);
-        public abstract LogLevel GetLogLevel();
+        public abstract LogLevel GetLevel();
     }
 }

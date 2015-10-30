@@ -130,10 +130,6 @@ namespace Hazelcast.Logging
         /// <param name="thrown">the Throwable associated to the message.</param>
         void Log(LogLevel level, string message, Exception thrown);
 
-        /// <summary>Logs a LogEvent</summary>
-        /// <param name="logEvent">the logEvent to log.</param>
-        void Log(TraceEventType logEvent);
-
         /// <summary>Gets the logging Level.</summary>
         /// <remarks>Gets the logging Level.</remarks>
         /// <returns>the logging Level.</returns>

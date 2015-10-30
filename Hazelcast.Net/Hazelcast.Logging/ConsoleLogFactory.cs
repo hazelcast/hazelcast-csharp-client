@@ -15,62 +15,81 @@
 */
 
 using System;
-using System.Diagnostics;
 using System.Threading;
+using Hazelcast.Config;
 
 namespace Hazelcast.Logging
 {
     internal class ConsoleLogFactory : ILoggerFactory
     {
+        private readonly LogLevel _loggingLevel;
 
         public ConsoleLogFactory()
         {
+            var logLevel = Environment.GetEnvironmentVariable("hazelcast.logging.level");
+            if (logLevel == null)
+            {
+                _loggingLevel = LogLevel.All;
+            }
+            else
+            {
+                LogLevel level;
+                if (Enum.TryParse(logLevel, true, out level))
+                {
+                    _loggingLevel = level;
+                }
+                else
+                {
+                    throw new ConfigurationException("Log level " + logLevel + " is invalid, the allowed values are " +
+                                                     string.Join(", ", (LogLevel[])Enum.GetValues(typeof (LogLevel))));
+                }
+            }
         }
 
         public virtual ILogger GetLogger(string name)
         {
-            return new ConsoleLogger(name);
+            return new ConsoleLogger(name, _loggingLevel);
         }
 
         internal class ConsoleLogger : AbstractLogger
         {
+            private readonly LogLevel _loggingLevel;
             private readonly string _name;
 
-            internal ConsoleLogger(string name)
+            internal ConsoleLogger(string name, LogLevel loggingLevel)
             {
                 _name = name;
+                _loggingLevel = loggingLevel;
+            }
+
+            public override LogLevel GetLevel()
+            {
+                return _loggingLevel;
             }
 
             public override bool IsLoggable(LogLevel arg1)
             {
-                return true;
+                return _loggingLevel.IsGreaterThanOrEqualTo(arg1);
             }
 
             public override void Log(LogLevel arg1, string message)
             {
+                if (!_loggingLevel.IsGreaterThanOrEqualTo(arg1)) return;
                 Console.WriteLine(GetDateFormat(arg1) + message);
             }
 
             public override void Log(LogLevel arg1, string message, Exception ex)
             {
+                if (!_loggingLevel.IsGreaterThanOrEqualTo(arg1)) return;
                 Console.WriteLine(GetDateFormat(arg1) + message + " ---- " + ex);
             }
 
             private string GetDateFormat(LogLevel logLevel)
             {
-                return DateTime.Now.ToString("HH:mm:ss.fff") + " [" + logLevel.ToString().ToUpper() + "] - [" + Thread.CurrentThread.Name + ":" + 
-                    Thread.CurrentThread.ManagedThreadId + "] " + _name + 
+                return DateTime.Now.ToString("HH:mm:ss.fff") + " [" + logLevel.ToString().ToUpper() + "] - [" +
+                       Thread.CurrentThread.Name + ":" +
+                       Thread.CurrentThread.ManagedThreadId + "] " + _name +
                        ": ";
-            }
-
-            public override void Log(TraceEventType logEvent)
-            {
-                
-            }
-
-            public override LogLevel GetLogLevel()
-            {
-                return LogLevel.Info;
             }
         }
     }
