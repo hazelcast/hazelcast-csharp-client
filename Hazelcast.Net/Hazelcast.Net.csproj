@@ -509,8 +509,6 @@
     <Compile Include="Hazelcast.IO.Serialization\ISerializerAdapter.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IStreamSerializer.cs" />
     <Compile Include="Hazelcast.IO.Serialization\StreamSerializerAdapter.cs" />
-    <Compile Include="Hazelcast.IO.Ssl\BasicSSLContextFactory.cs" />
-    <Compile Include="Hazelcast.IO.Ssl\SSLContextFactory.cs" />
     <Compile Include="Hazelcast.IO\Address.cs" />
     <Compile Include="Hazelcast.IO\IBufferObjectDataInput.cs" />
     <Compile Include="Hazelcast.IO\IBufferObjectDataOutput.cs" />
@@ -552,15 +550,12 @@
     <Compile Include="Hazelcast.Util\AbstractLoadBalancer.cs" />
     <Compile Include="Hazelcast.Util\AddressHelper.cs" />
     <Compile Include="Hazelcast.Util\AddressUtil.cs" />
-    <Compile Include="Hazelcast.Util\ByteFlipperUtil.cs" />
     <Compile Include="Hazelcast.Util\ClientExceptionFactory.cs" />
     <Compile Include="Hazelcast.Util\Delegates.cs" />
     <Compile Include="Hazelcast.Util\Clock.cs" />
     <Compile Include="Hazelcast.Util\EnvironmentUtil.cs" />
     <Compile Include="Hazelcast.Util\ExceptionUtil.cs" />
     <Compile Include="Hazelcast.Util\HashUtil.cs" />
-    <Compile Include="Hazelcast.Util\IterationType.cs" />
-    <Compile Include="Hazelcast.Util\ListenerUtil.cs" />
     <Compile Include="Hazelcast.Util\QuickMath.cs" />
     <Compile Include="Hazelcast.Util\RandomLB.cs" />
     <Compile Include="Hazelcast.Util\RoundRobinLB.cs" />
@@ -595,9 +590,6 @@
     <Content Include="Resources\hazelcast-client-default.xml">
       <SubType>Designer</SubType>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hazelcast-client-full.xml" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

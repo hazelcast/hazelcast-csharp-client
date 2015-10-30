@@ -33,7 +33,7 @@ namespace Hazelcast.Util
     {
         private delegate Exception ExceptionFactoryDelegate(string message, Exception cause);
 
-        private readonly IDictionary<ClientProtocolErrorCodes, ExceptionFactoryDelegate> errorCodeToException =
+        private readonly IDictionary<ClientProtocolErrorCodes, ExceptionFactoryDelegate> _errorCodeToException =
             new Dictionary<ClientProtocolErrorCodes, ExceptionFactoryDelegate>
             {
                 {ClientProtocolErrorCodes.ArrayIndexOutOfBounds, (m, c) => new IndexOutOfRangeException(m)},
@@ -104,7 +104,7 @@ namespace Hazelcast.Util
         {
             ExceptionFactoryDelegate factory;
             if (Enum.IsDefined(typeof(ClientProtocolErrorCodes), errorCode) &&
-                errorCodeToException.TryGetValue((ClientProtocolErrorCodes)errorCode, out factory))
+                _errorCodeToException.TryGetValue((ClientProtocolErrorCodes)errorCode, out factory))
             {
                 return factory.Invoke(message, cause);
             }
