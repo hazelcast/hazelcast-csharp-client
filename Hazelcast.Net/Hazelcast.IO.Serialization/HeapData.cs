@@ -16,24 +16,22 @@
 
 using System;
 using System.Text;
-using Hazelcast.IO;
-using Hazelcast.Net.Ext;
 using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
     public sealed class HeapData : IData
     {
-        internal const int TypeOffset = 0;
-
-        internal const int DataOffset = 4;
+        internal const int PartitionHashOffset = 0;
+        internal const int TypeOffset = 4;
+        internal const int DataOffset = 8;
 
         private const int ArrayHeaderSizeInBytes = 16;
 
         //first 4 byte is type id + last 4 byte is partition hash code
-        private const int HeapDataOverHead = DataOffset + Bits.IntSizeInBytes;
+        private const int HeapDataOverHead = DataOffset;
 
-        private byte[] data;
+        private readonly byte[] _data;
 
         public HeapData()
         {
@@ -46,9 +44,10 @@ namespace Hazelcast.IO.Serialization
             // array (12: array header, 4: length)
             if (data != null && data.Length > 0 && data.Length < HeapDataOverHead)
             {
-                throw new ArgumentException("Data should be either empty or should contain more than " + HeapDataOverHead);
+                throw new ArgumentException("Data should be either empty or should contain more than " +
+                                            HeapDataOverHead);
             }
-            this.data = data;
+            _data = data;
         }
 
         public int DataSize()
@@ -58,27 +57,27 @@ namespace Hazelcast.IO.Serialization
 
         public int TotalSize()
         {
-            return data != null ? data.Length : 0;
+            return _data != null ? _data.Length : 0;
         }
 
         public int GetPartitionHash()
         {
             if (HasPartitionHash())
             {
-                return Bits.ReadIntB(data, data.Length - Bits.IntSizeInBytes);
+                return Bits.ReadIntB(_data, PartitionHashOffset);
             }
             return GetHashCode();
         }
 
         public bool HasPartitionHash()
         {
-            return data != null && data.Length > HeapDataOverHead
-                    && Bits.ReadInt(data, data.Length - Bits.IntSizeInBytes, true) != 0;
+            return _data != null && _data.Length >= HeapDataOverHead
+                   && Bits.ReadIntB(_data, PartitionHashOffset) != 0;
         }
 
         public byte[] ToByteArray()
         {
-            return data;
+            return _data;
         }
 
         public int GetTypeId()
@@ -87,14 +86,19 @@ namespace Hazelcast.IO.Serialization
             {
                 return SerializationConstants.ConstantTypeNull;
             }
-            return Bits.ReadIntB(data, TypeOffset);
+            return Bits.ReadIntB(_data, TypeOffset);
         }
 
         public int GetHeapCost()
         {
             // reference (assuming compressed oops)
-            int objectRef = Bits.IntSizeInBytes;
-            return objectRef + (data != null ? ArrayHeaderSizeInBytes + data.Length : 0);
+            var objectRef = Bits.IntSizeInBytes;
+            return objectRef + (_data != null ? ArrayHeaderSizeInBytes + _data.Length : 0);
+        }
+
+        public bool IsPortable()
+        {
+            return SerializationConstants.ConstantTypePortable == GetTypeId();
         }
 
         public override bool Equals(object o)
@@ -103,25 +107,39 @@ namespace Hazelcast.IO.Serialization
             {
                 return true;
             }
-            if (o == null)
-            {
-                return false;
-            }
             if (!(o is IData))
             {
                 return false;
             }
-            IData data = (IData)o;
+            var data = (IData) o;
             if (GetTypeId() != data.GetTypeId())
             {
                 return false;
             }
-            int dataSize = DataSize();
+            var dataSize = DataSize();
             if (dataSize != data.DataSize())
             {
                 return false;
             }
-            return dataSize == 0 || Equals(this.data, data.ToByteArray());
+            return dataSize == 0 || Equals(_data, data.ToByteArray());
+        }
+
+        public override int GetHashCode()
+        {
+            return HashUtil.MurmurHash3_x86_32(_data, DataOffset, DataSize());
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder("DefaultData{");
+            sb.Append("type=").Append(GetTypeId());
+            sb.Append(", hashCode=").Append(GetHashCode());
+            sb.Append(", partitionHash=").Append(GetPartitionHash());
+            sb.Append(", totalSize=").Append(TotalSize());
+            sb.Append(", dataSize=").Append(DataSize());
+            sb.Append(", heapCost=").Append(GetHeapCost());
+            sb.Append('}');
+            return sb.ToString();
         }
 
         // Same as Arrays.equals(byte[] a, byte[] a2) but loop order is reversed.
@@ -135,12 +153,12 @@ namespace Hazelcast.IO.Serialization
             {
                 return false;
             }
-            int length = data1.Length;
+            var length = data1.Length;
             if (data2.Length != length)
             {
                 return false;
             }
-            for (int i = length - 1; i >= DataOffset; i--)
+            for (var i = length - 1; i >= DataOffset; i--)
             {
                 if (data1[i] != data2[i])
                 {
@@ -148,29 +166,6 @@ namespace Hazelcast.IO.Serialization
                 }
             }
             return true;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashUtil.MurmurHash3_x86_32(data, DataOffset, DataSize());
-        }
-
-        public bool IsPortable()
-        {
-            return SerializationConstants.ConstantTypePortable == GetTypeId();
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder("DefaultData{");
-            sb.Append("type=").Append(GetTypeId());
-            sb.Append(", hashCode=").Append(GetHashCode());
-            sb.Append(", partitionHash=").Append(GetPartitionHash());
-            sb.Append(", totalSize=").Append(TotalSize());
-            sb.Append(", dataSize=").Append(DataSize());
-            sb.Append(", heapCost=").Append(GetHeapCost());
-            sb.Append('}');
-            return sb.ToString();
         }
     }
 }
