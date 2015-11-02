@@ -30,9 +30,9 @@ namespace Hazelcast.Util
         public static ICollection<IPEndPoint> GetSocketAddresses(string address)
         {
             AddressHolder addressHolder = AddressUtil.GetAddressHolder(address, -1);
-            string scopedAddress = addressHolder.scopeId != null
-                ? addressHolder.address + "%" + addressHolder.scopeId
-                : addressHolder.address;
+            string scopedAddress = addressHolder.ScopeId != null
+                ? addressHolder.Address + "%" + addressHolder.ScopeId
+                : addressHolder.Address;
             IPAddress inetAddress = null;
             try
             {
@@ -42,7 +42,7 @@ namespace Hazelcast.Util
             {
                 Logger.GetLogger(typeof(AddressHelper)).Finest("Address not available");
             }
-            return GetPossibleSocketAddresses(inetAddress, addressHolder.port, scopedAddress);
+            return GetPossibleSocketAddresses(inetAddress, addressHolder.Port, scopedAddress);
         }
 
         public static ICollection<IPEndPoint> GetPossibleSocketAddresses(IPAddress ipAddress, int port,

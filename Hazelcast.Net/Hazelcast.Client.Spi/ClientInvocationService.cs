@@ -447,7 +447,7 @@ namespace Hazelcast.Client.Spi
 
             Logger.Finest("Retry #" + retryNr + " for request " + invocation.Message);
 
-            _client.GetClientExecutionService().SubmitWithDelay(() =>
+            _client.GetClientExecutionService().Schedule(() =>
             {
                 if (_isShutDown) FailRequestDueToShutdown(invocation);
                 else
@@ -456,7 +456,7 @@ namespace Hazelcast.Client.Spi
                     var connection = GetConnectionForInvocation(invocation);
                     Send(connection, invocation);
                 }
-            }, _retryWaitTime).ContinueWith(t =>
+            }, _retryWaitTime, TimeUnit.MILLISECONDS).ContinueWith(t =>
             {
                 if (t.IsFaulted)
                 {

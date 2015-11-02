@@ -16,35 +16,32 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Hazelcast.Util
 {
     internal class AddressHolder
     {
-        public readonly string address;
+        public readonly string Address;
 
-        public readonly int port;
-        public readonly string scopeId;
+        public readonly int Port;
+        public readonly string ScopeId;
 
         public AddressHolder(string address, int port, string scopeId)
         {
             // ----------------- UTILITY CLASSES ------------------
-            this.address = address;
-            this.scopeId = scopeId;
-            this.port = port;
+            Address = address;
+            ScopeId = scopeId;
+            Port = port;
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder();
             sb.Append("AddressHolder ");
-            sb.Append('[').Append(address).Append("]:").Append(port);
+            sb.Append('[').Append(Address).Append("]:").Append(Port);
             return sb.ToString();
         }
     }
@@ -53,12 +50,12 @@ namespace Hazelcast.Util
     {
         public static AddressHolder GetAddressHolder(string address, int defaultPort)
         {
-            int indexBracketStart = address.IndexOf('[');
-            int indexBracketEnd = indexBracketStart >= 0 ? address.IndexOf(']', indexBracketStart) : -1;
-            int indexColon = address.IndexOf(':');
-            int lastIndexColon = address.LastIndexOf(':');
+            var indexBracketStart = address.IndexOf('[');
+            var indexBracketEnd = indexBracketStart >= 0 ? address.IndexOf(']', indexBracketStart) : -1;
+            var indexColon = address.IndexOf(':');
+            var lastIndexColon = address.LastIndexOf(':');
             string host;
-            int port = defaultPort;
+            var port = defaultPort;
             string scopeId = null;
             if (indexColon > -1 && lastIndexColon > indexColon)
             {
@@ -75,7 +72,7 @@ namespace Hazelcast.Util
                 {
                     host = address;
                 }
-                int indexPercent = host.IndexOf('%');
+                var indexPercent = host.IndexOf('%');
                 if (indexPercent != -1)
                 {
                     scopeId = host.Substring(indexPercent + 1);
@@ -95,21 +92,6 @@ namespace Hazelcast.Util
                 }
             }
             return new AddressHolder(host, port, scopeId);
-        }
-
-        public static bool IsIpAddress(string address)
-        {
-            try
-            {
-                IPAddress ipAddress = null;
-                IPAddress.TryParse(address, out ipAddress);
-
-                return (ipAddress != null);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
         }
 
         public static ICollection<IPAddress> GetPossibleInetAddressesFor(IPAddress ipAddress)
@@ -135,6 +117,21 @@ namespace Hazelcast.Util
                 return possibleAddresses;
             }
             return new List<IPAddress>(1) {ipAddress};
+        }
+
+        public static bool IsIpAddress(string address)
+        {
+            try
+            {
+                IPAddress ipAddress;
+                IPAddress.TryParse(address, out ipAddress);
+
+                return (ipAddress != null);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         [Serializable]
