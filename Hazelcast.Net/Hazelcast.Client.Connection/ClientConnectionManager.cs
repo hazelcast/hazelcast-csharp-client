@@ -102,7 +102,7 @@ namespace Hazelcast.Client.Connection
             _heartBeatThread = new Thread(HearthBeatLoop)
             {
                 IsBackground = true,
-                Name = ("HearthBeat" + new Random().Next()).Substring(0, 15)
+                Name = ("hz-heartbeat-" + new Random().Next()).Substring(0, 15)
             };
             _heartBeatThread.Start();
         }
