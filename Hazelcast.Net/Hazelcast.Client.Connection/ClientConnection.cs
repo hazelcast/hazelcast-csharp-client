@@ -358,7 +358,11 @@ namespace Hazelcast.Client.Connection
         private void StartAsyncProcess()
         {
             BeginRead();
-            _writeThread = new Thread(WriteQueueLoop) {IsBackground = true, Priority = ThreadPriority.Highest};
+            _writeThread = new Thread(WriteQueueLoop)
+            {
+                IsBackground = true, Priority = ThreadPriority.Highest, Name = 
+                    "hz-connection-write-" + Id
+            };
             _writeThread.Start();
         }
 

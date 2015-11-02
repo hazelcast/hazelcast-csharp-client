@@ -61,9 +61,9 @@ namespace Hazelcast.Client.Spi
             return _taskFactory.StartNew(action, state);
         }
 
-        public Task<T> Submit<T>(Func<object, T> function)
+        public Task<T> Submit<T>(Func<T> function)
         {
-            return _taskFactory.StartNew(function, null);
+            return _taskFactory.StartNew(function);
         }
 
         public Task<T> Submit<T>(Func<object, T> function, object state)

@@ -53,13 +53,13 @@ namespace Hazelcast.Client.Spi
         public void Start()
         {
             _isLive = true;
-            _partitionThread = new Thread(RefreshPartitionThread) {IsBackground = true};
+            _partitionThread = new Thread(RefreshPartitionThread) {IsBackground = true, Name = "hz-partition-updater-" + new Random().Next()};
             _partitionThread.Start();
         }
 
         public void RefreshPartitions()
         {
-            Task.Factory.StartNew(() => { GetPartitions(); });
+            _client.GetClientExecutionService().Submit(() => { GetPartitions(); });
         }
 
         public void Stop()

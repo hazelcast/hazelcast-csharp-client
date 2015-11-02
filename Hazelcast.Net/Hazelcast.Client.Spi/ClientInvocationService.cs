@@ -165,7 +165,7 @@ namespace Hazelcast.Client.Spi
             }
             else
             {
-                Task.Factory.StartNew(() =>
+                _client.GetClientExecutionService().Submit(() =>
                 {
                     if (!_isShutDown)
                     {
@@ -248,7 +248,7 @@ namespace Hazelcast.Client.Spi
                 if (invocation.Future.IsComplete && invocation.Future.Result != null)
                 {
                     //re-register listener on a new node
-                    Task.Factory.StartNew(() =>
+                    _client.GetClientExecutionService().Submit(() =>
                     {
                         if (!_isShutDown)
                         {

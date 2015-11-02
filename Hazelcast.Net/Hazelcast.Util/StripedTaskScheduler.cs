@@ -46,7 +46,7 @@ namespace Hazelcast.Util
             _threads = Enumerable.Range(0, numberOfThreads).Select(i =>
             {
                 var thread = new Thread(()=> ThreadLoop(i))
-                {IsBackground = true};
+                {IsBackground = true, Name = "hz-striped-scheduler-" + i};
                 return thread;
             }).ToList();
 

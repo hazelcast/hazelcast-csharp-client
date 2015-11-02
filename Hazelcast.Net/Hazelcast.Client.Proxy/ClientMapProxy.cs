@@ -140,7 +140,7 @@ namespace Hazelcast.Client.Proxy
                 var cached = _nearCache.Get(keyData);
                 if (cached != null)
                 {
-                    var task = Task.Factory.StartNew(() =>
+                    var task = GetContext().GetExecutionService().Submit(() =>
                     {
                         if (cached.Equals(ClientNearCache.NullObject))
                         {
