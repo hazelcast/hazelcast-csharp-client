@@ -133,6 +133,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientLockTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientLoggingTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientMapTest.cs">
       <SubType>Code</SubType>
     </Compile>

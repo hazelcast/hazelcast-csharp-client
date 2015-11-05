@@ -21,29 +21,23 @@ namespace Hazelcast.Logging
 {
     internal class TraceLogFactory : ILoggerFactory
     {
-        internal readonly ILogger logger;
+        internal readonly ILogger Logger;
 
         public TraceLogFactory()
         {
-            logger = new TraceLogger(this);
+            Logger = new TraceLogger();
         }
 
         public virtual ILogger GetLogger(string name)
         {
-            return logger;
+            return Logger;
         }
 
         internal class TraceLogger : ILogger
         {
-            private readonly TraceLogFactory _enclosing;
-
-            internal TraceLogger(TraceLogFactory _enclosing)
-            {
-                this._enclosing = _enclosing;
-            }
-
             public virtual void Finest(string message)
             {
+                //TODO: Trace does not contain any native support for debug level
                 Trace.TraceInformation(message);
             }
 

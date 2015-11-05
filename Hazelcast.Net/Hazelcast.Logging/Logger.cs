@@ -19,11 +19,15 @@ using System.Diagnostics;
 
 namespace Hazelcast.Logging
 {
-    internal sealed class Logger
+    public class Logger
     {
-        private static volatile ILoggerFactory loggerFactory;
+        private static volatile ILoggerFactory  _loggerFactory;
 
-        private static readonly object factoryLock = new object();
+        private static readonly object FactoryLock = new object();
+
+        static Logger()
+        {
+        }
 
         public static ILogger GetLogger(Type clazz)
         {
@@ -33,36 +37,37 @@ namespace Hazelcast.Logging
         public static ILogger GetLogger(string name)
         {
             //noinspection DoubleCheckedLocking
-            if (loggerFactory == null)
+            if (_loggerFactory == null)
             {
                 //noinspection SynchronizationOnStaticField
-                lock (factoryLock)
+                lock (FactoryLock)
                 {
-                    if (loggerFactory == null)
+                    if (_loggerFactory == null)
                     {
                         string loggerType = Environment.GetEnvironmentVariable("hazelcast.logging.type");
-                        loggerFactory = NewLoggerFactory(loggerType);
+                        _loggerFactory = NewLoggerFactory(loggerType);
                     }
                 }
             }
-            return loggerFactory.GetLogger(name);
+            return _loggerFactory.GetLogger(name);
         }
 
         public static ILoggerFactory NewLoggerFactory(string loggerType)
         {
-            ILoggerFactory _loggerFactory = null;
             if ("console".Equals(loggerType))
             {
-                _loggerFactory = new ConsoleLogFactory();
+                return new ConsoleLogFactory();
             }
-
-            if (_loggerFactory == null)
+            if ("trace".Equals(loggerType))
             {
-                _loggerFactory = (Debugger.IsAttached ? (ILoggerFactory)new TraceLogFactory() : new NoLogFactory());
-                //_loggerFactory = new TraceLogFactory();
+                return new TraceLogFactory();
             }
+            return (Debugger.IsAttached ? (ILoggerFactory)new TraceLogFactory() : new NoLogFactory());
+        }
 
-            return _loggerFactory;
+        public static void SetLoggerFactory(ILoggerFactory loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
         }
     }
 }

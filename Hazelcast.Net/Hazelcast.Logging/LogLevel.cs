@@ -28,4 +28,12 @@
         Finest,
         All
     }
+
+    internal static class LogLevelExtensions
+    {
+        public static bool IsGreaterThanOrEqualTo(this LogLevel logLevel, LogLevel other)
+        {
+            return (int) logLevel >= (int)other;
+        }
+    }
 }
