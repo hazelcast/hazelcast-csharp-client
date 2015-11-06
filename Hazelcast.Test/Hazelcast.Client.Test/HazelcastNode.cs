@@ -17,8 +17,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
-using Hazelcast.Logging;
+﻿using Hazelcast.Logging;
 
 namespace Hazelcast.Client.Test
 {
@@ -49,10 +48,16 @@ namespace Hazelcast.Client.Test
             if (hzhome == null) throw new Exception("HAZELCAST_HOME must be defined in order to run the unit tests.");
 
             var redirectOutput = Environment.GetEnvironmentVariable("HAZELCAST_REDIRECT_OUTPUT") != null;
+            var jarPath = Path.Combine(hzhome, HazelcastJar);
+
+            if (!File.Exists(jarPath))
+            {
+                throw new FileNotFoundException("Could not find hazelcast.jar at " + jarPath);
+            }
 
             string[] arguments =
             {
-                "-cp", Path.Combine(hzhome, HazelcastJar),
+                "-cp", jarPath,
                 "-Dhazelcast.event.queue.capacity=1100000",
                 "-Dhazelcast.config=" + Path.Combine(hzhome,"hazelcast.xml"),
                 "com.hazelcast.core.server.StartServer"
