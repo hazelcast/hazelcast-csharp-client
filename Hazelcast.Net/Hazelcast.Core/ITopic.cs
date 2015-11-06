@@ -14,6 +14,8 @@
 * limitations under the License.
 */
 
+using System;
+
 namespace Hazelcast.Core
 {
     /// <summary>
@@ -51,6 +53,15 @@ namespace Hazelcast.Core
         /// <param name="listener"></param>
         /// <returns>returns registration id.</returns>
         string AddMessageListener(IMessageListener<T> listener);
+
+        /// <summary>Subscribes to this topic.</summary>
+        /// <remarks>
+        ///     Subscribes to this topic. When someone publishes a message on this topic.
+        ///     onMessage() function of the given IMessageListener is called. More than one message listener can be
+        ///     added on one instance.
+        /// </remarks>
+        /// <param name="listener"></param>
+        string AddMessageListener(Action<Message<T>> listener);
 
         /// <summary>Stops receiving messages for the given message listener.</summary>
         /// <remarks>

@@ -34,9 +34,9 @@ namespace Hazelcast.Client.Test
             var map = Client.GetMap<string, string>(name);
             int eventCount = 0;
             var count = 2;
-            var regId = map.AddEntryListener(new EntryListener<string, string>
+            var regId = map.AddEntryListener(new EntryAdapter<string, string>
             {
-                EntryAddedAction = e =>
+                Added = e =>
                 {
                     Interlocked.Increment(ref eventCount);
                 }

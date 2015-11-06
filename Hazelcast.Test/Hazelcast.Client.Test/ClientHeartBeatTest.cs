@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using Hazelcast.Config;
+using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -65,9 +66,9 @@ namespace Hazelcast.Client.Test
             map.Put(key, value);
 
             int eventCount = 0;
-            var regId = map.AddEntryListener(new EntryListener<string, string>
+            var regId = map.AddEntryListener(new EntryAdapter<string, string>
             {
-                EntryAddedAction = e => Interlocked.Increment(ref eventCount)
+                Added = e => Interlocked.Increment(ref eventCount)
             }, key2, false);
             var nodeId = Cluster.NodeIds.First();
 

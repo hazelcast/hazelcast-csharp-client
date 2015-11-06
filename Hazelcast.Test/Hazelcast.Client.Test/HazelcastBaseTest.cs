@@ -123,7 +123,7 @@ namespace Hazelcast.Client.Test
             var resetEvent = new ManualResetEventSlim();
             var regId = Client.GetCluster().AddMembershipListener(new MembershipListener
             {
-                MemberAddedAction = @event => resetEvent.Set()
+                OnMemberAdded = @event => resetEvent.Set()
             });
             int id = Cluster.AddNode();
             Assert.IsTrue(resetEvent.Wait(120 * 1000), "The member did not get added in 120 seconds");
@@ -156,7 +156,7 @@ namespace Hazelcast.Client.Test
             var resetEvent = new ManualResetEventSlim();
             var regId = Client.GetCluster().AddMembershipListener(new MembershipListener
             {
-                MemberRemovedAction = @event => resetEvent.Set()
+                OnMemberRemoved = @event => resetEvent.Set()
             });
             Cluster.RemoveNode(id);
             Assert.IsTrue(resetEvent.Wait(120 * 1000), "The member did not get removed in 120 seconds");
