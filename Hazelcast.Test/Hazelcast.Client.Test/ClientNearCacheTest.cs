@@ -235,7 +235,7 @@ namespace Hazelcast.Client.Test
         {
             var lfuMap = Client.GetMap<object, object>("nearCacheMapLfu-" + TestSupport.RandomString());
             var keys = new List<object>();
-            for (var i = 0; i < MaxSize - 1; i++)
+            for (var i = 0; i < MaxSize; i++)
             {
                 lfuMap.Put(i, i);
                 keys.Add(i);
@@ -249,7 +249,8 @@ namespace Hazelcast.Client.Test
             lfuMap.GetAll(subList);
 
             // add another item, triggering eviction
-            lfuMap.Put(MaxSize + 1, MaxSize + 1);
+            lfuMap.Put(MaxSize, MaxSize);
+            lfuMap.Get(MaxSize);
 
             var cache = GetNearCache(lfuMap);
 
@@ -286,7 +287,7 @@ namespace Hazelcast.Client.Test
         {
             var lruMap = Client.GetMap<object, object>("nearCacheMapLru-" + TestSupport.RandomString());
             var keys = new List<object>();
-            for (var i = 0; i < MaxSize - 1; i++)
+            for (var i = 0; i < MaxSize; i++)
             {
                 lruMap.Put(i, i);
                 keys.Add(i);
@@ -300,7 +301,8 @@ namespace Hazelcast.Client.Test
             lruMap.GetAll(subList);
 
             // add another item, triggering eviction
-            lruMap.Put(MaxSize + 1, MaxSize + 1);
+            lruMap.Put(MaxSize, MaxSize);
+            lruMap.Get(MaxSize);
 
             var cache = GetNearCache(lruMap);
 
@@ -357,30 +359,37 @@ namespace Hazelcast.Client.Test
         private void TestInvalidate(Action<IMap<string,string>, string> invalidatingAction)
         {
             var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
-            map.Put("key", "value");
-
-            var val = map.Get("key");
-            Assert.AreEqual("value", val);
-
-            var clientNearCache = GetNearCache(map);
-
-            Assert.AreEqual(1, clientNearCache.Cache.Count);
-
-            var client = CreateClient();
             try
             {
-                invalidatingAction(client.GetMap<string, string>(map.GetName()), "key");
+                map.Put("key", "value");
+
+                var val = map.Get("key");
+                Assert.AreEqual("value", val);
+
+                var clientNearCache = GetNearCache(map);
+
+                Assert.AreEqual(1, clientNearCache.Cache.Count);
+
+                var client = CreateClient();
+                try
+                {
+                    invalidatingAction(client.GetMap<string, string>(map.GetName()), "key");
+                }
+                finally
+                {
+                    client.Shutdown();
+                }
+
+                TestSupport.AssertTrueEventually(() =>
+                {
+                    Assert.IsFalse(clientNearCache.Cache.ContainsKey(ToKeyData("key")),
+                        "key should have been invalidated");
+                });
             }
             finally
             {
-                client.Shutdown();
+                map.Destroy();
             }
-
-            TestSupport.AssertTrueEventually(() =>
-            {
-                Assert.IsFalse(clientNearCache.Cache.ContainsKey(ToKeyData("key")),
-                    "key should have been invalidated");
-            });
         }
     }
 }
