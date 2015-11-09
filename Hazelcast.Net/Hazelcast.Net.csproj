@@ -329,6 +329,7 @@
     <Compile Include="Hazelcast.Core\IQueue.cs" />
     <Compile Include="Hazelcast.Core\IHSet.cs" />
     <Compile Include="Hazelcast.Core\IRingbuffer.cs" />
+    <Compile Include="Hazelcast.Core\ItemListener.cs" />
     <Compile Include="Hazelcast.Core\ITopic.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalList.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalMap.cs" />
@@ -379,6 +380,7 @@
     <Compile Include="Hazelcast.Core\MapEvent.cs" />
     <Compile Include="Hazelcast.Core\MapOperationType.cs" />
     <Compile Include="Hazelcast.Core\MemberAttributeEvent.cs" />
+    <Compile Include="Hazelcast.Core\MembershipListener.cs" />
     <Compile Include="Hazelcast.Core\OverflowPolicy.cs" />
     <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
     <Compile Include="Hazelcast.IO.Serialization\HeapData.cs" />

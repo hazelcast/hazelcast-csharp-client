@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Test
             MembershipEvent memberAddedEvent = null;
             Client.GetCluster().AddMembershipListener(new MembershipListener()
             {
-                MemberAddedAction = memberAdded =>
+                OnMemberAdded = memberAdded =>
                 {
                     memberAddedEvent = memberAdded;
                     reset.Set();
@@ -79,7 +79,7 @@ namespace Hazelcast.Client.Test
             var node = Cluster.AddNode();
             Client.GetCluster().AddMembershipListener(new MembershipListener()
             {
-                MemberAddedAction = memberAddedEvent =>
+                OnMemberAdded = memberAddedEvent =>
                 {
                     Cluster.RemoveNode(node);
                 }
@@ -90,7 +90,7 @@ namespace Hazelcast.Client.Test
             MembershipEvent memberRemovedEvent = null;
             Client.GetCluster().AddMembershipListener(new MembershipListener
             {
-                MemberRemovedAction = memberRemoved =>
+                OnMemberRemoved = memberRemoved =>
                 {
                     memberRemovedEvent = memberRemoved;
                     reset.Set();

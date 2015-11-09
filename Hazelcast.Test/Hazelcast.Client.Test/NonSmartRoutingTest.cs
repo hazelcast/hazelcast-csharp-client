@@ -21,7 +21,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Config;
-using NUnit.Framework;
+﻿using Hazelcast.Core;
+﻿using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
@@ -76,9 +77,9 @@ namespace Hazelcast.Client.Test
             foreach (var key in keys)
             {
                 var tcs = new TaskCompletionSource<bool>();
-                var id = map.AddEntryListener(new EntryListener<string, string>
+                var id = map.AddEntryListener(new EntryAdapter<string, string>
                 {
-                    EntryAddedAction = e => tcs.SetResult(true)
+                    Added = e => tcs.SetResult(true)
                 }, key, false);
                 registrations.Add(id);
                 tasks.Add(tcs.Task);

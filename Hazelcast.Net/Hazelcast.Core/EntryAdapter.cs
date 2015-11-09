@@ -18,63 +18,68 @@
 
 namespace Hazelcast.Core
 {
-    public class EntryAdapter<K, V> : IEntryListener<K, V>
+    public class EntryAdapter<TKey, TValue> : IEntryListener<TKey, TValue>
     {
-        private readonly Action<EntryEvent<K, V>> fAdded;
-        private readonly Action<EntryEvent<K, V>> fEvicted;
-        private readonly Action<EntryEvent<K, V>> fRemoved;
-        private readonly Action<EntryEvent<K, V>> fUpdated;
-        private readonly Action<MapEvent> fEvictAll;
-        private readonly Action<MapEvent> fClearAll;
+        public Action<EntryEvent<TKey, TValue>> Added { get; set; }
+        public Action<EntryEvent<TKey, TValue>> Evicted { get; set; }
+        public Action<EntryEvent<TKey, TValue>> Removed { get; set; }
+        public Action<EntryEvent<TKey, TValue>> Updated { get; set; }
+        public Action<MapEvent> EvictAll { get; set; }
+        public Action<MapEvent> ClearAll { get; set; }
 
-        public EntryAdapter(Action<EntryEvent<K, V>> fAdded, Action<EntryEvent<K, V>> fRemoved,
-            Action<EntryEvent<K, V>> fUpdated, Action<EntryEvent<K, V>> fEvicted)
+        public EntryAdapter()
         {
-            this.fAdded = fAdded;
-            this.fRemoved = fRemoved;
-            this.fUpdated = fUpdated;
-            this.fEvicted = fEvicted;
+            
+        } 
+
+        public EntryAdapter(Action<EntryEvent<TKey, TValue>> fAdded, Action<EntryEvent<TKey, TValue>> fRemoved,
+            Action<EntryEvent<TKey, TValue>> fUpdated, Action<EntryEvent<TKey, TValue>> fEvicted)
+        {
+            Added = fAdded;
+            Removed = fRemoved;
+            Updated = fUpdated;
+            Evicted = fEvicted;
         }
 
-        public EntryAdapter(Action<EntryEvent<K, V>> fAdded, Action<EntryEvent<K, V>> fRemoved,
-            Action<EntryEvent<K, V>> fUpdated, Action<EntryEvent<K, V>> fEvicted, Action<MapEvent> fEvictAll, Action<MapEvent> fClearAll)
+        public EntryAdapter(Action<EntryEvent<TKey, TValue>> fAdded, Action<EntryEvent<TKey, TValue>> fRemoved,
+            Action<EntryEvent<TKey, TValue>> fUpdated, Action<EntryEvent<TKey, TValue>> fEvicted, Action<MapEvent> fEvictAll, Action<MapEvent> fClearAll)
         {
-            this.fAdded = fAdded;
-            this.fRemoved = fRemoved;
-            this.fUpdated = fUpdated;
-            this.fEvicted = fEvicted;
-            this.fEvictAll = fEvictAll;
-            this.fClearAll = fClearAll;
+            Added = fAdded;
+            Removed = fRemoved;
+            Updated = fUpdated;
+            Evicted = fEvicted;
+            EvictAll = fEvictAll;
+            ClearAll = fClearAll;
         }
 
-        public void EntryAdded(EntryEvent<K, V> @event)
+        public void EntryAdded(EntryEvent<TKey, TValue> @event)
         {
-            fAdded(@event);
+            if (Added != null) Added(@event);
         }
 
-        public void EntryRemoved(EntryEvent<K, V> @event)
+        public void EntryRemoved(EntryEvent<TKey, TValue> @event)
         {
-            fRemoved(@event);
+            if (Removed != null) Removed(@event);
         }
 
-        public void EntryUpdated(EntryEvent<K, V> @event)
+        public void EntryUpdated(EntryEvent<TKey, TValue> @event)
         {
-            fUpdated(@event);
+            if (Updated != null) Updated(@event);
         }
 
-        public void EntryEvicted(EntryEvent<K, V> @event)
+        public void EntryEvicted(EntryEvent<TKey, TValue> @event)
         {
-            fEvicted(@event);
+            if (Evicted != null) Evicted(@event);
         }
 
         public void MapEvicted(MapEvent @event)
         {
-            fEvictAll(@event);
+            if (EvictAll != null) EvictAll(@event);
         }
 
         public void MapCleared(MapEvent @event)
         {
-            fClearAll(@event);
+            if (ClearAll != null) ClearAll(@event);
         }
     }
 }

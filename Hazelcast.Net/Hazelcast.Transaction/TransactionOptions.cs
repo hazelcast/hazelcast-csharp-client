@@ -17,8 +17,6 @@
 using System;
 using System.Text;
 using Hazelcast.Core;
-using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Transaction
 {
@@ -27,15 +25,31 @@ namespace Hazelcast.Transaction
     {
         public enum TransactionType
         {
+            /// <summary>The two phase commit is separated in 2 parts.</summary>
+            /// <remarks>
+            /// The two phase commit is separated in 2 parts. First it tries to execute the prepare; if there are any conflicts,
+            /// the prepare will fail. Once the prepare has succeeded, the commit (writing the changes) can be executed.
+            /// Hazelcast also provides three phase transaction by automatically copying the backlog to another member so that in case
+            /// of failure during a commit, another member can continue the commit from backup. For more information see the
+            /// <see cref="TransactionOptions.SetDurability(int)"/>
+            /// </remarks>
             TwoPhase = 1,
             [Obsolete("Use OnePhase instead")] Local = 2,
+
+            /// <summary>The one phase transaction executes a transaction using a single step at the end; committing the changes.</summary>
+            /// <remarks>
+            /// The one phase transaction executes a transaction using a single step at the end; committing the changes. There
+            /// is no prepare of the transactions, so conflicts are not detected. If there is a conflict, then when the transaction
+            /// commits the changes, some of the changes are written and others are not; leaving the system in a potentially permanent
+            /// inconsistent state.
+            /// </remarks>
             OnePhase = 2
         }
 
-        private int durability;
-        private long timeoutMillis;
+        private int _durability;
+        private long _timeoutMillis;
 
-        private TransactionType transactionType;
+        private TransactionType _transactionType;
 
         /// <summary>Creates a new default configured TransactionsOptions.</summary>
         /// <remarks>
@@ -55,7 +69,7 @@ namespace Hazelcast.Transaction
         /// <returns>the TransactionType.</returns>
         public TransactionType GetTransactionType()
         {
-            return transactionType;
+            return _transactionType;
         }
 
         /// <summary>
@@ -72,7 +86,7 @@ namespace Hazelcast.Transaction
         /// <seealso cref="SetDurability(int)">SetDurability(int)</seealso>
         public TransactionOptions SetTransactionType(TransactionType transactionType)
         {
-            this.transactionType = transactionType;
+            _transactionType = transactionType;
             return this;
         }
 
@@ -82,7 +96,7 @@ namespace Hazelcast.Transaction
         /// <seealso cref="SetTimeout(long, TimeUnit)">SetTimeout(long, TimeUnit)</seealso>
         public long GetTimeoutMillis()
         {
-            return timeoutMillis;
+            return _timeoutMillis;
         }
 
         /// <summary>Sets the timeout.</summary>
@@ -102,7 +116,7 @@ namespace Hazelcast.Transaction
             {
                 throw new ArgumentException("Timeout must be positive!");
             }
-            timeoutMillis = timeUnit.ToMillis(timeout);
+            _timeoutMillis = timeUnit.ToMillis(timeout);
             return this;
         }
 
@@ -112,7 +126,7 @@ namespace Hazelcast.Transaction
         /// <seealso cref="SetDurability(int)">SetDurability(int)</seealso>
         public int GetDurability()
         {
-            return durability;
+            return _durability;
         }
 
         /// <summary>Sets the transaction durability.</summary>
@@ -132,7 +146,7 @@ namespace Hazelcast.Transaction
             {
                 throw new ArgumentException("Durability cannot be negative!");
             }
-            this.durability = durability;
+            _durability = durability;
             return this;
         }
 
@@ -149,9 +163,9 @@ namespace Hazelcast.Transaction
         {
             var sb = new StringBuilder();
             sb.Append("TransactionOptions");
-            sb.Append("{timeoutMillis=").Append(timeoutMillis);
-            sb.Append(", durability=").Append(durability);
-            sb.Append(", txType=").Append((int) transactionType);
+            sb.Append("{timeoutMillis=").Append(_timeoutMillis);
+            sb.Append(", durability=").Append(_durability);
+            sb.Append(", txType=").Append((int) _transactionType);
             sb.Append('}');
             return sb.ToString();
         }

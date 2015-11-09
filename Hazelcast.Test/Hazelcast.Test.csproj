@@ -190,7 +190,6 @@
     <Compile Include="Hazelcast.Client.Test.Serialization\RawDataPortable.cs" />
     <Compile Include="Hazelcast.Client.Test\NonSmartRoutingTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ProcessUtil.cs" />
-    <Compile Include="Hazelcast.Client.Test\TestListenerSupport.cs" />
     <Compile Include="Hazelcast.Client.Test\TestSetup.cs" />
     <Compile Include="Hazelcast.Client.Test\TestSupport.cs" />
     <Compile Include="Program.cs" />

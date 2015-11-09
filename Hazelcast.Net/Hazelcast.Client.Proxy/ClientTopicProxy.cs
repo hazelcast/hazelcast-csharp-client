@@ -24,7 +24,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    internal class ClientTopicProxy<E> : ClientProxy, ITopic<E>
+    internal class ClientTopicProxy<T> : ClientProxy, ITopic<T>
     {
         private volatile IData key;
 
@@ -32,19 +32,24 @@ namespace Hazelcast.Client.Proxy
         {
         }
 
-        public virtual void Publish(E message)
+        public virtual void Publish(T message)
         {
             IData data = ToData(message);
             var request = TopicPublishCodec.EncodeRequest(GetName(), data);
             Invoke(request);
         }
 
-        public virtual string AddMessageListener(IMessageListener<E> listener)
+        public virtual string AddMessageListener(IMessageListener<T> listener)
+        {
+            return AddMessageListener(listener.OnMessage);
+        }
+
+        public virtual string AddMessageListener(Action<Message<T>> listener)
         {
             var request = TopicAddMessageListenerCodec.EncodeRequest(GetName(), false);
             DistributedEventHandler handler = m => TopicAddMessageListenerCodec.AbstractEventHandler.Handle(m,
                 (item, time, uuid) => HandleMessageListener(item, time, uuid, listener));
-            return Listen(request, m => TopicAddMessageListenerCodec.DecodeResponse(m).response, 
+            return Listen(request, m => TopicAddMessageListenerCodec.DecodeResponse(m).response,
                 GetKey(), handler);
         }
 
@@ -59,17 +64,17 @@ namespace Hazelcast.Client.Proxy
             return base.Invoke(request, GetKey());
         }
 
-        protected override T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
+        protected override TT Invoke<TT>(IClientMessage request, Func<IClientMessage, TT> decodeResponse)
         {
             return base.Invoke(request, GetKey(), decodeResponse);
         }
 
-        private void HandleMessageListener(IData item, long time, string uuid, IMessageListener<E> listener)
+        private void HandleMessageListener(IData item, long time, string uuid, Action<Message<T>> listener)
         {
-            var messageObject = ToObject<E>(item);
+            var messageObject = ToObject<T>(item);
             IMember member = GetContext().GetClusterService().GetMember(uuid);
-            var message = new Message<E>(GetName(), messageObject, time, member);
-            listener.OnMessage(message);
+            var message = new Message<T>(GetName(), messageObject, time, member);
+            listener(message);
         }
 
         private IData GetKey()
