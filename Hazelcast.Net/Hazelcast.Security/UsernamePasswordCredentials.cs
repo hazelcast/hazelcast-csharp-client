@@ -1,22 +1,19 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Text;
-using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Security
 {
@@ -29,7 +26,7 @@ namespace Hazelcast.Security
     [Serializable]
     internal class UsernamePasswordCredentials : AbstractCredentials
     {
-        private byte[] password;
+        private byte[] _password;
 
         public UsernamePasswordCredentials()
         {
@@ -37,7 +34,12 @@ namespace Hazelcast.Security
 
         public UsernamePasswordCredentials(string username, string password) : base(username)
         {
-            this.password = Encoding.UTF8.GetBytes(password);
+            _password = Encoding.UTF8.GetBytes(password);
+        }
+
+        public virtual string GetPassword()
+        {
+            return _password == null ? string.Empty : Encoding.UTF8.GetString(_password);
         }
 
         public virtual string GetUsername()
@@ -45,19 +47,14 @@ namespace Hazelcast.Security
             return GetPrincipal();
         }
 
-        public virtual string GetPassword()
+        public virtual void SetPassword(string password)
         {
-            return password == null ? string.Empty : Encoding.UTF8.GetString(password);
+            _password = Encoding.UTF8.GetBytes(password);
         }
 
         public virtual void SetUsername(string username)
         {
             SetPrincipal(username);
-        }
-
-        public virtual void SetPassword(string password)
-        {
-            this.password = Encoding.UTF8.GetBytes(password);
         }
 
         public override string ToString()

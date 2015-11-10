@@ -1,60 +1,53 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-using Hazelcast.Client.Protocol;
+using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using System.Collections.Generic;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
     internal sealed class TransactionalMapKeySetWithPredicateCodec
     {
-
-        public static readonly TransactionalMapMessageType RequestType = TransactionalMapMessageType.TransactionalMapKeySetWithPredicate;
         public const int ResponseType = 113;
         public const bool Retryable = false;
 
-        //************************ REQUEST *************************//
+        public static readonly TransactionalMapMessageType RequestType =
+            TransactionalMapMessageType.TransactionalMapKeySetWithPredicate;
 
-        public class RequestParameters
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
-            public static readonly TransactionalMapMessageType TYPE = RequestType;
-            public string name;
-            public string txnId;
-            public long threadId;
-            public IData predicate;
-
-            public static int CalculateDataSize(string name, string txnId, long threadId, IData predicate)
+            var parameters = new ResponseParameters();
+            ISet<IData> set = null;
+            var set_size = clientMessage.GetInt();
+            set = new HashSet<IData>();
+            for (var set_index = 0; set_index < set_size; set_index++)
             {
-                int dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(txnId);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += ParameterUtil.CalculateDataSize(predicate);
-                return dataSize;
+                IData set_item;
+                set_item = clientMessage.GetData();
+                set.Add(set_item);
             }
+            parameters.set = set;
+            return parameters;
         }
 
         public static ClientMessage EncodeRequest(string name, string txnId, long threadId, IData predicate)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize(name, txnId, threadId, predicate);
-            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int)RequestType);
+            var requiredDataSize = RequestParameters.CalculateDataSize(name, txnId, threadId, predicate);
+            var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int) RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
             clientMessage.Set(txnId);
@@ -64,6 +57,27 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
+        //************************ REQUEST *************************//
+
+        public class RequestParameters
+        {
+            public static readonly TransactionalMapMessageType TYPE = RequestType;
+            public string name;
+            public IData predicate;
+            public long threadId;
+            public string txnId;
+
+            public static int CalculateDataSize(string name, string txnId, long threadId, IData predicate)
+            {
+                var dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += ParameterUtil.CalculateDataSize(txnId);
+                dataSize += Bits.LongSizeInBytes;
+                dataSize += ParameterUtil.CalculateDataSize(predicate);
+                return dataSize;
+            }
+        }
+
         //************************ RESPONSE *************************//
 
 
@@ -71,21 +85,5 @@ namespace Hazelcast.Client.Protocol.Codec
         {
             public ISet<IData> set;
         }
-
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
-        {
-            ResponseParameters parameters = new ResponseParameters();
-            ISet<IData> set = null;
-            int set_size = clientMessage.GetInt();
-            set = new HashSet<IData>();
-            for (int set_index = 0; set_index<set_size; set_index++) {
-                IData set_item;
-            set_item = clientMessage.GetData();
-                set.Add(set_item);
-            }
-            parameters.set = set;
-            return parameters;
-        }
-
     }
 }

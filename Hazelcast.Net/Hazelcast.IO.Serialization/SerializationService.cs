@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
@@ -29,31 +27,33 @@ namespace Hazelcast.IO.Serialization
         public const byte SerializerVersion = 1;
         private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersLength;
 
-        private static readonly IPartitioningStrategy emptyPartitioningStrategy = new EmptyPartitioningStrategy();
-        private readonly ISerializerAdapter[] constantTypeIds = new ISerializerAdapter[ConstantSerializersSize];
+        private static readonly IPartitioningStrategy TheEmptyPartitioningStrategy = new EmptyPartitioningStrategy();
 
-        private readonly Dictionary<Type, ISerializerAdapter> constantTypesMap =
+        private readonly ISerializerAdapter[] _constantTypeIds = new ISerializerAdapter[ConstantSerializersSize];
+
+        private readonly Dictionary<Type, ISerializerAdapter> _constantTypesMap =
             new Dictionary<Type, ISerializerAdapter>(ConstantSerializersSize);
 
-        private readonly ThreadLocalOutputCache dataOutputQueue;
-        private readonly ISerializerAdapter dataSerializerAdapter;
-        private readonly AtomicReference<ISerializerAdapter> global = new AtomicReference<ISerializerAdapter>();
-        protected internal readonly IPartitioningStrategy globalPartitioningStrategy;
+        private readonly ThreadLocalOutputCache _dataOutputQueue;
+        private readonly ISerializerAdapter _dataSerializerAdapter;
+        private readonly AtomicReference<ISerializerAdapter> _global = new AtomicReference<ISerializerAdapter>();
 
-        private readonly ConcurrentDictionary<int, ISerializerAdapter> idMap =
+        private readonly ConcurrentDictionary<int, ISerializerAdapter> _idMap =
             new ConcurrentDictionary<int, ISerializerAdapter>();
 
-        protected internal readonly IInputOutputFactory inputOutputFactory;
-        protected internal readonly IManagedContext managedContext;
-        private readonly int outputBufferSize;
-        protected internal readonly PortableContext portableContext;
-        private readonly PortableSerializer portableSerializer;
-        private readonly ISerializerAdapter portableSerializerAdapter;
+        private readonly IInputOutputFactory _inputOutputFactory;
+        private readonly IManagedContext _managedContext;
+        private readonly int _outputBufferSize;
+        private readonly PortableContext _portableContext;
+        private readonly PortableSerializer _portableSerializer;
+        private readonly ISerializerAdapter _portableSerializerAdapter;
 
-        private readonly ConcurrentDictionary<Type, ISerializerAdapter> typeMap =
+        private readonly ConcurrentDictionary<Type, ISerializerAdapter> _typeMap =
             new ConcurrentDictionary<Type, ISerializerAdapter>();
 
-        private volatile bool active = true;
+        protected internal readonly IPartitioningStrategy GlobalPartitioningStrategy;
+
+        private volatile bool _isActive = true;
 
         internal SerializationService(IInputOutputFactory inputOutputFactory, int version,
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
@@ -62,16 +62,16 @@ namespace Hazelcast.IO.Serialization
             IPartitioningStrategy partitionStrategy, int initialOutputBufferSize, bool enableCompression,
             bool enableSharedObject)
         {
-            this.inputOutputFactory = inputOutputFactory;
-            this.managedContext = managedContext;
-            globalPartitioningStrategy = partitionStrategy;
-            outputBufferSize = initialOutputBufferSize;
-            dataOutputQueue = new ThreadLocalOutputCache(this);
-            portableContext = new PortableContext(this, version);
-            dataSerializerAdapter =
+            _inputOutputFactory = inputOutputFactory;
+            _managedContext = managedContext;
+            GlobalPartitioningStrategy = partitionStrategy;
+            _outputBufferSize = initialOutputBufferSize;
+            _dataOutputQueue = new ThreadLocalOutputCache(this);
+            _portableContext = new PortableContext(this, version);
+            _dataSerializerAdapter =
                 CreateSerializerAdapterByGeneric<IDataSerializable>(new DataSerializer(dataSerializableFactories));
-            portableSerializer = new PortableSerializer(portableContext, portableFactories);
-            portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(portableSerializer);
+            _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
+            _portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(_portableSerializer);
             RegisterConstantSerializers();
             RegisterDefaultSerializers();
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
@@ -79,7 +79,7 @@ namespace Hazelcast.IO.Serialization
 
         public IData ToData(object obj)
         {
-            return ToData(obj, globalPartitioningStrategy);
+            return ToData(obj, GlobalPartitioningStrategy);
         }
 
         public IData ToData(object obj, IPartitioningStrategy strategy)
@@ -130,7 +130,7 @@ namespace Hazelcast.IO.Serialization
                 var serializer = SerializerFor(typeId);
                 if (serializer == null)
                 {
-                    if (active)
+                    if (_isActive)
                     {
                         throw new HazelcastSerializationException("There is no suitable de-serializer for type " +
                                                                   typeId);
@@ -138,9 +138,9 @@ namespace Hazelcast.IO.Serialization
                     throw new HazelcastInstanceNotActiveException();
                 }
                 var obj = serializer.Read(@in);
-                if (managedContext != null)
+                if (_managedContext != null)
                 {
-                    obj = managedContext.Initialize(obj);
+                    obj = _managedContext.Initialize(obj);
                 }
                 return (T) obj;
             }
@@ -197,7 +197,7 @@ namespace Hazelcast.IO.Serialization
                 var serializer = SerializerFor(typeId);
                 if (serializer == null)
                 {
-                    if (active)
+                    if (_isActive)
                     {
                         throw new HazelcastSerializationException("There is no suitable de-serializer for type "
                                                                   + typeId);
@@ -205,9 +205,9 @@ namespace Hazelcast.IO.Serialization
                     throw new HazelcastInstanceNotActiveException();
                 }
                 var obj = serializer.Read(input);
-                if (managedContext != null)
+                if (_managedContext != null)
                 {
-                    obj = managedContext.Initialize(obj);
+                    obj = _managedContext.Initialize(obj);
                 }
                 return (T) obj;
             }
@@ -223,22 +223,22 @@ namespace Hazelcast.IO.Serialization
 
         public IBufferObjectDataInput CreateObjectDataInput(byte[] data)
         {
-            return inputOutputFactory.CreateInput(data, this);
+            return _inputOutputFactory.CreateInput(data, this);
         }
 
         public IBufferObjectDataInput CreateObjectDataInput(IData data)
         {
-            return inputOutputFactory.CreateInput(data, this);
+            return _inputOutputFactory.CreateInput(data, this);
         }
 
         public IBufferObjectDataOutput CreateObjectDataOutput(int size)
         {
-            return inputOutputFactory.CreateOutput(size, this);
+            return _inputOutputFactory.CreateOutput(size, this);
         }
 
         public virtual IPortableContext GetPortableContext()
         {
-            return portableContext;
+            return _portableContext;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -249,36 +249,36 @@ namespace Hazelcast.IO.Serialization
                 throw new ArgumentException("Given data is not Portable! -> " + data.GetTypeId());
             }
             var input = CreateObjectDataInput(data);
-            return portableSerializer.CreateReader(input);
+            return _portableSerializer.CreateReader(input);
         }
 
         public virtual void Destroy()
         {
-            active = false;
-            foreach (var serializer in typeMap.Values)
+            _isActive = false;
+            foreach (var serializer in _typeMap.Values)
             {
                 serializer.Destroy();
             }
-            typeMap.Clear();
-            idMap.Clear();
-            global.Set(null);
-            constantTypesMap.Clear();
-            dataOutputQueue.Clear();
+            _typeMap.Clear();
+            _idMap.Clear();
+            _global.Set(null);
+            _constantTypesMap.Clear();
+            _dataOutputQueue.Clear();
         }
 
         public IManagedContext GetManagedContext()
         {
-            return managedContext;
+            return _managedContext;
         }
 
         public virtual ByteOrder GetByteOrder()
         {
-            return inputOutputFactory.GetByteOrder();
+            return _inputOutputFactory.GetByteOrder();
         }
 
         public virtual bool IsActive()
         {
-            return active;
+            return _isActive;
         }
 
         public void Register(Type type, ISerializer serializer)
@@ -298,14 +298,14 @@ namespace Hazelcast.IO.Serialization
         public void RegisterGlobal(ISerializer serializer)
         {
             var adapter = CreateSerializerAdapterByGeneric<object>(serializer);
-            if (!global.CompareAndSet(null, adapter))
+            if (!_global.CompareAndSet(null, adapter))
             {
                 throw new InvalidOperationException("Global serializer is already registered!");
             }
-            var current = idMap.GetOrAdd(serializer.GetTypeId(), adapter);
+            var current = _idMap.GetOrAdd(serializer.GetTypeId(), adapter);
             if (current != null && current.GetImpl().GetType() != adapter.GetImpl().GetType())
             {
-                global.CompareAndSet(adapter, null);
+                _global.CompareAndSet(adapter, null);
                 throw new InvalidOperationException("Serializer [" + current.GetImpl() +
                                                     "] has been already registered for type-id: "
                                                     + serializer.GetTypeId());
@@ -315,13 +315,13 @@ namespace Hazelcast.IO.Serialization
         protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)
         {
             var partitionHash = 0;
-            var partitioningStrategy = strategy ?? globalPartitioningStrategy;
+            var partitioningStrategy = strategy ?? GlobalPartitioningStrategy;
             if (partitioningStrategy != null)
             {
                 var pk = partitioningStrategy.GetPartitionKey(obj);
                 if (pk != null && pk != obj)
                 {
-                    var partitionKey = ToData(pk, emptyPartitioningStrategy);
+                    var partitionKey = ToData(pk, TheEmptyPartitioningStrategy);
                     partitionHash = partitionKey == null ? 0 : partitionKey.GetPartitionHash();
                 }
             }
@@ -330,12 +330,12 @@ namespace Hazelcast.IO.Serialization
 
         protected internal IBufferObjectDataOutput Pop()
         {
-            return dataOutputQueue.Pop();
+            return _dataOutputQueue.Pop();
         }
 
         protected internal void Push(IBufferObjectDataOutput output)
         {
-            dataOutputQueue.Push(output);
+            _dataOutputQueue.Push(output);
         }
 
         protected internal ISerializerAdapter SerializerFor(int typeId)
@@ -345,12 +345,17 @@ namespace Hazelcast.IO.Serialization
                 var index = IndexForDefaultType(typeId);
                 if (index < ConstantSerializersSize)
                 {
-                    return constantTypeIds[index];
+                    return _constantTypeIds[index];
                 }
             }
             ISerializerAdapter result;
-            idMap.TryGetValue(typeId, out result);
-            return idMap.TryGetValue(typeId, out result) ? result : default(ISerializerAdapter);
+            _idMap.TryGetValue(typeId, out result);
+            return _idMap.TryGetValue(typeId, out result) ? result : default(ISerializerAdapter);
+        }
+
+        internal PortableSerializer GetPortableSerializer()
+        {
+            return _portableSerializer;
         }
 
         internal static bool IsNullData(IData data)
@@ -399,9 +404,9 @@ namespace Hazelcast.IO.Serialization
             var types = type.GetInterfaces();
             if (types.Length > 0)
             {
-                foreach (var _type in types)
+                foreach (var t in types)
                 {
-                    interfaces.Add(_type);
+                    interfaces.Add(t);
                 }
                 foreach (var cl in types)
                 {
@@ -432,7 +437,7 @@ namespace Hazelcast.IO.Serialization
         private ISerializerAdapter LookupSerializer(Type type)
         {
             ISerializerAdapter serializer;
-            typeMap.TryGetValue(type, out serializer);
+            _typeMap.TryGetValue(type, out serializer);
             if (serializer == null)
             {
                 // look for super classes
@@ -463,7 +468,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 if (serializer == null)
                 {
-                    serializer = global.Get();
+                    serializer = _global.Get();
                     if (serializer != null)
                     {
                         SafeRegister(type, serializer);
@@ -487,7 +492,7 @@ namespace Hazelcast.IO.Serialization
                     if (nestedCd != null)
                     {
                         RegisterClassDefinition(nestedCd, classDefMap, checkClassDefErrors);
-                        portableContext.RegisterClassDefinition(nestedCd);
+                        _portableContext.RegisterClassDefinition(nestedCd);
                     }
                     else
                     {
@@ -499,7 +504,7 @@ namespace Hazelcast.IO.Serialization
                     }
                 }
             }
-            portableContext.RegisterClassDefinition(cd);
+            _portableContext.RegisterClassDefinition(cd);
         }
 
         private void RegisterClassDefinitions(ICollection<IClassDefinition> classDefinitions, bool checkClassDefErrors)
@@ -528,14 +533,14 @@ namespace Hazelcast.IO.Serialization
 
         private void RegisterConstant(Type type, ISerializerAdapter serializer)
         {
-            constantTypesMap.Add(type, serializer);
-            constantTypeIds[IndexForDefaultType(serializer.GetTypeId())] = serializer;
+            _constantTypesMap.Add(type, serializer);
+            _constantTypeIds[IndexForDefaultType(serializer.GetTypeId())] = serializer;
         }
 
         private void RegisterConstantSerializers()
         {
-            RegisterConstant(typeof (IDataSerializable), dataSerializerAdapter);
-            RegisterConstant(typeof (IPortable), portableSerializerAdapter);
+            RegisterConstant(typeof (IDataSerializable), _dataSerializerAdapter);
+            RegisterConstant(typeof (IPortable), _portableSerializerAdapter);
             RegisterConstant(typeof (byte), new ConstantSerializers.ByteSerializer());
             RegisterConstant(typeof (bool), new ConstantSerializers.BooleanSerializer());
             RegisterConstant(typeof (char), new ConstantSerializers.CharSerializer());
@@ -564,7 +569,7 @@ namespace Hazelcast.IO.Serialization
         private ISerializerAdapter RegisterFromSuperType(Type type, Type superType)
         {
             ISerializerAdapter serializer;
-            typeMap.TryGetValue(superType, out serializer);
+            _typeMap.TryGetValue(superType, out serializer);
             if (serializer != null)
             {
                 SafeRegister(type, serializer);
@@ -574,17 +579,17 @@ namespace Hazelcast.IO.Serialization
 
         private void SafeRegister(Type type, ISerializerAdapter serializer)
         {
-            if (constantTypesMap.ContainsKey(type))
+            if (_constantTypesMap.ContainsKey(type))
             {
                 throw new ArgumentException("[" + type + "] serializer cannot be overridden!");
             }
-            var current = typeMap.GetOrAdd(type, serializer);
+            var current = _typeMap.GetOrAdd(type, serializer);
             if (current != null && current.GetImpl().GetType() != serializer.GetImpl().GetType())
             {
                 throw new InvalidOperationException("Serializer[" + current.GetImpl() +
                                                     "] has been already registered for type: " + type);
             }
-            current = idMap.GetOrAdd(serializer.GetTypeId(), serializer);
+            current = _idMap.GetOrAdd(serializer.GetTypeId(), serializer);
             if (current != null && current.GetImpl().GetType() != serializer.GetImpl().GetType())
             {
                 throw new InvalidOperationException("Serializer [" + current.GetImpl() +
@@ -597,21 +602,21 @@ namespace Hazelcast.IO.Serialization
         {
             if (typeof (IDataSerializable).IsAssignableFrom(type))
             {
-                return dataSerializerAdapter;
+                return _dataSerializerAdapter;
             }
             if (typeof (IPortable).IsAssignableFrom(type))
             {
-                return portableSerializerAdapter;
+                return _portableSerializerAdapter;
             }
             ISerializerAdapter serializer;
-            if (constantTypesMap.TryGetValue(type, out serializer) && serializer != null)
+            if (_constantTypesMap.TryGetValue(type, out serializer) && serializer != null)
             {
                 return serializer;
             }
             serializer = LookupSerializer(type);
             if (serializer == null)
             {
-                if (active)
+                if (_isActive)
                 {
                     throw new HazelcastSerializationException("There is no suitable serializer for " + type);
                 }
@@ -622,44 +627,44 @@ namespace Hazelcast.IO.Serialization
 
         private sealed class ThreadLocalOutputCache
         {
-            private readonly int bufferSize;
-            private readonly ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>> map;
-            private readonly SerializationService serializationService;
+            private readonly int _bufferSize;
+            private readonly ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>> _map;
+            private readonly SerializationService _serializationService;
 
             internal ThreadLocalOutputCache(SerializationService serializationService)
             {
-                this.serializationService = serializationService;
-                bufferSize = serializationService.outputBufferSize;
+                _serializationService = serializationService;
+                _bufferSize = serializationService._outputBufferSize;
                 var initialCapacity = Environment.ProcessorCount;
-                map = new ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>>(1, initialCapacity);
+                _map = new ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>>(1, initialCapacity);
             }
 
             internal void Clear()
             {
-                map.Clear();
+                _map.Clear();
             }
 
             internal IBufferObjectDataOutput Pop()
             {
                 ConcurrentQueue<IBufferObjectDataOutput> outputQueue;
                 var t = Thread.CurrentThread;
-                map.TryGetValue(t, out outputQueue);
+                _map.TryGetValue(t, out outputQueue);
                 if (outputQueue == null)
                 {
                     outputQueue = new ConcurrentQueue<IBufferObjectDataOutput>();
-                    map.TryAdd(t, outputQueue);
+                    _map.TryAdd(t, outputQueue);
                 }
                 IBufferObjectDataOutput output;
                 outputQueue.TryDequeue(out output);
-                return output ?? serializationService.CreateObjectDataOutput(bufferSize);
+                return output ?? _serializationService.CreateObjectDataOutput(_bufferSize);
             }
 
             internal void Push(IBufferObjectDataOutput output)
             {
                 if (output == null) return;
                 output.Clear();
-                ConcurrentQueue<IBufferObjectDataOutput> outputQueue = null;
-                map.TryGetValue(Thread.CurrentThread, out outputQueue);
+                ConcurrentQueue<IBufferObjectDataOutput> outputQueue;
+                _map.TryGetValue(Thread.CurrentThread, out outputQueue);
                 if (outputQueue == null)
                 {
                     IOUtil.CloseResource(output);
@@ -682,11 +687,6 @@ namespace Hazelcast.IO.Serialization
             {
                 return null;
             }
-        }
-
-        internal PortableSerializer GetPortableSerializer()
-        {
-            return portableSerializer;
         }
     }
 }

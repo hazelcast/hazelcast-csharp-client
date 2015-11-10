@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -32,103 +30,54 @@ namespace Hazelcast.IO.Serialization
     /// </seealso>
     public sealed class ClassDefinitionBuilder
     {
-        private readonly int classId;
-        private readonly int factoryId;
+        private readonly int _classId;
+        private readonly int _factoryId;
 
-        private readonly IList<FieldDefinition> fieldDefinitions = new List<FieldDefinition>();
-        private readonly int version;
+        private readonly IList<FieldDefinition> _fieldDefinitions = new List<FieldDefinition>();
+        private readonly int _version;
 
-        private bool done;
-        private int index;
+        private bool _done;
+        private int _index;
 
         public ClassDefinitionBuilder(int factoryId, int classId)
         {
-            this.factoryId = factoryId;
-            this.classId = classId;
-            version = -1;
+            _factoryId = factoryId;
+            _classId = classId;
+            _version = -1;
         }
 
         public ClassDefinitionBuilder(int factoryId, int classId, int version)
         {
-            this.factoryId = factoryId;
-            this.classId = classId;
-            this.version = version;
+            _factoryId = factoryId;
+            _classId = classId;
+            _version = version;
         }
 
-        public ClassDefinitionBuilder AddIntField(string fieldName)
+        public ClassDefinitionBuilder AddBooleanArrayField(string fieldName)
         {
             Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Int));
-            return this;
-        }
-
-        public ClassDefinitionBuilder AddLongField(string fieldName)
-        {
-            Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Long));
-            return this;
-        }
-
-        public ClassDefinitionBuilder AddUTFField(string fieldName)
-        {
-            Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Utf));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.BooleanArray));
             return this;
         }
 
         public ClassDefinitionBuilder AddBooleanField(string fieldName)
         {
             Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Boolean));
-            return this;
-        }
-
-        public ClassDefinitionBuilder AddByteField(string fieldName)
-        {
-            Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Byte));
-            return this;
-        }
-
-        public ClassDefinitionBuilder AddCharField(string fieldName)
-        {
-            Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Char));
-            return this;
-        }
-
-        public ClassDefinitionBuilder AddDoubleField(string fieldName)
-        {
-            Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Double));
-            return this;
-        }
-
-        public ClassDefinitionBuilder AddFloatField(string fieldName)
-        {
-            Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Float));
-            return this;
-        }
-
-        public ClassDefinitionBuilder AddShortField(string fieldName)
-        {
-            Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Short));
-            return this;
-        }
-
-        public ClassDefinitionBuilder AddBooleanArrayField(string fieldName)
-        {
-            Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.BooleanArray));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Boolean));
             return this;
         }
 
         public ClassDefinitionBuilder AddByteArrayField(string fieldName)
         {
             Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.ByteArray));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.ByteArray));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddByteField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Byte));
             return this;
         }
 
@@ -136,61 +85,70 @@ namespace Hazelcast.IO.Serialization
             fieldName)
         {
             Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.CharArray));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.CharArray));
             return this;
         }
 
-        public ClassDefinitionBuilder AddIntArrayField(string fieldName)
+        public ClassDefinitionBuilder AddCharField(string fieldName)
         {
             Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.IntArray));
-            return this;
-        }
-
-        public ClassDefinitionBuilder AddLongArrayField(string fieldName)
-        {
-            Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.LongArray));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Char));
             return this;
         }
 
         public ClassDefinitionBuilder AddDoubleArrayField(string fieldName)
         {
             Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.DoubleArray));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.DoubleArray));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddDoubleField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Double));
             return this;
         }
 
         public ClassDefinitionBuilder AddFloatArrayField(string fieldName)
         {
             Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.FloatArray));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.FloatArray));
             return this;
         }
 
-        public ClassDefinitionBuilder AddShortArrayField(string fieldName)
+        public ClassDefinitionBuilder AddFloatField(string fieldName)
         {
             Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.ShortArray));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Float));
             return this;
         }
 
-        public ClassDefinitionBuilder AddUTFArrayField(string fieldName)
+        public ClassDefinitionBuilder AddIntArrayField(string fieldName)
         {
             Check();
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.UtfArray));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.IntArray));
             return this;
         }
 
-        public ClassDefinitionBuilder AddPortableField(string fieldName, IClassDefinition def)
+        public ClassDefinitionBuilder AddIntField(string fieldName)
         {
             Check();
-            if (def.GetClassId() == 0)
-            {
-                throw new ArgumentException("Portable class id cannot be zero!");
-            }
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.Portable, def.GetFactoryId(),
-                def.GetClassId()));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Int));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddLongArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.LongArray));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddLongField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Long));
             return this;
         }
 
@@ -201,55 +159,95 @@ namespace Hazelcast.IO.Serialization
             {
                 throw new ArgumentException("Portable class id cannot be zero!");
             }
-            fieldDefinitions.Add(new FieldDefinition(index++, fieldName, FieldType.PortableArray, def.GetFactoryId(),
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.PortableArray, def.GetFactoryId(),
                 def.GetClassId()));
             return this;
         }
 
-        internal ClassDefinitionBuilder AddField(FieldDefinition fieldDefinition)
+        public ClassDefinitionBuilder AddPortableField(string fieldName, IClassDefinition def)
         {
             Check();
-            if (index != fieldDefinition.GetIndex())
+            if (def.GetClassId() == 0)
             {
-                throw new ArgumentException("Invalid field index");
+                throw new ArgumentException("Portable class id cannot be zero!");
             }
-            index++;
-            fieldDefinitions.Add(fieldDefinition);
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Portable, def.GetFactoryId(),
+                def.GetClassId()));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddShortArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.ShortArray));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddShortField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Short));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddUTFArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.UtfArray));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddUTFField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Utf));
             return this;
         }
 
         public IClassDefinition Build()
         {
-            done = true;
-            var cd = new ClassDefinition(factoryId, classId, version);
-            foreach (FieldDefinition fd in fieldDefinitions)
+            _done = true;
+            var cd = new ClassDefinition(_factoryId, _classId, _version);
+            foreach (var fd in _fieldDefinitions)
             {
                 cd.AddFieldDef(fd);
             }
             return cd;
         }
 
-        private void Check()
+        public int GetClassId()
         {
-            if (done)
-            {
-                throw new HazelcastSerializationException("ClassDefinition is already built for " + classId);
-            }
+            return _classId;
         }
 
         public int GetFactoryId()
         {
-            return factoryId;
-        }
-
-        public int GetClassId()
-        {
-            return classId;
+            return _factoryId;
         }
 
         public int GetVersion()
         {
-            return version;
+            return _version;
+        }
+
+        internal ClassDefinitionBuilder AddField(FieldDefinition fieldDefinition)
+        {
+            Check();
+            if (_index != fieldDefinition.GetIndex())
+            {
+                throw new ArgumentException("Invalid field index");
+            }
+            _index++;
+            _fieldDefinitions.Add(fieldDefinition);
+            return this;
+        }
+
+        private void Check()
+        {
+            if (_done)
+            {
+                throw new HazelcastSerializationException("ClassDefinition is already built for " + _classId);
+            }
         }
     }
 }

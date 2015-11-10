@@ -1,24 +1,21 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
-using Hazelcast.IO;
 using Hazelcast.Transaction;
 
 namespace Hazelcast.Client.Proxy
@@ -27,17 +24,17 @@ namespace Hazelcast.Client.Proxy
     {
         internal const int TxOwnerNodeTryCount = 5;
 
-        internal readonly HazelcastClient Client;
+        private readonly IDictionary<TransactionalObjectKey, ITransactionalObject> _txnObjectMap =
+            new Dictionary<TransactionalObjectKey, ITransactionalObject>(2);
 
-        internal IMember TxnOwnerNode;
+        internal readonly HazelcastClient Client;
         internal readonly TransactionProxy Transaction;
 
-        private readonly IDictionary<TransactionalObjectKey, ITransactionalObject> txnObjectMap =
-            new Dictionary<TransactionalObjectKey, ITransactionalObject>(2);
+        internal IMember TxnOwnerNode;
 
         public TransactionContextProxy(HazelcastClient client, TransactionOptions options)
         {
-            this.Client = client;
+            Client = client;
 
             var clusterService = (ClientClusterService) client.GetClientClusterService();
             TxnOwnerNode = clusterService.GetRandomMember();
@@ -69,29 +66,29 @@ namespace Hazelcast.Client.Proxy
             Transaction.Rollback();
         }
 
-        public virtual ITransactionalMap<K, V> GetMap<K, V>(string name)
+        public virtual ITransactionalMap<TKey, TValue> GetMap<TKey, TValue>(string name)
         {
-            return GetTransactionalObject<ITransactionalMap<K, V>>(ServiceNames.Map, name);
+            return GetTransactionalObject<ITransactionalMap<TKey, TValue>>(ServiceNames.Map, name);
         }
 
-        public virtual ITransactionalQueue<E> GetQueue<E>(string name) //where E : ITransactionalObject
+        public virtual ITransactionalQueue<T> GetQueue<T>(string name) //where E : ITransactionalObject
         {
-            return GetTransactionalObject<ITransactionalQueue<E>>(ServiceNames.Queue, name);
+            return GetTransactionalObject<ITransactionalQueue<T>>(ServiceNames.Queue, name);
         }
 
-        public virtual ITransactionalMultiMap<K, V> GetMultiMap<K, V>(string name)
+        public virtual ITransactionalMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name)
         {
-            return GetTransactionalObject<ITransactionalMultiMap<K, V>>(ServiceNames.MultiMap, name);
+            return GetTransactionalObject<ITransactionalMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name);
         }
 
-        public virtual ITransactionalList<E> GetList<E>(string name)
+        public virtual ITransactionalList<T> GetList<T>(string name)
         {
-            return GetTransactionalObject<ITransactionalList<E>>(ServiceNames.List, name);
+            return GetTransactionalObject<ITransactionalList<T>>(ServiceNames.List, name);
         }
 
-        public virtual ITransactionalSet<E> GetSet<E>(string name)
+        public virtual ITransactionalSet<T> GetSet<T>(string name)
         {
-            return GetTransactionalObject<ITransactionalSet<E>>(ServiceNames.Set, name);
+            return GetTransactionalObject<ITransactionalSet<T>>(ServiceNames.Set, name);
         }
 
         public virtual T GetTransactionalObject<T>(string serviceName, string name) where T : ITransactionalObject
@@ -101,9 +98,9 @@ namespace Hazelcast.Client.Proxy
                 throw new TransactionNotActiveException("No transaction is found while accessing " +
                                                         "transactional object -> " + serviceName + "[" + name + "]!");
             }
-            var key = new TransactionalObjectKey(this, serviceName, name);
-            ITransactionalObject obj = null;
-            txnObjectMap.TryGetValue(key, out obj);
+            var key = new TransactionalObjectKey(serviceName, name);
+            ITransactionalObject obj;
+            _txnObjectMap.TryGetValue(key, out obj);
             if (obj == null)
             {
                 obj = CreateProxy<T>(serviceName, name);
@@ -111,14 +108,19 @@ namespace Hazelcast.Client.Proxy
                 {
                     throw new ArgumentException("Service[" + serviceName + "] is not transactional!");
                 }
-                txnObjectMap.Add(key, obj);
+                _txnObjectMap.Add(key, obj);
             }
             return (T) obj;
         }
 
-        private ClientTxnProxy CreateProxy<T>(String serviceName, string name)
+        public virtual HazelcastClient GetClient()
         {
-            Type proxyType = null;
+            return Client;
+        }
+
+        private ClientTxnProxy CreateProxy<T>(string serviceName, string name)
+        {
+            Type proxyType;
             switch (serviceName)
             {
                 case ServiceNames.Queue:
@@ -139,33 +141,22 @@ namespace Hazelcast.Client.Proxy
                 default:
                     throw new ArgumentException("Service[" + serviceName + "] is not transactional!");
             }
-            if (proxyType != null)
-            {
-                Type[] genericTypeArguments = typeof (T).GetGenericArguments();
-                Type mgType = proxyType.MakeGenericType(genericTypeArguments);
-                return Activator.CreateInstance(mgType, new object[] {name, this}) as ClientTxnProxy;
-            }
-            return null;
-        }
 
-        public virtual HazelcastClient GetClient()
-        {
-            return Client;
+            var genericTypeArguments = typeof (T).GetGenericArguments();
+            var mgType = proxyType.MakeGenericType(genericTypeArguments);
+            return Activator.CreateInstance(mgType, name, this) as ClientTxnProxy;
         }
-
     }
 
     internal class TransactionalObjectKey
     {
-        private readonly TransactionContextProxy _enclosing;
-        private readonly string name;
-        private readonly string serviceName;
+        private readonly string _name;
+        private readonly string _serviceName;
 
-        internal TransactionalObjectKey(TransactionContextProxy _enclosing, string serviceName, string name)
+        internal TransactionalObjectKey(string serviceName, string name)
         {
-            this._enclosing = _enclosing;
-            this.serviceName = serviceName;
-            this.name = name;
+            _serviceName = serviceName;
+            _name = name;
         }
 
         public override bool Equals(object o)
@@ -179,11 +170,11 @@ namespace Hazelcast.Client.Proxy
                 return false;
             }
             var that = (TransactionalObjectKey) o;
-            if (!name.Equals(that.name))
+            if (!_name.Equals(that._name))
             {
                 return false;
             }
-            if (!serviceName.Equals(that.serviceName))
+            if (!_serviceName.Equals(that._serviceName))
             {
                 return false;
             }
@@ -192,8 +183,8 @@ namespace Hazelcast.Client.Proxy
 
         public override int GetHashCode()
         {
-            int result = serviceName.GetHashCode();
-            result = 31*result + name.GetHashCode();
+            var result = _serviceName.GetHashCode();
+            result = 31*result + _name.GetHashCode();
             return result;
         }
     }

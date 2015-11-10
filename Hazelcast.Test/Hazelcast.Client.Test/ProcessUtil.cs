@@ -1,4 +1,18 @@
-﻿using System;
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -7,6 +21,34 @@ namespace Hazelcast.Client.Test
 {
     public static class ProcessUtil
     {
+        /// <summary>
+        /// Resumes all threads of the given process
+        /// </summary>
+        /// <param name="process"></param>
+        public static void Resume(Process process)
+        {
+            Action<ProcessThread> resume = pt =>
+            {
+                var threadHandle = NativeMethods.OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint) pt.Id);
+
+                if (threadHandle != IntPtr.Zero)
+                {
+                    try
+                    {
+                        NativeMethods.ResumeThread(threadHandle);
+                    }
+                    finally
+                    {
+                        NativeMethods.CloseHandle(threadHandle);
+                    }
+                }
+            };
+
+            var threads = GetThreads(process);
+            Parallel.ForEach(threads, new ParallelOptions {MaxDegreeOfParallelism = threads.Length},
+                pt => { resume(pt); });
+        }
+
         /// <summary>
         /// Suspends all threads of the given process
         /// </summary>
@@ -33,7 +75,7 @@ namespace Hazelcast.Client.Test
 
             var threads = GetThreads(process);
             Parallel.ForEach(threads, new ParallelOptions {MaxDegreeOfParallelism = threads.Length},
-                    pt => { suspend(pt); });
+                pt => { suspend(pt); });
         }
 
         private static ProcessThread[] GetThreads(Process process)
@@ -44,34 +86,6 @@ namespace Hazelcast.Client.Test
                 threads[i] = process.Threads[i];
             }
             return threads;
-        }
-
-        /// <summary>
-        /// Resumes all threads of the given process
-        /// </summary>
-        /// <param name="process"></param>
-        public static void Resume(Process process)
-        {
-            Action<ProcessThread> resume = pt =>
-            {
-                var threadHandle = NativeMethods.OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)pt.Id);
-
-                if (threadHandle != IntPtr.Zero)
-                {
-                    try
-                    {
-                        NativeMethods.ResumeThread(threadHandle);
-                    }
-                    finally
-                    {
-                        NativeMethods.CloseHandle(threadHandle);
-                    }
-                }
-            };
-
-            var threads = GetThreads(process);
-            Parallel.ForEach(threads, new ParallelOptions { MaxDegreeOfParallelism = threads.Length },
-                    pt => { resume(pt); });
         }
 
         private static class NativeMethods

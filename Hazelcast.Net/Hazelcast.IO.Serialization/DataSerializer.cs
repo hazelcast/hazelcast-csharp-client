@@ -1,29 +1,23 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Hazelcast.Core;
 using Hazelcast.Logging;
-using Hazelcast.Transaction;
-using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
@@ -40,9 +34,9 @@ namespace Hazelcast.IO.Serialization
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (DataSerializer));
 
-        private readonly ConcurrentDictionary<string, Type> class2Type = new ConcurrentDictionary<string, Type>();
+        private readonly ConcurrentDictionary<string, Type> _class2Type = new ConcurrentDictionary<string, Type>();
 
-        private readonly IDictionary<int, IDataSerializableFactory> factories =
+        private readonly IDictionary<int, IDataSerializableFactory> _factories =
             new Dictionary<int, IDataSerializableFactory>();
 
         internal DataSerializer(IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories)
@@ -66,9 +60,9 @@ namespace Hazelcast.IO.Serialization
         public IDataSerializable Read(IObjectDataInput input)
         {
             IDataSerializable ds = null;
-            bool identified = input.ReadBoolean();
-            int id = 0;
-            int factoryId = 0;
+            var identified = input.ReadBoolean();
+            var id = 0;
+            var factoryId = 0;
             string className = null;
             try
             {
@@ -76,7 +70,7 @@ namespace Hazelcast.IO.Serialization
                 {
                     factoryId = input.ReadInt();
                     IDataSerializableFactory dsf;
-                    factories.TryGetValue(factoryId, out dsf);
+                    _factories.TryGetValue(factoryId, out dsf);
                     if (dsf == null)
                     {
                         throw new HazelcastSerializationException(
@@ -93,8 +87,8 @@ namespace Hazelcast.IO.Serialization
                 else
                 {
                     className = input.ReadUTF();
-                    Type type = null;
-                    class2Type.TryGetValue(className, out type);
+                    Type type;
+                    _class2Type.TryGetValue(className, out type);
                     if (type != null) ds = Activator.CreateInstance(type) as IDataSerializable;
                     if (ds == null)
                     {
@@ -124,7 +118,7 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public void Write(IObjectDataOutput output, IDataSerializable obj)
         {
-            bool identified = obj is IIdentifiedDataSerializable;
+            var identified = obj is IIdentifiedDataSerializable;
             output.WriteBoolean(identified);
             if (identified)
             {
@@ -134,9 +128,9 @@ namespace Hazelcast.IO.Serialization
             }
             else
             {
-                string javaClassName = obj.GetJavaClassName();
+                var javaClassName = obj.GetJavaClassName();
 
-                class2Type.AddOrUpdate(javaClassName, obj.GetType(), (s, type) => obj.GetType());
+                _class2Type.AddOrUpdate(javaClassName, obj.GetType(), (s, type) => obj.GetType());
                 output.WriteUTF(javaClassName);
             }
             obj.WriteData(output);
@@ -144,18 +138,19 @@ namespace Hazelcast.IO.Serialization
 
         public void Destroy()
         {
-            factories.Clear();
+            _factories.Clear();
         }
 
         private void Register(int factoryId, IDataSerializableFactory factory)
         {
             IDataSerializableFactory current;
-            factories.TryGetValue(factoryId, out current);
+            _factories.TryGetValue(factoryId, out current);
             if (current != null)
             {
                 if (current.Equals(factory))
                 {
-                    Logger.Warning("DataSerializableFactory[" + factoryId + "] is already registered! Skipping " + factory);
+                    Logger.Warning("DataSerializableFactory[" + factoryId + "] is already registered! Skipping " +
+                                   factory);
                 }
                 else
                 {
@@ -165,21 +160,21 @@ namespace Hazelcast.IO.Serialization
             }
             else
             {
-                factories.Add(factoryId, factory);
+                _factories.Add(factoryId, factory);
             }
         }
 
         private void ScanAssemblyForSerializables()
         {
             var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(m => m.GetTypes())
-                .Where(t => typeof(IDataSerializable).IsAssignableFrom(t) && t.IsClass && t.IsPublic && !t.IsAbstract);
+                .Where(t => typeof (IDataSerializable).IsAssignableFrom(t) && t.IsClass && t.IsPublic && !t.IsAbstract);
 
             foreach (var type in types)
             {
                 try
                 {
-                    var instance = (IDataSerializable)Activator.CreateInstance(type);
-                    class2Type.AddOrUpdate(instance.GetJavaClassName(), type, (s, ignored) => type);
+                    var instance = (IDataSerializable) Activator.CreateInstance(type);
+                    _class2Type.AddOrUpdate(instance.GetJavaClassName(), type, (s, ignored) => type);
                 }
                 catch (MissingMethodException)
                 {

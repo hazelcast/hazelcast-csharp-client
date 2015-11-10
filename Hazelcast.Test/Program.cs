@@ -1,57 +1,35 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
 using Hazelcast.Client;
 using Hazelcast.Config;
-using Hazelcast.Core;
-using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Test
 {
-    class MyClass:IDisposable
+    internal class MyClass : IDisposable
     {
-        private bool disposed;
-
         private int _data = 10;
+        private bool disposed;
 
         public int Data
         {
-            get
-            {
-                return _data;
-            }
-            set
-            {
-                _data = value;
-            }
+            get { return _data; }
+            set { _data = value; }
         }
 
-        public MyClass()
-        {
-        }
-
-        ~MyClass()
-        {
-            Dispose(false);
-            Console.WriteLine("finalized:"+Data);
-        }
         public void Dispose()
         {
             Dispose(true);
@@ -62,27 +40,67 @@ namespace Hazelcast.Test
         protected virtual void Dispose(bool disposing)
         {
             // Check to see if Dispose has already been called. 
-            if (!this.disposed)
+            if (!disposed)
             {
                 // Note disposing has been done.
                 disposed = true;
-
             }
         }
 
-    }
-    class Program
-    {
-        private static ConcurrentDictionary<string, MyClass> dict = new ConcurrentDictionary<string, MyClass>(); 
-        static void Main2(string[] args)
+        ~MyClass()
         {
-            ClientConfig clientConfig = new ClientConfig();
+            Dispose(false);
+            Console.WriteLine("finalized:" + Data);
+        }
+    }
+
+    internal class Program
+    {
+        private static readonly ConcurrentDictionary<string, MyClass> dict = new ConcurrentDictionary<string, MyClass>();
+
+        private static void Main1(string[] args)
+        {
+            using (var myClass = new MyClass())
+            {
+                myClass.Data = 17;
+                //dict.TryAdd("den", myClass);
+            }
+
+            MyClass o;
+            dict.TryGetValue("den", out o);
+
+            //Console.WriteLine(o.Data);
+            Console.WriteLine(dict.Count);
+            Console.ReadKey();
+        }
+
+        private static void Main11(string[] args)
+        {
+            var clientConfig = new ClientConfig();
+
+            clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
+
+            var hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
+
+            var list = hazelcast.GetList<object>("mylist");
+
+            list.Add("Item 1");
+            list.Add("Item 2");
+            list.Add("Item 3");
+
+            Console.WriteLine("count:" + list.Size());
+            Console.ReadKey();
+        }
+
+        private static void Main2(string[] args)
+        {
+            var clientConfig = new ClientConfig();
 
             clientConfig.GetNetworkConfig().AddAddress("192.168.1.162");
 
             var hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
 
-            var hzMap = hazelcast.GetMap<string,string>("mylist");
+            var hzMap = hazelcast.GetMap<string, string>("mylist");
 
             //hzMap.Put("key1","Value1");
             //hzMap.Put("key2","Value2");
@@ -95,47 +113,13 @@ namespace Hazelcast.Test
             Console.WriteLine(hzMap.Get("key4"));
 
             Console.ReadKey();
-
-        }
-        static void Main1(string[] args)
-        {
-            using (var myClass=new MyClass())
-            {
-                myClass.Data = 17;
-                //dict.TryAdd("den", myClass);
-
-            }
-
-            MyClass o;
-            dict.TryGetValue("den", out o);
-
-            //Console.WriteLine(o.Data);
-            Console.WriteLine(dict.Count);
-            Console.ReadKey();
-
         }
 
-        static void Main11(string[] args)
-        {
-            ClientConfig clientConfig = new ClientConfig();
-
-            clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
-
-            var hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
-
-            var list = hazelcast.GetList<object>("mylist");
-
-            list.Add("Item 1");
-            list.Add("Item 2");
-            list.Add("Item 3");
-
-            Console.WriteLine("count:"+list.Size());
-            Console.ReadKey();
-        }
         //{
         //    var bs = new ByteSerializer();
 
         //    Console.WriteLine(bs is ByteSerializer);
+
         //    Console.WriteLine(bs is SingletonSerializer<byte>);
         //    Console.WriteLine(bs is IStreamSerializer<byte>);
 
@@ -144,7 +128,7 @@ namespace Hazelcast.Test
 
         //private bool test<T>(T t)
         //{
-            
+
         //}
     }
 

@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -96,7 +94,7 @@ namespace Hazelcast.Client.Proxy
 
         public TValue Put(TKey key, TValue value)
         {
-            return Put(key, value, -1, TimeUnit.SECONDS);
+            return Put(key, value, -1, TimeUnit.Seconds);
         }
 
         public TValue Remove(object key)
@@ -176,7 +174,7 @@ namespace Hazelcast.Client.Proxy
 
         public Task<TValue> PutAsync(TKey key, TValue value)
         {
-            return PutAsync(key, value, -1, TimeUnit.SECONDS);
+            return PutAsync(key, value, -1, TimeUnit.Seconds);
         }
 
         public Task<TValue> PutAsync(TKey key, TValue value, long ttl, TimeUnit timeunit)
@@ -253,7 +251,7 @@ namespace Hazelcast.Client.Proxy
 
         public TValue PutIfAbsent(TKey key, TValue value)
         {
-            return PutIfAbsent(key, value, -1, TimeUnit.SECONDS);
+            return PutIfAbsent(key, value, -1, TimeUnit.Seconds);
         }
 
         public TValue PutIfAbsent(TKey key, TValue value, long ttl, TimeUnit timeunit)
@@ -302,7 +300,7 @@ namespace Hazelcast.Client.Proxy
 
         public void Lock(TKey key)
         {
-            Lock(key, -1, TimeUnit.MILLISECONDS);
+            Lock(key, -1, TimeUnit.Milliseconds);
         }
 
         public void Lock(TKey key, long leaseTime, TimeUnit timeUnit)
@@ -325,7 +323,7 @@ namespace Hazelcast.Client.Proxy
         {
             try
             {
-                return TryLock(key, 0, TimeUnit.SECONDS);
+                return TryLock(key, 0, TimeUnit.Seconds);
             }
             catch (Exception)
             {
@@ -336,7 +334,7 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public bool TryLock(TKey key, long time, TimeUnit timeunit)
         {
-            return TryLock(key, time, timeunit, long.MaxValue, TimeUnit.MILLISECONDS);
+            return TryLock(key, time, timeunit, long.MaxValue, TimeUnit.Milliseconds);
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -545,7 +543,7 @@ namespace Hazelcast.Client.Proxy
 
         public void Set(TKey key, TValue value)
         {
-            Set(key, value, -1, TimeUnit.SECONDS);
+            Set(key, value, -1, TimeUnit.Seconds);
         }
 
         public int Size()
@@ -599,7 +597,8 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate, TKey key,
+        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate,
+            TKey key,
             bool includeValue)
         {
             var keyData = ToData(key);
@@ -618,7 +617,8 @@ namespace Hazelcast.Client.Proxy
                 handler);
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate, bool includeValue)
+        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate,
+            bool includeValue)
         {
             var predicateData = ToData(predicate);
             var flags = GetListenerFlags(listener);
@@ -698,17 +698,20 @@ namespace Hazelcast.Client.Proxy
                 }
                 case EntryEventType.Removed:
                 {
-                    listener.EntryRemoved(new EntryEvent<TKey, TValue>(GetName(), member, eventType, key, oldValue, value));
+                    listener.EntryRemoved(new EntryEvent<TKey, TValue>(GetName(), member, eventType, key, oldValue,
+                        value));
                     break;
                 }
                 case EntryEventType.Updated:
                 {
-                    listener.EntryUpdated(new EntryEvent<TKey, TValue>(GetName(), member, eventType, key, oldValue, value));
+                    listener.EntryUpdated(new EntryEvent<TKey, TValue>(GetName(), member, eventType, key, oldValue,
+                        value));
                     break;
                 }
                 case EntryEventType.Evicted:
                 {
-                    listener.EntryEvicted(new EntryEvent<TKey, TValue>(GetName(), member, eventType, key, oldValue, value));
+                    listener.EntryEvicted(new EntryEvent<TKey, TValue>(GetName(), member, eventType, key, oldValue,
+                        value));
                     break;
                 }
                 case EntryEventType.EvictAll:

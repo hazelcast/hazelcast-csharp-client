@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Collections.Generic;
 
@@ -36,26 +34,6 @@ namespace Hazelcast.Core
         /// <returns>returns registration id.</returns>
         string AddMembershipListener(IMembershipListener listener);
 
-        /// <summary>Removes the specified membership listener.</summary>
-        /// <remarks>Removes the specified membership listener.</remarks>
-        /// <param name="registrationId">Id of listener registration.</param>
-        /// <returns>true if registration is removed, false otherwise</returns>
-        bool RemoveMembershipListener(string registrationId);
-
-        /// <summary>Set of current members of the cluster.</summary>
-        /// <remarks>
-        ///     Set of current members of the cluster.
-        ///     Returning set instance is not modifiable.
-        ///     Every member in the cluster has the same member list in the same
-        ///     order. First member is the oldest member.
-        /// </remarks>
-        /// <returns>current members of the cluster</returns>
-        ISet<IMember> GetMembers();
-
-        /// <summary>Returns this Hazelcast instance member</summary>
-        /// <returns>this Hazelcast instance member</returns>
-        IMember GetLocalMember();
-
         /// <summary>Returns the cluster-wide time in milliseconds.</summary>
         /// <remarks>
         ///     Returns the cluster-wide time in milliseconds.
@@ -67,5 +45,25 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <returns>cluster-wide time</returns>
         long GetClusterTime();
+
+        /// <summary>Returns this Hazelcast instance member</summary>
+        /// <returns>this Hazelcast instance member</returns>
+        IMember GetLocalMember();
+
+        /// <summary>Set of current members of the cluster.</summary>
+        /// <remarks>
+        ///     Set of current members of the cluster.
+        ///     Returning set instance is not modifiable.
+        ///     Every member in the cluster has the same member list in the same
+        ///     order. First member is the oldest member.
+        /// </remarks>
+        /// <returns>current members of the cluster</returns>
+        ISet<IMember> GetMembers();
+
+        /// <summary>Removes the specified membership listener.</summary>
+        /// <remarks>Removes the specified membership listener.</remarks>
+        /// <param name="registrationId">Id of listener registration.</param>
+        /// <returns>true if registration is removed, false otherwise</returns>
+        bool RemoveMembershipListener(string registrationId);
     }
 }

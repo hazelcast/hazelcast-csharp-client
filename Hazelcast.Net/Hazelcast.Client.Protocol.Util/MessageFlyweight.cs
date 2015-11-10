@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Collections.Generic;
 using Hazelcast.IO;
@@ -32,66 +30,142 @@ namespace Hazelcast.Client.Protocol.Util
         /// <summary>Short mask</summary>
         private const short ShortMask = unchecked(0x00FF);
 
-        protected internal IClientProtocolBuffer buffer;
-        private int index;
-        private int offset;
+        protected IClientProtocolBuffer Buffer;
+        private int _index;
+        private int _offset;
 
         public MessageFlyweight()
         {
             //initialized in wrap method by user , does not change.
             //starts from zero, incremented each tome something set to buffer
-            offset = 0;
+            _offset = 0;
         }
 
-        public virtual MessageFlyweight Wrap(IClientProtocolBuffer buffer, int offset)
+        public virtual IClientProtocolBuffer GetBuffer()
         {
-            this.buffer = buffer;
-            this.offset = offset;
-            index = 0;
-            return this;
+            return Buffer;
+        }
+
+        //endregion SET Overloads
+        //region GET Overloads
+        public virtual bool GetBoolean()
+        {
+            var result = Buffer.GetByte(_index + _offset);
+            _index += Bits.ByteSizeInBytes;
+            return result != 0;
+        }
+
+        public virtual byte GetByte()
+        {
+            var result = Buffer.GetByte(_index + _offset);
+            _index += Bits.ByteSizeInBytes;
+            return result;
+        }
+
+        public virtual byte[] GetByteArray()
+        {
+            var length = Buffer.GetInt(_index + _offset);
+            _index += Bits.IntSizeInBytes;
+            var result = new byte[length];
+            Buffer.GetBytes(_index + _offset, result);
+            _index += length;
+            return result;
+        }
+
+        public virtual IData GetData()
+        {
+            return new HeapData(GetByteArray());
+        }
+
+        public virtual IList<IData> GetDataList()
+        {
+            var length = Buffer.GetInt(_index + _offset);
+            _index += Bits.IntSizeInBytes;
+            IList<IData> result = new List<IData>();
+            for (var i = 0; i < length; i++)
+            {
+                result.Add(GetData());
+            }
+            return result;
+        }
+
+        public virtual ICollection<IData> GetDataSet()
+        {
+            var length = Buffer.GetInt(_index + _offset);
+            _index += Bits.IntSizeInBytes;
+            ICollection<IData> result = new HashSet<IData>();
+            for (var i = 0; i < length; i++)
+            {
+                result.Add(GetData());
+            }
+            return result;
+        }
+
+        public virtual int GetInt()
+        {
+            var result = Buffer.GetInt(_index + _offset);
+            _index += Bits.IntSizeInBytes;
+            return result;
+        }
+
+        public virtual long GetLong()
+        {
+            var result = Buffer.GetLong(_index + _offset);
+            _index += Bits.LongSizeInBytes;
+            return result;
+        }
+
+        public virtual KeyValuePair<IData, IData> GetMapEntry()
+        {
+            var key = GetData();
+            var value = GetData();
+            return new KeyValuePair<IData, IData>(key, value);
+        }
+
+        public virtual string GetStringUtf8()
+        {
+            var length = Buffer.GetInt(_index + _offset);
+            var result = Buffer.GetStringUtf8(_index + _offset, length);
+            _index += length + Bits.IntSizeInBytes;
+            return result;
         }
 
         public virtual int Index()
         {
-            return index;
+            return _index;
         }
 
         public virtual MessageFlyweight Index(int index)
         {
-            this.index = index;
+            _index = index;
             return this;
-        }
-
-        public virtual IClientProtocolBuffer Buffer()
-        {
-            return buffer;
         }
 
         //region SET Overloads
         public virtual MessageFlyweight Set(bool value)
         {
-            buffer.PutByte(index + offset, unchecked((byte) (value ? 1 : 0)));
-            index += Bits.ByteSizeInBytes;
+            Buffer.PutByte(_index + _offset, unchecked((byte) (value ? 1 : 0)));
+            _index += Bits.ByteSizeInBytes;
             return this;
         }
 
         public virtual MessageFlyweight Set(int value)
         {
-            buffer.PutInt(index + offset, value);
-            index += Bits.IntSizeInBytes;
+            Buffer.PutInt(_index + _offset, value);
+            _index += Bits.IntSizeInBytes;
             return this;
         }
 
         public virtual MessageFlyweight Set(long value)
         {
-            buffer.PutLong(index + offset, value);
-            index += Bits.LongSizeInBytes;
+            Buffer.PutLong(_index + _offset, value);
+            _index += Bits.LongSizeInBytes;
             return this;
         }
 
         public virtual MessageFlyweight Set(string value)
         {
-            index += buffer.PutStringUtf8(index + offset, value);
+            _index += Buffer.PutStringUtf8(_index + _offset, value);
             return this;
         }
 
@@ -106,8 +180,8 @@ namespace Hazelcast.Client.Protocol.Util
         {
             var length = value.Length;
             Set(length);
-            buffer.PutBytes(index + offset, value);
-            index += length;
+            Buffer.PutBytes(_index + _offset, value);
+            _index += length;
             return this;
         }
 
@@ -127,129 +201,53 @@ namespace Hazelcast.Client.Protocol.Util
             return Set(entry.Key).Set(entry.Value);
         }
 
-        //endregion SET Overloads
-        //region GET Overloads
-        public virtual bool GetBoolean()
+        public virtual MessageFlyweight Wrap(IClientProtocolBuffer buffer, int offset)
         {
-            var result = buffer.GetByte(index + offset);
-            index += Bits.ByteSizeInBytes;
-            return result != 0;
-        }
-
-        public virtual byte GetByte()
-        {
-            var result = buffer.GetByte(index + offset);
-            index += Bits.ByteSizeInBytes;
-            return result;
-        }
-
-        public virtual int GetInt()
-        {
-            var result = buffer.GetInt(index + offset);
-            index += Bits.IntSizeInBytes;
-            return result;
-        }
-
-        public virtual long GetLong()
-        {
-            var result = buffer.GetLong(index + offset);
-            index += Bits.LongSizeInBytes;
-            return result;
-        }
-
-        public virtual string GetStringUtf8()
-        {
-            var length = buffer.GetInt(index + offset);
-            var result = buffer.GetStringUtf8(index + offset, length);
-            index += length + Bits.IntSizeInBytes;
-            return result;
-        }
-
-        public virtual byte[] GetByteArray()
-        {
-            var length = buffer.GetInt(index + offset);
-            index += Bits.IntSizeInBytes;
-            var result = new byte[length];
-            buffer.GetBytes(index + offset, result);
-            index += length;
-            return result;
-        }
-
-        public virtual IData GetData()
-        {
-            return new HeapData(GetByteArray());
-        }
-
-        public virtual IList<IData> GetDataList()
-        {
-            var length = buffer.GetInt(index + offset);
-            index += Bits.IntSizeInBytes;
-            IList<IData> result = new List<IData>();
-            for (var i = 0; i < length; i++)
-            {
-                result.Add(GetData());
-            }
-            return result;
-        }
-
-        public virtual ICollection<IData> GetDataSet()
-        {
-            var length = buffer.GetInt(index + offset);
-            index += Bits.IntSizeInBytes;
-            ICollection<IData> result = new HashSet<IData>();
-            for (var i = 0; i < length; i++)
-            {
-                result.Add(GetData());
-            }
-            return result;
-        }
-
-        public virtual KeyValuePair<IData, IData> GetMapEntry()
-        {
-            var key = GetData();
-            var value = GetData();
-            return new KeyValuePair<IData, IData>(key, value);
+            Buffer = buffer;
+            _offset = offset;
+            _index = 0;
+            return this;
         }
 
         //endregion GET Overloads
         protected internal virtual int Int32Get(int index)
         {
-            return buffer.GetInt(index + offset);
+            return Buffer.GetInt(index + _offset);
         }
 
         protected internal virtual void Int32Set(int index, int length)
         {
-            buffer.PutInt(index + offset, length);
-        }
-
-        protected internal virtual short Uint8Get(int index)
-        {
-            return (short) (buffer.GetByte(index + offset) & ShortMask);
-        }
-
-        protected internal virtual void Uint8Put(int index, short value)
-        {
-            buffer.PutByte(index + offset, unchecked((byte) value));
+            Buffer.PutInt(index + _offset, length);
         }
 
         protected internal virtual int Uint16Get(int index)
         {
-            return buffer.GetShort(index + offset) & IntMask;
+            return Buffer.GetShort(index + _offset) & IntMask;
         }
 
         protected internal virtual void Uint16Put(int index, int value)
         {
-            buffer.PutShort(index + offset, (short) value);
+            Buffer.PutShort(index + _offset, (short) value);
         }
 
         protected internal virtual long Uint32Get(int index)
         {
-            return buffer.GetInt(index + offset) & LongMask;
+            return Buffer.GetInt(index + _offset) & LongMask;
         }
 
         protected internal virtual void Uint32Put(int index, long value)
         {
-            buffer.PutInt(index + offset, (int) value);
+            Buffer.PutInt(index + _offset, (int) value);
+        }
+
+        protected internal virtual short Uint8Get(int index)
+        {
+            return (short) (Buffer.GetByte(index + _offset) & ShortMask);
+        }
+
+        protected internal virtual void Uint8Put(int index, short value)
+        {
+            Buffer.PutByte(index + _offset, unchecked((byte) value));
         }
     }
 }

@@ -1,21 +1,17 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using Hazelcast.Client.Model;
-using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using NUnit.Framework;
 
@@ -58,12 +54,12 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestDifferentClassVersions()
         {
             var serializationService =
-                new SerializationServiceBuilder().AddPortableFactory(FactoryId, 
-                new PortableFactoryFunc(i => new NamedPortable()))
+                new SerializationServiceBuilder().AddPortableFactory(FactoryId,
+                    new PortableFactoryFunc(i => new NamedPortable()))
                     .Build();
             var serializationService2 =
                 new SerializationServiceBuilder().AddPortableFactory(FactoryId,
-                new PortableFactoryFunc(i => new NamedPortableV2()))
+                    new PortableFactoryFunc(i => new NamedPortableV2()))
                     .Build();
             TestDifferentClassVersions(serializationService, serializationService2);
         }
@@ -73,10 +69,12 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestDifferentClassVersionsUsingDataWriteAndRead()
         {
             var serializationService =
-                new SerializationServiceBuilder().AddPortableFactory(FactoryId, new PortableFactoryFunc(i => new NamedPortable()))
+                new SerializationServiceBuilder().AddPortableFactory(FactoryId,
+                    new PortableFactoryFunc(i => new NamedPortable()))
                     .Build();
             var serializationService2 =
-                new SerializationServiceBuilder().AddPortableFactory(FactoryId, new PortableFactoryFunc(i => new NamedPortableV2()))
+                new SerializationServiceBuilder().AddPortableFactory(FactoryId,
+                    new PortableFactoryFunc(i => new NamedPortableV2()))
                     .Build();
             TestDifferentClassVersionsUsingDataWriteAndRead(serializationService, serializationService2);
         }
@@ -147,19 +145,19 @@ namespace Hazelcast.Client.Test.Serialization
             var p1 = new NamedPortable("portable-v1", 111);
             var data = serializationService.ToData(p1);
             // emulate socket write by writing data to stream
-            IBufferObjectDataOutput @out = serializationService.CreateObjectDataOutput(1024);
+            var @out = serializationService.CreateObjectDataOutput(1024);
             @out.WriteData(data);
-            byte[] bytes = @out.ToByteArray();
+            var bytes = @out.ToByteArray();
             // emulate socket read by reading data from stream
-            IBufferObjectDataInput @in = serializationService2.CreateObjectDataInput(bytes);
+            var @in = serializationService2.CreateObjectDataInput(bytes);
             data = @in.ReadData();
             // read data
-            object object1 = serializationService2.ToObject<object>(data);
+            var object1 = serializationService2.ToObject<object>(data);
             // serialize new portable version
             var p2 = new NamedPortableV2("portable-v2", 123);
             var data2 = serializationService2.ToData(p2);
             // de-serialize back using old version
-            object object2 = serializationService.ToObject<object>(data2);
+            var object2 = serializationService.ToObject<object>(data2);
             Assert.IsNotNull(object1, "object1 should not be null!");
             Assert.IsNotNull(object2, "object2 should not be null!");
             Assert.IsInstanceOf<NamedPortableV2>(object1, "Should be instance of NamedPortableV2: " + object1.GetType());

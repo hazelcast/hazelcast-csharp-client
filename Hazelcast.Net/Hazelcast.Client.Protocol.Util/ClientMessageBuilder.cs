@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -31,8 +29,8 @@ namespace Hazelcast.Client.Protocol.Util
         public delegate void HandleMessageDelegate(ClientMessage message);
 
         private readonly HandleMessageDelegate _delegate;
-        private readonly Dictionary<int, BufferBuilder> builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
-        private ClientMessage message = ClientMessage.Create();
+        private readonly Dictionary<int, BufferBuilder> _builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
+        private ClientMessage _message = ClientMessage.Create();
 
         public ClientMessageBuilder(HandleMessageDelegate _delegate)
         {
@@ -43,46 +41,46 @@ namespace Hazelcast.Client.Protocol.Util
         {
             while (buffer.HasRemaining())
             {
-                var complete = message.ReadFrom(buffer);
+                var complete = _message.ReadFrom(buffer);
                 if (!complete)
                 {
                     return;
                 }
                 //MESSAGE IS COMPLETE HERE
-                if (message.IsFlagSet(ClientMessage.BeginAndEndFlags))
+                if (_message.IsFlagSet(ClientMessage.BeginAndEndFlags))
                 {
                     //HANDLE-MESSAGE
-                    HandleMessage(message);
-                    message = ClientMessage.Create();
+                    HandleMessage(_message);
+                    _message = ClientMessage.Create();
                     continue;
                 }
-                if (message.IsFlagSet(ClientMessage.BeginFlag))
+                if (_message.IsFlagSet(ClientMessage.BeginFlag))
                 {
                     // first fragment
                     var builder = new BufferBuilder();
-                    builderBySessionIdMap.Add(message.GetCorrelationId(), builder);
-                    builder.Append(message.Buffer(), 0, message.GetFrameLength());
+                    _builderBySessionIdMap.Add(_message.GetCorrelationId(), builder);
+                    builder.Append(_message.GetBuffer(), 0, _message.GetFrameLength());
                 }
                 else
                 {
-                    var builder = builderBySessionIdMap[message.GetCorrelationId()];
+                    var builder = _builderBySessionIdMap[_message.GetCorrelationId()];
                     if (builder.Position() == 0)
                     {
                         throw new InvalidOperationException();
                     }
-                    builder.Append(message.Buffer(), message.GetDataOffset(),
-                        message.GetFrameLength() - message.GetDataOffset());
-                    if (message.IsFlagSet(ClientMessage.EndFlag))
+                    builder.Append(_message.GetBuffer(), _message.GetDataOffset(),
+                        _message.GetFrameLength() - _message.GetDataOffset());
+                    if (_message.IsFlagSet(ClientMessage.EndFlag))
                     {
                         var msgLength = builder.Position();
                         var cm = ClientMessage.CreateForDecode(builder.Buffer(), 0);
                         cm.SetFrameLength(msgLength);
                         //HANDLE-MESSAGE
                         HandleMessage(cm);
-                        builderBySessionIdMap.Remove(message.GetCorrelationId());
+                        _builderBySessionIdMap.Remove(_message.GetCorrelationId());
                     }
                 }
-                message = ClientMessage.Create();
+                _message = ClientMessage.Create();
             }
         }
 

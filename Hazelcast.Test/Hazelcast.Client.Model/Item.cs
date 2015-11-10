@@ -1,33 +1,29 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Model
 {
-
-
     public class Item : IPortable
     {
-        private Header _header;
-        private int[] _enabled;
         private int[] _disabled;
+        private int[] _enabled;
+        private Header _header;
 
         internal Item()
         {
@@ -45,16 +41,14 @@ namespace Hazelcast.Client.Model
             get { return _header; }
         }
 
-        #region IPortable Implementation
-
         int IPortable.GetClassId()
         {
-            return (int)ClassIds.Item;
+            return (int) ClassIds.Item;
         }
 
         int IPortable.GetFactoryId()
         {
-            return (int)ClassIds.Factory;
+            return (int) ClassIds.Factory;
         }
 
         void IPortable.ReadPortable(IPortableReader reader)
@@ -71,18 +65,11 @@ namespace Hazelcast.Client.Model
             writer.WriteIntArray("disabled", _disabled);
         }
 
-        #endregion
-
-        protected bool Equals(Item other)
-        {
-            return _header.Equals(other._header) && _enabled.SequenceEqual(other._enabled) && _disabled.SequenceEqual(other._disabled);
-        }
-
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((Item) obj);
         }
 
@@ -90,11 +77,17 @@ namespace Hazelcast.Client.Model
         {
             unchecked
             {
-                int hashCode = _header.GetHashCode();
+                var hashCode = _header.GetHashCode();
                 hashCode = (hashCode*397) ^ (_enabled != null ? _enabled.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (_disabled != null ? _disabled.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        protected bool Equals(Item other)
+        {
+            return _header.Equals(other._header) && _enabled.SequenceEqual(other._enabled) &&
+                   _disabled.SequenceEqual(other._disabled);
         }
     }
 
@@ -108,15 +101,16 @@ namespace Hazelcast.Client.Model
             var header = new Header(id, new Handle(true));
 
             var allowedGroups = new int[RandomGenerator.Instance.Next(MaxGroups + 1)];
-            for (int i = 0; i < allowedGroups.Length; i++)
+            for (var i = 0; i < allowedGroups.Length; i++)
                 allowedGroups[i] = RandomGenerator.Instance.Next(GroupNumber);
 
             var deniedUsers = new int[RandomGenerator.Instance.Next(MaxGroups + 1)];
-            for (int i = 0; i < deniedUsers.Length; i++)
+            for (var i = 0; i < deniedUsers.Length; i++)
                 deniedUsers[i] = RandomGenerator.Instance.Next(GroupNumber);
             return new Item(header, allowedGroups, deniedUsers);
         }
     }
+
     public struct Header : IPortable
     {
         private long _id;
@@ -128,20 +122,26 @@ namespace Hazelcast.Client.Model
             _handle = handle;
         }
 
-        public long Id { get { return _id; } }
+        public long Id
+        {
+            get { return _id; }
+        }
 
-        public Handle Handle { get { return _handle; } }
+        public Handle Handle
+        {
+            get { return _handle; }
+        }
 
         #region IPortable Implementation
 
         int IPortable.GetClassId()
         {
-            return (int)ClassIds.Header;
+            return (int) ClassIds.Header;
         }
 
         int IPortable.GetFactoryId()
         {
-            return (int)ClassIds.Factory;
+            return (int) ClassIds.Factory;
         }
 
         void IPortable.ReadPortable(IPortableReader reader)
@@ -187,18 +187,21 @@ namespace Hazelcast.Client.Model
             _handle = isActive ? 1L : 0L;
         }
 
-        public bool IsActive { get { return _handle % 2L == 1L; } }
+        public bool IsActive
+        {
+            get { return _handle%2L == 1L; }
+        }
 
         #region IPortable Implementation
 
         int IPortable.GetClassId()
         {
-            return (int)ClassIds.Handle;
+            return (int) ClassIds.Handle;
         }
 
         int IPortable.GetFactoryId()
         {
-            return (int)ClassIds.Factory;
+            return (int) ClassIds.Factory;
         }
 
         void IPortable.ReadPortable(IPortableReader reader)
@@ -252,10 +255,7 @@ namespace Hazelcast.Client.Model
 
         public static Random Instance
         {
-            get
-            {
-                return LocalRandom.Value;
-            }
+            get { return LocalRandom.Value; }
         }
     }
 
@@ -263,7 +263,7 @@ namespace Hazelcast.Client.Model
     {
         public IPortable Create(int classId)
         {
-            switch ((ClassIds)classId)
+            switch ((ClassIds) classId)
             {
                 case ClassIds.Handle:
                     return new Handle();

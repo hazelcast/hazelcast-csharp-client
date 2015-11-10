@@ -1,24 +1,20 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Hazelcast.IO;
-using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
@@ -26,28 +22,24 @@ namespace Hazelcast.IO.Serialization
     {
         private const char NestedFieldPattern = '.';
 
-        protected internal readonly IClassDefinition cd;
+        private readonly int _finalPosition;
+        private readonly IBufferObjectDataInput _in;
+        private readonly int _offset;
 
-        protected internal readonly PortableSerializer serializer;
-
-        private readonly IBufferObjectDataInput @in;
-
-        private readonly int finalPosition;
-
-        private readonly int offset;
-
-        private bool raw;
+        protected readonly IClassDefinition Cd;
+        protected internal readonly PortableSerializer Serializer;
+        private bool _raw;
 
         public DefaultPortableReader(PortableSerializer serializer, IBufferObjectDataInput @in, IClassDefinition cd)
         {
-            this.@in = @in;
-            this.serializer = serializer;
-            this.cd = cd;
+            _in = @in;
+            Serializer = serializer;
+            Cd = cd;
             int fieldCount;
             try
             {
                 // final position after portable is read
-                finalPosition = @in.ReadInt();
+                _finalPosition = @in.ReadInt();
                 // field count
                 fieldCount = @in.ReadInt();
             }
@@ -59,257 +51,257 @@ namespace Hazelcast.IO.Serialization
             {
                 throw new InvalidOperationException("Field count[" + fieldCount + "] in stream does not match " + cd);
             }
-            this.offset = @in.Position();
+            _offset = @in.Position();
         }
 
         public virtual int GetVersion()
         {
-            return cd.GetVersion();
+            return Cd.GetVersion();
         }
 
         public virtual bool HasField(string fieldName)
         {
-            return cd.HasField(fieldName);
+            return Cd.HasField(fieldName);
         }
 
         public virtual ICollection<string> GetFieldNames()
         {
-            return cd.GetFieldNames();
+            return Cd.GetFieldNames();
         }
 
         public virtual FieldType GetFieldType(string fieldName)
         {
-            return cd.GetFieldType(fieldName);
+            return Cd.GetFieldType(fieldName);
         }
 
         public virtual int GetFieldClassId(string fieldName)
         {
-            return cd.GetFieldClassId(fieldName);
+            return Cd.GetFieldClassId(fieldName);
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual int ReadInt(string fieldName)
         {
-            int pos = ReadPosition(fieldName, FieldType.Int);
-            return @in.ReadInt(pos);
+            var pos = ReadPosition(fieldName, FieldType.Int);
+            return _in.ReadInt(pos);
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual long ReadLong(string fieldName)
         {
-            int pos = ReadPosition(fieldName, FieldType.Long);
-            return @in.ReadLong(pos);
+            var pos = ReadPosition(fieldName, FieldType.Long);
+            return _in.ReadLong(pos);
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual string ReadUTF(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.Utf);
-                @in.Position(pos);
-                return @in.ReadUTF();
+                var pos = ReadPosition(fieldName, FieldType.Utf);
+                _in.Position(pos);
+                return _in.ReadUTF();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual bool ReadBoolean(string fieldName)
         {
-            int pos = ReadPosition(fieldName, FieldType.Boolean);
-            return @in.ReadBoolean(pos);
+            var pos = ReadPosition(fieldName, FieldType.Boolean);
+            return _in.ReadBoolean(pos);
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual byte ReadByte(string fieldName)
         {
-            int pos = ReadPosition(fieldName, FieldType.Byte);
-            return @in.ReadByte(pos);
+            var pos = ReadPosition(fieldName, FieldType.Byte);
+            return _in.ReadByte(pos);
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual char ReadChar(string fieldName)
         {
-            int pos = ReadPosition(fieldName, FieldType.Char);
-            return @in.ReadChar(pos);
+            var pos = ReadPosition(fieldName, FieldType.Char);
+            return _in.ReadChar(pos);
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual double ReadDouble(string fieldName)
         {
-            int pos = ReadPosition(fieldName, FieldType.Double);
-            return @in.ReadDouble(pos);
+            var pos = ReadPosition(fieldName, FieldType.Double);
+            return _in.ReadDouble(pos);
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual float ReadFloat(string fieldName)
         {
-            int pos = ReadPosition(fieldName, FieldType.Float);
-            return @in.ReadFloat(pos);
+            var pos = ReadPosition(fieldName, FieldType.Float);
+            return _in.ReadFloat(pos);
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual short ReadShort(string fieldName)
         {
-            int pos = ReadPosition(fieldName, FieldType.Short);
-            return @in.ReadShort(pos);
+            var pos = ReadPosition(fieldName, FieldType.Short);
+            return _in.ReadShort(pos);
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual bool[] ReadBooleanArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.BooleanArray);
-                @in.Position(pos);
-                return @in.ReadBooleanArray();
+                var pos = ReadPosition(fieldName, FieldType.BooleanArray);
+                _in.Position(pos);
+                return _in.ReadBooleanArray();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual byte[] ReadByteArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.ByteArray);
-                @in.Position(pos);
-                return @in.ReadByteArray();
+                var pos = ReadPosition(fieldName, FieldType.ByteArray);
+                _in.Position(pos);
+                return _in.ReadByteArray();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual char[] ReadCharArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.CharArray);
-                @in.Position(pos);
-                return @in.ReadCharArray();
+                var pos = ReadPosition(fieldName, FieldType.CharArray);
+                _in.Position(pos);
+                return _in.ReadCharArray();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual int[] ReadIntArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.IntArray);
-                @in.Position(pos);
-                return @in.ReadIntArray();
+                var pos = ReadPosition(fieldName, FieldType.IntArray);
+                _in.Position(pos);
+                return _in.ReadIntArray();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual long[] ReadLongArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.LongArray);
-                @in.Position(pos);
-                return @in.ReadLongArray();
+                var pos = ReadPosition(fieldName, FieldType.LongArray);
+                _in.Position(pos);
+                return _in.ReadLongArray();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual double[] ReadDoubleArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.DoubleArray);
-                @in.Position(pos);
-                return @in.ReadDoubleArray();
+                var pos = ReadPosition(fieldName, FieldType.DoubleArray);
+                _in.Position(pos);
+                return _in.ReadDoubleArray();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual float[] ReadFloatArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.FloatArray);
-                @in.Position(pos);
-                return @in.ReadFloatArray();
+                var pos = ReadPosition(fieldName, FieldType.FloatArray);
+                _in.Position(pos);
+                return _in.ReadFloatArray();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual short[] ReadShortArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.ShortArray);
-                @in.Position(pos);
-                return @in.ReadShortArray();
+                var pos = ReadPosition(fieldName, FieldType.ShortArray);
+                _in.Position(pos);
+                return _in.ReadShortArray();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual string[] ReadUTFArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                int pos = ReadPosition(fieldName, FieldType.UtfArray);
-                @in.Position(pos);
-                return @in.ReadUTFArray();
+                var pos = ReadPosition(fieldName, FieldType.UtfArray);
+                _in.Position(pos);
+                return _in.ReadUTFArray();
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
-        public virtual P ReadPortable<P>(string fieldName) where P:IPortable
+        public virtual TPortable ReadPortable<TPortable>(string fieldName) where TPortable : IPortable
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                IFieldDefinition fd = cd.GetField(fieldName);
+                var fd = Cd.GetField(fieldName);
                 if (fd == null)
                 {
                     throw ThrowUnknownFieldException(fieldName);
@@ -318,31 +310,31 @@ namespace Hazelcast.IO.Serialization
                 {
                     throw new HazelcastSerializationException("Not a Portable field: " + fieldName);
                 }
-                int pos = ReadPosition(fd);
-                @in.Position(pos);
-                bool isNull = @in.ReadBoolean();
-                int factoryId = @in.ReadInt();
-                int classId = @in.ReadInt();
+                var pos = ReadPosition(fd);
+                _in.Position(pos);
+                var isNull = _in.ReadBoolean();
+                var factoryId = _in.ReadInt();
+                var classId = _in.ReadInt();
                 CheckFactoryAndClass(fd, factoryId, classId);
                 if (!isNull)
                 {
-                    return (P)serializer.ReadAndInitialize(@in, factoryId, classId);
+                    return (TPortable) Serializer.ReadAndInitialize(_in, factoryId, classId);
                 }
-                return default(P);
+                return default(TPortable);
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
         }
 
         /// <exception cref="System.IO.IOException"/>
         public virtual IPortable[] ReadPortableArray(string fieldName)
         {
-            int currentPos = @in.Position();
+            var currentPos = _in.Position();
             try
             {
-                IFieldDefinition fd = cd.GetField(fieldName);
+                var fd = Cd.GetField(fieldName);
                 if (fd == null)
                 {
                     throw ThrowUnknownFieldException(fieldName);
@@ -351,39 +343,58 @@ namespace Hazelcast.IO.Serialization
                 {
                     throw new HazelcastSerializationException("Not a Portable array field: " + fieldName);
                 }
-                int pos = ReadPosition(fd);
-                @in.Position(pos);
-                int len = @in.ReadInt();
-                int factoryId = @in.ReadInt();
-                int classId = @in.ReadInt();
+                var pos = ReadPosition(fd);
+                _in.Position(pos);
+                var len = _in.ReadInt();
+                var factoryId = _in.ReadInt();
+                var classId = _in.ReadInt();
 
                 if (len == Bits.NullArray) return null;
 
                 CheckFactoryAndClass(fd, factoryId, classId);
-                IPortable[] portables = new IPortable[len];
+                var portables = new IPortable[len];
                 if (len > 0)
                 {
-                    int offset = @in.Position();
-                    for (int i = 0; i < len; i++)
+                    var offset = _in.Position();
+                    for (var i = 0; i < len; i++)
                     {
-                        int start = @in.ReadInt(offset + i * Bits.IntSizeInBytes);
-                        @in.Position(start);
-                        portables[i] = serializer.ReadAndInitialize(@in, factoryId, classId);
+                        var start = _in.ReadInt(offset + i*Bits.IntSizeInBytes);
+                        _in.Position(start);
+                        portables[i] = Serializer.ReadAndInitialize(_in, factoryId, classId);
                     }
                 }
                 return portables;
             }
             finally
             {
-                @in.Position(currentPos);
+                _in.Position(currentPos);
             }
+        }
+
+        /// <exception cref="System.IO.IOException"/>
+        public virtual IObjectDataInput GetRawDataInput()
+        {
+            if (!_raw)
+            {
+                var pos = _in.ReadInt(_offset + Cd.GetFieldCount()*Bits.IntSizeInBytes);
+                _in.Position(pos);
+            }
+            _raw = true;
+            return _in;
+        }
+
+        /// <exception cref="System.IO.IOException"/>
+        internal void End()
+        {
+            _in.Position(_finalPosition);
         }
 
         private void CheckFactoryAndClass(IFieldDefinition fd, int factoryId, int classId)
         {
             if (factoryId != fd.GetFactoryId())
             {
-                throw new ArgumentException("Invalid factoryId! Expected: " + fd.GetFactoryId() + ", Current: " + factoryId);
+                throw new ArgumentException("Invalid factoryId! Expected: " + fd.GetFactoryId() + ", Current: " +
+                                            factoryId);
             }
             if (classId != fd.GetClassId())
             {
@@ -391,41 +402,17 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        private HazelcastSerializationException ThrowUnknownFieldException(string fieldName)
-        {
-            return new HazelcastSerializationException("Unknown field name: '" + fieldName + "' for ClassDefinition {id: " + cd.GetClassId() + ", version: " + cd.GetVersion() + "}");
-        }
-
-        /// <exception cref="System.IO.IOException"/>
-        private int ReadPosition(string fieldName, FieldType type)
-        {
-            if (raw)
-            {
-                throw new HazelcastSerializationException("Cannot read Portable fields after getRawDataInput() is called!");
-            }
-            IFieldDefinition fd = cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return ReadNestedPosition(fieldName, type);
-            }
-            if (fd.GetFieldType() != type)
-            {
-                throw new HazelcastSerializationException("Not a '" + type + "' field: " + fieldName);
-            }
-            return ReadPosition(fd);
-        }
-
         /// <exception cref="System.IO.IOException"/>
         private int ReadNestedPosition(string fieldName, FieldType type)
         {
-            string[] fieldNames = fieldName.Split(NestedFieldPattern);
+            var fieldNames = fieldName.Split(NestedFieldPattern);
             if (fieldNames.Length > 1)
             {
                 IFieldDefinition fd = null;
-                Hazelcast.IO.Serialization.DefaultPortableReader reader = this;
-                for (int i = 0; i < fieldNames.Length; i++)
+                var reader = this;
+                for (var i = 0; i < fieldNames.Length; i++)
                 {
-                    fd = reader.cd.GetField(fieldNames[i]);
+                    fd = reader.Cd.GetField(fieldNames[i]);
                     if (fd == null)
                     {
                         break;
@@ -434,14 +421,14 @@ namespace Hazelcast.IO.Serialization
                     {
                         break;
                     }
-                    int pos = reader.ReadPosition(fd);
-                    @in.Position(pos);
-                    bool isNull = @in.ReadBoolean();
+                    var pos = reader.ReadPosition(fd);
+                    _in.Position(pos);
+                    var isNull = _in.ReadBoolean();
                     if (isNull)
                     {
                         throw new ArgumentNullException("Parent field is null: " + fieldNames[i]);
                     }
-                    reader = serializer.CreateReader(@in);
+                    reader = Serializer.CreateReader(_in);
                 }
                 if (fd == null)
                 {
@@ -457,30 +444,39 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
+        private int ReadPosition(string fieldName, FieldType type)
+        {
+            if (_raw)
+            {
+                throw new HazelcastSerializationException(
+                    "Cannot read Portable fields after getRawDataInput() is called!");
+            }
+            var fd = Cd.GetField(fieldName);
+            if (fd == null)
+            {
+                return ReadNestedPosition(fieldName, type);
+            }
+            if (fd.GetFieldType() != type)
+            {
+                throw new HazelcastSerializationException("Not a '" + type + "' field: " + fieldName);
+            }
+            return ReadPosition(fd);
+        }
+
+        /// <exception cref="System.IO.IOException"/>
         private int ReadPosition(IFieldDefinition fd)
         {
-            int pos = @in.ReadInt(offset + fd.GetIndex() * Bits.IntSizeInBytes);
-            short len = @in.ReadShort(pos);
+            var pos = _in.ReadInt(_offset + fd.GetIndex()*Bits.IntSizeInBytes);
+            var len = _in.ReadShort(pos);
             // name + len + type
             return pos + Bits.ShortSizeInBytes + len + 1;
         }
 
-        /// <exception cref="System.IO.IOException"/>
-        public virtual IObjectDataInput GetRawDataInput()
+        private HazelcastSerializationException ThrowUnknownFieldException(string fieldName)
         {
-            if (!raw)
-            {
-                int pos = @in.ReadInt(offset + cd.GetFieldCount() * Bits.IntSizeInBytes);
-                @in.Position(pos);
-            }
-            raw = true;
-            return @in;
-        }
-
-        /// <exception cref="System.IO.IOException"/>
-        internal void End()
-        {
-            @in.Position(finalPosition);
+            return
+                new HazelcastSerializationException("Unknown field name: '" + fieldName + "' for ClassDefinition {id: " +
+                                                    Cd.GetClassId() + ", version: " + Cd.GetVersion() + "}");
         }
     }
 }

@@ -1,18 +1,16 @@
-﻿/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using Hazelcast.IO;
@@ -42,7 +40,7 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public virtual void TestAvailable()
         {
-            Assert.AreEqual(_input.size - _input.pos, _input.Available());
+            Assert.AreEqual(_input.Size - _input.Pos, _input.Available());
         }
 
         public virtual void TestCheckAvailable()
@@ -59,8 +57,8 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestClose()
         {
             _input.Close();
-            Assert.IsNull(_input.data);
-            Assert.IsNull(_input.charBuffer);
+            Assert.IsNull(_input.Data);
+            Assert.IsNull(_input.CharBuffer);
         }
 
         [Test]
@@ -75,9 +73,9 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestInit()
         {
             _input.Init(InitData, 2);
-            Assert.AreEqual(InitData, _input.data);
-            Assert.AreEqual(InitData.Length, _input.size);
-            Assert.AreEqual(2, _input.pos);
+            Assert.AreEqual(InitData, _input.Data);
+            Assert.AreEqual(InitData.Length, _input.Size);
+            Assert.AreEqual(2, _input.Pos);
         }
 
         [Test]
@@ -85,7 +83,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             _input.Position(1);
             _input.Mark(1);
-            Assert.AreEqual(1, _input.mark);
+            Assert.AreEqual(1, _input.MarkPos);
         }
 
         [Test]
@@ -117,11 +115,11 @@ namespace Hazelcast.Client.Test.Serialization
         {
             _input.Position(InitData.Length - 1);
             _input.Mark(0);
-            var firstMarked = _input.mark;
+            var firstMarked = _input.MarkPos;
             _input.Position(1);
             Assert.AreEqual(InitData.Length - 1, firstMarked);
             Assert.AreEqual(1, _input.Position());
-            Assert.AreEqual(-1, _input.mark);
+            Assert.AreEqual(-1, _input.MarkPos);
         }
 
         public virtual void TestPositionNewPos_negativeNewPos()
@@ -147,7 +145,7 @@ namespace Hazelcast.Client.Test.Serialization
 
         public virtual void TestReadBoolean_EOF()
         {
-            _input.pos = InitData.Length + 1;
+            _input.Pos = InitData.Length + 1;
             _input.ReadBoolean();
         }
 
@@ -194,7 +192,7 @@ namespace Hazelcast.Client.Test.Serialization
 
         public virtual void TestReadByte_EOF()
         {
-            _input.pos = InitData.Length + 1;
+            _input.Pos = InitData.Length + 1;
             _input.ReadByte();
         }
 
@@ -416,7 +414,7 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public virtual void TestReadForBOffLen_pos_gt_size()
         {
-            _input.pos = 100;
+            _input.Pos = 100;
             var read = _input.Read(InitData, 0, 1);
             Assert.AreEqual(-1, read);
         }
@@ -426,7 +424,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var readFull = new byte[InitData.Length];
             _input.ReadFully(readFull);
-            Assert.AreEqual(readFull, _input.data);
+            Assert.AreEqual(readFull, _input.Data);
         }
 
         public virtual void TestReadFullyB_EOF()
@@ -443,7 +441,7 @@ namespace Hazelcast.Client.Test.Serialization
             _input.ReadFully(readFull, 0, 5);
             for (var i = 0; i < 5; i++)
             {
-                Assert.AreEqual(readFull[i], _input.data[i]);
+                Assert.AreEqual(readFull[i], _input.Data[i]);
             }
         }
 
@@ -667,7 +665,7 @@ namespace Hazelcast.Client.Test.Serialization
             _input.Position(1);
             _input.Mark(1);
             _input.Reset();
-            Assert.AreEqual(1, _input.pos);
+            Assert.AreEqual(1, _input.Pos);
         }
 
         [Test]

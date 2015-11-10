@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Linq;
@@ -27,13 +25,17 @@ namespace Hazelcast.IO
     public sealed class Address
     {
         public const int Id = 1;
+        // ReSharper disable once InconsistentNaming
         private const byte IPv4 = 4;
+
+        // ReSharper disable once InconsistentNaming
         private const byte IPv6 = 6;
-        private readonly string host;
-        private readonly bool hostSet;
-        private readonly int port = -1;
-        private readonly byte type;
-        private string scopeId;
+
+        private readonly string _host;
+        private readonly bool _hostSet;
+        private readonly int _port = -1;
+        private readonly byte _type;
+        private string _scopeId;
 
         public Address()
         {
@@ -61,15 +63,15 @@ namespace Hazelcast.IO
             {
                 throw new ArgumentNullException("inetAddress");
             }
-            type = (inetAddress.AddressFamily == AddressFamily.InterNetwork) ? IPv4 : IPv6;
+            _type = (inetAddress.AddressFamily == AddressFamily.InterNetwork) ? IPv4 : IPv6;
             var addressArgs = inetAddress.ToString().Split('%');
-            host = hostname ?? addressArgs[0];
+            _host = hostname ?? addressArgs[0];
             if (addressArgs.Length == 2)
             {
-                scopeId = addressArgs[1];
+                _scopeId = addressArgs[1];
             }
-            this.port = port;
-            hostSet = !AddressUtil.IsIpAddress(host);
+            _port = port;
+            _hostSet = !AddressUtil.IsIpAddress(_host);
         }
 
         public override bool Equals(object obj)
@@ -88,16 +90,16 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                var hashCode = port;
-                hashCode = (hashCode*397) ^ (host != null ? host.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ type.GetHashCode();
+                var hashCode = _port;
+                hashCode = (hashCode*397) ^ (_host != null ? _host.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ _type.GetHashCode();
                 return hashCode;
             }
         }
 
         public string GetHost()
         {
-            return host;
+            return _host;
         }
 
         public IPAddress GetInetAddress()
@@ -107,50 +109,50 @@ namespace Hazelcast.IO
 
         public IPEndPoint GetInetSocketAddress()
         {
-            return new IPEndPoint(GetInetAddress(), port);
+            return new IPEndPoint(GetInetAddress(), _port);
         }
 
         public int GetPort()
         {
-            return port;
+            return _port;
         }
 
         public string GetScopedHost()
         {
-            return (IsIPv4() || hostSet || scopeId == null) ? GetHost() : GetHost() + "%" + scopeId;
+            return (IsIPv4() || _hostSet || _scopeId == null) ? GetHost() : GetHost() + "%" + _scopeId;
         }
 
         public string GetScopeId()
         {
-            return IsIPv6() ? scopeId : null;
+            return IsIPv6() ? _scopeId : null;
         }
 
         public bool IsIPv4()
         {
-            return type == IPv4;
+            return _type == IPv4;
         }
 
         public bool IsIPv6()
         {
-            return type == IPv6;
+            return _type == IPv6;
         }
 
         public void SetScopeId(string scopeId)
         {
             if (IsIPv6())
             {
-                this.scopeId = scopeId;
+                _scopeId = scopeId;
             }
         }
 
         public override string ToString()
         {
-            return "Address[" + GetHost() + "]:" + port;
+            return "Address[" + GetHost() + "]:" + _port;
         }
 
         private bool Equals(Address other)
         {
-            return port == other.port && string.Equals(host, other.host) && type == other.type;
+            return _port == other._port && string.Equals(_host, other._host) && _type == other._type;
         }
 
         private static IPAddress Resolve(IPEndPoint inetSocketAddress)

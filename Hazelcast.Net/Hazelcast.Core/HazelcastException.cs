@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 
@@ -40,13 +38,23 @@ namespace Hazelcast.Core
         }
     }
 
-    public class QueryException : HazelcastException 
+    public class QueryException : HazelcastException
     {
+        public QueryException()
+        {
+        }
 
-        public QueryException() { }
-        public QueryException(String message) :base(message){}
-        public QueryException(string message, Exception cause): base(message, cause){}
-        public QueryException(Exception cause) : base(cause.Message) { }
+        public QueryException(string message) : base(message)
+        {
+        }
+
+        public QueryException(string message, Exception cause) : base(message, cause)
+        {
+        }
+
+        public QueryException(Exception cause) : base(cause.Message)
+        {
+        }
     }
 
     /// <summary>
@@ -58,10 +66,21 @@ namespace Hazelcast.Core
     /// </summary>
     public class DistributedObjectDestroyedException : HazelcastException
     {
-        public DistributedObjectDestroyedException() {}
-        public DistributedObjectDestroyedException(String message) :base(message){}
-        public DistributedObjectDestroyedException(string message, Exception cause): base(message, cause){}
-        public DistributedObjectDestroyedException(Exception cause) : base(cause.Message) { }
+        public DistributedObjectDestroyedException()
+        {
+        }
+
+        public DistributedObjectDestroyedException(string message) : base(message)
+        {
+        }
+
+        public DistributedObjectDestroyedException(string message, Exception cause) : base(message, cause)
+        {
+        }
+
+        public DistributedObjectDestroyedException(Exception cause) : base(cause.Message)
+        {
+        }
     }
 
     /// <summary>

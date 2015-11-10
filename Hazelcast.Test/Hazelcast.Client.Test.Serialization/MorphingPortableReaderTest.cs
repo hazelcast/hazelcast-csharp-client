@@ -1,18 +1,16 @@
-﻿/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using Hazelcast.IO.Serialization;
 using NUnit.Framework;
@@ -56,7 +54,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsFalse(reader.ReadBoolean("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadBoolean_IncompatibleClass()
         {
             reader.ReadBoolean("string");
@@ -70,7 +68,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(0, reader.ReadByte("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadByte_IncompatibleClass()
         {
             reader.ReadByte("string");
@@ -82,7 +80,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadByteArray("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadByteArray_IncompatibleClass()
         {
             reader.ReadByteArray("byte");
@@ -96,7 +94,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(0, reader.ReadChar("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadChar_IncompatibleClass()
         {
             reader.ReadChar("string");
@@ -108,7 +106,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadCharArray("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadCharArray_IncompatibleClass()
         {
             reader.ReadCharArray("byte");
@@ -134,7 +132,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(0, reader.ReadDouble("NO SUCH FIELD"), 0);
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadDouble_IncompatibleClass()
         {
             reader.ReadDouble("string");
@@ -146,7 +144,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadDoubleArray("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadDoubleArray_IncompatibleClass()
         {
             reader.ReadByteArray("byte");
@@ -168,7 +166,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(0, reader.ReadFloat("NO SUCH FIELD"), 0);
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadFloat_IncompatibleClass()
         {
             reader.ReadFloat("string");
@@ -180,7 +178,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadFloatArray("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadFloatArray_IncompatibleClass()
         {
             reader.ReadByteArray("byte");
@@ -200,7 +198,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(0, reader.ReadInt("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadInt_IncompatibleClass()
         {
             reader.ReadInt("string");
@@ -212,7 +210,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadIntArray("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadIntArray_IncompatibleClass()
         {
             reader.ReadIntArray("byte");
@@ -234,7 +232,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(0, reader.ReadLong("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadLong_IncompatibleClass()
         {
             reader.ReadLong("string");
@@ -246,7 +244,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadLongArray("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadLongArray_IncompatibleClass()
         {
             reader.ReadByteArray("byte");
@@ -258,7 +256,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadPortable<MorphingPortable>("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadPortable_IncompatibleClass()
         {
             reader.ReadByteArray("byte");
@@ -270,7 +268,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadPortableArray("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadPortableArray_IncompatibleClass()
         {
             reader.ReadByteArray("byte");
@@ -286,7 +284,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(0, reader.ReadShort("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadShort_IncompatibleClass()
         {
             reader.ReadShort("string");
@@ -298,7 +296,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadShortArray("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadShortArray_IncompatibleClass()
         {
             reader.ReadByteArray("byte");
@@ -312,7 +310,7 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(reader.ReadUTF("NO SUCH FIELD"));
         }
 
-        [Test, ExpectedException(typeof(IncompatibleClassChangeError))]
+        [Test, ExpectedException(typeof (IncompatibleClassChangeError))]
         public virtual void TestReadUTF_IncompatibleClass()
         {
             reader.ReadUTF("byte");

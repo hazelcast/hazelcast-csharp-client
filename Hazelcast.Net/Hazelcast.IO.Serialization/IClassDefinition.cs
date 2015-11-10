@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Collections.Generic;
 
@@ -29,6 +27,12 @@ namespace Hazelcast.IO.Serialization
     /// <seealso cref="ClassDefinitionBuilder"/>
     public interface IClassDefinition
     {
+        /// <returns>class id</returns>
+        int GetClassId();
+
+        /// <returns>factory id</returns>
+        int GetFactoryId();
+
         /// <param name="name">name of the field</param>
         /// <returns>field definition by given name or null</returns>
         IFieldDefinition GetField(string name);
@@ -38,9 +42,13 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IndexOutOfRangeException"/>
         IFieldDefinition GetField(int fieldIndex);
 
-        /// <param name="fieldName">field name</param>
-        /// <returns>true if this class definition contains a field named by given name</returns>
-        bool HasField(string fieldName);
+        /// <param name="fieldName">name of the field</param>
+        /// <returns>class id of given field</returns>
+        /// <exception cref="System.ArgumentException"/>
+        int GetFieldClassId(string fieldName);
+
+        /// <returns>total field count</returns>
+        int GetFieldCount();
 
         /// <returns>all field names contained in this class definition</returns>
         ICollection<string> GetFieldNames();
@@ -50,21 +58,11 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.ArgumentException"/>
         FieldType GetFieldType(string fieldName);
 
-        /// <param name="fieldName">name of the field</param>
-        /// <returns>class id of given field</returns>
-        /// <exception cref="System.ArgumentException"/>
-        int GetFieldClassId(string fieldName);
-
-        /// <returns>total field count</returns>
-        int GetFieldCount();
-
-        /// <returns>factory id</returns>
-        int GetFactoryId();
-
-        /// <returns>class id</returns>
-        int GetClassId();
-
         /// <returns>version</returns>
         int GetVersion();
+
+        /// <param name="fieldName">field name</param>
+        /// <returns>true if this class definition contains a field named by given name</returns>
+        bool HasField(string fieldName);
     }
 }

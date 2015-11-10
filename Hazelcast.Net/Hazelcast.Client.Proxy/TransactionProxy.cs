@@ -1,25 +1,22 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Threading;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
-using Hazelcast.IO;
 using Hazelcast.Transaction;
 using Hazelcast.Util;
 
@@ -27,47 +24,46 @@ namespace Hazelcast.Client.Proxy
 {
     internal sealed class TransactionProxy
     {
-        [ThreadStatic]
-        private static bool? _threadFlag ;
+        [ThreadStatic] private static bool? _threadFlag;
 
-        private readonly TransactionOptions options;
-        private readonly long threadId = ThreadUtil.GetThreadId();
+        private readonly HazelcastClient _client;
 
-        private readonly HazelcastClient client;
+        private readonly TransactionOptions _options;
+        private readonly long _threadId = ThreadUtil.GetThreadId();
 
-        private IMember txOwner;
+        private readonly IMember _txOwner;
 
-        private long startTime;
-        private TransactionState state = TransactionState.NoTxn;
-        private string txnId;
+        private long _startTime;
+        private TransactionState _state = TransactionState.NoTxn;
+        private string _txnId;
 
         internal TransactionProxy(HazelcastClient client, TransactionOptions options, IMember txOwner)
         {
-            this.options = options;
-            this.client =  client;
-            this.txOwner = txOwner;
-        }
-
-        public string GetTxnId()
-        {
-            return txnId;
+            _options = options;
+            _client = client;
+            _txOwner = txOwner;
         }
 
         public TransactionState GetState()
         {
-            return state;
+            return _state;
         }
 
         public long GetTimeoutMillis()
         {
-            return options.GetTimeoutMillis();
+            return _options.GetTimeoutMillis();
+        }
+
+        public string GetTxnId()
+        {
+            return _txnId;
         }
 
         internal void Begin()
         {
             try
             {
-                if (state == TransactionState.Active)
+                if (_state == TransactionState.Active)
                 {
                     throw new InvalidOperationException("Transaction is already active");
                 }
@@ -77,12 +73,12 @@ namespace Hazelcast.Client.Proxy
                     throw new InvalidOperationException("Nested transactions are not allowed!");
                 }
                 _threadFlag = true;
-                startTime = Clock.CurrentTimeMillis();
-                var request = TransactionCreateCodec.EncodeRequest(GetTimeoutMillis(), options.GetDurability(),
-                    (int)options.GetTransactionType(), threadId);
+                _startTime = Clock.CurrentTimeMillis();
+                var request = TransactionCreateCodec.EncodeRequest(GetTimeoutMillis(), _options.GetDurability(),
+                    (int) _options.GetTransactionType(), _threadId);
                 var response = Invoke(request);
-                txnId = TransactionCreateCodec.DecodeResponse(response).response;
-                state = TransactionState.Active;
+                _txnId = TransactionCreateCodec.DecodeResponse(response).response;
+                _state = TransactionState.Active;
             }
             catch (Exception e)
             {
@@ -95,19 +91,19 @@ namespace Hazelcast.Client.Proxy
         {
             try
             {
-                if (state != TransactionState.Active)
+                if (_state != TransactionState.Active)
                 {
                     throw new TransactionNotActiveException("Transaction is not active");
                 }
                 CheckThread();
                 CheckTimeout();
-                var request = TransactionCommitCodec.EncodeRequest(GetTxnId(), threadId, prepareAndCommit);
+                var request = TransactionCommitCodec.EncodeRequest(GetTxnId(), _threadId, prepareAndCommit);
                 Invoke(request);
-                state = TransactionState.Committed;
+                _state = TransactionState.Committed;
             }
             catch (Exception e)
             {
-                state = TransactionState.RollingBack;
+                _state = TransactionState.RollingBack;
                 throw ExceptionUtil.Rethrow(e);
             }
             finally
@@ -120,25 +116,26 @@ namespace Hazelcast.Client.Proxy
         {
             try
             {
-                if (state == TransactionState.NoTxn || state == TransactionState.RolledBack)
+                if (_state == TransactionState.NoTxn || _state == TransactionState.RolledBack)
                 {
                     throw new InvalidOperationException("Transaction is not active");
                 }
-                if (state == TransactionState.RollingBack)
+                if (_state == TransactionState.RollingBack)
                 {
-                    state = TransactionState.RolledBack;
+                    _state = TransactionState.RolledBack;
                     return;
                 }
                 CheckThread();
                 try
                 {
-                    var request = TransactionRollbackCodec.EncodeRequest(txnId, threadId);
+                    var request = TransactionRollbackCodec.EncodeRequest(_txnId, _threadId);
                     Invoke(request);
                 }
-                catch (Exception)
+                catch
                 {
+                    // ignored
                 }
-                state = TransactionState.RolledBack;
+                _state = TransactionState.RolledBack;
             }
             finally
             {
@@ -146,23 +143,9 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        private IClientMessage Invoke(IClientMessage request)
-        {
-            var rpc = client.GetInvocationService();
-            try
-            {
-                var task = rpc.InvokeOnMember(request, txOwner);
-                return ThreadUtil.GetResult(task);
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
-
         private void CheckThread()
         {
-            if (threadId != Thread.CurrentThread.ManagedThreadId)
+            if (_threadId != Thread.CurrentThread.ManagedThreadId)
             {
                 throw new InvalidOperationException("Transaction cannot span multiple threads!");
             }
@@ -170,12 +153,24 @@ namespace Hazelcast.Client.Proxy
 
         private void CheckTimeout()
         {
-            if (startTime + options.GetTimeoutMillis() < Clock.CurrentTimeMillis())
+            if (_startTime + _options.GetTimeoutMillis() < Clock.CurrentTimeMillis())
             {
                 throw new TransactionException("Transaction is timed-out!");
             }
         }
 
-
+        private IClientMessage Invoke(IClientMessage request)
+        {
+            var rpc = _client.GetInvocationService();
+            try
+            {
+                var task = rpc.InvokeOnMember(request, _txOwner);
+                return ThreadUtil.GetResult(task);
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
+        }
     }
 }

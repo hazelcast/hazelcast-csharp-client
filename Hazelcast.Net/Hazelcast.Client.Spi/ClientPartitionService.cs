@@ -1,26 +1,21 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
-using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
 using Hazelcast.IO;
@@ -31,7 +26,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    internal sealed class 
+    internal sealed class
         ClientPartitionService : IClientPartitionService
     {
         private const int PartitionTimeout = 60000;
@@ -41,25 +36,51 @@ namespace Hazelcast.Client.Spi
         private readonly HazelcastClient _client;
         private readonly ConcurrentDictionary<int, Address> _partitions = new ConcurrentDictionary<int, Address>();
         private readonly AtomicBoolean _updating = new AtomicBoolean(false);
+        private volatile bool _isLive;
         private volatile int _partitionCount;
         private Thread _partitionThread;
-        private volatile bool _isLive;
 
         public ClientPartitionService(HazelcastClient client)
         {
             _client = client;
         }
 
-        public void Start()
+        public Address GetPartitionOwner(int partitionId)
         {
-            _isLive = true;
-            _partitionThread = new Thread(RefreshPartitionThread) {IsBackground = true, Name = "hz-partition-updater-" + new Random().Next()};
-            _partitionThread.Start();
+            Address rtn;
+            _partitions.TryGetValue(partitionId, out rtn);
+            return rtn;
+        }
+
+        public int GetPartitionId(object key)
+        {
+            var data = _client.GetSerializationService().ToData(key);
+            return GetPartitionId(data);
+        }
+
+        public int GetPartitionCount()
+        {
+            if (_partitionCount == 0)
+            {
+                GetPartitionsBlocking();
+            }
+            return _partitionCount;
         }
 
         public void RefreshPartitions()
         {
             _client.GetClientExecutionService().Submit(() => { GetPartitions(); });
+        }
+
+        public void Start()
+        {
+            _isLive = true;
+            _partitionThread = new Thread(RefreshPartitionThread)
+            {
+                IsBackground = true,
+                Name = "hz-partition-updater-" + new Random().Next()
+            };
+            _partitionThread.Start();
         }
 
         public void Stop()
@@ -77,19 +98,15 @@ namespace Hazelcast.Client.Spi
             _partitions.Clear();
         }
 
-        private void RefreshPartitionThread()
+        internal int GetPartitionId(IData key)
         {
-            while (_isLive)
+            var pc = GetPartitionCount();
+            if (pc <= 0)
             {
-                try
-                {
-                    GetPartitions();
-                    Thread.Sleep(PartitionRefreshPeriod);
-                }
-                catch (ThreadInterruptedException)
-                {
-                }
-            }   
+                return 0;
+            }
+            var hash = key.GetPartitionHash();
+            return (hash == int.MinValue) ? 0 : Math.Abs(hash)%pc;
         }
 
         private bool GetPartitions()
@@ -126,11 +143,19 @@ namespace Hazelcast.Client.Spi
             }
             return false;
         }
-        
+
+        private void GetPartitionsBlocking()
+        {
+            while (!GetPartitions() && _isLive)
+            {
+                Thread.Sleep(PartitionRefreshPeriod);
+            }
+        }
+
         private ClientGetPartitionsCodec.ResponseParameters GetPartitionsFrom(ClientConnection connection)
         {
             var request = ClientGetPartitionsCodec.EncodeRequest();
-            var task = ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, connection);
+            var task = ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request, connection);
             var result = ThreadUtil.GetResult(task, PartitionTimeout);
             return ClientGetPartitionsCodec.DecodeResponse(result);
         }
@@ -143,12 +168,33 @@ namespace Hazelcast.Client.Spi
                 var address = entry.Key;
                 foreach (var partition in entry.Value)
                 {
-                    _partitions.AddOrUpdate(partition, address, (p,a) => address);
+                    _partitions.AddOrUpdate(partition, address, (p, a) => address);
                 }
             }
             _partitionCount = _partitions.Count;
             return _partitionCount > 0;
         }
+
+        private void RefreshPartitionThread()
+        {
+            while (_isLive)
+            {
+                try
+                {
+                    GetPartitions();
+                    Thread.Sleep(PartitionRefreshPeriod);
+                }
+                catch (ThreadInterruptedException)
+                {
+                }
+            }
+        }
+
+//                {
+//                if (owner != null)
+//                var owner = _client.GetPartitionService().GetPartitionOwner(_partitionId);
+//            {
+//            public IMember GetOwner()
 
 //        TODO: will be useful when the ClientPartitionServiceProxy is implemeneted 
 //        internal class Partition : IPartition
@@ -166,12 +212,8 @@ namespace Hazelcast.Client.Spi
 //            {
 //                return _partitionId;
 //            }
+
 //
-//            public IMember GetOwner()
-//            {
-//                var owner = _client.GetPartitionService().GetPartitionOwner(_partitionId);
-//                if (owner != null)
-//                {
 //                    return _client.GetClientClusterService().GetMember(owner);
 //                }
 //                return null;
@@ -185,51 +227,5 @@ namespace Hazelcast.Client.Spi
 //                return sb.ToString();
 //            }
 //        }
-
-        #region IClientPartitionService
-
-        public Address GetPartitionOwner(int partitionId)
-        {
-            Address rtn;
-            _partitions.TryGetValue(partitionId, out rtn);
-            return rtn;
-        }
-
-        internal int GetPartitionId(IData key)
-        {
-            var pc = GetPartitionCount();
-            if (pc <= 0)
-            {
-                return 0;
-            }
-            var hash = key.GetPartitionHash();
-            return (hash == int.MinValue) ? 0 : Math.Abs(hash)%pc;
-        }
-
-        public int GetPartitionId(object key)
-        {
-            var data = _client.GetSerializationService().ToData(key);
-            return GetPartitionId(data);
-        }
-
-        public int GetPartitionCount()
-        {
-            if (_partitionCount == 0)
-            {
-                GetPartitionsBlocking();
-            }
-            return _partitionCount;
-        }
-
-        private void GetPartitionsBlocking()
-        {
-            while (!GetPartitions() && _isLive)
-            {
-                Thread.Sleep(PartitionRefreshPeriod);
-            }
-        }
-
-        #endregion
-
     }
 }

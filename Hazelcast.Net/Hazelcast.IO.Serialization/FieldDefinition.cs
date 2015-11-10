@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Text;
 
@@ -20,11 +18,11 @@ namespace Hazelcast.IO.Serialization
 {
     internal class FieldDefinition : IFieldDefinition
     {
-        internal int classId;
-        internal int factoryId;
-        internal string fieldName;
-        internal int index;
-        internal FieldType type;
+        private readonly int _classId;
+        private readonly int _factoryId;
+        private readonly string _fieldName;
+        private readonly int _index;
+        private readonly FieldType _type;
 
         internal FieldDefinition()
         {
@@ -37,53 +35,43 @@ namespace Hazelcast.IO.Serialization
 
         internal FieldDefinition(int index, string fieldName, FieldType type, int factoryId, int classId)
         {
-            this.classId = classId;
-            this.type = type;
-            this.fieldName = fieldName;
-            this.index = index;
-            this.factoryId = factoryId;
+            _classId = classId;
+            _type = type;
+            _fieldName = fieldName;
+            _index = index;
+            _factoryId = factoryId;
         }
 
         public virtual FieldType GetFieldType()
         {
-            return type;
+            return _type;
         }
 
         public virtual string GetName()
         {
-            return fieldName;
+            return _fieldName;
         }
 
         public virtual int GetIndex()
         {
-            return index;
+            return _index;
         }
 
         public virtual int GetFactoryId()
         {
-            return factoryId;
+            return _factoryId;
         }
 
         public virtual int GetClassId()
         {
-            return classId;
-        }
-
-        internal virtual bool IsPortable()
-        {
-            return type == FieldType.Portable || type == FieldType.PortableArray;
-        }
-
-        protected bool Equals(FieldDefinition other)
-        {
-            return classId == other.classId && factoryId == other.factoryId && string.Equals(fieldName, other.fieldName) && index == other.index && type == other.type;
+            return _classId;
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((FieldDefinition) obj);
         }
 
@@ -91,11 +79,11 @@ namespace Hazelcast.IO.Serialization
         {
             unchecked
             {
-                var hashCode = classId;
-                hashCode = (hashCode*397) ^ factoryId;
-                hashCode = (hashCode*397) ^ (fieldName != null ? fieldName.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ index;
-                hashCode = (hashCode*397) ^ (int) type;
+                var hashCode = _classId;
+                hashCode = (hashCode*397) ^ _factoryId;
+                hashCode = (hashCode*397) ^ (_fieldName != null ? _fieldName.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ _index;
+                hashCode = (hashCode*397) ^ (int) _type;
                 return hashCode;
             }
         }
@@ -103,13 +91,25 @@ namespace Hazelcast.IO.Serialization
         public override string ToString()
         {
             var sb = new StringBuilder("FieldDefinition{");
-            sb.Append("index=").Append(index);
-            sb.Append(", fieldName='").Append(fieldName).Append('\'');
-            sb.Append(", type=").Append(type);
-            sb.Append(", classId=").Append(classId);
-            sb.Append(", factoryId=").Append(factoryId);
+            sb.Append("index=").Append(_index);
+            sb.Append(", fieldName='").Append(_fieldName).Append('\'');
+            sb.Append(", type=").Append(_type);
+            sb.Append(", classId=").Append(_classId);
+            sb.Append(", factoryId=").Append(_factoryId);
             sb.Append('}');
             return sb.ToString();
+        }
+
+        protected bool Equals(FieldDefinition other)
+        {
+            return _classId == other._classId && _factoryId == other._factoryId &&
+                   string.Equals(_fieldName, other._fieldName) &&
+                   _index == other._index && _type == other._type;
+        }
+
+        internal virtual bool IsPortable()
+        {
+            return _type == FieldType.Portable || _type == FieldType.PortableArray;
         }
     }
 }

@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 namespace Hazelcast.Client.Protocol.Util
 {
@@ -24,10 +22,6 @@ namespace Hazelcast.Client.Protocol.Util
     /// </remarks>
     internal interface IClientProtocolBuffer
     {
-        /// <summary>Attach a view to a byte[] for providing direct access.</summary>
-        /// <param name="buffer">to which the view is attached.</param>
-        void Wrap(byte[] buffer);
-
         /// <summary>Get the underlying byte[] if one exists.</summary>
         /// <returns>the underlying byte[] if one exists.</returns>
         byte[] ByteArray();
@@ -35,21 +29,6 @@ namespace Hazelcast.Client.Protocol.Util
         /// <summary>Get the capacity of the underlying buffer.</summary>
         /// <returns>the capacity of the underlying buffer in bytes.</returns>
         int Capacity();
-
-        /// <summary>Get the value at a given index.</summary>
-        /// <param name="index">in bytes from which to get.</param>
-        /// <returns>the value for at a given index</returns>
-        long GetLong(int index);
-
-        /// <summary>Get the value at a given index.</summary>
-        /// <param name="index">in bytes from which to get.</param>
-        /// <returns>the value at a given index.</returns>
-        int GetInt(int index);
-
-        /// <summary>Get the value at a given index.</summary>
-        /// <param name="index">in bytes from which to get.</param>
-        /// <returns>the value at a given index.</returns>
-        short GetShort(int index);
 
         /// <summary>Get the value at a given index.</summary>
         /// <param name="index">in bytes from which to get.</param>
@@ -72,26 +51,26 @@ namespace Hazelcast.Client.Protocol.Util
         /// <param name="length">of the supplied buffer to use.</param>
         void GetBytes(int index, byte[] dst, int offset, int length);
 
+        /// <summary>Get the value at a given index.</summary>
+        /// <param name="index">in bytes from which to get.</param>
+        /// <returns>the value at a given index.</returns>
+        int GetInt(int index);
+
+        /// <summary>Get the value at a given index.</summary>
+        /// <param name="index">in bytes from which to get.</param>
+        /// <returns>the value for at a given index</returns>
+        long GetLong(int index);
+
+        /// <summary>Get the value at a given index.</summary>
+        /// <param name="index">in bytes from which to get.</param>
+        /// <returns>the value at a given index.</returns>
+        short GetShort(int index);
+
         /// <summary>Get part of String from bytes encoded in UTF-8 format without a length prefix.</summary>
         /// <param name="offset">at which the String begins.</param>
         /// <param name="length">of the String in bytes to decode.</param>
         /// <returns>the String as represented by the UTF-8 encoded bytes.</returns>
         string GetStringUtf8(int offset, int length);
-
-        /// <summary>Put a value at a given index.</summary>
-        /// <param name="index">The index in bytes where the value is put.</param>
-        /// <param name="value">The value to put at the given index.</param>
-        void PutLong(int index, long value);
-
-        /// <summary>Put a value at a given index.</summary>
-        /// <param name="index">The index in bytes where the value is put.</param>
-        /// <param name="value">The value put at the given index.</param>
-        void PutInt(int index, int value);
-
-        /// <summary>Put a value to a given index.</summary>
-        /// <param name="index">The index in bytes where the value is put.</param>
-        /// <param name="value">The value put at the given index.</param>
-        void PutShort(int index, short value);
 
         /// <summary>Put a value to a given index.</summary>
         /// <param name="index">The index in bytes where the value is put.</param>
@@ -110,6 +89,21 @@ namespace Hazelcast.Client.Protocol.Util
         /// <param name="length">The length of the supplied buffer to copy.</param>
         void PutBytes(int index, byte[] src, int offset, int length);
 
+        /// <summary>Put a value at a given index.</summary>
+        /// <param name="index">The index in bytes where the value is put.</param>
+        /// <param name="value">The value put at the given index.</param>
+        void PutInt(int index, int value);
+
+        /// <summary>Put a value at a given index.</summary>
+        /// <param name="index">The index in bytes where the value is put.</param>
+        /// <param name="value">The value to put at the given index.</param>
+        void PutLong(int index, long value);
+
+        /// <summary>Put a value to a given index.</summary>
+        /// <param name="index">The index in bytes where the value is put.</param>
+        /// <param name="value">The value put at the given index.</param>
+        void PutShort(int index, short value);
+
         /// <summary>Encode a String as UTF-8 bytes to the buffer with a length prefix.</summary>
         /// <param name="index">The index at which the String should be encoded.</param>
         /// <param name="value">The value of the String to be encoded.</param>
@@ -123,5 +117,9 @@ namespace Hazelcast.Client.Protocol.Util
         /// <returns>The number of bytes put to the buffer.</returns>
         /// <exception cref="System.ArgumentException">if the encoded bytes are greater than maxEncodedSize.</exception>
         int PutStringUtf8(int index, string value, int maxEncodedSize);
+
+        /// <summary>Attach a view to a byte[] for providing direct access.</summary>
+        /// <param name="buffer">to which the view is attached.</param>
+        void Wrap(byte[] buffer);
     }
 }

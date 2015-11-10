@@ -1,69 +1,91 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Hazelcast.IO;
 
 namespace Hazelcast.Net.Ext
 {
     internal class ByteBuffer
     {
-        private volatile byte[] buffer;
-        private volatile int capacity;
-        private volatile int index;
-        private volatile int limit;
-        private volatile int mark;
-        private bool _bigEndian=true;
+        private bool _bigEndian = true;
+        private volatile byte[] _buffer;
+        private volatile int _capacity;
+        private volatile int _index;
+        private volatile int _limit;
+        private volatile int _mark;
 
         public ByteBuffer()
         {
-            this._bigEndian=true;
+            _bigEndian = true;
         }
 
         private ByteBuffer(byte[] buf, int start, int len)
         {
-            this.buffer = buf;
-            this.limit = start + len;
-            this.index = start;
-            this.mark = start;
-            this.capacity = buf.Length;
-            this._bigEndian = true;
+            _buffer = buf;
+            _limit = start + len;
+            _index = start;
+            _mark = start;
+            _capacity = buf.Length;
+            _bigEndian = true;
         }
+
         private ByteBuffer(byte[] buf, int len)
         {
-            this.buffer = buf;
-            this.limit = len;
-            this.index = 0;
-            this.mark = 0;
-            this.capacity = buf.Length;
-            this._bigEndian = true;
+            _buffer = buf;
+            _limit = len;
+            _index = 0;
+            _mark = 0;
+            _capacity = buf.Length;
+            _bigEndian = true;
         }
 
         internal ByteBuffer(byte[] buffer, int capacity, int index, int limit, int mark, bool bigEndian)
         {
-            this.buffer = buffer;
-            this.capacity = capacity;
-            this.index = index;
-            this.limit = limit;
-            this.mark = mark;
+            _buffer = buffer;
+            _capacity = capacity;
+            _index = index;
+            _limit = limit;
+            _mark = mark;
             _bigEndian = bigEndian;
+        }
+
+        public int Limit
+        {
+            get { return _limit; }
+            set { _limit = value; }
+        }
+
+        public int Position
+        {
+            get { return _index; }
+            set
+            {
+                if ((value < 0) || (value > _limit))
+                {
+                    throw new IndexOutOfRangeException("Byte Buffer under flow");
+                }
+                _index = value;
+            }
+        }
+
+        public ByteOrder Order
+        {
+            get { return _bigEndian ? ByteOrder.BigEndian : ByteOrder.LittleEndian; }
+
+            set { _bigEndian = (value == ByteOrder.BigEndian); }
         }
 
         public static ByteBuffer Allocate(int size)
@@ -73,54 +95,38 @@ namespace Hazelcast.Net.Ext
 
         public byte[] Array()
         {
-            return buffer;
+            return _buffer;
         }
 
         public int Capacity()
         {
-            return capacity;
-        }
-
-        private void CheckGetLimit(int inc)
-        {
-            if ((index + inc) > limit)
-            {
-                throw new IndexOutOfRangeException("Byte Buffer under flow");
-            }
-        }
-
-        private void CheckPutLimit(int inc)
-        {
-            if ((index + inc) > limit)
-            {
-                throw new IndexOutOfRangeException("Byte Buffer under flow");
-            }
-        }
-
-        public virtual void Compact()
-        {
-            System.Array.Copy(buffer, Position, buffer, 0, Remaining());
-            Position = Remaining();
-            Limit = Capacity();
-            mark = -1;
+            return _capacity;
         }
 
         public void Clear()
         {
-            index = 0;
-            limit = capacity;
+            _index = 0;
+            _limit = _capacity;
+        }
+
+        public virtual void Compact()
+        {
+            System.Array.Copy(_buffer, Position, _buffer, 0, Remaining());
+            Position = Remaining();
+            Limit = Capacity();
+            _mark = -1;
         }
 
         public void Flip()
         {
-            limit = index;
-            index = 0;
+            _limit = _index;
+            _index = 0;
         }
 
         public byte Get()
         {
             CheckGetLimit(1);
-            return buffer[index++];
+            return _buffer[_index++];
         }
 
         public void Get(byte[] data)
@@ -131,9 +137,9 @@ namespace Hazelcast.Net.Ext
         public void Get(byte[] data, int start, int len)
         {
             CheckGetLimit(len);
-            for (int i = 0; i < len; i++)
+            for (var i = 0; i < len; i++)
             {
-                data[i + start] = buffer[index++];
+                data[i + start] = _buffer[_index++];
             }
         }
 
@@ -141,6 +147,7 @@ namespace Hazelcast.Net.Ext
         {
             return ReadInt();
         }
+
         public short GetShort()
         {
             return ReadShort();
@@ -151,51 +158,15 @@ namespace Hazelcast.Net.Ext
             return true;
         }
 
-        public int Limit
+        public bool HasRemaining()
         {
-            get
-            {
-                return limit;
-            }
-            set
-            {
-                limit = value; 
-            }
+            return _index < _limit;
         }
 
 
         public void Mark()
         {
-            mark = index;
-        }
-
-        public int Position
-        {
-            get
-            {
-                return index;
-            }
-            set
-            {
-                if ((value < 0) || (value > limit))
-                {
-                    throw new IndexOutOfRangeException("Byte Buffer under flow");
-                }
-                index = value; 
-            }
-        }
-
-        public ByteOrder Order
-        {
-            get
-            {
-                return _bigEndian ? ByteOrder.BigEndian : ByteOrder.LittleEndian;
-            }
-
-            set
-            {
-                _bigEndian = (value == ByteOrder.BigEndian);
-            }
+            _mark = _index;
         }
 
         public virtual void Put(byte[] data)
@@ -206,52 +177,48 @@ namespace Hazelcast.Net.Ext
         public virtual void Put(byte data)
         {
             CheckPutLimit(1);
-            buffer[index++] = data;
+            _buffer[_index++] = data;
         }
 
         public virtual void Put(byte[] data, int start, int len)
         {
             CheckPutLimit(len);
-            for (int i = 0; i < len; i++)
+            for (var i = 0; i < len; i++)
             {
-                buffer[index++] = data[i + start];
+                _buffer[_index++] = data[i + start];
             }
-        }
-
-        public virtual void PutInt(int i)
-        {
-            WriteInt(i);
-        }
-        public virtual void PutShort(short i)
-        {
-            WriteShort(i);
         }
 
         public ByteBuffer Put(ByteBuffer src)
         {
             if (src == this)
                 throw new ArgumentException("Source cannot be destination");
-            int n = src.Remaining();
+            var n = src.Remaining();
             if (n > Remaining())
                 throw new InternalBufferOverflowException();
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
                 Put(src.Get());
             return this;
         }
 
-        public int Remaining()
+        public virtual void PutInt(int i)
         {
-            return (limit - index);
+            WriteInt(i);
         }
 
-        public bool HasRemaining() 
+        public virtual void PutShort(short i)
         {
-            return index < limit;
+            WriteShort(i);
+        }
+
+        public int Remaining()
+        {
+            return (_limit - _index);
         }
 
         public void Reset()
         {
-            index = mark;
+            _index = _mark;
         }
 
         public static ByteBuffer Wrap(byte[] buf)
@@ -267,30 +234,47 @@ namespace Hazelcast.Net.Ext
         protected virtual int ReadInt()
         {
             CheckGetLimit(Bits.IntSizeInBytes);
-            int i = Bits.ReadInt(buffer, index, _bigEndian);
-            index += Bits.IntSizeInBytes;
+            var i = Bits.ReadInt(_buffer, _index, _bigEndian);
+            _index += Bits.IntSizeInBytes;
+            return i;
+        }
+
+        protected virtual short ReadShort()
+        {
+            CheckGetLimit(Bits.ShortSizeInBytes);
+            var i = Bits.ReadShort(_buffer, _index, _bigEndian);
+            _index += Bits.ShortSizeInBytes;
             return i;
         }
 
         protected virtual void WriteInt(int v)
         {
             CheckPutLimit(Bits.IntSizeInBytes);
-            Bits.WriteInt(buffer, index, v, _bigEndian);
-            index += Bits.IntSizeInBytes;
-        }
-        protected virtual short ReadShort()
-        {
-            CheckGetLimit(Bits.ShortSizeInBytes);
-            short i = Bits.ReadShort(buffer, index, _bigEndian);
-            index += Bits.ShortSizeInBytes;
-            return i;
+            Bits.WriteInt(_buffer, _index, v, _bigEndian);
+            _index += Bits.IntSizeInBytes;
         }
 
         protected virtual void WriteShort(short v)
         {
             CheckPutLimit(Bits.ShortSizeInBytes);
-            Bits.WriteShort(buffer, index, v, _bigEndian);
-            index += Bits.ShortSizeInBytes;
+            Bits.WriteShort(_buffer, _index, v, _bigEndian);
+            _index += Bits.ShortSizeInBytes;
+        }
+
+        private void CheckGetLimit(int inc)
+        {
+            if ((_index + inc) > _limit)
+            {
+                throw new IndexOutOfRangeException("Byte Buffer under flow");
+            }
+        }
+
+        private void CheckPutLimit(int inc)
+        {
+            if ((_index + inc) > _limit)
+            {
+                throw new IndexOutOfRangeException("Byte Buffer under flow");
+            }
         }
     }
 }

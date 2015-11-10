@@ -1,20 +1,18 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Map;
@@ -66,22 +64,6 @@ namespace Hazelcast.Core
     /// <typeparam name="TValue">type of the Value</typeparam>
     public interface IMap<TKey, TValue> : IDistributedObject
     {
-        /// <summary>Adds an interceptor for this map.</summary>
-        /// <remarks>
-        ///     Adds an interceptor for this map. Added interceptor will intercept operations
-        ///     and execute user defined methods and will cancel operations if user defined method throw exception.
-        /// </remarks>
-        /// <param name="interceptor">map interceptor</param>
-        /// <returns>id of registered interceptor</returns>
-        string AddInterceptor(IMapInterceptor interceptor);
-
-        /// <summary>Removes the given interceptor for this map.</summary>
-        /// <remarks>
-        ///     Removes the given interceptor for this map. So it will not intercept operations anymore.
-        /// </remarks>
-        /// <param name="id">registration id of map interceptor</param>
-        void RemoveInterceptor(string id);
-
         /// <summary>
         ///     Adds an entry listener for this map.
         /// </summary>
@@ -92,18 +74,6 @@ namespace Hazelcast.Core
         /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
         /// <returns>returns registration id</returns>
         string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue);
-
-        /// <summary>
-        ///     Removes the specified entry listener
-        ///     Returns silently if there is no such listener added before.
-        /// </summary>
-        /// <remarks>
-        ///     Removes the specified entry listener
-        ///     Returns silently if there is no such listener added before.
-        /// </remarks>
-        /// <param name="id">id of registered listener</param>
-        /// <returns>true if registration is removed, false otherwise</returns>
-        bool RemoveEntryListener(string id);
 
         /// <summary>Adds the specified entry listener for the specified key.</summary>
         /// <remarks>
@@ -140,7 +110,8 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate, TKey key, bool includeValue);
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate, TKey key,
+            bool includeValue);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
@@ -154,7 +125,8 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate, bool includeValue);
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate,
+            bool includeValue);
 
         /// <summary>
         ///     Adds an index to this map for the specified entries so
@@ -194,6 +166,23 @@ namespace Hazelcast.Core
         ///     <c>false</c> otherwise.
         /// </param>
         void AddIndex(string attribute, bool ordered);
+
+        /// <summary>Adds an interceptor for this map.</summary>
+        /// <remarks>
+        ///     Adds an interceptor for this map. Added interceptor will intercept operations
+        ///     and execute user defined methods and will cancel operations if user defined method throw exception.
+        /// </remarks>
+        /// <param name="interceptor">map interceptor</param>
+        /// <returns>id of registered interceptor</returns>
+        string AddInterceptor(IMapInterceptor interceptor);
+
+        /// <summary>
+        ///     Removes all of the mappings from this map (optional operation).
+        /// </summary>
+        /// <remarks>
+        ///     The map will be empty after this call returns.
+        /// </remarks>
+        void Clear();
 
         /// <summary>
         ///     Determines whether this map contains an entry for the specified key.
@@ -247,6 +236,87 @@ namespace Hazelcast.Core
         void Delete(object key);
 
         /// <summary>
+        ///     Returns a
+        ///     <see cref="ICollection{E}" />
+        ///     clone of the mappings contained in this map.
+        ///     The set is <b>NOT</b> backed by the map,
+        ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
+        /// </summary>
+        /// <returns>a <see cref="ISet{E}" /> clone of the keys mappings in this map</returns>
+        ISet<KeyValuePair<TKey, TValue>> EntrySet();
+
+        /// <summary>
+        ///     Queries the map based on the specified predicate and
+        ///     returns the matching entries.
+        /// </summary>
+        /// <remarks>
+        ///     Queries the map based on the specified predicate and
+        ///     returns the matching entries.
+        ///     <p />
+        ///     Specified predicate runs on all members in parallel.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     The set is <b>NOT</b> backed by the map,
+        ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
+        /// </remarks>
+        /// <param name="predicate">query criteria</param>
+        /// <returns>result entry <see cref="ISet{E}" /> of the query</returns>
+        ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate<TKey, TValue> predicate);
+
+        /// <summary>Evicts the specified key from this map.</summary>
+        /// <remarks>
+        ///     Evicts the specified key from this map. If
+        ///     a <c>MapStore</c> defined for this map, then the entry is not
+        ///     deleted from the underlying <c>MapStore</c>, evict only removes
+        ///     the entry from the memory.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key to evict</param>
+        /// <returns><c>true</c> if the key is evicted, <c>false</c> otherwise.</returns>
+        bool Evict(TKey key);
+
+        /// <summary>Evicts all keys from this map except the locked ones.</summary>
+        /// <remarks>
+        /// Evicts all keys from this map except the locked ones.
+        /// <p/>
+        /// <see cref="IMap{K, V}.Clear()"/>
+        /// method.
+        /// <p/>
+        /// The EVICT_ALL event is fired for any registered listeners.
+        /// </remarks>
+        void EvictAll();
+
+        /// <summary>
+        ///     If this map has a MapStore this method flushes
+        ///     all the local dirty entries by calling <c>MapStore.storeAll()</c> and/or <c>MapStore.deleteAll()</c>
+        /// </summary>
+        void Flush();
+
+        /// <summary>Releases the lock for the specified key regardless of the lock owner.</summary>
+        /// <remarks>
+        ///     Releases the lock for the specified key regardless of the lock owner.
+        ///     It always successfully unlocks the key, never blocks
+        ///     and returns immediately.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key to lock.</param>
+        void ForceUnlock(TKey key);
+
+        /// <summary>
         ///     Returns the value for the specified key, or <c>null</c> if this map does not contain this key.
         /// </summary>
         /// <remarks>
@@ -275,6 +345,27 @@ namespace Hazelcast.Core
         /// <param name="key">key</param>
         /// <returns>value</returns>
         TValue Get(object key);
+
+        /// <summary>Returns the entries for the given keys.</summary>
+        /// <remarks>
+        ///     Returns the entries for the given keys.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     The returned map is <b>NOT</b> backed by the original map,
+        ///     so changes to the original map are <b>NOT</b> reflected in the returned map, and vice-versa.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning-2:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="keys">keys to get</param>
+        /// <returns>map of entries</returns>
+        IDictionary<TKey, TValue> GetAll(ICollection<TKey> keys);
 
         /// <summary>Asynchronously gets the given key.</summary>
         /// <remarks>
@@ -313,15 +404,17 @@ namespace Hazelcast.Core
         /// <seealso cref="Task{V}" />
         Task<TValue> GetAsync(TKey key);
 
-        /// <summary>Returns the entries for the given keys.</summary>
+        /// <summary>Returns the <c>EntryView</c> for the specified key.</summary>
         /// <remarks>
-        ///     Returns the entries for the given keys.
+        ///     Returns the <c>EntryView</c> for the specified key.
         ///     <p />
         ///     <p>
         ///         <b>Warning:</b>
         ///     </p>
-        ///     The returned map is <b>NOT</b> backed by the original map,
-        ///     so changes to the original map are <b>NOT</b> reflected in the returned map, and vice-versa.
+        ///     <p>
+        ///         This method returns a clone of original mapping, modifying the returned value does not change
+        ///         the actual value in the map. One should put modified value back to make changes visible to all nodes.
+        ///     </p>
         ///     <p />
         ///     <p>
         ///         <b>Warning-2:</b>
@@ -330,9 +423,113 @@ namespace Hazelcast.Core
         ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
         ///     defined in <c>key</c>'s class.
         /// </remarks>
-        /// <param name="keys">keys to get</param>
-        /// <returns>map of entries</returns>
-        IDictionary<TKey, TValue> GetAll(ICollection<TKey> keys);
+        /// <param name="key">key of the entry</param>
+        /// <returns><c>EntryView</c> of the specified key</returns>
+        /// <seealso cref="IEntryView{K, V}" />
+        IEntryView<TKey, TValue> GetEntryView(TKey key);
+
+        /// <summary>Returns <c>true</c> if this map contains no entries.</summary>
+        /// <remarks>Returns <c>true</c> if this map contains no entries.</remarks>
+        /// <returns><c>true</c> if this map contains no entries</returns>
+        bool IsEmpty();
+
+        /// <summary>Checks the lock for the specified key.</summary>
+        /// <remarks>
+        ///     Checks the lock for the specified key.
+        ///     <p />
+        ///     If the lock is acquired then returns true, else false.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key to lock to be checked.</param>
+        /// <returns><c>true</c> if lock is acquired, <c>false</c> otherwise.</returns>
+        bool IsLocked(TKey key);
+
+        /// <summary>Returns a set clone of the keys contained in this map.</summary>
+        /// <remarks>
+        ///     Returns a set clone of the keys contained in this map.
+        ///     The set is <b>NOT</b> backed by the map,
+        ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
+        /// </remarks>
+        /// <returns>a <see cref="ISet{E}" /> clone of the keys contained in this map</returns>
+        ISet<TKey> KeySet();
+
+        /// <summary>
+        ///     Queries the map based on the specified predicate and
+        ///     returns the keys of matching entries.
+        /// </summary>
+        /// <remarks>
+        ///     Queries the map based on the specified predicate and
+        ///     returns the keys of matching entries.
+        ///     <p />
+        ///     Specified predicate runs on all members in parallel.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     The set is <b>NOT</b> backed by the map,
+        ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
+        /// </remarks>
+        /// <param name="predicate">query criteria</param>
+        /// <returns>result key <see cref="ISet{E}" /> of the query</returns>
+        ISet<TKey> KeySet(IPredicate<TKey, TValue> predicate);
+
+        /// <summary>Acquires the lock for the specified key.</summary>
+        /// <remarks>
+        ///     Acquires the lock for the specified key.
+        ///     <p />
+        ///     If the lock is not available then
+        ///     the current thread becomes disabled for thread scheduling
+        ///     purposes and lies dormant until the lock has been acquired.
+        ///     <p />
+        ///     Scope of the lock is this map only.
+        ///     Acquired lock is only for the key in this map.
+        ///     <p />
+        ///     Locks are re-entrant so if the key is locked N times then
+        ///     it should be unlocked N times before another thread can acquire it.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key to lock.</param>
+        void Lock(TKey key);
+
+        /// <summary>Acquires the lock for the specified key for the specified lease time.</summary>
+        /// <remarks>
+        ///     Acquires the lock for the specified key for the specified lease time.
+        ///     <p />
+        ///     After lease time, lock will be released..
+        ///     <p />
+        ///     If the lock is not available then
+        ///     the current thread becomes disabled for thread scheduling
+        ///     purposes and lies dormant until the lock has been acquired.
+        ///     <p />
+        ///     Scope of the lock is this map only.
+        ///     Acquired lock is only for the key in this map.
+        ///     <p />
+        ///     Locks are re-entrant so if the key is locked N times then
+        ///     it should be unlocked N times before another thread can acquire it.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key to lock.</param>
+        /// <param name="leaseTime">time to wait before releasing the lock.</param>
+        /// <param name="timeUnit"><see cref="TimeUnit" /> for the ttl</param>
+        void Lock(TKey key, long leaseTime, TimeUnit timeUnit);
 
         /// <summary>
         ///     Associates the specified value with the specified key in this map
@@ -398,6 +595,12 @@ namespace Hazelcast.Core
         /// <param name="timeunit"><see cref="TimeUnit" />for the ttl</param>
         /// <returns>old value of the entry</returns>
         TValue Put(TKey key, TValue value, long ttl, TimeUnit timeunit);
+
+        /// <summary>
+        ///     Copies all of the mappings from the specified map to this map
+        /// </summary>
+        /// <param name="m">mappings to be stored in this map</param>
+        void PutAll(IDictionary<TKey, TValue> m);
 
         /// <summary>Asynchronously puts the given key and value.</summary>
         /// <remarks>
@@ -550,29 +753,6 @@ namespace Hazelcast.Core
         TValue PutIfAbsent(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
         /// <summary>
-        ///     Tries to put the given key, value into this map within specified timeout value.
-        /// </summary>
-        /// <remarks>
-        ///     Tries to put the given key, value into this map within specified
-        ///     timeout value. If this method returns false, it means that
-        ///     the caller thread couldn't acquire the lock for the key within
-        ///     timeout duration, thus put operation is not successful.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        /// </remarks>
-        /// <param name="key">key of the entry</param>
-        /// <param name="value">value of the entry</param>
-        /// <param name="timeout">maximum time to wait</param>
-        /// <param name="timeunit"><see cref="TimeUnit" /> for the timeout</param>
-        /// <returns> <c>true</c> if the put is successful, <c>false</c> otherwise. </returns>
-        bool TryPut(TKey key, TValue value, long timeout, TimeUnit timeunit);
-
-        /// <summary>
         ///     Same as <see cref="IMap{K, V}.Put(TKey, TValue, long, TimeUnit)" />
         ///     but MapStore, if defined,
         ///     will not be called to store/persist the entry.  If ttl is 0, then
@@ -599,83 +779,6 @@ namespace Hazelcast.Core
         /// </param>
         /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
         void PutTransient(TKey key, TValue value, long ttl, TimeUnit timeunit);
-
-        /// <summary>
-        ///     Copies all of the mappings from the specified map to this map
-        /// </summary>
-        /// <param name="m">mappings to be stored in this map</param>
-        void PutAll(IDictionary<TKey, TValue> m);
-
-        /// <summary>Replaces the entry for a key only if currently mapped to some value.</summary>
-        /// <remarks>
-        ///     Replaces the entry for a key only if currently mapped to some value.
-        ///     This is equivalent to
-        ///     <code>
-        /// if (map.ContainsKey(key))
-        ///     return map.put(key, value);
-        /// else 
-        ///     return null;
-        /// </code>
-        ///     >
-        ///     except that the action is performed atomically.
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        /// </remarks>
-        /// <param name="key">key</param>
-        /// <param name="value">value</param>
-        /// <returns> previous value associated with <c>key</c> or <c>null</c> if there was no mapping for <c>key</c> . </returns>
-        TValue Replace(TKey key, TValue value);
-
-        /// <summary>Replaces the entry for a key only if currently mapped to a given value.</summary>
-        /// <remarks>
-        ///     Replaces the entry for a key only if currently mapped to a given value.
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        /// </remarks>
-        /// <param name="key">key</param>
-        /// <param name="oldValue">old value</param>
-        /// <param name="newValue">new value</param>
-        /// <returns><c>true</c> if the value was replaced </returns>
-        bool Replace(TKey key, TValue oldValue, TValue newValue);
-
-        /// <summary>
-        ///     Tries to remove the entry with the given key from this map
-        ///     within specified timeout value.
-        /// </summary>
-        /// <remarks>
-        ///     Tries to remove the entry with the given key from this map
-        ///     within specified timeout value. If the key is already locked by another
-        ///     thread and/or member, then this operation will wait timeout
-        ///     amount for acquiring the lock.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning-2:</b>
-        ///     </p>
-        ///     <p>
-        ///         This method returns a clone of previous value, not the original (identically equal) value
-        ///         previously put into map.
-        ///     </p>
-        /// </remarks>
-        /// <param name="key">key of the entry</param>
-        /// <param name="timeout"> maximum time to wait for acquiring the lock for the key </param>
-        /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
-        /// <returns> <c>true</c> if the remove is successful, <c>false</c> otherwise. </returns>
-        bool TryRemove(TKey key, long timeout, TimeUnit timeunit);
 
         /// <summary>Removes the mapping for a key from this map if it is present.</summary>
         /// <remarks>
@@ -722,6 +825,65 @@ namespace Hazelcast.Core
         /// <returns>Task&lt;V&gt; from which the value removed from the map can be retrieved.</returns>
         Task<TValue> RemoveAsync(TKey key);
 
+        /// <summary>
+        ///     Removes the specified entry listener
+        ///     Returns silently if there is no such listener added before.
+        /// </summary>
+        /// <remarks>
+        ///     Removes the specified entry listener
+        ///     Returns silently if there is no such listener added before.
+        /// </remarks>
+        /// <param name="id">id of registered listener</param>
+        /// <returns>true if registration is removed, false otherwise</returns>
+        bool RemoveEntryListener(string id);
+
+        /// <summary>Removes the given interceptor for this map.</summary>
+        /// <remarks>
+        ///     Removes the given interceptor for this map. So it will not intercept operations anymore.
+        /// </remarks>
+        /// <param name="id">registration id of map interceptor</param>
+        void RemoveInterceptor(string id);
+
+        /// <summary>Replaces the entry for a key only if currently mapped to some value.</summary>
+        /// <remarks>
+        ///     Replaces the entry for a key only if currently mapped to some value.
+        ///     This is equivalent to
+        ///     <code>
+        /// if (map.ContainsKey(key))
+        ///     return map.put(key, value);
+        /// else 
+        ///     return null;
+        /// </code>
+        ///     >
+        ///     except that the action is performed atomically.
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key</param>
+        /// <param name="value">value</param>
+        /// <returns> previous value associated with <c>key</c> or <c>null</c> if there was no mapping for <c>key</c> . </returns>
+        TValue Replace(TKey key, TValue value);
+
+        /// <summary>Replaces the entry for a key only if currently mapped to a given value.</summary>
+        /// <remarks>
+        ///     Replaces the entry for a key only if currently mapped to a given value.
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key</param>
+        /// <param name="oldValue">old value</param>
+        /// <param name="newValue">new value</param>
+        /// <returns><c>true</c> if the value was replaced </returns>
+        bool Replace(TKey key, TValue oldValue, TValue newValue);
+
         /// <summary>Puts an entry into this map.</summary>
         /// <remarks>
         ///     Puts an entry into this map.
@@ -758,74 +920,10 @@ namespace Hazelcast.Core
         /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
         void Set(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
-        /// <summary>Acquires the lock for the specified key.</summary>
-        /// <remarks>
-        ///     Acquires the lock for the specified key.
-        ///     <p />
-        ///     If the lock is not available then
-        ///     the current thread becomes disabled for thread scheduling
-        ///     purposes and lies dormant until the lock has been acquired.
-        ///     <p />
-        ///     Scope of the lock is this map only.
-        ///     Acquired lock is only for the key in this map.
-        ///     <p />
-        ///     Locks are re-entrant so if the key is locked N times then
-        ///     it should be unlocked N times before another thread can acquire it.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        /// </remarks>
-        /// <param name="key">key to lock.</param>
-        void Lock(TKey key);
-
-        /// <summary>Acquires the lock for the specified key for the specified lease time.</summary>
-        /// <remarks>
-        ///     Acquires the lock for the specified key for the specified lease time.
-        ///     <p />
-        ///     After lease time, lock will be released..
-        ///     <p />
-        ///     If the lock is not available then
-        ///     the current thread becomes disabled for thread scheduling
-        ///     purposes and lies dormant until the lock has been acquired.
-        ///     <p />
-        ///     Scope of the lock is this map only.
-        ///     Acquired lock is only for the key in this map.
-        ///     <p />
-        ///     Locks are re-entrant so if the key is locked N times then
-        ///     it should be unlocked N times before another thread can acquire it.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        /// </remarks>
-        /// <param name="key">key to lock.</param>
-        /// <param name="leaseTime">time to wait before releasing the lock.</param>
-        /// <param name="timeUnit"><see cref="TimeUnit" /> for the ttl</param>
-        void Lock(TKey key, long leaseTime, TimeUnit timeUnit);
-
-        /// <summary>Checks the lock for the specified key.</summary>
-        /// <remarks>
-        ///     Checks the lock for the specified key.
-        ///     <p />
-        ///     If the lock is acquired then returns true, else false.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        /// </remarks>
-        /// <param name="key">key to lock to be checked.</param>
-        /// <returns><c>true</c> if lock is acquired, <c>false</c> otherwise.</returns>
-        bool IsLocked(TKey key);
+        /// <summary>Returns the number of entries in this map.</summary>
+        /// <remarks>Returns the number of entries in this map.</remarks>
+        /// <returns>the number of entries in this map</returns>
+        int Size();
 
         /// <summary>Tries to acquire the lock for the specified key.</summary>
         /// <remarks>
@@ -908,6 +1006,60 @@ namespace Hazelcast.Core
         /// <exception cref="System.Exception" />
         bool TryLock(TKey key, long time, TimeUnit timeunit, long leaseTime, TimeUnit leaseTimeunit);
 
+        /// <summary>
+        ///     Tries to put the given key, value into this map within specified timeout value.
+        /// </summary>
+        /// <remarks>
+        ///     Tries to put the given key, value into this map within specified
+        ///     timeout value. If this method returns false, it means that
+        ///     the caller thread couldn't acquire the lock for the key within
+        ///     timeout duration, thus put operation is not successful.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key of the entry</param>
+        /// <param name="value">value of the entry</param>
+        /// <param name="timeout">maximum time to wait</param>
+        /// <param name="timeunit"><see cref="TimeUnit" /> for the timeout</param>
+        /// <returns> <c>true</c> if the put is successful, <c>false</c> otherwise. </returns>
+        bool TryPut(TKey key, TValue value, long timeout, TimeUnit timeunit);
+
+        /// <summary>
+        ///     Tries to remove the entry with the given key from this map
+        ///     within specified timeout value.
+        /// </summary>
+        /// <remarks>
+        ///     Tries to remove the entry with the given key from this map
+        ///     within specified timeout value. If the key is already locked by another
+        ///     thread and/or member, then this operation will wait timeout
+        ///     amount for acquiring the lock.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning-2:</b>
+        ///     </p>
+        ///     <p>
+        ///         This method returns a clone of previous value, not the original (identically equal) value
+        ///         previously put into map.
+        ///     </p>
+        /// </remarks>
+        /// <param name="key">key of the entry</param>
+        /// <param name="timeout"> maximum time to wait for acquiring the lock for the key </param>
+        /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
+        /// <returns> <c>true</c> if the remove is successful, <c>false</c> otherwise. </returns>
+        bool TryRemove(TKey key, long timeout, TimeUnit timeunit);
+
         /// <summary>Releases the lock for the specified key.</summary>
         /// <remarks>
         ///     Releases the lock for the specified key. It never blocks and
@@ -930,81 +1082,6 @@ namespace Hazelcast.Core
         /// <param name="key">key to lock.</param>
         /// <exception cref="SynchronizationLockException">if the current thread does not hold this lock</exception>
         void Unlock(TKey key);
-
-        /// <summary>Releases the lock for the specified key regardless of the lock owner.</summary>
-        /// <remarks>
-        ///     Releases the lock for the specified key regardless of the lock owner.
-        ///     It always successfully unlocks the key, never blocks
-        ///     and returns immediately.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        /// </remarks>
-        /// <param name="key">key to lock.</param>
-        void ForceUnlock(TKey key);
-
-        /// <summary>
-        ///     Returns a
-        ///     <see cref="ICollection{E}" />
-        ///     clone of the mappings contained in this map.
-        ///     The set is <b>NOT</b> backed by the map,
-        ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
-        /// </summary>
-        /// <returns>a <see cref="ISet{E}" /> clone of the keys mappings in this map</returns>
-        ISet<KeyValuePair<TKey, TValue>> EntrySet();
-
-        /// <summary>
-        ///     Queries the map based on the specified predicate and
-        ///     returns the matching entries.
-        /// </summary>
-        /// <remarks>
-        ///     Queries the map based on the specified predicate and
-        ///     returns the matching entries.
-        ///     <p />
-        ///     Specified predicate runs on all members in parallel.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     The set is <b>NOT</b> backed by the map,
-        ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
-        /// </remarks>
-        /// <param name="predicate">query criteria</param>
-        /// <returns>result entry <see cref="ISet{E}" /> of the query</returns>
-        ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate<TKey, TValue> predicate);
-
-        /// <summary>Returns a set clone of the keys contained in this map.</summary>
-        /// <remarks>
-        ///     Returns a set clone of the keys contained in this map.
-        ///     The set is <b>NOT</b> backed by the map,
-        ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
-        /// </remarks>
-        /// <returns>a <see cref="ISet{E}" /> clone of the keys contained in this map</returns>
-        ISet<TKey> KeySet();
-
-        /// <summary>
-        ///     Queries the map based on the specified predicate and
-        ///     returns the keys of matching entries.
-        /// </summary>
-        /// <remarks>
-        ///     Queries the map based on the specified predicate and
-        ///     returns the keys of matching entries.
-        ///     <p />
-        ///     Specified predicate runs on all members in parallel.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     The set is <b>NOT</b> backed by the map,
-        ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
-        /// </remarks>
-        /// <param name="predicate">query criteria</param>
-        /// <returns>result key <see cref="ISet{E}" /> of the query</returns>
-        ISet<TKey> KeySet(IPredicate<TKey, TValue> predicate);
 
         /// <summary>Returns a collection clone of the values contained in this map.</summary>
         /// <remarks>
@@ -1034,82 +1111,5 @@ namespace Hazelcast.Core
         /// <param name="predicate">query criteria</param>
         /// <returns>result value collection of the query</returns>
         ICollection<TValue> Values(IPredicate<TKey, TValue> predicate);
-
-        /// <summary>Returns the <c>EntryView</c> for the specified key.</summary>
-        /// <remarks>
-        ///     Returns the <c>EntryView</c> for the specified key.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     <p>
-        ///         This method returns a clone of original mapping, modifying the returned value does not change
-        ///         the actual value in the map. One should put modified value back to make changes visible to all nodes.
-        ///     </p>
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning-2:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        /// </remarks>
-        /// <param name="key">key of the entry</param>
-        /// <returns><c>EntryView</c> of the specified key</returns>
-        /// <seealso cref="IEntryView{K, V}" />
-        IEntryView<TKey, TValue> GetEntryView(TKey key);
-
-        /// <summary>
-        ///     Removes all of the mappings from this map (optional operation).
-        /// </summary>
-        /// <remarks>
-        ///     The map will be empty after this call returns.
-        /// </remarks>
-        void Clear();
-
-        /// <summary>Returns <c>true</c> if this map contains no entries.</summary>
-        /// <remarks>Returns <c>true</c> if this map contains no entries.</remarks>
-        /// <returns><c>true</c> if this map contains no entries</returns>
-        bool IsEmpty();
-
-        /// <summary>Returns the number of entries in this map.</summary>
-        /// <remarks>Returns the number of entries in this map.</remarks>
-        /// <returns>the number of entries in this map</returns>
-        int Size();
-
-        /// <summary>
-        ///     If this map has a MapStore this method flushes
-        ///     all the local dirty entries by calling <c>MapStore.storeAll()</c> and/or <c>MapStore.deleteAll()</c>
-        /// </summary>
-        void Flush();
-
-        /// <summary>Evicts the specified key from this map.</summary>
-        /// <remarks>
-        ///     Evicts the specified key from this map. If
-        ///     a <c>MapStore</c> defined for this map, then the entry is not
-        ///     deleted from the underlying <c>MapStore</c>, evict only removes
-        ///     the entry from the memory.
-        ///     <p />
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        ///     defined in <c>key</c>'s class.
-        /// </remarks>
-        /// <param name="key">key to evict</param>
-        /// <returns><c>true</c> if the key is evicted, <c>false</c> otherwise.</returns>
-        bool Evict(TKey key);
-
-        /// <summary>Evicts all keys from this map except the locked ones.</summary>
-        /// <remarks>
-        /// Evicts all keys from this map except the locked ones.
-        /// <p/>
-        /// <see cref="IMap{K, V}.Clear()"/>
-        /// method.
-        /// <p/>
-        /// The EVICT_ALL event is fired for any registered listeners.
-        /// </remarks>
-        void EvictAll();
     }
 }

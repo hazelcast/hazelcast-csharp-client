@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
@@ -74,7 +72,7 @@ namespace Hazelcast.Client.Spi
                     (name, serviceName, type) =>
                     {
                         var ns = new ObjectNamespace(serviceName, name);
-                        ClientProxy proxy = null;
+                        ClientProxy proxy;
                         _proxies.TryGetValue(ns, out proxy);
                         if (proxy == null)
                         {
@@ -113,13 +111,13 @@ namespace Hazelcast.Client.Spi
         public ClientProxy GetOrCreateProxy<T>(string service, string id)
         {
             var ns = new ObjectNamespace(service, id);
-            ClientProxy proxy = null;
+            ClientProxy proxy;
             _proxies.TryGetValue(ns, out proxy);
             if (proxy != null)
             {
                 return proxy;
             }
-            ClientProxyFactory factory = null;
+            ClientProxyFactory factory;
 
             _proxyFactories.TryGetValue(service, out factory);
             if (factory == null)
@@ -134,7 +132,7 @@ namespace Hazelcast.Client.Spi
         public ClientProxy GetProxy(string service, string id)
         {
             var ns = new ObjectNamespace(service, id);
-            ClientProxy proxy = null;
+            ClientProxy proxy;
             _proxies.TryGetValue(ns, out proxy);
             if (proxy != null)
             {
@@ -207,7 +205,6 @@ namespace Hazelcast.Client.Spi
 
         public bool RemoveDistributedObjectListener(string id)
         {
-            var request = ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id);
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
                 _client.GetListenerService(), this, _client.GetClientConfig());
@@ -260,15 +257,19 @@ namespace Hazelcast.Client.Spi
         {
             var initializationTarget = FindNextAddressToCreateARequest();
             var invocationTarget = initializationTarget;
-            if (initializationTarget != null && _client.GetConnectionManager().GetConnection(initializationTarget) == null) {
+            if (initializationTarget != null &&
+                _client.GetConnectionManager().GetConnection(initializationTarget) == null)
+            {
                 invocationTarget = _client.GetClientClusterService().GetOwnerConnectionAddress();
-            }   
+            }
 
-            if (invocationTarget == null) {
+            if (invocationTarget == null)
+            {
                 throw new IOException("Not able to setup owner connection!");
             }
 
-            var request = ClientCreateProxyCodec.EncodeRequest(clientProxy.GetName(), clientProxy.GetServiceName(), initializationTarget);
+            var request = ClientCreateProxyCodec.EncodeRequest(clientProxy.GetName(), clientProxy.GetServiceName(),
+                initializationTarget);
             try
             {
                 ThreadUtil.GetResult(_client.GetInvocationService().InvokeOnTarget(request, invocationTarget));
@@ -277,7 +278,8 @@ namespace Hazelcast.Client.Spi
             {
                 throw ExceptionUtil.Rethrow(e);
             }
-            clientProxy.SetContext(new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
+            clientProxy.SetContext(new ClientContext(_client.GetSerializationService(),
+                _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
                 _client.GetListenerService(),
                 this, _client.GetClientConfig()));
@@ -286,7 +288,7 @@ namespace Hazelcast.Client.Spi
 
         private void InitializeWithRetry(ClientProxy clientProxy)
         {
-            var clientInvocationService = (ClientInvocationService)_client.GetInvocationService();
+            var clientInvocationService = (ClientInvocationService) _client.GetInvocationService();
             long retryCountLimit = clientInvocationService.InvocationRetryCount;
             for (var retryCount = 0; retryCount < retryCountLimit; retryCount++)
             {
@@ -310,7 +312,7 @@ namespace Hazelcast.Client.Spi
                     }
                     else
                     {
-                        throw e;
+                        throw;
                     }
                 }
             }

@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Collections.Generic;
 
@@ -20,26 +18,26 @@ namespace Hazelcast.IO.Serialization
 {
     internal class DefaultPortableWriter : IPortableWriter
     {
-        private readonly int begin;
-        private readonly IClassDefinition cd;
-        private readonly int offset;
-        private readonly IBufferObjectDataOutput @out;
-        private readonly PortableSerializer serializer;
-        private readonly ISet<string> writtenFields;
-        private bool raw;
+        private readonly int _begin;
+        private readonly IClassDefinition _cd;
+        private readonly IBufferObjectDataOutput _out;
+        private readonly PortableSerializer _serializer;
+        private readonly ISet<string> _writtenFields;
+        private readonly int _offset;
+        private bool _raw;
 
         /// <exception cref="System.IO.IOException" />
         public DefaultPortableWriter(PortableSerializer serializer, IBufferObjectDataOutput @out, IClassDefinition cd)
         {
-            this.serializer = serializer;
-            this.@out = @out;
-            this.cd = cd;
-            writtenFields = new HashSet<string>(); //cd.GetFieldCount()
-            begin = @out.Position();
+            _serializer = serializer;
+            _out = @out;
+            _cd = cd;
+            _writtenFields = new HashSet<string>(); //cd.GetFieldCount()
+            _begin = @out.Position();
             // room for final offset
             @out.WriteZeroBytes(4);
             @out.WriteInt(cd.GetFieldCount());
-            offset = @out.Position();
+            _offset = @out.Position();
             // one additional for raw data
             var fieldIndexesLength = (cd.GetFieldCount() + 1)*Bits.IntSizeInBytes;
             @out.WriteZeroBytes(fieldIndexesLength);
@@ -49,63 +47,63 @@ namespace Hazelcast.IO.Serialization
         public virtual void WriteInt(string fieldName, int value)
         {
             SetPosition(fieldName, FieldType.Int);
-            @out.WriteInt(value);
+            _out.WriteInt(value);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteLong(string fieldName, long value)
         {
             SetPosition(fieldName, FieldType.Long);
-            @out.WriteLong(value);
+            _out.WriteLong(value);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteUTF(string fieldName, string str)
         {
             SetPosition(fieldName, FieldType.Utf);
-            @out.WriteUTF(str);
+            _out.WriteUTF(str);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteBoolean(string fieldName, bool value)
         {
             SetPosition(fieldName, FieldType.Boolean);
-            @out.WriteBoolean(value);
+            _out.WriteBoolean(value);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteByte(string fieldName, byte value)
         {
             SetPosition(fieldName, FieldType.Byte);
-            @out.WriteByte(value);
+            _out.WriteByte(value);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteChar(string fieldName, int value)
         {
             SetPosition(fieldName, FieldType.Char);
-            @out.WriteChar(value);
+            _out.WriteChar(value);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteDouble(string fieldName, double value)
         {
             SetPosition(fieldName, FieldType.Double);
-            @out.WriteDouble(value);
+            _out.WriteDouble(value);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteFloat(string fieldName, float value)
         {
             SetPosition(fieldName, FieldType.Float);
-            @out.WriteFloat(value);
+            _out.WriteFloat(value);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteShort(string fieldName, short value)
         {
             SetPosition(fieldName, FieldType.Short);
-            @out.WriteShort(value);
+            _out.WriteShort(value);
         }
 
         /// <exception cref="System.IO.IOException" />
@@ -113,13 +111,13 @@ namespace Hazelcast.IO.Serialization
         {
             var fd = SetPosition(fieldName, FieldType.Portable);
             var isNull = portable == null;
-            @out.WriteBoolean(isNull);
-            @out.WriteInt(fd.GetFactoryId());
-            @out.WriteInt(fd.GetClassId());
+            _out.WriteBoolean(isNull);
+            _out.WriteInt(fd.GetFactoryId());
+            _out.WriteInt(fd.GetClassId());
             if (!isNull)
             {
                 CheckPortableAttributes(fd, portable);
-                serializer.WriteInternal(@out, portable);
+                _serializer.WriteInternal(_out, portable);
             }
         }
 
@@ -127,72 +125,72 @@ namespace Hazelcast.IO.Serialization
         public virtual void WriteNullPortable(string fieldName, int factoryId, int classId)
         {
             SetPosition(fieldName, FieldType.Portable);
-            @out.WriteBoolean(true);
-            @out.WriteInt(factoryId);
-            @out.WriteInt(classId);
+            _out.WriteBoolean(true);
+            _out.WriteInt(factoryId);
+            _out.WriteInt(classId);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteBooleanArray(string fieldName, bool[] values)
         {
             SetPosition(fieldName, FieldType.BooleanArray);
-            @out.WriteBooleanArray(values);
+            _out.WriteBooleanArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteByteArray(string fieldName, byte[] values)
         {
             SetPosition(fieldName, FieldType.ByteArray);
-            @out.WriteByteArray(values);
+            _out.WriteByteArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteCharArray(string fieldName, char[] values)
         {
             SetPosition(fieldName, FieldType.CharArray);
-            @out.WriteCharArray(values);
+            _out.WriteCharArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteIntArray(string fieldName, int[] values)
         {
             SetPosition(fieldName, FieldType.IntArray);
-            @out.WriteIntArray(values);
+            _out.WriteIntArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteLongArray(string fieldName, long[] values)
         {
             SetPosition(fieldName, FieldType.LongArray);
-            @out.WriteLongArray(values);
+            _out.WriteLongArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteDoubleArray(string fieldName, double[] values)
         {
             SetPosition(fieldName, FieldType.DoubleArray);
-            @out.WriteDoubleArray(values);
+            _out.WriteDoubleArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteFloatArray(string fieldName, float[] values)
         {
             SetPosition(fieldName, FieldType.FloatArray);
-            @out.WriteFloatArray(values);
+            _out.WriteFloatArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteShortArray(string fieldName, short[] values)
         {
             SetPosition(fieldName, FieldType.ShortArray);
-            @out.WriteShortArray(values);
+            _out.WriteShortArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteUTFArray(string fieldName, string[] values)
         {
             SetPosition(fieldName, FieldType.UtfArray);
-            @out.WriteUTFArray(values);
+            _out.WriteUTFArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />
@@ -200,20 +198,20 @@ namespace Hazelcast.IO.Serialization
         {
             var fd = SetPosition(fieldName, FieldType.PortableArray);
             var len = portables == null ? Bits.NullArray : portables.Length;
-            @out.WriteInt(len);
-            @out.WriteInt(fd.GetFactoryId());
-            @out.WriteInt(fd.GetClassId());
+            _out.WriteInt(len);
+            _out.WriteInt(fd.GetFactoryId());
+            _out.WriteInt(fd.GetClassId());
             if (len > 0)
             {
-                var offset = @out.Position();
-                @out.WriteZeroBytes(len*4);
+                var offset = _out.Position();
+                _out.WriteZeroBytes(len*4);
                 for (var i = 0; i < portables.Length; i++)
                 {
                     var portable = portables[i];
                     CheckPortableAttributes(fd, portable);
-                    var position = @out.Position();
-                    @out.WriteInt(offset + i*Bits.IntSizeInBytes, position);
-                    serializer.WriteInternal(@out, portable);
+                    var position = _out.Position();
+                    _out.WriteInt(offset + i*Bits.IntSizeInBytes, position);
+                    _serializer.WriteInternal(_out, portable);
                 }
             }
         }
@@ -221,20 +219,28 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException" />
         public virtual IObjectDataOutput GetRawDataOutput()
         {
-            if (!raw)
+            if (!_raw)
             {
-                var pos = @out.Position();
+                var pos = _out.Position();
                 // last index
-                var index = cd.GetFieldCount();
-                @out.WriteInt(offset + index*Bits.IntSizeInBytes, pos);
+                var index = _cd.GetFieldCount();
+                _out.WriteInt(_offset + index*Bits.IntSizeInBytes, pos);
             }
-            raw = true;
-            return @out;
+            _raw = true;
+            return _out;
         }
 
         public virtual int GetVersion()
         {
-            return cd.GetVersion();
+            return _cd.GetVersion();
+        }
+
+        /// <exception cref="System.IO.IOException" />
+        internal virtual void End()
+        {
+            // write final offset
+            var position = _out.Position();
+            _out.WriteInt(_begin, position);
         }
 
         private void CheckPortableAttributes(IFieldDefinition fd, IPortable portable)
@@ -256,40 +262,32 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException" />
         private IFieldDefinition SetPosition(string fieldName, FieldType fieldType)
         {
-            if (raw)
+            if (_raw)
             {
                 throw new HazelcastSerializationException(
                     "Cannot write Portable fields after getRawDataOutput() is called!");
             }
-            var fd = cd.GetField(fieldName);
+            var fd = _cd.GetField(fieldName);
             if (fd == null)
             {
                 throw new HazelcastSerializationException("Invalid field name: '" + fieldName +
-                                                          "' for ClassDefinition {id: " + cd.GetClassId() +
-                                                          ", version: " + cd.GetVersion() + "}");
+                                                          "' for ClassDefinition {id: " + _cd.GetClassId() +
+                                                          ", version: " + _cd.GetVersion() + "}");
             }
-            if (writtenFields.Add(fieldName))
+            if (_writtenFields.Add(fieldName))
             {
-                var pos = @out.Position();
+                var pos = _out.Position();
                 var index = fd.GetIndex();
-                @out.WriteInt(offset + index*Bits.IntSizeInBytes, pos);
-                @out.WriteShort(fieldName.Length);
-                @out.WriteBytes(fieldName);
-                @out.WriteByte((byte) fieldType);
+                _out.WriteInt(_offset + index*Bits.IntSizeInBytes, pos);
+                _out.WriteShort(fieldName.Length);
+                _out.WriteBytes(fieldName);
+                _out.WriteByte((byte) fieldType);
             }
             else
             {
                 throw new HazelcastSerializationException("Field '" + fieldName + "' has already been written!");
             }
             return fd;
-        }
-
-        /// <exception cref="System.IO.IOException" />
-        internal virtual void End()
-        {
-            // write final offset
-            var position = @out.Position();
-            @out.WriteInt(begin, position);
         }
     }
 }

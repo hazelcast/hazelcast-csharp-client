@@ -1,33 +1,50 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-using Hazelcast.Client.Protocol;
-using Hazelcast.Client.Protocol.Util;
-using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
 using System.Collections.Generic;
+using Hazelcast.Core;
+using Hazelcast.IO;
+using Hazelcast.Logging;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
     internal sealed class ClientAddMembershipListenerCodec
     {
-
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientAddMembershipListener;
         public const int ResponseType = 104;
         public const bool Retryable = false;
+
+        public static readonly ClientMessageType RequestType = ClientMessageType.ClientAddMembershipListener;
+
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            var parameters = new ResponseParameters();
+            string response = null;
+            response = clientMessage.GetStringUtf8();
+            parameters.response = response;
+            return parameters;
+        }
+
+        public static ClientMessage EncodeRequest(bool localOnly)
+        {
+            var requiredDataSize = RequestParameters.CalculateDataSize(localOnly);
+            var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            clientMessage.SetMessageType((int) RequestType);
+            clientMessage.SetRetryable(Retryable);
+            clientMessage.Set(localOnly);
+            clientMessage.UpdateFrameLength();
+            return clientMessage;
+        }
 
         //************************ REQUEST *************************//
 
@@ -38,21 +55,10 @@ namespace Hazelcast.Client.Protocol.Codec
 
             public static int CalculateDataSize(bool localOnly)
             {
-                int dataSize = ClientMessage.HeaderSize;
+                var dataSize = ClientMessage.HeaderSize;
                 dataSize += Bits.BooleanSizeInBytes;
                 return dataSize;
             }
-        }
-
-        public static ClientMessage EncodeRequest(bool localOnly)
-        {
-            int requiredDataSize = RequestParameters.CalculateDataSize(localOnly);
-            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int)RequestType);
-            clientMessage.SetRetryable(Retryable);
-            clientMessage.Set(localOnly);
-            clientMessage.UpdateFrameLength();
-            return clientMessage;
         }
 
         //************************ RESPONSE *************************//
@@ -63,25 +69,23 @@ namespace Hazelcast.Client.Protocol.Codec
             public string response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
-        {
-            ResponseParameters parameters = new ResponseParameters();
-            string response = null;
-            response = clientMessage.GetStringUtf8();
-            parameters.response = response;
-            return parameters;
-        }
-
 
         //************************ EVENTS *************************//
         public abstract class AbstractEventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleMember handleMember, HandleMemberSet handleMemberSet, HandleMemberAttributeChange handleMemberAttributeChange)
+            public delegate void HandleMember(IMember member, int eventType);
+
+            public delegate void HandleMemberAttributeChange(string uuid, string key, int operationType, string value);
+
+            public delegate void HandleMemberSet(ISet<IMember> members);
+
+            public static void Handle(IClientMessage clientMessage, HandleMember handleMember,
+                HandleMemberSet handleMemberSet, HandleMemberAttributeChange handleMemberAttributeChange)
             {
-                int messageType = clientMessage.GetMessageType();
+                var messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventMember)
                 {
-                    Core.IMember member = null;
+                    IMember member = null;
                     member = MemberCodec.Decode(clientMessage);
                     int eventType;
                     eventType = clientMessage.GetInt();
@@ -90,12 +94,12 @@ namespace Hazelcast.Client.Protocol.Codec
                 }
                 if (messageType == EventMessageConst.EventMemberSet)
                 {
-                    ISet<Core.IMember> members = null;
-                    int members_size = clientMessage.GetInt();
-                    members = new HashSet<Core.IMember>();
-                    for (int members_index = 0; members_index < members_size; members_index++)
+                    ISet<IMember> members = null;
+                    var members_size = clientMessage.GetInt();
+                    members = new HashSet<IMember>();
+                    for (var members_index = 0; members_index < members_size; members_index++)
                     {
-                        Core.IMember members_item;
+                        IMember members_item;
                         members_item = MemberCodec.Decode(clientMessage);
                         members.Add(members_item);
                     }
@@ -111,7 +115,7 @@ namespace Hazelcast.Client.Protocol.Codec
                     int operationType;
                     operationType = clientMessage.GetInt();
                     string value = null;
-                    bool value_isNull = clientMessage.GetBoolean();
+                    var value_isNull = clientMessage.GetBoolean();
                     if (!value_isNull)
                     {
                         value = clientMessage.GetStringUtf8();
@@ -119,13 +123,9 @@ namespace Hazelcast.Client.Protocol.Codec
                     handleMemberAttributeChange(uuid, key, operationType, value);
                     return;
                 }
-                Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler)).Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
+                Logger.GetLogger(typeof (AbstractEventHandler))
+                    .Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
             }
-
-            public delegate void HandleMember(Core.IMember member, int eventType);
-            public delegate void HandleMemberSet(ISet<Core.IMember> members);
-            public delegate void HandleMemberAttributeChange(string uuid, string key, int operationType, string value);
         }
-
     }
 }

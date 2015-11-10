@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -54,47 +52,6 @@ namespace Hazelcast.Client.Proxy
         }
 
         public abstract string GetServiceName();
-        internal abstract void OnDestroy();
-
-        protected virtual IClientMessage Invoke(IClientMessage request)
-        {
-            var rpc = Proxy.GetClient().GetInvocationService();
-            try
-            {
-                var task = rpc.InvokeOnMember(request, Proxy.TxnOwnerNode);
-                return ThreadUtil.GetResult(task);
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
-
-        protected virtual T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
-        {
-            var response = Invoke(request);
-            return decodeResponse(response);
-        }
-
-        protected virtual string GetTransactionId()
-        {
-            return Proxy.GetTxnId();
-        }
-
-        protected virtual long GetThreadId()
-        {
-            return ThreadUtil.GetThreadId();
-        }
-
-        protected virtual IData ToData(object obj)
-        {
-            return Proxy.GetClient().GetSerializationService().ToData(obj);
-        }
-
-        protected virtual E ToObject<E>(IData data)
-        {
-            return Proxy.GetClient().GetSerializationService().ToObject<E>(data);
-        }
 
         protected internal virtual IList<T> ToList<T>(ICollection<IData> dataList)
         {
@@ -116,5 +73,46 @@ namespace Hazelcast.Client.Proxy
             return set;
         }
 
+        protected virtual long GetThreadId()
+        {
+            return ThreadUtil.GetThreadId();
+        }
+
+        protected virtual string GetTransactionId()
+        {
+            return Proxy.GetTxnId();
+        }
+
+        protected virtual IClientMessage Invoke(IClientMessage request)
+        {
+            var rpc = Proxy.GetClient().GetInvocationService();
+            try
+            {
+                var task = rpc.InvokeOnMember(request, Proxy.TxnOwnerNode);
+                return ThreadUtil.GetResult(task);
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
+        }
+
+        protected virtual T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
+        {
+            var response = Invoke(request);
+            return decodeResponse(response);
+        }
+
+        protected virtual IData ToData(object obj)
+        {
+            return Proxy.GetClient().GetSerializationService().ToData(obj);
+        }
+
+        protected virtual TE ToObject<TE>(IData data)
+        {
+            return Proxy.GetClient().GetSerializationService().ToObject<TE>(data);
+        }
+
+        internal abstract void OnDestroy();
     }
 }

@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Text;
@@ -58,36 +56,25 @@ namespace Hazelcast.Transaction
         /// </remarks>
         public TransactionOptions()
         {
-            SetTimeout(2, TimeUnit.MINUTES).SetDurability(1).SetTransactionType(TransactionType.TwoPhase);
+            SetTimeout(2, TimeUnit.Minutes).SetDurability(1).SetTransactionType(TransactionType.TwoPhase);
         }
 
-        /// <summary>
-        ///     Gets the
-        ///     <see cref="TransactionType">TransactionType</see>
-        ///     .
-        /// </summary>
-        /// <returns>the TransactionType.</returns>
-        public TransactionType GetTransactionType()
+        /// <summary>Creates a new TransactionOptions configured with default settings.</summary>
+        /// <remarks>Creates a new TransactionOptions configured with default settings.</remarks>
+        /// <returns>the created default TransactionOptions.</returns>
+        /// <seealso cref="TransactionOptions()">TransactionOptions()</seealso>
+        public static TransactionOptions GetDefault()
         {
-            return _transactionType;
+            return new TransactionOptions();
         }
 
-        /// <summary>
-        ///     Sets the
-        ///     <see cref="TransactionType">TransactionType</see>
-        ///     .
-        ///     A local transaction is less safe than a two phase transaction; when a member fails during the commit
-        ///     of a local transaction, it could be that some of the changes are committed, while others are not and this
-        ///     can leave your system in an inconsistent state.
-        /// </summary>
-        /// <param name="transactionType">the new TransactionType.</param>
-        /// <returns>the updated TransactionOptions.</returns>
-        /// <seealso cref="GetTransactionType()">GetTransactionType()</seealso>
+        /// <summary>Gets the transaction durability.</summary>
+        /// <remarks>Gets the transaction durability.</remarks>
+        /// <returns>the transaction durability.</returns>
         /// <seealso cref="SetDurability(int)">SetDurability(int)</seealso>
-        public TransactionOptions SetTransactionType(TransactionType transactionType)
+        public int GetDurability()
         {
-            _transactionType = transactionType;
-            return this;
+            return _durability;
         }
 
         /// <summary>Gets the timeout in milliseconds.</summary>
@@ -99,34 +86,15 @@ namespace Hazelcast.Transaction
             return _timeoutMillis;
         }
 
-        /// <summary>Sets the timeout.</summary>
-        /// <remarks>
-        ///     Sets the timeout.
-        ///     The timeout determines the maximum lifespan of a transaction. So if a transaction is configured with a
-        ///     timeout of 2 minutes, then it will automatically rollback if it hasn't committed yet.
-        /// </remarks>
-        /// <param name="timeout">the timeout.</param>
-        /// <param name="timeUnit">the TimeUnit of the timeout.</param>
-        /// <returns>the updated TransactionOptions</returns>
-        /// <exception cref="System.ArgumentException">if timeout smaller or equal than 0, or timeUnit is null.</exception>
-        /// <seealso cref="GetTimeoutMillis()">GetTimeoutMillis()</seealso>
-        public TransactionOptions SetTimeout(long timeout, TimeUnit timeUnit)
+        /// <summary>
+        ///     Gets the
+        ///     <see cref="TransactionType">TransactionType</see>
+        ///     .
+        /// </summary>
+        /// <returns>the TransactionType.</returns>
+        public TransactionType GetTransactionType()
         {
-            if (timeout <= 0)
-            {
-                throw new ArgumentException("Timeout must be positive!");
-            }
-            _timeoutMillis = timeUnit.ToMillis(timeout);
-            return this;
-        }
-
-        /// <summary>Gets the transaction durability.</summary>
-        /// <remarks>Gets the transaction durability.</remarks>
-        /// <returns>the transaction durability.</returns>
-        /// <seealso cref="SetDurability(int)">SetDurability(int)</seealso>
-        public int GetDurability()
-        {
-            return _durability;
+            return _transactionType;
         }
 
         /// <summary>Sets the transaction durability.</summary>
@@ -150,13 +118,43 @@ namespace Hazelcast.Transaction
             return this;
         }
 
-        /// <summary>Creates a new TransactionOptions configured with default settings.</summary>
-        /// <remarks>Creates a new TransactionOptions configured with default settings.</remarks>
-        /// <returns>the created default TransactionOptions.</returns>
-        /// <seealso cref="TransactionOptions()">TransactionOptions()</seealso>
-        public static TransactionOptions GetDefault()
+        /// <summary>Sets the timeout.</summary>
+        /// <remarks>
+        ///     Sets the timeout.
+        ///     The timeout determines the maximum lifespan of a transaction. So if a transaction is configured with a
+        ///     timeout of 2 minutes, then it will automatically rollback if it hasn't committed yet.
+        /// </remarks>
+        /// <param name="timeout">the timeout.</param>
+        /// <param name="timeUnit">the TimeUnit of the timeout.</param>
+        /// <returns>the updated TransactionOptions</returns>
+        /// <exception cref="System.ArgumentException">if timeout smaller or equal than 0, or timeUnit is null.</exception>
+        /// <seealso cref="GetTimeoutMillis()">GetTimeoutMillis()</seealso>
+        public TransactionOptions SetTimeout(long timeout, TimeUnit timeUnit)
         {
-            return new TransactionOptions();
+            if (timeout <= 0)
+            {
+                throw new ArgumentException("Timeout must be positive!");
+            }
+            _timeoutMillis = timeUnit.ToMillis(timeout);
+            return this;
+        }
+
+        /// <summary>
+        ///     Sets the
+        ///     <see cref="TransactionType">TransactionType</see>
+        ///     .
+        ///     A local transaction is less safe than a two phase transaction; when a member fails during the commit
+        ///     of a local transaction, it could be that some of the changes are committed, while others are not and this
+        ///     can leave your system in an inconsistent state.
+        /// </summary>
+        /// <param name="transactionType">the new TransactionType.</param>
+        /// <returns>the updated TransactionOptions.</returns>
+        /// <seealso cref="GetTransactionType()">GetTransactionType()</seealso>
+        /// <seealso cref="SetDurability(int)">SetDurability(int)</seealso>
+        public TransactionOptions SetTransactionType(TransactionType transactionType)
+        {
+            _transactionType = transactionType;
+            return this;
         }
 
         public override string ToString()
