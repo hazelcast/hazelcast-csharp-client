@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Text;
 using Hazelcast.Util;
@@ -31,9 +29,9 @@ namespace Hazelcast.Config
 
         public const string DefaultGroupName = "dev";
 
-        private string name = DefaultGroupName;
+        private string _name = DefaultGroupName;
 
-        private string password = DefaultGroupPassword;
+        private string _password = DefaultGroupPassword;
 
         /// <summary>Creates a GroupConfig with default group-name and group-password.</summary>
         /// <remarks>Creates a GroupConfig with default group-name and group-password.</remarks>
@@ -59,49 +57,6 @@ namespace Hazelcast.Config
             SetPassword(password);
         }
 
-        /// <summary>Gets the name of the group.</summary>
-        /// <remarks>Gets the name of the group.</remarks>
-        /// <returns>the name</returns>
-        public string GetName()
-        {
-            return name;
-        }
-
-        /// <summary>Sets the group name.</summary>
-        /// <remarks>Sets the group name.</remarks>
-        /// <param name="name">the name to set</param>
-        /// <returns>the updated GroupConfig.</returns>
-        /// <exception cref="System.ArgumentException">if name is null.</exception>
-        public GroupConfig SetName(string name)
-        {
-            this.name = ValidationUtil.IsNotNull(name, "group name");
-            return this;
-        }
-
-        /// <summary>Gets the password to connec to to the group.</summary>
-        /// <remarks>Gets the password to connec to to the group.</remarks>
-        /// <returns>the password</returns>
-        public string GetPassword()
-        {
-            return password;
-        }
-
-        /// <summary>Sets the password.</summary>
-        /// <remarks>Sets the password.</remarks>
-        /// <param name="password">the password to set</param>
-        /// <returns>the updated GroupConfig.</returns>
-        /// <exception cref="System.ArgumentException">if password is null.</exception>
-        public GroupConfig SetPassword(string password)
-        {
-            this.password = ValidationUtil.IsNotNull(password, "group password");
-            return this;
-        }
-
-        public override int GetHashCode()
-        {
-            return (name != null ? name.GetHashCode() : 0) + 31*(password != null ? password.GetHashCode() : 0);
-        }
-
         public override bool Equals(object obj)
         {
             if (this == obj)
@@ -113,16 +68,59 @@ namespace Hazelcast.Config
                 return false;
             }
             var other = (GroupConfig) obj;
-            return (name == null ? other.name == null : name.Equals(other.name)) &&
-                   (password == null ? other.password == null : password.Equals(other.password));
+            return (_name == null ? other._name == null : _name.Equals(other._name)) &&
+                   (_password == null ? other._password == null : _password.Equals(other._password));
+        }
+
+        public override int GetHashCode()
+        {
+            return (_name != null ? _name.GetHashCode() : 0) + 31*(_password != null ? _password.GetHashCode() : 0);
+        }
+
+        /// <summary>Gets the name of the group.</summary>
+        /// <remarks>Gets the name of the group.</remarks>
+        /// <returns>the name</returns>
+        public string GetName()
+        {
+            return _name;
+        }
+
+        /// <summary>Gets the password to connec to to the group.</summary>
+        /// <remarks>Gets the password to connec to to the group.</remarks>
+        /// <returns>the password</returns>
+        public string GetPassword()
+        {
+            return _password;
+        }
+
+        /// <summary>Sets the group name.</summary>
+        /// <remarks>Sets the group name.</remarks>
+        /// <param name="name">the name to set</param>
+        /// <returns>the updated GroupConfig.</returns>
+        /// <exception cref="System.ArgumentException">if name is null.</exception>
+        public GroupConfig SetName(string name)
+        {
+            _name = ValidationUtil.IsNotNull(name, "group name");
+            return this;
+        }
+
+        /// <summary>Sets the password.</summary>
+        /// <remarks>Sets the password.</remarks>
+        /// <param name="password">the password to set</param>
+        /// <returns>the updated GroupConfig.</returns>
+        /// <exception cref="System.ArgumentException">if password is null.</exception>
+        public GroupConfig SetPassword(string password)
+        {
+            _password = ValidationUtil.IsNotNull(password, "group password");
+            return this;
         }
 
         public override string ToString()
         {
             var builder = new StringBuilder();
-            builder.Append("GroupConfig [name=").Append(name).Append(", password=");
-            int len = password.Length;
-            for (int i = 0; i < len; i++)
+            builder.Append("GroupConfig [name=").Append(_name).Append(", password=");
+            var len = _password.Length;
+            for (var i = 0; i < len; i++)
             {
                 builder.Append('*');
             }

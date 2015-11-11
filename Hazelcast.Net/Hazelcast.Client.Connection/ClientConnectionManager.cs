@@ -1,23 +1,20 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using Hazelcast.Client.Protocol;
@@ -27,8 +24,7 @@ using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
-﻿using Hazelcast.Net.Ext;
-﻿using Hazelcast.Security;
+using Hazelcast.Security;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Connection
@@ -36,8 +32,6 @@ namespace Hazelcast.Client.Connection
     internal class ClientConnectionManager : IClientConnectionManager
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientConnectionManager));
-        private readonly int _heartBeatTimeout = 60000;
-        private readonly int _heartBeatInterval = 5000;
 
         private readonly ConcurrentDictionary<Address, ClientConnection> _addresses =
             new ConcurrentDictionary<Address, ClientConnection>();
@@ -49,6 +43,8 @@ namespace Hazelcast.Client.Connection
 
         private readonly object _connectionMutex = new object();
         private readonly ICredentials _credentials;
+        private readonly int _heartBeatInterval = 5000;
+        private readonly int _heartBeatTimeout = 60000;
 
         private readonly ConcurrentBag<IConnectionHeartbeatListener> _heatHeartbeatListeners =
             new ConcurrentBag<IConnectionHeartbeatListener>();
@@ -87,8 +83,10 @@ namespace Hazelcast.Client.Connection
                 ThreadUtil.TaskOperationTimeOutMilliseconds = timeout.Value;
             }
 
-            _heartBeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ?? _heartBeatTimeout;
-            _heartBeatInterval = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.interval") ?? _heartBeatInterval;
+            _heartBeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ??
+                                _heartBeatTimeout;
+            _heartBeatInterval = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.interval") ??
+                                 _heartBeatInterval;
         }
 
         public void Start()
@@ -131,12 +129,14 @@ namespace Hazelcast.Client.Connection
                     }
                     catch (Exception)
                     {
+                        // ReSharper disable once InconsistentlySynchronizedField
                         Logger.Finest("Exception during closing connection on shutdown");
                     }
                 }
             }
             catch (Exception e)
             {
+                // ReSharper disable once InconsistentlySynchronizedField
                 Logger.Warning(e.Message);
             }
             return _live;
@@ -206,6 +206,33 @@ namespace Hazelcast.Client.Connection
             return GetOrConnect(target, ClusterAuthenticator);
         }
 
+        public void DestroyConnection(ClientConnection connection)
+        {
+            var address = connection.GetAddress();
+            // ReSharper disable once InconsistentlySynchronizedField
+            Logger.Finest("Destroying connection " + connection);
+            lock (_connectionMutex)
+            {
+                if (address != null)
+                {
+                    ClientConnection conn;
+                    if (_addresses.TryRemove(address, out conn))
+                    {
+                        if (conn == connection)
+                        {
+                            connection.Close();
+                            FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
+                        }
+                        else
+                        {
+                            Logger.Warning(connection + " is already destroyed.");
+                            _addresses.TryAdd(address, conn);
+                        }
+                    }
+                }
+            }
+        }
+
         /// <exception cref="HazelcastException"></exception>
         private void CheckLive()
         {
@@ -225,9 +252,9 @@ namespace Hazelcast.Client.Connection
             var ownerUuid = principal.GetOwnerUuid();
             ClientMessage request;
 
-            if (_credentials is UsernamePasswordCredentials)
+            var usernamePasswordCr = _credentials as UsernamePasswordCredentials;
+            if (usernamePasswordCr != null)
             {
-                var usernamePasswordCr = (UsernamePasswordCredentials) _credentials;
                 request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
                     usernamePasswordCr.GetPassword(), uuid, ownerUuid, false,
                     ClientTypes.Csharp, _client.GetSerializationService().GetVersion());
@@ -243,7 +270,8 @@ namespace Hazelcast.Client.Connection
             IClientMessage response;
             try
             {
-                var future = ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, connection);
+                var future = ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request,
+                    connection);
                 response = ThreadUtil.GetResult(future);
             }
             catch (Exception e)
@@ -257,32 +285,6 @@ namespace Hazelcast.Client.Connection
                 throw new HazelcastException("Node with address '" + rp.address + "' was not found in the member list");
             }
             connection.SetRemoteMember(member);
-        }
-
-        public void DestroyConnection(ClientConnection connection)
-        {
-            var address = connection.GetAddress();
-            Logger.Finest("Destroying connection " + connection);
-            lock (_connectionMutex)
-            {
-                if (address != null)
-                {
-                    ClientConnection conn;
-                    if(_addresses.TryRemove(address, out conn))
-                    {
-                        if (conn == connection)
-                        {
-                            connection.Close();
-                            FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
-                        }
-                        else
-                        {
-                            Logger.Warning(connection + " is already destroyed.");
-                            _addresses.TryAdd(address, conn);
-                        }
-                    }
-                }
-            }
         }
 
         private void FireConnectionListenerEvent(Action<IConnectionListener> listenerAction)
@@ -310,7 +312,7 @@ namespace Hazelcast.Client.Connection
                 try
                 {
                     Logger.Finest("Creating new connection for " + address + " with id " + id);
-                    connection = new ClientConnection(this, (ClientInvocationService)_client.GetInvocationService(),
+                    connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(),
                         id,
                         address, _networkConfig);
                     if (_socketInterceptor != null)
@@ -330,7 +332,7 @@ namespace Hazelcast.Client.Connection
                     {
                         connection.Close();
                     }
-                    throw ExceptionUtil.Rethrow(e, typeof (IOException), typeof(SocketException));
+                    throw ExceptionUtil.Rethrow(e, typeof (IOException), typeof (SocketException));
                 }
             }
         }
@@ -342,19 +344,24 @@ namespace Hazelcast.Client.Connection
                 foreach (var clientConnection in _addresses.Values)
                 {
                     var request = ClientPingCodec.EncodeRequest();
-                    var task = ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, clientConnection);
-                    Logger.Finest("Sending heartbeat request to " +  clientConnection.GetAddress());
+                    var task = ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request,
+                        clientConnection);
+                    // ReSharper disable once InconsistentlySynchronizedField
+                    Logger.Finest("Sending heartbeat request to " + clientConnection.GetAddress());
                     try
                     {
                         var response = ThreadUtil.GetResult(task, _heartBeatTimeout);
-                        var result = ClientPingCodec.DecodeResponse(response);
+                        ClientPingCodec.DecodeResponse(response);
+                        // ReSharper disable once InconsistentlySynchronizedField
                         Logger.Finest("Got heartbeat response from " + clientConnection.GetAddress());
                     }
                     catch (Exception e)
                     {
-                        Logger.Warning(string.Format("Error getting heartbeat from {0}: {1}", clientConnection.GetAddress(), e));
+                        // ReSharper disable once InconsistentlySynchronizedField
+                        Logger.Warning(string.Format("Error getting heartbeat from {0}: {1}",
+                            clientConnection.GetAddress(), e));
                         var connection = clientConnection;
-                        FireHeartBeatEvent((listener) => listener.HeartBeatStopped(connection));
+                        FireHeartBeatEvent(listener => listener.HeartBeatStopped(connection));
                     }
                 }
                 try

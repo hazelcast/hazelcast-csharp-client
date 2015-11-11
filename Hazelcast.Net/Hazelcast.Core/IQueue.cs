@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Collections.Generic;
 
@@ -22,6 +20,48 @@ namespace Hazelcast.Core
     public interface IQueue<T> : IHCollection<T>
     {
         bool Contains(object o);
+
+        /// <summary>
+        /// Removes all available elements from this queue and adds them
+        /// to the given collection.  This operation may be more
+        /// efficient than repeatedly polling this queue.  A failure
+        /// encountered while attempting to add elements to
+        /// collection <c>c</c> may result in elements being in neither,
+        /// either or both collections when the associated exception is
+        /// thrown.  Attempts to drain a queue to itself result in
+        /// <c>IllegalArgumentException</c>. Further, the behavior of
+        /// this operation is undefined if the specified collection is
+        /// modified while the operation is in progress.
+        /// </summary>
+        /// <typeparam name="TE">type of elements</typeparam>
+        /// <param name="c">the collection to transfer elements into</param>
+        /// <returns>the number of elements transferred</returns>
+        int DrainTo<TE>(ICollection<TE> c) where TE : T;
+
+        /// <summary>
+        /// Removes at most the given number of available elements from
+        /// this queue and adds them to the given collection.  A failure
+        /// encountered while attempting to add elements to
+        /// collection <c>c</c> may result in elements being in neither,
+        /// either or both collections when the associated exception is
+        /// thrown.  Attempts to drain a queue to itself result in
+        /// <c>IllegalArgumentException</c>. Further, the behavior of
+        /// this operation is undefined if the specified collection is
+        /// modified while the operation is in progress.
+        /// </summary>
+        /// <typeparam name="TE">type of elements</typeparam>
+        /// <param name="c">the collection to transfer elements into</param>
+        /// <param name="maxElements">the maximum number of elements to transfer</param>
+        /// <returns>the number of elements transferred</returns>
+        int DrainTo<TE>(ICollection<TE> c, int maxElements) where TE : T;
+
+        /// <summary>
+        /// Retrieves, but does not remove, the head of this queue.  This method
+        /// differs from <see cref="Peek()"/> only in that it throws an exception
+        /// if this queue is empty.
+        /// </summary>
+        /// <returns>the head of this queue</returns>
+        T Element();
 
         /// <summary>
         /// Inserts the specified element into this queue if it is possible to do
@@ -65,6 +105,7 @@ namespace Hazelcast.Core
         /// </returns>
         /// <exception cref="System.Exception">if interrupted while waiting</exception>
         bool Offer(T e, long timeout, TimeUnit unit);
+
         T Peek();
 
         /// <summary>
@@ -107,13 +148,19 @@ namespace Hazelcast.Core
         void Put(T e);
 
         /// <summary>
-        /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
-        /// </summary>
-        /// <remarks>
-        /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
-        /// </remarks>
-        /// <returns>the head of this queue</returns>
-        T Take();
+        /// Returns the number of additional elements that this queue can ideally
+        /// (in the absence of memory or resource constraints) accept without
+        /// blocking, or <c>Int64.MaxValue</c> if there is no intrinsic
+        /// limit.
+        ///
+        /// <p>Note that you <em>cannot</em> always tell if an attempt to insert
+        /// an element will succeed by inspecting <c>remainingCapacity</c>
+        /// because it may be the case that another thread is about to
+        /// insert or remove an element.
+        ///</p>
+        ///</summary>
+        ///<returns>the remaining capacity </returns>
+        int RemainingCapacity();
 
         /// <summary>
         /// Removes a single instance of the specified element from this queue, if it is present
@@ -131,61 +178,12 @@ namespace Hazelcast.Core
         T Remove();
 
         /// <summary>
-        /// Removes all available elements from this queue and adds them
-        /// to the given collection.  This operation may be more
-        /// efficient than repeatedly polling this queue.  A failure
-        /// encountered while attempting to add elements to
-        /// collection <c>c</c> may result in elements being in neither,
-        /// either or both collections when the associated exception is
-        /// thrown.  Attempts to drain a queue to itself result in
-        /// <c>IllegalArgumentException</c>. Further, the behavior of
-        /// this operation is undefined if the specified collection is
-        /// modified while the operation is in progress.
+        /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
         /// </summary>
-        /// <typeparam name="TE">type of elements</typeparam>
-        /// <param name="c">the collection to transfer elements into</param>
-        /// <returns>the number of elements transferred</returns>
-        int DrainTo<TE>(ICollection<TE> c) where TE : T;
-
-        /// <summary>
-        /// Removes at most the given number of available elements from
-        /// this queue and adds them to the given collection.  A failure
-        /// encountered while attempting to add elements to
-        /// collection <c>c</c> may result in elements being in neither,
-        /// either or both collections when the associated exception is
-        /// thrown.  Attempts to drain a queue to itself result in
-        /// <c>IllegalArgumentException</c>. Further, the behavior of
-        /// this operation is undefined if the specified collection is
-        /// modified while the operation is in progress.
-        /// </summary>
-        /// <typeparam name="TE">type of elements</typeparam>
-        /// <param name="c">the collection to transfer elements into</param>
-        /// <param name="maxElements">the maximum number of elements to transfer</param>
-        /// <returns>the number of elements transferred</returns>
-        int DrainTo<TE>(ICollection<TE> c, int maxElements) where TE : T;
-
-        /// <summary>
-        /// Returns the number of additional elements that this queue can ideally
-        /// (in the absence of memory or resource constraints) accept without
-        /// blocking, or <c>Int64.MaxValue</c> if there is no intrinsic
-        /// limit.
-        ///
-        /// <p>Note that you <em>cannot</em> always tell if an attempt to insert
-        /// an element will succeed by inspecting <c>remainingCapacity</c>
-        /// because it may be the case that another thread is about to
-        /// insert or remove an element.
-        ///</p>
-        ///</summary>
-        ///<returns>the remaining capacity </returns>
-        int RemainingCapacity();
-
-        /// <summary>
-        /// Retrieves, but does not remove, the head of this queue.  This method
-        /// differs from <see cref="Peek()"/> only in that it throws an exception
-        /// if this queue is empty.
-        /// </summary>
+        /// <remarks>
+        /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
+        /// </remarks>
         /// <returns>the head of this queue</returns>
-        T Element();
-
+        T Take();
     }
 }

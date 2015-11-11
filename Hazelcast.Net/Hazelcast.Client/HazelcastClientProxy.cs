@@ -1,26 +1,22 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Logging;
 using Hazelcast.Transaction;
 
 namespace Hazelcast.Client
@@ -39,39 +35,39 @@ namespace Hazelcast.Client
             return GetClient().GetName();
         }
 
-        public IQueue<E> GetQueue<E>(string name)
+        public IQueue<T> GetQueue<T>(string name)
         {
-            return GetClient().GetQueue<E>(name);
+            return GetClient().GetQueue<T>(name);
         }
 
-        public IRingbuffer<E> GetRingbuffer<E>(string name)
+        public IRingbuffer<T> GetRingbuffer<T>(string name)
         {
-            return GetClient().GetRingbuffer<E>(name);
+            return GetClient().GetRingbuffer<T>(name);
         }
 
-        public ITopic<E> GetTopic<E>(string name)
+        public ITopic<T> GetTopic<T>(string name)
         {
-            return GetClient().GetTopic<E>(name);
+            return GetClient().GetTopic<T>(name);
         }
 
-        public IHSet<E> GetSet<E>(string name)
+        public IHSet<T> GetSet<T>(string name)
         {
-            return GetClient().GetSet<E>(name);
+            return GetClient().GetSet<T>(name);
         }
 
-        public IHList<E> GetList<E>(string name)
+        public IHList<T> GetList<T>(string name)
         {
-            return GetClient().GetList<E>(name);
+            return GetClient().GetList<T>(name);
         }
 
-        public IMap<K, V> GetMap<K, V>(string name)
+        public IMap<TKey, TValue> GetMap<TKey, TValue>(string name)
         {
-            return GetClient().GetMap<K, V>(name);
+            return GetClient().GetMap<TKey, TValue>(name);
         }
 
-        public IMultiMap<K, V> GetMultiMap<K, V>(string name)
+        public IMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name)
         {
-            return GetClient().GetMultiMap<K, V>(name);
+            return GetClient().GetMultiMap<TKey, TValue>(name);
         }
 
         public ILock GetLock(string key)
@@ -141,7 +137,7 @@ namespace Hazelcast.Client
 
         public ILifecycleService GetLifecycleService()
         {
-            HazelcastClient hz = _client;
+            var hz = _client;
             return hz != null ? hz.GetLifecycleService() : new TerminatedLifecycleService();
         }
 
@@ -172,7 +168,7 @@ namespace Hazelcast.Client
 
         internal HazelcastClient GetClient()
         {
-            HazelcastClient c = _client;
+            var c = _client;
             if (c == null || !c.GetLifecycleService().IsRunning())
             {
                 throw new HazelcastInstanceNotActiveException();

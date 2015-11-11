@@ -1,50 +1,45 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
-using System.Collections.Generic;
+using System;
 using Hazelcast.Config;
-using Hazelcast.Client;
-using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Example
 {
     public class SimpleExample1
     {
-
-        static void Main111(string[] args)
+        private static void Main111(string[] args)
         {
             var clientConfig = new ClientConfig();
             clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
             //clientConfig.GetNetworkConfig().AddAddress("10.0.0.2:5702");
 
             //Portable Serialization setup up for Customer CLass
-            clientConfig.GetSerializationConfig().AddPortableFactory(MyPortableFactory.FactoryId, new MyPortableFactory());
+            clientConfig.GetSerializationConfig()
+                .AddPortableFactory(MyPortableFactory.FactoryId, new MyPortableFactory());
 
 
-            IHazelcastInstance client = HazelcastClient.NewHazelcastClient(clientConfig);
+            var client = HazelcastClient.NewHazelcastClient(clientConfig);
             //All cluster operations that you can do with ordinary HazelcastInstance
-            IMap<string, Customer> mapCustomers = client.GetMap<string, Customer>("customers");
+            var mapCustomers = client.GetMap<string, Customer>("customers");
             mapCustomers.Put("1", new Customer("Joe", "Smith"));
             mapCustomers.Put("2", new Customer("Ali", "Selam"));
             mapCustomers.Put("3", new Customer("Avi", "Noyan"));
 
 
-            Customer customer1 = mapCustomers.Get("1");
+            var customer1 = mapCustomers.Get("1");
             Console.WriteLine(customer1);
 
             //ICollection<Customer> customers = mapCustomers.Values();
@@ -52,7 +47,6 @@ namespace Hazelcast.Client.Example
             //{
             //    //customer
             //}
-
         }
     }
 
@@ -60,19 +54,19 @@ namespace Hazelcast.Client.Example
     {
         public const int FactoryId = 1;
 
-        public IPortable Create(int classId) {
+        public IPortable Create(int classId)
+        {
             if (Customer.Id == classId)
                 return new Customer();
-            else return null;
+            return null;
         }
     }
 
-    public class Customer: IPortable
+    public class Customer : IPortable
     {
+        public const int Id = 5;
         private string name;
         private string surname;
-
-        public const int Id = 5;
 
         public Customer(string name, string surname)
         {
@@ -80,7 +74,9 @@ namespace Hazelcast.Client.Example
             this.surname = surname;
         }
 
-        public Customer(){}
+        public Customer()
+        {
+        }
 
 
         public int GetFactoryId()
@@ -104,7 +100,5 @@ namespace Hazelcast.Client.Example
             name = reader.ReadUTF("n");
             surname = reader.ReadUTF("s");
         }
-
-
     }
 }

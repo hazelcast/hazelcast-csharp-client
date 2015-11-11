@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -31,12 +29,6 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientMapTest : HazelcastBaseTest
     {
-        protected override void ConfigureClient(ClientConfig config)
-        {
-            base.ConfigureClient(config);
-            config.GetSerializationConfig().AddPortableFactory(1, new PortableFactory());
-        }
-
         [SetUp]
         public void Init()
         {
@@ -49,10 +41,16 @@ namespace Hazelcast.Client.Test
             map.Clear();
         }
 
+        protected override void ConfigureClient(ClientConfig config)
+        {
+            base.ConfigureClient(config);
+            config.GetSerializationConfig().AddPortableFactory(1, new PortableFactory());
+        }
+
         //internal const string name = "test";
 
         internal static IMap<object, object> map;
-     
+
         private void FillMap()
         {
             for (var i = 0; i < 10; i++)
@@ -82,10 +80,64 @@ namespace Hazelcast.Client.Test
             }
         }
 
+        private class Interceptor : IMapInterceptor, IDataSerializable
+        {
+            public void WriteData(IObjectDataOutput output)
+            {
+            }
+
+            public void ReadData(IObjectDataInput input)
+            {
+            }
+
+            public string GetJavaClassName()
+            {
+                return "MapInterceptor";
+            }
+
+            public object InterceptGet(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AfterGet(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public object InterceptPut(object oldValue, object newValue)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AfterPut(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public object InterceptRemove(object removedValue)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AfterRemove(object value)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         [Test]
         public virtual void TestAddIndex()
         {
             map.AddIndex("name", true);
+        }
+
+        [Test, ExpectedException(typeof (HazelcastException))]
+        public void TestAddInterceptor()
+        {
+            //TODO: not currently possible to test this
+
+            var id = map.AddInterceptor(new Interceptor());
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -126,16 +178,13 @@ namespace Hazelcast.Client.Test
                 delegate { latch.Signal(); }
                 ), true);
 
-            var f1 = map.PutAsync("key", "value1", 100, TimeUnit.MILLISECONDS);
+            var f1 = map.PutAsync("key", "value1", 100, TimeUnit.Milliseconds);
             Assert.IsNull(f1.Result);
             Assert.AreEqual("value1", map.Get("key"));
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
 
-            TestSupport.AssertTrueEventually(() =>
-            {
-                Assert.IsNull(map.Get("key"));
-            });
+            TestSupport.AssertTrueEventually(() => { Assert.IsNull(map.Get("key")); });
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -597,7 +646,7 @@ namespace Hazelcast.Client.Test
 
             var t1 = new Thread(delegate(object o)
             {
-                map.TryPut("key1", "value2", 1, TimeUnit.SECONDS);
+                map.TryPut("key1", "value2", 1, TimeUnit.Seconds);
                 latch.Signal();
             });
             t1.Start();
@@ -613,11 +662,11 @@ namespace Hazelcast.Client.Test
             map.Put("key1", "value1");
             Assert.AreEqual("value1", map.Get("key1"));
             var leaseTime = 500;
-            map.Lock("key1", leaseTime, TimeUnit.MILLISECONDS);
+            map.Lock("key1", leaseTime, TimeUnit.Milliseconds);
             var latch = new CountdownEvent(1);
             var t1 = new Thread(delegate(object o)
             {
-                map.TryPut("key1", "value2", 2000, TimeUnit.MILLISECONDS);
+                map.TryPut("key1", "value2", 2000, TimeUnit.Milliseconds);
                 latch.Signal();
             });
             t1.Start();
@@ -631,7 +680,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestLockTtl2()
         {
-            map.Lock("key1", 1, TimeUnit.SECONDS);
+            map.Lock("key1", 1, TimeUnit.Seconds);
             var latch = new CountdownEvent(2);
             var t1 = new Thread(delegate(object o)
             {
@@ -641,7 +690,7 @@ namespace Hazelcast.Client.Test
                 }
                 try
                 {
-                    if (map.TryLock("key1", 2, TimeUnit.SECONDS))
+                    if (map.TryLock("key1", 2, TimeUnit.Seconds))
                     {
                         latch.Signal();
                     }
@@ -682,7 +731,7 @@ namespace Hazelcast.Client.Test
             object newValue = "newValue";
 
             map.Put(key, value);
-            var result = map.PutIfAbsent(key, newValue, 5, TimeUnit.MINUTES);
+            var result = map.PutIfAbsent(key, newValue, 5, TimeUnit.Minutes);
 
             Assert.AreEqual(value, result);
             Assert.AreEqual(value, map.Get(key));
@@ -694,7 +743,7 @@ namespace Hazelcast.Client.Test
             object key = "Key";
             object value = "Value";
 
-            var result = map.PutIfAbsent(key, value, 5, TimeUnit.MINUTES);
+            var result = map.PutIfAbsent(key, value, 5, TimeUnit.Minutes);
 
             Assert.AreEqual(null, result);
             Assert.AreEqual(value, map.Get(key));
@@ -707,9 +756,10 @@ namespace Hazelcast.Client.Test
             object value = "Value";
 
             var ttl = 100;
-            var result = map.PutIfAbsent(key, value, ttl, TimeUnit.MILLISECONDS);
+            var result = map.PutIfAbsent(key, value, ttl, TimeUnit.Milliseconds);
 
-            TestSupport.AssertTrueEventually(() => {
+            TestSupport.AssertTrueEventually(() =>
+            {
                 Assert.AreEqual(null, result);
                 Assert.AreEqual(null, map.Get(key));
             });
@@ -722,7 +772,7 @@ namespace Hazelcast.Client.Test
             object value = "Value";
 
             map.Put(key, value);
-            var result = map.PutIfAbsent(key, value, 5, TimeUnit.MINUTES);
+            var result = map.PutIfAbsent(key, value, 5, TimeUnit.Minutes);
 
             Assert.AreEqual(value, result);
             Assert.AreEqual(value, map.Get(key));
@@ -735,7 +785,7 @@ namespace Hazelcast.Client.Test
             object value = "Value";
 
             map.Put(key, value);
-            var result = map.PutIfAbsent(key, value, 1, TimeUnit.SECONDS);
+            var result = map.PutIfAbsent(key, value, 1, TimeUnit.Seconds);
 
             Assert.AreEqual(value, result);
             Assert.AreEqual(value, map.Get(key));
@@ -745,13 +795,10 @@ namespace Hazelcast.Client.Test
         public virtual void TestPutTransient()
         {
             Assert.AreEqual(0, map.Size());
-            map.PutTransient("key1", "value1", 100, TimeUnit.MILLISECONDS);
+            map.PutTransient("key1", "value1", 100, TimeUnit.Milliseconds);
             Assert.AreEqual("value1", map.Get("key1"));
-           
-            TestSupport.AssertTrueEventually(() =>
-            {
-                Assert.AreNotEqual("value1", map.Get("key1"));
-            });
+
+            TestSupport.AssertTrueEventually(() => { Assert.AreNotEqual("value1", map.Get("key1")); });
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -759,13 +806,10 @@ namespace Hazelcast.Client.Test
         public virtual void TestPutTtl()
         {
             var ttl = 100;
-            map.Put("key1", "value1", ttl, TimeUnit.MILLISECONDS);
+            map.Put("key1", "value1", ttl, TimeUnit.Milliseconds);
             Assert.IsNotNull(map.Get("key1"));
 
-            TestSupport.AssertTrueEventually(() =>
-            {
-                Assert.IsNull(map.Get("key1"));
-            });
+            TestSupport.AssertTrueEventually(() => { Assert.IsNull(map.Get("key1")); });
         }
 
         [Test]
@@ -793,6 +837,12 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(9, map.Size());
         }
 
+        [Test]
+        public void TestRemoveInterceptor()
+        {
+            map.RemoveInterceptor("interceptor");
+        }
+
         /// <exception cref="System.Exception"></exception>
         [Test]
         public virtual void TestReplace()
@@ -815,7 +865,7 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual("value1", map.Get("key1"));
             map.Set("key1", "value2");
             Assert.AreEqual("value2", map.Get("key1"));
-            map.Set("key1", "value3", 100, TimeUnit.MILLISECONDS);
+            map.Set("key1", "value3", 100, TimeUnit.Milliseconds);
             Assert.AreEqual("value3", map.Get("key1"));
 
             TestSupport.AssertTrueEventually(() => Assert.IsNull(map.Get("key1")));
@@ -825,15 +875,15 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestTryPutRemove()
         {
-            Assert.IsTrue(map.TryPut("key1", "value1", 1, TimeUnit.SECONDS));
-            Assert.IsTrue(map.TryPut("key2", "value2", 1, TimeUnit.SECONDS));
+            Assert.IsTrue(map.TryPut("key1", "value1", 1, TimeUnit.Seconds));
+            Assert.IsTrue(map.TryPut("key2", "value2", 1, TimeUnit.Seconds));
             map.Lock("key1");
             map.Lock("key2");
             var latch = new CountdownEvent(2);
 
             var t1 = new Thread(delegate(object o)
             {
-                var result = map.TryPut("key1", "value3", 1, TimeUnit.SECONDS);
+                var result = map.TryPut("key1", "value3", 1, TimeUnit.Seconds);
                 if (!result)
                 {
                     latch.Signal();
@@ -842,7 +892,7 @@ namespace Hazelcast.Client.Test
 
             var t2 = new Thread(delegate(object o)
             {
-                var result = map.TryRemove("key2", 1, TimeUnit.SECONDS);
+                var result = map.TryRemove("key2", 1, TimeUnit.Seconds);
                 if (!result)
                 {
                     latch.Signal();
@@ -893,66 +943,6 @@ namespace Hazelcast.Client.Test
             var enumerator = values.GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("value1", enumerator.Current);
-        }
-
-        [Test, ExpectedException(typeof(HazelcastException))]
-        public void TestAddInterceptor()
-        {
-            //TODO: not currently possible to test this
-
-            String id = map.AddInterceptor(new Interceptor());
-        }
-
-        [Test]
-        public void TestRemoveInterceptor()
-        {
-            map.RemoveInterceptor("interceptor");
-        }
-
-        class Interceptor : IMapInterceptor, IDataSerializable
-        {
-            public object InterceptGet(object value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AfterGet(object value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public object InterceptPut(object oldValue, object newValue)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AfterPut(object value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public object InterceptRemove(object removedValue)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void AfterRemove(object value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void WriteData(IObjectDataOutput output)
-            {
-            }
-
-            public void ReadData(IObjectDataInput input)
-            {
-            }
-
-            public string GetJavaClassName()
-            {
-                return "MapInterceptor";
-            }
         }
     }
 }

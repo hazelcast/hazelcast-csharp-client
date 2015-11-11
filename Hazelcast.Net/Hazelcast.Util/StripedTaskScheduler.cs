@@ -1,20 +1,18 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,11 +23,11 @@ namespace Hazelcast.Util
 {
     internal class StripedTaskScheduler : TaskScheduler, IDisposable
     {
-        private static readonly Random random = new Random();
-        private readonly List<Thread> _threads;
-        private IDictionary<int,BlockingCollection<Task>> _tasks;
+        private static readonly Random Random = new Random();
 
         private readonly int _numberOfThreads;
+        private readonly List<Thread> _threads;
+        private IDictionary<int, BlockingCollection<Task>> _tasks;
 
         public StripedTaskScheduler(int numberOfThreads)
         {
@@ -37,7 +35,7 @@ namespace Hazelcast.Util
 
             _numberOfThreads = numberOfThreads;
             _tasks = new Dictionary<int, BlockingCollection<Task>>();
-            for (int i = 0; i < numberOfThreads; i++)
+            for (var i = 0; i < numberOfThreads; i++)
             {
                 _tasks.Add(i, new BlockingCollection<Task>());
             }
@@ -45,33 +43,13 @@ namespace Hazelcast.Util
             // Create the threads to be used by this scheduler
             _threads = Enumerable.Range(0, numberOfThreads).Select(i =>
             {
-                var thread = new Thread(()=> ThreadLoop(i))
+                var thread = new Thread(() => ThreadLoop(i))
                 {IsBackground = true, Name = "hz-striped-scheduler-" + i};
                 return thread;
             }).ToList();
 
             // Start all of the threads
             _threads.ForEach(t => t.Start());
-        }
-
-        private void ThreadLoop(int threadId)
-        {
-            BlockingCollection<Task> blockingTasks;
-            _tasks.TryGetValue(threadId, out blockingTasks);
-            if(blockingTasks == null) return;
-
-            while (!blockingTasks.IsAddingCompleted)
-            {
-                try
-                {
-                    var task = blockingTasks.Take();
-                    TryExecuteTask(task);
-                }
-                catch (InvalidOperationException)
-                {
-                    //BlockingCollection is empty, just ignore it
-                }
-            }
         }
 
         /// <summary>Gets the maximum concurrency level supported by this scheduler.</summary>
@@ -95,7 +73,7 @@ namespace Hazelcast.Util
                 }
 
                 // Wait for all threads to finish processing tasks
-                foreach (Thread thread in _threads) thread.Join();
+                foreach (var thread in _threads) thread.Join();
 
                 // Cleanup
                 foreach (var task in _tasks)
@@ -104,6 +82,14 @@ namespace Hazelcast.Util
                 }
                 _tasks = null;
             }
+        }
+
+        /// <summary>Provides a list of the scheduled tasks for the debugger to consume.</summary>
+        /// <returns>An enumerable of all tasks currently scheduled.</returns>
+        protected override IEnumerable<Task> GetScheduledTasks()
+        {
+            // Serialize the contents of the blocking collection of tasks for the debugger
+            return _tasks.SelectMany(pair => pair.Value.ToArray());
         }
 
         /// <summary>Queues a Task to be executed by this scheduler.</summary>
@@ -123,7 +109,7 @@ namespace Hazelcast.Util
             }
             else
             {
-                threadId = random.Next(_numberOfThreads);
+                threadId = Random.Next(_numberOfThreads);
             }
 
             _tasks.TryGetValue(threadId, out blockingTasks);
@@ -131,14 +117,6 @@ namespace Hazelcast.Util
             {
                 blockingTasks.Add(task);
             }
-        }
-
-        /// <summary>Provides a list of the scheduled tasks for the debugger to consume.</summary>
-        /// <returns>An enumerable of all tasks currently scheduled.</returns>
-        protected override IEnumerable<Task> GetScheduledTasks()
-        {
-            // Serialize the contents of the blocking collection of tasks for the debugger
-            return _tasks.SelectMany(pair => pair.Value.ToArray());
         }
 
 
@@ -151,5 +129,24 @@ namespace Hazelcast.Util
             return false;
         }
 
+        private void ThreadLoop(int threadId)
+        {
+            BlockingCollection<Task> blockingTasks;
+            _tasks.TryGetValue(threadId, out blockingTasks);
+            if (blockingTasks == null) return;
+
+            while (!blockingTasks.IsAddingCompleted)
+            {
+                try
+                {
+                    var task = blockingTasks.Take();
+                    TryExecuteTask(task);
+                }
+                catch (InvalidOperationException)
+                {
+                    //BlockingCollection is empty, just ignore it
+                }
+            }
+        }
     }
 }

@@ -1,20 +1,18 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
@@ -23,16 +21,14 @@ using System.Threading;
 using Hazelcast.Client;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Spi;
-﻿using Hazelcast.Config;
-﻿using Hazelcast.Core;
+using Hazelcast.Config;
+using Hazelcast.Core;
 using Hazelcast.Transaction;
 
 namespace Hazelcast.Util
 {
     internal class ClientExceptionFactory
     {
-        private delegate Exception ExceptionFactoryDelegate(string message, Exception cause);
-
         private readonly IDictionary<ClientProtocolErrorCodes, ExceptionFactoryDelegate> _errorCodeToException =
             new Dictionary<ClientProtocolErrorCodes, ExceptionFactoryDelegate>
             {
@@ -44,10 +40,16 @@ namespace Hazelcast.Util
                 {ClientProtocolErrorCodes.ClassNotFound, (m, c) => new TypeLoadException(m, c)},
                 {ClientProtocolErrorCodes.ConcurrentModification, (m, c) => new InvalidOperationException(m)},
                 {ClientProtocolErrorCodes.Configuration, (m, c) => new ConfigurationException(m)},
-                {ClientProtocolErrorCodes.DistributedObjectDestroyed, (m, c) => new DistributedObjectDestroyedException(m)},
+                {
+                    ClientProtocolErrorCodes.DistributedObjectDestroyed,
+                    (m, c) => new DistributedObjectDestroyedException(m)
+                },
                 {ClientProtocolErrorCodes.Eof, (m, c) => new IOException(m)},
                 {ClientProtocolErrorCodes.Hazelcast, (m, c) => new HazelcastException(m, c)},
-                {ClientProtocolErrorCodes.HazelcastInstanceNotActive, (m, c) => new HazelcastInstanceNotActiveException()},
+                {
+                    ClientProtocolErrorCodes.HazelcastInstanceNotActive,
+                    (m, c) => new HazelcastInstanceNotActiveException()
+                },
                 {ClientProtocolErrorCodes.HazelcastOverload, (m, c) => new HazelcastException(m)},
                 {ClientProtocolErrorCodes.HazelcastSerialization, (m, c) => new HazelcastException(m, c)},
                 {ClientProtocolErrorCodes.Io, (m, c) => new IOException(m, c)},
@@ -87,28 +89,30 @@ namespace Hazelcast.Util
         }
 
         public Exception CreateException(int errorCode, string className, string message, StackTraceElement[] stackTrace
-            ,int? causeErrorCode, string causeClassName)
+            , int? causeErrorCode, string causeClassName)
         {
             Exception cause = null;
             if (causeClassName != null && causeErrorCode.HasValue)
             {
-                cause = CreateException(causeErrorCode.Value, causeClassName, null, null);
+                cause = CreateException(causeErrorCode.Value, null, null);
             }
 
-            var exception = CreateException(errorCode, className, message, cause);
+            var exception = CreateException(errorCode, message, cause);
 
             return exception;
         }
 
-        private Exception CreateException(int errorCode, string className, string message, Exception cause)
+        private Exception CreateException(int errorCode, string message, Exception cause)
         {
             ExceptionFactoryDelegate factory;
-            if (Enum.IsDefined(typeof(ClientProtocolErrorCodes), errorCode) &&
-                _errorCodeToException.TryGetValue((ClientProtocolErrorCodes)errorCode, out factory))
+            if (Enum.IsDefined(typeof (ClientProtocolErrorCodes), errorCode) &&
+                _errorCodeToException.TryGetValue((ClientProtocolErrorCodes) errorCode, out factory))
             {
                 return factory.Invoke(message, cause);
             }
             return new HazelcastException(message, cause);
         }
+
+        private delegate Exception ExceptionFactoryDelegate(string message, Exception cause);
     }
 }

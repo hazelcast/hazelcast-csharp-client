@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
@@ -27,11 +25,11 @@ namespace Hazelcast.Core
 {
     internal sealed class Member : IMember
     {
+        private readonly Address _address;
         private readonly ConcurrentDictionary<string, string> _attributes = new ConcurrentDictionary<string, string>();
-        private readonly Address address;
-        private readonly string uuid;
         private readonly bool _liteMember;
-        private readonly ILogger logger;
+        private readonly ILogger _logger;
+        private readonly string _uuid;
 
         public Member()
         {
@@ -49,9 +47,9 @@ namespace Hazelcast.Core
 
         public Member(Address address, string uuid, IDictionary<string, string> attributes, bool liteMember)
         {
-            this.logger = Logger.GetLogger(typeof(Member) + ":" + address);
-            this.address = address;
-            this.uuid = uuid;
+            _logger = Logger.GetLogger(typeof (Member) + ":" + address);
+            _address = address;
+            _uuid = uuid;
             _liteMember = liteMember;
             foreach (var kv in attributes)
             {
@@ -66,20 +64,20 @@ namespace Hazelcast.Core
 
         public Address GetAddress()
         {
-            return address;
+            return _address;
         }
 
         public IPEndPoint GetSocketAddress()
         {
             try
             {
-                return address.GetInetSocketAddress();
+                return _address.GetInetSocketAddress();
             }
             catch (Exception e)
             {
-                if (logger != null)
+                if (_logger != null)
                 {
-                    logger.Warning(e);
+                    _logger.Warning(e);
                 }
                 return null;
             }
@@ -87,7 +85,7 @@ namespace Hazelcast.Core
 
         public string GetUuid()
         {
-            return uuid;
+            return _uuid;
         }
 
         public IDictionary<string, string> GetAttributes()
@@ -100,28 +98,6 @@ namespace Hazelcast.Core
             string _out;
             _attributes.TryGetValue(key, out _out);
             return _out;
-        }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder("IMember [");
-            sb.Append(address.GetHost());
-            sb.Append("]");
-            sb.Append(":");
-            sb.Append(address.GetPort());
-            if (IsLiteMember)
-            {
-                sb.Append(" lite");
-            }
-            return sb.ToString();
-        }
-
-        public override int GetHashCode()
-        {
-            var Prime = 31;
-            var result = 1;
-            result = Prime*result + ((address == null) ? 0 : address.GetHashCode());
-            return result;
         }
 
         public override bool Equals(object obj)
@@ -139,16 +115,16 @@ namespace Hazelcast.Core
                 return false;
             }
             var other = (Member) obj;
-            if (address == null)
+            if (_address == null)
             {
-                if (other.address != null)
+                if (other._address != null)
                 {
                     return false;
                 }
             }
             else
             {
-                if (!address.Equals(other.address))
+                if (!_address.Equals(other._address))
                 {
                     return false;
                 }
@@ -156,14 +132,36 @@ namespace Hazelcast.Core
             return true;
         }
 
+        public override int GetHashCode()
+        {
+            var Prime = 31;
+            var result = 1;
+            result = Prime*result + ((_address == null) ? 0 : _address.GetHashCode());
+            return result;
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder("IMember [");
+            sb.Append(_address.GetHost());
+            sb.Append("]");
+            sb.Append(":");
+            sb.Append(_address.GetPort());
+            if (IsLiteMember)
+            {
+                sb.Append(" lite");
+            }
+            return sb.ToString();
+        }
+
         internal void UpdateAttribute(MemberAttributeOperationType operationType, string key, string value)
         {
             switch (operationType)
             {
-                case MemberAttributeOperationType.PUT:
+                case MemberAttributeOperationType.Put:
                     _attributes.TryAdd(key, value);
                     break;
-                case MemberAttributeOperationType.REMOVE:
+                case MemberAttributeOperationType.Remove:
                     string _out;
                     _attributes.TryRemove(key, out _out);
                     break;

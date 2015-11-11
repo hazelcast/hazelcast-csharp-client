@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -25,10 +23,7 @@ namespace Hazelcast.IO.Serialization
 {
     internal sealed class SerializationServiceBuilder : ISerializationServiceBuilder
     {
-        private const int DEFAULT_OUT_BUFFER_SIZE = 4*1024;
-
-        private ICollection<IClassDefinition> classDefinitions =
-            new HashSet<IClassDefinition>();
+        private const int DefaultOutBufferSize = 4*1024;
 
         private readonly IDictionary<int, IDataSerializableFactory> _dataSerializableFactories =
             new Dictionary<int, IDataSerializableFactory>();
@@ -39,6 +34,9 @@ namespace Hazelcast.IO.Serialization
         private ByteOrder _byteOrder = ByteOrder.BigEndian;
         private bool _checkClassDefErrors = true;
 
+        private ICollection<IClassDefinition> _classDefinitions =
+            new HashSet<IClassDefinition>();
+
         private SerializationConfig _config;
 
         private bool _enableCompression;
@@ -46,22 +44,22 @@ namespace Hazelcast.IO.Serialization
         private bool _enableSharedObject;
         private IHazelcastInstance _hazelcastInstance;
 
-        private int _initialOutputBufferSize = DEFAULT_OUT_BUFFER_SIZE;
+        private int _initialOutputBufferSize = DefaultOutBufferSize;
         private IManagedContext _managedContext;
 
         private IPartitioningStrategy _partitioningStrategy;
-        private bool _useNativeByteOrder;
 
         private int _portableVersion = -1;
+        private bool _useNativeByteOrder;
         private byte _version = SerializationService.SerializerVersion;
 
         public ISerializationServiceBuilder SetVersion(byte version)
         {
-            byte maxVersion = SerializationService.SerializerVersion;
+            var maxVersion = SerializationService.SerializerVersion;
             if (version > maxVersion)
             {
                 throw new ArgumentException(
-                        "Configured serialization version is higher than the max supported version :" + maxVersion);
+                    "Configured serialization version is higher than the max supported version :" + maxVersion);
             }
             _version = version;
             return this;
@@ -79,7 +77,7 @@ namespace Hazelcast.IO.Serialization
 
         public ISerializationServiceBuilder SetConfig(SerializationConfig config)
         {
-            this._config = config;
+            _config = config;
             if (_portableVersion < 0)
             {
                 _portableVersion = config.GetPortableVersion();
@@ -106,49 +104,49 @@ namespace Hazelcast.IO.Serialization
 
         public ISerializationServiceBuilder AddClassDefinition(IClassDefinition cd)
         {
-            classDefinitions.Add(cd);
+            _classDefinitions.Add(cd);
             return this;
         }
 
         public ISerializationServiceBuilder SetCheckClassDefErrors(bool checkClassDefErrors)
         {
-            this._checkClassDefErrors = checkClassDefErrors;
+            _checkClassDefErrors = checkClassDefErrors;
             return this;
         }
 
         public ISerializationServiceBuilder SetManagedContext(IManagedContext managedContext)
         {
-            this._managedContext = managedContext;
+            _managedContext = managedContext;
             return this;
         }
 
         public ISerializationServiceBuilder SetUseNativeByteOrder(bool useNativeByteOrder)
         {
-            this._useNativeByteOrder = useNativeByteOrder;
+            _useNativeByteOrder = useNativeByteOrder;
             return this;
         }
 
         public ISerializationServiceBuilder SetByteOrder(ByteOrder byteOrder)
         {
-            this._byteOrder = byteOrder;
+            _byteOrder = byteOrder;
             return this;
         }
 
         public ISerializationServiceBuilder SetHazelcastInstance(IHazelcastInstance hazelcastInstance)
         {
-            this._hazelcastInstance = hazelcastInstance;
+            _hazelcastInstance = hazelcastInstance;
             return this;
         }
 
         public ISerializationServiceBuilder SetEnableCompression(bool enableCompression)
         {
-            this._enableCompression = enableCompression;
+            _enableCompression = enableCompression;
             return this;
         }
 
         public ISerializationServiceBuilder SetEnableSharedObject(bool enableSharedObject)
         {
-            this._enableSharedObject = enableSharedObject;
+            _enableSharedObject = enableSharedObject;
             return this;
         }
 
@@ -164,7 +162,7 @@ namespace Hazelcast.IO.Serialization
             {
                 throw new ArgumentException("Initial buffer size must be positive!");
             }
-            this._initialOutputBufferSize = initialOutputBufferSize;
+            _initialOutputBufferSize = initialOutputBufferSize;
             return this;
         }
 
@@ -178,7 +176,7 @@ namespace Hazelcast.IO.Serialization
             {
                 AddConfigDataSerializableFactories(_dataSerializableFactories, _config);
                 AddConfigPortableFactories(_portableFactories, _config);
-                classDefinitions = classDefinitions.Union(_config.GetClassDefinitions()).ToList();
+                _classDefinitions = _classDefinitions.Union(_config.GetClassDefinitions()).ToList();
             }
             //TODO: add support for multiple versions
             var ss = new SerializationService(
@@ -186,7 +184,7 @@ namespace Hazelcast.IO.Serialization
                 _portableVersion,
                 _dataSerializableFactories,
                 _portableFactories,
-                classDefinitions,
+                _classDefinitions,
                 _checkClassDefErrors,
                 _managedContext,
                 _partitioningStrategy,
@@ -197,14 +195,14 @@ namespace Hazelcast.IO.Serialization
             {
                 if (_config.GetGlobalSerializerConfig() != null)
                 {
-                    GlobalSerializerConfig globalSerializerConfig = _config.GetGlobalSerializerConfig();
-                    ISerializer serializer = globalSerializerConfig.GetImplementation();
+                    var globalSerializerConfig = _config.GetGlobalSerializerConfig();
+                    var serializer = globalSerializerConfig.GetImplementation();
                     if (serializer == null)
                     {
                         try
                         {
-                            string className = globalSerializerConfig.GetClassName();
-                            Type type = Type.GetType(className);
+                            var className = globalSerializerConfig.GetClassName();
+                            var type = Type.GetType(className);
                             if (type != null)
                             {
                                 serializer = Activator.CreateInstance(type) as ISerializer;
@@ -222,16 +220,16 @@ namespace Hazelcast.IO.Serialization
                     }
                     ss.RegisterGlobal(serializer);
                 }
-                ICollection<SerializerConfig> typeSerializers = _config.GetSerializerConfigs();
-                foreach (SerializerConfig serializerConfig in typeSerializers)
+                var typeSerializers = _config.GetSerializerConfigs();
+                foreach (var serializerConfig in typeSerializers)
                 {
-                    ISerializer serializer = serializerConfig.GetImplementation();
+                    var serializer = serializerConfig.GetImplementation();
                     if (serializer == null)
                     {
                         try
                         {
-                            string className = serializerConfig.GetClassName();
-                            Type type = Type.GetType(className);
+                            var className = serializerConfig.GetClassName();
+                            var type = Type.GetType(className);
                             if (type != null)
                             {
                                 serializer = Activator.CreateInstance(type) as ISerializer;
@@ -244,14 +242,14 @@ namespace Hazelcast.IO.Serialization
                     }
                     if (serializer is IHazelcastInstanceAware)
                     {
-                        ((IHazelcastInstanceAware)serializer).SetHazelcastInstance(_hazelcastInstance);
+                        ((IHazelcastInstanceAware) serializer).SetHazelcastInstance(_hazelcastInstance);
                     }
-                    Type typeClass = serializerConfig.GetTypeClass();
+                    var typeClass = serializerConfig.GetTypeClass();
                     if (typeClass == null)
                     {
                         try
                         {
-                            string className = serializerConfig.GetTypeClassName();
+                            var className = serializerConfig.GetTypeClassName();
                             typeClass = Type.GetType(className);
                         }
                         catch (TypeLoadException e)
@@ -270,27 +268,14 @@ namespace Hazelcast.IO.Serialization
             return ss;
         }
 
-        private IInputOutputFactory CreateInputOutputFactory()
-        {
-            if (_byteOrder == null)
-            {
-                _byteOrder = ByteOrder.BigEndian;
-            }
-            if (_useNativeByteOrder || _byteOrder == ByteOrder.NativeOrder())
-            {
-                _byteOrder = ByteOrder.NativeOrder();
-            }
-            return new ByteArrayInputOutputFactory(_byteOrder);
-        }
-
 
         private void AddConfigDataSerializableFactories(
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories, SerializationConfig config)
         {
             foreach (var entry in config.GetDataSerializableFactories())
             {
-                int factoryId = entry.Key;
-                IDataSerializableFactory factory = entry.Value;
+                var factoryId = entry.Key;
+                var factory = entry.Value;
                 if (factoryId <= 0)
                 {
                     throw new ArgumentException("IDataSerializableFactory factoryId must be positive! -> " + factory);
@@ -304,8 +289,8 @@ namespace Hazelcast.IO.Serialization
             }
             foreach (var entry in config.GetDataSerializableFactoryClasses())
             {
-                int factoryId = entry.Key;
-                string factoryClassName = entry.Value;
+                var factoryId = entry.Key;
+                var factoryClassName = entry.Value;
                 if (factoryId <= 0)
                 {
                     throw new ArgumentException("IDataSerializableFactory factoryId must be positive! -> " +
@@ -319,7 +304,7 @@ namespace Hazelcast.IO.Serialization
                 IDataSerializableFactory factory = null;
                 try
                 {
-                    Type type = Type.GetType(factoryClassName);
+                    var type = Type.GetType(factoryClassName);
                     if (type != null)
                     {
                         factory = Activator.CreateInstance(type) as IDataSerializableFactory;
@@ -331,7 +316,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 dataSerializableFactories.Add(factoryId, factory);
             }
-            foreach (IDataSerializableFactory f in dataSerializableFactories.Values)
+            foreach (var f in dataSerializableFactories.Values)
             {
                 var aware = f as IHazelcastInstanceAware;
                 if (aware != null)
@@ -346,8 +331,8 @@ namespace Hazelcast.IO.Serialization
         {
             foreach (var entry in config.GetPortableFactories())
             {
-                int factoryId = entry.Key;
-                IPortableFactory factory = entry.Value;
+                var factoryId = entry.Key;
+                var factory = entry.Value;
                 if (factoryId <= 0)
                 {
                     throw new ArgumentException("IPortableFactory factoryId must be positive! -> " + factory);
@@ -361,8 +346,8 @@ namespace Hazelcast.IO.Serialization
             }
             foreach (var entry in config.GetPortableFactoryClasses())
             {
-                int factoryId = entry.Key;
-                string factoryClassName = entry.Value;
+                var factoryId = entry.Key;
+                var factoryClassName = entry.Value;
                 if (factoryId <= 0)
                 {
                     throw new ArgumentException("IPortableFactory factoryId must be positive! -> " + factoryClassName);
@@ -386,13 +371,26 @@ namespace Hazelcast.IO.Serialization
                 portableFactories.Add(factoryId, factory);
             }
 
-            foreach (IPortableFactory f in portableFactories.Values)
+            foreach (var f in portableFactories.Values)
             {
                 if (f is IHazelcastInstanceAware)
                 {
-                    ((IHazelcastInstanceAware)f).SetHazelcastInstance(_hazelcastInstance);
+                    ((IHazelcastInstanceAware) f).SetHazelcastInstance(_hazelcastInstance);
                 }
             }
+        }
+
+        private IInputOutputFactory CreateInputOutputFactory()
+        {
+            if (_byteOrder == null)
+            {
+                _byteOrder = ByteOrder.BigEndian;
+            }
+            if (_useNativeByteOrder || _byteOrder == ByteOrder.NativeOrder())
+            {
+                _byteOrder = ByteOrder.NativeOrder();
+            }
+            return new ByteArrayInputOutputFactory(_byteOrder);
         }
     }
 }

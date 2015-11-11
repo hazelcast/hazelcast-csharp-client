@@ -1,20 +1,18 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Core
@@ -51,46 +49,6 @@ namespace Hazelcast.Core
     /// </remarks>
     public interface IRingbuffer<T> : IDistributedObject
     {
-        /// <summary>Returns the capacity of this Ringbuffer.</summary>
-        /// <returns>the capacity.</returns>
-        long Capacity();
-
-        /// <summary>Returns number of items in the ringbuffer.</summary>
-        /// <remarks>
-        /// Returns number of items in the ringbuffer.
-        /// If no ttl is set, the size will always be equal to capacity after the head completed the first loop
-        /// around the ring. This is because no items are getting retired.
-        /// </remarks>
-        /// <returns>the size.</returns>
-        long Size();
-
-        /// <summary>Returns the sequence of the tail.</summary>
-        /// <remarks>
-        /// Returns the sequence of the tail. The tail is the side of the ringbuffer where the items are added to.
-        /// The initial value of the tail is -1.
-        /// </remarks>
-        /// <returns>the sequence of the tail.</returns>
-        long TailSequence();
-
-        /// <summary>Returns the sequence of the head.</summary>
-        /// <remarks>
-        /// Returns the sequence of the head. The head is the side of the ringbuffer where the oldest items in the
-        /// ringbuffer are found.
-        /// If the RingBuffer is empty, the head will be one more than the tail.
-        /// The initial value of the head is 0 (1 more than tail).
-        /// </remarks>
-        /// <returns>the sequence of the head.</returns>
-        long HeadSequence();
-
-        /// <summary>Returns the remaining capacity of the ringbuffer.</summary>
-        /// <remarks>
-        /// Returns the remaining capacity of the ringbuffer.
-        /// The returned value could be stale as soon as it is returned.
-        /// If ttl is not set, the remaining capacity will always be the capacity.
-        /// </remarks>
-        /// <returns>the remaining capacity.</returns>
-        long RemainingCapacity();
-
         /// <summary>Adds an item to the tail of the Ringbuffer.</summary>
         /// <remarks>
         /// Adds an item to the tail of the Ringbuffer. If there is no space in the Ringbuffer, the add will overwrite the oldest
@@ -113,6 +71,36 @@ namespace Hazelcast.Core
         /// <exception cref="System.ArgumentNullException">if item is null.</exception>
         /// <seealso cref="AddAsync"/>
         long Add(T item);
+
+        /// <summary>Adds all the items of a collection to the tail of the Ringbuffer.</summary>
+        /// <remarks>
+        /// Adds all the items of a collection to the tail of the Ringbuffer.
+        /// A addAll is likely to outperform multiple calls to
+        /// <see cref="Add"/>
+        /// due to better io utilization and a reduced number
+        /// of executed operations.
+        /// If the batch is empty, the call is ignored.
+        /// When the collection is not empty, the content is copied into a different data-structure. This means that:
+        /// <ol>
+        /// <li>after this call completes, the collection can be re-used.</li>
+        /// <li>the collection doesn't need to be serializable</li>
+        /// </ol>
+        /// If the collection is larger than the capacity of the ringbuffer, then the items that were written first will
+        /// be overwritten. Therefor this call will not block.
+        /// The items are inserted in the order of the Iterator of the collection. If an addAll is executed concurrently with
+        /// an add or addAll, no guarantee is given that items are contiguous.
+        /// The result of the future contains the sequenceId of the last written item
+        /// </remarks>
+        /// <param name="collection">the batch of items to add.</param>
+        /// <param name="overflowPolicy">overflow policy to use</param>
+        /// <returns>the ICompletableFuture to synchronize on completion.</returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// if batch is null,
+        /// or if an item in this batch is null
+        /// or if overflowPolicy is null
+        /// </exception>
+        /// <exception cref="System.ArgumentException">if collection is empty</exception>
+        Task<long> AddAllAsync<TE>(ICollection<TE> collection, OverflowPolicy overflowPolicy) where TE : T;
 
         /// <summary>
         /// Asynchronously writes an item with a configurable
@@ -148,6 +136,42 @@ namespace Hazelcast.Core
         /// <returns>the sequenceId of the added item, or -1 if the add failed.</returns>
         /// <exception cref="System.ArgumentNullException">if item or overflowPolicy is null.</exception>
         Task<long> AddAsync(T item, OverflowPolicy overflowPolicy);
+
+        /// <summary>Returns the capacity of this Ringbuffer.</summary>
+        /// <returns>the capacity.</returns>
+        long Capacity();
+
+        /// <summary>Returns the sequence of the head.</summary>
+        /// <remarks>
+        /// Returns the sequence of the head. The head is the side of the ringbuffer where the oldest items in the
+        /// ringbuffer are found.
+        /// If the RingBuffer is empty, the head will be one more than the tail.
+        /// The initial value of the head is 0 (1 more than tail).
+        /// </remarks>
+        /// <returns>the sequence of the head.</returns>
+        long HeadSequence();
+
+        /// <summary>Reads a batch of items from the Ringbuffer.</summary>
+        /// <remarks>
+        /// Reads a batch of items from the Ringbuffer. If the number of available items after the first read item is smaller than
+        /// the maxCount, these items are returned. So it could be the number of items read is smaller than the maxCount.
+        /// If there are less items available than minCount, then this call blocks.
+        /// Reading a batch of items is likely to perform better because less overhead is involved.
+        /// </remarks>
+        /// <param name="startSequence">the startSequence of the first item to read.</param>
+        /// <param name="minCount">the minimum number of items to read.</param>
+        /// <param name="maxCount">the maximum number of items to read.</param>
+        /// <returns>a future containing the items read.</returns>
+        /// <exception cref="System.ArgumentException">
+        /// if startSequence is smaller than 0
+        /// or if startSequence larger than
+        /// <see cref="TailSequence()"/>
+        /// or if minCount smaller than 0
+        /// or if minCount larger than maxCount,
+        /// or if maxCount larger than the capacity of the ringbuffer
+        /// or if maxCount larger than 1000 (to prevent overload)
+        /// </exception>
+        Task<IList<T>> ReadManyAsync(long startSequence, int minCount, int maxCount);
 
         /// <summary>Reads one item from the Ringbuffer.</summary>
         /// <remarks>
@@ -189,56 +213,30 @@ namespace Hazelcast.Core
         /// <exception cref="System.Exception">if the call is interrupted while blocking.</exception>
         T ReadOne(long sequence);
 
-        /// <summary>Adds all the items of a collection to the tail of the Ringbuffer.</summary>
+        /// <summary>Returns the remaining capacity of the ringbuffer.</summary>
         /// <remarks>
-        /// Adds all the items of a collection to the tail of the Ringbuffer.
-        /// A addAll is likely to outperform multiple calls to
-        /// <see cref="Add"/>
-        /// due to better io utilization and a reduced number
-        /// of executed operations.
-        /// If the batch is empty, the call is ignored.
-        /// When the collection is not empty, the content is copied into a different data-structure. This means that:
-        /// <ol>
-        /// <li>after this call completes, the collection can be re-used.</li>
-        /// <li>the collection doesn't need to be serializable</li>
-        /// </ol>
-        /// If the collection is larger than the capacity of the ringbuffer, then the items that were written first will
-        /// be overwritten. Therefor this call will not block.
-        /// The items are inserted in the order of the Iterator of the collection. If an addAll is executed concurrently with
-        /// an add or addAll, no guarantee is given that items are contiguous.
-        /// The result of the future contains the sequenceId of the last written item
+        /// Returns the remaining capacity of the ringbuffer.
+        /// The returned value could be stale as soon as it is returned.
+        /// If ttl is not set, the remaining capacity will always be the capacity.
         /// </remarks>
-        /// <param name="collection">the batch of items to add.</param>
-        /// <param name="overflowPolicy">overflow policy to use</param>
-        /// <returns>the ICompletableFuture to synchronize on completion.</returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// if batch is null,
-        /// or if an item in this batch is null
-        /// or if overflowPolicy is null
-        /// </exception>
-        /// <exception cref="System.ArgumentException">if collection is empty</exception>
-        Task<long> AddAllAsync<TE>(ICollection<TE> collection, OverflowPolicy overflowPolicy) where TE : T;
+        /// <returns>the remaining capacity.</returns>
+        long RemainingCapacity();
 
-        /// <summary>Reads a batch of items from the Ringbuffer.</summary>
+        /// <summary>Returns number of items in the ringbuffer.</summary>
         /// <remarks>
-        /// Reads a batch of items from the Ringbuffer. If the number of available items after the first read item is smaller than
-        /// the maxCount, these items are returned. So it could be the number of items read is smaller than the maxCount.
-        /// If there are less items available than minCount, then this call blocks.
-        /// Reading a batch of items is likely to perform better because less overhead is involved.
+        /// Returns number of items in the ringbuffer.
+        /// If no ttl is set, the size will always be equal to capacity after the head completed the first loop
+        /// around the ring. This is because no items are getting retired.
         /// </remarks>
-        /// <param name="startSequence">the startSequence of the first item to read.</param>
-        /// <param name="minCount">the minimum number of items to read.</param>
-        /// <param name="maxCount">the maximum number of items to read.</param>
-        /// <returns>a future containing the items read.</returns>
-        /// <exception cref="System.ArgumentException">
-        /// if startSequence is smaller than 0
-        /// or if startSequence larger than
-        /// <see cref="TailSequence()"/>
-        /// or if minCount smaller than 0
-        /// or if minCount larger than maxCount,
-        /// or if maxCount larger than the capacity of the ringbuffer
-        /// or if maxCount larger than 1000 (to prevent overload)
-        /// </exception>
-        Task<IList<T>> ReadManyAsync(long startSequence, int minCount, int maxCount);
+        /// <returns>the size.</returns>
+        long Size();
+
+        /// <summary>Returns the sequence of the tail.</summary>
+        /// <remarks>
+        /// Returns the sequence of the tail. The tail is the side of the ringbuffer where the items are added to.
+        /// The initial value of the tail is -1.
+        /// </remarks>
+        /// <returns>the sequence of the tail.</returns>
+        long TailSequence();
     }
 }

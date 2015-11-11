@@ -1,9 +1,21 @@
-﻿using System;
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Hazelcast.Config;
 using Hazelcast.Logging;
 using NUnit.Framework;
@@ -13,24 +25,13 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientLoggingTest
     {
-        [Test]
-        public void TestCustomLogger()
+        [Test, ExpectedException(typeof (ConfigurationException))]
+        public void TestConsoleLoggingInvalidLevel()
         {
-            Logger.SetLoggerFactory(new CustomLogFactory());
-            var logger = Logger.GetLogger("test");
+            Environment.SetEnvironmentVariable("hazelcast.logging.level", "asdf");
+            var logger = new ConsoleLogFactory().GetLogger("logger");
 
-            logger.Info("test message");
-            var exception = new ArgumentException();
-            logger.Severe("got exception", exception);
-
-            Assert.IsInstanceOf<CustomLogFactory.CustomLogger>(logger);
-
-            var customLogger = (CustomLogFactory.CustomLogger) logger;
-
-            Assert.AreEqual(new Tuple<LogLevel, string, Exception>(LogLevel.Info, "test message" , null),
-                (customLogger.Logs[0]));
-            Assert.AreEqual(new Tuple<LogLevel, string, Exception>(LogLevel.Severe, "got exception", exception),
-                (customLogger.Logs[1]));
+            Assert.IsFalse(logger.IsFinestEnabled());
         }
 
         [Test]
@@ -61,16 +62,27 @@ namespace Hazelcast.Client.Test
             {
                 Console.SetOut(original);
                 Environment.SetEnvironmentVariable("hazelcast.logging.level", null);
-            }    
+            }
         }
 
-        [Test, ExpectedException(typeof(ConfigurationException))]
-        public void TestConsoleLoggingInvalidLevel()
+        [Test]
+        public void TestCustomLogger()
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "asdf");
-            var logger = new ConsoleLogFactory().GetLogger("logger");
+            Logger.SetLoggerFactory(new CustomLogFactory());
+            var logger = Logger.GetLogger("test");
 
-            Assert.IsFalse(logger.IsFinestEnabled());
+            logger.Info("test message");
+            var exception = new ArgumentException();
+            logger.Severe("got exception", exception);
+
+            Assert.IsInstanceOf<CustomLogFactory.CustomLogger>(logger);
+
+            var customLogger = (CustomLogFactory.CustomLogger) logger;
+
+            Assert.AreEqual(new Tuple<LogLevel, string, Exception>(LogLevel.Info, "test message", null),
+                (customLogger.Logs[0]));
+            Assert.AreEqual(new Tuple<LogLevel, string, Exception>(LogLevel.Severe, "got exception", exception),
+                (customLogger.Logs[1]));
         }
 
         [Test]
@@ -105,8 +117,13 @@ namespace Hazelcast.Client.Test
 
         internal class CustomLogger : AbstractLogger
         {
-            public String Name { get; set; }
             public List<Tuple<LogLevel, string, Exception>> Logs = new List<Tuple<LogLevel, string, Exception>>();
+            public string Name { get; set; }
+
+            public override LogLevel GetLevel()
+            {
+                return LogLevel.Info;
+            }
 
 
             public override bool IsLoggable(LogLevel arg1)
@@ -122,11 +139,6 @@ namespace Hazelcast.Client.Test
             public override void Log(LogLevel arg1, string arg2, Exception arg3)
             {
                 Logs.Add(new Tuple<LogLevel, string, Exception>(arg1, arg2, arg3));
-            }
-
-            public override LogLevel GetLevel()
-            {
-                return LogLevel.Info;
             }
         }
     }

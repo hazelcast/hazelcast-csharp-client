@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Text;
@@ -82,127 +80,8 @@ namespace Hazelcast.Client.Protocol
         /// <summary>ClientMessage Fixed Header size in bytes</summary>
         public const int HeaderSize = DataOffsetFieldOffset + Bits.ShortSizeInBytes;
 
-        private bool isRetryable;
-        private int writeOffset;
-
-        public virtual bool ReadFrom(ByteBuffer source)
-        {
-            if (Index() == 0)
-            {
-                InitFrameSize(source);
-            }
-            while (Index() >= Bits.IntSizeInBytes && source.HasRemaining() && !IsComplete())
-            {
-                Accumulate(source, GetFrameLength() - Index());
-            }
-            return IsComplete();
-        }
-
-        public virtual bool WriteTo(ByteBuffer destination)
-        {
-            var byteArray = buffer.ByteArray();
-            var size = GetFrameLength();
-            // the number of bytes that can be written to the bb.
-            var bytesWritable = destination.Remaining();
-            // the number of bytes that need to be written.
-            var bytesNeeded = size - writeOffset;
-            int bytesWrite;
-            bool done;
-            if (bytesWritable >= bytesNeeded)
-            {
-                // All bytes for the value are available.
-                bytesWrite = bytesNeeded;
-                done = true;
-            }
-            else
-            {
-                // Not all bytes for the value are available. Write as much as is available.
-                bytesWrite = bytesWritable;
-                done = false;
-            }
-            destination.Put(byteArray, writeOffset, bytesWrite);
-            writeOffset += bytesWrite;
-            if (done)
-            {
-                //clear the write offset so that same client message can be resend if needed.
-                writeOffset = 0;
-            }
-            return done;
-        }
-
-        public virtual bool IsUrgent()
-        {
-            return false;
-        }
-
-        public static ClientMessage Create()
-        {
-            var clientMessage = new ClientMessage();
-            clientMessage.Wrap(new SafeBuffer(new byte[InitialBufferSize]), 0);
-            return clientMessage;
-        }
-
-        public static ClientMessage CreateForEncode(int initialCapacity)
-        {
-            initialCapacity = QuickMath.NextPowerOfTwo(initialCapacity);
-            return CreateForEncode(new SafeBuffer(new byte[initialCapacity]), 0);
-        }
-
-        public static ClientMessage CreateForEncode(IClientProtocolBuffer buffer, int offset)
-        {
-            var clientMessage = new ClientMessage();
-            clientMessage.WrapForEncode(buffer, offset);
-            return clientMessage;
-        }
-
-        public static ClientMessage CreateForDecode(IClientProtocolBuffer buffer, int offset)
-        {
-            var clientMessage = new ClientMessage();
-            clientMessage.WrapForDecode(buffer, offset);
-            return clientMessage;
-        }
-
-        protected internal virtual void WrapForEncode(IClientProtocolBuffer buffer, int offset)
-        {
-            EnsureHeaderSize(offset, buffer.Capacity());
-            Wrap(buffer, offset);
-            SetDataOffset(HeaderSize);
-            SetFrameLength(HeaderSize);
-            Index(GetDataOffset());
-            SetPartitionId(-1);
-        }
-
-        private void EnsureHeaderSize(int offset, int length)
-        {
-            if (length - offset < HeaderSize)
-            {
-                throw new IndexOutOfRangeException("ClientMessage buffer must contain at least " + HeaderSize +
-                                                   " bytes! length: " + length + ", offset: " + offset);
-            }
-        }
-
-        protected internal virtual void WrapForDecode(IClientProtocolBuffer buffer, int offset)
-        {
-            EnsureHeaderSize(offset, buffer.Capacity());
-            Wrap(buffer, offset);
-            Index(GetDataOffset());
-        }
-
-        /// <summary>Returns the version field value.</summary>
-        /// <returns>The version field value.</returns>
-        public virtual short GetVersion()
-        {
-            return Uint8Get(VersionFieldOffset);
-        }
-
-        /// <summary>Sets the version field value.</summary>
-        /// <param name="version">The value to set in the version field.</param>
-        /// <returns>The ClientMessage with the new version field value.</returns>
-        public virtual ClientMessage SetVersion(short version)
-        {
-            Uint8Put(VersionFieldOffset, version);
-            return this;
-        }
+        private bool _isRetryable;
+        private int _writeOffset;
 
         /// <param name="flag">Check this flag to see if it is set.</param>
         /// <returns>true if the given flag is set, false otherwise.</returns>
@@ -210,13 +89,6 @@ namespace Hazelcast.Client.Protocol
         {
             var i = GetFlags() & flag;
             return i == flag;
-        }
-
-        /// <summary>Returns the flags field value.</summary>
-        /// <returns>The flags field value.</returns>
-        public virtual short GetFlags()
-        {
-            return Uint8Get(FlagsFieldOffset);
         }
 
         /// <summary>Sets the flags field value.</summary>
@@ -233,31 +105,6 @@ namespace Hazelcast.Client.Protocol
         public virtual int GetMessageType()
         {
             return Uint16Get(TypeFieldOffset);
-        }
-
-        /// <summary>Sets the message type field.</summary>
-        /// <param name="type">The value to set in the message type field.</param>
-        /// <returns>The ClientMessage with the new message type field value.</returns>
-        public virtual ClientMessage SetMessageType(int type)
-        {
-            Uint16Put(TypeFieldOffset, type);
-            return this;
-        }
-
-        /// <summary>Returns the frame length field.</summary>
-        /// <returns>The frame length field.</returns>
-        public virtual int GetFrameLength()
-        {
-            return Int32Get(FrameLengthFieldOffset);
-        }
-
-        /// <summary>Sets the frame length field.</summary>
-        /// <param name="length">The value to set in the frame length field.</param>
-        /// <returns>The ClientMessage with the new frame length field value.</returns>
-        public virtual ClientMessage SetFrameLength(int length)
-        {
-            Int32Set(FrameLengthFieldOffset, length);
-            return this;
         }
 
         /// <summary>Returns the correlation id field.</summary>
@@ -292,11 +139,121 @@ namespace Hazelcast.Client.Protocol
             return this;
         }
 
+        public virtual bool IsRetryable()
+        {
+            return _isRetryable;
+        }
+
+        public virtual bool ReadFrom(ByteBuffer source)
+        {
+            if (Index() == 0)
+            {
+                InitFrameSize(source);
+            }
+            while (Index() >= Bits.IntSizeInBytes && source.HasRemaining() && !IsComplete())
+            {
+                Accumulate(source, GetFrameLength() - Index());
+            }
+            return IsComplete();
+        }
+
+        public virtual bool WriteTo(ByteBuffer destination)
+        {
+            var byteArray = Buffer.ByteArray();
+            var size = GetFrameLength();
+            // the number of bytes that can be written to the bb.
+            var bytesWritable = destination.Remaining();
+            // the number of bytes that need to be written.
+            var bytesNeeded = size - _writeOffset;
+            int bytesWrite;
+            bool done;
+            if (bytesWritable >= bytesNeeded)
+            {
+                // All bytes for the value are available.
+                bytesWrite = bytesNeeded;
+                done = true;
+            }
+            else
+            {
+                // Not all bytes for the value are available. Write as much as is available.
+                bytesWrite = bytesWritable;
+                done = false;
+            }
+            destination.Put(byteArray, _writeOffset, bytesWrite);
+            _writeOffset += bytesWrite;
+            if (done)
+            {
+                //clear the write offset so that same client message can be resend if needed.
+                _writeOffset = 0;
+            }
+            return done;
+        }
+
+        public virtual bool IsUrgent()
+        {
+            return false;
+        }
+
+        public static ClientMessage Create()
+        {
+            var clientMessage = new ClientMessage();
+            clientMessage.Wrap(new SafeBuffer(new byte[InitialBufferSize]), 0);
+            return clientMessage;
+        }
+
+        public static ClientMessage CreateForDecode(IClientProtocolBuffer buffer, int offset)
+        {
+            var clientMessage = new ClientMessage();
+            clientMessage.WrapForDecode(buffer, offset);
+            return clientMessage;
+        }
+
+        public static ClientMessage CreateForEncode(int initialCapacity)
+        {
+            initialCapacity = QuickMath.NextPowerOfTwo(initialCapacity);
+            return CreateForEncode(new SafeBuffer(new byte[initialCapacity]), 0);
+        }
+
+        public static ClientMessage CreateForEncode(IClientProtocolBuffer buffer, int offset)
+        {
+            var clientMessage = new ClientMessage();
+            clientMessage.WrapForEncode(buffer, offset);
+            return clientMessage;
+        }
+
         /// <summary>Returns the setDataOffset field.</summary>
         /// <returns>The setDataOffset type field value.</returns>
         public virtual int GetDataOffset()
         {
             return Uint16Get(DataOffsetFieldOffset);
+        }
+
+        /// <summary>Returns the flags field value.</summary>
+        /// <returns>The flags field value.</returns>
+        public virtual short GetFlags()
+        {
+            return Uint8Get(FlagsFieldOffset);
+        }
+
+        /// <summary>Returns the frame length field.</summary>
+        /// <returns>The frame length field.</returns>
+        public virtual int GetFrameLength()
+        {
+            return Int32Get(FrameLengthFieldOffset);
+        }
+
+        /// <summary>Returns the version field value.</summary>
+        /// <returns>The version field value.</returns>
+        public virtual short GetVersion()
+        {
+            return Uint8Get(VersionFieldOffset);
+        }
+
+        /// <summary>Checks the frame size and total data size to validate the message size.</summary>
+        /// <returns>true if the message is constructed.</returns>
+        public virtual bool IsComplete()
+        {
+            return (Index() >= HeaderSize) && (Index() == GetFrameLength());
         }
 
         /// <summary>Sets the dataOffset field.</summary>
@@ -308,52 +265,36 @@ namespace Hazelcast.Client.Protocol
             return this;
         }
 
-        public virtual ClientMessage UpdateFrameLength()
+        /// <summary>Sets the frame length field.</summary>
+        /// <param name="length">The value to set in the frame length field.</param>
+        /// <returns>The ClientMessage with the new frame length field value.</returns>
+        public virtual ClientMessage SetFrameLength(int length)
         {
-            SetFrameLength(Index());
+            Int32Set(FrameLengthFieldOffset, length);
             return this;
         }
 
-        private int InitFrameSize(ByteBuffer byteBuffer)
+        /// <summary>Sets the message type field.</summary>
+        /// <param name="type">The value to set in the message type field.</param>
+        /// <returns>The ClientMessage with the new message type field value.</returns>
+        public virtual ClientMessage SetMessageType(int type)
         {
-            if (byteBuffer.Remaining() < Bits.IntSizeInBytes)
-            {
-                return 0;
-            }
-            return Accumulate(byteBuffer, Bits.IntSizeInBytes);
-        }
-
-        private int Accumulate(ByteBuffer byteBuffer, int length)
-        {
-            var remaining = byteBuffer.Remaining();
-            var readLength = remaining < length ? remaining : length;
-            if (readLength > 0)
-            {
-                var requiredCapacity = Index() + readLength;
-                EnsureCapacity(requiredCapacity);
-                buffer.PutBytes(Index(), byteBuffer.Array(), byteBuffer.Position, readLength);
-                byteBuffer.Position = byteBuffer.Position + readLength;
-                Index(Index() + readLength);
-                return readLength;
-            }
-            return 0;
-        }
-
-        /// <summary>Checks the frame size and total data size to validate the message size.</summary>
-        /// <returns>true if the message is constructed.</returns>
-        public virtual bool IsComplete()
-        {
-            return (Index() >= HeaderSize) && (Index() == GetFrameLength());
+            Uint16Put(TypeFieldOffset, type);
+            return this;
         }
 
         public virtual void SetRetryable(bool isRetryable)
         {
-            this.isRetryable = isRetryable;
+            _isRetryable = isRetryable;
         }
 
-        public virtual bool IsRetryable()
+        /// <summary>Sets the version field value.</summary>
+        /// <param name="version">The value to set in the version field.</param>
+        /// <returns>The ClientMessage with the new version field value.</returns>
+        public virtual ClientMessage SetVersion(short version)
         {
-            return isRetryable;
+            Uint8Put(VersionFieldOffset, version);
+            return this;
         }
 
         public override string ToString()
@@ -369,22 +310,79 @@ namespace Hazelcast.Client.Protocol
                 sb.Append(", isComplete=").Append(IsComplete());
                 sb.Append(", isRetryable=").Append(IsRetryable());
                 sb.Append(", isEvent=").Append(IsFlagSet(ListenerEventFlag));
-                sb.Append(", writeOffset=").Append(writeOffset);
+                sb.Append(", writeOffset=").Append(_writeOffset);
             }
             sb.Append('}');
             return sb.ToString();
         }
 
+        public virtual ClientMessage UpdateFrameLength()
+        {
+            SetFrameLength(Index());
+            return this;
+        }
+
+        protected internal virtual void WrapForDecode(IClientProtocolBuffer buffer, int offset)
+        {
+            EnsureHeaderSize(offset, buffer.Capacity());
+            Wrap(buffer, offset);
+            Index(GetDataOffset());
+        }
+
+        protected internal virtual void WrapForEncode(IClientProtocolBuffer buffer, int offset)
+        {
+            EnsureHeaderSize(offset, buffer.Capacity());
+            Wrap(buffer, offset);
+            SetDataOffset(HeaderSize);
+            SetFrameLength(HeaderSize);
+            Index(GetDataOffset());
+            SetPartitionId(-1);
+        }
+
+        private int Accumulate(ByteBuffer byteBuffer, int length)
+        {
+            var remaining = byteBuffer.Remaining();
+            var readLength = remaining < length ? remaining : length;
+            if (readLength > 0)
+            {
+                var requiredCapacity = Index() + readLength;
+                EnsureCapacity(requiredCapacity);
+                Buffer.PutBytes(Index(), byteBuffer.Array(), byteBuffer.Position, readLength);
+                byteBuffer.Position = byteBuffer.Position + readLength;
+                Index(Index() + readLength);
+                return readLength;
+            }
+            return 0;
+        }
+
         private void EnsureCapacity(int requiredCapacity)
         {
-            var capacity = buffer.Capacity() > 0 ? buffer.Capacity() : 1;
+            var capacity = Buffer.Capacity() > 0 ? Buffer.Capacity() : 1;
             if (requiredCapacity > capacity)
             {
                 var newCapacity = QuickMath.NextPowerOfTwo(requiredCapacity);
                 var newBuffer = new byte[newCapacity];
-                Array.Copy(buffer.ByteArray(), 0, newBuffer, 0, capacity);
-                buffer.Wrap(newBuffer);
+                Array.Copy(Buffer.ByteArray(), 0, newBuffer, 0, capacity);
+                Buffer.Wrap(newBuffer);
             }
+        }
+
+        private void EnsureHeaderSize(int offset, int length)
+        {
+            if (length - offset < HeaderSize)
+            {
+                throw new IndexOutOfRangeException("ClientMessage buffer must contain at least " + HeaderSize +
+                                                   " bytes! length: " + length + ", offset: " + offset);
+            }
+        }
+
+        private int InitFrameSize(ByteBuffer byteBuffer)
+        {
+            if (byteBuffer.Remaining() < Bits.IntSizeInBytes)
+            {
+                return 0;
+            }
+            return Accumulate(byteBuffer, Bits.IntSizeInBytes);
         }
     }
 }

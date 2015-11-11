@@ -1,18 +1,16 @@
-﻿/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -77,9 +75,9 @@ namespace Hazelcast.Client.Test.Serialization
             }
             var actualStr = sb.ToString();
             var strBytes = Encoding.UTF8.GetBytes(actualStr);
-            byte[] actualDataBytes = _serializationService.ToData(actualStr).ToByteArray();
+            var actualDataBytes = _serializationService.ToData(actualStr).ToByteArray();
             var expectedDataByte = ToDataByte(strBytes, actualStr.Length);
-            string decodedStr = (string)_serializationService.ToObject<object>(new HeapData(expectedDataByte));
+            var decodedStr = (string) _serializationService.ToObject<object>(new HeapData(expectedDataByte));
             Assert.AreEqual(expectedDataByte, actualDataBytes, "Deserialized byte array do not match utf-8 encoding");
             Assert.AreEqual(decodedStr, actualStr);
         }
@@ -88,7 +86,7 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestNullStringEncodeDecode()
         {
             var nullData = _serializationService.ToData(null);
-            string decodedStr = (string)_serializationService.ToObject<object>(nullData);
+            var decodedStr = (string) _serializationService.ToObject<object>(nullData);
             Assert.IsNull(decodedStr);
         }
 
@@ -109,7 +107,7 @@ namespace Hazelcast.Client.Test.Serialization
             var allstr = new string(AllChars);
             var expected = Encoding.UTF8.GetBytes(allstr);
             IData data = new HeapData(ToDataByte(expected, allstr.Length));
-            var actualStr = (string)_serializationService.ToObject<object>(data);
+            var actualStr = (string) _serializationService.ToObject<object>(data);
             Assert.AreEqual(allstr, actualStr);
         }
 
@@ -137,7 +135,7 @@ namespace Hazelcast.Client.Test.Serialization
                 stringArray[i] = TestDataAll;
             }
             var dataStrArray = _serializationService.ToData(stringArray);
-            string[] actualStr = (string[])_serializationService.ToObject<object>(dataStrArray);
+            var actualStr = (string[]) _serializationService.ToObject<object>(dataStrArray);
             Assert.AreEqual(SerializationConstants.ConstantTypeStringArray, dataStrArray.GetTypeId());
             Assert.AreEqual(stringArray, actualStr);
         }
@@ -146,7 +144,7 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestStringDecode()
         {
             IData data = new HeapData(ToDataByte(TestDataBytesAll, TestDataAll.Length));
-            string actualStr = (string)_serializationService.ToObject<object>(data);
+            var actualStr = (string) _serializationService.ToObject<object>(data);
             Assert.AreEqual(TestDataAll, actualStr);
         }
 
@@ -154,7 +152,7 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestStringEncode()
         {
             var expected = ToDataByte(TestDataBytesAll, TestDataAll.Length);
-            byte[] actual = _serializationService.ToData(TestDataAll).ToByteArray();
+            var actual = _serializationService.ToData(TestDataAll).ToByteArray();
             Assert.AreEqual(expected, actual);
         }
 

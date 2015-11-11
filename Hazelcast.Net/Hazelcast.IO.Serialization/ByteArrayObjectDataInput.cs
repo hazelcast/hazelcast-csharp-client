@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.IO;
@@ -21,15 +19,10 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
 {
-    internal class ByteArrayObjectDataInput : InputStream, IBufferObjectDataInput
+    internal class ByteArrayObjectDataInput : IInputStream, IBufferObjectDataInput
     {
-        private readonly bool bigEndian;
-        internal readonly ISerializationService service;
-        internal char[] charBuffer;
-        internal byte[] data;
-        internal int mark;
-        internal int pos;
-        internal int size;
+        private readonly bool _bigEndian;
+        private readonly ISerializationService _service;
 
         internal ByteArrayObjectDataInput(byte[] data, ISerializationService service, ByteOrder byteOrder)
             : this(data, 0, service, byteOrder)
@@ -38,17 +31,27 @@ namespace Hazelcast.IO.Serialization
 
         internal ByteArrayObjectDataInput(byte[] data, int offset, ISerializationService service, ByteOrder byteOrder)
         {
-            this.data = data;
-            size = data != null ? data.Length : 0;
-            this.service = service;
-            pos = offset;
-            bigEndian = byteOrder == ByteOrder.BigEndian;
+            Data = data;
+            Size = data != null ? data.Length : 0;
+            _service = service;
+            Pos = offset;
+            _bigEndian = byteOrder == ByteOrder.BigEndian;
         }
+
+        internal char[] CharBuffer { get; set; }
+
+        internal byte[] Data { get; set; }
+
+        internal int MarkPos { get; set; }
+
+        internal int Pos { get; set; }
+
+        internal int Size { get; set; }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int Read(int position)
         {
-            return (position < size) ? (data[position] & unchecked(0xff)) : -1;
+            return (position < Size) ? (Data[position] & unchecked(0xff)) : -1;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -130,8 +133,8 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
         public virtual char ReadChar()
         {
-            var c = ReadChar(pos);
-            pos += Bits.CharSizeInBytes;
+            var c = ReadChar(Pos);
+            Pos += Bits.CharSizeInBytes;
             return c;
         }
 
@@ -139,7 +142,7 @@ namespace Hazelcast.IO.Serialization
         public virtual char ReadChar(int position)
         {
             CheckAvailable(position, Bits.CharSizeInBytes);
-            return Bits.ReadChar(data, position, bigEndian);
+            return Bits.ReadChar(Data, position, _bigEndian);
         }
 
         /// <summary>
@@ -261,8 +264,8 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
         public virtual int ReadInt()
         {
-            var i = ReadInt(pos);
-            pos += Bits.IntSizeInBytes;
+            var i = ReadInt(Pos);
+            Pos += Bits.IntSizeInBytes;
             return i;
         }
 
@@ -270,20 +273,20 @@ namespace Hazelcast.IO.Serialization
         public virtual int ReadInt(int position)
         {
             CheckAvailable(position, Bits.IntSizeInBytes);
-            return Bits.ReadInt(data, position, bigEndian);
+            return Bits.ReadInt(Data, position, _bigEndian);
         }
 
         public int ReadInt(ByteOrder byteOrder)
         {
-            var i = ReadInt(pos, byteOrder);
-            pos += Bits.IntSizeInBytes;
+            var i = ReadInt(Pos, byteOrder);
+            Pos += Bits.IntSizeInBytes;
             return i;
         }
 
         public int ReadInt(int position, ByteOrder byteOrder)
         {
             CheckAvailable(position, Bits.IntSizeInBytes);
-            return Bits.ReadInt(data, position, byteOrder == ByteOrder.BigEndian);
+            return Bits.ReadInt(Data, position, byteOrder == ByteOrder.BigEndian);
         }
 
         /// <summary>
@@ -307,8 +310,8 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
         public virtual long ReadLong()
         {
-            var l = ReadLong(pos);
-            pos += Bits.LongSizeInBytes;
+            var l = ReadLong(Pos);
+            Pos += Bits.LongSizeInBytes;
             return l;
         }
 
@@ -316,21 +319,21 @@ namespace Hazelcast.IO.Serialization
         public virtual long ReadLong(int position)
         {
             CheckAvailable(position, Bits.LongSizeInBytes);
-            return Bits.ReadLong(data, position, bigEndian);
+            return Bits.ReadLong(Data, position, _bigEndian);
         }
 
         public long ReadLong(ByteOrder byteOrder)
         {
-            var l = ReadLong(pos, byteOrder);
-            pos += Bits.LongSizeInBytes;
+            var l = ReadLong(Pos, byteOrder);
+            Pos += Bits.LongSizeInBytes;
             return l;
         }
 
         public long ReadLong(int position, ByteOrder byteOrder)
         {
             CheckAvailable(position, Bits.LongSizeInBytes);
-            long l = Bits.ReadLong(data, position, byteOrder == ByteOrder.BigEndian); ;
-            pos += Bits.LongSizeInBytes;
+            var l = Bits.ReadLong(Data, position, byteOrder == ByteOrder.BigEndian);
+            Pos += Bits.LongSizeInBytes;
             return l;
         }
 
@@ -355,8 +358,8 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
         public virtual short ReadShort()
         {
-            var s = ReadShort(pos);
-            pos += Bits.ShortSizeInBytes;
+            var s = ReadShort(Pos);
+            Pos += Bits.ShortSizeInBytes;
             return s;
         }
 
@@ -364,20 +367,20 @@ namespace Hazelcast.IO.Serialization
         public virtual short ReadShort(int position)
         {
             CheckAvailable(position, Bits.ShortSizeInBytes);
-            return Bits.ReadShort(data, position, bigEndian);
+            return Bits.ReadShort(Data, position, _bigEndian);
         }
 
         public short ReadShort(ByteOrder byteOrder)
         {
-            var s = ReadShort(pos, byteOrder);
-            pos += Bits.ShortSizeInBytes;
+            var s = ReadShort(Pos, byteOrder);
+            Pos += Bits.ShortSizeInBytes;
             return s;
         }
 
         public short ReadShort(int position, ByteOrder byteOrder)
         {
             CheckAvailable(position, Bits.ShortSizeInBytes);
-            return Bits.ReadShort(data, position, byteOrder == ByteOrder.BigEndian);
+            return Bits.ReadShort(Data, position, byteOrder == ByteOrder.BigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -539,7 +542,7 @@ namespace Hazelcast.IO.Serialization
 
         public T ReadObject<T>()
         {
-            return service.ReadObject<T>(this);
+            return _service.ReadObject<T>(this);
         }
 
         /// <summary>
@@ -616,23 +619,23 @@ namespace Hazelcast.IO.Serialization
             {
                 return null;
             }
-            if (charBuffer == null || charCount > charBuffer.Length)
+            if (CharBuffer == null || charCount > CharBuffer.Length)
             {
-                charBuffer = new char[charCount];
+                CharBuffer = new char[charCount];
             }
             for (var i = 0; i < charCount; i++)
             {
                 var b = ReadByte();
                 if (b > 127)
                 {
-                    charBuffer[i] = Bits.ReadUtf8Char(this, b);
+                    CharBuffer[i] = Bits.ReadUtf8Char(this, b);
                 }
                 else
                 {
-                    charBuffer[i] = (char) b;
+                    CharBuffer[i] = (char) b;
                 }
             }
-            return new string(charBuffer, 0, charCount);
+            return new string(CharBuffer, 0, charCount);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -651,9 +654,9 @@ namespace Hazelcast.IO.Serialization
             }
             var skip = n;
             var pos = Position();
-            if (pos + skip > size)
+            if (pos + skip > Size)
             {
-                skip = size - pos;
+                skip = Size - pos;
             }
             Position(pos + skip);
             return skip;
@@ -663,25 +666,25 @@ namespace Hazelcast.IO.Serialization
         /// <remarks>Returns this buffer's position.</remarks>
         public virtual int Position()
         {
-            return pos;
+            return Pos;
         }
 
         public virtual void Position(int newPos)
         {
-            if ((newPos > size) || (newPos < 0))
+            if ((newPos > Size) || (newPos < 0))
             {
                 throw new ArgumentException();
             }
-            pos = newPos;
-            if (mark > pos)
+            Pos = newPos;
+            if (MarkPos > Pos)
             {
-                mark = -1;
+                MarkPos = -1;
             }
         }
 
         public virtual ByteOrder GetByteOrder()
         {
-            return bigEndian ? ByteOrder.BigEndian : ByteOrder.LittleEndian;
+            return _bigEndian ? ByteOrder.BigEndian : ByteOrder.LittleEndian;
         }
 
         public void Dispose()
@@ -691,27 +694,27 @@ namespace Hazelcast.IO.Serialization
 
         public virtual void Init(byte[] data, int offset)
         {
-            this.data = data;
-            size = data != null ? data.Length : 0;
-            pos = offset;
+            Data = data;
+            Size = data != null ? data.Length : 0;
+            Pos = offset;
         }
 
         public virtual void Clear()
         {
-            data = null;
-            pos = 0;
-            size = 0;
-            mark = 0;
-            if (charBuffer != null && charBuffer.Length > BufferObjectDataInputConstants.UtfBufferSize*8)
+            Data = null;
+            Pos = 0;
+            Size = 0;
+            MarkPos = 0;
+            if (CharBuffer != null && CharBuffer.Length > BufferObjectDataInputConstants.UtfBufferSize*8)
             {
-                charBuffer = new char[BufferObjectDataInputConstants.UtfBufferSize*8];
+                CharBuffer = new char[BufferObjectDataInputConstants.UtfBufferSize*8];
             }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int Read()
         {
-            return (pos < size) ? (data[pos++] & unchecked(0xff)) : -1;
+            return (Pos < Size) ? (Data[Pos++] & unchecked(0xff)) : -1;
         }
 
         public virtual int Read(byte[] b)
@@ -734,16 +737,16 @@ namespace Hazelcast.IO.Serialization
             {
                 return 0;
             }
-            if (pos >= size)
+            if (Pos >= Size)
             {
                 return -1;
             }
-            if (pos + len > size)
+            if (Pos + len > Size)
             {
-                len = size - pos;
+                len = Size - Pos;
             }
-            Array.Copy(data, pos, b, off, len);
-            pos += len;
+            Array.Copy(Data, Pos, b, off, len);
+            Pos += len;
             return len;
         }
 
@@ -758,7 +761,7 @@ namespace Hazelcast.IO.Serialization
 
         public int Available()
         {
-            return size - pos;
+            return Size - Pos;
         }
 
         public bool MarkSupported()
@@ -768,18 +771,18 @@ namespace Hazelcast.IO.Serialization
 
         public void Mark(int readlimit)
         {
-            mark = pos;
+            MarkPos = Pos;
         }
 
         public void Reset()
         {
-            pos = mark;
+            Pos = MarkPos;
         }
 
         public void Close()
         {
-            data = null;
-            charBuffer = null;
+            Data = null;
+            CharBuffer = null;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -793,9 +796,9 @@ namespace Hazelcast.IO.Serialization
         {
             var sb = new StringBuilder();
             sb.Append("ByteArrayObjectDataInput");
-            sb.Append("{size=").Append(size);
-            sb.Append(", pos=").Append(pos);
-            sb.Append(", mark=").Append(mark);
+            sb.Append("{size=").Append(Size);
+            sb.Append(", pos=").Append(Pos);
+            sb.Append(", mark=").Append(MarkPos);
             sb.Append('}');
             return sb.ToString();
         }
@@ -807,7 +810,7 @@ namespace Hazelcast.IO.Serialization
             {
                 throw new ArgumentException("Negative pos! -> " + pos);
             }
-            if ((size - pos) < k)
+            if ((Size - pos) < k)
             {
                 throw new EndOfStreamException("Cannot read " + k + " bytes!");
             }

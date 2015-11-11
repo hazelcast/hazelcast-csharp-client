@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using Hazelcast.Client.Connection;
 
@@ -20,92 +18,92 @@ namespace Hazelcast.Config
 {
     public class SocketOptions
     {
-        private int bufferSize = 32;
-        private bool keepAlive = true;
+        private int _bufferSize = 32;
+        private bool _keepAlive = true;
 
-        private int lingerSeconds = 3;
-        private bool reuseAddress = true;
+        private int _lingerSeconds = 3;
+        private bool _reuseAddress = true;
 
-        private ISocketFactory socketFactory;
-        private bool tcpNoDelay;
-        private int timeout = -1;
+        private ISocketFactory _socketFactory;
+        private bool _tcpNoDelay;
+        private int _timeout = -1;
+
+        public virtual int GetBufferSize()
+        {
+            return _bufferSize;
+        }
+
+        public virtual int GetLingerSeconds()
+        {
+            return _lingerSeconds;
+        }
+
+        public virtual ISocketFactory GetSocketFactory()
+        {
+            return _socketFactory;
+        }
+
+        public virtual int GetTimeout()
+        {
+            return _timeout;
+        }
+
+        public virtual bool IsKeepAlive()
+        {
+            return _keepAlive;
+        }
+
+        public virtual bool IsReuseAddress()
+        {
+            return _reuseAddress;
+        }
 
         // socket options
         // in kb
         public virtual bool IsTcpNoDelay()
         {
-            return tcpNoDelay;
-        }
-
-        public virtual SocketOptions SetTcpNoDelay(bool tcpNoDelay)
-        {
-            this.tcpNoDelay = tcpNoDelay;
-            return this;
-        }
-
-        public virtual bool IsKeepAlive()
-        {
-            return keepAlive;
-        }
-
-        public virtual SocketOptions SetKeepAlive(bool keepAlive)
-        {
-            this.keepAlive = keepAlive;
-            return this;
-        }
-
-        public virtual bool IsReuseAddress()
-        {
-            return reuseAddress;
-        }
-
-        public virtual SocketOptions SetReuseAddress(bool reuseAddress)
-        {
-            this.reuseAddress = reuseAddress;
-            return this;
-        }
-
-        public virtual int GetLingerSeconds()
-        {
-            return lingerSeconds;
-        }
-
-        public virtual SocketOptions SetLingerSeconds(int lingerSeconds)
-        {
-            this.lingerSeconds = lingerSeconds;
-            return this;
-        }
-
-        public virtual int GetTimeout()
-        {
-            return timeout;
-        }
-
-        public virtual SocketOptions SetTimeout(int timeout)
-        {
-            this.timeout = timeout;
-            return this;
-        }
-
-        public virtual int GetBufferSize()
-        {
-            return bufferSize;
+            return _tcpNoDelay;
         }
 
         public virtual SocketOptions SetBufferSize(int bufferSize)
         {
-            this.bufferSize = bufferSize;
+            _bufferSize = bufferSize;
             return this;
         }
 
-        public virtual ISocketFactory GetSocketFactory()
+        public virtual SocketOptions SetKeepAlive(bool keepAlive)
         {
-            return socketFactory;
+            _keepAlive = keepAlive;
+            return this;
+        }
+
+        public virtual SocketOptions SetLingerSeconds(int lingerSeconds)
+        {
+            _lingerSeconds = lingerSeconds;
+            return this;
+        }
+
+        public virtual SocketOptions SetReuseAddress(bool reuseAddress)
+        {
+            _reuseAddress = reuseAddress;
+            return this;
         }
 
         public virtual SocketOptions SetSocketFactory(ISocketFactory socketFactory)
         {
-            this.socketFactory = socketFactory;
+            _socketFactory = socketFactory;
+            return this;
+        }
+
+        public virtual SocketOptions SetTcpNoDelay(bool tcpNoDelay)
+        {
+            _tcpNoDelay = tcpNoDelay;
+            return this;
+        }
+
+        public virtual SocketOptions SetTimeout(int timeout)
+        {
+            _timeout = timeout;
             return this;
         }
     }

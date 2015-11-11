@@ -1,20 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
-
-using Hazelcast.Net.Ext;
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 namespace Hazelcast.IO.Serialization
 {
@@ -24,22 +20,6 @@ namespace Hazelcast.IO.Serialization
     /// </remarks>
     public interface IData
     {
-        /// <summary>Returns byte array representation of internal binary format.</summary>
-        /// <returns>binary data</returns>
-        byte[] ToByteArray();
-
-        /// <summary>Returns serialization type of binary form.</summary>
-        /// <remarks>
-        /// Returns serialization type of binary form. It's defined by
-        /// <see cref="ISerializer.GetTypeId()"/>
-        /// </remarks>
-        /// <returns>serializer type id</returns>
-        int GetTypeId();
-
-        /// <summary>Returns the total size of Data in bytes</summary>
-        /// <returns>total size</returns>
-        int TotalSize();
-
         /// <summary>Returns size of internal binary data in bytes</summary>
         /// <returns>internal data size</returns>
         int DataSize();
@@ -63,6 +43,14 @@ namespace Hazelcast.IO.Serialization
         /// <seealso cref="SerializationService.ToData(object, Hazelcast.Core.IPartitioningStrategy)"/>
         int GetPartitionHash();
 
+        /// <summary>Returns serialization type of binary form.</summary>
+        /// <remarks>
+        /// Returns serialization type of binary form. It's defined by
+        /// <see cref="ISerializer.GetTypeId()"/>
+        /// </remarks>
+        /// <returns>serializer type id</returns>
+        int GetTypeId();
+
         /// <summary>Returns true if Data has partition hash, false otherwise.</summary>
         /// <returns>true if Data has partition hash, false otherwise.</returns>
         bool HasPartitionHash();
@@ -75,5 +63,13 @@ namespace Hazelcast.IO.Serialization
         /// </summary>
         /// <returns>true if source object is <tt>Portable</tt>, false otherwise.</returns>
         bool IsPortable();
+
+        /// <summary>Returns byte array representation of internal binary format.</summary>
+        /// <returns>binary data</returns>
+        byte[] ToByteArray();
+
+        /// <summary>Returns the total size of Data in bytes</summary>
+        /// <returns>total size</returns>
+        int TotalSize();
     }
 }

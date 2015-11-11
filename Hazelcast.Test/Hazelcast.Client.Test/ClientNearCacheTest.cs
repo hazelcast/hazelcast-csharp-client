@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -94,6 +92,42 @@ namespace Hazelcast.Client.Test
             return ((HazelcastClientProxy) Client).GetClient().GetSerializationService().ToData(k);
         }
 
+        private void TestInvalidate(Action<IMap<string, string>, string> invalidatingAction)
+        {
+            var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
+            try
+            {
+                map.Put("key", "value");
+
+                var val = map.Get("key");
+                Assert.AreEqual("value", val);
+
+                var clientNearCache = GetNearCache(map);
+
+                Assert.AreEqual(1, clientNearCache.Cache.Count);
+
+                var client = CreateClient();
+                try
+                {
+                    invalidatingAction(client.GetMap<string, string>(map.GetName()), "key");
+                }
+                finally
+                {
+                    client.Shutdown();
+                }
+
+                TestSupport.AssertTrueEventually(() =>
+                {
+                    Assert.IsFalse(clientNearCache.Cache.ContainsKey(ToKeyData("key")),
+                        "key should have been invalidated");
+                });
+            }
+            finally
+            {
+                map.Destroy();
+            }
+        }
+
         [Test]
         public void TestNearCache()
         {
@@ -114,6 +148,17 @@ namespace Hazelcast.Client.Test
             }
             var secondRead = Clock.CurrentTimeMillis() - begin;
             Assert.IsTrue(secondRead < firstRead);
+        }
+
+        [Test]
+        public void TestNearCacheContains()
+        {
+            _map.Put("key", "value");
+
+            _map.Get("key");
+            _map.Get("invalidKey");
+            Assert.IsTrue(_map.ContainsKey("key"));
+            Assert.IsFalse(_map.ContainsKey("invalidKey"));
         }
 
         [Test]
@@ -167,17 +212,6 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestNearCacheContains()
-        {
-            _map.Put("key", "value");
-
-            _map.Get("key");
-            _map.Get("invalidKey");
-            Assert.IsTrue(_map.ContainsKey("key"));
-            Assert.IsFalse(_map.ContainsKey("invalidKey"));
-        }
-
-        [Test]
         public void TestNearCacheIdleEviction()
         {
             var map = Client.GetMap<int, int>("nearCacheIdle-" + TestSupport.RandomString());
@@ -207,27 +241,27 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestNearCacheInvalidationOnPut()
-        {
-            TestInvalidate((m,k) => m.Remove(k));
-        }
-
-        [Test]
-        public void TestNearCacheInvalidationOnRemove()
-        {
-            TestInvalidate((m,k) => m.Remove(k));
-        }
-
-        [Test]
         public void TestNearCacheInvalidationOnClear()
         {
-            TestInvalidate((m,k) => m.Clear());
+            TestInvalidate((m, k) => m.Clear());
         }
 
         [Test]
         public void TestNearCacheInvalidationOnEvict()
         {
-            TestInvalidate((m,k) => m.EvictAll());
+            TestInvalidate((m, k) => m.EvictAll());
+        }
+
+        [Test]
+        public void TestNearCacheInvalidationOnPut()
+        {
+            TestInvalidate((m, k) => m.Remove(k));
+        }
+
+        [Test]
+        public void TestNearCacheInvalidationOnRemove()
+        {
+            TestInvalidate((m, k) => m.Remove(k));
         }
 
         [Test]
@@ -354,42 +388,6 @@ namespace Hazelcast.Client.Test
                     Assert.IsFalse(cache.Cache.ContainsKey(keyData), "key " + k + " should have expired.");
                 }
             });
-        }
-
-        private void TestInvalidate(Action<IMap<string,string>, string> invalidatingAction)
-        {
-            var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
-            try
-            {
-                map.Put("key", "value");
-
-                var val = map.Get("key");
-                Assert.AreEqual("value", val);
-
-                var clientNearCache = GetNearCache(map);
-
-                Assert.AreEqual(1, clientNearCache.Cache.Count);
-
-                var client = CreateClient();
-                try
-                {
-                    invalidatingAction(client.GetMap<string, string>(map.GetName()), "key");
-                }
-                finally
-                {
-                    client.Shutdown();
-                }
-
-                TestSupport.AssertTrueEventually(() =>
-                {
-                    Assert.IsFalse(clientNearCache.Cache.ContainsKey(ToKeyData("key")),
-                        "key should have been invalidated");
-                });
-            }
-            finally
-            {
-                map.Destroy();
-            }
         }
     }
 }

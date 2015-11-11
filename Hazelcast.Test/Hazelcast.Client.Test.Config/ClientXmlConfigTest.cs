@@ -1,41 +1,68 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Hazelcast.Config;
 using Hazelcast.Net.Ext;
 using Hazelcast.Security;
+using Hazelcast.Test;
 using NUnit.Framework;
-using Properties;
 
 namespace Hazelcast.Client.Test.Config
 {
     [TestFixture]
     public class ClientXmlConfigTest
     {
-        private ClientConfig _clientConfig;
-
         [SetUp]
         public void ReadConfig()
         {
-            _clientConfig = XmlClientConfigBuilder.Build(new StringReader(Hazelcast.Test.Resources.hazelcast_config_full));
+            _clientConfig = XmlClientConfigBuilder.Build(new StringReader(Resources.hazelcast_config_full));
+        }
+
+        private ClientConfig _clientConfig;
+
+        [Test]
+        public void TestGroupConfig()
+        {
+            Assert.That(_clientConfig.GetGroupConfig(), Is.EqualTo(new GroupConfig("dev", "dev-pass")));
+        }
+
+        [Test]
+        public void TestListenerConfig()
+        {
+            var listenerConfigs = _clientConfig.GetListenerConfigs();
+
+            Assert.That(listenerConfigs, Has.Count.EqualTo(3));
+            Assert.That(listenerConfigs[0].GetClassName(), Is.EqualTo("Hazelcast.Examples.MembershipListener"));
+            Assert.That(listenerConfigs[1].GetClassName(), Is.EqualTo("Hazelcast.Examples.InstanceListener"));
+            Assert.That(listenerConfigs[2].GetClassName(), Is.EqualTo("Hazelcast.Examples.MigrationListener"));
+        }
+
+        [Test]
+        public void TestNearCacheConfig()
+        {
+            var nearCacheConfig = _clientConfig.GetNearCacheConfig("asd");
+            Assert.That(nearCacheConfig, Is.Not.Null);
+
+            Assert.That(nearCacheConfig.GetName(), Is.EqualTo("asd"));
+            Assert.That(nearCacheConfig.GetMaxSize(), Is.EqualTo(2000));
+            Assert.That(nearCacheConfig.GetTimeToLiveSeconds(), Is.EqualTo(100));
+            Assert.That(nearCacheConfig.GetMaxIdleSeconds(), Is.EqualTo(100));
+            Assert.That(nearCacheConfig.GetEvictionPolicy(), Is.EqualTo("LFU"));
+            Assert.That(nearCacheConfig.IsInvalidateOnChange(), Is.True);
+            Assert.That(nearCacheConfig.GetInMemoryFormat(), Is.EqualTo(InMemoryFormat.Object));
         }
 
         [Test]
@@ -67,38 +94,6 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestGroupConfig()
-        {
-            Assert.That(_clientConfig.GetGroupConfig(), Is.EqualTo(new GroupConfig("dev", "dev-pass")));
-        }
-
-        [Test]
-        public void TestSecurity()
-        {
-            Assert.That(_clientConfig.GetCredentials(), Is.InstanceOf(typeof(UsernamePasswordCredentials)));
-
-            var credentials = (UsernamePasswordCredentials) _clientConfig.GetCredentials();
-
-            Assert.That(credentials.GetUsername(), Is.EqualTo("dev-user"));
-            Assert.That(credentials.GetPassword(), Is.EqualTo("pass123"));
-        }
-
-        [Test]
-        public void TestNearCacheConfig()
-        {
-            var nearCacheConfig = _clientConfig.GetNearCacheConfig("asd");
-            Assert.That(nearCacheConfig, Is.Not.Null);
-
-            Assert.That(nearCacheConfig.GetName(), Is.EqualTo("asd"));
-            Assert.That(nearCacheConfig.GetMaxSize(), Is.EqualTo(2000));
-            Assert.That(nearCacheConfig.GetTimeToLiveSeconds(), Is.EqualTo(100));
-            Assert.That(nearCacheConfig.GetMaxIdleSeconds(), Is.EqualTo(100));
-            Assert.That(nearCacheConfig.GetEvictionPolicy(), Is.EqualTo("LFU"));
-            Assert.That(nearCacheConfig.IsInvalidateOnChange(), Is.True);
-            Assert.That(nearCacheConfig.GetInMemoryFormat(), Is.EqualTo(InMemoryFormat.Object));
-        }
-
-        [Test]
         public void TestProxyFactoryConfig()
         {
             var proxyFactoryConfigs = _clientConfig.GetProxyFactoryConfigs();
@@ -114,14 +109,14 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestListenerConfig()
+        public void TestSecurity()
         {
-            var listenerConfigs = _clientConfig.GetListenerConfigs();
+            Assert.That(_clientConfig.GetCredentials(), Is.InstanceOf(typeof (UsernamePasswordCredentials)));
 
-            Assert.That(listenerConfigs, Has.Count.EqualTo(3));
-            Assert.That(listenerConfigs[0].GetClassName(), Is.EqualTo("Hazelcast.Examples.MembershipListener"));
-            Assert.That(listenerConfigs[1].GetClassName(), Is.EqualTo("Hazelcast.Examples.InstanceListener"));
-            Assert.That(listenerConfigs[2].GetClassName(), Is.EqualTo("Hazelcast.Examples.MigrationListener"));
+            var credentials = (UsernamePasswordCredentials) _clientConfig.GetCredentials();
+
+            Assert.That(credentials.GetUsername(), Is.EqualTo("dev-user"));
+            Assert.That(credentials.GetPassword(), Is.EqualTo("pass123"));
         }
 
         [Test]
@@ -153,8 +148,6 @@ namespace Hazelcast.Client.Test.Config
             Assert.AreEqual(true, serializationConfig.IsEnableCompression());
             Assert.AreEqual(true, serializationConfig.IsEnableSharedObject());
             Assert.AreEqual(true, serializationConfig.IsUseNativeByteOrder());
-
         }
-
     }
 }

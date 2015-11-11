@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using Hazelcast.Core;
 using Hazelcast.Util;
@@ -27,8 +25,8 @@ namespace Hazelcast.Config
     /// </summary>
     public class ListenerConfig
     {
-        private string className;
-        private IEventListener implementation;
+        private string _className;
+        private IEventListener _implementation;
 
         /// <summary>Creates a ListenerConfig without className/implementation.</summary>
         /// <remarks>Creates a ListenerConfig without className/implementation.</remarks>
@@ -51,7 +49,7 @@ namespace Hazelcast.Config
         /// <exception cref="System.ArgumentException">if the implementation is null.</exception>
         public ListenerConfig(IEventListener implementation)
         {
-            this.implementation = ValidationUtil.IsNotNull(implementation, "implementation");
+            _implementation = ValidationUtil.IsNotNull(implementation, "implementation");
         }
 
         /// <summary>Returns the name of the class of the IEventListener.</summary>
@@ -60,7 +58,7 @@ namespace Hazelcast.Config
         /// <seealso cref="SetClassName(string)">SetClassName(string)</seealso>
         public virtual string GetClassName()
         {
-            return className;
+            return _className;
         }
 
         /// <summary>Returns the IEventListener implementation.</summary>
@@ -69,7 +67,7 @@ namespace Hazelcast.Config
         /// <seealso cref="SetImplementation(IEventListener)" />
         public virtual IEventListener GetImplementation()
         {
-            return implementation;
+            return _implementation;
         }
 
         public virtual bool IsIncludeValue()
@@ -94,8 +92,8 @@ namespace Hazelcast.Config
         /// <seealso cref="GetClassName()">GetClassName()</seealso>
         public ListenerConfig SetClassName(string className)
         {
-            this.className = ValidationUtil.HasText(className, "className");
-            implementation = null;
+            _className = ValidationUtil.HasText(className, "className");
+            _implementation = null;
             return this;
         }
 
@@ -111,14 +109,14 @@ namespace Hazelcast.Config
         /// <seealso cref="GetImplementation()">GetImplementation()</seealso>
         public virtual ListenerConfig SetImplementation(IEventListener implementation)
         {
-            this.implementation = ValidationUtil.IsNotNull(implementation, "implementation");
-            className = null;
+            _implementation = ValidationUtil.IsNotNull(implementation, "implementation");
+            _className = null;
             return this;
         }
 
         public override string ToString()
         {
-            return "ListenerConfig [className=" + className + ", implementation=" + implementation + ", includeValue=" +
+            return "ListenerConfig [className=" + _className + ", implementation=" + _implementation + ", includeValue=" +
                    IsIncludeValue() + ", local=" + IsLocal() + "]";
         }
     }

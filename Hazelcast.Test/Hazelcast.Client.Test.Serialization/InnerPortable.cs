@@ -1,20 +1,18 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using System.Linq;
 using Hazelcast.IO.Serialization;
 
@@ -116,8 +114,10 @@ namespace Hazelcast.Client.Test.Serialization
 
         protected bool Equals(InnerPortable other)
         {
-            return Enumerable.SequenceEqual(bb, other.bb) && Enumerable.SequenceEqual(cc, other.cc) && Enumerable.SequenceEqual(dd, other.dd) && Enumerable.SequenceEqual(ff, other.ff) &&
-                   Enumerable.SequenceEqual(ii, other.ii) && Enumerable.SequenceEqual(ll, other.ll) && Enumerable.SequenceEqual(nn, other.nn) && Enumerable.SequenceEqual(ss, other.ss);
+            return bb.SequenceEqual(other.bb) && cc.SequenceEqual(other.cc) && dd.SequenceEqual(other.dd) &&
+                   ff.SequenceEqual(other.ff) &&
+                   ii.SequenceEqual(other.ii) && ll.SequenceEqual(other.ll) && nn.SequenceEqual(other.nn) &&
+                   ss.SequenceEqual(other.ss);
         }
     }
 }

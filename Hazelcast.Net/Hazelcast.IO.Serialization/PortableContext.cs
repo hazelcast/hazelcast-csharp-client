@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
@@ -31,8 +29,8 @@ namespace Hazelcast.IO.Serialization
 
         internal PortableContext(SerializationService serializationService, int version)
         {
-            this._serializationService = serializationService;
-            this._version = version;
+            _serializationService = serializationService;
+            _version = version;
         }
 
         public int GetClassVersion(int factoryId, int classId)
@@ -137,7 +135,8 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException" />
-        internal IClassDefinition ReadClassDefinition(IBufferObjectDataInput @in, int factoryId, int classId, int version)
+        internal IClassDefinition ReadClassDefinition(IBufferObjectDataInput @in, int factoryId, int classId,
+            int version)
         {
             var register = true;
             var builder = new ClassDefinitionBuilder(factoryId, classId, version);
@@ -179,10 +178,10 @@ namespace Hazelcast.IO.Serialization
                 {
                     if (type == FieldType.PortableArray)
                     {
-                        var k_1 = @in.ReadInt();
+                        var k1 = @in.ReadInt();
                         fieldFactoryId = @in.ReadInt();
                         fieldClassId = @in.ReadInt();
-                        if (k_1 > 0)
+                        if (k1 > 0)
                         {
                             var p = @in.ReadInt();
                             @in.Position(p);
@@ -207,21 +206,23 @@ namespace Hazelcast.IO.Serialization
 
         private ClassDefinitionContext GetClassDefContext(int factoryId)
         {
-            return _classDefContextMap.GetOrAdd(factoryId, theFactoryId => new ClassDefinitionContext(this, theFactoryId));
+            return _classDefContextMap.GetOrAdd(factoryId,
+                theFactoryId => new ClassDefinitionContext(this, theFactoryId));
         }
 
         private sealed class ClassDefinitionContext
         {
-            private readonly PortableContext _portableContext;
-            private readonly int _factoryId;
             private readonly ConcurrentDictionary<int, int> _currentClassVersions = new ConcurrentDictionary<int, int>();
+            private readonly int _factoryId;
+            private readonly PortableContext _portableContext;
+
             private readonly ConcurrentDictionary<long, IClassDefinition> _versionedDefinitions =
                 new ConcurrentDictionary<long, IClassDefinition>();
 
             internal ClassDefinitionContext(PortableContext portableContext, int factoryId)
             {
-                this._portableContext = portableContext;
-                this._factoryId = factoryId;
+                _portableContext = portableContext;
+                _factoryId = factoryId;
             }
 
             internal int GetClassVersion(int classId)
@@ -231,19 +232,10 @@ namespace Hazelcast.IO.Serialization
                 return hasValue ? version : -1;
             }
 
-            internal void SetClassVersion(int classId, int version)
-            {
-                var hasAdded = _currentClassVersions.TryAdd(classId, version);
-                if (!hasAdded)
-                {
-                    throw new ArgumentException("Class-id: " + classId + " is already registered!");
-                }
-            }
-
             internal IClassDefinition Lookup(int classId, int version)
             {
                 var versionedClassId = Bits.CombineToLong(classId, version);
-                IClassDefinition cd = null;
+                IClassDefinition cd;
                 _versionedDefinitions.TryGetValue(versionedClassId, out cd);
                 return cd;
             }
@@ -260,7 +252,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 if (cd is ClassDefinition)
                 {
-                    var cdImpl = (ClassDefinition)cd;
+                    var cdImpl = (ClassDefinition) cd;
                     cdImpl.SetVersionIfNotSet(_portableContext.GetVersion());
                 }
                 var versionedClassId = Bits.CombineToLong(cd.GetClassId(), cd.GetVersion());
@@ -280,6 +272,15 @@ namespace Hazelcast.IO.Serialization
                 }
                 _versionedDefinitions.AddOrUpdate(versionedClassId, cd, (key, oldValue) => cd);
                 return cd;
+            }
+
+            internal void SetClassVersion(int classId, int version)
+            {
+                var hasAdded = _currentClassVersions.TryAdd(classId, version);
+                if (!hasAdded)
+                {
+                    throw new ArgumentException("Class-id: " + classId + " is already registered!");
+                }
             }
         }
     }

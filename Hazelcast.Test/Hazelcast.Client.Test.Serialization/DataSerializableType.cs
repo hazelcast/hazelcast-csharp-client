@@ -1,43 +1,42 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Test.Serialization
 {
-    class DataSerializableType:IIdentifiedDataSerializable
+    internal class DataSerializableType : IIdentifiedDataSerializable
     {
-        private DataSerializableBasicType[,] _runnerInfos;
-
-        private int _runnerCount;
         private int _raceCount;
 
+        private int _runnerCount;
+        private DataSerializableBasicType[,] _runnerInfos;
+
         public DataSerializableType()
-        { }
+        {
+        }
 
         public DataSerializableType(int runnerCount, int raceCount)
         {
             _runnerCount = runnerCount;
             _raceCount = raceCount;
-            _runnerInfos = new DataSerializableBasicType[runnerCount,raceCount];
-            for (int i = 0; i < _runnerCount; i++)
+            _runnerInfos = new DataSerializableBasicType[runnerCount, raceCount];
+            for (var i = 0; i < _runnerCount; i++)
             {
-                for (int j = 0; j < _raceCount; j++)
+                for (var j = 0; j < _raceCount; j++)
                 {
                     _runnerInfos[i, j] = new DataSerializableBasicType();
                 }
@@ -48,9 +47,9 @@ namespace Hazelcast.Client.Test.Serialization
         {
             output.WriteInt(_runnerCount);
             output.WriteInt(_raceCount);
-            for (int i = 0; i < _runnerCount; i++)
+            for (var i = 0; i < _runnerCount; i++)
             {
-                for (int j = 0; j < _raceCount; j++)
+                for (var j = 0; j < _raceCount; j++)
                 {
                     _runnerInfos[i, j].WriteData(output);
                 }
@@ -62,15 +61,14 @@ namespace Hazelcast.Client.Test.Serialization
             _runnerCount = input.ReadInt();
             _raceCount = input.ReadInt();
             _runnerInfos = new DataSerializableBasicType[_runnerCount, _raceCount];
-            for (int i = 0; i < _runnerCount; i++)
+            for (var i = 0; i < _runnerCount; i++)
             {
-                for (int j = 0; j < _raceCount; j++)
+                for (var j = 0; j < _raceCount; j++)
                 {
                     _runnerInfos[i, j] = new DataSerializableBasicType();
-                    _runnerInfos[i, j].ReadData(input); 
+                    _runnerInfos[i, j].ReadData(input);
                 }
             }
-
         }
 
         public string GetJavaClassName()
@@ -89,14 +87,10 @@ namespace Hazelcast.Client.Test.Serialization
         }
     }
 
-    class DataSerializableBasicType : IIdentifiedDataSerializable
+    internal class DataSerializableBasicType : IIdentifiedDataSerializable
     {
-        private double dblValue1=10.1;
+        private double dblValue1 = 10.1;
         private double dblValue2 = 21.34;
-
-        public DataSerializableBasicType()
-        {
-        }
 
         public double DblValue1
         {
@@ -138,7 +132,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
     }
 
-    class MyDataSerializableFactory : IDataSerializableFactory
+    internal class MyDataSerializableFactory : IDataSerializableFactory
     {
         public IIdentifiedDataSerializable Create(int typeId)
         {
@@ -151,9 +145,6 @@ namespace Hazelcast.Client.Test.Serialization
                 default:
                     throw new NotImplementedException();
             }
-
-
         }
     }
-
 }

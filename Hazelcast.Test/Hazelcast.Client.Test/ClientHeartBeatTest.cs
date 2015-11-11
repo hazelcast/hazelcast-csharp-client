@@ -1,18 +1,16 @@
-﻿/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Linq;
@@ -26,6 +24,13 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientHeartBeatTest : HazelcastBaseTest
     {
+        [TearDown]
+        public new void TearDown()
+        {
+            Cluster.RemoveNode();
+            Cluster.AddNode();
+        }
+
         protected override void ConfigureClient(ClientConfig config)
         {
             config.GetNetworkConfig().SetRedoOperation(true);
@@ -45,13 +50,6 @@ namespace Hazelcast.Client.Test
             Environment.SetEnvironmentVariable("hazelcast.client.request.retry.wait.time", null);
         }
 
-        [TearDown]
-        public new void TearDown()
-        {
-            Cluster.RemoveNode();
-            Cluster.AddNode();
-        }
-
         //TODO: Intermittently failing test
         [Test, Ignore]
         public void TestHeartBeatStoppedOnOwnerNode()
@@ -65,7 +63,7 @@ namespace Hazelcast.Client.Test
             var value2 = TestSupport.RandomString();
             map.Put(key, value);
 
-            int eventCount = 0;
+            var eventCount = 0;
             var regId = map.AddEntryListener(new EntryAdapter<string, string>
             {
                 Added = e => Interlocked.Increment(ref eventCount)
@@ -94,12 +92,12 @@ namespace Hazelcast.Client.Test
             var map = Client.GetMap<int, string>(TestSupport.RandomString());
             var count = 50;
             // make sure we have a connection open to the second node
-            for (var i = 0; i < count / 2; i++)
+            for (var i = 0; i < count/2; i++)
             {
                 map.Put(i, TestSupport.RandomString());
             }
             Cluster.SuspendNode(id);
-            for (var i = count / 2; i < count; i++)
+            for (var i = count/2; i < count; i++)
             {
                 try
                 {
@@ -113,10 +111,7 @@ namespace Hazelcast.Client.Test
             Thread.Sleep(5000);
             Cluster.ResumeNode(id);
 
-            TestSupport.AssertTrueEventually(() =>
-            {
-                Assert.AreEqual(count, map.Size());
-            });
+            TestSupport.AssertTrueEventually(() => { Assert.AreEqual(count, map.Size()); });
 
             RemoveNodeAndWait(id);
         }

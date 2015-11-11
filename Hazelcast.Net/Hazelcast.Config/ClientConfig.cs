@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Collections.Generic;
 using Hazelcast.Client;
@@ -25,15 +23,9 @@ namespace Hazelcast.Config
 {
     public class ClientConfig
     {
-        /// <summary>
-        /// The Group Configuration properties like:
-        /// Name and Password that is used to connect to the cluster.
-        /// </summary>
-        /// <remarks>
-        /// The Group Configuration properties like:
-        /// Name and Password that is used to connect to the cluster.
-        /// </remarks>
-        private GroupConfig groupConfig = new GroupConfig();
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConfig));
+
+        private IConfigPatternMatcher _configPatternMatcher = new MatchingPointConfigPatternMatcher();
 
         /// <summary>
         /// The Security Configuration for custom Credentials:
@@ -42,7 +34,36 @@ namespace Hazelcast.Config
         ///     <see cref="GroupConfig">GroupConfig</see>
         ///     in Hazelcast EE.
         /// </summary>
-        private ICredentials credentials;
+        private ICredentials _credentials;
+
+        /// <summary>pool-size for internal ExecutorService which handles responses etc.</summary>
+        private int _executorPoolSize = -1;
+
+        /// <summary>
+        /// The Group Configuration properties like:
+        /// Name and Password that is used to connect to the cluster.
+        /// </summary>
+        /// <remarks>
+        /// The Group Configuration properties like:
+        /// Name and Password that is used to connect to the cluster.
+        /// </remarks>
+        private GroupConfig _groupConfig = new GroupConfig();
+
+        /// <summary>List of listeners that Hazelcast will automatically add as a part of initialization process.</summary>
+        /// <remarks>
+        /// List of listeners that Hazelcast will automatically add as a part of initialization process.
+        /// Currently only supports
+        /// <see cref="Hazelcast.Core.LifecycleListener">Hazelcast.Core.LifecycleListener</see>
+        /// .
+        /// </remarks>
+        private IList<ListenerConfig> _listenerConfigs = new List<ListenerConfig>();
+
+        /// <summary>Used to distribute the operations to multiple Endpoints.</summary>
+        private ILoadBalancer _loadBalancer = new RoundRobinLB();
+
+        private IManagedContext _managedContext;
+
+        private IDictionary<string, NearCacheConfig> _nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
 
         /// <summary>
         /// The Network Configuration properties like:
@@ -52,34 +73,75 @@ namespace Hazelcast.Config
         /// The Network Configuration properties like:
         /// addresses to connect, smart-routing, socket-options...
         /// </remarks>
-        private ClientNetworkConfig networkConfig = new ClientNetworkConfig();
+        private ClientNetworkConfig _networkConfig = new ClientNetworkConfig();
 
-        /// <summary>Used to distribute the operations to multiple Endpoints.</summary>
-        private ILoadBalancer loadBalancer = new RoundRobinLB();
+        private IList<ProxyFactoryConfig> _proxyFactoryConfigs = new List<ProxyFactoryConfig>();
 
-        /// <summary>List of listeners that Hazelcast will automatically add as a part of initialization process.</summary>
-        /// <remarks>
-        /// List of listeners that Hazelcast will automatically add as a part of initialization process.
-        /// Currently only supports
-        /// <see cref="Hazelcast.Core.LifecycleListener">Hazelcast.Core.LifecycleListener</see>
-        /// .
-        /// </remarks>
-        private IList<ListenerConfig> listenerConfigs = new List<ListenerConfig>();
+        private SerializationConfig _serializationConfig = new SerializationConfig();
 
-        /// <summary>pool-size for internal ExecutorService which handles responses etc.</summary>
-        private int executorPoolSize = -1;
+        public virtual ClientConfig AddListenerConfig(ListenerConfig listenerConfig)
+        {
+            GetListenerConfigs().Add(listenerConfig);
+            return this;
+        }
 
-        private SerializationConfig serializationConfig = new SerializationConfig();
+        public virtual ClientConfig AddNearCacheConfig(NearCacheConfig nearCacheConfig)
+        {
+            _nearCacheConfigMap.Add(nearCacheConfig.GetName(), nearCacheConfig);
+            return this;
+        }
 
-        private IList<ProxyFactoryConfig> proxyFactoryConfigs = new List<ProxyFactoryConfig>();
+        public virtual ClientConfig AddNearCacheConfig(string mapName, NearCacheConfig nearCacheConfig)
+        {
+            _nearCacheConfigMap.Add(mapName, nearCacheConfig);
+            return this;
+        }
 
-        private IManagedContext managedContext = null;
+        public virtual ClientConfig AddProxyFactoryConfig(ProxyFactoryConfig proxyFactoryConfig)
+        {
+            _proxyFactoryConfigs.Add(proxyFactoryConfig);
+            return this;
+        }
 
-        private IDictionary<string, NearCacheConfig> nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
+        public virtual ICredentials GetCredentials()
+        {
+            if (_credentials == null)
+            {
+                SetCredentials(new UsernamePasswordCredentials(GetGroupConfig().GetName(),
+                    GetGroupConfig().GetPassword()));
+            }
+            return _credentials;
+        }
 
-        private IConfigPatternMatcher configPatternMatcher = new MatchingPointConfigPatternMatcher();
+        public virtual int GetExecutorPoolSize()
+        {
+            return _executorPoolSize;
+        }
 
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientConfig));
+        public virtual GroupConfig GetGroupConfig()
+        {
+            return _groupConfig;
+        }
+
+        public virtual IList<ListenerConfig> GetListenerConfigs()
+        {
+            return _listenerConfigs;
+        }
+
+        public virtual IManagedContext GetManagedContext()
+        {
+            return _managedContext;
+        }
+
+        public virtual NearCacheConfig GetNearCacheConfig(string mapName)
+        {
+            return LookupByPattern(_nearCacheConfigMap, mapName);
+        }
+
+        public virtual IDictionary<string, NearCacheConfig> GetNearCacheConfigMap()
+        {
+            return _nearCacheConfigMap;
+        }
 
         //public virtual ClientSecurityConfig GetSecurityConfig()
         //{
@@ -93,144 +155,85 @@ namespace Hazelcast.Config
 
         public virtual ClientNetworkConfig GetNetworkConfig()
         {
-            return networkConfig;
+            return _networkConfig;
         }
 
-        public virtual void SetNetworkConfig(ClientNetworkConfig networkConfig)
+        public virtual IList<ProxyFactoryConfig> GetProxyFactoryConfigs()
         {
-            this.networkConfig = networkConfig;
+            return _proxyFactoryConfigs;
         }
 
-        public virtual ClientConfig AddNearCacheConfig(NearCacheConfig nearCacheConfig)
+        public virtual SerializationConfig GetSerializationConfig()
         {
-            nearCacheConfigMap.Add(nearCacheConfig.GetName(), nearCacheConfig);
-            return this;
+            return _serializationConfig;
         }
 
-        public virtual ClientConfig AddNearCacheConfig(string mapName, NearCacheConfig nearCacheConfig)
+        public void SetConfigPatternMatcher(IConfigPatternMatcher matchingPointConfigPatternMatcher)
         {
-            nearCacheConfigMap.Add(mapName, nearCacheConfig);
-            return this;
-        }
-
-        public virtual ClientConfig AddListenerConfig(ListenerConfig listenerConfig)
-        {
-            GetListenerConfigs().Add(listenerConfig);
-            return this;
-        }
-
-        public virtual ClientConfig AddProxyFactoryConfig(ProxyFactoryConfig proxyFactoryConfig)
-        {
-            this.proxyFactoryConfigs.Add(proxyFactoryConfig);
-            return this;
-        }
-
-        public virtual NearCacheConfig GetNearCacheConfig(string mapName)
-        {
-            return LookupByPattern(nearCacheConfigMap, mapName);
-        }
-
-        public virtual IDictionary<string, NearCacheConfig> GetNearCacheConfigMap()
-        {
-            return nearCacheConfigMap;
-        }
-
-        public virtual ClientConfig SetNearCacheConfigMap(IDictionary<string, NearCacheConfig> nearCacheConfigMap)
-        {
-            this.nearCacheConfigMap = nearCacheConfigMap;
-            return this;
-        }
-
-        public virtual ICredentials GetCredentials()
-        {
-            if (credentials == null)
-            {
-                SetCredentials(new UsernamePasswordCredentials(GetGroupConfig().GetName(),
-                    GetGroupConfig().GetPassword()));
-            }
-            return credentials;
+            _configPatternMatcher = matchingPointConfigPatternMatcher;
         }
 
         public virtual ClientConfig SetCredentials(ICredentials credentials)
         {
-            this.credentials = credentials;
+            _credentials = credentials;
             return this;
         }
 
-        public virtual GroupConfig GetGroupConfig()
+        public virtual ClientConfig SetExecutorPoolSize(int executorPoolSize)
         {
-            return groupConfig;
+            _executorPoolSize = executorPoolSize;
+            return this;
         }
 
         public virtual ClientConfig SetGroupConfig(GroupConfig groupConfig)
         {
-            this.groupConfig = groupConfig;
+            _groupConfig = groupConfig;
             return this;
-        }
-
-        public virtual IList<ListenerConfig> GetListenerConfigs()
-        {
-            return listenerConfigs;
         }
 
         public virtual ClientConfig SetListenerConfigs(IList<ListenerConfig> listenerConfigs)
         {
-            this.listenerConfigs = listenerConfigs;
+            _listenerConfigs = listenerConfigs;
+            return this;
+        }
+
+        public virtual ClientConfig SetManagedContext(IManagedContext managedContext)
+        {
+            _managedContext = managedContext;
+            return this;
+        }
+
+        public virtual ClientConfig SetNearCacheConfigMap(IDictionary<string, NearCacheConfig> nearCacheConfigMap)
+        {
+            _nearCacheConfigMap = nearCacheConfigMap;
+            return this;
+        }
+
+        public virtual void SetNetworkConfig(ClientNetworkConfig networkConfig)
+        {
+            _networkConfig = networkConfig;
+        }
+
+        public virtual ClientConfig SetProxyFactoryConfigs(IList<ProxyFactoryConfig> proxyFactoryConfigs)
+        {
+            _proxyFactoryConfigs = proxyFactoryConfigs;
+            return this;
+        }
+
+        public virtual ClientConfig SetSerializationConfig(SerializationConfig serializationConfig)
+        {
+            _serializationConfig = serializationConfig;
             return this;
         }
 
         internal virtual ILoadBalancer GetLoadBalancer()
         {
-            return loadBalancer;
+            return _loadBalancer;
         }
 
         internal virtual ClientConfig SetLoadBalancer(ILoadBalancer loadBalancer)
         {
-            this.loadBalancer = loadBalancer;
-            return this;
-        }
-
-        public virtual IManagedContext GetManagedContext()
-        {
-            return managedContext;
-        }
-
-        public virtual ClientConfig SetManagedContext(IManagedContext managedContext)
-        {
-            this.managedContext = managedContext;
-            return this;
-        }
-
-        public virtual int GetExecutorPoolSize()
-        {
-            return executorPoolSize;
-        }
-
-        public virtual ClientConfig SetExecutorPoolSize(int executorPoolSize)
-        {
-            this.executorPoolSize = executorPoolSize;
-            return this;
-        }
-
-        public virtual IList<ProxyFactoryConfig> GetProxyFactoryConfigs()
-        {
-            return proxyFactoryConfigs;
-        }
-
-        public virtual ClientConfig SetProxyFactoryConfigs(IList<ProxyFactoryConfig> proxyFactoryConfigs)
-        {
-            this.proxyFactoryConfigs = proxyFactoryConfigs;
-            return this;
-        }
-
-        public virtual SerializationConfig GetSerializationConfig()
-        {
-            return serializationConfig;
-        }
-
-        public virtual ClientConfig SetSerializationConfig(SerializationConfig serializationConfig)
-        {
-            this.serializationConfig = serializationConfig;
+            _loadBalancer = loadBalancer;
             return this;
         }
 
@@ -242,7 +245,7 @@ namespace Hazelcast.Config
                 return t;
             }
 
-            var key = configPatternMatcher.Matches(map.Keys, name);
+            var key = _configPatternMatcher.Matches(map.Keys, name);
             if (key != null) return map[key];
 
             if ("default" != name && !name.StartsWith("hz:"))
@@ -250,11 +253,6 @@ namespace Hazelcast.Config
                 Logger.Finest("No configuration found for " + name + ", using default config.");
             }
             return default(T);
-        }
-
-        public void SetConfigPatternMatcher(IConfigPatternMatcher matchingPointConfigPatternMatcher)
-        {
-            this.configPatternMatcher = matchingPointConfigPatternMatcher;
         }
     }
 }

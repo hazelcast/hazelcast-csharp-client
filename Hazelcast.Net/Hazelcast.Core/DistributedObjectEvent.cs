@@ -1,20 +1,17 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-using System;
 using System.Text;
 
 namespace Hazelcast.Core
@@ -28,24 +25,24 @@ namespace Hazelcast.Core
     /// <seealso cref="IDistributedObjectListener">IDistributedObjectListener</seealso>
     public class DistributedObjectEvent
     {
-        
-        public static class EventType
+        private readonly IDistributedObject _distributedObject;
+
+        private readonly string _eventType;
+
+        private readonly string _serviceName;
+
+        public DistributedObjectEvent(string eventType, string serviceName, IDistributedObject distributedObject)
         {
-            public const string Created = "CREATED";
-            public const string Destroyed = "DESTROYED";
+            _eventType = eventType;
+            _serviceName = serviceName;
+            _distributedObject = distributedObject;
         }
 
-        private readonly IDistributedObject distributedObject;
-
-        private readonly String eventType;
-
-        private readonly string serviceName;
-
-        public DistributedObjectEvent(String eventType, string serviceName, IDistributedObject distributedObject)
+        /// <summary>Returns IDistributedObject instance</summary>
+        /// <returns>IDistributedObject</returns>
+        public virtual IDistributedObject GetDistributedObject()
         {
-            this.eventType = eventType;
-            this.serviceName = serviceName;
-            this.distributedObject = distributedObject;
+            return _distributedObject;
         }
 
         /// <summary>
@@ -55,26 +52,25 @@ namespace Hazelcast.Core
         ///     <see cref="EventType.Destroyed">EventType.Destroyed</see>
         /// </summary>
         /// <returns>eventType</returns>
-        public virtual String GetEventType()
+        public virtual string GetEventType()
         {
-            return eventType;
-        }
-
-        /// <summary>Returns IDistributedObject instance</summary>
-        /// <returns>IDistributedObject</returns>
-        public virtual IDistributedObject GetDistributedObject()
-        {
-            return distributedObject;
+            return _eventType;
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder("DistributedObjectEvent{");
-            sb.Append("eventType=").Append(eventType);
-            sb.Append(", serviceName='").Append(serviceName).Append('\'');
-            sb.Append(", distributedObject=").Append(distributedObject);
+            sb.Append("eventType=").Append(_eventType);
+            sb.Append(", serviceName='").Append(_serviceName).Append('\'');
+            sb.Append(", distributedObject=").Append(_distributedObject);
             sb.Append('}');
             return sb.ToString();
+        }
+
+        public static class EventType
+        {
+            public const string Created = "CREATED";
+            public const string Destroyed = "DESTROYED";
         }
     }
 }

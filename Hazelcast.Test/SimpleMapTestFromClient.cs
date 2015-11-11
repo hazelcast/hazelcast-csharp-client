@@ -1,20 +1,18 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,17 +25,17 @@ namespace Hazelcast.Test
 {
     public class Stats
     {
+        public long exceptions;
         public long gets;
         public long puts;
         public long removes;
-        public long exceptions;
 
         public Stats GetAndReset()
         {
-            long putsNow = Interlocked.Exchange(ref puts, 0);
-            long getsNow = Interlocked.Exchange(ref gets, 0);
-            long removesNow = Interlocked.Exchange(ref removes, 0);
-            long exceptionsNow = Interlocked.Exchange(ref exceptions, 0);
+            var putsNow = Interlocked.Exchange(ref puts, 0);
+            var getsNow = Interlocked.Exchange(ref gets, 0);
+            var removesNow = Interlocked.Exchange(ref removes, 0);
+            var exceptionsNow = Interlocked.Exchange(ref exceptions, 0);
             var newOne = new Stats();
             Interlocked.Exchange(ref newOne.puts, putsNow);
             Interlocked.Exchange(ref newOne.gets, getsNow);
@@ -46,18 +44,19 @@ namespace Hazelcast.Test
             return newOne;
         }
 
+        public override string ToString()
+        {
+            return "total= " + Total() + ", gets:" + Interlocked.Read(ref gets) + ", puts: " +
+                   Interlocked.Read(ref puts) + ", removes:" + Interlocked.Read(ref removes) + ", exceptions:" +
+                   Interlocked.Read(ref exceptions);
+        }
+
         public long Total()
         {
             return //
                 Interlocked.Read(ref gets) +
                 Interlocked.Read(ref puts) +
                 Interlocked.Read(ref removes);
-        }
-
-        public override string ToString()
-        {
-            return "total= " + Total() + ", gets:" + Interlocked.Read(ref gets) + ", puts: " +
-                   Interlocked.Read(ref puts) + ", removes:" + Interlocked.Read(ref removes) + ", exceptions:" + Interlocked.Read(ref exceptions);
         }
     }
 
@@ -74,7 +73,78 @@ namespace Hazelcast.Test
 
         private static Stats stats;
 
-        static void Main(string[] args)
+        public static void HzTask(IHazelcastInstance hz)
+        {
+            try
+            {
+                var random = new Random();
+                var map = hz.GetMap<string, byte[]>("default");
+                //int i = 0;
+                while (true)
+                {
+                    //i++;
+                    //if (i % 1000 == 0)
+                    //{
+                    //    Console.WriteLine("Iterate...."+i);
+                    //}
+                    try
+                    {
+                        var key = random.Next(0, ENTRY_COUNT);
+                        var operation = random.Next(0, 100);
+                        if (operation < GET_PERCENTAGE)
+                        {
+                            map.Get(key.ToString());
+                            Interlocked.Increment(ref stats.gets);
+                        }
+                        else if (operation < GET_PERCENTAGE + PUT_PERCENTAGE)
+                        {
+                            map.Put(key.ToString(), new byte[VALUE_SIZE]);
+                            Interlocked.Increment(ref stats.puts);
+                        }
+                        else
+                        {
+                            map.Remove(key.ToString());
+                            Interlocked.Increment(ref stats.removes);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Interlocked.Increment(ref stats.exceptions);
+                        Console.WriteLine("HATAAAAAA @" + ThreadUtil.GetThreadId());
+                        Console.WriteLine(ex.Message);
+                        //Console.ReadKey();
+                        //break;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("HATAAAAAA--BUYUK");
+                Console.WriteLine(e.StackTrace);
+            }
+            Console.WriteLine("BITTIIIII");
+        }
+
+        public static void StatDisplayTask()
+        {
+            while (true)
+            {
+                try
+                {
+                    Thread.Sleep(STATS_SECONDS*1000);
+                    Console.WriteLine("cluster size:" + hazelcast.GetCluster().GetMembers().Count);
+                    var currentStats = stats.GetAndReset();
+                    Console.WriteLine(currentStats.ToString());
+                    Console.WriteLine("Operations per Second : " + currentStats.Total()/STATS_SECONDS);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
+        }
+
+        private static void Main(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
             Environment.SetEnvironmentVariable("hazelcast.client.request.timeout", "250000");
@@ -90,9 +160,9 @@ namespace Hazelcast.Test
             //Thread.Sleep(100000);
             if (args != null && args.Length > 0)
             {
-                foreach (string _arg in  args)
+                foreach (var _arg in  args)
                 {
-                    string arg = _arg.Trim();
+                    var arg = _arg.Trim();
                     //if (arg.startsWith("t")) {
                     //    THREAD_COUNT = Integer.parseInt(arg.substring(1));
                     //} else if (arg.startsWith("c")) {
@@ -122,9 +192,9 @@ namespace Hazelcast.Test
 
 
             var tasks = new List<Task>();
-            for (int i = 0; i < THREAD_COUNT; i++)
+            for (var i = 0; i < THREAD_COUNT; i++)
             {
-                var t = new Task(()=> HzTask(hazelcast),TaskCreationOptions.LongRunning);
+                var t = new Task(() => HzTask(hazelcast), TaskCreationOptions.LongRunning);
                 tasks.Add(t);
                 t.Start();
             }
@@ -144,79 +214,6 @@ namespace Hazelcast.Test
             //Task.Factory.Scheduler.MaximumConcurrencyLevel = THREAD_COUNT;
 
             Console.ReadKey();
-        }
-
-        public static void HzTask(IHazelcastInstance hz)
-        {
-            try
-            {
-                var random = new Random();
-                IMap<string, byte[]> map = hz.GetMap<String, byte[]>("default");
-                //int i = 0;
-                while (true)
-                {
-                    //i++;
-                    //if (i % 1000 == 0)
-                    //{
-                    //    Console.WriteLine("Iterate...."+i);
-                    //}
-                    try
-                    {
-                        int key = random.Next(0, ENTRY_COUNT);
-                        int operation = random.Next(0, 100);
-                        if (operation < GET_PERCENTAGE)
-                        {
-                            map.Get(key.ToString());
-                            Interlocked.Increment(ref stats.gets);
-                        }
-                        else if (operation < GET_PERCENTAGE + PUT_PERCENTAGE)
-                        {
-                            map.Put(key.ToString(), new byte[VALUE_SIZE]);
-                            Interlocked.Increment(ref stats.puts);
-                        }
-                        else
-                        {
-                            map.Remove(key.ToString());
-                            Interlocked.Increment(ref stats.removes);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Interlocked.Increment(ref stats.exceptions);
-                        Console.WriteLine("HATAAAAAA @" + ThreadUtil.GetThreadId());
-                        Console.WriteLine(ex.Message);
-                        //Console.ReadKey();
-                        //break;
-                    }
-
-                }
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("HATAAAAAA--BUYUK");
-                Console.WriteLine(e.StackTrace);
-            }
-            Console.WriteLine("BITTIIIII");
-        }
-
-        public static void StatDisplayTask()
-        {
-            while (true)
-            {
-                try
-                {
-                    Thread.Sleep(STATS_SECONDS*1000);
-                    Console.WriteLine("cluster size:" + hazelcast.GetCluster().GetMembers().Count);
-                    Stats currentStats = stats.GetAndReset();
-                    Console.WriteLine(currentStats.ToString());
-                    Console.WriteLine("Operations per Second : " + currentStats.Total()/STATS_SECONDS);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-            }
         }
     }
 }

@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
@@ -24,7 +22,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
-using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
@@ -53,7 +50,7 @@ namespace Hazelcast.Client.Spi
         private int _correlationIdCounter = 1;
         private volatile bool _isShutDown;
 
-        public ClientInvocationService(HazelcastClient client)
+        protected ClientInvocationService(HazelcastClient client)
         {
             _client = client;
             _redoOperations = client.GetClientConfig().GetNetworkConfig().IsRedoOperation();
@@ -61,7 +58,7 @@ namespace Hazelcast.Client.Spi
             var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count") ??
                                   DefaultEventThreadCount;
             _taskScheduler = new StripedTaskScheduler(eventTreadCount);
-            
+
             // TODO: These should be consoliated with the way it's done in the Java client
             _retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count") ?? _retryCount;
             _retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time") ??
@@ -175,6 +172,14 @@ namespace Hazelcast.Client.Spi
             }
         }
 
+        public IFuture<IClientMessage> InvokeListenerOnConnection(IClientMessage request,
+            DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder, ClientConnection connection)
+        {
+            var clientInvocation = new ClientListenerInvocation(request, handler, responseDecoder, connection);
+            Send(connection, clientInvocation);
+            return clientInvocation.Future;
+        }
+
         public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
         {
             var clientInvocation = new ClientInvocation(request, connection);
@@ -182,17 +187,18 @@ namespace Hazelcast.Client.Spi
             return clientInvocation.Future;
         }
 
-        public IFuture<IClientMessage> InvokeListenerOnConnection(IClientMessage request, DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder, ClientConnection connection)
+        protected IFuture<IClientMessage> Invoke(ClientInvocation invocation, Address address = null)
         {
-            var clientInvocation = new ClientListenerInvocation(request, handler, responseDecoder, connection);
-            Send(connection, clientInvocation);
-            return clientInvocation.Future;
-        }
-
-        private ClientConnection GetConnection(Address address = null)
-        {
-            EnsureOwnerConnectionAvailable();
-            return _client.GetConnectionManager().GetOrConnect(address);
+            try
+            {
+                var connection = GetConnection(address);
+                Send(connection, invocation);
+            }
+            catch (Exception e)
+            {
+                HandleException(invocation, e);
+            }
+            return invocation.Future;
         }
 
         protected virtual void Send(ClientConnection connection, ClientInvocation clientInvocation)
@@ -208,7 +214,8 @@ namespace Hazelcast.Client.Spi
             if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.GetMember().GetUuid())
             {
                 HandleException(clientInvocation,
-                    new TargetNotMemberException("The member UUID on the invocation doesn't match the member UUID on the connection."));
+                    new TargetNotMemberException(
+                        "The member UUID on the invocation doesn't match the member UUID on the connection."));
             }
 
             if (_isShutDown)
@@ -324,148 +331,10 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        private static string GetRegistrationIdFromResponse(ClientListenerInvocation invocation)
+        private ClientConnection GetConnection(Address address = null)
         {
-            var originalResponse = (ClientMessage) invocation.Future.Result;
-            originalResponse.Index(originalResponse.GetDataOffset());
-            return invocation.ResponseDecoder(originalResponse);
-        }
-
-        private void HandleEventMessage(IClientMessage eventMessage)
-        {
-            var correlationId = eventMessage.GetCorrelationId();
-            ClientListenerInvocation invocationWithHandler;
-            if (!_listenerInvocations.TryGetValue(correlationId, out invocationWithHandler))
-            {
-                // no event handler found, could be that the event is already unregistered
-                Logger.Warning("No eventHandler for correlationId: " + correlationId + ", event: " + eventMessage);
-                return;
-            }
-            invocationWithHandler.Handler(eventMessage);
-        }
-
-        private void HandleResponseMessage(IClientMessage response)
-        {
-            var correlationId = response.GetCorrelationId();
-            ClientInvocation invocation;
-            if (_invocations.TryRemove(correlationId, out invocation))
-            {
-                if (response.GetMessageType() == Error.Type)
-                {
-                    var error = Error.Decode(response);
-                    var exception = ExceptionUtil.ToException(error);
-
-                    // retry only specific exceptions
-                    HandleException(invocation, exception);
-
-                }
-                // if this was a re-registration operation, then we will throw away the response and just store the alias
-                else if (invocation is ClientListenerInvocation && invocation.Future.IsComplete &&
-                         invocation.Future.Result != null)
-                {
-                    var listenerInvocation = (ClientListenerInvocation) invocation;
-                    var originalRegistrationId = GetRegistrationIdFromResponse(listenerInvocation);
-                    var newRegistrationId = listenerInvocation.ResponseDecoder(response);
-                    _client.GetListenerService()
-                        .ReregisterListener(originalRegistrationId, newRegistrationId,
-                            invocation.Message.GetCorrelationId());
-                    Logger.Finest(string.Format("Re-registered listener for {0} of type {1:X}", originalRegistrationId, listenerInvocation.Message.GetMessageType()));
-                }
-                else
-                {
-                    invocation.Future.Result = response;
-                }
-            }
-            else
-            {
-                Logger.Warning("No call for correlationId: " + correlationId + ", response: " + response);
-            }
-        }
-
-        private void HandleException(ClientInvocation invocation, Exception exception)
-        {
-            Logger.Finest("Got exception for request " + invocation.Message + ":" + exception);
-            if (exception is IOException
-                || exception is SocketException
-                || exception is HazelcastInstanceNotActiveException
-                || exception is AuthenticationException)
-            {
-                if (RetryRequest(invocation, exception)) return;
-            }
-
-            if (exception is RetryableHazelcastException)
-            {
-                if (_redoOperations || invocation.Message.IsRetryable())
-                {
-                    if (RetryRequest(invocation, exception))
-                        return;
-                }
-            }
-            invocation.Future.Exception = exception;
-        }
-
-        protected IFuture<IClientMessage> Invoke(ClientInvocation invocation, Address address = null)
-        {
-            try
-            {
-                var connection = GetConnection(address);
-                Send(connection, invocation);
-            }
-            catch (Exception e)
-            {
-                HandleException(invocation, e);
-            }
-           return invocation.Future;
-        }
-
-        private int NextCorrelationId()
-        {
-            return Interlocked.Increment(ref _correlationIdCounter);
-        }
-
-        private void RegisterInvocation(int correlationId, ClientInvocation request)
-        {
-            _invocations.TryAdd(correlationId, request);
-
-            var listenerInvocation = request as ClientListenerInvocation;
-            if (listenerInvocation != null)
-            {
-                _listenerInvocations.TryAdd(correlationId, listenerInvocation);
-            }
-        }
-
-        private void ReregisterListener(ClientListenerInvocation invocation)
-        {
-            Logger.Finest("Re-registering listener for " + invocation.Message);
-            Invoke(invocation);
-        }
-
-        private bool RetryRequest(ClientInvocation invocation, Exception exception)
-        {
-            var retryNr = invocation.IncrementAndGetRetryCount();
-            if (retryNr > _retryCount) return false;
-
-            Logger.Finest("Retry #" + retryNr + " for request " + invocation.Message);
-
-            _client.GetClientExecutionService().Schedule(() =>
-            {
-                if (_isShutDown) FailRequestDueToShutdown(invocation);
-                else
-                {
-                    // get the appropriate connection for retry
-                    var connection = GetConnectionForInvocation(invocation);
-                    Send(connection, invocation);
-                }
-            }, _retryWaitTime, TimeUnit.MILLISECONDS).ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    var innerException = t.Exception.InnerExceptions.First();
-                    Logger.Finest("Retry of request " + invocation.Message + " failed with ", innerException);
-                    HandleException(invocation, innerException);
-                }
-            });
-            return true;
+            EnsureOwnerConnectionAvailable();
+            return _client.GetConnectionManager().GetOrConnect(address);
         }
 
         private ClientConnection GetConnectionForInvocation(ClientInvocation invocation)
@@ -493,12 +362,143 @@ namespace Hazelcast.Client.Spi
                 }
                 address = member.GetAddress();
             }
-            
+
             else if (invocation.PartitionId != -1)
             {
                 address = _client.GetClientPartitionService().GetPartitionOwner(invocation.PartitionId);
             }
             return GetConnection(address);
+        }
+
+        private static string GetRegistrationIdFromResponse(ClientListenerInvocation invocation)
+        {
+            var originalResponse = (ClientMessage) invocation.Future.Result;
+            originalResponse.Index(originalResponse.GetDataOffset());
+            return invocation.ResponseDecoder(originalResponse);
+        }
+
+        private void HandleEventMessage(IClientMessage eventMessage)
+        {
+            var correlationId = eventMessage.GetCorrelationId();
+            ClientListenerInvocation invocationWithHandler;
+            if (!_listenerInvocations.TryGetValue(correlationId, out invocationWithHandler))
+            {
+                // no event handler found, could be that the event is already unregistered
+                Logger.Warning("No eventHandler for correlationId: " + correlationId + ", event: " + eventMessage);
+                return;
+            }
+            invocationWithHandler.Handler(eventMessage);
+        }
+
+        private void HandleException(ClientInvocation invocation, Exception exception)
+        {
+            Logger.Finest("Got exception for request " + invocation.Message + ":" + exception);
+            if (exception is IOException
+                || exception is SocketException
+                || exception is HazelcastInstanceNotActiveException
+                || exception is AuthenticationException)
+            {
+                if (RetryRequest(invocation)) return;
+            }
+
+            if (exception is RetryableHazelcastException)
+            {
+                if (_redoOperations || invocation.Message.IsRetryable())
+                {
+                    if (RetryRequest(invocation))
+                        return;
+                }
+            }
+            invocation.Future.Exception = exception;
+        }
+
+        private void HandleResponseMessage(IClientMessage response)
+        {
+            var correlationId = response.GetCorrelationId();
+            ClientInvocation invocation;
+            if (_invocations.TryRemove(correlationId, out invocation))
+            {
+                if (response.GetMessageType() == Error.Type)
+                {
+                    var error = Error.Decode(response);
+                    var exception = ExceptionUtil.ToException(error);
+
+                    // retry only specific exceptions
+                    HandleException(invocation, exception);
+                }
+                // if this was a re-registration operation, then we will throw away the response and just store the alias
+                else if (invocation is ClientListenerInvocation && invocation.Future.IsComplete &&
+                         invocation.Future.Result != null)
+                {
+                    var listenerInvocation = (ClientListenerInvocation) invocation;
+                    var originalRegistrationId = GetRegistrationIdFromResponse(listenerInvocation);
+                    var newRegistrationId = listenerInvocation.ResponseDecoder(response);
+                    _client.GetListenerService()
+                        .ReregisterListener(originalRegistrationId, newRegistrationId,
+                            invocation.Message.GetCorrelationId());
+                    Logger.Finest(string.Format("Re-registered listener for {0} of type {1:X}", originalRegistrationId,
+                        listenerInvocation.Message.GetMessageType()));
+                }
+                else
+                {
+                    invocation.Future.Result = response;
+                }
+            }
+            else
+            {
+                Logger.Warning("No call for correlationId: " + correlationId + ", response: " + response);
+            }
+        }
+
+        private int NextCorrelationId()
+        {
+            return Interlocked.Increment(ref _correlationIdCounter);
+        }
+
+        private void RegisterInvocation(int correlationId, ClientInvocation request)
+        {
+            _invocations.TryAdd(correlationId, request);
+
+            var listenerInvocation = request as ClientListenerInvocation;
+            if (listenerInvocation != null)
+            {
+                _listenerInvocations.TryAdd(correlationId, listenerInvocation);
+            }
+        }
+
+        private void ReregisterListener(ClientListenerInvocation invocation)
+        {
+            Logger.Finest("Re-registering listener for " + invocation.Message);
+            Invoke(invocation);
+        }
+
+        private bool RetryRequest(ClientInvocation invocation)
+        {
+            var retryNr = invocation.IncrementAndGetRetryCount();
+            if (retryNr > _retryCount) return false;
+
+            Logger.Finest("Retry #" + retryNr + " for request " + invocation.Message);
+
+            _client.GetClientExecutionService().Schedule(() =>
+            {
+                if (_isShutDown) FailRequestDueToShutdown(invocation);
+                else
+                {
+                    // get the appropriate connection for retry
+                    var connection = GetConnectionForInvocation(invocation);
+                    Send(connection, invocation);
+                }
+            }, _retryWaitTime, TimeUnit.Milliseconds).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    // ReSharper disable once PossibleNullReferenceException
+                    var innerException = t.Exception.InnerExceptions.First();
+                    Logger.Finest("Retry of request " + invocation.Message + " failed with ", innerException);
+                    HandleException(invocation, innerException);
+                }
+            });
+            return true;
         }
 
         private void UnregisterCall(int correlationId)

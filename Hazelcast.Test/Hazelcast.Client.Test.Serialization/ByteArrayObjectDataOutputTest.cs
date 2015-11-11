@@ -1,18 +1,16 @@
-﻿/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using Hazelcast.IO;
@@ -43,7 +41,7 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestAvailable()
         {
             var available = _output.Available();
-            _output.buffer = null;
+            _output.Buffer = null;
             var availableWhenBufferNull = _output.Available();
             Assert.AreEqual(10, available);
             Assert.AreEqual(0, availableWhenBufferNull);
@@ -68,9 +66,9 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public virtual void TestClear_bufferNull()
         {
-            _output.buffer = null;
+            _output.Buffer = null;
             _output.Clear();
-            Assert.IsNull(_output.buffer);
+            Assert.IsNull(_output.Buffer);
         }
 
         [Test]
@@ -78,23 +76,23 @@ namespace Hazelcast.Client.Test.Serialization
         {
             _output.Close();
             Assert.AreEqual(0, _output.Position());
-            Assert.IsNull(_output.buffer);
+            Assert.IsNull(_output.Buffer);
         }
 
         [Test]
         public virtual void TestEnsureAvailable()
         {
-            _output.buffer = null;
+            _output.Buffer = null;
             _output.EnsureAvailable(5);
-            Assert.AreEqual(10, _output.buffer.Length);
+            Assert.AreEqual(10, _output.Buffer.Length);
         }
 
         [Test]
         public virtual void TestEnsureAvailable_smallLen()
         {
-            _output.buffer = null;
+            _output.Buffer = null;
             _output.EnsureAvailable(1);
-            Assert.AreEqual(10, _output.buffer.Length);
+            Assert.AreEqual(10, _output.Buffer.Length);
         }
 
         [Test]
@@ -109,7 +107,7 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public virtual void TestPosition()
         {
-            _output.pos = 21;
+            _output.Pos = 21;
             Assert.AreEqual(21, _output.Position());
         }
 
@@ -117,12 +115,12 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestPositionNewPos()
         {
             _output.Position(1);
-            Assert.AreEqual(1, _output.pos);
+            Assert.AreEqual(1, _output.Pos);
         }
 
         public virtual void TestPositionNewPos_highPos()
         {
-            _output.Position(_output.buffer.Length + 1);
+            _output.Position(_output.Buffer.Length + 1);
         }
 
         public virtual void TestPositionNewPos_negativePos()
@@ -134,7 +132,7 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestToByteArray()
         {
             var arrayWhenPosZero = _output.ToByteArray();
-            _output.buffer = null;
+            _output.Buffer = null;
             var arrayWhenBufferNull = _output.ToByteArray();
             Assert.AreEqual(new byte[0], arrayWhenPosZero);
             Assert.AreEqual(new byte[0], arrayWhenBufferNull);
@@ -151,15 +149,15 @@ namespace Hazelcast.Client.Test.Serialization
         {
             _output.WriteBoolean(0, true);
             _output.WriteBoolean(1, false);
-            Assert.AreEqual(1, _output.buffer[0]);
-            Assert.AreEqual(0, _output.buffer[1]);
+            Assert.AreEqual(1, _output.Buffer[0]);
+            Assert.AreEqual(0, _output.Buffer[1]);
         }
 
         [Test]
         public virtual void TestWriteByteForPositionV()
         {
             _output.WriteByte(0, 10);
-            Assert.AreEqual(10, _output.buffer[0]);
+            Assert.AreEqual(10, _output.Buffer[0]);
         }
 
         [Test]
@@ -167,8 +165,8 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var v = 1.1d;
             _output.WriteDouble(1, v);
-            long theLong = BitConverter.DoubleToInt64Bits(v);
-            var readLongB = Bits.ReadLongB(_output.buffer, 1);
+            var theLong = BitConverter.DoubleToInt64Bits(v);
+            var readLongB = Bits.ReadLongB(_output.Buffer, 1);
             Assert.AreEqual(theLong, readLongB);
         }
 
@@ -177,8 +175,8 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var v = 1.1d;
             _output.WriteDouble(1, v, ByteOrder.LittleEndian);
-            long theLong = BitConverter.DoubleToInt64Bits(v);
-            var readLongB = Bits.ReadLongL(_output.buffer, 1);
+            var theLong = BitConverter.DoubleToInt64Bits(v);
+            var readLongB = Bits.ReadLongL(_output.Buffer, 1);
             Assert.AreEqual(theLong, readLongB);
         }
 
@@ -187,8 +185,8 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var v = 1.1d;
             _output.WriteDouble(v, ByteOrder.LittleEndian);
-            long theLong = BitConverter.DoubleToInt64Bits(v);
-            var readLongB = Bits.ReadLongL(_output.buffer, 0);
+            var theLong = BitConverter.DoubleToInt64Bits(v);
+            var readLongB = Bits.ReadLongL(_output.Buffer, 0);
             Assert.AreEqual(theLong, readLongB);
         }
 
@@ -197,8 +195,8 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var v = 1.1f;
             _output.WriteFloat(1, v);
-            int expected = BitConverter.ToInt32(BitConverter.GetBytes(v), 0);
-            var actual = Bits.ReadIntB(_output.buffer, 1);
+            var expected = BitConverter.ToInt32(BitConverter.GetBytes(v), 0);
+            var actual = Bits.ReadIntB(_output.Buffer, 1);
             Assert.AreEqual(actual, expected);
         }
 
@@ -207,8 +205,8 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var v = 1.1f;
             _output.WriteFloat(1, v, ByteOrder.LittleEndian);
-            int expected = BitConverter.ToInt32(BitConverter.GetBytes(v), 0);
-            var actual = Bits.ReadIntL(_output.buffer, 1);
+            var expected = BitConverter.ToInt32(BitConverter.GetBytes(v), 0);
+            var actual = Bits.ReadIntL(_output.Buffer, 1);
             Assert.AreEqual(actual, expected);
         }
 
@@ -217,8 +215,8 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var v = 1.1f;
             _output.WriteFloat(v, ByteOrder.LittleEndian);
-            int expected = BitConverter.ToInt32(BitConverter.GetBytes(v), 0);
-            var actual = Bits.ReadIntL(_output.buffer, 0);
+            var expected = BitConverter.ToInt32(BitConverter.GetBytes(v), 0);
+            var actual = Bits.ReadIntL(_output.Buffer, 0);
             Assert.AreEqual(actual, expected);
         }
 
@@ -227,8 +225,8 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var v = 1.1f;
             _output.WriteFloat(v);
-            int expected = BitConverter.ToInt32(BitConverter.GetBytes(v), 0);
-            var actual = Bits.ReadIntB(_output.buffer, 0);
+            var expected = BitConverter.ToInt32(BitConverter.GetBytes(v), 0);
+            var actual = Bits.ReadIntB(_output.Buffer, 0);
             Assert.AreEqual(actual, expected);
         }
 
@@ -237,10 +235,10 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var zeroBytes = new byte[20];
             _output.Write(zeroBytes, 0, 20);
-            byte[] bytes = new byte[20];
-            Array.Copy(_output.buffer, 0, bytes, 0, 20);
+            var bytes = new byte[20];
+            Array.Copy(_output.Buffer, 0, bytes, 0, 20);
             Assert.AreEqual(zeroBytes, bytes);
-            Assert.AreEqual(20, _output.pos);
+            Assert.AreEqual(20, _output.Pos);
         }
 
         public virtual void TestWriteForBOffLen_negativeLen()
@@ -262,7 +260,7 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestWriteForPositionB()
         {
             _output.Write(1, 5);
-            Assert.AreEqual(5, _output.buffer[1]);
+            Assert.AreEqual(5, _output.Buffer[1]);
         }
 
         [Test]
@@ -270,7 +268,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var expected = 100;
             _output.WriteInt(1, expected);
-            var actual = Bits.ReadIntB(_output.buffer, 1);
+            var actual = Bits.ReadIntB(_output.Buffer, 1);
             Assert.AreEqual(actual, expected);
         }
 
@@ -279,7 +277,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var expected = 100;
             _output.WriteInt(2, expected, ByteOrder.LittleEndian);
-            var actual = Bits.ReadIntL(_output.buffer, 2);
+            var actual = Bits.ReadIntL(_output.Buffer, 2);
             Assert.AreEqual(actual, expected);
         }
 
@@ -288,7 +286,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var expected = 100;
             _output.WriteInt(expected, ByteOrder.LittleEndian);
-            var actual = Bits.ReadIntL(_output.buffer, 0);
+            var actual = Bits.ReadIntL(_output.Buffer, 0);
             Assert.AreEqual(actual, expected);
         }
 
@@ -297,7 +295,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var expected = 100;
             _output.WriteInt(expected);
-            var actual = Bits.ReadIntB(_output.buffer, 0);
+            var actual = Bits.ReadIntB(_output.Buffer, 0);
             Assert.AreEqual(actual, expected);
         }
 
@@ -306,7 +304,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             long expected = 100;
             _output.WriteLong(2, expected);
-            var actual = Bits.ReadLongB(_output.buffer, 2);
+            var actual = Bits.ReadLongB(_output.Buffer, 2);
             Assert.AreEqual(actual, expected);
         }
 
@@ -315,7 +313,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             long expected = 100;
             _output.WriteLong(2, expected, ByteOrder.LittleEndian);
-            var actual = Bits.ReadLongL(_output.buffer, 2);
+            var actual = Bits.ReadLongL(_output.Buffer, 2);
             Assert.AreEqual(actual, expected);
         }
 
@@ -324,7 +322,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             long expected = 100;
             _output.WriteLong(2, expected, ByteOrder.LittleEndian);
-            var actual = Bits.ReadLongL(_output.buffer, 2);
+            var actual = Bits.ReadLongL(_output.Buffer, 2);
             Assert.AreEqual(actual, expected);
         }
 
@@ -333,7 +331,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             long expected = 100;
             _output.WriteLong(expected);
-            var actual = Bits.ReadLongB(_output.buffer, 0);
+            var actual = Bits.ReadLongB(_output.Buffer, 0);
             Assert.AreEqual(actual, expected);
         }
 
@@ -342,7 +340,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             short expected = 100;
             _output.WriteShort(2, expected);
-            var actual = Bits.ReadShortB(_output.buffer, 2);
+            var actual = Bits.ReadShortB(_output.Buffer, 2);
             Assert.AreEqual(actual, expected);
         }
 
@@ -351,7 +349,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             short expected = 100;
             _output.WriteShort(2, expected, ByteOrder.LittleEndian);
-            var actual = Bits.ReadShortL(_output.buffer, 2);
+            var actual = Bits.ReadShortL(_output.Buffer, 2);
             Assert.AreEqual(actual, expected);
         }
 
@@ -360,7 +358,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             short expected = 100;
             _output.WriteShort(2, expected, ByteOrder.LittleEndian);
-            var actual = Bits.ReadShortL(_output.buffer, 2);
+            var actual = Bits.ReadShortL(_output.Buffer, 2);
             Assert.AreEqual(actual, expected);
         }
 
@@ -369,7 +367,7 @@ namespace Hazelcast.Client.Test.Serialization
         {
             short expected = 100;
             _output.WriteShort(expected);
-            var actual = Bits.ReadShortB(_output.buffer, 0);
+            var actual = Bits.ReadShortB(_output.Buffer, 0);
             Assert.AreEqual(actual, expected);
         }
     }

@@ -1,24 +1,21 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
@@ -47,6 +44,10 @@ namespace Hazelcast.Client.Spi
             _clusterService = (ClientClusterService) client.GetClientClusterService();
         }
 
+        public virtual void BeforeListenerRegister()
+        {
+        }
+
         public void HandleMember(IMember member, int eventType)
         {
             switch (eventType)
@@ -71,6 +72,27 @@ namespace Hazelcast.Client.Spi
             }
 
             _partitionService.RefreshPartitions();
+        }
+
+        public void HandleMemberAttributeChange(string uuid, string key, int operationType, string value)
+        {
+            var memberMap = _clusterService.GetMembersRef();
+            if (memberMap == null)
+            {
+                return;
+            }
+            foreach (var target in memberMap.Values)
+            {
+                if (target.GetUuid().Equals(uuid))
+                {
+                    var type = (MemberAttributeOperationType) operationType;
+                    ((Member) target).UpdateAttribute(type, key, value);
+                    var memberAttributeEvent = new MemberAttributeEvent(_client.GetCluster(), target, type, key,
+                        value);
+                    _clusterService.FireMemberAttributeEvent(memberAttributeEvent);
+                    break;
+                }
+            }
         }
 
         public void HandleMemberCollection(ICollection<IMember> initialMembers)
@@ -99,31 +121,6 @@ namespace Hazelcast.Client.Spi
             _initialListFetched.Set();
         }
 
-        public void HandleMemberAttributeChange(string uuid, string key, int operationType, string value)
-        {
-            var memberMap = _clusterService.GetMembersRef();
-            if (memberMap == null)
-            {
-                return;
-            }
-            foreach (var target in memberMap.Values)
-            {
-                if (target.GetUuid().Equals(uuid))
-                {
-                    var type = (MemberAttributeOperationType) operationType;
-                    ((Member) target).UpdateAttribute(type, key, value);
-                    var memberAttributeEvent = new MemberAttributeEvent(_client.GetCluster(), target, type, key,
-                        value);
-                    _clusterService.FireMemberAttributeEvent(memberAttributeEvent);
-                    break;
-                }
-            }
-        }
-
-        public virtual void BeforeListenerRegister()
-        {
-        }
-
         public virtual void OnListenerRegister()
         {
         }
@@ -144,12 +141,13 @@ namespace Hazelcast.Client.Spi
                     if (connection == null)
                     {
                         throw new InvalidOperationException(
-                                "Can not load initial members list because owner connection is null. Address "
-                                        + ownerConnectionAddress);
+                            "Can not load initial members list because owner connection is null. Address "
+                            + ownerConnectionAddress);
                     }
-                    var invocationService = (ClientInvocationService)_client.GetInvocationService();
-                    var response = ThreadUtil.GetResult(invocationService.InvokeListenerOnConnection(clientMessage, handler,
-                        m => ClientAddMembershipListenerCodec.DecodeResponse(m).response, connection));
+                    var invocationService = (ClientInvocationService) _client.GetInvocationService();
+                    var response =
+                        ThreadUtil.GetResult(invocationService.InvokeListenerOnConnection(clientMessage, handler,
+                            m => ClientAddMembershipListenerCodec.DecodeResponse(m).response, connection));
                     //registraiton id is ignored as this listener will never be removed
                     var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
                     WaitInitialMemberListFetched();
@@ -158,7 +156,6 @@ namespace Hazelcast.Client.Spi
                 {
                     throw ExceptionUtil.Rethrow(e);
                 }
-               
             }
             catch (Exception e)
             {
@@ -177,42 +174,10 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        /// <exception cref="System.Exception" />
-        private void WaitInitialMemberListFetched()
-        {
-            var timeout = TimeUnit.SECONDS.ToMillis(InitialMembersTimeoutSeconds);
-            var success = _initialListFetched.Wait((int) timeout);
-            if (!success)
-            {
-                Logger.Warning("Error while getting initial member list from cluster!");
-            }
-        }
-
-        private void MemberRemoved(IMember member)
-        {
-            _members.Remove(member);
-            ApplyMemberListChanges();
-            var connection = _connectionManager.GetConnection(member.GetAddress());
-            if (connection !=  null)
-            {
-                _connectionManager.DestroyConnection(connection);
-            }
-            var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, GetMembers());
-            _clusterService.FireMembershipEvent(@event);
-        }
-
         private void ApplyMemberListChanges()
         {
             UpdateMembersRef();
             Logger.Info(_clusterService.MembersString());
-        }
-
-        private void FireMembershipEvent(IList<MembershipEvent> events)
-        {
-            foreach (var @event in events)
-            {
-                _clusterService.FireMembershipEvent(@event);
-            }
         }
 
         private IList<MembershipEvent> DetectMembershipEvents(IDictionary<string, IMember> prevMembers)
@@ -249,11 +214,42 @@ namespace Hazelcast.Client.Spi
             return events;
         }
 
+        private void FireMembershipEvent(IList<MembershipEvent> events)
+        {
+            foreach (var @event in events)
+            {
+                _clusterService.FireMembershipEvent(@event);
+            }
+        }
+
+        private ICollection<IMember> GetMembers()
+        {
+            var set = new HashSet<IMember>();
+            foreach (var member in _members)
+            {
+                set.Add(member);
+            }
+            return set;
+        }
+
         private void MemberAdded(IMember member)
         {
             _members.Add(member);
             ApplyMemberListChanges();
             var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberAdded, GetMembers());
+            _clusterService.FireMembershipEvent(@event);
+        }
+
+        private void MemberRemoved(IMember member)
+        {
+            _members.Remove(member);
+            ApplyMemberListChanges();
+            var connection = _connectionManager.GetConnection(member.GetAddress());
+            if (connection != null)
+            {
+                _connectionManager.DestroyConnection(connection);
+            }
+            var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, GetMembers());
             _clusterService.FireMembershipEvent(@event);
         }
 
@@ -267,14 +263,15 @@ namespace Hazelcast.Client.Spi
             _clusterService.SetMembersRef(map);
         }
 
-        private ICollection<IMember> GetMembers()
+        /// <exception cref="System.Exception" />
+        private void WaitInitialMemberListFetched()
         {
-            var set = new HashSet<IMember>();
-            foreach (var member in _members)
+            var timeout = TimeUnit.Seconds.ToMillis(InitialMembersTimeoutSeconds);
+            var success = _initialListFetched.Wait((int) timeout);
+            if (!success)
             {
-                set.Add(member);
+                Logger.Warning("Error while getting initial member list from cluster!");
             }
-            return set;
         }
     }
 }

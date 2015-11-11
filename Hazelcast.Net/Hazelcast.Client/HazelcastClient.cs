@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
@@ -50,48 +48,37 @@ namespace Hazelcast.Client
         private static readonly ConcurrentDictionary<int, HazelcastClientProxy> Clients =
             new ConcurrentDictionary<int, HazelcastClientProxy>();
 
-        private readonly ClientClusterService clusterService;
-        private readonly ClientConfig config;
-        private readonly IClientConnectionManager connectionManager;
-        private readonly IClientExecutionService executionService;
-        private readonly int id = ClientId.GetAndIncrement();
-        private readonly string instanceName;
-        private readonly IClientInvocationService invocationService;
-        private readonly ILoadBalancer loadBalancer;
+        private readonly ClientClusterService _clusterService;
+        private readonly ClientConfig _config;
+        private readonly IClientConnectionManager _connectionManager;
+        private readonly IClientExecutionService _executionService;
+        private readonly int _id = ClientId.GetAndIncrement();
+        private readonly string _instanceName;
+        private readonly IClientInvocationService _invocationService;
 
         //private readonly ThreadGroup threadGroup;
 
-        private readonly LifecycleService lifecycleService;
-        private readonly ClientListenerService listenerService;
-        private readonly ClientPartitionService partitionService;
-        private readonly ProxyManager proxyManager;
-        private readonly ISerializationService serializationService;
-        private readonly ConcurrentDictionary<string, object> userContext;
+        private readonly LifecycleService _lifecycleService;
+        private readonly ClientListenerService _listenerService;
+        private readonly ILoadBalancer _loadBalancer;
+        private readonly ClientPartitionService _partitionService;
+        private readonly ProxyManager _proxyManager;
+        private readonly ISerializationService _serializationService;
+        private readonly ConcurrentDictionary<string, object> _userContext;
 
         private HazelcastClient(ClientConfig config)
         {
-            this.config = config;
+            _config = config;
             var groupConfig = config.GetGroupConfig();
-            instanceName = "hz.client_" + id + (groupConfig != null ? "_" + groupConfig.GetName() : string.Empty);
+            _instanceName = "hz.client_" + _id + (groupConfig != null ? "_" + groupConfig.GetName() : string.Empty);
 
             //threadGroup = new ThreadGroup(instanceName);
-            lifecycleService = new LifecycleService(this);
+            _lifecycleService = new LifecycleService(this);
             try
             {
-                string partitioningStrategyClassName = null;
                 //TODO make partition strategy parametric                
-                //Runtime.GetProperty(PropPartitioningStrategyClass);
-                IPartitioningStrategy partitioningStrategy;
-                if (partitioningStrategyClassName != null && partitioningStrategyClassName.Length > 0)
-                {
-                    partitioningStrategy = null;
-                }
-                else
-                {
-                    //new Instance for partitioningStrategyClassName;
-                    partitioningStrategy = new DefaultPartitioningStrategy();
-                }
-                serializationService =
+                var partitioningStrategy = new DefaultPartitioningStrategy();
+                _serializationService =
                     new SerializationServiceBuilder().SetManagedContext(new HazelcastClientManagedContext(this,
                         config.GetManagedContext()))
                         .SetConfig(config.GetSerializationConfig())
@@ -103,59 +90,59 @@ namespace Hazelcast.Client
             {
                 throw ExceptionUtil.Rethrow(e);
             }
-            proxyManager = new ProxyManager(this);
+            _proxyManager = new ProxyManager(this);
 
             //TODO EXECUTION SERVICE
-            executionService = new ClientExecutionService(instanceName, config.GetExecutorPoolSize());
-            clusterService = new ClientClusterService(this);
-            loadBalancer = config.GetLoadBalancer() ?? new RoundRobinLB();
-            connectionManager = new ClientConnectionManager(this, loadBalancer);
-            invocationService = GetInvocationService(config);
-            listenerService = new ClientListenerService(this);
-            userContext = new ConcurrentDictionary<string, object>();
-            loadBalancer.Init(GetCluster(), config);
-            proxyManager.Init(config);
-            partitionService = new ClientPartitionService(this);
+            _executionService = new ClientExecutionService(_instanceName, config.GetExecutorPoolSize());
+            _clusterService = new ClientClusterService(this);
+            _loadBalancer = config.GetLoadBalancer() ?? new RoundRobinLB();
+            _connectionManager = new ClientConnectionManager(this, _loadBalancer);
+            _invocationService = GetInvocationService(config);
+            _listenerService = new ClientListenerService(this);
+            _userContext = new ConcurrentDictionary<string, object>();
+            _loadBalancer.Init(GetCluster(), config);
+            _proxyManager.Init(config);
+            _partitionService = new ClientPartitionService(this);
         }
 
         public string GetName()
         {
-            return instanceName;
+            return _instanceName;
         }
 
-        public IQueue<E> GetQueue<E>(string name)
+        public IQueue<T> GetQueue<T>(string name)
         {
-            return GetDistributedObject<IQueue<E>>(ServiceNames.Queue, name);
+            return GetDistributedObject<IQueue<T>>(ServiceNames.Queue, name);
         }
 
-        public IRingbuffer<E> GetRingbuffer<E>(string name)
+        public IRingbuffer<T> GetRingbuffer<T>(string name)
         {
-            return GetDistributedObject<IRingbuffer<E>>(ServiceNames.Ringbuffer, name);
+            return GetDistributedObject<IRingbuffer<T>>(ServiceNames.Ringbuffer, name);
         }
 
-        public ITopic<E> GetTopic<E>(string name)
+        public ITopic<T> GetTopic<T>(string name)
         {
-            return GetDistributedObject<ITopic<E>>(ServiceNames.Topic, name);
+            return GetDistributedObject<ITopic<T>>(ServiceNames.Topic, name);
         }
 
-        public IHSet<E> GetSet<E>(string name)
+        public IHSet<T> GetSet<T>(string name)
         {
-            return GetDistributedObject<IHSet<E>>(ServiceNames.Set, name);
+            return GetDistributedObject<IHSet<T>>(ServiceNames.Set, name);
         }
 
-        public IHList<E> GetList<E>(string name)
+        public IHList<T> GetList<T>(string name)
         {
-            return GetDistributedObject<IHList<E>>(ServiceNames.List, name);
+            return GetDistributedObject<IHList<T>>(ServiceNames.List, name);
         }
 
-        public IMap<K, V> GetMap<K, V>(string name)
+        public IMap<TKey, TValue> GetMap<TKey, TValue>(string name)
         {
-            return GetDistributedObject<IMap<K, V>>(ServiceNames.Map, name);
+            return GetDistributedObject<IMap<TKey, TValue>>(ServiceNames.Map, name);
         }
 
-        public IMultiMap<K, V> GetMultiMap<K, V>(string name)
+        public IMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name)
         {
-            return GetDistributedObject<IMultiMap<K, V>>(ServiceNames.MultiMap, name);
+            return GetDistributedObject<IMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name);
         }
 
         public ILock GetLock(string key)
@@ -165,12 +152,12 @@ namespace Hazelcast.Client
 
         public ICluster GetCluster()
         {
-            return new ClientClusterProxy(clusterService);
+            return new ClientClusterProxy(_clusterService);
         }
 
         public IEndpoint GetLocalEndpoint()
         {
-            return clusterService.GetLocalClient();
+            return _clusterService.GetLocalClient();
         }
 
         public ITransactionContext NewTransactionContext()
@@ -208,15 +195,15 @@ namespace Hazelcast.Client
             try
             {
                 var request = ClientGetDistributedObjectsCodec.EncodeRequest();
-                var task = invocationService.InvokeOnRandomTarget(request);
+                var task = _invocationService.InvokeOnRandomTarget(request);
                 var response = ThreadUtil.GetResult(task);
                 var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).infoCollection;
                 foreach (var data in result)
                 {
-                    var o = serializationService.ToObject<DistributedObjectInfo>(data);
+                    var o = _serializationService.ToObject<DistributedObjectInfo>(data);
                     GetDistributedObject<IDistributedObject>(o.GetServiceName(), o.GetName());
                 }
-                return proxyManager.GetDistributedObjects();
+                return _proxyManager.GetDistributedObjects();
             }
             catch (Exception e)
             {
@@ -226,12 +213,12 @@ namespace Hazelcast.Client
 
         public string AddDistributedObjectListener(IDistributedObjectListener distributedObjectListener)
         {
-            return proxyManager.AddDistributedObjectListener(distributedObjectListener);
+            return _proxyManager.AddDistributedObjectListener(distributedObjectListener);
         }
 
         public bool RemoveDistributedObjectListener(string registrationId)
         {
-            return proxyManager.RemoveDistributedObjectListener(registrationId);
+            return _proxyManager.RemoveDistributedObjectListener(registrationId);
         }
 
         public IClientService GetClientService()
@@ -241,18 +228,18 @@ namespace Hazelcast.Client
 
         public ILifecycleService GetLifecycleService()
         {
-            return lifecycleService;
+            return _lifecycleService;
         }
 
         public T GetDistributedObject<T>(string serviceName, string name) where T : IDistributedObject
         {
-            var clientProxy = proxyManager.GetOrCreateProxy<T>(serviceName, name);
-            return (T) (clientProxy as IDistributedObject);
+            var clientProxy = _proxyManager.GetOrCreateProxy<T>(serviceName, name);
+            return (T) ((IDistributedObject) clientProxy);
         }
 
         public ConcurrentDictionary<string, object> GetUserContext()
         {
-            return userContext;
+            return _userContext;
         }
 
         public void Shutdown()
@@ -267,6 +254,11 @@ namespace Hazelcast.Client
         public static ICollection<IHazelcastInstance> GetAllHazelcastClients()
         {
             return (ICollection<IHazelcastInstance>) Clients.Values;
+        }
+
+        public ILoadBalancer GetLoadBalancer()
+        {
+            return _loadBalancer;
         }
 
         //    @Override
@@ -335,7 +327,7 @@ namespace Hazelcast.Client
             var client = new HazelcastClient(config);
             client.Start();
             var proxy = new HazelcastClientProxy(client);
-            Clients.TryAdd(client.id, proxy);
+            Clients.TryAdd(client._id, proxy);
             return proxy;
         }
 
@@ -350,8 +342,9 @@ namespace Hazelcast.Client
                 {
                     proxy.GetClient().GetLifecycleService().Shutdown();
                 }
-                catch (Exception)
+                catch
                 {
+                    // ignored
                 }
             }
             Clients.Clear();
@@ -360,81 +353,77 @@ namespace Hazelcast.Client
         internal void DoShutdown()
         {
             HazelcastClientProxy _out;
-            Clients.TryRemove(id, out _out);
-            executionService.Shutdown();
-            partitionService.Stop();
-            connectionManager.Shutdown();
-            proxyManager.Destroy();
-            invocationService.Shutdown();
+            Clients.TryRemove(_id, out _out);
+            _executionService.Shutdown();
+            _partitionService.Stop();
+            _connectionManager.Shutdown();
+            _proxyManager.Destroy();
+            _invocationService.Shutdown();
         }
 
         internal IClientClusterService GetClientClusterService()
         {
-            return clusterService;
+            return _clusterService;
         }
 
         internal ClientConfig GetClientConfig()
         {
-            return config;
+            return _config;
         }
 
         internal IClientExecutionService GetClientExecutionService()
         {
-            return executionService;
+            return _executionService;
         }
 
         internal IClientPartitionService GetClientPartitionService()
         {
-            return partitionService;
+            return _partitionService;
         }
 
         internal IClientConnectionManager GetConnectionManager()
         {
-            return connectionManager;
+            return _connectionManager;
         }
 
         internal IClientInvocationService GetInvocationService()
         {
-            return invocationService;
+            return _invocationService;
         }
 
         internal IClientListenerService GetListenerService()
         {
-            return listenerService;
+            return _listenerService;
         }
 
         internal ISerializationService GetSerializationService()
         {
-            return serializationService;
+            return _serializationService;
         }
 
         private IClientInvocationService GetInvocationService(ClientConfig config)
         {
             return config.GetNetworkConfig().IsSmartRouting()
-                ? (IClientInvocationService)new ClientSmartInvocationService(this)
+                ? (IClientInvocationService) new ClientSmartInvocationService(this)
                 : new ClientNonSmartInvocationService(this);
         }
+
         private void Start()
         {
-            lifecycleService.SetStarted();
+            _lifecycleService.SetStarted();
             try
             {
-                connectionManager.Start();
-                clusterService.Start();
-                partitionService.Start();
+                _connectionManager.Start();
+                _clusterService.Start();
+                _partitionService.Start();
             }
             catch (InvalidOperationException)
             {
                 //there was an authentication failure (todo: perhaps use an AuthenticationException
                 // ??)
-                lifecycleService.Shutdown();
+                _lifecycleService.Shutdown();
                 throw;
             }
-        }
-
-        public ILoadBalancer GetLoadBalancer()
-        {
-            return loadBalancer;
         }
     }
 }

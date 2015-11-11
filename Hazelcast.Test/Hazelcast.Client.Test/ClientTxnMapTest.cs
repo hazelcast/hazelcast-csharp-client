@@ -1,22 +1,18 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -41,6 +37,52 @@ namespace Hazelcast.Client.Test
 
         private string _name;
         private IMap<object, object> _map;
+
+        [Test]
+        public virtual void TestGetForUpdate()
+        {
+            var key = "key";
+            var initialValue = 111;
+            var newValue = 123;
+            _map.Put(key, initialValue);
+
+            var context = Client.NewTransactionContext();
+            context.BeginTransaction();
+            var txnMap = context.GetMap<object, object>(_name);
+
+            var val = txnMap.GetForUpdate(key);
+            Assert.AreEqual(initialValue, val);
+            Assert.IsTrue(_map.IsLocked(key));
+            txnMap.Put(key, newValue);
+            context.CommitTransaction();
+            Assert.IsFalse(_map.IsLocked(key));
+            Assert.AreEqual(newValue, _map.Get(key));
+        }
+
+        [Test]
+        public virtual void TestKeySetPredicate()
+        {
+            _map.Put("key1", "value1");
+            _map.Put("key2", "value2");
+            _map.Put("key3", "value3");
+
+            var context = Client.NewTransactionContext();
+            context.BeginTransaction();
+            var txnMap = context.GetMap<object, object>(_name);
+
+            var sqlPredicate = new SqlPredicate("this == value1");
+            var keys = txnMap.KeySet(sqlPredicate);
+
+            Assert.AreEqual(1, keys.Count);
+            Assert.AreEqual("key1", keys.First());
+
+            var values = txnMap.Values(sqlPredicate);
+
+            Assert.AreEqual(1, values.Count);
+            Assert.AreEqual("value1", values.First());
+
+            context.CommitTransaction();
+        }
 
         /// <exception cref="System.Exception"></exception>
         [Test]
@@ -96,11 +138,11 @@ namespace Hazelcast.Client.Test
             context.BeginTransaction();
             var txnMap = context.GetMap<object, object>(_name);
             var ttlMillis = 100;
-            Assert.IsNull(txnMap.Put("key1", "value1", ttlMillis, TimeUnit.MILLISECONDS));
+            Assert.IsNull(txnMap.Put("key1", "value1", ttlMillis, TimeUnit.Milliseconds));
             Assert.AreEqual("value1", txnMap.Get("key1"));
-         
+
             context.CommitTransaction();
-            
+
             Assert.AreEqual("value1", _map.Get("key1"));
             TestSupport.AssertTrueEventually(() => Assert.IsNull(_map.Get("key1")));
         }
@@ -261,19 +303,6 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(value, _map.Get(key));
         }
 
-        [Test]
-        public virtual void TestTxnMapSet()
-        {
-            var key = "key";
-            var value = "Value";
-            var context = Client.NewTransactionContext();
-            context.BeginTransaction();
-            var txnMap = context.GetMap<object, object>(_name);
-            txnMap.Set(key, value);
-            context.CommitTransaction();
-            Assert.AreEqual(value, _map.Get(key));
-        }
-
         /// <exception cref="System.Exception" />
         [Test]
         public virtual void TestTxnMapPut_BeforeCommit()
@@ -288,49 +317,16 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestGetForUpdate()
+        public virtual void TestTxnMapSet()
         {
-            string key = "key";
-            var initialValue = 111;
-            var newValue = 123;
-            _map.Put(key,initialValue);
-
+            var key = "key";
+            var value = "Value";
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnMap = context.GetMap<object, object>(_name);
-
-            var val = txnMap.GetForUpdate(key);
-            Assert.AreEqual(initialValue, val);
-            Assert.IsTrue(_map.IsLocked(key));
-            txnMap.Put(key, newValue);
+            txnMap.Set(key, value);
             context.CommitTransaction();
-            Assert.IsFalse(_map.IsLocked(key));
-            Assert.AreEqual(newValue, _map.Get(key));
-        }
-
-        [Test]
-        public virtual void TestKeySetPredicate()
-        {
-            _map.Put("key1", "value1");
-            _map.Put("key2", "value2");
-            _map.Put("key3", "value3");
-
-            var context = Client.NewTransactionContext();
-            context.BeginTransaction();
-            var txnMap = context.GetMap<object, object>(_name);
-
-            var sqlPredicate = new SqlPredicate("this == value1");
-            var keys = txnMap.KeySet(sqlPredicate);
-           
-            Assert.AreEqual(1, keys.Count);
-            Assert.AreEqual("key1", keys.First());
-
-            var values = txnMap.Values(sqlPredicate);
-
-            Assert.AreEqual(1, values.Count);
-            Assert.AreEqual("value1", values.First());
-
-            context.CommitTransaction();
+            Assert.AreEqual(value, _map.Get(key));
         }
 
         [Test]

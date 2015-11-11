@@ -1,26 +1,24 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Hazelcast.Config;
 using Hazelcast.Core;
-using Hazelcast.Logging;
 using Hazelcast.IO;
+using Hazelcast.Logging;
 using Hazelcast.Util;
 using NUnit.Framework;
 
@@ -29,15 +27,39 @@ namespace Hazelcast.Client.Test
     public class HazelcastBaseTest
     {
         protected static volatile Random random = new Random((int) Clock.CurrentTimeMillis());
-        internal static HazelcastCluster Cluster { get; private set; }
-        protected IHazelcastInstance Client { get; set; }
 
         private readonly ILogger logger;
 
 
         public HazelcastBaseTest()
         {
-            logger = Logging.Logger.GetLogger(GetType().Name);
+            logger = Logger.GetLogger(GetType().Name);
+        }
+
+        internal static HazelcastCluster Cluster { get; private set; }
+        protected IHazelcastInstance Client { get; set; }
+
+        [TestFixtureTearDown]
+        public void FixtureTearDown()
+        {
+            if (Client != null)
+            {
+                Client.Shutdown();
+            }
+            //try to rebalance the cluster size
+            if (Cluster.Size > 1)
+            {
+                while (Cluster.Size != 1)
+                {
+                    Cluster.RemoveNode();
+                }
+            }
+            if (Cluster.Size == 0)
+            {
+                Cluster.AddNode();
+            }
+
+            Assert.AreEqual(1, Cluster.Size);
         }
 
         [TestFixtureSetUp]
@@ -65,30 +87,24 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public void TearDown()
         {
-            
         }
 
-        [TestFixtureTearDown]
-        public void FixtureTearDown()
+        protected int AddNodeAndWait()
         {
-            if (Client != null)
+            var resetEvent = new ManualResetEventSlim();
+            var regId = Client.GetCluster().AddMembershipListener(new MembershipListener
             {
-                Client.Shutdown();
-            }
-            //try to rebalance the cluster size
-            if (Cluster.Size > 1)
-            {
-                while (Cluster.Size != 1)
-                {
-                    Cluster.RemoveNode();
-                }
-            }
-            if (Cluster.Size == 0)
-            {
-                Cluster.AddNode();
-            }
+                OnMemberAdded = @event => resetEvent.Set()
+            });
+            var id = Cluster.AddNode();
+            Assert.IsTrue(resetEvent.Wait(120*1000), "The member did not get added in 120 seconds");
+            Assert.IsTrue(Client.GetCluster().RemoveMembershipListener(regId));
 
-            Assert.AreEqual(1, Cluster.Size);
+            // make sure partitions are updated
+            TestSupport.AssertTrueEventually(() => { Assert.AreEqual(Cluster.Size, GetUniquePartitionOwnerCount()); },
+                60, "The partition list did not contain " + Cluster.Size + " partitions.");
+
+            return id;
         }
 
         protected virtual void ConfigureClient(ClientConfig config)
@@ -118,33 +134,13 @@ namespace Hazelcast.Client.Test
             return client;
         }
 
-        protected int AddNodeAndWait()
-        {
-            var resetEvent = new ManualResetEventSlim();
-            var regId = Client.GetCluster().AddMembershipListener(new MembershipListener
-            {
-                OnMemberAdded = @event => resetEvent.Set()
-            });
-            int id = Cluster.AddNode();
-            Assert.IsTrue(resetEvent.Wait(120 * 1000), "The member did not get added in 120 seconds");
-            Assert.IsTrue(Client.GetCluster().RemoveMembershipListener(regId));
-
-            // make sure partitions are updated
-            TestSupport.AssertTrueEventually(() =>
-            {
-                Assert.AreEqual(Cluster.Size, GetUniquePartitionOwnerCount());
-            }, 60, "The partition list did not contain " + Cluster.Size + " partitions.");
-
-            return id;
-        }
-
         protected int GetUniquePartitionOwnerCount()
         {
-            var proxy = ((HazelcastClientProxy)Client);
+            var proxy = ((HazelcastClientProxy) Client);
             var partitionService = proxy.GetClient().GetClientPartitionService();
             var count = partitionService.GetPartitionCount();
             var owners = new HashSet<Address>();
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 owners.Add(partitionService.GetPartitionOwner(i));
             }
@@ -159,7 +155,7 @@ namespace Hazelcast.Client.Test
                 OnMemberRemoved = @event => resetEvent.Set()
             });
             Cluster.RemoveNode(id);
-            Assert.IsTrue(resetEvent.Wait(120 * 1000), "The member did not get removed in 120 seconds");
+            Assert.IsTrue(resetEvent.Wait(120*1000), "The member did not get removed in 120 seconds");
             Assert.IsTrue(Client.GetCluster().RemoveMembershipListener(regId));
         }
     }

@@ -1,18 +1,16 @@
-/*
-* Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -25,86 +23,39 @@ namespace Hazelcast.Config
 {
     public class SerializationConfig
     {
-        private ByteOrder byteOrder = ByteOrder.BigEndian;
-        private bool checkClassDefErrors = true;
-        private ICollection<IClassDefinition> classDefinitions;
-        private IDictionary<int, IDataSerializableFactory> dataSerializableFactories;
-        private IDictionary<int, string> dataSerializableFactoryClasses;
-        private bool enableCompression = false;
+        private ByteOrder _byteOrder = ByteOrder.BigEndian;
+        private bool _checkClassDefErrors = true;
+        private ICollection<IClassDefinition> _classDefinitions;
+        private IDictionary<int, IDataSerializableFactory> _dataSerializableFactories;
+        private IDictionary<int, string> _dataSerializableFactoryClasses;
+        private bool _enableCompression;
 
-        private bool enableSharedObject = false;
+        private bool _enableSharedObject;
 
-        private GlobalSerializerConfig globalSerializerConfig;
-        private IDictionary<int, IPortableFactory> portableFactories;
-        private IDictionary<int, string> portableFactoryClasses;
-        private int portableVersion = 0;
+        private GlobalSerializerConfig _globalSerializerConfig;
+        private IDictionary<int, IPortableFactory> _portableFactories;
+        private IDictionary<int, string> _portableFactoryClasses;
+        private int _portableVersion;
 
-        private ICollection<SerializerConfig> serializerConfigs;
+        private ICollection<SerializerConfig> _serializerConfigs;
 
-        private bool useNativeByteOrder = false;
+        private bool _useNativeByteOrder;
 
-        public SerializationConfig() : base(){}
-
-        public virtual GlobalSerializerConfig GetGlobalSerializerConfig()
+        public virtual SerializationConfig AddClassDefinition(IClassDefinition classDefinition)
         {
-            return globalSerializerConfig;
-        }
-
-        public virtual SerializationConfig SetGlobalSerializerConfig(GlobalSerializerConfig globalSerializerConfig)
-        {
-            this.globalSerializerConfig = globalSerializerConfig;
-            return this;
-        }
-
-        public virtual ICollection<SerializerConfig> GetSerializerConfigs()
-        {
-            if (serializerConfigs == null)
+            if (GetClassDefinitions().Contains(classDefinition))
             {
-                serializerConfigs = new List<SerializerConfig>();
+                throw new ArgumentException("IClassDefinition for class-id[" + classDefinition.GetClassId() +
+                                            "] already exists!");
             }
-            return serializerConfigs;
-        }
-
-        public virtual SerializationConfig AddSerializerConfig(SerializerConfig serializerConfig)
-        {
-            GetSerializerConfigs().Add(serializerConfig);
+            GetClassDefinitions().Add(classDefinition);
             return this;
         }
 
-        public virtual SerializationConfig SetSerializerConfigs(ICollection<SerializerConfig> serializerConfigs)
+        public virtual SerializationConfig AddDataSerializableFactory(int factoryId,
+            IDataSerializableFactory dataSerializableFactory)
         {
-            this.serializerConfigs = serializerConfigs;
-            return this;
-        }
-
-        public virtual int GetPortableVersion()
-        {
-            return portableVersion;
-        }
-
-        public virtual SerializationConfig SetPortableVersion(int portableVersion)
-        {
-            if (portableVersion < 0)
-            {
-                throw new ArgumentException("IPortable version cannot be negative!");
-            }
-            this.portableVersion = portableVersion;
-            return this;
-        }
-
-        public virtual IDictionary<int, string> GetDataSerializableFactoryClasses()
-        {
-            if (dataSerializableFactoryClasses == null)
-            {
-                dataSerializableFactoryClasses = new Dictionary<int, string>();
-            }
-            return dataSerializableFactoryClasses;
-        }
-
-        public virtual SerializationConfig SetDataSerializableFactoryClasses(
-            IDictionary<int, string> dataSerializableFactoryClasses)
-        {
-            this.dataSerializableFactoryClasses = dataSerializableFactoryClasses;
+            GetDataSerializableFactories().Add(factoryId, dataSerializableFactory);
             return this;
         }
 
@@ -119,52 +70,21 @@ namespace Hazelcast.Config
         public virtual SerializationConfig AddDataSerializableFactoryClass(int factoryId,
             Type dataSerializableFactoryClass)
         {
-            string factoryClassName =
-                ValidationUtil.IsNotNull(dataSerializableFactoryClass, "dataSerializableFactoryClass").AssemblyQualifiedName;
+            var factoryClassName =
+                ValidationUtil.IsNotNull(dataSerializableFactoryClass, "dataSerializableFactoryClass")
+                    .AssemblyQualifiedName;
             return AddDataSerializableFactoryClass(factoryId, factoryClassName);
         }
 
-        public virtual IDictionary<int, IDataSerializableFactory> GetDataSerializableFactories()
+        public virtual SerializationConfig AddPortableFactory(int factoryId, IPortableFactory portableFactory)
         {
-            if (dataSerializableFactories == null)
-            {
-                dataSerializableFactories = new Dictionary<int, IDataSerializableFactory>();
-            }
-            return dataSerializableFactories;
-        }
-
-        public virtual SerializationConfig SetDataSerializableFactories(
-            IDictionary<int, IDataSerializableFactory> dataSerializableFactories)
-        {
-            this.dataSerializableFactories = dataSerializableFactories;
-            return this;
-        }
-
-        public virtual SerializationConfig AddDataSerializableFactory(int factoryId,
-            IDataSerializableFactory dataSerializableFactory)
-        {
-            GetDataSerializableFactories().Add(factoryId, dataSerializableFactory);
-            return this;
-        }
-
-        public virtual IDictionary<int, string> GetPortableFactoryClasses()
-        {
-            if (portableFactoryClasses == null)
-            {
-                portableFactoryClasses = new Dictionary<int, string>();
-            }
-            return portableFactoryClasses;
-        }
-
-        public virtual SerializationConfig SetPortableFactoryClasses(IDictionary<int, string> portableFactoryClasses)
-        {
-            this.portableFactoryClasses = portableFactoryClasses;
+            GetPortableFactories().Add(factoryId, portableFactory);
             return this;
         }
 
         public virtual SerializationConfig AddPortableFactoryClass(int factoryId, Type portableFactoryClass)
         {
-            string portableFactoryClassName =
+            var portableFactoryClassName =
                 ValidationUtil.IsNotNull(portableFactoryClass, "portableFactoryClass").AssemblyQualifiedName;
             return AddPortableFactoryClass(factoryId, portableFactoryClassName);
         }
@@ -175,122 +95,199 @@ namespace Hazelcast.Config
             return this;
         }
 
-        public virtual IDictionary<int, IPortableFactory> GetPortableFactories()
+        public virtual SerializationConfig AddSerializerConfig(SerializerConfig serializerConfig)
         {
-            if (portableFactories == null)
-            {
-                portableFactories = new Dictionary<int, IPortableFactory>();
-            }
-            return portableFactories;
-        }
-
-        public virtual SerializationConfig SetPortableFactories(IDictionary<int, IPortableFactory> portableFactories)
-        {
-            this.portableFactories = portableFactories;
-            return this;
-        }
-
-        public virtual SerializationConfig AddPortableFactory(int factoryId, IPortableFactory portableFactory)
-        {
-            GetPortableFactories().Add(factoryId, portableFactory);
-            return this;
-        }
-
-        public virtual ICollection<IClassDefinition> GetClassDefinitions()
-        {
-            if (classDefinitions == null)
-            {
-                classDefinitions = new HashSet<IClassDefinition>();
-            }
-            return classDefinitions;
-        }
-
-        public virtual SerializationConfig AddClassDefinition(IClassDefinition classDefinition)
-        {
-            if (GetClassDefinitions().Contains(classDefinition))
-            {
-                throw new ArgumentException("IClassDefinition for class-id[" + classDefinition.GetClassId() +
-                                            "] already exists!");
-            }
-            GetClassDefinitions().Add(classDefinition);
-            return this;
-        }
-
-        public virtual SerializationConfig SetClassDefinitions(ICollection<IClassDefinition> classDefinitions)
-        {
-            this.classDefinitions = classDefinitions;
-            return this;
-        }
-
-        public virtual bool IsCheckClassDefErrors()
-        {
-            return checkClassDefErrors;
-        }
-
-        public virtual SerializationConfig SetCheckClassDefErrors(bool checkClassDefErrors)
-        {
-            this.checkClassDefErrors = checkClassDefErrors;
-            return this;
-        }
-
-        public virtual bool IsUseNativeByteOrder()
-        {
-            return useNativeByteOrder;
-        }
-
-        public virtual SerializationConfig SetUseNativeByteOrder(bool useNativeByteOrder)
-        {
-            this.useNativeByteOrder = useNativeByteOrder;
+            GetSerializerConfigs().Add(serializerConfig);
             return this;
         }
 
         public virtual ByteOrder GetByteOrder()
         {
-            return byteOrder;
+            return _byteOrder;
         }
 
-        public virtual SerializationConfig SetByteOrder(ByteOrder byteOrder)
+        public virtual ICollection<IClassDefinition> GetClassDefinitions()
         {
-            this.byteOrder = byteOrder;
-            return this;
+            if (_classDefinitions == null)
+            {
+                _classDefinitions = new HashSet<IClassDefinition>();
+            }
+            return _classDefinitions;
+        }
+
+        public virtual IDictionary<int, IDataSerializableFactory> GetDataSerializableFactories()
+        {
+            if (_dataSerializableFactories == null)
+            {
+                _dataSerializableFactories = new Dictionary<int, IDataSerializableFactory>();
+            }
+            return _dataSerializableFactories;
+        }
+
+        public virtual IDictionary<int, string> GetDataSerializableFactoryClasses()
+        {
+            if (_dataSerializableFactoryClasses == null)
+            {
+                _dataSerializableFactoryClasses = new Dictionary<int, string>();
+            }
+            return _dataSerializableFactoryClasses;
+        }
+
+        public virtual GlobalSerializerConfig GetGlobalSerializerConfig()
+        {
+            return _globalSerializerConfig;
+        }
+
+        public virtual IDictionary<int, IPortableFactory> GetPortableFactories()
+        {
+            if (_portableFactories == null)
+            {
+                _portableFactories = new Dictionary<int, IPortableFactory>();
+            }
+            return _portableFactories;
+        }
+
+        public virtual IDictionary<int, string> GetPortableFactoryClasses()
+        {
+            if (_portableFactoryClasses == null)
+            {
+                _portableFactoryClasses = new Dictionary<int, string>();
+            }
+            return _portableFactoryClasses;
+        }
+
+        public virtual int GetPortableVersion()
+        {
+            return _portableVersion;
+        }
+
+        public virtual ICollection<SerializerConfig> GetSerializerConfigs()
+        {
+            if (_serializerConfigs == null)
+            {
+                _serializerConfigs = new List<SerializerConfig>();
+            }
+            return _serializerConfigs;
+        }
+
+        public virtual bool IsCheckClassDefErrors()
+        {
+            return _checkClassDefErrors;
         }
 
         public virtual bool IsEnableCompression()
         {
-            return enableCompression;
-        }
-
-        public virtual SerializationConfig SetEnableCompression(bool enableCompression)
-        {
-            this.enableCompression = enableCompression;
-            return this;
+            return _enableCompression;
         }
 
         public virtual bool IsEnableSharedObject()
         {
-            return enableSharedObject;
+            return _enableSharedObject;
+        }
+
+        public virtual bool IsUseNativeByteOrder()
+        {
+            return _useNativeByteOrder;
+        }
+
+        public virtual SerializationConfig SetByteOrder(ByteOrder byteOrder)
+        {
+            _byteOrder = byteOrder;
+            return this;
+        }
+
+        public virtual SerializationConfig SetCheckClassDefErrors(bool checkClassDefErrors)
+        {
+            _checkClassDefErrors = checkClassDefErrors;
+            return this;
+        }
+
+        public virtual SerializationConfig SetClassDefinitions(ICollection<IClassDefinition> classDefinitions)
+        {
+            _classDefinitions = classDefinitions;
+            return this;
+        }
+
+        public virtual SerializationConfig SetDataSerializableFactories(
+            IDictionary<int, IDataSerializableFactory> dataSerializableFactories)
+        {
+            _dataSerializableFactories = dataSerializableFactories;
+            return this;
+        }
+
+        public virtual SerializationConfig SetDataSerializableFactoryClasses(
+            IDictionary<int, string> dataSerializableFactoryClasses)
+        {
+            _dataSerializableFactoryClasses = dataSerializableFactoryClasses;
+            return this;
+        }
+
+        public virtual SerializationConfig SetEnableCompression(bool enableCompression)
+        {
+            _enableCompression = enableCompression;
+            return this;
         }
 
         public virtual SerializationConfig SetEnableSharedObject(bool enableSharedObject)
         {
-            this.enableSharedObject = enableSharedObject;
+            _enableSharedObject = enableSharedObject;
+            return this;
+        }
+
+        public virtual SerializationConfig SetGlobalSerializerConfig(GlobalSerializerConfig globalSerializerConfig)
+        {
+            _globalSerializerConfig = globalSerializerConfig;
+            return this;
+        }
+
+        public virtual SerializationConfig SetPortableFactories(IDictionary<int, IPortableFactory> portableFactories)
+        {
+            _portableFactories = portableFactories;
+            return this;
+        }
+
+        public virtual SerializationConfig SetPortableFactoryClasses(IDictionary<int, string> portableFactoryClasses)
+        {
+            _portableFactoryClasses = portableFactoryClasses;
+            return this;
+        }
+
+        public virtual SerializationConfig SetPortableVersion(int portableVersion)
+        {
+            if (portableVersion < 0)
+            {
+                throw new ArgumentException("IPortable version cannot be negative!");
+            }
+            _portableVersion = portableVersion;
+            return this;
+        }
+
+        public virtual SerializationConfig SetSerializerConfigs(ICollection<SerializerConfig> serializerConfigs)
+        {
+            _serializerConfigs = serializerConfigs;
+            return this;
+        }
+
+        public virtual SerializationConfig SetUseNativeByteOrder(bool useNativeByteOrder)
+        {
+            _useNativeByteOrder = useNativeByteOrder;
             return this;
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder("SerializationConfig{");
-            sb.Append("portableVersion=").Append(portableVersion);
-            sb.Append(", dataSerializableFactoryClasses=").Append(dataSerializableFactoryClasses);
-            sb.Append(", dataSerializableFactories=").Append(dataSerializableFactories);
-            sb.Append(", portableFactoryClasses=").Append(portableFactoryClasses);
-            sb.Append(", portableFactories=").Append(portableFactories);
-            sb.Append(", globalSerializerConfig=").Append(globalSerializerConfig);
-            sb.Append(", serializerConfigs=").Append(serializerConfigs);
-            sb.Append(", checkClassDefErrors=").Append(checkClassDefErrors);
-            sb.Append(", classDefinitions=").Append(classDefinitions);
-            sb.Append(", byteOrder=").Append(byteOrder);
-            sb.Append(", useNativeByteOrder=").Append(useNativeByteOrder);
+            sb.Append("portableVersion=").Append(_portableVersion);
+            sb.Append(", dataSerializableFactoryClasses=").Append(_dataSerializableFactoryClasses);
+            sb.Append(", dataSerializableFactories=").Append(_dataSerializableFactories);
+            sb.Append(", portableFactoryClasses=").Append(_portableFactoryClasses);
+            sb.Append(", portableFactories=").Append(_portableFactories);
+            sb.Append(", globalSerializerConfig=").Append(_globalSerializerConfig);
+            sb.Append(", serializerConfigs=").Append(_serializerConfigs);
+            sb.Append(", checkClassDefErrors=").Append(_checkClassDefErrors);
+            sb.Append(", classDefinitions=").Append(_classDefinitions);
+            sb.Append(", byteOrder=").Append(_byteOrder);
+            sb.Append(", useNativeByteOrder=").Append(_useNativeByteOrder);
             sb.Append('}');
             return sb.ToString();
         }
