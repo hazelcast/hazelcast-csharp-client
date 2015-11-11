@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
@@ -462,47 +463,51 @@ namespace Hazelcast.Client.Proxy
 
         public IDictionary<TKey, TValue> GetAll(ICollection<TKey> keys)
         {
-            var keySet = new HashSet<IData>();
-            IDictionary<TKey, TValue> result = new Dictionary<TKey, TValue>();
-            foreach (object key in keys)
-            {
-                keySet.Add(ToData(key));
-            }
+            var partitionToKeyData = GetPartitionKeyData(keys);
 
-
+            var result = new Dictionary<TKey, TValue>();
             if (_nearCache != null)
             {
-                var foundKeys = new HashSet<IData>();
-                foreach (var keyData in keySet)
+                // remove items from list which are already found in the cache
+                foreach (var kvp in partitionToKeyData)
                 {
-                    var cached = _nearCache.Get(keyData);
-                    if (cached != null)
+                    var list = kvp.Value;
+                    for (var i = list.Count - 1; i >= 0 ; i--)
                     {
-                        if (!cached.Equals(ClientNearCache.NullObject))
+                        var keyData = kvp.Value[i];
+                        var cached = _nearCache.Get(keyData);
+                        if (cached != null && cached != ClientNearCache.NullObject)
                         {
-                            result.Add(ToObject<TKey>(keyData), (TValue) cached);
-                            foundKeys.Add(keyData);
+                            list.RemoveAt(i);
+                            result.Add(ToObject<TKey>(keyData), (TValue)cached);
                         }
                     }
                 }
-                keySet.ExceptWith(foundKeys);
             }
 
-            if (keySet.Count == 0)
+            var invocationService = GetContext().GetInvocationService();
+            var futures = new List<IFuture<IClientMessage>>(partitionToKeyData.Count);
+            foreach (var kvp in partitionToKeyData)
             {
-                return result;
-            }
-
-            var request = MapGetAllCodec.EncodeRequest(GetName(), keySet);
-            var entrySet = Invoke(request, m => MapGetAllCodec.DecodeResponse(m).entrySet);
-            foreach (var entry in entrySet)
-            {
-                var value = ToObject<TValue>(entry.Value);
-                var key1 = ToObject<TKey>(entry.Key);
-                result[key1] = value;
-                if (_nearCache != null)
+                if (kvp.Value.Count > 0)
                 {
-                    _nearCache.Put(entry.Key, value);
+                    var request = MapGetAllCodec.EncodeRequest(GetName(), kvp.Value);
+                    futures.Add(invocationService.InvokeOnPartition(request, kvp.Key));
+                }
+            }
+            var messages = ThreadUtil.GetResult(futures);
+            foreach (var clientMessage in messages)
+            {
+                var items = MapGetAllCodec.DecodeResponse(clientMessage).entrySet;
+                foreach (var entry in items)
+                {
+                    var key = ToObject<TKey>(entry.Key);
+                    var value = ToObject<TValue>(entry.Value);
+                    result.Add(key, value);
+                    if (_nearCache != null)
+                    {
+                        _nearCache.Put(entry.Key, value);
+                    }
                 }
             }
             return result;
@@ -759,6 +764,28 @@ namespace Hazelcast.Client.Proxy
             {
                 _nearCache.Invalidate(key);
             }
+        }
+
+        private Dictionary<int, IList<IData>> GetPartitionKeyData(ICollection<TKey> keys)
+        {
+            var partitionService = GetContext().GetPartitionService();
+
+            // split the keys based on which partition they belong
+            var partitionToKeyData = new Dictionary<int, IList<IData>>();
+            foreach (object key in keys)
+            {
+                var keyData = ToData(key);
+                var partitionId = partitionService.GetPartitionId(keyData);
+
+                IList<IData> keyList = null;
+                if (!partitionToKeyData.TryGetValue(partitionId, out keyList))
+                {
+                    partitionToKeyData[partitionId] = keyList = new List<IData>();
+                }
+
+                keyList.Add(keyData);
+            }
+            return partitionToKeyData;
         }
     }
 }
