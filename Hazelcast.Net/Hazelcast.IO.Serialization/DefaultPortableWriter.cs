@@ -20,10 +20,10 @@ namespace Hazelcast.IO.Serialization
     {
         private readonly int _begin;
         private readonly IClassDefinition _cd;
+        private readonly int _offset;
         private readonly IBufferObjectDataOutput _out;
         private readonly PortableSerializer _serializer;
         private readonly ISet<string> _writtenFields;
-        private readonly int _offset;
         private bool _raw;
 
         /// <exception cref="System.IO.IOException" />

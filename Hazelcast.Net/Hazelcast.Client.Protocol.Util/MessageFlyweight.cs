@@ -30,20 +30,16 @@ namespace Hazelcast.Client.Protocol.Util
         /// <summary>Short mask</summary>
         private const short ShortMask = unchecked(0x00FF);
 
-        protected IClientProtocolBuffer Buffer;
         private int _index;
         private int _offset;
+
+        protected IClientProtocolBuffer Buffer;
 
         public MessageFlyweight()
         {
             //initialized in wrap method by user , does not change.
             //starts from zero, incremented each tome something set to buffer
             _offset = 0;
-        }
-
-        public virtual IClientProtocolBuffer GetBuffer()
-        {
-            return Buffer;
         }
 
         //endregion SET Overloads
@@ -53,6 +49,11 @@ namespace Hazelcast.Client.Protocol.Util
             var result = Buffer.GetByte(_index + _offset);
             _index += Bits.ByteSizeInBytes;
             return result != 0;
+        }
+
+        public virtual IClientProtocolBuffer GetBuffer()
+        {
+            return Buffer;
         }
 
         public virtual byte GetByte()

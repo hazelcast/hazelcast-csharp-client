@@ -92,7 +92,8 @@ namespace Hazelcast.Client.Protocol.Util
             var requiredCapacity = _position + additionalCapacity;
             if (requiredCapacity < 0)
             {
-                var s = string.Format("Insufficient capacity: position={0} additional={1}", _position, additionalCapacity);
+                var s = string.Format("Insufficient capacity: position={0} additional={1}", _position,
+                    additionalCapacity);
                 throw new InvalidOperationException(s);
             }
             if (requiredCapacity > _capacity)

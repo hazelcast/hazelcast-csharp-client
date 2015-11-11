@@ -18,7 +18,7 @@ namespace Hazelcast.Transaction
 {
     /// <summary>
     ///     Provides a context to access transactional data-structures like the
-    ///     <see cref="ITransactionalMap{K,V}">Hazelcast.Core.ITransactionalMap&lt;K, V&gt;</see>
+    ///     <see cref="ITransactionalMap{TKey,TValue}">Hazelcast.Core.ITransactionalMap&lt;K, V&gt;</see>
     ///     .
     /// </summary>
     public interface ITransactionalTaskContext
