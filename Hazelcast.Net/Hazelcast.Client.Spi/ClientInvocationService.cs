@@ -32,7 +32,10 @@ namespace Hazelcast.Client.Spi
     internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener,
         IConnectionHeartbeatListener
     {
-        public const int DefaultEventThreadCount = 3;
+        private const int DefaultEventThreadCount = 3;
+        private const int DefaultInvocationTimeout = 120;
+        private const int RetryWaitTime = 1000;
+
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientInvocationService));
         private readonly HazelcastClient _client;
         private readonly ClientConnectionManager _clientConnectionManager;
@@ -40,12 +43,13 @@ namespace Hazelcast.Client.Spi
         private readonly ConcurrentDictionary<int, ClientInvocation> _invocations =
             new ConcurrentDictionary<int, ClientInvocation>();
 
+        private readonly int _invocationTimeoutMillis;
+
         private readonly ConcurrentDictionary<int, ClientListenerInvocation> _listenerInvocations =
             new ConcurrentDictionary<int, ClientListenerInvocation>();
 
         private readonly bool _redoOperations;
-        private readonly int _retryCount = 120;
-        private readonly int _retryWaitTime = 1000;
+        
         private readonly StripedTaskScheduler _taskScheduler;
         private int _correlationIdCounter = 1;
         private volatile bool _isShutDown;
@@ -59,10 +63,9 @@ namespace Hazelcast.Client.Spi
                                   DefaultEventThreadCount;
             _taskScheduler = new StripedTaskScheduler(eventTreadCount);
 
-            // TODO: These should be consoliated with the way it's done in the Java client
-            _retryCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.count") ?? _retryCount;
-            _retryWaitTime = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.retry.wait.time") ??
-                             _retryWaitTime;
+            _invocationTimeoutMillis =
+                (EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.invocation.timeout.seconds") ??
+                 DefaultInvocationTimeout)*1000;
 
             _clientConnectionManager = (ClientConnectionManager) client.GetConnectionManager();
             _clientConnectionManager.AddConnectionListener(this);
@@ -76,12 +79,12 @@ namespace Hazelcast.Client.Spi
 
         internal int InvocationRetryCount
         {
-            get { return _retryCount; }
+            get { return _invocationTimeoutMillis / RetryWaitTime; }
         }
 
         internal int InvocationRetryWaitTime
         {
-            get { return _retryWaitTime; }
+            get { return RetryWaitTime; }
         }
 
         public abstract IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key,
@@ -191,8 +194,39 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
+                if (address == null)
+                {
+                    address = GetRandomAddress();
+                }
+
+                // try to get an existing connection, if not establish a new connection asyncronously
                 var connection = GetConnection(address);
-                Send(connection, invocation);
+                if (connection != null)
+                {
+                    Send(connection, invocation);
+                }
+                else
+                {
+                    _clientConnectionManager.GetOrConnectAsync(address).ContinueWith(t =>
+                    {
+                        if (t.IsFaulted)
+                        {
+                            var innerException = t.Exception.InnerExceptions.First();
+                            HandleException(invocation, innerException);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                Send(t.Result, invocation);
+                            }
+                            catch (Exception e)
+                            {
+                                HandleException(invocation, e);
+                            }
+                        }
+                    });
+                }
             }
             catch (Exception e)
             {
@@ -331,43 +365,20 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        private ClientConnection GetConnection(Address address = null)
+        private ClientConnection GetConnection(Address address)
         {
             EnsureOwnerConnectionAvailable();
-            return _client.GetConnectionManager().GetOrConnect(address);
+            return _client.GetConnectionManager().GetConnection(address);
         }
 
-        private ClientConnection GetConnectionForInvocation(ClientInvocation invocation)
+        private Address GetRandomAddress()
         {
-            if (invocation.BoundConnection != null)
+            var member = _client.GetLoadBalancer().Next();
+            if (member != null)
             {
-                if (!invocation.BoundConnection.Live)
-                {
-                    throw new HazelcastException(invocation.BoundConnection + " is no longer available");
-                }
-                return invocation.BoundConnection;
+                return member.GetAddress();
             }
-
-            Address address = null;
-            if (invocation.Address != null)
-            {
-                address = invocation.Address;
-            }
-            else if (invocation.MemberUuid != null)
-            {
-                var member = _client.GetClientClusterService().GetMember(invocation.MemberUuid);
-                if (member == null)
-                {
-                    throw new InvalidOperationException("Could not find a member with UUID " + invocation.MemberUuid);
-                }
-                address = member.GetAddress();
-            }
-
-            else if (invocation.PartitionId != -1)
-            {
-                address = _client.GetClientPartitionService().GetPartitionOwner(invocation.PartitionId);
-            }
-            return GetConnection(address);
+            throw new IOException("Could not find any available address");
         }
 
         private static string GetRegistrationIdFromResponse(ClientListenerInvocation invocation)
@@ -393,6 +404,7 @@ namespace Hazelcast.Client.Spi
         private void HandleException(ClientInvocation invocation, Exception exception)
         {
             Logger.Finest("Got exception for request " + invocation.Message + ":" + exception);
+
             if (exception is IOException
                 || exception is SocketException
                 || exception is HazelcastInstanceNotActiveException
@@ -436,8 +448,12 @@ namespace Hazelcast.Client.Spi
                     _client.GetListenerService()
                         .ReregisterListener(originalRegistrationId, newRegistrationId,
                             invocation.Message.GetCorrelationId());
-                    Logger.Finest(string.Format("Re-registered listener for {0} of type {1:X}", originalRegistrationId,
-                        listenerInvocation.Message.GetMessageType()));
+                    if (Logger.IsFinestEnabled())
+                    {
+                        Logger.Finest(string.Format("Re-registered listener for {0} of type {1:X}",
+                            originalRegistrationId,
+                            listenerInvocation.Message.GetMessageType()));
+                    }
                 }
                 else
                 {
@@ -466,18 +482,48 @@ namespace Hazelcast.Client.Spi
             }
         }
 
+        private void ReinvokeInvocation(ClientInvocation invocation)
+        {
+            Address address = null;
+            if (invocation.Address != null)
+            {
+                address = invocation.Address;
+            }
+            else if (invocation.MemberUuid != null)
+            {
+                var member = _client.GetClientClusterService().GetMember(invocation.MemberUuid);
+                if (member == null)
+                {
+                    throw new InvalidOperationException("Could not find a member with UUID " + invocation.MemberUuid);
+                }
+                address = member.GetAddress();
+            }
+            else if (invocation.PartitionId != -1)
+            {
+                address = _client.GetClientPartitionService().GetPartitionOwner(invocation.PartitionId);
+            }
+            Invoke(invocation, address);
+        }
+
         private void ReregisterListener(ClientListenerInvocation invocation)
         {
             Logger.Finest("Re-registering listener for " + invocation.Message);
-            Invoke(invocation);
+            Invoke(invocation, GetRandomAddress());
         }
 
         private bool RetryRequest(ClientInvocation invocation)
         {
-            var retryNr = invocation.IncrementAndGetRetryCount();
-            if (retryNr > _retryCount) return false;
+            if (invocation.BoundConnection != null)
+            {
+                return false;
+            }
 
-            Logger.Finest("Retry #" + retryNr + " for request " + invocation.Message);
+            if (Clock.CurrentTimeMillis() >= (invocation.InvocationTimeMillis + _invocationTimeoutMillis))
+            {
+                return false;
+            }
+
+            Logger.Finest("Retry for request " + invocation.Message);
 
             _client.GetClientExecutionService().Schedule(() =>
             {
@@ -485,10 +531,9 @@ namespace Hazelcast.Client.Spi
                 else
                 {
                     // get the appropriate connection for retry
-                    var connection = GetConnectionForInvocation(invocation);
-                    Send(connection, invocation);
+                    ReinvokeInvocation(invocation);
                 }
-            }, _retryWaitTime, TimeUnit.Milliseconds).ContinueWith(t =>
+            }, RetryWaitTime, TimeUnit.Milliseconds).ContinueWith(t =>
             {
                 if (t.IsFaulted)
                 {

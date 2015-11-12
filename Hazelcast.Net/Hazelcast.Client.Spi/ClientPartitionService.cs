@@ -118,6 +118,10 @@ namespace Hazelcast.Client.Spi
                     Logger.Finest("Updating partition list.");
                     var clusterService = _client.GetClientClusterService();
                     var ownerAddress = clusterService.GetOwnerConnectionAddress();
+                    if (ownerAddress == null)
+                    {
+                        throw new InvalidOperationException("Owner address was null");
+                    }
                     var connection = _client.GetConnectionManager().GetConnection(ownerAddress);
                     if (connection == null)
                     {

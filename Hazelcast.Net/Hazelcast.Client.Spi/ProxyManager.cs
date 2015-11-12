@@ -241,7 +241,7 @@ namespace Hazelcast.Client.Spi
             for (var i = 0; i < clusterSize; i++)
             {
                 var member = loadBalancer.Next();
-                if (!member.IsLiteMember)
+                if (member != null && !member.IsLiteMember)
                 {
                     return member.GetAddress();
                 }

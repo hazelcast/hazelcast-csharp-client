@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics;
 using System.Threading;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
@@ -27,12 +29,14 @@ namespace Hazelcast.Client.Spi
         private readonly IClientMessage _message;
         private readonly int _partitionId = -1;
 
-        private int _retryCount;
+        // the point at which the request should be considered timed out
+        private readonly long _invocationTimeMillis; 
 
         public ClientInvocation(IClientMessage message)
         {
             _message = message;
             _future = new SettableFuture<IClientMessage>();
+            _invocationTimeMillis = Clock.CurrentTimeMillis();
         }
 
         public ClientInvocation(IClientMessage message, int partitionId) : this(message)
@@ -88,9 +92,9 @@ namespace Hazelcast.Client.Spi
 
         public Address Address { get; private set; }
 
-        public int IncrementAndGetRetryCount()
+        public long InvocationTimeMillis
         {
-            return Interlocked.Increment(ref _retryCount);
+            get { return _invocationTimeMillis; }
         }
     }
 }

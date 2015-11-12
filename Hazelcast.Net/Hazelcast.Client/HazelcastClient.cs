@@ -96,7 +96,7 @@ namespace Hazelcast.Client
             _executionService = new ClientExecutionService(_instanceName, config.GetExecutorPoolSize());
             _clusterService = new ClientClusterService(this);
             _loadBalancer = config.GetLoadBalancer() ?? new RoundRobinLB();
-            _connectionManager = new ClientConnectionManager(this, _loadBalancer);
+            _connectionManager = new ClientConnectionManager(this);
             _invocationService = GetInvocationService(config);
             _listenerService = new ClientListenerService(this);
             _userContext = new ConcurrentDictionary<string, object>();

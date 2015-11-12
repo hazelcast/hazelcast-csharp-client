@@ -13,6 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Config;
 using NUnit.Framework;
 
@@ -37,8 +40,11 @@ namespace Hazelcast.Client.Test
 
             var map = context.GetMap<int, string>(TestSupport.RandomString());
 
-            Cluster.RemoveNode();
-            Cluster.AddNode();
+            Task.Factory.StartNew(() =>
+            {
+                Cluster.RemoveNode();
+                Cluster.AddNode();
+            });
             try
             {
                 for (var i = 0; i < Count; i++)
@@ -99,6 +105,36 @@ namespace Hazelcast.Client.Test
                 }
                 Assert.AreEqual(Count, map.Size());
             }, 60);
+        }
+
+        [Test]
+        public void TestRetryTimeout()
+        {
+            Environment.SetEnvironmentVariable("hazelcast.client.invocation.timeout.seconds", "2");
+            var client = new HazelcastClientFactory().CreateClient(c => c.GetNetworkConfig().AddAddress("127.0.0.1:5701"));
+            try
+            {
+                var map = client.GetMap<string, string>(TestSupport.RandomString());
+                
+                Cluster.RemoveNode();
+                var resetEvent = new ManualResetEventSlim();
+                Task.Factory.StartNew(() =>
+                {
+                    Logging.Logger.GetLogger("ClientRetryTest").Info("Calling map.Put");
+                    map.Put("key", "value");
+                }).ContinueWith(t =>
+                {
+                    if (t.IsFaulted) resetEvent.Set();
+                    else Assert.Fail("Method invocation did not fail as expected");
+                });
+
+                Assert.IsTrue(resetEvent.Wait(4000), "Did not get an exception within seconds");
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("hazelcast.client.invocation.timeout.seconds", null);
+                client.Shutdown();
+            }
         }
     }
 }
