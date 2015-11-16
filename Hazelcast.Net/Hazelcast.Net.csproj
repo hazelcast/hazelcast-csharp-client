@@ -569,6 +569,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Package.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
