@@ -16,6 +16,23 @@ namespace Hazelcast.IO.Serialization
 {
     internal sealed class ConstantSerializers
     {
+        internal sealed class NullSerializer : SingletonSerializer<object>
+        {
+            public override int GetTypeId()
+            {
+                return SerializationConstants.ConstantTypeNull;
+            }
+
+            public override object Read(IObjectDataInput input)
+            {
+                return null;
+            }
+
+            public override void Write(IObjectDataOutput output, object obj)
+            {
+            }
+        }
+
         internal sealed class BooleanSerializer : SingletonSerializer<bool>
         {
             public override int GetTypeId()
@@ -316,19 +333,6 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        internal abstract class SingletonSerializer<T> : IStreamSerializer<T>
-        {
-            public virtual void Destroy()
-            {
-            }
-
-            public abstract int GetTypeId();
-
-            public abstract T Read(IObjectDataInput arg1);
-
-            public abstract void Write(IObjectDataOutput arg1, T arg2);
-        }
-
         internal sealed class StringSerializer : SingletonSerializer<string>
         {
             public override int GetTypeId()
@@ -391,6 +395,19 @@ namespace Hazelcast.IO.Serialization
             public void Destroy()
             {
             }
+        }
+
+        internal abstract class SingletonSerializer<T> : IStreamSerializer<T>
+        {
+            public virtual void Destroy()
+            {
+            }
+
+            public abstract int GetTypeId();
+
+            public abstract T Read(IObjectDataInput input);
+
+            public abstract void Write(IObjectDataOutput output, T obj);
         }
     }
 }

@@ -58,8 +58,14 @@ namespace Hazelcast.IO.Serialization
 
         public const int ConstantTypeStringArray = -20;
 
-        public const int ConstantSerializersLength = 21;
+        public const int DefaultTypeDate = -21;
 
-        public const int DefaultTypeDate = -101;
+        public const int DefaultTypeArrayList = -26;
+        
+        public const int DefaultTypeLinkedList = -27;
+
+        public const int ConstantSerializersLength = 28;
+
+        public const int DefaultTypeSerializable = -101;
     }
 }

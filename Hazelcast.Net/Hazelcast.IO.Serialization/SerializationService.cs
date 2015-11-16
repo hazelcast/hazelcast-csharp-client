@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using Hazelcast.Core;
+using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
 
 namespace Hazelcast.IO.Serialization
@@ -28,6 +29,7 @@ namespace Hazelcast.IO.Serialization
         private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersLength;
 
         private static readonly IPartitioningStrategy TheEmptyPartitioningStrategy = new EmptyPartitioningStrategy();
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (SerializationService));
 
         private readonly ISerializerAdapter[] _constantTypeIds = new ISerializerAdapter[ConstantSerializersSize];
 
@@ -43,10 +45,12 @@ namespace Hazelcast.IO.Serialization
 
         private readonly IInputOutputFactory _inputOutputFactory;
         private readonly IManagedContext _managedContext;
+        private readonly ISerializerAdapter _nullSerializerAdapter;
         private readonly int _outputBufferSize;
         private readonly PortableContext _portableContext;
         private readonly PortableSerializer _portableSerializer;
         private readonly ISerializerAdapter _portableSerializerAdapter;
+        private readonly ISerializerAdapter _serializableSerializerAdapter;
 
         private readonly ConcurrentDictionary<Type, ISerializerAdapter> _typeMap =
             new ConcurrentDictionary<Type, ISerializerAdapter>();
@@ -72,6 +76,10 @@ namespace Hazelcast.IO.Serialization
                 CreateSerializerAdapterByGeneric<IDataSerializable>(new DataSerializer(dataSerializableFactories));
             _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
             _portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(_portableSerializer);
+            _nullSerializerAdapter = CreateSerializerAdapterByGeneric<object>(new ConstantSerializers.NullSerializer());
+            _serializableSerializerAdapter =
+                CreateSerializerAdapterByGeneric<object>(new DefaultSerializers.SerializableSerializer());
+
             RegisterConstantSerializers();
             RegisterDefaultSerializers();
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
@@ -95,7 +103,7 @@ namespace Hazelcast.IO.Serialization
             var @out = Pop();
             try
             {
-                var serializer = SerializerFor(obj.GetType());
+                var serializer = SerializerFor(obj);
                 var partitionHash = CalculatePartitionHash(obj, strategy);
                 @out.WriteInt(partitionHash, ByteOrder.BigEndian);
                 @out.WriteInt(serializer.GetTypeId(), ByteOrder.BigEndian);
@@ -169,7 +177,7 @@ namespace Hazelcast.IO.Serialization
                 {
                     return;
                 }
-                var serializer = SerializerFor(obj.GetType());
+                var serializer = SerializerFor(obj);
                 output.WriteInt(serializer.GetTypeId());
                 serializer.Write(output, obj);
             }
@@ -339,7 +347,7 @@ namespace Hazelcast.IO.Serialization
         }
 
         protected internal ISerializerAdapter SerializerFor(int typeId)
-        {
+        {            
             if (typeId < 0)
             {
                 var index = IndexForDefaultType(typeId);
@@ -379,24 +387,18 @@ namespace Hazelcast.IO.Serialization
 
         private ISerializerAdapter CreateSerializerAdapterByGeneric<T>(ISerializer serializer)
         {
-            ISerializerAdapter s;
-            if (serializer is IStreamSerializer<T>)
+            var streamSerializer = serializer as IStreamSerializer<T>;
+            if (streamSerializer != null)
             {
-                s = new StreamSerializerAdapter<T>(this, (IStreamSerializer<T>) serializer);
+                return new StreamSerializerAdapter<T>(streamSerializer);
             }
-            else
+            var arraySerializer = serializer as IByteArraySerializer<T>;
+            if (arraySerializer != null)
             {
-                if (serializer is IByteArraySerializer<T>)
-                {
-                    s = new ByteArraySerializerAdapter<T>((IByteArraySerializer<T>) serializer);
-                }
-                else
-                {
-                    throw new ArgumentException("Serializer must be instance of either " +
-                                                "StreamSerializer or ByteArraySerializer!");
-                }
+                return new ByteArraySerializerAdapter<T>(arraySerializer);
             }
-            return s;
+            throw new ArgumentException("Serializer must be instance of either " +
+                                        "StreamSerializer or ByteArraySerializer!");
         }
 
         private static void GetInterfaces(Type type, ICollection<Type> interfaces)
@@ -419,7 +421,6 @@ namespace Hazelcast.IO.Serialization
         {
             if (e is OutOfMemoryException)
             {
-                //OutOfMemoryErrorDispatcher.OnOutOfMemory((OutOfMemoryException)e);
                 return e;
             }
             if (e is HazelcastSerializationException)
@@ -434,7 +435,7 @@ namespace Hazelcast.IO.Serialization
             return -typeId - 1;
         }
 
-        private ISerializerAdapter LookupSerializer(Type type)
+        private ISerializerAdapter LookupCustomSerializer(Type type)
         {
             ISerializerAdapter serializer;
             _typeMap.TryGetValue(type, out serializer);
@@ -466,16 +467,47 @@ namespace Hazelcast.IO.Serialization
                         }
                     }
                 }
-                if (serializer == null)
-                {
-                    serializer = _global.Get();
-                    if (serializer != null)
-                    {
-                        SafeRegister(type, serializer);
-                    }
-                }
             }
             return serializer;
+        }
+
+        private ISerializerAdapter LookupDefaultSerializer(Type type)
+        {
+            if (typeof (IDataSerializable).IsAssignableFrom(type))
+            {
+                return _dataSerializerAdapter;
+            }
+            if (typeof (IPortable).IsAssignableFrom(type))
+            {
+                return _portableSerializerAdapter;
+            }
+            ISerializerAdapter serializer;
+            if (_constantTypesMap.TryGetValue(type, out serializer) && serializer != null)
+            {
+                return serializer;
+            }
+            return null;
+        }
+
+        private ISerializerAdapter LookupGlobalSerializer(Type type)
+        {
+            var serializer = _global.Get();
+            if (serializer != null)
+            {
+                SafeRegister(type, serializer);
+            }
+            return serializer;
+        }
+
+        private ISerializerAdapter LookupSerializableSerializer(Type type)
+        {
+            if (type.IsSerializable)
+            {
+                Logger.Warning("Using default CLR serialization for type: " + type);
+                SafeRegister(type, _serializableSerializerAdapter);
+                return _serializableSerializerAdapter;
+            }
+            return null;
         }
 
         private void RegisterClassDefinition(IClassDefinition cd, IDictionary<int, IClassDefinition> classDefMap,
@@ -563,7 +595,13 @@ namespace Hazelcast.IO.Serialization
 
         private void RegisterDefaultSerializers()
         {
-            SafeRegister(typeof (DateTime), new DefaultSerializers.DateSerializer());
+            RegisterConstant(typeof (DateTime), new DefaultSerializers.DateSerializer());
+
+            //TODO: proper support for generic types
+            RegisterConstant(typeof (List<object>), new DefaultSerializers.ListSerializer<object>());
+            RegisterConstant(typeof (LinkedList<object>), new DefaultSerializers.LinkedListSerializer<object>());
+
+            _idMap.TryAdd(_serializableSerializerAdapter.GetTypeId(), _serializableSerializerAdapter);
         }
 
         private ISerializerAdapter RegisterFromSuperType(Type type, Type superType)
@@ -598,22 +636,38 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        private ISerializerAdapter SerializerFor(Type type)
+        /// <summary>
+        /// Searches for a serializer for the provided object
+        /// Serializers will be  searched in this order;
+        ///  1-NULL serializer
+        ///  2-Default serializers, like primitives, arrays, String and some C# types
+        ///  3-Custom registered types by user
+        ///  4-Global serializer if registered by user
+        ///  5-CLR serialization if type is Serializable
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        private ISerializerAdapter SerializerFor(object obj)
         {
-            if (typeof (IDataSerializable).IsAssignableFrom(type))
+            if (obj == null)
             {
-                return _dataSerializerAdapter;
+                return _nullSerializerAdapter;
             }
-            if (typeof (IPortable).IsAssignableFrom(type))
+            var type = obj.GetType();
+
+            var serializer = LookupDefaultSerializer(type);
+            if (serializer == null)
             {
-                return _portableSerializerAdapter;
+                serializer = LookupCustomSerializer(type);
             }
-            ISerializerAdapter serializer;
-            if (_constantTypesMap.TryGetValue(type, out serializer) && serializer != null)
+            if (serializer == null)
             {
-                return serializer;
+                serializer = LookupGlobalSerializer(type);
             }
-            serializer = LookupSerializer(type);
+            if (serializer == null)
+            {
+                serializer = LookupSerializableSerializer(type);
+            }
             if (serializer == null)
             {
                 if (_isActive)
