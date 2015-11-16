@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return parameters;
         }
 
-        public static ClientMessage EncodeRequest(string name, ISet<IData> keys)
+        public static ClientMessage EncodeRequest(string name, IList<IData> keys)
         {
             var requiredDataSize = RequestParameters.CalculateDataSize(name, keys);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
@@ -63,10 +63,10 @@ namespace Hazelcast.Client.Protocol.Codec
         public class RequestParameters
         {
             public static readonly MapMessageType TYPE = RequestType;
-            public ISet<IData> keys;
+            public IList<IData> keys;
             public string name;
 
-            public static int CalculateDataSize(string name, ISet<IData> keys)
+            public static int CalculateDataSize(string name, IList<IData> keys)
             {
                 var dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
