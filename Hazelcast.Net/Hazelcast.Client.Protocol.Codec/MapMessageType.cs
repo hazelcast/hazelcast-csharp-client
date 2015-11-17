@@ -21,9 +21,6 @@ namespace Hazelcast.Client.Protocol.Codec
         MapRemove = 0x0103,
         MapReplace = 0x0104,
         MapReplaceIfSame = 0x0105,
-        MapPutAsync = 0x0106,
-        MapGetAsync = 0x0107,
-        MapRemoveAsync = 0x0108,
         MapContainsKey = 0x0109,
         MapContainsValue = 0x010a,
         MapRemoveIfSame = 0x010b,
@@ -73,6 +70,7 @@ namespace Hazelcast.Client.Protocol.Codec
         MapForceUnlock = 0x0137,
         MapKeySetWithPagingPredicate = 0x0138,
         MapValuesWithPagingPredicate = 0x0139,
-        MapEntriesWithPagingPredicate = 0x013a
+        MapEntriesWithPagingPredicate = 0x013a,
+        MapClearNearCache = 0x013b
     }
 }
