@@ -83,21 +83,21 @@ namespace Hazelcast.Client.Proxy
 
         public override bool ContainsAll<TE>(ICollection<TE> c)
         {
-            var values = ToDataSet(c);
+            var values = ToDataList(c);
             var request = SetContainsAllCodec.EncodeRequest(GetName(), values);
             return Invoke(request, m => SetContainsAllCodec.DecodeResponse(m).response);
         }
 
         public override bool RemoveAll<TE>(ICollection<TE> c)
         {
-            var values = ToDataSet(c);
+            var values = ToDataList(c);
             var request = SetCompareAndRemoveAllCodec.EncodeRequest(GetName(), values);
             return Invoke(request, m => SetCompareAndRemoveAllCodec.DecodeResponse(m).response);
         }
 
         public override bool RetainAll<TE>(ICollection<TE> c)
         {
-            var values = ToDataSet(c);
+            var values = ToDataList(c);
             var request = SetCompareAndRetainAllCodec.EncodeRequest(GetName(), values);
             return Invoke(request, m => SetCompareAndRetainAllCodec.DecodeResponse(m).response);
         }

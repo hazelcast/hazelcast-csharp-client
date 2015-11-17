@@ -28,9 +28,9 @@ namespace Hazelcast.Client.Protocol.Codec
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            ISet<KeyValuePair<IData, IData>> entrySet = null;
+            IList<KeyValuePair<IData, IData>> entrySet = null;
             var entrySet_size = clientMessage.GetInt();
-            entrySet = new HashSet<KeyValuePair<IData, IData>>();
+            entrySet = new List<KeyValuePair<IData, IData>>();
             for (var entrySet_index = 0; entrySet_index < entrySet_size; entrySet_index++)
             {
                 KeyValuePair<IData, IData> entrySet_item;
@@ -72,7 +72,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public class ResponseParameters
         {
-            public ISet<KeyValuePair<IData, IData>> entrySet;
+            public IList<KeyValuePair<IData, IData>> entrySet;
         }
     }
 }

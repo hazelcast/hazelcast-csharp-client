@@ -26,9 +26,9 @@ namespace Hazelcast.Client.Protocol.Codec
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            ISet<DistributedObjectInfo> infoCollection = null;
+            IList<DistributedObjectInfo> infoCollection = null;
             var infoCollection_size = clientMessage.GetInt();
-            infoCollection = new HashSet<DistributedObjectInfo>();
+            infoCollection = new List<DistributedObjectInfo>();
             for (var infoCollection_index = 0; infoCollection_index < infoCollection_size; infoCollection_index++)
             {
                 DistributedObjectInfo infoCollection_item;
@@ -67,7 +67,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public class ResponseParameters
         {
-            public ISet<DistributedObjectInfo> infoCollection;
+            public IList<DistributedObjectInfo> infoCollection;
         }
     }
 }

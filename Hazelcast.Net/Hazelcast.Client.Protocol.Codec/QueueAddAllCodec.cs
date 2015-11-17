@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return parameters;
         }
 
-        public static ClientMessage EncodeRequest(string name, ISet<IData> dataList)
+        public static ClientMessage EncodeRequest(string name, IList<IData> dataList)
         {
             var requiredDataSize = RequestParameters.CalculateDataSize(name, dataList);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
@@ -56,10 +56,10 @@ namespace Hazelcast.Client.Protocol.Codec
         public class RequestParameters
         {
             public static readonly QueueMessageType TYPE = RequestType;
-            public ISet<IData> dataList;
+            public IList<IData> dataList;
             public string name;
 
-            public static int CalculateDataSize(string name, ISet<IData> dataList)
+            public static int CalculateDataSize(string name, IList<IData> dataList)
             {
                 var dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);

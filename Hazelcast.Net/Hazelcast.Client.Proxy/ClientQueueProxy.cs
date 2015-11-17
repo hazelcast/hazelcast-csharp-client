@@ -251,26 +251,26 @@ namespace Hazelcast.Client.Proxy
 
         public bool ContainsAll<TE>(ICollection<TE> c)
         {
-            var dataSet = ToDataSet(c);
+            var dataSet = ToDataList(c);
             var request = QueueContainsAllCodec.EncodeRequest(GetName(), dataSet);
             return Invoke(request, m => QueueContainsAllCodec.DecodeResponse(m).response);
         }
 
         public bool AddAll<TE>(ICollection<TE> c)
         {
-            var request = QueueAddAllCodec.EncodeRequest(GetName(), ToDataSet(c));
+            var request = QueueAddAllCodec.EncodeRequest(GetName(), ToDataList(c));
             return Invoke(request, m => QueueAddAllCodec.DecodeResponse(m).response);
         }
 
         public bool RemoveAll<TE>(ICollection<TE> c)
         {
-            var request = QueueCompareAndRemoveAllCodec.EncodeRequest(GetName(), ToDataSet(c));
+            var request = QueueCompareAndRemoveAllCodec.EncodeRequest(GetName(), ToDataList(c));
             return Invoke(request, m => QueueCompareAndRemoveAllCodec.DecodeResponse(m).response);
         }
 
         public bool RetainAll<TE>(ICollection<TE> c)
         {
-            var request = QueueCompareAndRetainAllCodec.EncodeRequest(GetName(), ToDataSet(c));
+            var request = QueueCompareAndRetainAllCodec.EncodeRequest(GetName(), ToDataList(c));
             return Invoke(request, m => QueueCompareAndRetainAllCodec.DecodeResponse(m).response);
         }
 

@@ -27,16 +27,16 @@ namespace Hazelcast.Client.Protocol.Codec
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            IDictionary<Address, ISet<int>> partitions = null;
+            IDictionary<Address, IList<int>> partitions = null;
             var partitions_size = clientMessage.GetInt();
-            partitions = new Dictionary<Address, ISet<int>>(partitions_size);
+            partitions = new Dictionary<Address, IList<int>>(partitions_size);
             for (var partitions_index = 0; partitions_index < partitions_size; partitions_index++)
             {
                 Address partitions_key;
-                ISet<int> partitions_val;
+                IList<int> partitions_val;
                 partitions_key = AddressCodec.Decode(clientMessage);
                 var partitions_val_size = clientMessage.GetInt();
-                partitions_val = new HashSet<int>();
+                partitions_val = new List<int>();
                 for (var partitions_val_index = 0; partitions_val_index < partitions_val_size; partitions_val_index++)
                 {
                     int partitions_val_item;
@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public class ResponseParameters
         {
-            public IDictionary<Address, ISet<int>> partitions;
+            public IDictionary<Address, IList<int>> partitions;
         }
     }
 }
