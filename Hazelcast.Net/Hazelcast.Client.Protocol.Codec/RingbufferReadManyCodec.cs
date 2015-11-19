@@ -19,12 +19,12 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class RingbufferReadManyAsyncCodec
+    internal sealed class RingbufferReadManyCodec
     {
         public const int ResponseType = 115;
         public const bool Retryable = false;
 
-        public static readonly RingbufferMessageType RequestType = RingbufferMessageType.RingbufferReadManyAsync;
+        public static readonly RingbufferMessageType RequestType = RingbufferMessageType.RingbufferReadMany;
 
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {

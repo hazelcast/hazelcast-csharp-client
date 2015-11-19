@@ -22,9 +22,8 @@ namespace Hazelcast.Client.Protocol.Codec
         RingbufferCapacity = 0x1904,
         RingbufferRemainingCapacity = 0x1905,
         RingbufferAdd = 0x1906,
-        RingbufferAddAsync = 0x1907,
         RingbufferReadOne = 0x1908,
-        RingbufferAddAllAsync = 0x1909,
-        RingbufferReadManyAsync = 0x190a
+        RingbufferAddAll = 0x1909,
+        RingbufferReadMany = 0x190a
     }
 }

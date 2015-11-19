@@ -151,14 +151,14 @@ namespace Hazelcast.Client.Proxy
                 }
             }
 
-            var request = MapGetAsyncCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
+            var request = MapGetCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             try
             {
                 var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
                 var deserializeTask = task.ToTask().ContinueWith(continueTask =>
                 {
                     var responseMessage = ThreadUtil.GetResult(continueTask);
-                    var result = MapGetAsyncCodec.DecodeResponse(responseMessage).response;
+                    var result = MapGetCodec.DecodeResponse(responseMessage).response;
                     if (_nearCache != null)
                     {
                         _nearCache.Put(keyData, result);
@@ -182,13 +182,13 @@ namespace Hazelcast.Client.Proxy
         {
             var keyData = ToData(key);
             var valueData = ToData(value);
-            var request = MapPutAsyncCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(),
+            var request = MapPutCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(),
                 timeunit.ToMillis(ttl));
             InvalidateNearCacheEntry(keyData);
 
             return InvokeAsync(request, keyData, m =>
             {
-                var response = MapPutAsyncCodec.DecodeResponse(m).response;
+                var response = MapPutCodec.DecodeResponse(m).response;
                 return ToObject<TValue>(response);
             });
         }
@@ -196,11 +196,11 @@ namespace Hazelcast.Client.Proxy
         public Task<TValue> RemoveAsync(TKey key)
         {
             var keyData = ToData(key);
-            var request = MapRemoveAsyncCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
+            var request = MapRemoveCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             InvalidateNearCacheEntry(keyData);
             return InvokeAsync(request, keyData, m =>
             {
-                var response = MapRemoveAsyncCodec.DecodeResponse(m).response;
+                var response = MapRemoveCodec.DecodeResponse(m).response;
                 return ToObject<TValue>(response);
             });
         }

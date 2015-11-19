@@ -12,43 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapPutAsyncCodec
+    internal sealed class RingbufferAddAllCodec
     {
-        public const int ResponseType = 105;
+        public const int ResponseType = 103;
         public const bool Retryable = false;
 
-        public static readonly MapMessageType RequestType = MapMessageType.MapPutAsync;
+        public static readonly RingbufferMessageType RequestType = RingbufferMessageType.RingbufferAddAll;
 
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            IData response = null;
-            var response_isNull = clientMessage.GetBoolean();
-            if (!response_isNull)
-            {
-                response = clientMessage.GetData();
-                parameters.response = response;
-            }
+            long response;
+            response = clientMessage.GetLong();
+            parameters.response = response;
             return parameters;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData value, long threadId, long ttl)
+        public static ClientMessage EncodeRequest(string name, IList<IData> valueList, int overflowPolicy)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, key, value, threadId, ttl);
+            var requiredDataSize = RequestParameters.CalculateDataSize(name, valueList, overflowPolicy);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int) RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
-            clientMessage.Set(key);
-            clientMessage.Set(value);
-            clientMessage.Set(threadId);
-            clientMessage.Set(ttl);
+            clientMessage.Set(valueList.Count);
+            foreach (var valueList_item in valueList)
+            {
+                clientMessage.Set(valueList_item);
+            }
+            clientMessage.Set(overflowPolicy);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
@@ -57,21 +56,21 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public class RequestParameters
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public IData key;
+            public static readonly RingbufferMessageType TYPE = RequestType;
             public string name;
-            public long threadId;
-            public long ttl;
-            public IData value;
+            public int overflowPolicy;
+            public IList<IData> valueList;
 
-            public static int CalculateDataSize(string name, IData key, IData value, long threadId, long ttl)
+            public static int CalculateDataSize(string name, IList<IData> valueList, int overflowPolicy)
             {
                 var dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(key);
-                dataSize += ParameterUtil.CalculateDataSize(value);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
+                dataSize += Bits.IntSizeInBytes;
+                foreach (var valueList_item in valueList)
+                {
+                    dataSize += ParameterUtil.CalculateDataSize(valueList_item);
+                }
+                dataSize += Bits.IntSizeInBytes;
                 return dataSize;
             }
         }
@@ -81,7 +80,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public class ResponseParameters
         {
-            public IData response;
+            public long response;
         }
     }
 }

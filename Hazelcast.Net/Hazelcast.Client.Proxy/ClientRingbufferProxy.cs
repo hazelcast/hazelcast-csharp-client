@@ -81,8 +81,8 @@ namespace Hazelcast.Client.Proxy
         {
             ThrowExceptionIfNull(item, "Item cannot be null");
 
-            var request = RingbufferAddAsyncCodec.EncodeRequest(GetName(), (int) OverflowPolicy.Overwrite, ToData(item));
-            return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddAsyncCodec.DecodeResponse(m).response);
+            var request = RingbufferAddCodec.EncodeRequest(GetName(), (int) OverflowPolicy.Overwrite, ToData(item));
+            return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddCodec.DecodeResponse(m).response);
         }
 
         public T ReadOne(long sequence)
@@ -99,8 +99,8 @@ namespace Hazelcast.Client.Proxy
             ThrowExceptionIfTrue(collection.Count == 0, "Collection cannot be empty");
 
             var valueList = ToDataList(collection);
-            var request = RingbufferAddAllAsyncCodec.EncodeRequest(GetName(), valueList, (int) overflowPolicy);
-            return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddAllAsyncCodec.DecodeResponse(m).response);
+            var request = RingbufferAddAllCodec.EncodeRequest(GetName(), valueList, (int) overflowPolicy);
+            return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddAllCodec.DecodeResponse(m).response);
         }
 
         public Task<IList<T>> ReadManyAsync(long startSequence, int minCount, int maxCount)
@@ -111,10 +111,10 @@ namespace Hazelcast.Client.Proxy
             ThrowExceptionIfTrue(minCount > Capacity(), "the minCount should be smaller than or equal to the capacity");
             ThrowExceptionIfTrue(maxCount > MaxBatchSize, "maxCount can't be larger than " + MaxBatchSize);
 
-            var request = RingbufferReadManyAsyncCodec.EncodeRequest(GetName(), startSequence, minCount, maxCount, null);
+            var request = RingbufferReadManyCodec.EncodeRequest(GetName(), startSequence, minCount, maxCount, null);
 
             return InvokeAsync(request, GetPartitionKey(),
-                m => ToList<T>(RingbufferReadManyAsyncCodec.DecodeResponse(m).items));
+                m => ToList<T>(RingbufferReadManyCodec.DecodeResponse(m).items));
         }
 
         protected override IClientMessage Invoke(IClientMessage request)
