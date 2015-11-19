@@ -30,9 +30,9 @@ namespace Hazelcast.Client.Protocol.Codec
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            ISet<IData> set = null;
+            IList<IData> set = null;
             var set_size = clientMessage.GetInt();
-            set = new HashSet<IData>();
+            set = new List<IData>();
             for (var set_index = 0; set_index < set_size; set_index++)
             {
                 IData set_item;
@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public class ResponseParameters
         {
-            public ISet<IData> set;
+            public IList<IData> set;
         }
     }
 }

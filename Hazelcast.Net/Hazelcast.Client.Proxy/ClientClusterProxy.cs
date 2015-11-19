@@ -38,11 +38,11 @@ namespace Hazelcast.Client.Proxy
             return _clusterService.RemoveMembershipListener(registrationId);
         }
 
-        public virtual ISet<IMember> GetMembers()
+        public virtual IList<IMember> GetMembers()
         {
             var members = _clusterService.GetMemberList();
 
-            return members != null ? new HashSet<IMember>(members) : new HashSet<IMember>();
+            return members != null ? new List<IMember>(members) : new List<IMember>();
         }
 
         public virtual IMember GetLocalMember()

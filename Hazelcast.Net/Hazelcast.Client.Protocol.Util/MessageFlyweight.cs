@@ -90,18 +90,6 @@ namespace Hazelcast.Client.Protocol.Util
             return result;
         }
 
-        public virtual ICollection<IData> GetDataSet()
-        {
-            var length = Buffer.GetInt(_index + _offset);
-            _index += Bits.IntSizeInBytes;
-            ICollection<IData> result = new HashSet<IData>();
-            for (var i = 0; i < length; i++)
-            {
-                result.Add(GetData());
-            }
-            return result;
-        }
-
         public virtual int GetInt()
         {
             var result = Buffer.GetInt(_index + _offset);

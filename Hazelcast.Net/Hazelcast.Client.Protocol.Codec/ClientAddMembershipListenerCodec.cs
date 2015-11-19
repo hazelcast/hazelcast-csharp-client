@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
             public delegate void HandleMemberAttributeChange(string uuid, string key, int operationType, string value);
 
-            public delegate void HandleMemberSet(ISet<IMember> members);
+            public delegate void HandleMemberSet(IList<IMember> members);
 
             public static void Handle(IClientMessage clientMessage, HandleMember handleMember,
                 HandleMemberSet handleMemberSet, HandleMemberAttributeChange handleMemberAttributeChange)
@@ -94,9 +94,9 @@ namespace Hazelcast.Client.Protocol.Codec
                 }
                 if (messageType == EventMessageConst.EventMemberSet)
                 {
-                    ISet<IMember> members = null;
+                    IList<IMember> members = null;
                     var members_size = clientMessage.GetInt();
-                    members = new HashSet<IMember>();
+                    members = new List<IMember>();
                     for (var members_index = 0; members_index < members_size; members_index++)
                     {
                         IMember members_item;

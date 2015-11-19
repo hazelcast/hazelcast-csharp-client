@@ -50,15 +50,15 @@ namespace Hazelcast.Core
         /// <returns>this Hazelcast instance member</returns>
         IMember GetLocalMember();
 
-        /// <summary>Set of current members of the cluster.</summary>
+        /// <summary>List of current members of the cluster.</summary>
         /// <remarks>
-        ///     Set of current members of the cluster.
+        ///     List of current members of the cluster.
         ///     Returning set instance is not modifiable.
         ///     Every member in the cluster has the same member list in the same
         ///     order. First member is the oldest member.
         /// </remarks>
         /// <returns>current members of the cluster</returns>
-        ISet<IMember> GetMembers();
+        IList<IMember> GetMembers();
 
         /// <summary>Removes the specified membership listener.</summary>
         /// <remarks>Removes the specified membership listener.</remarks>
