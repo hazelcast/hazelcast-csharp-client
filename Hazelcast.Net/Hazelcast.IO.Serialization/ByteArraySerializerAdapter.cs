@@ -58,29 +58,6 @@ namespace Hazelcast.IO.Serialization
             return _serializer;
         }
 
-        public override bool Equals(object o)
-        {
-            if (this == o)
-            {
-                return true;
-            }
-            if (o == null || GetType() != o.GetType())
-            {
-                return false;
-            }
-            var that = (ByteArraySerializerAdapter<T>) o;
-            if (_serializer != null ? !_serializer.Equals(that._serializer) : that._serializer != null)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public override int GetHashCode()
-        {
-            return _serializer != null ? _serializer.GetHashCode() : 0;
-        }
-
         public override string ToString()
         {
             var sb = new StringBuilder("SerializerAdapter{");

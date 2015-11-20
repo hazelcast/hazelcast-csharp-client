@@ -19,11 +19,9 @@ namespace Hazelcast.IO.Serialization
     internal sealed class StreamSerializerAdapter<T> : ISerializerAdapter
     {
         private readonly IStreamSerializer<T> _serializer;
-        private readonly SerializationService _service;
 
-        public StreamSerializerAdapter(SerializationService service, IStreamSerializer<T> serializer)
+        public StreamSerializerAdapter(IStreamSerializer<T> serializer)
         {
-            _service = service;
             _serializer = serializer;
         }
 
@@ -52,29 +50,6 @@ namespace Hazelcast.IO.Serialization
         public ISerializer GetImpl()
         {
             return _serializer;
-        }
-
-        public override bool Equals(object o)
-        {
-            if (this == o)
-            {
-                return true;
-            }
-            if (o == null || GetType() != o.GetType())
-            {
-                return false;
-            }
-            var that = (StreamSerializerAdapter<T>) o;
-            if (_serializer != null ? !_serializer.Equals(that._serializer) : that._serializer != null)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public override int GetHashCode()
-        {
-            return _serializer != null ? _serializer.GetHashCode() : 0;
         }
 
         public override string ToString()

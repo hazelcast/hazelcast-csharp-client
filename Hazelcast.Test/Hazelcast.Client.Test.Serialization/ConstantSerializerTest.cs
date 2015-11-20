@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
 using NUnit.Framework;
@@ -37,7 +40,12 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var ss = CreateSerializationService(order);
             var data = ss.ToData(obj);
-            Assert.AreEqual(obj, ss.ToObject<T>(data));
+            var deserialized = ss.ToObject<T>(data);
+            Assert.AreEqual(obj, deserialized);
+
+            // test first time deserialization
+            var ss2 = CreateSerializationService(order);
+            Assert.AreEqual(obj, ss2.ToObject<T>(data));
         }
 
         [Test, TestCaseSource("ByteOrders")]
@@ -146,6 +154,88 @@ namespace Hazelcast.Client.Test.Serialization
         public void TestStringArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomString), order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestNull(ByteOrder order)
+        {
+            AssertSerialization<object>(null, order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestDate(ByteOrder order)
+        {
+            var now = DateTime.UtcNow;
+
+            //strip nanos as they will not be serialized
+            var dateWithoutNanos = new DateTime(now.Ticks - now.Ticks % 10000);
+            AssertSerialization(dateWithoutNanos, order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestList(ByteOrder order)
+        {
+            var list = new List<object> {"1", 2, 2.0};
+
+            //strip nanos as they will not be serialized
+            AssertSerialization(list, order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestLinkedList(ByteOrder order)
+        {
+            var list = new LinkedList<object>();
+
+            list.AddLast("1");
+            list.AddLast(2);
+            list.AddLast(2.0);
+
+            //strip nanos as they will not be serialized
+            AssertSerialization(list, order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestSerializable(ByteOrder order)
+        {
+            var p = new SerializableClass {Age = TestSupport.RandomInt(), Name = TestSupport.RandomString()};
+
+            AssertSerialization(p, order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestGenericListUsingSerializable(ByteOrder order)
+        {
+            var p = new List<string> { "a", "b", "c"};
+
+            AssertSerialization(p, order);
+        }
+
+        [Serializable]
+        public class SerializableClass
+        {
+            public int Age { get; set; }
+            public string Name { get; set; }
+
+            protected bool Equals(SerializableClass other)
+            {
+                return Age == other.Age && string.Equals(Name, other.Name);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((SerializableClass)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (Age*397) ^ (Name != null ? Name.GetHashCode() : 0);
+                }
+            }
         }
     }
 }
