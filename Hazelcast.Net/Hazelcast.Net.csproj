@@ -336,7 +336,6 @@
     <Compile Include="Hazelcast.Client.Connection\IClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Connection\ClientConnection.cs" />
     <Compile Include="Hazelcast.Client.Connection\DefaultSocketFactory.cs" />
-    <Compile Include="Hazelcast.Client.Connection\Router.cs" />
     <Compile Include="Hazelcast.Client.Connection\ISocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Proxy\AbstractClientTxnCollectionProxy.cs" />
     <Compile Include="Hazelcast.Client.Proxy\ClientAtomicLongProxy.cs" />

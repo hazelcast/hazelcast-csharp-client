@@ -14,9 +14,11 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
@@ -50,16 +52,18 @@ namespace Hazelcast.Client.Connection
             new ConcurrentBag<IConnectionHeartbeatListener>();
 
         private readonly ClientNetworkConfig _networkConfig;
-        private readonly Router _router;
+
+        private readonly Dictionary<Address, Task<ClientConnection>> _pendingConnections =
+            new Dictionary<Address, Task<ClientConnection>>();
+
         private readonly ISocketInterceptor _socketInterceptor;
         private Thread _heartBeatThread;
         private volatile bool _live;
         private int _nextConnectionId;
 
-        public ClientConnectionManager(HazelcastClient client, ILoadBalancer loadBalancer)
+        public ClientConnectionManager(HazelcastClient client)
         {
             _client = client;
-            _router = new Router(loadBalancer);
 
             var config = client.GetClientConfig();
 
@@ -77,10 +81,10 @@ namespace Hazelcast.Client.Connection
             }
             _socketInterceptor = null;
 
-            var timeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.request.timeout");
+            var timeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.invocation.timeout.seconds");
             if (timeout > 0)
             {
-                ThreadUtil.TaskOperationTimeOutMilliseconds = timeout.Value;
+                ThreadUtil.TaskOperationTimeOutMilliseconds = timeout.Value * 1000;
             }
 
             _heartBeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ??
@@ -169,7 +173,7 @@ namespace Hazelcast.Client.Connection
                 ClientConnection connection;
                 if (!_addresses.ContainsKey(address))
                 {
-                    connection = TryGetNewConnection(address, authenticator);
+                    connection = InitializeConnection(address, authenticator);
                     FireConnectionListenerEvent(f => f.ConnectionAdded(connection));
                     _addresses.TryAdd(connection.GetAddress(), connection);
                 }
@@ -184,25 +188,24 @@ namespace Hazelcast.Client.Connection
             }
         }
 
+        /// <summary>
+        /// Gets an existing connection for the given address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
         public ClientConnection GetConnection(Address address)
         {
             ClientConnection connection;
             return _addresses.TryGetValue(address, out connection) ? connection : null;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
+        /// <summary>
+        /// Gets the connection for the address. If there is no connection, a new one will be created
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
         public ClientConnection GetOrConnect(Address target)
         {
-            if (target == null || !IsMember(target))
-            {
-                target = _router.Next();
-            }
-            if (target == null)
-            {
-                //no suitable instance found, instance not active?
-                throw new HazelcastInstanceNotActiveException();
-            }
-
             return GetOrConnect(target, ClusterAuthenticator);
         }
 
@@ -211,25 +214,39 @@ namespace Hazelcast.Client.Connection
             var address = connection.GetAddress();
             // ReSharper disable once InconsistentlySynchronizedField
             Logger.Finest("Destroying connection " + connection);
-            lock (_connectionMutex)
+            if (address != null)
             {
-                if (address != null)
+                ClientConnection conn;
+                if (_addresses.TryRemove(address, out conn))
                 {
-                    ClientConnection conn;
-                    if (_addresses.TryRemove(address, out conn))
-                    {
-                        if (conn == connection)
-                        {
-                            connection.Close();
-                            FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
-                        }
-                        else
-                        {
-                            Logger.Warning(connection + " is already destroyed.");
-                            _addresses.TryAdd(address, conn);
-                        }
-                    }
+                    connection.Close();
+                    FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
                 }
+            }
+            else
+            {
+                // connection has not authenticated yet
+                ((ClientInvocationService) _client.GetInvocationService()).CleanUpConnectionResources(connection);
+            }
+        }
+
+        public Task<ClientConnection> GetOrConnectAsync(Address address)
+        {
+            lock (_pendingConnections)
+            {
+                if (!_pendingConnections.ContainsKey(address))
+                {
+                    var task = _client.GetClientExecutionService().Submit(() => GetOrConnect(address));
+                    task.ContinueWith(t =>
+                    {
+                        lock (_pendingConnections)
+                        {
+                            _pendingConnections.Remove(address);
+                        }
+                    });
+                    _pendingConnections[address] = task;
+                }
+                return _pendingConnections[address];
             }
         }
 
@@ -303,40 +320,6 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private ClientConnection GetNewConnection(Address address, Authenticator authenticator)
-        {
-            ClientConnection connection = null;
-            lock (_connectionMutex)
-            {
-                var id = _nextConnectionId;
-                try
-                {
-                    Logger.Finest("Creating new connection for " + address + " with id " + id);
-                    connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(),
-                        id,
-                        address, _networkConfig);
-                    if (_socketInterceptor != null)
-                    {
-                        _socketInterceptor.OnConnect(connection.GetSocket());
-                    }
-                    connection.SwitchToNonBlockingMode();
-                    authenticator(connection);
-                    Interlocked.Increment(ref _nextConnectionId);
-                    Logger.Finest("Authenticated to " + connection);
-                    return connection;
-                }
-                catch (Exception e)
-                {
-                    Logger.Severe("Error connecting to " + address + " with id " + id, e);
-                    if (connection != null)
-                    {
-                        connection.Close();
-                    }
-                    throw ExceptionUtil.Rethrow(e, typeof (IOException), typeof (SocketException));
-                }
-            }
-        }
-
         private void HearthBeatLoop()
         {
             while (_live)
@@ -375,18 +358,37 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private bool IsMember(Address target)
-        {
-            var clientClusterService = _client.GetClientClusterService();
-            return clientClusterService.GetMember(target) != null;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        /// <exception cref="HazelcastException"></exception>
-        private ClientConnection TryGetNewConnection(Address address, Authenticator authenticator)
+        private ClientConnection InitializeConnection(Address address, Authenticator authenticator)
         {
             CheckLive();
-            return GetNewConnection(address, authenticator);
+            ClientConnection connection = null;
+            var id = _nextConnectionId;
+            try
+            {
+                Logger.Finest("Creating new connection for " + address + " with id " + id);
+                connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(),
+                    id,
+                    address, _networkConfig);
+                if (_socketInterceptor != null)
+                {
+                    _socketInterceptor.OnConnect(connection.GetSocket());
+                }
+                connection.SwitchToNonBlockingMode();
+                authenticator(connection);
+                Interlocked.Increment(ref _nextConnectionId);
+                Logger.Finest("Authenticated to " + connection);
+                return connection;
+            }
+            catch (Exception e)
+            {
+                Logger.Severe("Error connecting to " + address + " with id " + id, e);
+                if (connection != null)
+                {
+                    connection.Close();
+                }
+                throw ExceptionUtil.Rethrow(e, typeof (IOException), typeof (SocketException),
+                    typeof (TargetDisconnectedException));
+            }
         }
     }
 }

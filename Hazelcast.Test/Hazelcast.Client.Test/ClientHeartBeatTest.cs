@@ -35,10 +35,8 @@ namespace Hazelcast.Client.Test
         {
             config.GetNetworkConfig().SetRedoOperation(true);
             base.ConfigureClient(config);
-            Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.timeout", "1000");
+            Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.timeout", "2000");
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", "1000");
-            Environment.SetEnvironmentVariable("hazelcast.client.request.retry.count", "25");
-            Environment.SetEnvironmentVariable("hazelcast.client.request.retry.wait.time", "1000");
         }
 
         [TestFixtureTearDown]
@@ -46,11 +44,8 @@ namespace Hazelcast.Client.Test
         {
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.timeout", null);
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", null);
-            Environment.SetEnvironmentVariable("hazelcast.client.request.retry.count", null);
-            Environment.SetEnvironmentVariable("hazelcast.client.request.retry.wait.time", null);
         }
 
-        //TODO: Intermittently failing test
         [Test, Ignore]
         public void TestHeartBeatStoppedOnOwnerNode()
         {
@@ -71,7 +66,7 @@ namespace Hazelcast.Client.Test
             var nodeId = Cluster.NodeIds.First();
 
             Cluster.SuspendNode(nodeId);
-            Thread.Sleep(2000);
+            Thread.Sleep(10000);
             Cluster.ResumeNode(nodeId);
 
             Assert.That(map.Get(key), Is.EqualTo(value));
@@ -83,7 +78,6 @@ namespace Hazelcast.Client.Test
             });
         }
 
-        //TODO: Intermittently failing test
         [Test, Ignore]
         public void TestHeartStoppedOnNonOwnerNode()
         {
@@ -108,7 +102,7 @@ namespace Hazelcast.Client.Test
                     Assert.Fail(e.Message);
                 }
             }
-            Thread.Sleep(5000);
+            Thread.Sleep(10000);
             Cluster.ResumeNode(id);
 
             TestSupport.AssertTrueEventually(() => { Assert.AreEqual(count, map.Size()); });

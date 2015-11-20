@@ -66,6 +66,7 @@ namespace Hazelcast.Client.Test
         public void InitFixture()
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            Environment.SetEnvironmentVariable("hazelcast.logging.level", "finest");
             if (Cluster == null)
             {
                 Cluster = new HazelcastCluster(1);
