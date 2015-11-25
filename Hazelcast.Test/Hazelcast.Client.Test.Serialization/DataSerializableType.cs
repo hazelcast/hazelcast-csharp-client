@@ -18,7 +18,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Test.Serialization
 {
-    internal class DataSerializableType : IIdentifiedDataSerializable
+    internal class DataSerializableType : IdentifiedDataSerializable
     {
         private int _raceCount;
 
@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public void WriteData(IObjectDataOutput output)
+        public override void WriteData(IObjectDataOutput output)
         {
             output.WriteInt(_runnerCount);
             output.WriteInt(_raceCount);
@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public void ReadData(IObjectDataInput input)
+        public override void ReadData(IObjectDataInput input)
         {
             _runnerCount = input.ReadInt();
             _raceCount = input.ReadInt();
@@ -71,23 +71,18 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public string GetJavaClassName()
-        {
-            return "com.example.DataSerializableType";
-        }
-
-        public int GetFactoryId()
+        public override int GetFactoryId()
         {
             return 1;
         }
 
-        public int GetId()
+        public override int GetId()
         {
             return 2;
         }
     }
 
-    internal class DataSerializableBasicType : IIdentifiedDataSerializable
+    internal class DataSerializableBasicType : IdentifiedDataSerializable
     {
         private double dblValue1 = 10.1;
         private double dblValue2 = 21.34;
@@ -104,29 +99,24 @@ namespace Hazelcast.Client.Test.Serialization
             set { dblValue2 = value; }
         }
 
-        public void WriteData(IObjectDataOutput output)
+        public override void WriteData(IObjectDataOutput output)
         {
             output.WriteDouble(dblValue1);
             output.WriteDouble(dblValue2);
         }
 
-        public void ReadData(IObjectDataInput input)
+        public override void ReadData(IObjectDataInput input)
         {
             dblValue1 = input.ReadDouble();
             dblValue2 = input.ReadDouble();
         }
 
-        public string GetJavaClassName()
-        {
-            return "com.example.DataSerializableBasicType";
-        }
-
-        public int GetFactoryId()
+        public override int GetFactoryId()
         {
             return 1;
         }
 
-        public int GetId()
+        public override int GetId()
         {
             return 1;
         }

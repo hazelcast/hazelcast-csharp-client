@@ -167,7 +167,9 @@ namespace Hazelcast.IO.Serialization
         private void ScanAssemblyForSerializables()
         {
             var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(m => m.GetTypes())
-                .Where(t => typeof (IDataSerializable).IsAssignableFrom(t) && t.IsClass && t.IsPublic && !t.IsAbstract);
+                .Where(t => typeof (IDataSerializable).IsAssignableFrom(t) 
+                    && !typeof(IIdentifiedDataSerializable).IsAssignableFrom(t) 
+                  &&  t.IsClass && t.IsPublic && !t.IsAbstract);
 
             foreach (var type in types)
             {

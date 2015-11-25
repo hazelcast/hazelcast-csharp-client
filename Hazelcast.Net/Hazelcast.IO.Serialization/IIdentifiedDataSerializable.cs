@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.IO.Serialization
 {
     /// <summary>
@@ -38,5 +40,25 @@ namespace Hazelcast.IO.Serialization
         /// 	</remarks>
         /// <returns>type id</returns>
         int GetId();
+    }
+
+    /// <summary>
+    /// Convenience class for implementing IIdentifiedDataSerializable
+    /// </summary>
+    public abstract class IdentifiedDataSerializable : IIdentifiedDataSerializable
+    {
+        /// <summary>
+        /// This method is not used for IdentifiedDataSerializables
+        /// </summary>
+        /// <returns></returns>
+        public string GetJavaClassName()
+        {
+            throw new NotImplementedException();
+        }
+
+        public abstract void ReadData(IObjectDataInput input);
+        public abstract void WriteData(IObjectDataOutput output);
+        public abstract int GetFactoryId();
+        public abstract int GetId();
     }
 }
