@@ -218,7 +218,7 @@ namespace Hazelcast.IO.Serialization
                     {
                         aware.SetHazelcastInstance(_hazelcastInstance);
                     }
-                    ss.RegisterGlobal(serializer);
+                    ss.RegisterGlobal(serializer, globalSerializerConfig.GetOverrideClrSerialization());
                 }
                 var typeSerializers = _config.GetSerializerConfigs();
                 foreach (var serializerConfig in typeSerializers)

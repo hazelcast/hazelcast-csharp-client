@@ -22,6 +22,7 @@ namespace Hazelcast.Config
         private string _className;
 
         private ISerializer _implementation;
+        private bool _overrideClrSerialization;
 
         public virtual string GetClassName()
         {
@@ -45,13 +46,21 @@ namespace Hazelcast.Config
             return this;
         }
 
+        public GlobalSerializerConfig SetOverrideClrSerialization(bool overrideClrSerialization)
+        {
+            _overrideClrSerialization = overrideClrSerialization;
+            return this;
+        }
+
+        public bool GetOverrideClrSerialization()
+        {
+            return _overrideClrSerialization;
+        }
+
         public override string ToString()
         {
-            var sb = new StringBuilder("GlobalSerializerConfig{");
-            sb.Append("className='").Append(_className).Append('\'');
-            sb.Append(", implementation=").Append(_implementation);
-            sb.Append('}');
-            return sb.ToString();
+            return string.Format("ClassName: {0}, Implementation: {1}, OverrideClrSerialization: {2}",
+                _className, _implementation, _overrideClrSerialization);
         }
     }
 }

@@ -13,9 +13,9 @@ call mvn dependency:get -DrepoUrl=https://oss.sonatype.org/content/repositories/
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 IF %COVERAGE%==--coverage (
   echo Running Unit Tests with coverage...
-  dotcover analyse /TargetExecutable="packages\NUnit.Runners.2.6.4\tools\nunit-console.exe" /TargetArguments="/xml:"console-text.xml" Hazelcast.Test/bin/Release/Hazelcast.Test.exe" /TargetWorkingDir=. /Output=Coverage.html /ReportType=HTML
+  dotcover analyse /TargetExecutable="packages\NUnit.Runners.2.6.4\tools\nunit-console.exe" /TargetArguments="/xml:"console-text.xml" Hazelcast.Test/bin/Release/Hazelcast.Test.dll" /TargetWorkingDir=. /Output=Coverage.html /ReportType=HTML
 ) ELSE (
   echo Running Unit Tests...
-  packages\NUnit.Runners.2.6.4\tools\nunit-console /xml:"console-text.xml" "Hazelcast.Test/bin/Release/Hazelcast.Test.exe" /noshadow 
+  packages\NUnit.Runners.2.6.4\tools\nunit-console /xml:"console-text.xml" "Hazelcast.Test/bin/Release/Hazelcast.Test.dll" /noshadow 
 )
 popd

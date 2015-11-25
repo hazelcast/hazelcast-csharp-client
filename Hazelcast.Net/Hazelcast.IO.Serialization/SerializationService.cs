@@ -58,6 +58,7 @@ namespace Hazelcast.IO.Serialization
         protected internal readonly IPartitioningStrategy GlobalPartitioningStrategy;
 
         private volatile bool _isActive = true;
+        private bool _overrideClrSerialization;
 
         internal SerializationService(IInputOutputFactory inputOutputFactory, int version,
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
@@ -303,17 +304,19 @@ namespace Hazelcast.IO.Serialization
             SafeRegister(type, CreateSerializerAdapter(type, serializer));
         }
 
-        public void RegisterGlobal(ISerializer serializer)
+        public void RegisterGlobal(ISerializer serializer, bool overrideClrSerialization)
         {
             var adapter = CreateSerializerAdapterByGeneric<object>(serializer);
             if (!_global.CompareAndSet(null, adapter))
             {
                 throw new InvalidOperationException("Global serializer is already registered!");
             }
+            _overrideClrSerialization = overrideClrSerialization;
             var current = _idMap.GetOrAdd(serializer.GetTypeId(), adapter);
             if (current != null && current.GetImpl().GetType() != adapter.GetImpl().GetType())
             {
                 _global.CompareAndSet(adapter, null);
+                _overrideClrSerialization = false;
                 throw new InvalidOperationException("Serializer [" + current.GetImpl() +
                                                     "] has been already registered for type-id: "
                                                     + serializer.GetTypeId());
@@ -503,8 +506,12 @@ namespace Hazelcast.IO.Serialization
         {
             if (type.IsSerializable)
             {
-                Logger.Warning("Using default CLR serialization for type: " + type);
-                SafeRegister(type, _serializableSerializerAdapter);
+                if (SafeRegister(type, _serializableSerializerAdapter))
+                {
+                    Logger.Warning("Performance Hint: Serialization service will use CLR Serialization for : " + type
+                     + ". Please consider using a faster serialization option such as IIdentifiedDataSerializable.");
+                    
+                }
                 return _serializableSerializerAdapter;
             }
             return null;
@@ -615,7 +622,7 @@ namespace Hazelcast.IO.Serialization
             return serializer;
         }
 
-        private void SafeRegister(Type type, ISerializerAdapter serializer)
+        private bool SafeRegister(Type type, ISerializerAdapter serializer)
         {
             if (_constantTypesMap.ContainsKey(type))
             {
@@ -634,6 +641,7 @@ namespace Hazelcast.IO.Serialization
                                                     "] has been already registered for type-id: " +
                                                     serializer.GetTypeId());
             }
+            return current == null;
         }
 
         /// <summary>
@@ -642,8 +650,9 @@ namespace Hazelcast.IO.Serialization
         ///  1-NULL serializer
         ///  2-Default serializers, like primitives, arrays, String and some C# types
         ///  3-Custom registered types by user
-        ///  4-Global serializer if registered by user
-        ///  5-CLR serialization if type is Serializable
+        ///  4-CLR serialization if type is Serializable
+        ///  5-Global serializer if registered by user
+        /// 
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
@@ -660,13 +669,13 @@ namespace Hazelcast.IO.Serialization
             {
                 serializer = LookupCustomSerializer(type);
             }
-            if (serializer == null)
+            if (serializer == null && !_overrideClrSerialization)
             {
-                serializer = LookupGlobalSerializer(type);
+                serializer = LookupSerializableSerializer(type);
             }
             if (serializer == null)
             {
-                serializer = LookupSerializableSerializer(type);
+                serializer = LookupGlobalSerializer(type);
             }
             if (serializer == null)
             {
