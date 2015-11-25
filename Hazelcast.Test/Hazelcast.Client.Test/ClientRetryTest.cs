@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        [Test]
+        [Test, Ignore] // https://github.com/hazelcast/hazelcast-csharp-client/issues/28
         public void TestRetryAsyncRequest()
         {
             var count = 100;
