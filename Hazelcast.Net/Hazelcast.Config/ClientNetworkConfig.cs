@@ -34,7 +34,7 @@ namespace Hazelcast.Config
         /// <see cref="_connectionAttemptLimit">connectionAttemptLimit</see>
         /// times.
         /// </summary>
-        private int _connectionAttemptLimit = 20;
+        private int _connectionAttemptLimit = 2;
 
         /// <summary>Period for the next attempt to find a member to connect.</summary>
         /// <remarks>
@@ -42,13 +42,13 @@ namespace Hazelcast.Config
         /// <see cref="_connectionAttemptLimit">connectionAttemptLimit</see>
         /// ).
         /// </remarks>
-        private int _connectionAttemptPeriod = 5000;
+        private int _connectionAttemptPeriod = 3000;
 
         /// <summary>Timeout value in millis for nodes to accept client connection requests</summary>
         /// <remarks>
         /// Timeout value in millis for nodes to accept client connection requests
         /// </remarks>
-        private int _connectionTimeout = -1;
+        private int _connectionTimeout = 5000;
 
         /// <summary>If true, client will redo the operations that were executing on the server and client lost the connection.</summary>
         /// <remarks>
