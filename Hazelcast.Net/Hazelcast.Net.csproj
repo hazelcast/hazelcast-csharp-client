@@ -383,6 +383,7 @@
     <Compile Include="Hazelcast.IO.Serialization\ISerializationServiceBuilder.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializerHook.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IVersionedPortable.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\JavaClass.cs" />
     <Compile Include="Hazelcast.IO.Serialization\PortableVersionHelper.cs" />
     <Compile Include="Hazelcast.IO\Bits.cs" />
     <Compile Include="Hazelcast.IO\IDataInput.cs" />

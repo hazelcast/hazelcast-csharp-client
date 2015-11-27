@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
@@ -9,7 +10,25 @@ namespace Hazelcast.IO.Serialization
 {
     class DefaultSerializers
     {
-        public sealed class DateSerializer : ConstantSerializers.SingletonSerializer<DateTime>
+        public class JavaClassSerializer : ConstantSerializers.SingletonSerializer<JavaClass>
+        {
+            public override int GetTypeId()
+            {
+                return SerializationConstants.DefaultTypeJavaClass;
+            }
+
+            public override JavaClass Read(IObjectDataInput input)
+            {
+                return new JavaClass(input.ReadUTF());
+            }
+
+            public override void Write(IObjectDataOutput output, JavaClass obj)
+            {
+                output.WriteUTF(obj.Name);
+            }
+        }
+
+        public class DateSerializer : ConstantSerializers.SingletonSerializer<DateTime>
         {
             private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -18,13 +37,11 @@ namespace Hazelcast.IO.Serialization
                 return SerializationConstants.DefaultTypeDate;
             }
 
-            /// <exception cref="System.IO.IOException"></exception>
             public override DateTime Read(IObjectDataInput input)
             {
                 return FromEpochTime(input.ReadLong());
             }
 
-            /// <exception cref="System.IO.IOException"></exception>
             public override void Write(IObjectDataOutput output, DateTime obj)
             {
                 output.WriteLong(ToEpochDateTime(obj));
@@ -38,6 +55,49 @@ namespace Hazelcast.IO.Serialization
             private static long ToEpochDateTime(DateTime dateTime)
             {
                 return (long)dateTime.Subtract(Epoch).TotalMilliseconds;
+            }
+        }
+
+        public class BigIntegerSerializer : ConstantSerializers.SingletonSerializer<BigInteger>
+        {
+            public override int GetTypeId()
+            {
+                return SerializationConstants.DefaultTypeBigInteger;
+            }
+
+            public override BigInteger Read(IObjectDataInput input)
+            {
+                var bytes = input.ReadByteArray();
+                Array.Reverse(bytes);
+                return new BigInteger(bytes);
+            }
+
+            public override void Write(IObjectDataOutput output, BigInteger obj)
+            {
+                var bytes = obj.ToByteArray();
+                Array.Reverse(bytes);
+                output.WriteByteArray(bytes);
+            }
+        }
+
+        // TODO: BigDecimal
+
+        public class JavaEnumSerializer : ConstantSerializers.SingletonSerializer<JavaEnum>
+        {
+            public override int GetTypeId()
+            {
+                return SerializationConstants.DefaultTypeJavaEnum;
+            }
+
+            public override JavaEnum Read(IObjectDataInput input)
+            {
+                return new JavaEnum(input.ReadUTF(), input.ReadUTF());
+            }
+
+            public override void Write(IObjectDataOutput output, JavaEnum obj)
+            {
+                output.WriteUTF(obj.Type);
+                output.WriteUTF(obj.Value);
             }
         }
 
