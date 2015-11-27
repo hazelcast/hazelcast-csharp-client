@@ -18,7 +18,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Test.Serialization
 {
-    internal class DataSerializableType : IdentifiedDataSerializable
+    internal class DataSerializableType : IIdentifiedDataSerializable
     {
         private int _raceCount;
 
@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public override void WriteData(IObjectDataOutput output)
+        public void WriteData(IObjectDataOutput output)
         {
             output.WriteInt(_runnerCount);
             output.WriteInt(_raceCount);
@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public override void ReadData(IObjectDataInput input)
+        public void ReadData(IObjectDataInput input)
         {
             _runnerCount = input.ReadInt();
             _raceCount = input.ReadInt();
@@ -71,18 +71,18 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public override int GetFactoryId()
+        public int GetFactoryId()
         {
             return 1;
         }
 
-        public override int GetId()
+        public int GetId()
         {
             return 2;
         }
     }
 
-    internal class DataSerializableBasicType : IdentifiedDataSerializable
+    internal class DataSerializableBasicType : IIdentifiedDataSerializable
     {
         private double dblValue1 = 10.1;
         private double dblValue2 = 21.34;
@@ -99,24 +99,24 @@ namespace Hazelcast.Client.Test.Serialization
             set { dblValue2 = value; }
         }
 
-        public override void WriteData(IObjectDataOutput output)
+        public void WriteData(IObjectDataOutput output)
         {
             output.WriteDouble(dblValue1);
             output.WriteDouble(dblValue2);
         }
 
-        public override void ReadData(IObjectDataInput input)
+        public void ReadData(IObjectDataInput input)
         {
             dblValue1 = input.ReadDouble();
             dblValue2 = input.ReadDouble();
         }
 
-        public override int GetFactoryId()
+        public int GetFactoryId()
         {
             return 1;
         }
 
-        public override int GetId()
+        public int GetId()
         {
             return 1;
         }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Config;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -79,7 +80,12 @@ namespace Hazelcast.Client.Test.Serialization
             var obj = KitchenSinkDataSerializable.Generate();
             obj.Serializable = KitchenSinkDataSerializable.Generate();
 
-            var ss = new SerializationServiceBuilder().SetUseNativeByteOrder(false).SetByteOrder(byteOrder).Build();
+            var ss = new SerializationServiceBuilder()
+                .AddDataSerializableFactory(1, new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
+                {
+                    () => new KitchenSinkDataSerializable(),
+                }))
+                .SetUseNativeByteOrder(false).SetByteOrder(byteOrder).Build();
 
             IObjectDataOutput output = ss.CreateObjectDataOutput(1024);
             output.WriteObject(obj);

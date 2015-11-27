@@ -17,9 +17,8 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Test.Serialization
 {
-    internal class SampleIdentifiedDataSerializable : IdentifiedDataSerializable
+    internal class SampleIdentifiedDataSerializable : IIdentifiedDataSerializable
     {
-        public const int CLASS_ID = 1;
         private char c;
         private int i;
 
@@ -33,26 +32,26 @@ namespace Hazelcast.Client.Test.Serialization
         {
         }
 
-        public override void WriteData(IObjectDataOutput output)
+        public void WriteData(IObjectDataOutput output)
         {
             output.WriteInt(i);
             output.WriteChar(c);
         }
 
-        public override void ReadData(IObjectDataInput input)
+        public void ReadData(IObjectDataInput input)
         {
             i = input.ReadInt();
             c = input.ReadChar();
         }
 
-        public override int GetFactoryId()
+        public int GetFactoryId()
         {
             return TestSerializationConstants.PORTABLE_FACTORY_ID;
         }
 
-        public override int GetId()
+        public int GetId()
         {
-            return CLASS_ID;
+            return TestSerializationConstants.SAMPLE_IDENTIFIED_DATA_SERIALIZABLE;
         }
 
         public override bool Equals(object obj)

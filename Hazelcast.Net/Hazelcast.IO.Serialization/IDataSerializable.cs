@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.IO.Serialization
 {
     /// <summary>DataSerializable is a serialization method as an alternative to standard serialization.
@@ -22,6 +24,7 @@ namespace Hazelcast.IO.Serialization
     /// <seealso cref="IIdentifiedDataSerializable">IIdentifiedDataSerializable</seealso>
     /// <seealso cref="IPortable">IPortable</seealso>
     /// <seealso cref="IVersionedPortable">IVersionedPortable</seealso>
+    [Obsolete("IDataSerializable is no longer supported in the .NET client. Please use IIdentifiedDataSerializable instead.")]
     public interface IDataSerializable
     {
         /// <summary>

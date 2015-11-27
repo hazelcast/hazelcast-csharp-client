@@ -381,6 +381,7 @@
     <Compile Include="Hazelcast.IO.Serialization\ArrayDataSerializableFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\HeapData.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IData.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\IDataSerializable.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializationServiceBuilder.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializerHook.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IVersionedPortable.cs" />
@@ -476,7 +477,6 @@
     <Compile Include="Hazelcast.IO.Serialization\ClassDefinition.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ClassDefinitionWriter.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ConstantSerializers.cs" />
-    <Compile Include="Hazelcast.IO.Serialization\IDataSerializable.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IDataSerializableFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\DataSerializer.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IDataSerializerHook.cs" />

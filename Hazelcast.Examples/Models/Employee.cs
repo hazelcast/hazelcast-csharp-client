@@ -4,31 +4,31 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Examples.Models
 {
-    public class Employee : IdentifiedDataSerializable
+    public class Employee : IIdentifiedDataSerializable
     {
         public const int TypeId = 100;
 
         public int Id { get; set; }
         public string Name { get; set; }
 
-        public override void ReadData(IObjectDataInput input)
+        public void ReadData(IObjectDataInput input)
         {
             Id = input.ReadInt();
             Name = input.ReadUTF();
         }
 
-        public override void WriteData(IObjectDataOutput output)
+        public void WriteData(IObjectDataOutput output)
         {
             output.WriteInt(Id);
             output.WriteUTF(Name);
         }
 
-        public override int GetFactoryId()
+        public int GetFactoryId()
         {
             return ExampleDataSerializableFactory.FactoryId;
         }
 
-        public override int GetId()
+        public int GetId()
         {
             return TypeId;
         }

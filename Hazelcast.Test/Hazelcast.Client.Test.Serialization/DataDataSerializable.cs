@@ -17,7 +17,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Test.Serialization
 {
-    public class DataDataSerializable : IDataSerializable
+    public class DataDataSerializable : IIdentifiedDataSerializable
     {
         internal IData Data;
 
@@ -35,14 +35,19 @@ namespace Hazelcast.Client.Test.Serialization
             Data = input.ReadData();
         }
 
-        public string GetJavaClassName()
-        {
-            return typeof (DataDataSerializable).FullName;
-        }
-
         public void WriteData(IObjectDataOutput output)
         {
             output.WriteData(Data);
+        }
+
+        public int GetFactoryId()
+        {
+            return TestSerializationConstants.DATA_SERIALIZABLE_FACTORY_ID;
+        }
+
+        public int GetId()
+        {
+            return TestSerializationConstants.DATA_DATA_SERIALIZABLE_ID;
         }
 
         public override bool Equals(object obj)

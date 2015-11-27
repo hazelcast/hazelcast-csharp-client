@@ -41,7 +41,6 @@ namespace Hazelcast.Client.Test.Serialization
         public double Double { get; set; }
         public string String { get; set; }
         public string[] StringArray { get; set; }
-        public IDataSerializable Serializable { get; set; }
 
         public int GetFactoryId()
         {
@@ -134,9 +133,9 @@ namespace Hazelcast.Client.Test.Serialization
         {
             return
                 string.Format(
-                    "Bool: {0}, BoolArray: {1}, ByteArray: {2}, Byte: {3}, CharArray: {4}, Char: {5}, ShortArray: {6}, Short: {7}, IntArray: {8}, Int: {9}, LongArray: {10}, Long: {11}, FloatArray: {12}, Float: {13}, DoubleArray: {14}, Double: {15}, String: {16}, StringArray: {17}, Serializable: {18}",
+                    "Bool: {0}, BoolArray: {1}, ByteArray: {2}, Byte: {3}, CharArray: {4}, Char: {5}, ShortArray: {6}, Short: {7}, IntArray: {8}, Int: {9}, LongArray: {10}, Long: {11}, FloatArray: {12}, Float: {13}, DoubleArray: {14}, Double: {15}, String: {16}, StringArray: {17}, ",
                     Bool, BoolArray, ByteArray, Byte, CharArray, Char, ShortArray, Short, IntArray, Int, LongArray, Long,
-                    FloatArray, Float, DoubleArray, Double, String, StringArray, Serializable);
+                    FloatArray, Float, DoubleArray, Double, String, StringArray);
         }
 
         protected bool Equals(KitchenSinkPortable other)
@@ -150,8 +149,7 @@ namespace Hazelcast.Client.Test.Serialization
                    FloatArray.SequenceEqual(other.FloatArray) &&
                    Float.Equals(other.Float) && DoubleArray.SequenceEqual(other.DoubleArray) &&
                    Double.Equals(other.Double)
-                   && string.Equals(String, other.String) && StringArray.SequenceEqual(other.StringArray) &&
-                   Equals(Serializable, other.Serializable)
+                   && string.Equals(String, other.String) && StringArray.SequenceEqual(other.StringArray) 
                 ;
         }
     }
