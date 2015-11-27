@@ -16,7 +16,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Core
 {
-    public interface IPredicate<TKey, TValue> : IDataSerializable
+    public interface IPredicate<TKey, TValue> : IIdentifiedDataSerializable
     {
     }
 }
