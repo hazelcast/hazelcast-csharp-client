@@ -13,11 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using Hazelcast.Config;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Net.Ext;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test.Serialization
@@ -62,6 +65,29 @@ namespace Hazelcast.Client.Test.Serialization
             var newFoo = ss.ToObject<CustomSerializableType>(d);
 
             Assert.AreEqual(newFoo.Value, foo.Value);
+        }
+
+        [Test]
+        public void TestGlobalSerializerOverride()
+        {
+            var config = new SerializationConfig();
+            var globalConfig = new GlobalSerializerConfig();
+
+            var globalListSerializer = new GlobalListSerializer();
+            globalConfig.SetImplementation(globalListSerializer).SetOverrideClrSerialization(true);
+            config.SetGlobalSerializerConfig(globalConfig);
+
+            var ss = new SerializationServiceBuilder().SetConfig(config).Build();
+
+
+            var list = new List<string> {"foo", "bar"};
+
+            var d = ss.ToData(list);
+            var input = new ByteArrayObjectDataInput(d.ToByteArray(), HeapData.DataOffset, ss, ByteOrder.BigEndian);
+
+            var actual = (List<string>)globalListSerializer.Read(input);
+
+            Assert.AreEqual(list, actual);
         }
     }
 
@@ -154,6 +180,42 @@ namespace Hazelcast.Client.Test.Serialization
         public object Read(IObjectDataInput input)
         {
             return new CustomSerializer().Read(input);
+        }
+    }
+
+    public class GlobalListSerializer : IStreamSerializer<object>
+    {
+        public int GetTypeId()
+        {
+            return 50;
+        }
+
+        public void Destroy()
+        {
+        }
+
+        public void Write(IObjectDataOutput output, object obj)
+        {
+            if (obj is IList<string>)
+            {
+                IList<string> list = (IList<string>) obj;
+                output.WriteInt(list.Count);
+                foreach (var o in list)
+                {
+                    output.WriteUTF(o);
+                }
+            }
+        }
+
+        public object Read(IObjectDataInput input)
+        {
+            int size = input.ReadInt();
+            List<string> list = new List<string>(size);
+            for (int i = 0; i < size; i++)
+            {
+                list.Add(input.ReadUTF());
+            }
+            return list;
         }
     }
 }
