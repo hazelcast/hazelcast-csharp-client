@@ -17,7 +17,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Test.Serialization
 {
-    internal class SampleIdentifiedDataSerializable : IIdentifiedDataSerializable
+    internal class SampleIdentifiedDataSerializable : IdentifiedDataSerializable
     {
         public const int CLASS_ID = 1;
         private char c;
@@ -33,29 +33,24 @@ namespace Hazelcast.Client.Test.Serialization
         {
         }
 
-        public void WriteData(IObjectDataOutput output)
+        public override void WriteData(IObjectDataOutput output)
         {
             output.WriteInt(i);
             output.WriteChar(c);
         }
 
-        public void ReadData(IObjectDataInput input)
+        public override void ReadData(IObjectDataInput input)
         {
             i = input.ReadInt();
             c = input.ReadChar();
         }
 
-        public string GetJavaClassName()
-        {
-            return typeof (SampleIdentifiedDataSerializable).FullName;
-        }
-
-        public int GetFactoryId()
+        public override int GetFactoryId()
         {
             return TestSerializationConstants.PORTABLE_FACTORY_ID;
         }
 
-        public int GetId()
+        public override int GetId()
         {
             return CLASS_ID;
         }

@@ -19,7 +19,7 @@ using Hazelcast.Examples.Models;
 
 namespace Hazelcast.Examples.Map
 {
-    internal class MapDataSerializableExample
+    internal class MapIdentifiedDataSerializableExample
     {
         public static void Run(string[] args)
         {
@@ -27,21 +27,25 @@ namespace Hazelcast.Examples.Map
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
             var config = new ClientConfig();
+            
             config.GetNetworkConfig().AddAddress("127.0.0.1");
+            config.GetSerializationConfig()
+                .AddDataSerializableFactory(ExampleDataSerializableFactory.FactoryId,
+                    new ExampleDataSerializableFactory());
 
             var client = HazelcastClient.NewHazelcastClient(config);
 
-            var map = client.GetMap<int, Person>("data-serializable-example");
+            var map = client.GetMap<int, Employee>("identified-data-serializable-example");
 
-            var person = new Person(1, "A person", 30);
+            var employee = new Employee { Id = 1, Name = "the employee"};
 
-            Console.WriteLine("Adding person: " + person);
-            
-            map.Put(person.Id, person);
+            Console.WriteLine("Adding employee: " + employee);
 
-            var p = map.Get(person.Id);
+            map.Put(employee.Id, employee);
 
-            Console.WriteLine("Gotten person: " + p);
+            var e = map.Get(employee.Id);
+
+            Console.WriteLine("Gotten employee: " + e);
 
             client.Shutdown();
         }
