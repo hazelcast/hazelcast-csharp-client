@@ -128,14 +128,6 @@ namespace Hazelcast.Client
             return null;
         }
 
-        public virtual void Invalidate(IData key)
-        {
-            if (key == null) return;
-
-            CacheRecord record;
-            Cache.TryRemove(key, out record);
-        }
-
         public virtual void InvalidateAll()
         {
             Cache.Clear();
@@ -174,11 +166,11 @@ namespace Hazelcast.Client
                 DistributedEventHandler handler;
                 if (_cacheType == ClientNearCacheType.Map)
                 {
-                    request = MapAddNearCacheEntryListenerCodec.EncodeRequest(_mapName, false, (int) EntryEventType.All,
+                    request = MapAddNearCacheEntryListenerCodec.EncodeRequest(_mapName, (int) EntryEventType.Invalidation,
                         false);
 
                     handler = message
-                        => MapAddNearCacheEntryListenerCodec.AbstractEventHandler.Handle(message, HandleEntryEvent);
+                        => MapAddNearCacheEntryListenerCodec.AbstractEventHandler.Handle(message, HandleIMapInvalidation, HandleIMapBatchInvalidation);
                 }
                 else
                 {
@@ -191,6 +183,26 @@ namespace Hazelcast.Client
             catch (Exception e)
             {
                 Logger.Severe("-----------------\n Near Cache is not initialized!!! \n-----------------", e);
+            }
+        }
+
+        private void HandleIMapBatchInvalidation(IList<IData> keys)
+        {
+            foreach (var data in keys)
+            {
+                Invalidate(data);
+            }
+        }
+
+        private void HandleIMapInvalidation(IData key)
+        {
+            if (key == null)
+            {
+                InvalidateAll();
+            }
+            else
+            {
+                Invalidate(key);
             }
         }
 
@@ -289,24 +301,10 @@ namespace Hazelcast.Client
             return new DefaultComparer();
         }
 
-        private void HandleEntryEvent(IData key, IData value, IData oldValue, IData mergingValue, int type, string uuid,
-            int entries)
+        public void Invalidate(IData key)
         {
-            var entryEventType = (EntryEventType) type;
-            switch (entryEventType)
-            {
-                case EntryEventType.Added:
-                case EntryEventType.Removed:
-                case EntryEventType.Evicted:
-                case EntryEventType.Updated:
-                    CacheRecord removed;
-                    Cache.TryRemove(key, out removed);
-                    break;
-                case EntryEventType.ClearAll:
-                case EntryEventType.EvictAll:
-                    Cache.Clear();
-                    break;
-            }
+            CacheRecord removed;
+            Cache.TryRemove(key, out removed);
         }
 
         internal class CacheRecord

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -35,14 +36,13 @@ namespace Hazelcast.Client.Protocol.Codec
             return parameters;
         }
 
-        public static ClientMessage EncodeRequest(string name, bool includeValue, int listenerFlags, bool localOnly)
+        public static ClientMessage EncodeRequest(string name, int listenerFlags, bool localOnly)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, includeValue, listenerFlags, localOnly);
+            var requiredDataSize = RequestParameters.CalculateDataSize(name, listenerFlags, localOnly);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int) RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
-            clientMessage.Set(includeValue);
             clientMessage.Set(listenerFlags);
             clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
@@ -54,16 +54,14 @@ namespace Hazelcast.Client.Protocol.Codec
         public class RequestParameters
         {
             public static readonly MapMessageType TYPE = RequestType;
-            public bool includeValue;
             public int listenerFlags;
             public bool localOnly;
             public string name;
 
-            public static int CalculateDataSize(string name, bool includeValue, int listenerFlags, bool localOnly)
+            public static int CalculateDataSize(string name, int listenerFlags, bool localOnly)
             {
                 var dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.BooleanSizeInBytes;
                 dataSize += Bits.IntSizeInBytes;
                 dataSize += Bits.BooleanSizeInBytes;
                 return dataSize;
@@ -82,14 +80,15 @@ namespace Hazelcast.Client.Protocol.Codec
         //************************ EVENTS *************************//
         public abstract class AbstractEventHandler
         {
-            public delegate void HandleEntry(
-                IData key, IData value, IData oldValue, IData mergingValue, int eventType, string uuid,
-                int numberOfAffectedEntries);
+            public delegate void HandleIMapBatchInvalidation(IList<IData> keys);
 
-            public static void Handle(IClientMessage clientMessage, HandleEntry handleEntry)
+            public delegate void HandleIMapInvalidation(IData key);
+
+            public static void Handle(IClientMessage clientMessage, HandleIMapInvalidation handleIMapInvalidation,
+                HandleIMapBatchInvalidation handleIMapBatchInvalidation)
             {
                 var messageType = clientMessage.GetMessageType();
-                if (messageType == EventMessageConst.EventEntry)
+                if (messageType == EventMessageConst.EventIMapInvalidation)
                 {
                     IData key = null;
                     var key_isNull = clientMessage.GetBoolean();
@@ -97,31 +96,21 @@ namespace Hazelcast.Client.Protocol.Codec
                     {
                         key = clientMessage.GetData();
                     }
-                    IData value = null;
-                    var value_isNull = clientMessage.GetBoolean();
-                    if (!value_isNull)
+                    handleIMapInvalidation(key);
+                    return;
+                }
+                if (messageType == EventMessageConst.EventIMapBatchInvalidation)
+                {
+                    IList<IData> keys = null;
+                    var keys_size = clientMessage.GetInt();
+                    keys = new List<IData>();
+                    for (var keys_index = 0; keys_index < keys_size; keys_index++)
                     {
-                        value = clientMessage.GetData();
+                        IData keys_item;
+                        keys_item = clientMessage.GetData();
+                        keys.Add(keys_item);
                     }
-                    IData oldValue = null;
-                    var oldValue_isNull = clientMessage.GetBoolean();
-                    if (!oldValue_isNull)
-                    {
-                        oldValue = clientMessage.GetData();
-                    }
-                    IData mergingValue = null;
-                    var mergingValue_isNull = clientMessage.GetBoolean();
-                    if (!mergingValue_isNull)
-                    {
-                        mergingValue = clientMessage.GetData();
-                    }
-                    int eventType;
-                    eventType = clientMessage.GetInt();
-                    string uuid = null;
-                    uuid = clientMessage.GetStringUtf8();
-                    int numberOfAffectedEntries;
-                    numberOfAffectedEntries = clientMessage.GetInt();
-                    handleEntry(key, value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
+                    handleIMapBatchInvalidation(keys);
                     return;
                 }
                 Logger.GetLogger(typeof (AbstractEventHandler))

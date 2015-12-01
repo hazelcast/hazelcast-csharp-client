@@ -35,5 +35,8 @@ namespace Hazelcast.Client.Protocol
         public const int EventCacheBatchInvalidation = 211;
         public const int EventQueryCacheSingle = 212;
         public const int EventQueryCacheBatch = 213;
+        public const int EventCachePartitionLost = 214;
+        public const int EventIMapInvalidation = 215;
+        public const int EventIMapBatchInvalidation = 216;
     }
 }
