@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Reflection;
 using System.Threading;
 using Hazelcast.Core;
@@ -605,6 +606,9 @@ namespace Hazelcast.IO.Serialization
             RegisterConstant(typeof (DateTime), new DefaultSerializers.DateSerializer());
 
             //TODO: proper support for generic types
+            RegisterConstant(typeof(JavaClass), new DefaultSerializers.JavaClassSerializer());
+            RegisterConstant(typeof (BigInteger), new DefaultSerializers.BigIntegerSerializer());
+            RegisterConstant(typeof (JavaEnum), new DefaultSerializers.JavaEnumSerializer());
             RegisterConstant(typeof (List<object>), new DefaultSerializers.ListSerializer<object>());
             RegisterConstant(typeof (LinkedList<object>), new DefaultSerializers.LinkedListSerializer<object>());
 

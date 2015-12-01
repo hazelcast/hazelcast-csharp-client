@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.Serialization;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Net.Ext;
@@ -208,6 +209,27 @@ namespace Hazelcast.Client.Test.Serialization
             var p = new List<string> { "a", "b", "c"};
 
             AssertSerialization(p, order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestBigInteger(ByteOrder order)
+        {
+            var bigInt = BigInteger.Parse("123456789012345678901234567890123456789012345678901234567890");
+            AssertSerialization(bigInt, order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestJavaEnum(ByteOrder order)
+        {
+            var javaEnum = new JavaEnum(TestSupport.RandomString(), TestSupport.RandomString());
+            AssertSerialization(javaEnum, order);
+        }
+
+        [Test, TestCaseSource("ByteOrders")]
+        public void TestJavaClass(ByteOrder order)
+        {
+            var javaEnum = new JavaClass(TestSupport.RandomString());
+            AssertSerialization(javaEnum, order);
         }
 
         [Serializable]
