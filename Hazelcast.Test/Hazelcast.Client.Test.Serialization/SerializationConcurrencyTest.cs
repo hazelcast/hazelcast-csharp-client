@@ -38,7 +38,13 @@ namespace Hazelcast.Client.Test.Serialization
             });
 
             var ss = new SerializationServiceBuilder()
-                .AddPortableFactory(FactoryId, portableFactory).Build();
+                .AddPortableFactory(FactoryId, portableFactory)
+                .AddDataSerializableFactory(FactoryId, new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
+                {
+                    () => new Address(), 
+                    () => new Person(), 
+                }))
+                .Build();
             var k = 10;
             var tasks = new Task[k];
             for (var i = 0; i < k; i++)
@@ -138,7 +144,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
     }
 
-    internal class Address : IDataSerializable
+    internal class Address : IIdentifiedDataSerializable
     {
         private int no;
         private string street;
@@ -159,15 +165,20 @@ namespace Hazelcast.Client.Test.Serialization
             @out.WriteInt(no);
         }
 
+        public int GetFactoryId()
+        {
+            return SerializationConcurrencyTest.FactoryId;
+        }
+
+        public int GetId()
+        {
+            return 0;
+        }
+
         public virtual void ReadData(IObjectDataInput @in)
         {
             street = @in.ReadUTF();
             no = @in.ReadInt();
-        }
-
-        public string GetJavaClassName()
-        {
-            return typeof (Address).FullName;
         }
 
         public override bool Equals(object obj)
@@ -271,7 +282,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
     }
 
-    internal class Person : IDataSerializable
+    internal class Person : IIdentifiedDataSerializable
     {
         private Address address;
         private int age;
@@ -302,6 +313,16 @@ namespace Hazelcast.Client.Test.Serialization
             @out.WriteDouble(weight);
         }
 
+        public int GetFactoryId()
+        {
+            return SerializationConcurrencyTest.FactoryId;
+        }
+
+        public int GetId()
+        {
+            return 1;
+        }
+
         /// <exception cref="System.IO.IOException" />
         public virtual void ReadData(IObjectDataInput @in)
         {
@@ -310,11 +331,6 @@ namespace Hazelcast.Client.Test.Serialization
             age = @in.ReadInt();
             height = @in.ReadLong();
             weight = @in.ReadDouble();
-        }
-
-        public string GetJavaClassName()
-        {
-            return typeof (Person).FullName;
         }
 
         public override bool Equals(object obj)

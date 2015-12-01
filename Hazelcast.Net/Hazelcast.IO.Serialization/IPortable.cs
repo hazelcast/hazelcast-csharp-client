@@ -33,7 +33,6 @@ namespace Hazelcast.IO.Serialization
     /// <seealso cref="IPortableWriter">IPortableWriter</seealso>
     /// <seealso cref="IPortableReader">IPortableReader</seealso>
     /// <seealso cref="IClassDefinition">IClassDefinition</seealso>
-    /// <seealso cref="IDataSerializable">IDataSerializable</seealso>
     /// <seealso cref="IIdentifiedDataSerializable">IIdentifiedDataSerializable</seealso>
     /// <seealso cref="Hazelcast.Config.SerializationConfig">Hazelcast.Config.SerializationConfig
     /// 	</seealso>

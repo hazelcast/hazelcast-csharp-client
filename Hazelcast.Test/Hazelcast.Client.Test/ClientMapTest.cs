@@ -80,19 +80,24 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        private class Interceptor : IMapInterceptor, IDataSerializable
+        private class Interceptor : IMapInterceptor, IIdentifiedDataSerializable
         {
             public void WriteData(IObjectDataOutput output)
             {
             }
 
-            public void ReadData(IObjectDataInput input)
+            public int GetFactoryId()
             {
+                return 1;
             }
 
-            public string GetJavaClassName()
+            public int GetId()
             {
-                return "MapInterceptor";
+                return 0;
+            }
+
+            public void ReadData(IObjectDataInput input)
+            {
             }
 
             public object InterceptGet(object value)
@@ -132,7 +137,7 @@ namespace Hazelcast.Client.Test
             map.AddIndex("name", true);
         }
 
-        [Test, ExpectedException(typeof (HazelcastException))]
+        [Test, Ignore, ExpectedException(typeof (HazelcastException))]
         public void TestAddInterceptor()
         {
             //TODO: not currently possible to test this

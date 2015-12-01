@@ -51,15 +51,6 @@ namespace Hazelcast.Core
             _sql = input.ReadUTF();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public string GetJavaClassName()
-        {
-            return "com.hazelcast.query.SqlPredicate";
-        }
-
         public int GetFactoryId()
         {
             return FactoryIds.PredicateFactoryId;

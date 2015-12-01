@@ -12,24 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace Hazelcast.IO.Serialization
 {
     /// <summary>
-    /// IdentifiedDataSerializable is an extension to
-    /// <see cref="IDataSerializable">IDataSerializable</see>
-    /// to avoid reflection during de-serialization.
-    /// Each IdentifiedDataSerializable is
-    /// created by a registered
+    /// IIdentifiedDataSerializable is a serialization method as an alternative to standard serialization.
+    /// It uses a factory to avoid reflection during deserialization.
     /// <see cref="IDataSerializableFactory">IDataSerializableFactory</see>
-    /// .
     /// </summary>
-    /// <seealso cref="IDataSerializable">IDataSerializable</seealso>
     /// <seealso cref="IPortable">IPortable</seealso>
     /// <seealso cref="IDataSerializableFactory">IDataSerializableFactory</seealso>
-    public interface IIdentifiedDataSerializable : IDataSerializable
+    public interface IIdentifiedDataSerializable
     {
+        /// <summary>Reads fields from the input stream</summary>
+        /// <param name="input">input</param>
+        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        void ReadData(IObjectDataInput input);
+
+        /// <summary>Writes object fields to output stream</summary>
+        /// <param name="output">output</param>
+        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        void WriteData(IObjectDataOutput output);
+
         /// <summary>Returns DataSerializableFactory factory id for this class.</summary>
         /// <remarks>Returns DataSerializableFactory factory id for this class.</remarks>
         /// <returns>factory id</returns>
@@ -40,25 +43,5 @@ namespace Hazelcast.IO.Serialization
         /// 	</remarks>
         /// <returns>type id</returns>
         int GetId();
-    }
-
-    /// <summary>
-    /// Convenience class for implementing IIdentifiedDataSerializable
-    /// </summary>
-    public abstract class IdentifiedDataSerializable : IIdentifiedDataSerializable
-    {
-        /// <summary>
-        /// This method is not used for IdentifiedDataSerializables
-        /// </summary>
-        /// <returns></returns>
-        public string GetJavaClassName()
-        {
-            throw new NotImplementedException();
-        }
-
-        public abstract void ReadData(IObjectDataInput input);
-        public abstract void WriteData(IObjectDataOutput output);
-        public abstract int GetFactoryId();
-        public abstract int GetId();
     }
 }

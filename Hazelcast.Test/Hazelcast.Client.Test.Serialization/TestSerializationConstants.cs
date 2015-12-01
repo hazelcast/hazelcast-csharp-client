@@ -25,7 +25,12 @@ namespace Hazelcast.Client.Test.Serialization
         public const int NAMED_PORTABLE = 6;
         public const int OBJECT_CARRYING_PORTABLE = 7;
         public const int MORPHING_PORTABLE_ID = 9;
+
         public const int DATA_SERIALIZABLE_FACTORY_ID = 1;
-        public const int SAMPLE_IDENTIFIED_DATA_SERIALIZABLE = 1;
+        public const int SAMPLE_IDENTIFIED_DATA_SERIALIZABLE = 0;
+        public const int BYTE_ARRAY_DATA_SERIALIZABLE_ID = 1;
+        public const int DATA_DATA_SERIALIZABLE_ID = 2;
+        public const int COMPLEX_DATA_SERIALIZABLE_ID = 3;
+
     }
 }

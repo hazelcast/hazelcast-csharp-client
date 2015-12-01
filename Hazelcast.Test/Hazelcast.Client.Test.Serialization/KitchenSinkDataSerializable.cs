@@ -22,7 +22,7 @@ using Hazelcast.IO.Serialization;
 namespace Hazelcast.Client.Test.Serialization
 {
     // test object that contains all types
-    internal class KitchenSinkDataSerializable : IDataSerializable
+    internal class KitchenSinkDataSerializable : IIdentifiedDataSerializable
     {
         private static readonly Random Random = new Random();
         public bool[] BoolArray { get; set; }
@@ -44,8 +44,7 @@ namespace Hazelcast.Client.Test.Serialization
         public string Chars { get; set; }
         public string String { get; set; }
         public string[] StringArray { get; set; }
-        public IDataSerializable Serializable { get; set; }
-        //public IDataSerializable[] SerializableArray { get; set; }
+        public IIdentifiedDataSerializable Serializable { get; set; }
         public IPortable Portable { get; set; }
         public IPortable[] PortableArray { get; set; }
         public IData Data { get; set; }
@@ -80,6 +79,16 @@ namespace Hazelcast.Client.Test.Serialization
             output.WriteObject(DateTime);
         }
 
+        public int GetFactoryId()
+        {
+            return 1;
+        }
+
+        public int GetId()
+        {
+            return 0;
+        }
+
         public void ReadData(IObjectDataInput input)
         {
             Bool = input.ReadBoolean();
@@ -98,7 +107,7 @@ namespace Hazelcast.Client.Test.Serialization
             FloatArray = input.ReadFloatArray();
             Double = input.ReadDouble();
             DoubleArray = input.ReadDoubleArray();
-            Serializable = input.ReadObject<IDataSerializable>();
+            Serializable = input.ReadObject<IIdentifiedDataSerializable>();
             //input.ReadObject(SerializableArray);
             //Portable = input.ReadObject<IPortable>();
             //input.ReadObject(PortableArray);
@@ -112,11 +121,6 @@ namespace Hazelcast.Client.Test.Serialization
             String = input.ReadUTF();
             StringArray = input.ReadUTFArray();
             DateTime = input.ReadObject<DateTime>();
-        }
-
-        public string GetJavaClassName()
-        {
-            return "KitchenSink";
         }
 
         public override bool Equals(object obj)

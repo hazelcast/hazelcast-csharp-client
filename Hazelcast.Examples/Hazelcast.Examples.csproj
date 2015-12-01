@@ -51,7 +51,6 @@
     <Compile Include="Collections\ListExample.cs" />
     <Compile Include="Map\MapAsyncExample.cs" />
     <Compile Include="Map\MapIdentifiedDataSerializableExample.cs" />
-    <Compile Include="Map\MapDataSerializableExample.cs" />
     <Compile Include="Map\MapListenerExample.cs" />
     <Compile Include="Map\MapLockExample.cs" />
     <Compile Include="Map\MapNearCacheExample.cs" />
@@ -61,7 +60,6 @@
     <Compile Include="Models\Customer.cs" />
     <Compile Include="Models\Employee.cs" />
     <Compile Include="Models\ExamplePortableFactory.cs" />
-    <Compile Include="Models\Person.cs" />
     <Compile Include="Primitives\AtomicLongExample.cs" />
     <Compile Include="Primitives\CountdownLatchExample.cs" />
     <Compile Include="Primitives\IdGeneratorExample.cs" />

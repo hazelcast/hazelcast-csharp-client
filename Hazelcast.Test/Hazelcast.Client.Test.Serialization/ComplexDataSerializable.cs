@@ -17,17 +17,17 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Test.Serialization
 {
-    public class ComplexDataSerializable : IDataSerializable
+    public class ComplexDataSerializable : IIdentifiedDataSerializable
     {
-        private IDataSerializable ds;
-        private IDataSerializable ds2;
+        private IIdentifiedDataSerializable ds;
+        private IIdentifiedDataSerializable ds2;
         private IPortable portable;
 
         public ComplexDataSerializable()
         {
         }
 
-        public ComplexDataSerializable(IPortable portable, IDataSerializable ds, IDataSerializable ds2)
+        public ComplexDataSerializable(IPortable portable, IIdentifiedDataSerializable ds, IIdentifiedDataSerializable ds2)
         {
             this.portable = portable;
             this.ds = ds;
@@ -36,14 +36,9 @@ namespace Hazelcast.Client.Test.Serialization
 
         public void ReadData(IObjectDataInput input)
         {
-            ds = input.ReadObject<IDataSerializable>();
+            ds = input.ReadObject<IIdentifiedDataSerializable>();
             portable = input.ReadObject<IPortable>();
-            ds2 = input.ReadObject<IDataSerializable>();
-        }
-
-        public string GetJavaClassName()
-        {
-            return typeof (ComplexDataSerializable).Name;
+            ds2 = input.ReadObject<IIdentifiedDataSerializable>();
         }
 
         public void WriteData(IObjectDataOutput output)
@@ -51,6 +46,16 @@ namespace Hazelcast.Client.Test.Serialization
             output.WriteObject(ds);
             output.WriteObject(portable);
             output.WriteObject(ds2);
+        }
+
+        public int GetFactoryId()
+        {
+            return TestSerializationConstants.DATA_SERIALIZABLE_FACTORY_ID;
+        }
+
+        public int GetId()
+        {
+            return TestSerializationConstants.COMPLEX_DATA_SERIALIZABLE_ID;
         }
 
         public override bool Equals(object obj)

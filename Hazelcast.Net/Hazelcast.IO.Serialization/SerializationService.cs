@@ -75,7 +75,7 @@ namespace Hazelcast.IO.Serialization
             _dataOutputQueue = new ThreadLocalOutputCache(this);
             _portableContext = new PortableContext(this, version);
             _dataSerializerAdapter =
-                CreateSerializerAdapterByGeneric<IDataSerializable>(new DataSerializer(dataSerializableFactories));
+                CreateSerializerAdapterByGeneric<IIdentifiedDataSerializable>(new DataSerializer(dataSerializableFactories));
             _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
             _portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(_portableSerializer);
             _nullSerializerAdapter = CreateSerializerAdapterByGeneric<object>(new ConstantSerializers.NullSerializer());
@@ -477,7 +477,7 @@ namespace Hazelcast.IO.Serialization
 
         private ISerializerAdapter LookupDefaultSerializer(Type type)
         {
-            if (typeof (IDataSerializable).IsAssignableFrom(type))
+            if (typeof (IIdentifiedDataSerializable).IsAssignableFrom(type))
             {
                 return _dataSerializerAdapter;
             }
@@ -579,7 +579,7 @@ namespace Hazelcast.IO.Serialization
 
         private void RegisterConstantSerializers()
         {
-            RegisterConstant(typeof (IDataSerializable), _dataSerializerAdapter);
+            RegisterConstant(typeof (IIdentifiedDataSerializable), _dataSerializerAdapter);
             RegisterConstant(typeof (IPortable), _portableSerializerAdapter);
             RegisterConstant(typeof (byte), new ConstantSerializers.ByteSerializer());
             RegisterConstant(typeof (bool), new ConstantSerializers.BooleanSerializer());
