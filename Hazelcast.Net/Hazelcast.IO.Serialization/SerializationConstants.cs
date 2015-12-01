@@ -68,4 +68,9 @@ namespace Hazelcast.IO.Serialization
 
         public const int DefaultTypeSerializable = -101;
     }
+
+    internal static class FactoryIds
+    {
+        public const int PredicateFactoryId = -32;
+    }
 }

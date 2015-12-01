@@ -42,6 +42,7 @@ namespace Hazelcast.IO.Serialization
         internal DataSerializer(IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories)
         {
             ScanAssemblyForSerializables();
+            RegisterHooks();
             if (dataSerializableFactories != null)
             {
                 foreach (var entry in dataSerializableFactories)
@@ -49,6 +50,13 @@ namespace Hazelcast.IO.Serialization
                     Register(entry.Key, entry.Value);
                 }
             }
+        }
+
+        private void RegisterHooks()
+        {
+            //TODO: Assembly scan for all hooks
+            var hook = new PredicateDataSerializerHook();
+            Register(hook.GetFactoryId(), hook.CreateFactory());
         }
 
         public int GetTypeId()

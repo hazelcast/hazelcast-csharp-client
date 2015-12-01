@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Core
 {
@@ -57,6 +58,16 @@ namespace Hazelcast.Core
         public string GetJavaClassName()
         {
             return "com.hazelcast.query.SqlPredicate";
+        }
+
+        public int GetFactoryId()
+        {
+            return FactoryIds.PredicateFactoryId;
+        }
+
+        public int GetId()
+        {
+            return PredicateDataSerializerHook.SqlPredicate;
         }
     }
 }

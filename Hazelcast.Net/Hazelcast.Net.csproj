@@ -378,12 +378,14 @@
     <Compile Include="Hazelcast.Core\MembershipListener.cs" />
     <Compile Include="Hazelcast.Core\OverflowPolicy.cs" />
     <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\ArrayDataSerializableFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\HeapData.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IData.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializationServiceBuilder.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ISerializerHook.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IVersionedPortable.cs" />
     <Compile Include="Hazelcast.IO.Serialization\PortableVersionHelper.cs" />
+    <Compile Include="Hazelcast.IO.Serialization\PredicateDataSerializerHook.cs" />
     <Compile Include="Hazelcast.IO\Bits.cs" />
     <Compile Include="Hazelcast.IO\IDataInput.cs" />
     <Compile Include="Hazelcast.IO\IDataOutput.cs" />
