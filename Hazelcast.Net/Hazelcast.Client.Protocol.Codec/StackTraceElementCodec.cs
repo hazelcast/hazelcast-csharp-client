@@ -22,9 +22,9 @@ namespace Hazelcast.Client.Protocol.Codec
         {
             var declaringClass = clientMessage.GetStringUtf8();
             var methodName = clientMessage.GetStringUtf8();
-            var fileName_notNull = clientMessage.GetBoolean();
+            var filename_Null = clientMessage.GetBoolean();
             string fileName = null;
-            if (fileName_notNull)
+            if (!filename_Null)
             {
                 fileName = clientMessage.GetStringUtf8();
             }
