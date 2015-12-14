@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Protocol
         IClientMessage AddFlag(short flags);
         bool GetBoolean();
         byte GetByte();
-        int GetCorrelationId();
+        long GetCorrelationId();
         IData GetData();
         int GetInt();
         long GetLong();
@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Protocol
         /// <summary>Sets the correlation id field.</summary>
         /// <param name="correlationId">The value to set in the correlation id field.</param>
         /// <returns>The ClientMessage with the new correlation id field value.</returns>
-        IClientMessage SetCorrelationId(int correlationId);
+        IClientMessage SetCorrelationId(long correlationId);
 
         IClientMessage SetPartitionId(int partitionId);
     }
