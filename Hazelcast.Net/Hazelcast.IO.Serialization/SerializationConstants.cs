@@ -48,7 +48,7 @@ namespace Hazelcast.IO.Serialization
 
         public const int ConstantSerializersLength = 28;
 
-        public const int DefaultTypeSerializable = -101; //C# serializable
+        public const int DefaultTypeSerializable = -110; //C# serializable
     }
 
     internal static class FactoryIds
