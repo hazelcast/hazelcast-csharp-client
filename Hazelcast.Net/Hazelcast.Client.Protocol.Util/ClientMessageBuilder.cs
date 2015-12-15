@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Protocol.Util
         /// <summary>Implementers will be responsible to delegate the constructed message</summary>
         public delegate void HandleMessageDelegate(ClientMessage message);
 
-        private readonly Dictionary<int, BufferBuilder> _builderBySessionIdMap = new Dictionary<int, BufferBuilder>();
+        private readonly Dictionary<long, BufferBuilder> _builderBySessionIdMap = new Dictionary<long, BufferBuilder>();
 
         private readonly HandleMessageDelegate _delegate;
         private ClientMessage _message = ClientMessage.Create();

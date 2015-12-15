@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Spi
         IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId);
         IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
         IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
-        bool RemoveEventHandler(int correlationId);
+        bool RemoveEventHandler(long correlationId);
         void Shutdown();
     }
 }

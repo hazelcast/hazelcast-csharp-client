@@ -40,18 +40,18 @@ namespace Hazelcast.Client.Spi
         private readonly HazelcastClient _client;
         private readonly ClientConnectionManager _clientConnectionManager;
 
-        private readonly ConcurrentDictionary<int, ClientInvocation> _invocations =
-            new ConcurrentDictionary<int, ClientInvocation>();
+        private readonly ConcurrentDictionary<long, ClientInvocation> _invocations =
+            new ConcurrentDictionary<long, ClientInvocation>();
 
         private readonly int _invocationTimeoutMillis;
 
-        private readonly ConcurrentDictionary<int, ClientListenerInvocation> _listenerInvocations =
-            new ConcurrentDictionary<int, ClientListenerInvocation>();
+        private readonly ConcurrentDictionary<long, ClientListenerInvocation> _listenerInvocations =
+            new ConcurrentDictionary<long, ClientListenerInvocation>();
 
         private readonly bool _redoOperations;
         
         private readonly StripedTaskScheduler _taskScheduler;
-        private int _correlationIdCounter = 1;
+        private long _correlationIdCounter = 1;
         private volatile bool _isShutDown;
 
         protected ClientInvocationService(HazelcastClient client)
@@ -109,7 +109,7 @@ namespace Hazelcast.Client.Spi
         public abstract IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
         public abstract IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId);
 
-        public bool RemoveEventHandler(int correlationId)
+        public bool RemoveEventHandler(long correlationId)
         {
             ClientListenerInvocation invocationWithHandler;
             return _listenerInvocations.TryRemove(correlationId, out invocationWithHandler);
@@ -272,7 +272,7 @@ namespace Hazelcast.Client.Spi
 
         private void CleanupEventHandlers(ClientConnection connection)
         {
-            var keys = new List<int>();
+            var keys = new List<long>();
             foreach (var entry in _listenerInvocations)
             {
                 if (entry.Value.SentConnection == connection && entry.Value.BoundConnection == null)
@@ -302,7 +302,7 @@ namespace Hazelcast.Client.Spi
 
         private void CleanupInvocations(ClientConnection connection)
         {
-            var keys = new List<int>();
+            var keys = new List<long>();
             foreach (var entry in _invocations)
             {
                 if (entry.Value.SentConnection == connection)
@@ -466,12 +466,12 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        private int NextCorrelationId()
+        private long NextCorrelationId()
         {
             return Interlocked.Increment(ref _correlationIdCounter);
         }
 
-        private void RegisterInvocation(int correlationId, ClientInvocation request)
+        private void RegisterInvocation(long correlationId, ClientInvocation request)
         {
             _invocations.TryAdd(correlationId, request);
 
@@ -546,7 +546,7 @@ namespace Hazelcast.Client.Spi
             return true;
         }
 
-        private void UnregisterCall(int correlationId)
+        private void UnregisterCall(long correlationId)
         {
             ClientInvocation invocation;
             _invocations.TryRemove(correlationId, out invocation);

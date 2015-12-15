@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Spi
         private readonly ConcurrentDictionary<string, string> _registrationAliasMap =
             new ConcurrentDictionary<string, string>();
 
-        private readonly ConcurrentDictionary<string, int> _registrationMap = new ConcurrentDictionary<string, int>();
+        private readonly ConcurrentDictionary<string, long> _registrationMap = new ConcurrentDictionary<string, long>();
 
         public ClientListenerService(HazelcastClient hazelcastClient)
         {
@@ -91,19 +91,19 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        public void ReregisterListener(string originalRegistrationId, string newRegistrationId, int correlationId)
+        public void ReregisterListener(string originalRegistrationId, string newRegistrationId, long correlationId)
         {
             // re-register a listener with an alias.
             _registrationAliasMap.AddOrUpdate(originalRegistrationId, newRegistrationId, (key, oldValue) =>
             {
-                int ignored;
+                long ignored;
                 _registrationMap.TryRemove(oldValue, out ignored);
                 _registrationMap.TryAdd(newRegistrationId, correlationId);
                 return newRegistrationId;
             });
         }
 
-        private void RegisterListener(string registrationId, int callId)
+        private void RegisterListener(string registrationId, long callId)
         {
             _registrationAliasMap.TryAdd(registrationId, registrationId);
             _registrationMap.TryAdd(registrationId, callId);
@@ -114,7 +114,7 @@ namespace Hazelcast.Client.Spi
             string uuid;
             if (_registrationAliasMap.TryRemove(registrationId, out uuid))
             {
-                int correlationId;
+                long correlationId;
                 if (_registrationMap.TryRemove(uuid, out correlationId))
                 {
                     _client.GetInvocationService().RemoveEventHandler(correlationId);

@@ -41,7 +41,9 @@ namespace Hazelcast.Client.Protocol
     ///         +-------------+---------------+---------------------------------+
     ///         |  Version    |B|E|  Flags    |               Type              |
     ///         +-------------+---------------+---------------------------------+
-    ///         |                       CorrelationId                           |
+    ///         |                                                               |
+    ///         +                       CorrelationId                           +
+    ///         |                                                               |
     ///         +---------------------------------------------------------------+
     ///         |                        PartitionId                            |
     ///         +-----------------------------+---------------------------------+
@@ -74,7 +76,7 @@ namespace Hazelcast.Client.Protocol
         private const int FlagsFieldOffset = VersionFieldOffset + Bits.ByteSizeInBytes;
         private const int TypeFieldOffset = FlagsFieldOffset + Bits.ByteSizeInBytes;
         private const int CorrelationIdFieldOffset = TypeFieldOffset + Bits.ShortSizeInBytes;
-        private const int PartitionIdFieldOffset = CorrelationIdFieldOffset + Bits.IntSizeInBytes;
+        private const int PartitionIdFieldOffset = CorrelationIdFieldOffset + Bits.LongSizeInBytes;
         private const int DataOffsetFieldOffset = PartitionIdFieldOffset + Bits.IntSizeInBytes;
 
         /// <summary>ClientMessage Fixed Header size in bytes</summary>
@@ -109,17 +111,17 @@ namespace Hazelcast.Client.Protocol
 
         /// <summary>Returns the correlation id field.</summary>
         /// <returns>The correlation id field.</returns>
-        public virtual int GetCorrelationId()
+        public virtual long GetCorrelationId()
         {
-            return Int32Get(CorrelationIdFieldOffset);
+            return Int64Get(CorrelationIdFieldOffset);
         }
 
         /// <summary>Sets the correlation id field.</summary>
         /// <param name="correlationId">The value to set in the correlation id field.</param>
         /// <returns>The ClientMessage with the new correlation id field value.</returns>
-        public virtual IClientMessage SetCorrelationId(int correlationId)
+        public virtual IClientMessage SetCorrelationId(long correlationId)
         {
-            Int32Set(CorrelationIdFieldOffset, correlationId);
+            Int64Set(CorrelationIdFieldOffset, correlationId);
             return this;
         }
 

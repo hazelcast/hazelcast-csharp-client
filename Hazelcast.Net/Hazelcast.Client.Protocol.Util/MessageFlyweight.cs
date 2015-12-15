@@ -198,15 +198,25 @@ namespace Hazelcast.Client.Protocol.Util
             return this;
         }
 
+        protected internal virtual long Int64Get(int index)
+        {
+            return Buffer.GetLong(index + _offset);
+        }
+
+        protected internal virtual void Int64Set(int index, long value)
+        {
+            Buffer.PutLong(index + _offset, value);
+        }
+
         //endregion GET Overloads
         protected internal virtual int Int32Get(int index)
         {
             return Buffer.GetInt(index + _offset);
         }
 
-        protected internal virtual void Int32Set(int index, int length)
+        protected internal virtual void Int32Set(int index, int value)
         {
-            Buffer.PutInt(index + _offset, length);
+            Buffer.PutInt(index + _offset, value);
         }
 
         protected internal virtual int Uint16Get(int index)
