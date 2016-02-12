@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 pushd %~dp0
 IF "%1"=="" (set COVERAGE="--no-coverage") ELSE (set COVERAGE=%1)
-set HAZELCAST_VERSION=3.6-RC2-SNAPSHOT
+set HAZELCAST_VERSION=3.7-SNAPSHOT
 set HAZELCAST_HOME=%~dp0\server
 set HAZELCAST_REDIRECT_OUTPUT=true
 echo Starting build...
