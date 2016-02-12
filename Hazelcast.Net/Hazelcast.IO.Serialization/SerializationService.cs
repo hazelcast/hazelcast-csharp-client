@@ -75,7 +75,8 @@ namespace Hazelcast.IO.Serialization
             _dataOutputQueue = new ThreadLocalOutputCache(this);
             _portableContext = new PortableContext(this, version);
             _dataSerializerAdapter =
-                CreateSerializerAdapterByGeneric<IIdentifiedDataSerializable>(new DataSerializer(dataSerializableFactories));
+                CreateSerializerAdapterByGeneric<IIdentifiedDataSerializable>(
+                    new DataSerializer(dataSerializableFactories));
             _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
             _portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(_portableSerializer);
             _nullSerializerAdapter = CreateSerializerAdapterByGeneric<object>(new ConstantSerializers.NullSerializer());
@@ -171,14 +172,8 @@ namespace Hazelcast.IO.Serialization
                 throw new HazelcastSerializationException(
                     "Cannot write a Data instance! Use #writeData(ObjectDataOutput out, Data data) instead.");
             }
-            var isNull = obj == null;
             try
             {
-                output.WriteBoolean(isNull);
-                if (isNull)
-                {
-                    return;
-                }
                 var serializer = SerializerFor(obj);
                 output.WriteInt(serializer.GetTypeId());
                 serializer.Write(output, obj);
@@ -198,11 +193,6 @@ namespace Hazelcast.IO.Serialization
         {
             try
             {
-                var isNull = input.ReadBoolean();
-                if (isNull)
-                {
-                    return default(T);
-                }
                 var typeId = input.ReadInt();
                 var serializer = SerializerFor(typeId);
                 if (serializer == null)
@@ -219,7 +209,15 @@ namespace Hazelcast.IO.Serialization
                 {
                     obj = _managedContext.Initialize(obj);
                 }
-                return (T) obj;
+                try
+                {
+                    return (T) obj;
+                }
+                catch (NullReferenceException)
+                {
+                    throw new HazelcastSerializationException("Trying to cast null value to value type " +
+                                                          typeof (T));
+                }
             }
             catch (Exception e)
             {
@@ -351,8 +349,8 @@ namespace Hazelcast.IO.Serialization
         }
 
         protected internal ISerializerAdapter SerializerFor(int typeId)
-        {            
-            if (typeId < 0)
+        {
+            if (typeId <= 0)
             {
                 var index = IndexForDefaultType(typeId);
                 if (index < ConstantSerializersSize)
@@ -436,7 +434,7 @@ namespace Hazelcast.IO.Serialization
 
         private int IndexForDefaultType(int typeId)
         {
-            return -typeId - 1;
+            return -typeId;
         }
 
         private ISerializerAdapter LookupCustomSerializer(Type type)
@@ -510,8 +508,8 @@ namespace Hazelcast.IO.Serialization
                 if (SafeRegister(type, _serializableSerializerAdapter))
                 {
                     Logger.Warning("Performance Hint: Serialization service will use CLR Serialization for : " + type
-                     + ". Please consider using a faster serialization option such as IIdentifiedDataSerializable.");
-                    
+                                   +
+                                   ". Please consider using a faster serialization option such as IIdentifiedDataSerializable.");
                 }
                 return _serializableSerializerAdapter;
             }
@@ -573,12 +571,16 @@ namespace Hazelcast.IO.Serialization
 
         private void RegisterConstant(Type type, ISerializerAdapter serializer)
         {
-            _constantTypesMap.Add(type, serializer);
+            if (type != null)
+            {
+                _constantTypesMap.Add(type, serializer);
+            }
             _constantTypeIds[IndexForDefaultType(serializer.GetTypeId())] = serializer;
         }
 
         private void RegisterConstantSerializers()
         {
+            RegisterConstant(null, _nullSerializerAdapter);
             RegisterConstant(typeof (IIdentifiedDataSerializable), _dataSerializerAdapter);
             RegisterConstant(typeof (IPortable), _portableSerializerAdapter);
             RegisterConstant(typeof (byte), new ConstantSerializers.ByteSerializer());
@@ -606,7 +608,7 @@ namespace Hazelcast.IO.Serialization
             RegisterConstant(typeof (DateTime), new DefaultSerializers.DateSerializer());
 
             //TODO: proper support for generic types
-            RegisterConstant(typeof(JavaClass), new DefaultSerializers.JavaClassSerializer());
+            RegisterConstant(typeof (JavaClass), new DefaultSerializers.JavaClassSerializer());
             RegisterConstant(typeof (BigInteger), new DefaultSerializers.BigIntegerSerializer());
             RegisterConstant(typeof (JavaEnum), new DefaultSerializers.JavaEnumSerializer());
             RegisterConstant(typeof (List<object>), new DefaultSerializers.ListSerializer<object>());
