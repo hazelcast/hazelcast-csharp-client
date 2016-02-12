@@ -49,6 +49,7 @@ namespace Hazelcast.Client.Connection
         private volatile Socket _clientSocket;
         private volatile ISocketWritable _lastWritable;
         private volatile bool _live;
+        private bool _isOwner;
         private volatile IMember _member;
         private Thread _writeThread;
 
@@ -211,6 +212,15 @@ namespace Hazelcast.Client.Connection
             _clientSocket.Send(Encoding.UTF8.GetBytes(Protocols.ClientBinaryNew));
         }
 
+        internal void SetOwner()
+        {
+            _isOwner = true;
+        }
+
+        internal bool IsOwner()
+        {
+            return _isOwner;
+        }
         private void BeginRead()
         {
             if (!CheckLive())
@@ -246,18 +256,10 @@ namespace Hazelcast.Client.Connection
         {
             if (!_live)
             {
-                if (Logger.IsFinestEnabled())
-                {
-                    Logger.Finest("We are being asked to read, but connection is not live so we won't");
-                }
                 return false;
             }
             if (!_clientSocket.Connected)
             {
-                if (Logger.IsFinestEnabled())
-                {
-                    Logger.Finest("We are being asked to read, but connection is not connected...");
-                }
                 Task.Factory.StartNew(Close);
                 return false;
             }

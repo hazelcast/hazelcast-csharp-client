@@ -308,6 +308,11 @@ namespace Hazelcast.Client.Spi
                         Logger.Finest("Trying to connect to " + address);
                     }
                     var connection = _connectionManager.GetOrConnect(address, ManagerAuthenticator);
+                    // promote connection to owner if not already
+                    if (!connection.IsOwner())
+                    {
+                        ManagerAuthenticator(connection);
+                    }
                     FireConnectionEvent(LifecycleEvent.LifecycleState.ClientConnected);
                     _ownerConnectionAddress = connection.GetAddress();
                     return true;
@@ -457,7 +462,6 @@ namespace Hazelcast.Client.Spi
                     ClientTypes.Csharp, _client.GetSerializationService().GetVersion());
             }
 
-            connection.Init();
             IClientMessage response;
             try
             {
@@ -479,6 +483,7 @@ namespace Hazelcast.Client.Spi
             _principal = new ClientPrincipal(result.uuid, result.ownerUuid);
 
             connection.SetRemoteMember(member);
+            connection.SetOwner();
         }
     }
 }
