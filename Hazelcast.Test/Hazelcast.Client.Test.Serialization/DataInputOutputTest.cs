@@ -96,5 +96,46 @@ namespace Hazelcast.Client.Test.Serialization
 
             ss.Destroy();
         }
+
+        [Test]
+        public void TestNullValue_When_ReferenceType()
+        {
+            var ss = new SerializationServiceBuilder()
+               .Build();
+
+            var output = ss.CreateObjectDataOutput(1024);
+            ss.WriteObject(output, null);
+
+            var input = ss.CreateObjectDataInput(output.ToByteArray());
+            Assert.IsNull(ss.ReadObject<object>(input));
+        }
+
+        [Test, ExpectedException(typeof (HazelcastSerializationException))]
+        public void TestNullValue_When_ValueType()
+        {
+            var ss = new SerializationServiceBuilder()
+               .Build();
+
+            var output = ss.CreateObjectDataOutput(1024);
+            ss.WriteObject(output, null);
+
+            var input = ss.CreateObjectDataInput(output.ToByteArray());
+            ss.ReadObject<int>(input);
+        }
+
+        [Test]
+        public void TestNullValue_When_NullableType()
+        {
+            var ss = new SerializationServiceBuilder()
+               .Build();
+
+            var output = ss.CreateObjectDataOutput(1024);
+            ss.WriteObject(output, 1);
+            ss.WriteObject(output, null);
+
+            var input = ss.CreateObjectDataInput(output.ToByteArray());
+            Assert.AreEqual(1, ss.ReadObject<int?>(input));
+            Assert.IsNull(ss.ReadObject<int?>(input));
+        }
     }
 }
