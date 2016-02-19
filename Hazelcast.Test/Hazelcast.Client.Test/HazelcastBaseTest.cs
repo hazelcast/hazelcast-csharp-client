@@ -26,7 +26,7 @@ namespace Hazelcast.Client.Test
 {
     public class HazelcastBaseTest
     {
-        protected static volatile Random random = new Random((int) Clock.CurrentTimeMillis());
+        protected static Random random = new Random((int) Clock.CurrentTimeMillis());
 
         private readonly ILogger logger;
 
