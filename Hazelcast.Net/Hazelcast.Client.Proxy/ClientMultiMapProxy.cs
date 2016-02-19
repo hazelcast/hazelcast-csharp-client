@@ -151,7 +151,7 @@ namespace Hazelcast.Client.Proxy
         public virtual string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue)
         {
             var keyData = ToData(key);
-            var request = MultiMapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue);
+            var request = MultiMapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, false);
 
             DistributedEventHandler handler =
                 eventData => MultiMapAddEntryListenerToKeyCodec.AbstractEventHandler.Handle(eventData,

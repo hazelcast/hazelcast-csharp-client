@@ -35,15 +35,16 @@ namespace Hazelcast.Client.Protocol.Codec
             return parameters;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData key, bool includeValue)
+        public static ClientMessage EncodeRequest(string name, IData key, bool includeValue, bool localOnly)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, key, includeValue);
+            var requiredDataSize = RequestParameters.CalculateDataSize(name, key, includeValue, localOnly);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int) RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
             clientMessage.Set(key);
             clientMessage.Set(includeValue);
+            clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
@@ -57,11 +58,12 @@ namespace Hazelcast.Client.Protocol.Codec
             public IData key;
             public string name;
 
-            public static int CalculateDataSize(string name, IData key, bool includeValue)
+            public static int CalculateDataSize(string name, IData key, bool includeValue, bool localOnly)
             {
                 var dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
                 dataSize += ParameterUtil.CalculateDataSize(key);
+                dataSize += Bits.BooleanSizeInBytes;
                 dataSize += Bits.BooleanSizeInBytes;
                 return dataSize;
             }
