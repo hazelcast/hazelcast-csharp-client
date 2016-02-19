@@ -23,7 +23,7 @@ namespace Hazelcast.Client.Spi
         private readonly object _lock = new object();
         private readonly TaskCompletionSource<T> _taskSource = new TaskCompletionSource<T>();
         private Exception _exception;
-        private int _isComplete;
+        private volatile int _isComplete;
         private object _result;
 
         public Exception Exception
@@ -35,10 +35,12 @@ namespace Hazelcast.Client.Spi
             }
             set
             {
+                Monitor.Enter(_lock);
                 SetComplete();
                 _exception = value;
                 _taskSource.SetException(value);
                 Notify();
+                Monitor.Exit(_lock);
             }
         }
 
@@ -52,10 +54,12 @@ namespace Hazelcast.Client.Spi
             }
             set
             {
+                Monitor.Enter(_lock);
                 SetComplete();
                 _result = value;
                 _taskSource.SetResult(value);
                 Notify();
+                Monitor.Exit(_lock);
             }
         }
 
@@ -121,17 +125,16 @@ namespace Hazelcast.Client.Spi
 
         private void Notify()
         {
-            Monitor.Enter(_lock);
             Monitor.PulseAll(_lock);
-            Monitor.Exit(_lock);
         }
 
         private void SetComplete()
         {
-            if (Interlocked.CompareExchange(ref _isComplete, 1, 0) == 1)
+            if (_isComplete == 1)
             {
                 throw new InvalidOperationException("The result is already set.");
             }
+            _isComplete = 1;
         }
     }
 }
