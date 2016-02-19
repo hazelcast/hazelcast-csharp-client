@@ -41,7 +41,7 @@ namespace Hazelcast.IO
         {
         }
 
-        public Address(string host, int port) : this(GetAddressByName(host), port)
+        public Address(string host, int port) : this(host, GetAddressByName(host), port)
         {
         }
 

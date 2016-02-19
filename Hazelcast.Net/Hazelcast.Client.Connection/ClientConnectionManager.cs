@@ -296,6 +296,12 @@ namespace Hazelcast.Client.Connection
                 throw ExceptionUtil.Rethrow(e);
             }
             var rp = ClientAuthenticationCodec.DecodeResponse(response);
+
+            if (rp.address == null)
+            {
+                throw new HazelcastException("Could not resolve address for member.");
+            }
+
             var member = _client.GetClientClusterService().GetMember(rp.address);
             if (member == null)
             {
