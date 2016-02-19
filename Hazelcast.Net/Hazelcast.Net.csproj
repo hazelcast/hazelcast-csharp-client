@@ -592,12 +592,6 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="Version">
-    <Version BuildType="None" RevisionType="BuildIncrement" VersionFile="version.txt">
-      <Output TaskParameter="Major" PropertyName="Major" />
-      <Output TaskParameter="Minor" PropertyName="Minor" />
-      <Output TaskParameter="Build" PropertyName="Build" />
-      <Output TaskParameter="Revision" PropertyName="Revision" />
-    </Version>
     <Message Text="Version: $(Major).$(Minor).$(Build).$(Revision)" />
     <GitVersion LocalPath="$(MSBuildProjectDirectory)">
       <Output TaskParameter="CommitHash" PropertyName="CommitHash" />
