@@ -474,6 +474,11 @@ namespace Hazelcast.Client.Spi
             }
             var result = ClientAuthenticationCodec.DecodeResponse(response);
 
+            if (result.address == null)
+            {
+                throw new HazelcastException("Could not resolve address for owner node.");
+            }
+
             var member = new Member(result.address, result.ownerUuid);
             _principal = new ClientPrincipal(result.uuid, result.ownerUuid);
 
