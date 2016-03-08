@@ -1,14 +1,14 @@
-# Hazelcast C# Client
+#Â Hazelcast C# Client
 
-C#/.NET client implementation for [Hazelcast](https://github.com/hazelcast/hazelcast), the open source in-memory data grid. A comparison of features supported by the C# Client vs the Java client can be found [here](http://docs.hazelcast.org/docs/3.5/manual/html/javaclient.html).
+C#/.NETÂ client implementation for [Hazelcast](https://github.com/hazelcast/hazelcast), the open source in-memory data grid. A comparison of features supported by the C# Client vs the Java client can be found [here](http://docs.hazelcast.org/docs/3.5/manual/html/javaclient.html).
 
-C# client is implemented using the [Hazelcast Open Binary Client Protocol](http://hazelcast.org/docs/protocol/1.0-developer-preview/client-protocol.html) 
+C#Â client is implemented using the [Hazelcast Open Binary Client Protocol](http://hazelcast.org/docs/protocol/1.0-developer-preview/client-protocol.html) 
 
-## Documentation
+##Â Documentation
 
-The docs for the C# client can be reached at [http://docs.hazelcast.org/docs/latest/manual/html/csharpclient.html](http://docs.hazelcast.org/docs/latest/manual/html/csharpclient.html)
+The docs for the C# client can be reached at [http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#net-client](http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#net-client)
 
-## How to build
+##Â How to build
 
 Hazelcast C# Client is developed using VS2013 Community Edition, which can be [downloaded](https://www.visualstudio.com/en-us/news/vs2013-community-vs.aspx) for free from Microsoft.
 
