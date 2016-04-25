@@ -182,8 +182,8 @@ namespace Hazelcast.Client.Test
                 delegate { },
                 delegate { latch.Signal(); }
                 ), true);
-
-            var f1 = map.PutAsync("key", "value1", 100, TimeUnit.Milliseconds);
+            
+            var f1 = map.PutAsync("key", "value1", 1, TimeUnit.Seconds);
             Assert.IsNull(f1.Result);
             Assert.AreEqual("value1", map.Get("key"));
 
