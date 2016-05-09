@@ -17,7 +17,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientTxnSetTest : HazelcastBaseTest
+    public class ClientTxnSetTest : SingleMemberBaseTest
     {
         //internal const string name = "test";
 

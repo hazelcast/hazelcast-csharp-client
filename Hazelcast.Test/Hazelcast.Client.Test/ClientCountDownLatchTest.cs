@@ -20,7 +20,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientCountDownLatchTest : HazelcastBaseTest
+    public class ClientCountDownLatchTest : SingleMemberBaseTest
     {
         [SetUp]
         public void Init()
