@@ -18,7 +18,7 @@ using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
-    internal class ClientDistributedObjectTest : HazelcastBaseTest
+    internal class ClientDistributedObjectTest : SingleMemberBaseTest
     {
         [Test]
         public void TestDistributedObjectListener()

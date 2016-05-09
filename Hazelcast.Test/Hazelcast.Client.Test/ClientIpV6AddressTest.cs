@@ -12,16 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using Hazelcast.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    internal class ClientIpV6AddressTest : HazelcastBaseTest
+    internal class ClientIpV6AddressTest : HazelcastTestSupport
     {
+        [SetUp]
+        public void Setup()
+        {
+            _remoteController = CreateRemoteController();
+            _cluster = CreateCluster(_remoteController);
+            StartMember(_remoteController, _cluster);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            HazelcastClient.ShutdownAll();
+            _remoteController.shutdownCluster(_cluster.Id);
+            StopRemoteController(_remoteController);
+        }
+
+        private RemoteController.Client _remoteController;
+        private Cluster _cluster;
+
         private static void AssertClientWithAddress(string address)
         {
             var client =
@@ -31,8 +52,6 @@ namespace Hazelcast.Client.Test
             map.Put("key", "val");
             Assert.AreEqual("val", map.Get("key"));
             map.Destroy();
-
-            client.Shutdown();
         }
 
         private static string GetLocalIpV6Address()

@@ -18,27 +18,40 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientShutdownTest : HazelcastBaseTest
+    public class ClientShutdownTest : HazelcastTestSupport
     {
+        private RemoteController.Client _remoteController;
+        private Cluster _cluster;
+
         [SetUp]
         public void Setup()
         {
-            if (Client == null)
-            {
-                Client = CreateClient();
-            }
+            _remoteController = CreateRemoteController();
+            _cluster = CreateCluster(_remoteController);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            HazelcastClient.ShutdownAll();
+            StopCluster(_remoteController, _cluster);
+            StopRemoteController(_remoteController);
         }
 
         //TODO: This test fails intermittently
         [Test, Ignore, ExpectedException(typeof (HazelcastException))]
         public void TestAsyncOperationDuringClientShutdown()
         {
-            var map = Client.GetMap<int, string>(TestSupport.RandomString());
+            var member = _remoteController.startMember(_cluster.Id);
+            var client = CreateClient();
+
+            var map = client.GetMap<int, string>(TestSupport.RandomString());
 
             var count = 100;
             var tasks = new List<Task>();
@@ -53,8 +66,7 @@ namespace Hazelcast.Client.Test
             });
             Task.Factory.StartNew(() =>
             {
-                Client.Shutdown();
-                Client = null;
+                client.Shutdown();
             });
             try
             {
@@ -70,29 +82,33 @@ namespace Hazelcast.Client.Test
         [Test, ExpectedException(typeof (HazelcastException), ExpectedMessage = "Client is shut down.")]
         public void TestOperationAfterShutdown()
         {
-            var map = Client.GetMap<int, string>(TestSupport.RandomString());
+            var member = _remoteController.startMember(_cluster.Id);
+            var client = CreateClient();
+
+            var map = client.GetMap<int, string>(TestSupport.RandomString());
             for (var i = 0; i < 100; i++)
             {
                 map.Put(i, TestSupport.RandomString());
             }
-            Client.Shutdown();
-            Client = null;
+            client.Shutdown();
             map.Get(0);
         }
 
         [Test, ExpectedException(typeof (HazelcastException))]
         public void TestOperationDuringClientShutdown()
         {
-            var map = Client.GetMap<int, string>(TestSupport.RandomString());
-            for (var i = 0; i < 100; i++)
+            var member = _remoteController.startMember(_cluster.Id);
+            var client = CreateClient();
+
+            var map = client.GetMap<int, string>(TestSupport.RandomString());
+            for (var i = 0; i < 10000; i++)
             {
                 map.Put(i, TestSupport.RandomString());
                 if (i == 0)
                 {
                     Task.Factory.StartNew(() =>
                     {
-                        Client.Shutdown();
-                        Client = null;
+                        client.Shutdown();
                     });
                 }
             }
