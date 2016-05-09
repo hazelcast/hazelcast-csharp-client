@@ -75,6 +75,27 @@ namespace Hazelcast.Test {
         ///  ~ distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
         ///  ~ WITHOUT WARRANTI [rest of string was truncated]&quot;;.
         /// </summary>
+        internal static string hazelcast {
+            get {
+                return ResourceManager.GetString("hazelcast", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;!--
+        ///  ~ Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
+        ///  ~
+        ///  ~ Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+        ///  ~ you may not use this file except in compliance with the License.
+        ///  ~ You may obtain a copy of the License at
+        ///  ~
+        ///  ~ http://www.apache.org/licenses/LICENSE-2.0
+        ///  ~
+        ///  ~ Unless required by applicable law or agreed to in writing, software
+        ///  ~ distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+        ///  ~ WITHOUT WARRANTI [rest of string was truncated]&quot;;.
+        /// </summary>
         internal static string hazelcast_config_full {
             get {
                 return ResourceManager.GetString("hazelcast_config_full", resourceCulture);

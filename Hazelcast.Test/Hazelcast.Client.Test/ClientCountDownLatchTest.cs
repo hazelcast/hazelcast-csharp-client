@@ -20,7 +20,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientCountDownLatchTest : HazelcastBaseTest
+    public class ClientCountDownLatchTest : SingleMemberBaseTest
     {
         [SetUp]
         public void Init()
@@ -32,7 +32,6 @@ namespace Hazelcast.Client.Test
         public void Destroy()
         {
             l.Destroy();
-            Console.WriteLine("destroy");
         }
 
         //internal const string name = "ClientCountDownLatchTest";
