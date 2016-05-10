@@ -21,7 +21,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientTxnTest : HazelcastBaseTest
+    public class ClientTxnTest : SingleMemberBaseTest
     {
         [Test, ExpectedException(typeof (ArgumentException))]
         public void TestNegativeDurability()

@@ -12,27 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using Hazelcast.Core;
+using Hazelcast.Remote;
+using Hazelcast.Test;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
-    [SetUpFixture]
-    public class TestSetup
+    public class SingleMemberBaseTest : HazelcastTestSupport
     {
-        [SetUp]
-        public void SetupLogging()
+        protected IHazelcastInstance Client { get; private set; }
+        protected RemoteController.Client RemoteController { get; private set; }
+
+        [TestFixtureSetUp]
+        public void SetupCluster()
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            RemoteController = CreateRemoteController();
+            var cluster = CreateCluster(RemoteController);
+            RemoteController.startMember(cluster.Id);
+            Client = CreateClient();
         }
 
-        [TearDown]
-        public void TearDown()
+        [TestFixtureTearDown]
+        public void ShutdownRemoteController()
         {
-            if (HazelcastBaseTest.Cluster != null)
-            {
-                HazelcastBaseTest.Cluster.Shutdown();
-            }
+            HazelcastClient.ShutdownAll();
+            StopRemoteController(RemoteController);
         }
     }
 }

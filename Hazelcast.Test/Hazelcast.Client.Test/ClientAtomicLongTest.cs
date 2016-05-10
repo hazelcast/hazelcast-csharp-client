@@ -18,7 +18,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientAtomicLongTest : HazelcastBaseTest
+    public class ClientAtomicLongTest : SingleMemberBaseTest
     {
         //
         [SetUp]
