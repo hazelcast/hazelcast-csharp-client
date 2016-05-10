@@ -18,7 +18,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientTxnMultiMapTest : HazelcastBaseTest
+    public class ClientTxnMultiMapTest : SingleMemberBaseTest
     {
         [SetUp]
         public void Init()
