@@ -75,11 +75,11 @@ namespace Hazelcast.Core
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.KeySet(IPredicate{K, V})"/>
+        /// <see cref="IMap{K, V}.KeySet(IPredicate)"/>
         /// .
         /// </summary>
-        /// <seealso cref="IMap{K, V}.KeySet(IPredicate{K, V})"/>
-        ICollection<TKey> KeySet(IPredicate<TKey, TValue> predicate);
+        /// <seealso cref="IMap{K, V}.KeySet(IPredicate)"/>
+        ICollection<TKey> KeySet(IPredicate predicate);
 
         /// <summary>
         /// Transactional implementation of
@@ -179,10 +179,10 @@ namespace Hazelcast.Core
 
         /// <summary>
         /// Transactional implementation of
-        /// <see cref="IMap{K, V}.Values(IPredicate{K, V})"/>
+        /// <see cref="IMap{K, V}.Values(IPredicate)"/>
         /// .
         /// </summary>
-        /// <seealso cref="IMap{K, V}.Values(IPredicate{K, V})"/>
-        ICollection<TValue> Values(IPredicate<TKey, TValue> predicate);
+        /// <seealso cref="IMap{K, V}.Values(IPredicate)"/>
+        ICollection<TValue> Values(IPredicate predicate);
     }
 }
