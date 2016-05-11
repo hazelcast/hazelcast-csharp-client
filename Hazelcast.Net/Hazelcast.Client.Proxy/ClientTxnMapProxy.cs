@@ -154,7 +154,7 @@ namespace Hazelcast.Client.Proxy
             return ToSet<TKey>(dataKeySet);
         }
 
-        public ICollection<TKey> KeySet(IPredicate<TKey, TValue> predicate)
+        public ICollection<TKey> KeySet(IPredicate predicate)
         {
             var data = ToData(predicate);
             var request = TransactionalMapKeySetWithPredicateCodec.EncodeRequest(GetName(), GetTransactionId(),
@@ -170,7 +170,7 @@ namespace Hazelcast.Client.Proxy
             return ToList<TValue>(dataValues);
         }
 
-        public ICollection<TValue> Values(IPredicate<TKey, TValue> predicate)
+        public ICollection<TValue> Values(IPredicate predicate)
         {
             var data = ToData(predicate);
             var request = TransactionalMapValuesWithPredicateCodec.EncodeRequest(GetName(), GetTransactionId(),

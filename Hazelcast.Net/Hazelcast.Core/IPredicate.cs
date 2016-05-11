@@ -12,11 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Core
-{
-    public interface IPredicate<TKey, TValue> : IIdentifiedDataSerializable
+{   [Obsolete("Use non generic version, IPredicate instead.")]
+    public interface IPredicate<TKey, TValue> : IPredicate
     {
+    }
+
+    public interface IPredicate : IIdentifiedDataSerializable
+    {
+        
     }
 }

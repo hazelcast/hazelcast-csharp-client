@@ -377,7 +377,7 @@
     <Compile Include="Hazelcast.Core\MemberAttributeEvent.cs" />
     <Compile Include="Hazelcast.Core\MembershipListener.cs" />
     <Compile Include="Hazelcast.Core\OverflowPolicy.cs" />
-    <Compile Include="Hazelcast.Core\SqlPredicate.cs" />
+    <Compile Include="Hazelcast.Core\Predicate.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ArrayDataSerializableFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\HeapData.cs" />
     <Compile Include="Hazelcast.IO.Serialization\IData.cs" />

@@ -157,3 +157,7 @@ $RECYCLE.BIN/
 
 # Sandcastle output
 docs/output
+
+rc/
+
+*.snk
