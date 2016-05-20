@@ -41,6 +41,7 @@
                 <interface>127.0.0.1</interface>
             </tcp-ip>
         </join>
+        <public-address>127.0.0.1</public-address>
         <ssl enabled="false" />
         <socket-interceptor enabled="false" />
     </network>	

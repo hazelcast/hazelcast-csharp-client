@@ -54,6 +54,16 @@ namespace Hazelcast.Remote
       IAsyncResult Begin_terminateMember(AsyncCallback callback, object state, string clusterId, string memberId);
       bool End_terminateMember(IAsyncResult asyncResult);
       #endif
+      bool suspendMember(string clusterId, string memberId);
+      #if SILVERLIGHT
+      IAsyncResult Begin_suspendMember(AsyncCallback callback, object state, string clusterId, string memberId);
+      bool End_suspendMember(IAsyncResult asyncResult);
+      #endif
+      bool resumeMember(string clusterId, string memberId);
+      #if SILVERLIGHT
+      IAsyncResult Begin_resumeMember(AsyncCallback callback, object state, string clusterId, string memberId);
+      bool End_resumeMember(IAsyncResult asyncResult);
+      #endif
       bool shutdownCluster(string clusterId);
       #if SILVERLIGHT
       IAsyncResult Begin_shutdownCluster(AsyncCallback callback, object state, string clusterId);
@@ -74,10 +84,10 @@ namespace Hazelcast.Remote
       IAsyncResult Begin_mergeMemberToCluster(AsyncCallback callback, object state, string clusterId, string memberId);
       Cluster End_mergeMemberToCluster(IAsyncResult asyncResult);
       #endif
-      bool executeOnController(string clusterId, string script, Lang lang);
+      Response executeOnController(string clusterId, string script, Lang lang);
       #if SILVERLIGHT
       IAsyncResult Begin_executeOnController(AsyncCallback callback, object state, string clusterId, string script, Lang lang);
-      bool End_executeOnController(IAsyncResult asyncResult);
+      Response End_executeOnController(IAsyncResult asyncResult);
       #endif
     }
 
@@ -579,6 +589,132 @@ namespace Hazelcast.Remote
 
       
       #if SILVERLIGHT
+      public IAsyncResult Begin_suspendMember(AsyncCallback callback, object state, string clusterId, string memberId)
+      {
+        return send_suspendMember(callback, state, clusterId, memberId);
+      }
+
+      public bool End_suspendMember(IAsyncResult asyncResult)
+      {
+        oprot_.Transport.EndFlush(asyncResult);
+        return recv_suspendMember();
+      }
+
+      #endif
+
+      public bool suspendMember(string clusterId, string memberId)
+      {
+        #if !SILVERLIGHT
+        send_suspendMember(clusterId, memberId);
+        return recv_suspendMember();
+
+        #else
+        var asyncResult = Begin_suspendMember(null, null, clusterId, memberId);
+        return End_suspendMember(asyncResult);
+
+        #endif
+      }
+      #if SILVERLIGHT
+      public IAsyncResult send_suspendMember(AsyncCallback callback, object state, string clusterId, string memberId)
+      #else
+      public void send_suspendMember(string clusterId, string memberId)
+      #endif
+      {
+        oprot_.WriteMessageBegin(new TMessage("suspendMember", TMessageType.Call, seqid_));
+        suspendMember_args args = new suspendMember_args();
+        args.ClusterId = clusterId;
+        args.MemberId = memberId;
+        args.Write(oprot_);
+        oprot_.WriteMessageEnd();
+        #if SILVERLIGHT
+        return oprot_.Transport.BeginFlush(callback, state);
+        #else
+        oprot_.Transport.Flush();
+        #endif
+      }
+
+      public bool recv_suspendMember()
+      {
+        TMessage msg = iprot_.ReadMessageBegin();
+        if (msg.Type == TMessageType.Exception) {
+          TApplicationException x = TApplicationException.Read(iprot_);
+          iprot_.ReadMessageEnd();
+          throw x;
+        }
+        suspendMember_result result = new suspendMember_result();
+        result.Read(iprot_);
+        iprot_.ReadMessageEnd();
+        if (result.__isset.success) {
+          return result.Success;
+        }
+        throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "suspendMember failed: unknown result");
+      }
+
+      
+      #if SILVERLIGHT
+      public IAsyncResult Begin_resumeMember(AsyncCallback callback, object state, string clusterId, string memberId)
+      {
+        return send_resumeMember(callback, state, clusterId, memberId);
+      }
+
+      public bool End_resumeMember(IAsyncResult asyncResult)
+      {
+        oprot_.Transport.EndFlush(asyncResult);
+        return recv_resumeMember();
+      }
+
+      #endif
+
+      public bool resumeMember(string clusterId, string memberId)
+      {
+        #if !SILVERLIGHT
+        send_resumeMember(clusterId, memberId);
+        return recv_resumeMember();
+
+        #else
+        var asyncResult = Begin_resumeMember(null, null, clusterId, memberId);
+        return End_resumeMember(asyncResult);
+
+        #endif
+      }
+      #if SILVERLIGHT
+      public IAsyncResult send_resumeMember(AsyncCallback callback, object state, string clusterId, string memberId)
+      #else
+      public void send_resumeMember(string clusterId, string memberId)
+      #endif
+      {
+        oprot_.WriteMessageBegin(new TMessage("resumeMember", TMessageType.Call, seqid_));
+        resumeMember_args args = new resumeMember_args();
+        args.ClusterId = clusterId;
+        args.MemberId = memberId;
+        args.Write(oprot_);
+        oprot_.WriteMessageEnd();
+        #if SILVERLIGHT
+        return oprot_.Transport.BeginFlush(callback, state);
+        #else
+        oprot_.Transport.Flush();
+        #endif
+      }
+
+      public bool recv_resumeMember()
+      {
+        TMessage msg = iprot_.ReadMessageBegin();
+        if (msg.Type == TMessageType.Exception) {
+          TApplicationException x = TApplicationException.Read(iprot_);
+          iprot_.ReadMessageEnd();
+          throw x;
+        }
+        resumeMember_result result = new resumeMember_result();
+        result.Read(iprot_);
+        iprot_.ReadMessageEnd();
+        if (result.__isset.success) {
+          return result.Success;
+        }
+        throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "resumeMember failed: unknown result");
+      }
+
+      
+      #if SILVERLIGHT
       public IAsyncResult Begin_shutdownCluster(AsyncCallback callback, object state, string clusterId)
       {
         return send_shutdownCluster(callback, state, clusterId);
@@ -833,7 +969,7 @@ namespace Hazelcast.Remote
         return send_executeOnController(callback, state, clusterId, script, lang);
       }
 
-      public bool End_executeOnController(IAsyncResult asyncResult)
+      public Response End_executeOnController(IAsyncResult asyncResult)
       {
         oprot_.Transport.EndFlush(asyncResult);
         return recv_executeOnController();
@@ -841,7 +977,7 @@ namespace Hazelcast.Remote
 
       #endif
 
-      public bool executeOnController(string clusterId, string script, Lang lang)
+      public Response executeOnController(string clusterId, string script, Lang lang)
       {
         #if !SILVERLIGHT
         send_executeOnController(clusterId, script, lang);
@@ -873,7 +1009,7 @@ namespace Hazelcast.Remote
         #endif
       }
 
-      public bool recv_executeOnController()
+      public Response recv_executeOnController()
       {
         TMessage msg = iprot_.ReadMessageBegin();
         if (msg.Type == TMessageType.Exception) {
@@ -902,6 +1038,8 @@ namespace Hazelcast.Remote
         processMap_["startMember"] = startMember_Process;
         processMap_["shutdownMember"] = shutdownMember_Process;
         processMap_["terminateMember"] = terminateMember_Process;
+        processMap_["suspendMember"] = suspendMember_Process;
+        processMap_["resumeMember"] = resumeMember_Process;
         processMap_["shutdownCluster"] = shutdownCluster_Process;
         processMap_["terminateCluster"] = terminateCluster_Process;
         processMap_["splitMemberFromCluster"] = splitMemberFromCluster_Process;
@@ -1033,6 +1171,32 @@ namespace Hazelcast.Remote
         terminateMember_result result = new terminateMember_result();
         result.Success = iface_.terminateMember(args.ClusterId, args.MemberId);
         oprot.WriteMessageBegin(new TMessage("terminateMember", TMessageType.Reply, seqid)); 
+        result.Write(oprot);
+        oprot.WriteMessageEnd();
+        oprot.Transport.Flush();
+      }
+
+      public void suspendMember_Process(int seqid, TProtocol iprot, TProtocol oprot)
+      {
+        suspendMember_args args = new suspendMember_args();
+        args.Read(iprot);
+        iprot.ReadMessageEnd();
+        suspendMember_result result = new suspendMember_result();
+        result.Success = iface_.suspendMember(args.ClusterId, args.MemberId);
+        oprot.WriteMessageBegin(new TMessage("suspendMember", TMessageType.Reply, seqid)); 
+        result.Write(oprot);
+        oprot.WriteMessageEnd();
+        oprot.Transport.Flush();
+      }
+
+      public void resumeMember_Process(int seqid, TProtocol iprot, TProtocol oprot)
+      {
+        resumeMember_args args = new resumeMember_args();
+        args.Read(iprot);
+        iprot.ReadMessageEnd();
+        resumeMember_result result = new resumeMember_result();
+        result.Success = iface_.resumeMember(args.ClusterId, args.MemberId);
+        oprot.WriteMessageBegin(new TMessage("resumeMember", TMessageType.Reply, seqid)); 
         result.Write(oprot);
         oprot.WriteMessageEnd();
         oprot.Transport.Flush();
@@ -2680,6 +2844,512 @@ namespace Hazelcast.Remote
     #if !SILVERLIGHT
     [Serializable]
     #endif
+    public partial class suspendMember_args : TBase
+    {
+      private string _clusterId;
+      private string _memberId;
+
+      public string ClusterId
+      {
+        get
+        {
+          return _clusterId;
+        }
+        set
+        {
+          __isset.clusterId = true;
+          this._clusterId = value;
+        }
+      }
+
+      public string MemberId
+      {
+        get
+        {
+          return _memberId;
+        }
+        set
+        {
+          __isset.memberId = true;
+          this._memberId = value;
+        }
+      }
+
+
+      public Isset __isset;
+      #if !SILVERLIGHT
+      [Serializable]
+      #endif
+      public struct Isset {
+        public bool clusterId;
+        public bool memberId;
+      }
+
+      public suspendMember_args() {
+      }
+
+      public void Read (TProtocol iprot)
+      {
+        iprot.IncrementRecursionDepth();
+        try
+        {
+          TField field;
+          iprot.ReadStructBegin();
+          while (true)
+          {
+            field = iprot.ReadFieldBegin();
+            if (field.Type == TType.Stop) { 
+              break;
+            }
+            switch (field.ID)
+            {
+              case 1:
+                if (field.Type == TType.String) {
+                  ClusterId = iprot.ReadString();
+                } else { 
+                  TProtocolUtil.Skip(iprot, field.Type);
+                }
+                break;
+              case 2:
+                if (field.Type == TType.String) {
+                  MemberId = iprot.ReadString();
+                } else { 
+                  TProtocolUtil.Skip(iprot, field.Type);
+                }
+                break;
+              default: 
+                TProtocolUtil.Skip(iprot, field.Type);
+                break;
+            }
+            iprot.ReadFieldEnd();
+          }
+          iprot.ReadStructEnd();
+        }
+        finally
+        {
+          iprot.DecrementRecursionDepth();
+        }
+      }
+
+      public void Write(TProtocol oprot) {
+        oprot.IncrementRecursionDepth();
+        try
+        {
+          TStruct struc = new TStruct("suspendMember_args");
+          oprot.WriteStructBegin(struc);
+          TField field = new TField();
+          if (ClusterId != null && __isset.clusterId) {
+            field.Name = "clusterId";
+            field.Type = TType.String;
+            field.ID = 1;
+            oprot.WriteFieldBegin(field);
+            oprot.WriteString(ClusterId);
+            oprot.WriteFieldEnd();
+          }
+          if (MemberId != null && __isset.memberId) {
+            field.Name = "memberId";
+            field.Type = TType.String;
+            field.ID = 2;
+            oprot.WriteFieldBegin(field);
+            oprot.WriteString(MemberId);
+            oprot.WriteFieldEnd();
+          }
+          oprot.WriteFieldStop();
+          oprot.WriteStructEnd();
+        }
+        finally
+        {
+          oprot.DecrementRecursionDepth();
+        }
+      }
+
+      public override string ToString() {
+        StringBuilder __sb = new StringBuilder("suspendMember_args(");
+        bool __first = true;
+        if (ClusterId != null && __isset.clusterId) {
+          if(!__first) { __sb.Append(", "); }
+          __first = false;
+          __sb.Append("ClusterId: ");
+          __sb.Append(ClusterId);
+        }
+        if (MemberId != null && __isset.memberId) {
+          if(!__first) { __sb.Append(", "); }
+          __first = false;
+          __sb.Append("MemberId: ");
+          __sb.Append(MemberId);
+        }
+        __sb.Append(")");
+        return __sb.ToString();
+      }
+
+    }
+
+
+    #if !SILVERLIGHT
+    [Serializable]
+    #endif
+    public partial class suspendMember_result : TBase
+    {
+      private bool _success;
+
+      public bool Success
+      {
+        get
+        {
+          return _success;
+        }
+        set
+        {
+          __isset.success = true;
+          this._success = value;
+        }
+      }
+
+
+      public Isset __isset;
+      #if !SILVERLIGHT
+      [Serializable]
+      #endif
+      public struct Isset {
+        public bool success;
+      }
+
+      public suspendMember_result() {
+      }
+
+      public void Read (TProtocol iprot)
+      {
+        iprot.IncrementRecursionDepth();
+        try
+        {
+          TField field;
+          iprot.ReadStructBegin();
+          while (true)
+          {
+            field = iprot.ReadFieldBegin();
+            if (field.Type == TType.Stop) { 
+              break;
+            }
+            switch (field.ID)
+            {
+              case 0:
+                if (field.Type == TType.Bool) {
+                  Success = iprot.ReadBool();
+                } else { 
+                  TProtocolUtil.Skip(iprot, field.Type);
+                }
+                break;
+              default: 
+                TProtocolUtil.Skip(iprot, field.Type);
+                break;
+            }
+            iprot.ReadFieldEnd();
+          }
+          iprot.ReadStructEnd();
+        }
+        finally
+        {
+          iprot.DecrementRecursionDepth();
+        }
+      }
+
+      public void Write(TProtocol oprot) {
+        oprot.IncrementRecursionDepth();
+        try
+        {
+          TStruct struc = new TStruct("suspendMember_result");
+          oprot.WriteStructBegin(struc);
+          TField field = new TField();
+
+          if (this.__isset.success) {
+            field.Name = "Success";
+            field.Type = TType.Bool;
+            field.ID = 0;
+            oprot.WriteFieldBegin(field);
+            oprot.WriteBool(Success);
+            oprot.WriteFieldEnd();
+          }
+          oprot.WriteFieldStop();
+          oprot.WriteStructEnd();
+        }
+        finally
+        {
+          oprot.DecrementRecursionDepth();
+        }
+      }
+
+      public override string ToString() {
+        StringBuilder __sb = new StringBuilder("suspendMember_result(");
+        bool __first = true;
+        if (__isset.success) {
+          if(!__first) { __sb.Append(", "); }
+          __first = false;
+          __sb.Append("Success: ");
+          __sb.Append(Success);
+        }
+        __sb.Append(")");
+        return __sb.ToString();
+      }
+
+    }
+
+
+    #if !SILVERLIGHT
+    [Serializable]
+    #endif
+    public partial class resumeMember_args : TBase
+    {
+      private string _clusterId;
+      private string _memberId;
+
+      public string ClusterId
+      {
+        get
+        {
+          return _clusterId;
+        }
+        set
+        {
+          __isset.clusterId = true;
+          this._clusterId = value;
+        }
+      }
+
+      public string MemberId
+      {
+        get
+        {
+          return _memberId;
+        }
+        set
+        {
+          __isset.memberId = true;
+          this._memberId = value;
+        }
+      }
+
+
+      public Isset __isset;
+      #if !SILVERLIGHT
+      [Serializable]
+      #endif
+      public struct Isset {
+        public bool clusterId;
+        public bool memberId;
+      }
+
+      public resumeMember_args() {
+      }
+
+      public void Read (TProtocol iprot)
+      {
+        iprot.IncrementRecursionDepth();
+        try
+        {
+          TField field;
+          iprot.ReadStructBegin();
+          while (true)
+          {
+            field = iprot.ReadFieldBegin();
+            if (field.Type == TType.Stop) { 
+              break;
+            }
+            switch (field.ID)
+            {
+              case 1:
+                if (field.Type == TType.String) {
+                  ClusterId = iprot.ReadString();
+                } else { 
+                  TProtocolUtil.Skip(iprot, field.Type);
+                }
+                break;
+              case 2:
+                if (field.Type == TType.String) {
+                  MemberId = iprot.ReadString();
+                } else { 
+                  TProtocolUtil.Skip(iprot, field.Type);
+                }
+                break;
+              default: 
+                TProtocolUtil.Skip(iprot, field.Type);
+                break;
+            }
+            iprot.ReadFieldEnd();
+          }
+          iprot.ReadStructEnd();
+        }
+        finally
+        {
+          iprot.DecrementRecursionDepth();
+        }
+      }
+
+      public void Write(TProtocol oprot) {
+        oprot.IncrementRecursionDepth();
+        try
+        {
+          TStruct struc = new TStruct("resumeMember_args");
+          oprot.WriteStructBegin(struc);
+          TField field = new TField();
+          if (ClusterId != null && __isset.clusterId) {
+            field.Name = "clusterId";
+            field.Type = TType.String;
+            field.ID = 1;
+            oprot.WriteFieldBegin(field);
+            oprot.WriteString(ClusterId);
+            oprot.WriteFieldEnd();
+          }
+          if (MemberId != null && __isset.memberId) {
+            field.Name = "memberId";
+            field.Type = TType.String;
+            field.ID = 2;
+            oprot.WriteFieldBegin(field);
+            oprot.WriteString(MemberId);
+            oprot.WriteFieldEnd();
+          }
+          oprot.WriteFieldStop();
+          oprot.WriteStructEnd();
+        }
+        finally
+        {
+          oprot.DecrementRecursionDepth();
+        }
+      }
+
+      public override string ToString() {
+        StringBuilder __sb = new StringBuilder("resumeMember_args(");
+        bool __first = true;
+        if (ClusterId != null && __isset.clusterId) {
+          if(!__first) { __sb.Append(", "); }
+          __first = false;
+          __sb.Append("ClusterId: ");
+          __sb.Append(ClusterId);
+        }
+        if (MemberId != null && __isset.memberId) {
+          if(!__first) { __sb.Append(", "); }
+          __first = false;
+          __sb.Append("MemberId: ");
+          __sb.Append(MemberId);
+        }
+        __sb.Append(")");
+        return __sb.ToString();
+      }
+
+    }
+
+
+    #if !SILVERLIGHT
+    [Serializable]
+    #endif
+    public partial class resumeMember_result : TBase
+    {
+      private bool _success;
+
+      public bool Success
+      {
+        get
+        {
+          return _success;
+        }
+        set
+        {
+          __isset.success = true;
+          this._success = value;
+        }
+      }
+
+
+      public Isset __isset;
+      #if !SILVERLIGHT
+      [Serializable]
+      #endif
+      public struct Isset {
+        public bool success;
+      }
+
+      public resumeMember_result() {
+      }
+
+      public void Read (TProtocol iprot)
+      {
+        iprot.IncrementRecursionDepth();
+        try
+        {
+          TField field;
+          iprot.ReadStructBegin();
+          while (true)
+          {
+            field = iprot.ReadFieldBegin();
+            if (field.Type == TType.Stop) { 
+              break;
+            }
+            switch (field.ID)
+            {
+              case 0:
+                if (field.Type == TType.Bool) {
+                  Success = iprot.ReadBool();
+                } else { 
+                  TProtocolUtil.Skip(iprot, field.Type);
+                }
+                break;
+              default: 
+                TProtocolUtil.Skip(iprot, field.Type);
+                break;
+            }
+            iprot.ReadFieldEnd();
+          }
+          iprot.ReadStructEnd();
+        }
+        finally
+        {
+          iprot.DecrementRecursionDepth();
+        }
+      }
+
+      public void Write(TProtocol oprot) {
+        oprot.IncrementRecursionDepth();
+        try
+        {
+          TStruct struc = new TStruct("resumeMember_result");
+          oprot.WriteStructBegin(struc);
+          TField field = new TField();
+
+          if (this.__isset.success) {
+            field.Name = "Success";
+            field.Type = TType.Bool;
+            field.ID = 0;
+            oprot.WriteFieldBegin(field);
+            oprot.WriteBool(Success);
+            oprot.WriteFieldEnd();
+          }
+          oprot.WriteFieldStop();
+          oprot.WriteStructEnd();
+        }
+        finally
+        {
+          oprot.DecrementRecursionDepth();
+        }
+      }
+
+      public override string ToString() {
+        StringBuilder __sb = new StringBuilder("resumeMember_result(");
+        bool __first = true;
+        if (__isset.success) {
+          if(!__first) { __sb.Append(", "); }
+          __first = false;
+          __sb.Append("Success: ");
+          __sb.Append(Success);
+        }
+        __sb.Append(")");
+        return __sb.ToString();
+      }
+
+    }
+
+
+    #if !SILVERLIGHT
+    [Serializable]
+    #endif
     public partial class shutdownCluster_args : TBase
     {
       private string _clusterId;
@@ -3776,9 +4446,9 @@ namespace Hazelcast.Remote
     #endif
     public partial class executeOnController_result : TBase
     {
-      private bool _success;
+      private Response _success;
 
-      public bool Success
+      public Response Success
       {
         get
         {
@@ -3819,8 +4489,9 @@ namespace Hazelcast.Remote
             switch (field.ID)
             {
               case 0:
-                if (field.Type == TType.Bool) {
-                  Success = iprot.ReadBool();
+                if (field.Type == TType.Struct) {
+                  Success = new Response();
+                  Success.Read(iprot);
                 } else { 
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
@@ -3848,12 +4519,14 @@ namespace Hazelcast.Remote
           TField field = new TField();
 
           if (this.__isset.success) {
-            field.Name = "Success";
-            field.Type = TType.Bool;
-            field.ID = 0;
-            oprot.WriteFieldBegin(field);
-            oprot.WriteBool(Success);
-            oprot.WriteFieldEnd();
+            if (Success != null) {
+              field.Name = "Success";
+              field.Type = TType.Struct;
+              field.ID = 0;
+              oprot.WriteFieldBegin(field);
+              Success.Write(oprot);
+              oprot.WriteFieldEnd();
+            }
           }
           oprot.WriteFieldStop();
           oprot.WriteStructEnd();
@@ -3867,11 +4540,11 @@ namespace Hazelcast.Remote
       public override string ToString() {
         StringBuilder __sb = new StringBuilder("executeOnController_result(");
         bool __first = true;
-        if (__isset.success) {
+        if (Success != null && __isset.success) {
           if(!__first) { __sb.Append(", "); }
           __first = false;
           __sb.Append("Success: ");
-          __sb.Append(Success);
+          __sb.Append(Success== null ? "<null>" : Success.ToString());
         }
         __sb.Append(")");
         return __sb.ToString();

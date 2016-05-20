@@ -68,21 +68,29 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestCustomLogger()
         {
-            Logger.SetLoggerFactory(new CustomLogFactory());
-            var logger = Logger.GetLogger("test");
+            var oldLogger = Logger.GetLoggerFactory();
+            try
+            {
+                Logger.SetLoggerFactory(new CustomLogFactory());
+                var logger = Logger.GetLogger("test");
 
-            logger.Info("test message");
-            var exception = new ArgumentException();
-            logger.Severe("got exception", exception);
+                logger.Info("test message");
+                var exception = new ArgumentException();
+                logger.Severe("got exception", exception);
 
-            Assert.IsInstanceOf<CustomLogFactory.CustomLogger>(logger);
+                Assert.IsInstanceOf<CustomLogFactory.CustomLogger>(logger);
 
-            var customLogger = (CustomLogFactory.CustomLogger) logger;
+                var customLogger = (CustomLogFactory.CustomLogger) logger;
 
-            Assert.AreEqual(new Tuple<LogLevel, string, Exception>(LogLevel.Info, "test message", null),
-                (customLogger.Logs[0]));
-            Assert.AreEqual(new Tuple<LogLevel, string, Exception>(LogLevel.Severe, "got exception", exception),
-                (customLogger.Logs[1]));
+                Assert.AreEqual(new Tuple<LogLevel, string, Exception>(LogLevel.Info, "test message", null),
+                    (customLogger.Logs[0]));
+                Assert.AreEqual(new Tuple<LogLevel, string, Exception>(LogLevel.Severe, "got exception", exception),
+                    (customLogger.Logs[1]));
+            }
+            finally
+            {
+                Logger.SetLoggerFactory(oldLogger);                
+            }
         }
 
         [Test]

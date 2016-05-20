@@ -37,9 +37,30 @@ namespace Hazelcast.Client.Spi
             return _taskFactory.StartNew(function);
         }
 
-        public Task<object> ScheduleWithFixedDelay(Action command, long initialDelay, long period, TimeUnit unit)
+        public void ScheduleWithFixedDelay(Action command, long initialDelay, long period, TimeUnit unit, CancellationToken token)
         {
-            throw new NotImplementedException();
+            ScheduleWithCancellation(command, initialDelay, unit, token).ContinueWith(task =>
+            {
+                if (!task.IsCanceled)
+                {
+                    ScheduleWithFixedDelay(command, period, period, unit, token);
+                }
+            }, token);
+        }
+
+        public Task ScheduleWithCancellation(Action command, long delay, TimeUnit unit, CancellationToken token)
+        {
+            var tcs = new TaskCompletionSource<object>();
+            var continueTask = tcs.Task.ContinueWith(t =>
+            {
+                token.ThrowIfCancellationRequested();
+                if (t.IsCompleted)
+                {
+                    command();
+                }
+            });
+            new Timer(o => tcs.SetResult(null)).Change(unit.ToMillis(delay), Timeout.Infinite);
+            return continueTask;
         }
 
         public Task Schedule(Action command, long delay, TimeUnit unit)

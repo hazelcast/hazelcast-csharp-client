@@ -83,7 +83,13 @@ namespace Hazelcast.IO
 
         public static IPAddress GetAddressByName(string name)
         {
-            return name == "0.0.0.0" ? IPAddress.Any : Dns.GetHostAddresses(name).FirstOrDefault();
+            if (name == "0.0.0.0")
+            {
+                return IPAddress.Any;
+            }
+            var addresses = Dns.GetHostAddresses(name);
+            var ipv4 = addresses.FirstOrDefault(m => m.AddressFamily == AddressFamily.InterNetwork);
+            return ipv4 ?? addresses.FirstOrDefault();
         }
 
         public override int GetHashCode()
