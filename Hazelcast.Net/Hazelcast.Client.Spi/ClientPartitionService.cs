@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Spi
         private readonly AtomicBoolean _updating = new AtomicBoolean(false);
         private volatile bool _isLive;
         private volatile int _partitionCount;
-        private Thread _partitionThread;
+        private CancellationTokenSource _partitionUpdaterToken;
 
         public ClientPartitionService(HazelcastClient client)
         {
@@ -75,12 +75,9 @@ namespace Hazelcast.Client.Spi
         public void Start()
         {
             _isLive = true;
-            _partitionThread = new Thread(RefreshPartitionThread)
-            {
-                IsBackground = true,
-                Name = "hz-partition-updater-" + new Random().Next()
-            };
-            _partitionThread.Start();
+            _partitionUpdaterToken = new CancellationTokenSource();
+            _client.GetClientExecutionService().ScheduleWithFixedDelay(() => GetPartitions(),
+                0, PartitionRefreshPeriod, TimeUnit.Milliseconds, _partitionUpdaterToken.Token);
         }
 
         public void Stop()
@@ -88,8 +85,14 @@ namespace Hazelcast.Client.Spi
             try
             {
                 _isLive = false;
-                _partitionThread.Interrupt();
-                _partitionThread.Join();
+                try
+                {
+                    _partitionUpdaterToken.Cancel();
+                }
+                finally
+                {
+                    _partitionUpdaterToken.Dispose();                    
+                }
             }
             catch (Exception e)
             {
@@ -111,7 +114,7 @@ namespace Hazelcast.Client.Spi
 
         private bool GetPartitions()
         {
-            if (_updating.CompareAndSet(false, true))
+            if (_isLive && _updating.CompareAndSet(false, true))
             {
                 try
                 {
@@ -178,22 +181,6 @@ namespace Hazelcast.Client.Spi
             _partitionCount = _partitions.Count;
             return _partitionCount > 0;
         }
-
-        private void RefreshPartitionThread()
-        {
-            while (_isLive)
-            {
-                try
-                {
-                    GetPartitions();
-                    Thread.Sleep(PartitionRefreshPeriod);
-                }
-                catch (ThreadInterruptedException)
-                {
-                }
-            }
-        }
-
 //                {
 //                if (owner != null)
 //                var owner = _client.GetPartitionService().GetPartitionOwner(_partitionId);

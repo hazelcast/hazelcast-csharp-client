@@ -29,8 +29,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
-    internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener,
-        IConnectionHeartbeatListener
+    internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener
     {
         private const int DefaultEventThreadCount = 3;
         private const int DefaultInvocationTimeout = 120;
@@ -69,7 +68,6 @@ namespace Hazelcast.Client.Spi
 
             _clientConnectionManager = (ClientConnectionManager) client.GetConnectionManager();
             _clientConnectionManager.AddConnectionListener(this);
-            _clientConnectionManager.AddConnectionHeartBeatListener(this);
         }
 
         protected HazelcastClient Client
@@ -119,17 +117,6 @@ namespace Hazelcast.Client.Spi
         {
             _isShutDown = true;
             _taskScheduler.Dispose();
-        }
-
-        public void HeartBeatStarted(ClientConnection connection)
-        {
-            // noop
-        }
-
-        public void HeartBeatStopped(ClientConnection connection)
-        {
-            CleanupInvocations(connection);
-            CleanupEventHandlers(connection);
         }
 
         public void ConnectionAdded(ClientConnection connection)
@@ -183,10 +170,10 @@ namespace Hazelcast.Client.Spi
             return clientInvocation.Future;
         }
 
-        public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
+        public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection, bool bypassHeartbeat = false)
         {
             var clientInvocation = new ClientInvocation(request, connection);
-            Send(connection, clientInvocation);
+            Send(connection, clientInvocation, bypassHeartbeat);
             return clientInvocation.Future;
         }
 
@@ -235,7 +222,7 @@ namespace Hazelcast.Client.Spi
             return invocation.Future;
         }
 
-        protected virtual void Send(ClientConnection connection, ClientInvocation clientInvocation)
+        protected virtual void Send(ClientConnection connection, ClientInvocation clientInvocation, bool bypassHeartbeat = false)
         {
             var correlationId = NextCorrelationId();
             clientInvocation.Message.SetCorrelationId(correlationId);
@@ -250,9 +237,13 @@ namespace Hazelcast.Client.Spi
                 HandleException(clientInvocation,
                     new TargetNotMemberException(
                         "The member UUID on the invocation doesn't match the member UUID on the connection."));
+                return;
             }
-
-            if (_isShutDown)
+            if (!connection.IsHeartBeating && !bypassHeartbeat)
+            {
+                HandleException(clientInvocation, new TargetDisconnectedException(connection.GetAddress() +  " has stopped heartbeating."));
+            }
+            else if (_isShutDown)
             {
                 FailRequestDueToShutdown(clientInvocation);
             }
@@ -263,9 +254,14 @@ namespace Hazelcast.Client.Spi
                 //enqueue to write queue
                 if (!connection.WriteAsync((ISocketWritable) clientInvocation.Message))
                 {
+                    if (Logger.IsFinestEnabled())
+                    {
+                        Logger.Finest("Unable to write request " + clientInvocation.Message + " to connection " +
+                                      connection);
+                    }
                     UnregisterCall(correlationId);
                     RemoveEventHandler(correlationId);
-                    FailRequest(connection, clientInvocation);
+                    FailRequest(connection, clientInvocation, "Error writing to socket.");
                 }
             }
         }
@@ -314,7 +310,7 @@ namespace Hazelcast.Client.Spi
             {
                 ClientInvocation invocation;
                 _invocations.TryRemove(key, out invocation);
-                FailRequest(connection, invocation);
+                FailRequest(connection, invocation, "connection was closed.");
             }
         }
 
@@ -336,12 +332,12 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        private void FailRequest(ClientConnection connection, ClientInvocation invocation)
+        private void FailRequest(ClientConnection connection, ClientInvocation invocation, string reason)
         {
             if (_client.GetConnectionManager().Live)
             {
                 HandleException(invocation,
-                    new TargetDisconnectedException(connection.GetAddress()));
+                    new TargetDisconnectedException(connection.GetAddress(), reason));
             }
             else
             {

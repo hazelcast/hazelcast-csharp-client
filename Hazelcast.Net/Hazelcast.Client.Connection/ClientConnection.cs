@@ -37,19 +37,22 @@ namespace Hazelcast.Client.Connection
         public const int BufferSize = 1 << 15; //32k
         public const int SocketReceiveBufferSize = 1 << 15; //32k
         public const int SocketSendBufferSize = 1 << 15; //32k
+
         private const int ConnectionTimeout = 30000;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConnection));
+
         private readonly ClientMessageBuilder _builder;
         private readonly ClientConnectionManager _clientConnectionManager;
         private readonly int _id;
-
         private readonly ByteBuffer _receiveBuffer;
         private readonly ByteBuffer _sendBuffer;
         private readonly BlockingCollection<ISocketWritable> _writeQueue = new BlockingCollection<ISocketWritable>();
+
         private volatile Socket _clientSocket;
-        private volatile ISocketWritable _lastWritable;
-        private volatile bool _live;
+        private volatile bool _isHeartBeating = true;
         private bool _isOwner;
+        private volatile ISocketWritable _lastWritable;
+        private readonly AtomicBoolean _live;
         private volatile IMember _member;
         private Thread _writeThread;
 
@@ -65,13 +68,9 @@ namespace Hazelcast.Client.Connection
 
             var isa = address.GetInetSocketAddress();
             var socketOptions = clientNetworkConfig.GetSocketOptions();
-            var socketFactory = socketOptions.GetSocketFactory();
-
-            if (socketFactory == null)
-            {
-                socketFactory = new DefaultSocketFactory();
-            }
+            var socketFactory = socketOptions.GetSocketFactory() ?? new DefaultSocketFactory();
             _clientSocket = socketFactory.CreateSocket();
+
             try
             {
                 _clientSocket = new Socket(isa.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -114,7 +113,7 @@ namespace Hazelcast.Client.Connection
 
                 _builder = new ClientMessageBuilder(invocationService.HandleClientMessage);
 
-                _live = true;
+                _live = new AtomicBoolean(true);
             }
             catch (Exception e)
             {
@@ -125,7 +124,7 @@ namespace Hazelcast.Client.Connection
 
         public bool Live
         {
-            get { return _live; }
+            get { return _live.Get(); }
         }
 
         internal int Id
@@ -133,10 +132,35 @@ namespace Hazelcast.Client.Connection
             get { return _id; }
         }
 
+        public DateTime LastRead { get; private set; }
+
+        public bool IsHeartBeating
+        {
+            get { return _isHeartBeating; }
+        }
+
         /// <exception cref="System.IO.IOException"></exception>
         public void Close()
         {
-            Release();
+            if (!_live.CompareAndSet(true, false))
+            {
+                return;
+            }
+            _writeQueue.CompleteAdding();
+
+            if (_writeThread != null && _writeThread.IsAlive)
+            {
+                _writeThread.Interrupt();
+            }
+            if (Logger.IsFinestEnabled())
+            {
+                Logger.Finest(string.Format("Closing socket, address: {0} id: {1}", GetAddress(), _id));
+            }
+
+            _clientSocket.Shutdown(SocketShutdown.Both);
+            _clientSocket.Close();
+
+            _clientSocket = null;
         }
 
         public Address GetAddress()
@@ -159,6 +183,16 @@ namespace Hazelcast.Client.Connection
         public IMember GetMember()
         {
             return _member;
+        }
+
+        public void HeartbeatFailed()
+        {
+            _isHeartBeating = false;
+        }
+
+        public void HeartbeatSucceeded()
+        {
+            _isHeartBeating = true;
         }
 
         public void SetRemoteMember(IMember member)
@@ -190,7 +224,7 @@ namespace Hazelcast.Client.Connection
 
         public bool WriteAsync(ISocketWritable packet)
         {
-            if (!_live)
+            if (!Live)
             {
                 if (Logger.IsFinestEnabled())
                 {
@@ -212,15 +246,16 @@ namespace Hazelcast.Client.Connection
             _clientSocket.Send(Encoding.UTF8.GetBytes(Protocols.ClientBinaryNew));
         }
 
+        internal bool IsOwner()
+        {
+            return _isOwner;
+        }
+
         internal void SetOwner()
         {
             _isOwner = true;
         }
 
-        internal bool IsOwner()
-        {
-            return _isOwner;
-        }
         private void BeginRead()
         {
             if (!CheckLive())
@@ -254,7 +289,7 @@ namespace Hazelcast.Client.Connection
 
         private bool CheckLive()
         {
-            if (!_live)
+            if (!Live)
             {
                 return false;
             }
@@ -274,26 +309,27 @@ namespace Hazelcast.Client.Connection
             }
             try
             {
-                //if (ThreadUtil.debug) { Console.Write(" ER"+id); }
                 SocketError socketError;
                 var receivedByteSize = _clientSocket.EndReceive(asyncResult, out socketError);
-
-                if (receivedByteSize <= 0)
-                {
-                    //Socket Closed
-                    Close();
-                }
 
                 if (socketError != SocketError.Success)
                 {
                     HandleSocketException(new SocketException((int) socketError));
                     return;
                 }
+
+                if (receivedByteSize <= 0)
+                {
+                    //socket was closed
+                    HandleSocketException(new TargetDisconnectedException(_member.GetAddress(), "Socket was closed."));
+                    return;
+                }
+
                 _receiveBuffer.Position += receivedByteSize;
                 _receiveBuffer.Flip();
 
                 _builder.OnData(_receiveBuffer);
-
+                LastRead = DateTime.Now;
                 if (_receiveBuffer.HasRemaining())
                 {
                     _receiveBuffer.Compact();
@@ -316,6 +352,12 @@ namespace Hazelcast.Client.Connection
 
         private void HandleSocketException(Exception e)
         {
+            if (!Live)
+            {
+                // connection is already closed
+                return;
+            }
+
             var se = e as SocketException;
             if (se != null)
             {
@@ -323,34 +365,9 @@ namespace Hazelcast.Client.Connection
             }
             else
             {
-                Logger.Warning(e.Message, e);
+                Logger.Warning("Got exception in connection " + this + ":", e);
             }
-            _clientConnectionManager.DestroyConnection(this);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        private void Release()
-        {
-            if (!_live)
-            {
-                return;
-            }
-            _live = false;
-            _writeQueue.CompleteAdding();
-
-            if (_writeThread != null && _writeThread.IsAlive)
-            {
-                _writeThread.Interrupt();
-            }
-            if (Logger.IsFinestEnabled())
-            {
-                Logger.Finest(string.Format("Closing socket, address: {0} id: {1}", GetAddress(), _id));
-            }
-
-            _clientSocket.Shutdown(SocketShutdown.Both);
-            _clientSocket.Close();
-
-            _clientSocket = null;
+            _clientConnectionManager.DestroyConnection(this, e);
         }
 
         private void StartAsyncProcess()
@@ -413,17 +430,19 @@ namespace Hazelcast.Client.Connection
                             _sendBuffer.Remaining(),
                             SocketFlags.None, out socketError);
 
-                        if (sendByteSize <= 0)
+                        if (socketError != SocketError.Success)
                         {
-                            Close();
+                            HandleSocketException(new SocketException((int)socketError));
                             return;
                         }
 
-                        if (socketError != SocketError.Success)
+                        if (sendByteSize <= 0)
                         {
-                            HandleSocketException(new SocketException((int) socketError));
+                            HandleSocketException(new IOException("Socket was closed"));
                             return;
                         }
+
+                        
 
                         _sendBuffer.Position += sendByteSize;
                         //logger.Info("SEND BUFFER CALLBACK: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
