@@ -283,7 +283,6 @@ namespace Hazelcast.Client.Connection
                     ClientTypes.Csharp, _client.GetSerializationService().GetVersion());
             }
 
-            connection.Init();
             IClientMessage response;
             try
             {
@@ -335,14 +334,10 @@ namespace Hazelcast.Client.Connection
                     var request = ClientPingCodec.EncodeRequest();
                     var task = ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request,
                         clientConnection);
-                    // ReSharper disable once InconsistentlySynchronizedField
-                    Logger.Finest("Sending heartbeat request to " + clientConnection.GetAddress());
                     try
                     {
                         var response = ThreadUtil.GetResult(task, _heartBeatTimeout);
                         ClientPingCodec.DecodeResponse(response);
-                        // ReSharper disable once InconsistentlySynchronizedField
-                        Logger.Finest("Got heartbeat response from " + clientConnection.GetAddress());
                     }
                     catch (Exception e)
                     {
@@ -375,6 +370,7 @@ namespace Hazelcast.Client.Connection
                 connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(),
                     id,
                     address, _networkConfig);
+                connection.Init();
                 if (_socketInterceptor != null)
                 {
                     _socketInterceptor.OnConnect(connection.GetSocket());

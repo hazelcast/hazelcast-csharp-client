@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
 using Hazelcast.Core;
 using NUnit.Framework;
@@ -78,6 +79,27 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual("value2", map.Get("key"));
 
             map.Destroy();
+        }
+
+        [Test]
+        public void TestPromoteToOwner()
+        {
+            AddNodeAndWait();
+            var name = TestSupport.RandomString();
+            var map = Client.GetMap<int, int>(name);
+
+            for (int i = 0; i < 1000; i++)
+            {
+                map.Put(i, i);
+            }
+
+            var clientDisconnected = TestSupport.WaitForClientState(Client,
+                LifecycleEvent.LifecycleState.ClientDisconnected);
+            var clientConnected = TestSupport.WaitForClientState(Client, LifecycleEvent.LifecycleState.ClientConnected);
+            Cluster.RemoveNode(Cluster.NodeIds.First());
+            TestSupport.AssertCompletedEventually(clientDisconnected, taskName: "clientDisconnected");
+            TestSupport.AssertCompletedEventually(clientConnected, taskName: "clientConnected");
+            Assert.AreEqual(1000, map.Size());
         }
     }
 }
