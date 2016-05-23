@@ -15,19 +15,41 @@
 using System.Linq;
 using System.Threading;
 using Hazelcast.Core;
+using Hazelcast.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
-    internal class ClientClusterServiceTest : HazelcastBaseTest
+    internal class ClientClusterServiceTest : HazelcastTestSupport
     {
+        private IHazelcastInstance _client;
+        private Cluster _cluster;
+        private RemoteController.Client _remoteController;
+
+        [SetUp]
+        public void Setup()
+        {
+            _remoteController = CreateRemoteController();
+            _cluster = CreateCluster(_remoteController);
+            StartMember(_remoteController, _cluster);
+            _client = CreateClient();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _client.Shutdown();
+            _remoteController.shutdownCluster(_cluster.Id);
+            StopRemoteController(_remoteController);
+        }
+
         [Test]
         public void MemberAddedEvent()
         {
             var reset = new ManualResetEventSlim();
 
             MembershipEvent memberAddedEvent = null;
-            Client.GetCluster().AddMembershipListener(new MembershipListener
+            _client.GetCluster().AddMembershipListener(new MembershipListener
             {
                 OnMemberAdded = memberAdded =>
                 {
@@ -35,35 +57,29 @@ namespace Hazelcast.Client.Test
                     reset.Set();
                 }
             });
-            var node = Cluster.AddNode();
-            try
-            {
-                Assert.IsTrue(reset.Wait(30*1000));
-                Assert.IsInstanceOf<ICluster>(memberAddedEvent.Source);
-                Assert.IsInstanceOf<ICluster>(memberAddedEvent.GetCluster());
-                Assert.AreEqual(MembershipEvent.MemberAdded, memberAddedEvent.GetEventType());
-                Assert.IsNotNull(memberAddedEvent.GetMember());
-                Assert.AreEqual(2, memberAddedEvent.GetMembers().Count);
-            }
-            finally
-            {
-                Cluster.RemoveNode(node);
-            }
+            StartMember(_remoteController, _cluster);
+            Assert.IsTrue(reset.Wait(30*1000));
+            Assert.IsInstanceOf<ICluster>(memberAddedEvent.Source);
+            Assert.IsInstanceOf<ICluster>(memberAddedEvent.GetCluster());
+            Assert.AreEqual(MembershipEvent.MemberAdded, memberAddedEvent.GetEventType());
+            Assert.IsNotNull(memberAddedEvent.GetMember());
+            Assert.AreEqual(2, memberAddedEvent.GetMembers().Count);
         }
 
         [Test]
         public void MemberRemovedEvent()
         {
-            var node = Cluster.AddNode();
-            Client.GetCluster().AddMembershipListener(new MembershipListener
-            {
-                OnMemberAdded = memberAddedEvent => { Cluster.RemoveNode(node); }
-            });
-
             var reset = new ManualResetEventSlim();
+            _client.GetCluster().AddMembershipListener(new MembershipListener
+            {
+                OnMemberAdded = memberAddedEvent => { reset.Set(); }
+            });
+            var member = StartMember(_remoteController, _cluster);
+            Assert.IsTrue(reset.Wait(30 * 1000));
+            reset.Reset();
 
             MembershipEvent memberRemovedEvent = null;
-            Client.GetCluster().AddMembershipListener(new MembershipListener
+            _client.GetCluster().AddMembershipListener(new MembershipListener
             {
                 OnMemberRemoved = memberRemoved =>
                 {
@@ -71,6 +87,8 @@ namespace Hazelcast.Client.Test
                     reset.Set();
                 }
             });
+            StopMember(_remoteController, _cluster, member);
+            
             Assert.IsTrue(reset.Wait(30*1000));
             Assert.IsInstanceOf<ICluster>(memberRemovedEvent.Source);
             Assert.IsInstanceOf<ICluster>(memberRemovedEvent.GetCluster());
@@ -83,7 +101,7 @@ namespace Hazelcast.Client.Test
         public void TestInitialMembershipService()
         {
             var listener = new InitialMembershipListener();
-            Client.GetCluster().AddMembershipListener(listener);
+            _client.GetCluster().AddMembershipListener(listener);
 
             var members = listener._membershipEvent.GetMembers();
             Assert.AreEqual(1, members.Count);

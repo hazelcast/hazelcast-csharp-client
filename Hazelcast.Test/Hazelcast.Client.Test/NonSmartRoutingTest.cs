@@ -16,14 +16,38 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Config;
 using Hazelcast.Core;
+using Hazelcast.Remote;
 using NUnit.Framework;
+using Member = Hazelcast.Remote.Member;
 
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class NonSmartRoutingTest : HazelcastBaseTest
+    public class NonSmartRoutingTest : HazelcastTestSupport
     {
-        private int _nodeId;
+        private RemoteController.Client _remoteController;
+        private Cluster _cluster;
+        private IHazelcastInstance _client;
+
+        [SetUp]
+        public void Setup()
+        {
+            _remoteController = CreateRemoteController();
+            _cluster = CreateCluster(_remoteController);
+            
+            StartMember(_remoteController, _cluster);
+            StartMember(_remoteController, _cluster);
+            _client = CreateClient();
+
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            HazelcastClient.ShutdownAll();
+            StopCluster(_remoteController, _cluster);
+            StopRemoteController(_remoteController);
+        }
 
         protected override void ConfigureClient(ClientConfig config)
         {
@@ -31,22 +55,10 @@ namespace Hazelcast.Client.Test
             config.GetNetworkConfig().SetSmartRouting(false);
         }
 
-        [TestFixtureSetUp]
-        public void Setup()
-        {
-            _nodeId = AddNodeAndWait();
-        }
-
-        [TestFixtureTearDown]
-        public new void TearDown()
-        {
-            RemoveNodeAndWait(_nodeId);
-        }
-
         [Test]
         public void TestListenerWithNonSmartRouting()
         {
-            var map = Client.GetMap<string, string>(TestSupport.RandomString());
+            var map = _client.GetMap<string, string>(TestSupport.RandomString());
 
             var keys = TestSupport.RandomArray(TestSupport.RandomString, 10);
             var registrations = new List<string>();
@@ -77,7 +89,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestPutAllWithNonSmartRouting()
         {
-            var map = Client.GetMap<string, string>(TestSupport.RandomString());
+            var map = _client.GetMap<string, string>(TestSupport.RandomString());
             var n = 1000;
             var toInsert = new Dictionary<string, string>();
             for (var i = 0; i < n; i++)

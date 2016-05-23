@@ -14,14 +14,39 @@
 
 using System.Collections.Generic;
 using Hazelcast.Client.Spi;
+using Hazelcast.Core;
 using Hazelcast.IO;
+using Hazelcast.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientPartitionTest : HazelcastBaseTest
+    public class ClientPartitionTest : HazelcastTestSupport
     {
+        private RemoteController.Client _remoteController;
+        private Cluster _cluster;
+        private IHazelcastInstance _client;
+
+        [SetUp]
+        public void Setup()
+        {
+            _remoteController = CreateRemoteController();
+            _cluster = CreateCluster(_remoteController);
+
+            StartMember(_remoteController, _cluster);
+            _client = CreateClient();
+
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            HazelcastClient.ShutdownAll();
+            StopCluster(_remoteController, _cluster);
+            StopRemoteController(_remoteController);
+        }
+
         private static HashSet<Address> GetPartitionOwners(int partitionCount, IClientPartitionService partitionService)
         {
             var partitionOwners = new HashSet<Address>();
@@ -36,7 +61,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestPartitionsUpdatedAfterNewNode()
         {
-            var proxy = ((HazelcastClientProxy) Client);
+            var proxy = (HazelcastClientProxy) _client;
             var partitionService = proxy.GetClient().GetClientPartitionService();
 
             var partitionCount = partitionService.GetPartitionCount();
@@ -45,7 +70,7 @@ namespace Hazelcast.Client.Test
             var owners = GetPartitionOwners(partitionCount, partitionService);
             Assert.AreEqual(1, owners.Count);
 
-            var id = AddNodeAndWait();
+            var member = StartMemberAndWait(_client, _remoteController, _cluster, 2);
             try
             {
                 TestSupport.AssertTrueEventually(() =>
@@ -56,7 +81,7 @@ namespace Hazelcast.Client.Test
             }
             finally
             {
-                RemoveNodeAndWait(id);
+                StopMemberAndWait(_client, _remoteController, _cluster, member);
 
                 TestSupport.AssertTrueEventually(() =>
                 {

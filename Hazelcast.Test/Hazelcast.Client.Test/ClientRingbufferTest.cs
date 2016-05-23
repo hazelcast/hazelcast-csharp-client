@@ -21,7 +21,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientRingbufferTest : HazelcastBaseTest
+    public class ClientRingbufferTest : SingleMemberBaseTest
     {
         [SetUp]
         public void Init()

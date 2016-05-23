@@ -17,18 +17,29 @@ using System.Linq;
 using System.Threading;
 using Hazelcast.Config;
 using Hazelcast.Core;
+using Hazelcast.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientHeartBeatTest : HazelcastBaseTest
+    public class ClientHeartBeatTest : HazelcastTestSupport
     {
-        [TearDown]
-        public new void TearDown()
+        private RemoteController.Client _remoteController;
+        private Cluster _cluster;
+
+        [SetUp]
+        public void Setup()
         {
-            Cluster.RemoveNode();
-            Cluster.AddNode();
+            _remoteController = CreateRemoteController();
+            _cluster = CreateCluster(_remoteController);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            HazelcastClient.ShutdownAll();
+            _remoteController.exit();
         }
 
         protected override void ConfigureClient(ClientConfig config)
@@ -49,7 +60,10 @@ namespace Hazelcast.Client.Test
         [Test, Ignore]
         public void TestHeartBeatStoppedOnOwnerNode()
         {
-            var map = Client.GetMap<string, string>(TestSupport.RandomString());
+            var member = _remoteController.startMember(_cluster.Id);
+            var client = CreateClient();
+
+            var map = client.GetMap<string, string>(TestSupport.RandomString());
 
             var key = TestSupport.RandomString();
             var key2 = TestSupport.RandomString();
@@ -63,11 +77,10 @@ namespace Hazelcast.Client.Test
             {
                 Added = e => Interlocked.Increment(ref eventCount)
             }, key2, false);
-            var nodeId = Cluster.NodeIds.First();
 
-            Cluster.SuspendNode(nodeId);
+            SuspendMember(member);
             Thread.Sleep(10000);
-            Cluster.ResumeNode(nodeId);
+            ResumeMember(member);
 
             Assert.That(map.Get(key), Is.EqualTo(value));
 
@@ -81,16 +94,21 @@ namespace Hazelcast.Client.Test
         [Test, Ignore]
         public void TestHeartStoppedOnNonOwnerNode()
         {
-            var id = AddNodeAndWait();
+            var member1 = _remoteController.startMember(_cluster.Id);
+            var client = CreateClient();
 
-            var map = Client.GetMap<int, string>(TestSupport.RandomString());
+            var member2 = StartMemberAndWait(client, _remoteController, _cluster, 2);
+
+            var map = client.GetMap<int, string>(TestSupport.RandomString());
             var count = 50;
             // make sure we have a connection open to the second node
             for (var i = 0; i < count/2; i++)
             {
                 map.Put(i, TestSupport.RandomString());
             }
-            Cluster.SuspendNode(id);
+            
+            SuspendMember(member2);
+
             for (var i = count/2; i < count; i++)
             {
                 try
@@ -103,11 +121,10 @@ namespace Hazelcast.Client.Test
                 }
             }
             Thread.Sleep(10000);
-            Cluster.ResumeNode(id);
+            
+            ResumeMember(member2);
 
             TestSupport.AssertTrueEventually(() => { Assert.AreEqual(count, map.Size()); });
-
-            RemoveNodeAndWait(id);
         }
     }
 }

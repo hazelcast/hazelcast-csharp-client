@@ -13,21 +13,42 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
 using System.Threading;
 using Hazelcast.Core;
+using Hazelcast.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    internal class ClientReconnectionTest : HazelcastBaseTest
+    internal class ClientReconnectionTest : HazelcastTestSupport
     {
+        [SetUp]
+        public void Setup()
+        {
+            _remoteController = CreateRemoteController();
+            _cluster = CreateCluster(_remoteController);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            HazelcastClient.ShutdownAll();
+            StopCluster(_remoteController, _cluster);
+            StopRemoteController(_remoteController);
+        }
+
+        private RemoteController.Client _remoteController;
+        private Cluster _cluster;
+
         [Test]
         public void TestListenerReconnect()
         {
+            var member = StartMember(_remoteController, _cluster);
+            var client = CreateClient();
+
             var name = TestSupport.RandomString();
-            var map = Client.GetMap<string, string>(name);
+            var map = client.GetMap<string, string>(name);
             var eventCount = 0;
             var count = 2;
             var regId = map.AddEntryListener(new EntryAdapter<string, string>
@@ -38,14 +59,14 @@ namespace Hazelcast.Client.Test
             // try to start and stop the instance several times
             for (var i = 0; i < count; i++)
             {
-                var clientDisconnected = TestSupport.WaitForClientState(Client,
+                var clientDisconnected = TestSupport.WaitForClientState(client,
                     LifecycleEvent.LifecycleState.ClientDisconnected);
-                Cluster.RemoveNode();
+                _remoteController.shutdownMember(_cluster.Id, member.Uuid);
                 TestSupport.AssertCompletedEventually(clientDisconnected, taskName: "clientDisconnected");
                 Interlocked.Exchange(ref eventCount, 0);
-                var clientConnected = TestSupport.WaitForClientState(Client,
+                var clientConnected = TestSupport.WaitForClientState(client,
                     LifecycleEvent.LifecycleState.ClientConnected);
-                Cluster.AddNode();
+                member = _remoteController.startMember(_cluster.Id);
                 TestSupport.AssertCompletedEventually(clientConnected, taskName: "clientConnected");
 
                 TestSupport.AssertTrueEventually(() =>
@@ -59,47 +80,60 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        public void TestPromoteToOwner()
+        {
+            var member1 = _remoteController.startMember(_cluster.Id);
+            var client = CreateClient();
+
+            var member2 = _remoteController.startMember(_cluster.Id);
+
+            var name = TestSupport.RandomString();
+            var map = client.GetMap<int, int>(name);
+
+            for (var i = 0; i < 1000; i++)
+            {
+                map.Put(i, i);
+            }
+
+            var clientDisconnected = TestSupport.WaitForClientState(client,
+                LifecycleEvent.LifecycleState.ClientDisconnected);
+            var clientConnected = TestSupport.WaitForClientState(client, LifecycleEvent.LifecycleState.ClientConnected);
+
+            _remoteController.shutdownMember(_cluster.Id, member1.Uuid);
+
+            TestSupport.AssertCompletedEventually(clientDisconnected, taskName: "clientDisconnected");
+            TestSupport.AssertCompletedEventually(clientConnected, taskName: "clientConnected");
+            Assert.AreEqual(1000, map.Size());
+        }
+
+        [Test]
         public void TestReconnect()
         {
+            var member = _remoteController.startMember(_cluster.Id);
+            var client = CreateClient();
+
             var name = TestSupport.RandomString();
-            var map = Client.GetMap<string, string>(name);
+            var map = client.GetMap<string, string>(name);
             map.Put("key", "value");
             Assert.AreEqual("value", map.Get("key"));
 
-            var clientDisconnected = TestSupport.WaitForClientState(Client,
+            var clientDisconnected = TestSupport.WaitForClientState(client,
                 LifecycleEvent.LifecycleState.ClientDisconnected);
-            Cluster.RemoveNode();
+
+            _remoteController.shutdownMember(_cluster.Id, member.Uuid);
+
             TestSupport.AssertCompletedEventually(clientDisconnected, taskName: "clientDisconnected");
 
-            var clientConnected = TestSupport.WaitForClientState(Client, LifecycleEvent.LifecycleState.ClientConnected);
-            Cluster.AddNode();
+            var clientConnected = TestSupport.WaitForClientState(client, LifecycleEvent.LifecycleState.ClientConnected);
+
+            _remoteController.startMember(_cluster.Id);
+
             TestSupport.AssertCompletedEventually(clientConnected, taskName: "clientConnected");
 
             map.Put("key", "value2");
             Assert.AreEqual("value2", map.Get("key"));
 
             map.Destroy();
-        }
-
-        [Test]
-        public void TestPromoteToOwner()
-        {
-            AddNodeAndWait();
-            var name = TestSupport.RandomString();
-            var map = Client.GetMap<int, int>(name);
-
-            for (int i = 0; i < 1000; i++)
-            {
-                map.Put(i, i);
-            }
-
-            var clientDisconnected = TestSupport.WaitForClientState(Client,
-                LifecycleEvent.LifecycleState.ClientDisconnected);
-            var clientConnected = TestSupport.WaitForClientState(Client, LifecycleEvent.LifecycleState.ClientConnected);
-            Cluster.RemoveNode(Cluster.NodeIds.First());
-            TestSupport.AssertCompletedEventually(clientDisconnected, taskName: "clientDisconnected");
-            TestSupport.AssertCompletedEventually(clientConnected, taskName: "clientConnected");
-            Assert.AreEqual(1000, map.Size());
         }
     }
 }
