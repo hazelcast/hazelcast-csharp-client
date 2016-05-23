@@ -20,17 +20,16 @@ namespace Hazelcast.IO.Serialization
     public class PredicateDataSerializerHook : IDataSerializerHook
     {
         private const int FactoryId = FactoryIds.PredicateFactoryId;
-
         public const int SqlPredicate = 0;
         public const int AndPredicate = 1;
         public const int BetweenPredicate = 2;
         public const int EqualPredicate = 3;
-        public const int GreaterlessPredicate = 4;
+        public const int GreaterLessPredicate = 4;
         public const int LikePredicate = 5;
         public const int ILikePredicate = 6;
         public const int InPredicate = 7;
         public const int InstanceofPredicate = 8;
-        public const int NotequalPredicate = 9;
+        public const int NotEqualPredicate = 9;
         public const int NotPredicate = 10;
         public const int OrPredicate = 11;
         public const int RegexPredicate = 12;
@@ -40,10 +39,23 @@ namespace Hazelcast.IO.Serialization
 
         public IDataSerializableFactory CreateFactory()
         {
-            return new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
-            {
-                () => new SqlPredicate(),    
-            });
+            var constructors = new Func<IIdentifiedDataSerializable>[PagingPredicate];
+            constructors[SqlPredicate] = () => new SqlPredicate();
+            constructors[AndPredicate] = () => new AndPredicate();
+            constructors[BetweenPredicate] = () => new BetweenPredicate();
+            constructors[EqualPredicate] = () => new EqualPredicate();
+            constructors[GreaterLessPredicate] = () => new GreaterLessPredicate();
+            constructors[LikePredicate] = () => new LikePredicate();
+            constructors[ILikePredicate] = () => new ILikePredicate();
+            constructors[InPredicate] = () => new InPredicate();
+            constructors[InstanceofPredicate] = () => new InstanceofPredicate();
+            constructors[NotEqualPredicate] = () => new NotEqualPredicate();
+            constructors[NotPredicate] = () => new NotPredicate();
+            constructors[OrPredicate] = () => new OrPredicate();
+            constructors[RegexPredicate] = () => new RegexPredicate();
+            constructors[FalsePredicate] = () => new FalsePredicate();
+            constructors[TruePredicate] = () => new TruePredicate();
+            return new ArrayDataSerializableFactory(constructors);
         }
 
         public int GetFactoryId()

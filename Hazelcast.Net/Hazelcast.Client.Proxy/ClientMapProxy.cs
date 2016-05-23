@@ -602,7 +602,7 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate,
+        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate,
             TKey key,
             bool includeValue)
         {
@@ -622,7 +622,7 @@ namespace Hazelcast.Client.Proxy
                 handler);
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate,
+        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate,
             bool includeValue)
         {
             var predicateData = ToData(predicate);
@@ -641,7 +641,7 @@ namespace Hazelcast.Client.Proxy
                 handler);
         }
 
-        public ISet<TKey> KeySet(IPredicate<TKey, TValue> predicate)
+        public ISet<TKey> KeySet(IPredicate predicate)
         {
             //TODO not supported yet
             //if (predicate is PagingPredicate)
@@ -653,7 +653,7 @@ namespace Hazelcast.Client.Proxy
             return ToSet<TKey>(keys);
         }
 
-        public ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate<TKey, TValue> predicate)
+        public ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate predicate)
         {
             var request = MapEntriesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
             var entries = Invoke(request, m => MapEntriesWithPredicateCodec.DecodeResponse(m).entrySet);
@@ -667,7 +667,7 @@ namespace Hazelcast.Client.Proxy
             return entrySet;
         }
 
-        public ICollection<TValue> Values(IPredicate<TKey, TValue> predicate)
+        public ICollection<TValue> Values(IPredicate predicate)
         {
             var request = MapValuesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
             var result = Invoke(request, m => MapValuesWithPredicateCodec.DecodeResponse(m).list);

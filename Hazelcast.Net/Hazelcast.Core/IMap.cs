@@ -110,7 +110,7 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate, TKey key,
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key,
             bool includeValue);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
@@ -125,7 +125,7 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate<TKey, TValue> predicate,
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate,
             bool includeValue);
 
         /// <summary>
@@ -263,7 +263,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="predicate">query criteria</param>
         /// <returns>result entry <see cref="ISet{E}" /> of the query</returns>
-        ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate<TKey, TValue> predicate);
+        ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate predicate);
 
         /// <summary>Evicts the specified key from this map.</summary>
         /// <remarks>
@@ -477,7 +477,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="predicate">query criteria</param>
         /// <returns>result key <see cref="ISet{E}" /> of the query</returns>
-        ISet<TKey> KeySet(IPredicate<TKey, TValue> predicate);
+        ISet<TKey> KeySet(IPredicate predicate);
 
         /// <summary>Acquires the lock for the specified key.</summary>
         /// <remarks>
@@ -1110,6 +1110,6 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="predicate">query criteria</param>
         /// <returns>result value collection of the query</returns>
-        ICollection<TValue> Values(IPredicate<TKey, TValue> predicate);
+        ICollection<TValue> Values(IPredicate predicate);
     }
 }
