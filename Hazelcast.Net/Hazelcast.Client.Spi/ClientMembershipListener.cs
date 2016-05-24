@@ -207,7 +207,7 @@ namespace Hazelcast.Client.Spi
                     var connection = _connectionManager.GetConnection(address);
                     if (connection != null)
                     {
-                        _connectionManager.DestroyConnection(connection);
+                        _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(address, "member left the cluster."));
                     }
                 }
             }
@@ -247,7 +247,8 @@ namespace Hazelcast.Client.Spi
             var connection = _connectionManager.GetConnection(member.GetAddress());
             if (connection != null)
             {
-                _connectionManager.DestroyConnection(connection);
+                _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(member.GetAddress(),
+                    "member left the cluster."));
             }
             var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, GetMembers());
             _clusterService.FireMembershipEvent(@event);

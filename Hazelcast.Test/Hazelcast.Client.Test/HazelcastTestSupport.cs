@@ -37,20 +37,9 @@ namespace Hazelcast.Client.Test
 
         public HazelcastTestSupport()
         {
-            _logger = Logger.GetLogger(GetType().Name);
-        }
-
-        [SetUp]
-        public void LogTestName()
-        {
-            _logger.Finest("Running test " + TestContext.CurrentContext.Test.Name);
-        }
-
-        [TestFixtureSetUp]
-        public void SetUpLogging()
-        {
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "finest");
+            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            _logger = Logger.GetLogger(GetType().Name);
         }
 
         [TestFixtureTearDown]
@@ -61,7 +50,7 @@ namespace Hazelcast.Client.Test
 
         protected virtual void ConfigureClient(ClientConfig config)
         {
-            config.GetNetworkConfig().AddAddress("127.0.0.1:5701");
+            config.GetNetworkConfig().AddAddress("localhost:5701");
             config.GetNetworkConfig().SetConnectionAttemptLimit(20);
             config.GetNetworkConfig().SetConnectionAttemptPeriod(2000);
         }
@@ -122,9 +111,9 @@ namespace Hazelcast.Client.Test
             return owners.Count;
         }
 
-        protected virtual void ResumeMember(Member member)
+        protected virtual void ResumeMember(RemoteController.Client remoteController, Cluster cluster, Member member)
         {
-            //TODO
+            remoteController.resumeMember(cluster.Id, member.Uuid);
         }
 
         protected virtual Member StartMember(RemoteController.Client remoteController, Cluster cluster)
@@ -177,9 +166,9 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(client.GetCluster().RemoveMembershipListener(regId));
         }
 
-        protected virtual void SuspendMember(Member member)
+        protected virtual void SuspendMember(RemoteController.Client remoteController,  Cluster cluster, Member member)
         {
-            //TODO
+            remoteController.suspendMember(cluster.Id, member.Uuid);
         }
     }
 }

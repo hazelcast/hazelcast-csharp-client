@@ -67,5 +67,10 @@ namespace Hazelcast.Logging
         {
             _loggerFactory = loggerFactory;
         }
+
+        public static ILoggerFactory GetLoggerFactory()
+        {
+            return _loggerFactory;
+        }
     }
 }

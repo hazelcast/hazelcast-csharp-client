@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Remote;
 using NUnit.Framework;
@@ -40,6 +41,23 @@ namespace Hazelcast.Client.Test
 
         private RemoteController.Client _remoteController;
         private Cluster _cluster;
+
+        [Test]
+        public void TestStartClientBeforeMember()
+        {
+            Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(5000);
+                StartMember(_remoteController, _cluster);
+            });
+
+            var client = CreateClient();
+
+            var map = client.GetMap<int, int>(TestSupport.RandomString());
+
+            map.Put(1, 1);
+            Assert.AreEqual(1, map.Get(1));
+        }
 
         [Test]
         public void TestListenerReconnect()
@@ -85,7 +103,7 @@ namespace Hazelcast.Client.Test
             var member1 = _remoteController.startMember(_cluster.Id);
             var client = CreateClient();
 
-            var member2 = _remoteController.startMember(_cluster.Id);
+            var member2 = StartMemberAndWait(client, _remoteController, _cluster, 2);
 
             var name = TestSupport.RandomString();
             var map = client.GetMap<int, int>(name);
@@ -100,7 +118,7 @@ namespace Hazelcast.Client.Test
             var clientConnected = TestSupport.WaitForClientState(client, LifecycleEvent.LifecycleState.ClientConnected);
 
             _remoteController.shutdownMember(_cluster.Id, member1.Uuid);
-
+            
             TestSupport.AssertCompletedEventually(clientDisconnected, taskName: "clientDisconnected");
             TestSupport.AssertCompletedEventually(clientConnected, taskName: "clientConnected");
             Assert.AreEqual(1000, map.Size());

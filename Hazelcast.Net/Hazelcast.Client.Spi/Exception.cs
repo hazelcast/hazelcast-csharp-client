@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Core;
 using Hazelcast.IO;
 
@@ -40,6 +41,12 @@ namespace Hazelcast.Client.Spi
         public TargetDisconnectedException(Address address) : base("Target[" + address + "] disconnected.")
         {
         }
+
+        public TargetDisconnectedException(Address address, string message)
+            : base("Target[" + address + "] disconnected, " + message)
+        {
+        }
+
 
         public TargetDisconnectedException(string msg) : base(msg)
         {
