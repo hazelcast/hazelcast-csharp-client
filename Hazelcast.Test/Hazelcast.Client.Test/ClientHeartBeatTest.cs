@@ -39,14 +39,15 @@ namespace Hazelcast.Client.Test
         public void TearDown()
         {
             HazelcastClient.ShutdownAll();
-            _remoteController.exit();
+            StopCluster(_remoteController, _cluster);
+            StopRemoteController(_remoteController);
         }
 
         protected override void ConfigureClient(ClientConfig config)
         {
             config.GetNetworkConfig().SetRedoOperation(true);
             base.ConfigureClient(config);
-            Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.timeout", "2000");
+            Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.timeout", "5000");
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", "1000");
         }
 
@@ -57,7 +58,7 @@ namespace Hazelcast.Client.Test
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", null);
         }
 
-        [Test, Ignore]
+        [Test]
         public void TestHeartBeatStoppedOnOwnerNode()
         {
             var member = _remoteController.startMember(_cluster.Id);
@@ -66,7 +67,6 @@ namespace Hazelcast.Client.Test
             var map = client.GetMap<string, string>(TestSupport.RandomString());
 
             var key = TestSupport.RandomString();
-            var key2 = TestSupport.RandomString();
 
             var value = TestSupport.RandomString();
             var value2 = TestSupport.RandomString();
@@ -76,22 +76,22 @@ namespace Hazelcast.Client.Test
             var regId = map.AddEntryListener(new EntryAdapter<string, string>
             {
                 Added = e => Interlocked.Increment(ref eventCount)
-            }, key2, false);
+            }, false);
 
-            SuspendMember(member);
+            SuspendMember(_remoteController, _cluster, member);
             Thread.Sleep(10000);
-            ResumeMember(member);
+            ResumeMember(_remoteController, _cluster, member);
 
             Assert.That(map.Get(key), Is.EqualTo(value));
 
             TestSupport.AssertTrueEventually(() =>
             {
-                map.Put(key2, value2);
+                map.Put(TestSupport.RandomString(), value2);
                 Assert.IsTrue(eventCount > 0);
             });
         }
 
-        [Test, Ignore]
+        [Test]
         public void TestHeartStoppedOnNonOwnerNode()
         {
             var member1 = _remoteController.startMember(_cluster.Id);
@@ -107,7 +107,7 @@ namespace Hazelcast.Client.Test
                 map.Put(i, TestSupport.RandomString());
             }
             
-            SuspendMember(member2);
+            SuspendMember(_remoteController, _cluster, member2);
 
             for (var i = count/2; i < count; i++)
             {
@@ -121,8 +121,8 @@ namespace Hazelcast.Client.Test
                 }
             }
             Thread.Sleep(10000);
-            
-            ResumeMember(member2);
+
+            ResumeMember(_remoteController, _cluster, member2);
 
             TestSupport.AssertTrueEventually(() => { Assert.AreEqual(count, map.Size()); });
         }

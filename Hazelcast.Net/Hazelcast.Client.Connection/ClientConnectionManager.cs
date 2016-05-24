@@ -45,8 +45,8 @@ namespace Hazelcast.Client.Connection
 
         private readonly object _connectionMutex = new object();
         private readonly ICredentials _credentials;
-        private readonly int _heartBeatInterval = 5000;
-        private readonly int _heartBeatTimeout = 60000;
+        private readonly int _heartbeatInterval = 5000;
+        private readonly int _heartbeatTimeout = 60000;
 
         private readonly ConcurrentBag<IConnectionHeartbeatListener> _heatHeartbeatListeners =
             new ConcurrentBag<IConnectionHeartbeatListener>();
@@ -57,7 +57,7 @@ namespace Hazelcast.Client.Connection
             new Dictionary<Address, Task<ClientConnection>>();
 
         private readonly ISocketInterceptor _socketInterceptor;
-        private Thread _heartBeatThread;
+        private CancellationTokenSource _heartbeatToken;
         private volatile bool _live;
         private int _nextConnectionId;
 
@@ -84,13 +84,13 @@ namespace Hazelcast.Client.Connection
             var timeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.invocation.timeout.seconds");
             if (timeout > 0)
             {
-                ThreadUtil.TaskOperationTimeOutMilliseconds = timeout.Value * 1000;
+                ThreadUtil.TaskOperationTimeOutMilliseconds = timeout.Value*1000;
             }
 
-            _heartBeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ??
-                                _heartBeatTimeout;
-            _heartBeatInterval = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.interval") ??
-                                 _heartBeatInterval;
+            _heartbeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ??
+                                _heartbeatTimeout;
+            _heartbeatInterval = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.interval") ??
+                                 _heartbeatInterval;
         }
 
         public void Start()
@@ -100,36 +100,33 @@ namespace Hazelcast.Client.Connection
                 return;
             }
             _live = true;
-            //start HeartBeat
-            _heartBeatThread = new Thread(HearthBeatLoop)
-            {
-                IsBackground = true,
-                Name = ("hz-heartbeat-" + new Random().Next()).Substring(0, 15)
-            };
-            _heartBeatThread.Start();
+
+            //start Heartbeat
+            _heartbeatToken = new CancellationTokenSource();
+            _client.GetClientExecutionService().ScheduleWithFixedDelay(Heartbeat,
+                _heartbeatInterval,
+                _heartbeatInterval,
+                TimeUnit.Milliseconds,
+                _heartbeatToken.Token);
         }
 
-        public bool Shutdown()
+        public void Shutdown()
         {
             if (!_live)
             {
-                return _live;
+                return;
             }
-            _live = false;
 
-            //Stop heartBeat
-            if (_heartBeatThread.IsAlive)
-            {
-                _heartBeatThread.Interrupt();
-                _heartBeatThread.Join();
-            }
+            _live = false;
             try
             {
+                _heartbeatToken.Cancel();
                 foreach (var kvPair in _addresses)
                 {
                     try
                     {
-                        DestroyConnection(kvPair.Value);
+                        DestroyConnection(kvPair.Value,
+                            new TargetDisconnectedException(kvPair.Key, "client shutting down"));
                     }
                     catch (Exception)
                     {
@@ -143,7 +140,10 @@ namespace Hazelcast.Client.Connection
                 // ReSharper disable once InconsistentlySynchronizedField
                 Logger.Warning(e.Message);
             }
-            return _live;
+            finally
+            {
+                _heartbeatToken.Dispose();
+            }
         }
 
         public bool Live
@@ -176,6 +176,7 @@ namespace Hazelcast.Client.Connection
                     connection = InitializeConnection(address, authenticator);
                     FireConnectionListenerEvent(f => f.ConnectionAdded(connection));
                     _addresses.TryAdd(connection.GetAddress(), connection);
+                    Logger.Finest("Active list of connections: " + string.Join(", ", _addresses.Values));
                 }
                 else
                     connection = _addresses[address];
@@ -209,11 +210,10 @@ namespace Hazelcast.Client.Connection
             return GetOrConnect(target, ClusterAuthenticator);
         }
 
-        public void DestroyConnection(ClientConnection connection)
+        public void DestroyConnection(ClientConnection connection, Exception cause)
         {
             var address = connection.GetAddress();
-            // ReSharper disable once InconsistentlySynchronizedField
-            Logger.Finest("Destroying connection " + connection);
+            Logger.Finest("Destroying connection " + connection + " due to " + cause.Message);
             if (address != null)
             {
                 ClientConnection conn;
@@ -221,6 +221,13 @@ namespace Hazelcast.Client.Connection
                 {
                     connection.Close();
                     FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
+                }
+                else
+                {
+                    Logger.Warning("Could not find connection " + connection +
+                                   " in list of connections, could not destroy connection. Current list of connections are " +
+                                   string.Join(", ", _addresses.Keys));
+                    connection.Close();
                 }
             }
             else
@@ -325,36 +332,41 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private void HearthBeatLoop()
+        private void Heartbeat()
         {
-            while (_live)
+            if (!_live) return;
+
+            foreach (var connection in _addresses.Values)
             {
-                foreach (var clientConnection in _addresses.Values)
+                if (DateTime.Now - connection.LastRead > TimeSpan.FromMilliseconds(_heartbeatTimeout))
+                {
+                    // heartbeat timed out
+                    if (connection.IsHeartBeating)
+                    {
+                        Logger.Warning("Heartbeat failed to connection " + connection);
+                        connection.HeartbeatFailed();
+                        var local = connection;
+                        FireHeartBeatEvent(l => l.HeartBeatStopped(local));
+                    }
+                }
+
+                if (DateTime.Now - connection.LastRead > TimeSpan.FromMilliseconds(_heartbeatInterval))
                 {
                     var request = ClientPingCodec.EncodeRequest();
-                    var task = ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request,
-                        clientConnection);
-                    try
-                    {
-                        var response = ThreadUtil.GetResult(task, _heartBeatTimeout);
-                        ClientPingCodec.DecodeResponse(response);
-                    }
-                    catch (Exception e)
-                    {
-                        // ReSharper disable once InconsistentlySynchronizedField
-                        Logger.Warning(string.Format("Error getting heartbeat from {0}: {1}",
-                            clientConnection.GetAddress(), e));
-                        var connection = clientConnection;
-                        FireHeartBeatEvent(listener => listener.HeartBeatStopped(connection));
-                    }
+                    Logger.Finest("Sending heartbeat to " + connection);
+                    ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request,
+                        connection, true);
                 }
-                try
+                else
                 {
-                    Thread.Sleep(_heartBeatInterval);
-                }
-                catch (Exception)
-                {
-                    break;
+                    // if heartbeat was failing for connection, restore the heartbeat
+                    if (!connection.IsHeartBeating)
+                    {
+                        Logger.Warning("Heartbeat is back to healthy for connection: " + connection);
+                        connection.HeartbeatSucceeded();
+                        var local = connection;
+                        FireHeartBeatEvent(l => l.HeartBeatStarted(local));
+                    }
                 }
             }
         }

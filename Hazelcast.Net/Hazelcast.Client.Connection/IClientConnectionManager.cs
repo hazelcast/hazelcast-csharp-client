@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.IO;
 using Hazelcast.Util;
 
@@ -23,7 +24,7 @@ namespace Hazelcast.Client.Connection
 
         void AddConnectionHeartBeatListener(IConnectionHeartbeatListener connectonHeartbeatListener);
         void AddConnectionListener(IConnectionListener connectionListener);
-        void DestroyConnection(ClientConnection clientConnection);
+        void DestroyConnection(ClientConnection clientConnection, Exception cause);
 
         /// <exception cref="System.IO.IOException"></exception>
         ClientConnection GetConnection(Address initializationTarget);
@@ -31,7 +32,7 @@ namespace Hazelcast.Client.Connection
         ClientConnection GetOrConnect(Address address, Authenticator authenticator);
         ClientConnection GetOrConnect(Address address);
 
-        bool Shutdown();
+        void Shutdown();
         void Start();
     }
 }

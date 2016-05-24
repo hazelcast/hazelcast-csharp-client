@@ -174,7 +174,7 @@ namespace Hazelcast.Client.Spi
         {
             if (connection.GetAddress().Equals(_ownerConnectionAddress))
             {
-                _connectionManager.DestroyConnection(connection);
+                _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(_ownerConnectionAddress));
             }
         }
 
@@ -311,6 +311,7 @@ namespace Hazelcast.Client.Spi
                     // promote connection to owner if not already
                     if (!connection.IsOwner())
                     {
+                        Logger.Finest("Promoting connection " + connection + " to owner.");
                         ManagerAuthenticator(connection);
                     }
                     FireConnectionEvent(LifecycleEvent.LifecycleState.ClientConnected);
