@@ -301,8 +301,11 @@ namespace Hazelcast.Config
                     case "socket-options":
                         HandleSocketOptions(child, clientNetworkConfig);
                         break;
+                    case "ssl":
+                        HandleSSLConfig(child, clientNetworkConfig);
+                        break;
                     case "socket-interceptor":
-                        HandleSocketInterceptorConfig(child);
+                        HandleSocketInterceptorConfig(child, clientNetworkConfig);
                         break;
                 }
             }
@@ -349,10 +352,10 @@ namespace Hazelcast.Config
             _clientConfig.SetSerializationConfig(serializationConfig);
         }
 
-        private void HandleSocketInterceptorConfig(XmlNode node)
+        private void HandleSocketInterceptorConfig(XmlNode node, ClientNetworkConfig clientNetworkConfig)
         {
             var socketInterceptorConfig = ParseSocketInterceptorConfig(node);
-            _clientConfig.GetNetworkConfig().SetSocketInterceptorConfig(socketInterceptorConfig);
+            clientNetworkConfig.SetSocketInterceptorConfig(socketInterceptorConfig);
         }
 
         private void HandleSocketOptions(XmlNode node, ClientNetworkConfig clientNetworkConfig)
@@ -383,6 +386,11 @@ namespace Hazelcast.Config
                         break;
                 }
             }
+        }
+        private void HandleSSLConfig(XmlNode node, ClientNetworkConfig clientNetworkConfig)
+        {
+            var sslConfig = ParseSSLConfig(node);
+            clientNetworkConfig.SetSSLConfig(sslConfig);
         }
     }
 }

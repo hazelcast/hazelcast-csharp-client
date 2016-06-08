@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientQueuePerformanceTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientSSLTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PredicatesTest.cs" />
     <Compile Include="Hazelcast.Client.Test\SingleMemberBaseTest.cs" />
     <Compile Include="Hazelcast.Remote\Cluster.cs" />
@@ -257,6 +258,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\hazelcast.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hazelcast-ssl.xml" />
   </ItemGroup>
   <PropertyGroup>
     <NUnitResultsFile>$(OutputPath)nunit-result.xml</NUnitResultsFile>

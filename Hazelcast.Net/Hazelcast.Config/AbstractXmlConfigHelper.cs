@@ -40,7 +40,7 @@ namespace Hazelcast.Config
             return name;
         }
 
-        protected internal virtual bool CheckTrue(string value)
+        public static bool CheckTrue(string value)
         {
             return
                 "true".Equals(value, StringComparison.OrdinalIgnoreCase) ||
@@ -253,6 +253,24 @@ namespace Hazelcast.Config
                 }
             }
             return socketInterceptorConfig;
+        }
+
+        protected internal virtual SSLConfig ParseSSLConfig(XmlNode node)
+        {
+            var sslConfig = new SSLConfig();
+            var atts = node.Attributes;
+            var enabledNode = atts.GetNamedItem("enabled");
+            var enabled = enabledNode != null && CheckTrue(GetTextContent(enabledNode).Trim());
+            sslConfig.SetEnabled(enabled);
+            foreach (XmlNode n in node.ChildNodes)
+            {
+                var nodeName = CleanNodeName(n.Name);
+                if ("properties".Equals(nodeName))
+                {
+                    FillProperties(n, sslConfig.GetProperties());
+                }
+            }
+            return sslConfig;
         }
     }
 }
