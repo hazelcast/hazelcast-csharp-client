@@ -302,17 +302,18 @@ namespace Hazelcast.Client.Connection
 
         private void EndReadCallback(IAsyncResult asyncResult)
         {
-            if (_clientSocket == null)
+            if (!Live)
             {
                 return;
             }
+
             try
             {
                 var receivedByteSize = _stream.EndRead(asyncResult);
                 if (receivedByteSize == 0)
                 {
                     //socket was closed
-                    HandleSocketException(new TargetDisconnectedException(_member.GetAddress(), "Socket was closed."));
+                    HandleSocketException(new TargetDisconnectedException(GetAddress(), "Socket was closed."));
                     return;
                 }
                 _receiveBuffer.Position += receivedByteSize;
@@ -328,15 +329,12 @@ namespace Hazelcast.Client.Connection
                 {
                     _receiveBuffer.Clear();
                 }
+                BeginRead();
             }
             catch (Exception e)
             {
                 Logger.Severe("Fatal Error at EndReadCallback : " + GetAddress(), e);
                 HandleSocketException(e);
-            }
-            finally
-            {
-                BeginRead();
             }
         }
 
