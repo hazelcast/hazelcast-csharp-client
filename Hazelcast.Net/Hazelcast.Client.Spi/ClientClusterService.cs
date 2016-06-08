@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Spi
             new AtomicReference<IDictionary<Address, IMember>>();
 
         private ClientMembershipListener _clientMembershipListener;
-        private IClientConnectionManager _connectionManager;
+        private ClientConnectionManager _connectionManager;
         private ICredentials _credentials;
         private Address _ownerConnectionAddress;
         private ClientPrincipal _principal;
@@ -483,7 +483,7 @@ namespace Hazelcast.Client.Spi
             var member = new Member(result.address, result.ownerUuid);
             _principal = new ClientPrincipal(result.uuid, result.ownerUuid);
 
-            connection.SetRemoteMember(member);
+            connection.Member  =member;
             connection.SetOwner();
         }
     }

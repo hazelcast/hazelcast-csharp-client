@@ -50,7 +50,7 @@ namespace Hazelcast.Client
 
         private readonly ClientClusterService _clusterService;
         private readonly ClientConfig _config;
-        private readonly IClientConnectionManager _connectionManager;
+        private readonly ClientConnectionManager _connectionManager;
         private readonly IClientExecutionService _executionService;
         private readonly int _id = ClientId.GetAndIncrement();
         private readonly string _instanceName;
@@ -381,7 +381,7 @@ namespace Hazelcast.Client
             return _partitionService;
         }
 
-        internal IClientConnectionManager GetConnectionManager()
+        internal ClientConnectionManager GetConnectionManager()
         {
             return _connectionManager;
         }

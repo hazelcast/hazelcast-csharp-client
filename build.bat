@@ -11,15 +11,15 @@ msbuild Build.proj /p:Configuration=Release /p:Platform="Any CPU" /target:Build
 
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
-echo Downlading latest HZ snapshot from Maven Central...
-call mvn dependency:get -DrepoUrl=https://oss.sonatype.org/content/repositories/snapshots -Dartifact=com.hazelcast:hazelcast-remote-controller:%HAZELCAST_RC_VERSION% -Ddest=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar
+REM echo Downlading latest HZ snapshot from Maven Central...
+REM call mvn dependency:get -DrepoUrl=https://oss.sonatype.org/content/repositories/snapshots -Dartifact=com.hazelcast:hazelcast-remote-controller:%HAZELCAST_RC_VERSION% -Ddest=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar
 REM call mvn dependency:get -DrepoUrl=https://oss.sonatype.org/content/repositories/snapshots -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_VERSION% -Ddest=hazelcast-%HAZELCAST_VERSION%.jar
 
 taskkill /T /F /FI "WINDOWTITLE eq hazelcast-remote-controller"
 if exist errorlevel del errorlevel
 
 echo "Starting hazelcast-remote-controller"
-start /min "hazelcast-remote-controller" cmd /c "java -jar hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar > rc_stdout.txt 2>rc_stderr.txt || call echo %^errorlevel% > errorlevel"
+start /min "hazelcast-remote-controller" cmd /c "java %~2 > rc_stdout.txt 2>rc_stderr.txt || call echo %^errorlevel% > errorlevel"
 
 REM Wait for Hazelcast RC to start
 ping -n 4 127.0.0.1 > nul
