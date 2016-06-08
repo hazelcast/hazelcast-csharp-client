@@ -84,6 +84,14 @@ namespace Hazelcast.Client.Test
             return cluster;
         }
 
+        protected virtual Cluster CreateCluster(RemoteController.Client remoteController, string xmlconfig)
+        {
+            _logger.Info("Creating cluster using custom config...");
+            var cluster = remoteController.createCluster(null, xmlconfig);
+            _logger.Info("Created cluster");
+            return cluster;
+        }
+
         protected RemoteController.Client CreateRemoteController()
         {
             TTransport transport = new TSocket("localhost", 9701);

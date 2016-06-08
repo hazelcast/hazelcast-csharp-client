@@ -232,7 +232,7 @@ namespace Hazelcast.Client.Spi
             {
                 clientInvocation.Message.SetPartitionId(clientInvocation.PartitionId);
             }
-            if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.GetMember().GetUuid())
+            if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.Member.GetUuid())
             {
                 HandleException(clientInvocation,
                     new TargetNotMemberException(

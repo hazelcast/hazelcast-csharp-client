@@ -16,7 +16,9 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,8 +32,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client.Connection
 {
-    /// <summary>Holds the clientSocket to one of the members of Hazelcast ICluster.</summary>
-    /// <remarks>Holds the clientSocket to one of the members of Hazelcast ICluster.</remarks>
+    /// <summary>Holds the clientSocket to one of the members of Hazelcast ICluster. SSL encription is used if configured.</summary>
     internal sealed class ClientConnection
     {
         public const int BufferSize = 1 << 15; //32k
@@ -39,7 +40,7 @@ namespace Hazelcast.Client.Connection
         public const int SocketSendBufferSize = 1 << 15; //32k
 
         private const int ConnectionTimeout = 30000;
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConnection));
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientConnection));
 
         private readonly ClientMessageBuilder _builder;
         private readonly ClientConnectionManager _clientConnectionManager;
@@ -48,7 +49,8 @@ namespace Hazelcast.Client.Connection
         private readonly ByteBuffer _sendBuffer;
         private readonly BlockingCollection<ISocketWritable> _writeQueue = new BlockingCollection<ISocketWritable>();
 
-        private volatile Socket _clientSocket;
+        private readonly Socket _clientSocket;
+        private readonly Stream _stream;
         private volatile bool _isHeartBeating = true;
         private bool _isOwner;
         private volatile ISocketWritable _lastWritable;
@@ -86,7 +88,7 @@ namespace Hazelcast.Client.Connection
 
                 _clientSocket.ReceiveTimeout = socketOptions.GetTimeout() > 0 ? socketOptions.GetTimeout() : -1;
 
-                var bufferSize = socketOptions.GetBufferSize()*1024;
+                var bufferSize = socketOptions.GetBufferSize() * 1024;
                 if (bufferSize < 0)
                 {
                     bufferSize = BufferSize;
@@ -113,11 +115,30 @@ namespace Hazelcast.Client.Connection
 
                 _builder = new ClientMessageBuilder(invocationService.HandleClientMessage);
 
+                var networkStream = new NetworkStream(_clientSocket, false);
+                if (clientNetworkConfig.GetSSLConfig().IsEnabled())
+                {
+                    var sslStream = new SslStream(networkStream, false,
+                        (sender, certificate, chain, sslPolicyErrors) =>
+                            RemoteCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors,
+                                clientNetworkConfig), null);
+                    var certificateName = clientNetworkConfig.GetSSLConfig().GetCertificateName() ?? "";
+                    sslStream.AuthenticateAsClient(certificateName);
+                    _stream = sslStream;
+                }
+                else
+                {
+                    _stream = networkStream;
+                }
                 _live = new AtomicBoolean(true);
             }
             catch (Exception e)
             {
                 _clientSocket.Close();
+                if (_stream != null)
+                {
+                    _stream.Close();
+                }
                 throw new IOException("Cannot connect! Socket error:" + e.Message);
             }
         }
@@ -127,7 +148,7 @@ namespace Hazelcast.Client.Connection
             get { return _live.Get(); }
         }
 
-        internal int Id
+        public int Id
         {
             get { return _id; }
         }
@@ -157,10 +178,9 @@ namespace Hazelcast.Client.Connection
                 Logger.Finest(string.Format("Closing socket, address: {0} id: {1}", GetAddress(), _id));
             }
 
+            _stream.Close();
             _clientSocket.Shutdown(SocketShutdown.Both);
             _clientSocket.Close();
-
-            _clientSocket = null;
         }
 
         public Address GetAddress()
@@ -172,7 +192,7 @@ namespace Hazelcast.Client.Connection
         {
             try
             {
-                return _clientSocket != null ? (IPEndPoint) _clientSocket.LocalEndPoint : null;
+                return _clientSocket != null ? (IPEndPoint)_clientSocket.LocalEndPoint : null;
             }
             catch (ObjectDisposedException)
             {
@@ -180,9 +200,11 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        public IMember GetMember()
+        public IMember Member
         {
-            return _member;
+            get { return _member; }
+
+            set { _member = value; }
         }
 
         public void HeartbeatFailed()
@@ -193,23 +215,6 @@ namespace Hazelcast.Client.Connection
         public void HeartbeatSucceeded()
         {
             _isHeartBeating = true;
-        }
-
-        public void SetRemoteMember(IMember member)
-        {
-            _member = member;
-        }
-
-        public void SwitchToNonBlockingMode()
-        {
-            if (_clientSocket.Blocking)
-            {
-                _sendBuffer.Clear();
-                _receiveBuffer.Clear();
-                //clientSocket.Blocking = false;
-                StartAsyncProcess();
-            }
-            //ignore other cases
         }
 
         public override string ToString()
@@ -241,17 +246,23 @@ namespace Hazelcast.Client.Connection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        internal void Init()
+        public void Init(ISocketInterceptor socketInterceptor)
         {
-            _clientSocket.Send(Encoding.UTF8.GetBytes(Protocols.ClientBinaryNew));
+            var initBytes = Encoding.UTF8.GetBytes(Protocols.ClientBinaryNew);
+            _stream.Write(initBytes, 0, initBytes.Length);
+            if (socketInterceptor != null)
+            {
+                socketInterceptor.OnConnect(_clientSocket);
+            }
+            StartReadWriteLoop();
         }
 
-        internal bool IsOwner()
+        public bool IsOwner()
         {
             return _isOwner;
         }
 
-        internal void SetOwner()
+        public void SetOwner()
         {
             _isOwner = true;
         }
@@ -265,20 +276,8 @@ namespace Hazelcast.Client.Connection
             }
             try
             {
-                try
-                {
-                    SocketError socketError;
-                    _clientSocket.BeginReceive(
-                        _receiveBuffer.Array(),
-                        _receiveBuffer.Position,
-                        _receiveBuffer.Remaining(),
-                        SocketFlags.None, out socketError, EndReadCallback, null);
-                }
-                catch (Exception e)
-                {
-                    Logger.Severe("Exception at Socket.Read for endPoint: " + GetAddress(), e);
-                    HandleSocketException(e);
-                }
+                _stream.BeginRead(_receiveBuffer.Array(), _receiveBuffer.Position, _receiveBuffer.Remaining(),
+                    EndReadCallback, null);
             }
             catch (Exception e)
             {
@@ -309,22 +308,13 @@ namespace Hazelcast.Client.Connection
             }
             try
             {
-                SocketError socketError;
-                var receivedByteSize = _clientSocket.EndReceive(asyncResult, out socketError);
-
-                if (socketError != SocketError.Success)
-                {
-                    HandleSocketException(new SocketException((int) socketError));
-                    return;
-                }
-
-                if (receivedByteSize <= 0)
+                var receivedByteSize = _stream.EndRead(asyncResult);
+                if (receivedByteSize == 0)
                 {
                     //socket was closed
                     HandleSocketException(new TargetDisconnectedException(_member.GetAddress(), "Socket was closed."));
                     return;
                 }
-
                 _receiveBuffer.Position += receivedByteSize;
                 _receiveBuffer.Flip();
 
@@ -370,7 +360,7 @@ namespace Hazelcast.Client.Connection
             _clientConnectionManager.DestroyConnection(this, e);
         }
 
-        private void StartAsyncProcess()
+        private void StartReadWriteLoop()
         {
             BeginRead();
             _writeThread = new Thread(WriteQueueLoop)
@@ -423,39 +413,8 @@ namespace Hazelcast.Client.Connection
                     _sendBuffer.Flip();
                     try
                     {
-                        SocketError socketError;
-                        var sendByteSize = _clientSocket.Send(
-                            _sendBuffer.Array(),
-                            _sendBuffer.Position,
-                            _sendBuffer.Remaining(),
-                            SocketFlags.None, out socketError);
-
-                        if (socketError != SocketError.Success)
-                        {
-                            HandleSocketException(new SocketException((int)socketError));
-                            return;
-                        }
-
-                        if (sendByteSize <= 0)
-                        {
-                            HandleSocketException(new IOException("Socket was closed"));
-                            return;
-                        }
-
-                        
-
-                        _sendBuffer.Position += sendByteSize;
-                        //logger.Info("SEND BUFFER CALLBACK: pos:" + sendBuffer.Position + " remaining:" + sendBuffer.Remaining());
-
-                        //if success case
-                        if (_sendBuffer.HasRemaining())
-                        {
-                            _sendBuffer.Compact();
-                        }
-                        else
-                        {
-                            _sendBuffer.Clear();
-                        }
+                        _stream.Write(_sendBuffer.Array(), _sendBuffer.Position, _sendBuffer.Remaining());
+                        _sendBuffer.Clear();
                     }
                     catch (Exception e)
                     {
@@ -464,6 +423,53 @@ namespace Hazelcast.Client.Connection
                     }
                 }
             }
+        }
+
+        private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors, ClientNetworkConfig clientNetworkConfig)
+        {
+            if (sslPolicyErrors == SslPolicyErrors.None)
+            {
+                return true;
+            }
+
+            var validation = true;
+
+            if (sslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateChainErrors))
+            {
+                var isValidateChain = clientNetworkConfig.GetSSLConfig().IsValidateCertificateChain();
+                if (isValidateChain)
+                {
+                    Logger.Warning("Certificate error:" + sslPolicyErrors);
+                    validation = false;
+                }
+                else
+                {
+                    Logger.Info("SSL Configured to ignore Certificate chain validation. Ignoring:");
+                }
+                foreach (var status in chain.ChainStatus)
+                {
+                    Logger.Info("Certificate chain status:" + status.StatusInformation);
+                }
+            }
+            if (sslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
+            {
+                var isValidateName = clientNetworkConfig.GetSSLConfig().IsValidateCertificateName();
+                if (isValidateName)
+                {
+                    Logger.Warning("Certificate error:" + sslPolicyErrors);
+                    validation = false;
+                }
+                else
+                {
+                    Logger.Info("Certificate name mismatched but client is configured to ignore Certificate name validation.");
+                }
+            }
+            if (sslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
+            {
+                Logger.Warning("Certificate error:" + sslPolicyErrors);
+                validation = false;
+            }
+            return validation;
         }
     }
 }
