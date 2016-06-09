@@ -97,8 +97,6 @@ namespace Hazelcast.Client.Connection
                 _clientSocket.SendBufferSize = bufferSize;
                 _clientSocket.ReceiveBufferSize = bufferSize;
 
-                _clientSocket.UseOnlyOverlappedIO = true;
-
                 var connectionTimeout = clientNetworkConfig.GetConnectionTimeout() > -1
                     ? clientNetworkConfig.GetConnectionTimeout()
                     : ConnectionTimeout;
