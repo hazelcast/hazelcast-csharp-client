@@ -11,6 +11,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
+    [Category("enterprise")]
     public class ClientSSLTest : HazelcastTestSupport
     {
         private const string ValidCertName = "Hazelcast, Inc";
