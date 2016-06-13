@@ -317,6 +317,7 @@
     <Compile Include="Hazelcast.Config\MatchingPointConfigPatternMatcher.cs" />
     <Compile Include="Hazelcast.Config\NearCacheConfigReadOnly.cs" />
     <Compile Include="Hazelcast.Config\SocketOptions.cs" />
+    <Compile Include="Hazelcast.Config\SSLConfig.cs" />
     <Compile Include="Hazelcast.Core\EntryAdapter.cs" />
     <Compile Include="Hazelcast.Core\IAtomicLong.cs" />
     <Compile Include="Hazelcast.Core\IIdGenerator.cs" />
@@ -333,7 +334,6 @@
     <Compile Include="Hazelcast.Core\ITransactionalMultiMap.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalQueue.cs" />
     <Compile Include="Hazelcast.Core\ITransactionalSet.cs" />
-    <Compile Include="Hazelcast.Client.Connection\IClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Connection\ClientConnection.cs" />
     <Compile Include="Hazelcast.Client.Connection\DefaultSocketFactory.cs" />
     <Compile Include="Hazelcast.Client.Connection\ISocketFactory.cs" />

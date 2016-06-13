@@ -31,9 +31,9 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Connection
 {
-    internal class ClientConnectionManager : IClientConnectionManager
+    internal class ClientConnectionManager
     {
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientConnectionManager));
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConnectionManager));
 
         private readonly ConcurrentDictionary<Address, ClientConnection> _addresses =
             new ConcurrentDictionary<Address, ClientConnection>();
@@ -313,7 +313,7 @@ namespace Hazelcast.Client.Connection
             {
                 throw new HazelcastException("Node with address '" + rp.address + "' was not found in the member list");
             }
-            connection.SetRemoteMember(member);
+            connection.Member = member;
         }
 
         private void FireConnectionListenerEvent(Action<IConnectionListener> listenerAction)
@@ -378,16 +378,14 @@ namespace Hazelcast.Client.Connection
             var id = _nextConnectionId;
             try
             {
-                Logger.Finest("Creating new connection for " + address + " with id " + id);
-                connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(),
-                    id,
-                    address, _networkConfig);
-                connection.Init();
-                if (_socketInterceptor != null)
+                if (Logger.IsFinestEnabled())
                 {
-                    _socketInterceptor.OnConnect(connection.GetSocket());
+                    Logger.Finest("Creating new connection for " + address + " with id " + id);
                 }
-                connection.SwitchToNonBlockingMode();
+
+                connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(), id, address, _networkConfig);
+
+                connection.Init(_socketInterceptor);
                 authenticator(connection);
                 Interlocked.Increment(ref _nextConnectionId);
                 Logger.Finest("Authenticated to " + connection);

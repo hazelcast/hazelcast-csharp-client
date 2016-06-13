@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
   ~ Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
   ~
@@ -16,95 +17,101 @@
   -->
 
 <hazelcast-client xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.5.xsd"
-           xmlns="http://www.hazelcast.com/schema/client-config"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                  xmlns="http://www.hazelcast.com/schema/client-config"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-    <group>
-        <name>dev</name>
-        <password>dev-pass</password>
-    </group>
+  <group>
+    <name>dev</name>
+    <password>dev-pass</password>
+  </group>
 
-    <network>
-        <cluster-members>
-            <address>127.0.0.1</address>
-            <address>127.0.0.2</address>
-        </cluster-members>
-        <smart-routing>true</smart-routing>
-        <redo-operation>true</redo-operation>
-        <connection-timeout>60000</connection-timeout>
-        <connection-attempt-period>3000</connection-attempt-period>
-        <connection-attempt-limit>2</connection-attempt-limit>
-        <socket-interceptor enabled="true">
-            <class-name>com.hazelcast.examples.MySocketInterceptor</class-name>
-            <properties>
-                <property name="foo">bar</property>
-            </properties>
-        </socket-interceptor>
-        <socket-options>
-          <tcp-no-delay>false</tcp-no-delay>
-          <keep-alive>true</keep-alive>
-          <reuse-address>true</reuse-address>
-          <linger-seconds>3</linger-seconds>
-          <timeout>-1</timeout>
-          <buffer-size>32</buffer-size>
-        </socket-options>
+  <network>
+    <cluster-members>
+      <address>127.0.0.1</address>
+      <address>127.0.0.2</address>
+    </cluster-members>
+    <smart-routing>true</smart-routing>
+    <redo-operation>true</redo-operation>
+    <connection-timeout>60000</connection-timeout>
+    <connection-attempt-period>3000</connection-attempt-period>
+    <connection-attempt-limit>2</connection-attempt-limit>
+    <socket-interceptor enabled="true">
+      <class-name>com.hazelcast.examples.MySocketInterceptor</class-name>
+      <properties>
+        <property name="foo">bar</property>
+      </properties>
+    </socket-interceptor>
+    <socket-options>
+      <tcp-no-delay>false</tcp-no-delay>
+      <keep-alive>true</keep-alive>
+      <reuse-address>true</reuse-address>
+      <linger-seconds>3</linger-seconds>
+      <timeout>-1</timeout>
+      <buffer-size>32</buffer-size>
+    </socket-options>
+    <ssl enabled="false">
+      <properites>
+        <property name="CertificateName">The_Certificate_Name</property>
+        <property name="ValidateCertificateChain">true</property>
+        <property name="ValidateCertificateName">true</property>
+      </properites>
+    </ssl>
+  </network>
 
-    </network>
-
-    <executor-pool-size>40</executor-pool-size>
+  <executor-pool-size>40</executor-pool-size>
 
 
-    <security>
-        <credentials>com.hazelcast.security.UsernamePasswordCredentials</credentials>
-        <login-credentials>
-          <username>dev-user</username>
-          <password>pass123</password>
-        </login-credentials>
-    </security>
+  <security>
+    <credentials>com.hazelcast.security.UsernamePasswordCredentials</credentials>
+    <login-credentials>
+      <username>dev-user</username>
+      <password>pass123</password>
+    </login-credentials>
+  </security>
 
-    <listeners>
-        <listener>Hazelcast.Examples.MembershipListener</listener>
-        <listener>Hazelcast.Examples.InstanceListener</listener>
-        <listener>Hazelcast.Examples.MigrationListener</listener>
-    </listeners>
+  <listeners>
+    <listener>Hazelcast.Examples.MembershipListener</listener>
+    <listener>Hazelcast.Examples.InstanceListener</listener>
+    <listener>Hazelcast.Examples.MigrationListener</listener>
+  </listeners>
 
-    <serialization>
-        <portable-version>3</portable-version>
-        <use-native-byte-order>true</use-native-byte-order>
-        <byte-order>BIG_ENDIAN</byte-order>
-        <enable-shared-object>true</enable-shared-object>
-        <check-class-def-errors>true</check-class-def-errors>
-        <enable-compression>true</enable-compression>>
-        <data-serializable-factories>
-            <data-serializable-factory factory-id="1">com.hazelcast.examples.DataSerializableFactory</data-serializable-factory>
-        </data-serializable-factories>
-        <portable-factories>
-            <portable-factory factory-id="1">com.hazelcast.examples.PortableFactory</portable-factory>
-        </portable-factories>
-        <serializers>
-            <global-serializer>com.hazelcast.examples.GlobalSerializerFactory</global-serializer>
-            <serializer type-class="com.hazelcast.examples.DummyType">com.hazelcast.examples.SerializerFactory</serializer>
-        </serializers>
-        <check-class-def-errors>true</check-class-def-errors>
-    </serialization>
+  <serialization>
+    <portable-version>3</portable-version>
+    <use-native-byte-order>true</use-native-byte-order>
+    <byte-order>BIG_ENDIAN</byte-order>
+    <enable-shared-object>true</enable-shared-object>
+    <check-class-def-errors>true</check-class-def-errors>
+    <enable-compression>true</enable-compression>>
+    <data-serializable-factories>
+      <data-serializable-factory factory-id="1">com.hazelcast.examples.DataSerializableFactory</data-serializable-factory>
+    </data-serializable-factories>
+    <portable-factories>
+      <portable-factory factory-id="1">com.hazelcast.examples.PortableFactory</portable-factory>
+    </portable-factories>
+    <serializers>
+      <global-serializer>com.hazelcast.examples.GlobalSerializerFactory</global-serializer>
+      <serializer type-class="com.hazelcast.examples.DummyType">com.hazelcast.examples.SerializerFactory</serializer>
+    </serializers>
+    <check-class-def-errors>true</check-class-def-errors>
+  </serialization>
 
-    <proxy-factories>
-        <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ1" service="sampleService1" />
-        <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ2" service="sampleService2" />
-        <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ3" service="sampleService3" />
+  <proxy-factories>
+    <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ1" service="sampleService1" />
+    <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ2" service="sampleService2" />
+    <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ3" service="sampleService3" />
 
-    </proxy-factories>
+  </proxy-factories>
 
-    <load-balancer type="random" ></load-balancer>
+  <load-balancer type="random"></load-balancer>
 
-    <near-cache name="asd">
-        <max-size>2000</max-size>
-        <time-to-live-seconds>100</time-to-live-seconds>
-        <max-idle-seconds>100</max-idle-seconds>
-        <eviction-policy>LFU</eviction-policy>
-        <invalidate-on-change>true</invalidate-on-change>
-        <in-memory-format>OBJECT</in-memory-format>
-    </near-cache>
+  <near-cache name="asd">
+    <max-size>2000</max-size>
+    <time-to-live-seconds>100</time-to-live-seconds>
+    <max-idle-seconds>100</max-idle-seconds>
+    <eviction-policy>LFU</eviction-policy>
+    <invalidate-on-change>true</invalidate-on-change>
+    <in-memory-format>OBJECT</in-memory-format>
+  </near-cache>
 
   <license-key>ENTERPRISE_KEY</license-key>
 

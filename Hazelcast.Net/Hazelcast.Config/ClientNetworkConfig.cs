@@ -74,6 +74,8 @@ namespace Hazelcast.Config
         /// <summary>Options for creating socket</summary>
         private SocketOptions _socketOptions = new SocketOptions();
 
+        private SSLConfig _sslConfig = new SSLConfig();
+
         public virtual ClientNetworkConfig AddAddress(params string[] addresses)
         {
             _addressList.AddRange(addresses);
@@ -112,6 +114,11 @@ namespace Hazelcast.Config
         public virtual SocketOptions GetSocketOptions()
         {
             return _socketOptions;
+        }
+
+        public virtual SSLConfig GetSSLConfig()
+        {
+            return _sslConfig;
         }
 
         public virtual bool IsRedoOperation()
@@ -175,5 +182,11 @@ namespace Hazelcast.Config
             _socketOptions = socketOptions;
             return this;
         }
-    }
+
+        public virtual ClientNetworkConfig SetSSLConfig(SSLConfig sslConfig)
+        {
+            _sslConfig = sslConfig;
+            return this;
+        }
+     }
 }
