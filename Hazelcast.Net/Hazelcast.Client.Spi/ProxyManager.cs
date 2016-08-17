@@ -108,25 +108,58 @@ namespace Hazelcast.Client.Spi
             return new ReadOnlyCollection<IDistributedObject>(_proxies.Values.ToList<IDistributedObject>());
         }
 
-        public ClientProxy GetOrCreateProxy<T>(string service, string id)
+        public ClientProxy GetOrCreateProxy<T>(string service, string id) where T : IDistributedObject
         {
             var ns = new ObjectNamespace(service, id);
             ClientProxy proxy;
             _proxies.TryGetValue(ns, out proxy);
+            var requestedInterface = typeof (T);
             if (proxy != null)
             {
-                return proxy;
+                // only return the existing proxy, if the requested type args match
+                var proxyInterface = proxy.GetType().GetInterface(requestedInterface.Name);
+                var proxyArgs = proxyInterface.GetGenericArguments();
+                var requestedArgs = requestedInterface.GetGenericArguments();
+                if (proxyArgs.SequenceEqual(requestedArgs))
+                {
+                    // the proxy we found matches what we were looking for
+                    return proxy;
+                }
+                
+                // create a new proxy, which matches the interface requested
+                proxy = makeProxy<T>(service, id, requestedInterface);
             }
-            ClientProxyFactory factory;
+            else
+            {
+                // create a new proxy, which needs initialization on server.
+                proxy = makeProxy<T>(service, id, requestedInterface);
+                InitializeWithRetry(proxy);
+            }
 
+            proxy.SetContext(new ClientContext(_client.GetSerializationService(),
+                _client.GetClientClusterService(),
+                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
+                _client.GetListenerService(),
+                this, _client.GetClientConfig()));
+            proxy.PostInit();
+
+            _proxies.AddOrUpdate(ns, n => proxy, (n, oldProxy) => {
+                Logger.Warning("Replacing old proxy for " + oldProxy.GetName() + " of type " + oldProxy.GetType() + " with " + proxy.GetType());
+                return proxy;
+            });
+            return proxy;
+        }
+
+        private ClientProxy makeProxy<T>(string service, string id, Type requestedInterface)
+        {
+            ClientProxyFactory factory;
             _proxyFactories.TryGetValue(service, out factory);
             if (factory == null)
             {
                 throw new ArgumentException("No factory registered for service: " + service);
             }
-            var clientProxy = factory(typeof (T), id);
-            InitializeWithRetry(clientProxy);
-            return _proxies.GetOrAdd(ns, clientProxy);
+            var clientProxy = factory(requestedInterface, id);
+            return clientProxy;
         }
 
         public ClientProxy GetProxy(string service, string id)
@@ -225,9 +258,8 @@ namespace Hazelcast.Client.Spi
         {
             if (proxyType.ContainsGenericParameters)
             {
-                var genericTypeArguments = interfaceType.GetGenericArguments();
-                var mgType = proxyType.MakeGenericType(genericTypeArguments);
-                return Activator.CreateInstance(mgType, name, id) as ClientProxy;
+                var typeWithParams = GetTypeWithParameters(proxyType, interfaceType);
+                return Activator.CreateInstance(typeWithParams, name, id) as ClientProxy;
             }
             return Activator.CreateInstance(proxyType, name, id) as ClientProxy;
         }
@@ -253,7 +285,22 @@ namespace Hazelcast.Client.Spi
             return liteMember != null ? liteMember.GetAddress() : null;
         }
 
-        private void Initialize(ClientProxy clientProxy)
+        private static Type GetTypeWithParameters(Type proxyType, Type interfaceType)
+        {
+            var genericTypeArguments = interfaceType.GetGenericArguments();
+            if (genericTypeArguments.Length == proxyType.GetGenericArguments().Length)
+            {
+                return proxyType.MakeGenericType(genericTypeArguments);
+            }
+            var types = new Type[proxyType.GetGenericArguments().Length];
+            for (var i = 0; i < types.Length; i++)
+            {
+                types[i] = typeof (object);
+            }
+            return proxyType.MakeGenericType(types);
+        }
+
+        private void InitializeOnServer(ClientProxy clientProxy)
         {
             var initializationTarget = FindNextAddressToCreateARequest();
             var invocationTarget = initializationTarget;
@@ -278,12 +325,6 @@ namespace Hazelcast.Client.Spi
             {
                 throw ExceptionUtil.Rethrow(e);
             }
-            clientProxy.SetContext(new ClientContext(_client.GetSerializationService(),
-                _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(),
-                this, _client.GetClientConfig()));
-            clientProxy.PostInit();
         }
 
         private void InitializeWithRetry(ClientProxy clientProxy)
@@ -294,7 +335,7 @@ namespace Hazelcast.Client.Spi
             {
                 try
                 {
-                    Initialize(clientProxy);
+                    InitializeOnServer(clientProxy);
                     return;
                 }
                 catch (Exception e)

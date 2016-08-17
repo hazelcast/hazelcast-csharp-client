@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading;
 using Hazelcast.Core;
 using NUnit.Framework;
@@ -40,17 +41,35 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestGetDistributedObjects()
         {
-            var queue = Client.GetMap<int, int>(TestSupport.RandomString());
+            var map = Client.GetMap<int, int>(TestSupport.RandomString());
             var topic = Client.GetTopic<int>(TestSupport.RandomString());
             var semaphore = Client.GetSemaphore(TestSupport.RandomString());
 
+            
             Assert.AreEqual(3, Client.GetDistributedObjects().Count);
 
-            queue.Destroy();
+            map.Destroy();
             topic.Destroy();
             semaphore.Destroy();
 
             Assert.AreEqual(0, Client.GetDistributedObjects().Count);
+        }
+
+        [Test]
+        public void TestGetDistributedObjectsFromAnotherClient()
+        {
+            String mapName = TestSupport.RandomString();
+            var map = Client.GetMap<int, int>(mapName);
+            Client.GetTopic<int>(TestSupport.RandomString());
+            Client.GetSemaphore(TestSupport.RandomString());
+
+            map.Put(1, 1);
+            var client2 = CreateClient();
+
+            Assert.AreEqual(3, client2.GetDistributedObjects().Count);
+
+            var map2 = client2.GetMap<int, int>(mapName);
+            Assert.AreEqual(1, map2.Get(1));
         }
 
         private class DistributedObjectListener : IDistributedObjectListener
