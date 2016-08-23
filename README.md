@@ -17,7 +17,7 @@ This is the repository of C#/.NET client implementation for [Hazelcast](https:/
 C# client is implemented using the [Hazelcast Open Binary Client Protocol](http://hazelcast.org/docs/protocol/1.0-developer-preview/client-protocol.html) 
 
 
-# Building the Project
+# Building the Project
 
 Hazelcast C# Client is developed using VS2013 Community Edition, which can be [downloaded](https://www.visualstudio.com/en-us/news/vs2013-community-vs.aspx) for free from Microsoft.
 
