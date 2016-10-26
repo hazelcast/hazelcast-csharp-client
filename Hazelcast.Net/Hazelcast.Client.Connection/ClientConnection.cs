@@ -371,52 +371,63 @@ namespace Hazelcast.Client.Connection
 
         private void WriteQueueLoop()
         {
-            while (!_writeQueue.IsAddingCompleted)
+            try
             {
-                try
+                while (!_writeQueue.IsAddingCompleted)
                 {
-                    if (_lastWritable == null)
+                    try
                     {
-                        _lastWritable = _writeQueue.Take();
+                        if (_lastWritable == null)
+                        {
+                            _lastWritable = _writeQueue.Take();
+                        }
                     }
-                }
-                catch (InvalidOperationException)
-                {
-                    //BlockingCollection is empty
-                    if (_writeQueue.IsAddingCompleted)
+                    catch (InvalidOperationException)
                     {
-                        return;
+                        //BlockingCollection is empty
+                        if (_writeQueue.IsAddingCompleted)
+                        {
+                            return;
+                        }
+                    }
+
+                    while (_sendBuffer.HasRemaining() && _lastWritable != null)
+                    {
+                        var complete = _lastWritable.WriteTo(_sendBuffer);
+                        if (complete)
+                        {
+                            //grap one from queue
+                            ISocketWritable tmp;
+                            _writeQueue.TryTake(out tmp);
+                            _lastWritable = tmp;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    if (_sendBuffer.Position > 0)
+                    {
+                        _sendBuffer.Flip();
+                        try
+                        {
+                            _stream.Write(_sendBuffer.Array(), _sendBuffer.Position, _sendBuffer.Remaining());
+                            _sendBuffer.Clear();
+                        }
+                        catch (Exception e)
+                        {
+                            _lastWritable = null;
+                            HandleSocketException(e);
+                        }
                     }
                 }
 
-                while (_sendBuffer.HasRemaining() && _lastWritable != null)
+            }
+            catch (ThreadInterruptedException)
+            {
+                if (Logger.IsFinestEnabled())
                 {
-                    var complete = _lastWritable.WriteTo(_sendBuffer);
-                    if (complete)
-                    {
-                        //grap one from queue
-                        ISocketWritable tmp;
-                        _writeQueue.TryTake(out tmp);
-                        _lastWritable = tmp;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                if (_sendBuffer.Position > 0)
-                {
-                    _sendBuffer.Flip();
-                    try
-                    {
-                        _stream.Write(_sendBuffer.Array(), _sendBuffer.Position, _sendBuffer.Remaining());
-                        _sendBuffer.Clear();
-                    }
-                    catch (Exception e)
-                    {
-                        _lastWritable = null;
-                        HandleSocketException(e);
-                    }
+                    Logger.Finest("Writer thread interreptud, stopping...");
                 }
             }
         }
