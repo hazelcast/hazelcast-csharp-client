@@ -161,3 +161,6 @@ docs/output
 rc/
 
 *.snk
+.idea
+*.jar
+

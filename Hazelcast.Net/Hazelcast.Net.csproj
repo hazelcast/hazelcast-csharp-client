@@ -26,8 +26,9 @@
     <Prefer32Bit>false</Prefer32Bit>
     <DocumentationFile>bin\Debug\Hazelcast.Net.xml</DocumentationFile>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>1591</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -597,9 +598,7 @@
       <Output TaskParameter="CommitHash" PropertyName="CommitHash" />
     </GitVersion>
     <Message Text="Commit Hash: $(CommitHash)" />
-    <FileUpdate Files="Properties\AssemblyInfo.cs"
-                Regex="AssemblyConfiguration\(&quot;Commit.*&quot;\)"
-                ReplacementText="AssemblyConfiguration(&quot;Commit $(CommitHash)&quot;)"/>
+    <FileUpdate Files="Properties\AssemblyInfo.cs" Regex="AssemblyConfiguration\(&quot;Commit.*&quot;\)" ReplacementText="AssemblyConfiguration(&quot;Commit $(CommitHash)&quot;)" />
   </Target>
   <Target Name="Nightly">
     <Message Text="Build Committed Revision: $(Revision)" />
