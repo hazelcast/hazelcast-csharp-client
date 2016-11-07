@@ -294,6 +294,48 @@ namespace Hazelcast.Core
         /// </remarks>
         void EvictAll();
 
+        /// <summary>Applies the user defined EntryProcessor to the entry mapped by the key.</summary>
+        /// <param name="key">key</param>
+        /// <param name="entryProcessor">
+        ///     The user defined <see cref="IEntryProcessor"/>. This object must have a hazelcast serializable
+        ///     EntryProcessor counterpart registered on server side with the actual
+        ///     <c>org.hazelcast.map.EntryProcessor</c> implementation.
+        /// </param>
+        /// <returns>result of entry process</returns>
+        object ExecuteOnKey(TKey key, IEntryProcessor entryProcessor);
+
+        /// <summary>Applies the user defined EntryProcessor to the entries mapped by the collection of keys.</summary>
+        /// <param name="keys">keys to process</param>
+        /// <param name="entryProcessor">
+        ///     The user defined <see cref="IEntryProcessor"/>. This object must have a hazelcast serializable
+        ///     EntryProcessor counterpart registered on server side with the actual
+        ///     <c>org.hazelcast.map.EntryProcessor</c> implementation.
+        /// </param>
+        /// <returns>the results mapped by each key in the collection.</returns>
+        IDictionary<TKey, object> ExecuteOnKeys(ISet<TKey> keys, IEntryProcessor entryProcessor);
+
+        /// <summary>Applies the user defined EntryProcessor to the all entries in the map.</summary>
+        /// <param name="entryProcessor">
+        ///     The user defined <see cref="IEntryProcessor"/>. This object must have a hazelcast serializable
+        ///     EntryProcessor counterpart registered on server side with the actual
+        ///     <c>org.hazelcast.map.EntryProcessor</c> implementation.
+        /// </param>
+        /// <returns></returns>
+        IDictionary<TKey, object> ExecuteOnEntries(IEntryProcessor entryProcessor);
+
+        /// <summary>
+        ///     Applies the user defined EntryProcessor to the entries in the map which satisfies provided predicate.
+        /// </summary>
+        /// <param name="entryProcessor">
+        ///     The user defined <see cref="IEntryProcessor"/>. This object must have a hazelcast serializable
+        ///     EntryProcessor counterpart registered on server side with the actual
+        ///     <c>org.hazelcast.map.EntryProcessor</c> implementation.
+        /// </param>
+        /// <param name="predicate">predicate for filtering the entries on server side</param>
+        /// <returns>the results mapped by each key in the map</returns>
+        IDictionary<TKey, object> ExecuteOnEntries(IEntryProcessor entryProcessor, IPredicate predicate);
+
+
         /// <summary>
         ///     If this map has a MapStore this method flushes
         ///     all the local dirty entries by calling <c>MapStore.storeAll()</c> and/or <c>MapStore.deleteAll()</c>
@@ -924,6 +966,19 @@ namespace Hazelcast.Core
         /// <remarks>Returns the number of entries in this map.</remarks>
         /// <returns>the number of entries in this map</returns>
         int Size();
+
+        /// <summary>
+        /// Applies the user defined EntryProcessor to the entry mapped by the key.
+        /// Returns immediately with a Task.
+        /// </summary>
+        /// <param name="key">key to be processed</param>
+        /// <param name="entryProcessor">
+        ///     The user defined <see cref="IEntryProcessor"/>. This object must have a hazelcast serializable
+        ///     EntryProcessor counterpart registered on server side with the actual
+        ///     <c>org.hazelcast.map.EntryProcessor</c> implementation.
+        /// </param>
+        /// <returns>the results mapped by each key in the collection</returns>
+        Task<object> SubmitToKey(TKey key, IEntryProcessor entryProcessor);
 
         /// <summary>Tries to acquire the lock for the specified key.</summary>
         /// <remarks>

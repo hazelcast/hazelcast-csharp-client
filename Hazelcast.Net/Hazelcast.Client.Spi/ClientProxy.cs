@@ -222,6 +222,19 @@ namespace Hazelcast.Client.Spi
             return values;
         }
 
+        protected IDictionary<TKey, object> DeserializeEntries<TKey>(IList<KeyValuePair<IData, IData>> entries) {
+            if (entries.Count == 0)
+            {
+                return new Dictionary<TKey, object>();
+            }
+            var result = new Dictionary<TKey, object>();
+            foreach(var entry in entries) {
+                var key = (TKey)ToObject<object>(entry.Key);
+                result.Add(key, ToObject<object>(entry.Value));
+            }
+            return result;
+        }
+
         protected ISet<IData> ToDataSet<T>(ICollection<T> c)
         {
             ThrowExceptionIfNull(c);

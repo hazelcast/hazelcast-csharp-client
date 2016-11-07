@@ -18,6 +18,7 @@ using Hazelcast.Core;
 namespace Hazelcast.IO.Serialization
 {
     /// <summary>This is an exception thrown when an exception occurs while serializing/deserializing objects.</summary>
+    [Serializable]
     public class HazelcastSerializationException : HazelcastException
     {
         public HazelcastSerializationException(string message)

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Core;
 
 namespace Hazelcast.Config
@@ -21,6 +22,7 @@ namespace Hazelcast.Config
     /// <see cref="Hazelcast.Core.HazelcastException"/>
     /// that is thrown when something is wrong with the server or client configuration.
     /// </summary>
+    [Serializable]
     public class ConfigurationException : HazelcastException
     {
         public ConfigurationException(string itemName, string candidate, string duplicate)

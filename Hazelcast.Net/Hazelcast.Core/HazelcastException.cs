@@ -19,6 +19,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Base Hazelcast exception.
     /// </summary>
+    [Serializable]
     public class HazelcastException : SystemException
     {
         public HazelcastException()
@@ -38,6 +39,7 @@ namespace Hazelcast.Core
         }
     }
 
+    [Serializable]
     public class QueryException : HazelcastException
     {
         public QueryException()
@@ -64,6 +66,7 @@ namespace Hazelcast.Core
     /// <see cref="Hazelcast.Core.IDistributedObject"/>
     /// access was attempted, but the object is destroyed.
     /// </summary>
+    [Serializable]
     public class DistributedObjectDestroyedException : HazelcastException
     {
         public DistributedObjectDestroyedException()
@@ -88,6 +91,7 @@ namespace Hazelcast.Core
     /// sequence that is smaller than the current head sequence. This means that the and old item is read, 
     /// but it isn't available anymore in the ringbuffer.
     /// </summary>
+    [Serializable]
     public class StaleSequenceException : HazelcastException
     {
         public StaleSequenceException()

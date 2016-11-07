@@ -14,6 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <keyfile>..\hazelcast.snk</keyfile>
+    <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -60,7 +61,12 @@
     <Compile Include="Hazelcast.Client.Connection\IConnectionHeartbeatListener.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapAddInterceptorCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapEvictAllCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnAllKeysCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnKeyCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnKeysCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteWithPredicateCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapRemoveInterceptorCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapSubmitToKeyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferAddAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferAddCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferCapacityCodec.cs" />
@@ -524,7 +530,6 @@
     <Compile Include="Hazelcast.Logging\Logger.cs" />
     <Compile Include="Hazelcast.Logging\LoggerFactory.cs" />
     <Compile Include="Hazelcast.Logging\NoLogFactory.cs" />
-    <Compile Include="Hazelcast.Map\IEntryBackupProcessor.cs" />
     <Compile Include="Hazelcast.Map\IEntryProcessor.cs" />
     <Compile Include="Hazelcast.Map\IMapInterceptor.cs" />
     <Compile Include="Hazelcast.Map\SimpleEntryView.cs" />
@@ -590,7 +595,9 @@
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Hazelcast.Map" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
     <Message Text="Version: $(Major).$(Minor).$(Build).$(Revision)" />
