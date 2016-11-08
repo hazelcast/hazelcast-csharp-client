@@ -45,6 +45,8 @@ namespace Hazelcast.Client.Test
         {
             base.ConfigureClient(config);
             config.GetSerializationConfig().AddPortableFactory(1, new PortableFactory());
+            config.GetSerializationConfig()
+                .AddDataSerializableFactory(IdentifiedFactory.FactoryId, new IdentifiedFactory());
         }
 
         //internal const string name = "test";
@@ -137,7 +139,7 @@ namespace Hazelcast.Client.Test
             map.AddIndex("name", true);
         }
 
-        [Test, Ignore, ExpectedException(typeof (HazelcastException))]
+        [Test, Ignore, ExpectedException(typeof(HazelcastException))]
         public void TestAddInterceptor()
         {
             //TODO: not currently possible to test this
@@ -181,8 +183,8 @@ namespace Hazelcast.Client.Test
                 delegate { },
                 delegate { },
                 delegate { latch.Signal(); }
-                ), true);
-            
+            ), true);
+
             var f1 = map.PutAsync("key", "value1", 1, TimeUnit.Seconds);
             Assert.IsNull(f1.Result);
             Assert.AreEqual("value1", map.Get("key"));
@@ -314,6 +316,103 @@ namespace Hazelcast.Client.Test
         public virtual void TestFlush()
         {
             map.Flush();
+        }
+
+        [Test]
+        public virtual void TestExecuteOnKey()
+        {
+            FillMap();
+            const string key = "key1";
+            const string value = "value10";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            var result = map.ExecuteOnKey(key, entryProcessor);
+            Assert.AreEqual(result, value);
+            Assert.AreEqual(result, map.Get(key));
+        }
+
+        [Test, ExpectedException(typeof(ArgumentNullException))]
+        public virtual void TestExecuteOnKey_nullKey()
+        {
+            FillMap();
+            const string key = null;
+            const string value = "value10";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            map.ExecuteOnKey(key, entryProcessor);
+        }
+
+        [Test]
+        public virtual void TestExecuteOnKeys()
+        {
+            FillMap();
+            var keys = new HashSet<object> {"key1", "key5"};
+            const string value = "valueX";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            var result = map.ExecuteOnKeys(keys, entryProcessor);
+            foreach (var resultKV in result)
+            {
+                Assert.AreEqual(resultKV.Value, value);
+                Assert.AreEqual(value, map.Get(resultKV.Key));
+            }
+        }
+
+        [Test, ExpectedException(typeof(ArgumentNullException))]
+        public virtual void TestExecuteOnKeys_keysNotNull()
+        {
+            FillMap();
+            ISet<object> keys = null;
+            const string value = "valueX";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            map.ExecuteOnKeys(keys, entryProcessor);
+        }
+
+        [Test]
+        public virtual void TestExecuteOnEntries()
+        {
+            FillMap();
+            const string value = "valueX";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            var result = map.ExecuteOnEntries(entryProcessor);
+            foreach (var resultKV in result)
+            {
+                Assert.AreEqual(resultKV.Value, value);
+                Assert.AreEqual(value, map.Get(resultKV.Key));
+            }
+        }
+
+        [Test]
+        public virtual void TestExecuteOnEntriesWithPredicate()
+        {
+            FillMap();
+            const string value = "valueX";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            var result = map.ExecuteOnEntries(entryProcessor, Predicates.Sql("this == value5"));
+            Assert.AreEqual(result.Count, 1);
+            foreach (var resultKV in result)
+            {
+                Assert.AreEqual(resultKV.Value, value);
+                Assert.AreEqual(value, map.Get(resultKV.Key));
+            }
+        }
+
+        [Test]
+        public virtual void TestSubmitToKey()
+        {
+            FillMap();
+            const string key = "key1";
+            const string value = "value10";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            var task = map.SubmitToKey(key, entryProcessor);
+            Assert.AreEqual(task.Result, value);
+            Assert.AreEqual(task.Result, map.Get(key));
+        }
+
+        [Test, ExpectedException(typeof(ArgumentNullException))]
+        public virtual void TestSubmitToKey_nullKey()
+        {
+            const string key = null;
+            const string value = "value10";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            map.SubmitToKey(key, entryProcessor);
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -542,7 +641,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestListenerExtreme()
         {
-            const int TestItemCount = 1*1000;
+            const int TestItemCount = 1 * 1000;
             var latch = new CountdownEvent(TestItemCount);
             var listener = new EntryAdapter<object, object>(
                 delegate { },
@@ -948,6 +1047,52 @@ namespace Hazelcast.Client.Test
             var enumerator = values.GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("value1", enumerator.Current);
+        }
+    }
+
+    internal class IdentifiedFactory : IDataSerializableFactory
+    {
+        internal const int FactoryId = 66;
+
+        public IIdentifiedDataSerializable Create(int typeId)
+        {
+            if (typeId == IdentifiedEntryProcessor.ClassId)
+            {
+                return new IdentifiedEntryProcessor();
+            }
+            return null;
+        }
+    }
+
+    internal class IdentifiedEntryProcessor : IIdentifiedDataSerializable, IEntryProcessor
+    {
+        internal const int ClassId = 1;
+
+        private string value;
+
+        public IdentifiedEntryProcessor(string value = null)
+        {
+            this.value = value;
+        }
+
+        public void ReadData(IObjectDataInput input)
+        {
+            value = input.ReadUTF();
+        }
+
+        public void WriteData(IObjectDataOutput output)
+        {
+            output.WriteUTF(value);
+        }
+
+        public int GetFactoryId()
+        {
+            return IdentifiedFactory.FactoryId;
+        }
+
+        public int GetId()
+        {
+            return ClassId;
         }
     }
 }

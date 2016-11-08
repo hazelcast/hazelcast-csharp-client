@@ -12,14 +12,15 @@ IF -%2-==-- (
 	set EXLUDE_PARAM=
 )
 
-set HAZELCAST_VERSION=3.6.3
+set HAZELCAST_TEST_VERSION=3.7.4-SNAPSHOT
+set HAZELCAST_VERSION=3.7.2
+set HAZELCAST_ENTERPRISE_VERSION=3.7.2
 set HAZELCAST_RC_VERSION=0.1-SNAPSHOT
 set SNAPSHOT_REPO=https://oss.sonatype.org/content/repositories/snapshots
 set RELEASE_REPO=http://repo1.maven.apache.org/maven2
 set ENTERPRISE_REPO=https://repository-hazelcast-l337.forge.cloudbees.com/release/
 
-IF %SERVER_TYPE%==--enterprise (set CP_PARAM=-cp hazelcast-enterprise-%HAZELCAST_VERSION%.jar;hazelcast-%HAZELCAST_VERSION%.jar;hazelcast-tests-%HAZELCAST_VERSION%.jar) ELSE (set CP_PARAM=-cp hazelcast-%HAZELCAST_VERSION%.jar)
-set CP_PARAM=%CP_PARAM%;hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar
+set CLASSPATH=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar;hazelcast-%HAZELCAST_VERSION%.jar;hazelcast-%HAZELCAST_TEST_VERSION%-tests.jar
 
 echo "PARAMETERS:" 
 echo %COVERAGE%
@@ -35,18 +36,19 @@ IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 echo Downlading Hazelcast %HAZELCAST_VERSION% ...
 call mvn dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast-remote-controller:%HAZELCAST_RC_VERSION% -Ddest=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar
 call mvn dependency:get -DrepoUrl=%RELEASE_REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_VERSION% -Ddest=hazelcast-%HAZELCAST_VERSION%.jar
-call mvn dependency:get -DrepoUrl=%RELEASE_REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_VERSION%:jar:tests -Ddest=hazelcast-tests-%HAZELCAST_VERSION%.jar
+call mvn dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_TEST_VERSION%:jar:tests -Ddest=hazelcast-%HAZELCAST_TEST_VERSION%-tests.jar
 
 if %SERVER_TYPE%==--enterprise (
-	echo Downlading Hazelcast Enterprise %HAZELCAST_VERSION%...
-	call mvn dependency:get -DrepoUrl=%ENTERPRISE_REPO% -Dartifact=com.hazelcast:hazelcast-enterprise:%HAZELCAST_VERSION% -Ddest=hazelcast-enterprise-%HAZELCAST_VERSION%.jar
+	echo Downlading Hazelcast Enterprise %HAZELCAST_ENTERPRISE_VERSION%...
+	call mvn dependency:get -DrepoUrl=%ENTERPRISE_REPO% -Dartifact=com.hazelcast:hazelcast-enterprise:%HAZELCAST_ENTERPRISE_VERSION% -Ddest=hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar
+	set CLASSPATH=%CLASSPATH%;hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar
 )
 
 taskkill /T /F /FI "WINDOWTITLE eq hazelcast-remote-controller"
 if exist errorlevel del errorlevel
 
 echo "Starting hazelcast-remote-controller"
-start /min "hazelcast-remote-controller" cmd /c "java -Dhazelcast.enterprise.license.key=%HAZELCAST_ENTERPRISE_KEY% %CP_PARAM% com.hazelcast.remotecontroller.Main> rc_stdout.txt 2>rc_stderr.txt || call echo %^errorlevel% > errorlevel"
+start /min "hazelcast-remote-controller" cmd /c "java -Dhazelcast.enterprise.license.key=%HAZELCAST_ENTERPRISE_KEY% -cp %CLASSPATH% com.hazelcast.remotecontroller.Main> rc_stdout.txt 2>rc_stderr.txt || call echo %^errorlevel% > errorlevel"
 
 REM Wait for Hazelcast RC to start
 ping -n 4 127.0.0.1 > nul

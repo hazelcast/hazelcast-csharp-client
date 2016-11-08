@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 
-<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.2.xsd"
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.7.xsd"
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <group>
@@ -42,21 +42,16 @@
             </tcp-ip>
         </join>
         <public-address>127.0.0.1</public-address>
-        <ssl enabled="false" />
-        <socket-interceptor enabled="false" />
-    </network>	
-	<!--
-	<serialization>
-        <portable-version>0</portable-version>
-        <portable-factories>
-            <portable-factory factory-id="1">com.hazelcast.examples.StartServer$MyPortableFactory</portable-factory>
-        </portable-factories>
-
+        <ssl enabled="false"/>
+        <socket-interceptor enabled="false"/>
+    </network>
+    <serialization>
+        <data-serializable-factories>
+            <data-serializable-factory factory-id="66">com.hazelcast.client.test.IdentifiedFactory
+            </data-serializable-factory>
+        </data-serializable-factories>
     </serialization>
-	<interfaces enabled="true">
-		<interface>127.0.0.1</interface>
-	</interfaces>
-     -->
+
     <queue name="ClientQueueTest*">
         <!--
             Maximum size of the queue. When a JVM's local queue size reaches the maximum,
@@ -68,11 +63,11 @@
         <max-size>6</max-size>
     </queue>
     <ringbuffer name="ClientRingbufferTest*">
-      <capacity>10</capacity>
+        <capacity>10</capacity>
     </ringbuffer>
-  <ringbuffer name="ClientRingbufferTestWithTTL*">
-    <capacity>10</capacity>
-    <time-to-live-seconds>180</time-to-live-seconds>
-  </ringbuffer>
+    <ringbuffer name="ClientRingbufferTestWithTTL*">
+        <capacity>10</capacity>
+        <time-to-live-seconds>180</time-to-live-seconds>
+    </ringbuffer>
 
 </hazelcast>

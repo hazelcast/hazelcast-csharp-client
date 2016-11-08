@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
@@ -320,6 +319,21 @@ namespace Hazelcast.Client.Proxy
             return MapIsLockedCodec.DecodeResponse(result).response;
         }
 
+        public Task<object> SubmitToKey(TKey key, IEntryProcessor entryProcessor)
+        {
+            ThrowExceptionIfNull(key);
+            var keyData = ToData(key);
+            InvalidateNearCacheEntry(keyData);
+            var request = MapSubmitToKeyCodec.EncodeRequest(GetName(), ToData(entryProcessor), keyData,
+                ThreadUtil.GetThreadId());
+            var responseTask = InvokeAsync(request, keyData, m =>
+            {
+                var response = MapSubmitToKeyCodec.DecodeResponse(m).response;
+                return ToObject<object>(response);
+            });
+            return responseTask;
+        }
+
         public bool TryLock(TKey key)
         {
             try
@@ -451,6 +465,47 @@ namespace Hazelcast.Client.Proxy
         {
             var request = MapEvictAllCodec.EncodeRequest(GetName());
             Invoke(request);
+        }
+
+        public object ExecuteOnKey(TKey key, IEntryProcessor entryProcessor)
+        {
+            ThrowExceptionIfNull(key);
+            var keyData = ToData(key);
+            InvalidateNearCacheEntry(keyData);
+            var request = MapExecuteOnKeyCodec.EncodeRequest(GetName(), ToData(entryProcessor), keyData,
+                ThreadUtil.GetThreadId());
+            var response = Invoke(request, keyData);
+            var resultParameters = MapExecuteOnKeyCodec.DecodeResponse(response);
+            return ToObject<object>(resultParameters.response);
+        }
+
+        public IDictionary<TKey, object> ExecuteOnKeys(ISet<TKey> keys, IEntryProcessor entryProcessor)
+        {
+            if (keys != null && keys.Count == 0)
+            {
+                return new Dictionary<TKey, object>();
+            }
+            var dataList = ToDataList(keys);
+            var request = MapExecuteOnKeysCodec.EncodeRequest(GetName(), ToData(entryProcessor), dataList);
+            var response = Invoke(request);
+            var resultParameters = MapExecuteOnKeysCodec.DecodeResponse(response);
+            return DeserializeEntries<TKey>(resultParameters.response);
+        }
+
+        public IDictionary<TKey, object> ExecuteOnEntries(IEntryProcessor entryProcessor)
+        {
+            var request = MapExecuteOnAllKeysCodec.EncodeRequest(GetName(), ToData(entryProcessor));
+            var response = Invoke(request);
+            var resultParameters = MapExecuteOnAllKeysCodec.DecodeResponse(response);
+            return DeserializeEntries<TKey>(resultParameters.response);
+        }
+
+        public IDictionary<TKey, object> ExecuteOnEntries(IEntryProcessor entryProcessor, IPredicate predicate)
+        {
+            var request = MapExecuteWithPredicateCodec.EncodeRequest(GetName(), ToData(entryProcessor), ToData(predicate));
+            var response = Invoke(request);
+            var resultParameters = MapExecuteWithPredicateCodec.DecodeResponse(response);
+            return DeserializeEntries<TKey>(resultParameters.response);
         }
 
         public ISet<TKey> KeySet()

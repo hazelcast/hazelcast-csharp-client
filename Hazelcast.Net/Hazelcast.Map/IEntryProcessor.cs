@@ -12,27 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-
 namespace Hazelcast.Map
 {
-    public interface IEntryProcessor<TKey, TValue>
+    /// <summary>
+    /// A stateful serializable object which represents the EntryProcessor defined on server side.
+    /// </summary>
+    /// <remarks>
+    /// This object must have a hazelcast serializable EntryProcessor counterpart registered on server side with the actual
+    /// <c>org.hazelcast.map.EntryProcessor</c> implementation.
+    /// Client side EntryProcessor does not have any processing logic.
+    /// </remarks>
+    public interface IEntryProcessor
     {
-        /// <summary>Get the entry processor to be applied to backup entries.</summary>
-        /// <remarks>
-        ///     Get the entry processor to be applied to backup entries.
-        ///     <p />
-        /// </remarks>
-        /// <returns>back up processor</returns>
-        IEntryBackupProcessor<TKey, TValue> GetBackupProcessor();
-
-        /// <summary>Process the entry without worrying about concurrency.</summary>
-        /// <remarks>
-        ///     Process the entry without worrying about concurrency.
-        ///     <p />
-        /// </remarks>
-        /// <param name="entry">entry to be processes</param>
-        /// <returns>result of the process</returns>
-        object Process(KeyValuePair<TKey, TValue> entry);
     }
 }
