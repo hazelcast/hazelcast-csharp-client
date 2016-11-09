@@ -366,6 +366,17 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        public virtual void TestExecuteOnKeys_keysEmpty()
+        {
+            FillMap();
+            ISet<object> keys = new HashSet<object>();
+            const string value = "valueX";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            var result = map.ExecuteOnKeys(keys, entryProcessor);
+            Assert.AreEqual(result.Count, 0);
+        }
+
+        [Test]
         public virtual void TestExecuteOnEntries()
         {
             FillMap();
