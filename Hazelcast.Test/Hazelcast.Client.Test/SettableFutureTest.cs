@@ -79,6 +79,26 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        public void TestResult_WhenException_withContinue()
+        {
+            var future = new SettableFuture<string>();
+            future.ToTask().ContinueWith(t =>
+            {
+                Assert.NotNull(t.Exception);
+            });
+            Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
+            try
+            {
+                var result = future.Result;
+            }
+            catch (Exception e)
+            {
+                Assert.NotNull(e);
+                Assert.NotNull(future.Exception);
+            }
+        }
+
+        [Test]
         public void TestWait()
         {
             var future = new SettableFuture<string>();
@@ -198,5 +218,36 @@ namespace Hazelcast.Client.Test
 
             Task.WaitAll(tasks.ToArray());
         }
+
+        [Test]
+        public void TestCompleted_checkResult()
+        {
+            var future = new SettableFuture<string>();
+
+            Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
+            try
+            {
+                future.GetResult(100);
+            }
+            catch (Exception e)
+            {
+                Assert.AreEqual("Failed", e.Message);
+            }
+
+            Assert.NotNull(future.Exception);
+            Assert.True(future.IsComplete); 
+        }
+
+        [Test]
+        public void TestCompleted_checkExceptiont()
+        {
+            var future = new SettableFuture<string>();
+
+            Task.Factory.StartNew(() => future.Result = "done");
+            Assert.AreEqual("done", future.Result);
+            Assert.True(future.IsComplete);
+            Assert.Null(future.Exception);
+        }
+
     }
 }

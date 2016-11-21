@@ -94,7 +94,7 @@ namespace Hazelcast.Client.Test
             map.Get(0);
         }
 
-        [Test, ExpectedException(typeof (HazelcastException))]
+        [Test, ExpectedException(typeof (HazelcastException)), Repeat(10)]
         public void TestOperationDuringClientShutdown()
         {
             var member = _remoteController.startMember(_cluster.Id);

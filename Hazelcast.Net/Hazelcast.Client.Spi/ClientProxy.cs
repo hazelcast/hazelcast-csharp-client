@@ -70,9 +70,8 @@ namespace Hazelcast.Client.Spi
             {
                 if (t.IsFaulted)
                 {
-                    var exception = t.Exception;
                     // ReSharper disable once PossibleNullReferenceException
-                    throw exception.InnerExceptions.First();
+                    throw t.Exception.Flatten().InnerExceptions.First();
                 }
                 var clientMessage = ThreadUtil.GetResult(t);
                 return decodeResponse(clientMessage);

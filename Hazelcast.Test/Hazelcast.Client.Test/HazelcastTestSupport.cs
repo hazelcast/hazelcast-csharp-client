@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
@@ -35,12 +36,33 @@ namespace Hazelcast.Client.Test
 
         private readonly ILogger _logger;
 
+        private bool wasUnobservedException;
+
         public HazelcastTestSupport()
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "finest");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
             _logger = Logger.GetLogger(GetType().Name);
+
+            TaskScheduler.UnobservedTaskException += UnobservedTaskException;
         }
+
+        private void UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            _logger.Warning("UnobservedTaskException Error sender:" + sender);
+            _logger.Warning("UnobservedTaskException Error.", e.Exception);
+            wasUnobservedException = true;
+        }
+
+        [TearDown]
+        public void BaseTearDown()
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(wasUnobservedException, "UnobservedTaskException occured.");
+            wasUnobservedException = false;
+        }
+
 
         [TestFixtureTearDown]
         public void ShutdownAllClients()

@@ -246,6 +246,13 @@ namespace Hazelcast.Client.Connection
                     var task = _client.GetClientExecutionService().Submit(() => GetOrConnect(address));
                     task.ContinueWith(t =>
                     {
+                        if (t.IsFaulted)
+                        {
+                            if (Logger.IsFinestEnabled())
+                            {
+                                Logger.Finest("Exception in async pending connection:", t.Exception);
+                            }
+                        }
                         lock (_pendingConnections)
                         {
                             _pendingConnections.Remove(address);
@@ -393,7 +400,11 @@ namespace Hazelcast.Client.Connection
             }
             catch (Exception e)
             {
-                Logger.Severe("Error connecting to " + address + " with id " + id, e);
+                if (Logger.IsFinestEnabled())
+                {
+                    Logger.Finest("Error connecting to " + address + " with id " + id, e);
+                }
+
                 if (connection != null)
                 {
                     connection.Close();

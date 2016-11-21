@@ -33,8 +33,7 @@ namespace Hazelcast.Util
 
         public static IClientMessage GetResult(IFuture<IClientMessage> future, int? timeout = null)
         {
-            if (timeout.HasValue) return future.GetResult(timeout.Value);
-            return future.GetResult(TaskOperationTimeOutMilliseconds);
+            return future.GetResult(timeout ?? TaskOperationTimeOutMilliseconds);
         }
 
         public static IClientMessage GetResult(Task<IClientMessage> task)
