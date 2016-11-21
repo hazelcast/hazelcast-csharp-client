@@ -17,6 +17,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -166,7 +167,8 @@ namespace Hazelcast.Client.Test
                 }
             }));
 
-            task.Task.ContinueWith(f => { instance.GetLifecycleService().RemoveLifecycleListener(regId); });
+            task.Task.ContinueWith(f => { instance.GetLifecycleService().RemoveLifecycleListener(regId); })
+                .IgnoreExceptions();
 
             return task.Task;
         }

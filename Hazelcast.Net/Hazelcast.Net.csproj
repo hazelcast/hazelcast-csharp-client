@@ -565,6 +565,7 @@
     <Compile Include="Hazelcast.Util\StackTraceElement.cs" />
     <Compile Include="Hazelcast.Util\StaticLB.cs" />
     <Compile Include="Hazelcast.Util\StripedTaskScheduler.cs" />
+    <Compile Include="Hazelcast.Util\TaskExtension.cs" />
     <Compile Include="Hazelcast.Util\ThreadUtil.cs" />
     <Compile Include="Hazelcast.Util\ValidationUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -596,6 +597,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Hazelcast.Client.Spi" />
     <Folder Include="Hazelcast.Map" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

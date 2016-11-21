@@ -19,7 +19,7 @@ using Hazelcast.IO;
 namespace Hazelcast.Client.Spi
 {
     [Serializable]
-    internal class RetryableHazelcastException : HazelcastException
+    public class RetryableHazelcastException : HazelcastException
     {
         public RetryableHazelcastException()
         {
@@ -31,7 +31,7 @@ namespace Hazelcast.Client.Spi
     }
 
     [Serializable]
-    internal class TargetNotMemberException : RetryableHazelcastException
+    public class TargetNotMemberException : RetryableHazelcastException
     {
         public TargetNotMemberException(string message) : base(message)
         {
@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Spi
     }
 
     [Serializable]
-    internal class TargetDisconnectedException : RetryableHazelcastException
+    public class TargetDisconnectedException : RetryableHazelcastException
     {
         public TargetDisconnectedException(Address address) : base("Target[" + address + "] disconnected.")
         {

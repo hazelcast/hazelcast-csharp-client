@@ -138,6 +138,13 @@ namespace Hazelcast.Client.Protocol.Util
             return this;
         }
 
+        public virtual MessageFlyweight Set(byte value)
+        {
+            Buffer.PutByte(_index + _offset, value);
+            _index += Bits.ByteSizeInBytes;
+            return this;
+        }
+
         public virtual MessageFlyweight Set(int value)
         {
             Buffer.PutInt(_index + _offset, value);

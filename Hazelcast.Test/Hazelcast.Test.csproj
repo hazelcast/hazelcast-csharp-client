@@ -86,6 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientQueuePerformanceTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientExecutorServiceTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSSLTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PredicatesTest.cs" />
     <Compile Include="Hazelcast.Client.Test\SingleMemberBaseTest.cs" />

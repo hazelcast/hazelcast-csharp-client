@@ -13,32 +13,32 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Spi
 {
+    //WARNING: All exceptions should returned from the _taskSource otherwise UnobservedTaskException problem occur
     internal class SettableFuture<T> : IFuture<T>
     {
         private readonly object _lock = new object();
         private readonly TaskCompletionSource<T> _taskSource = new TaskCompletionSource<T>();
-        private Exception _exception;
-        private volatile int _isComplete;
-        private object _result;
 
         public Exception Exception
         {
             get
             {
                 Wait();
-                return _exception;
+                return _taskSource.Task.IsFaulted ? _taskSource.Task.Exception.Flatten().InnerExceptions.First(): null;
             }
             set
             {
                 Monitor.Enter(_lock);
-                SetComplete();
-                _exception = value;
                 _taskSource.SetException(value);
+                //is there a better way to handle TaskCompletionSource's unobserved exception???
+                _taskSource.Task.IgnoreExceptions();
                 Notify();
                 Monitor.Exit(_lock);
             }
@@ -49,14 +49,11 @@ namespace Hazelcast.Client.Spi
             get
             {
                 Wait();
-                if (_exception != null) throw _exception;
-                return (T) _result;
+                return _GetResult();
             }
             set
             {
                 Monitor.Enter(_lock);
-                SetComplete();
-                _result = value;
                 _taskSource.SetResult(value);
                 Notify();
                 Monitor.Exit(_lock);
@@ -65,7 +62,7 @@ namespace Hazelcast.Client.Spi
 
         public bool IsComplete
         {
-            get { return _isComplete == 1; }
+            get { return _taskSource.Task.IsCompleted; }
         }
 
         public Task<T> ToTask()
@@ -83,14 +80,25 @@ namespace Hazelcast.Client.Spi
                 {
                     result = Monitor.Wait(_lock, miliseconds);
                 }
-                if (result == false) throw new TimeoutException("Operation timed out.");
-                if (_exception != null) throw _exception;
-                return (T) _result;
+                if (result == false)
+                {
+                    _taskSource.SetException(new TimeoutException("Operation timed out."));
+                }
+                return _GetResult();
             }
             finally
             {
                 Monitor.Exit(_lock);
             }
+        }
+
+        private T _GetResult()
+        {
+            if (_taskSource.Task.IsFaulted)
+            {
+                throw _taskSource.Task.Exception.Flatten().InnerExceptions.First();
+            }
+            return _taskSource.Task.Result;
         }
 
         public bool Wait()
@@ -126,15 +134,6 @@ namespace Hazelcast.Client.Spi
         private void Notify()
         {
             Monitor.PulseAll(_lock);
-        }
-
-        private void SetComplete()
-        {
-            if (_isComplete == 1)
-            {
-                throw new InvalidOperationException("The result is already set.");
-            }
-            _isComplete = 1;
         }
     }
 }
