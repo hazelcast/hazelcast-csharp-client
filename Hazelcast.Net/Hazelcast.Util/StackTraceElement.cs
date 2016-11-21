@@ -54,5 +54,10 @@ namespace Hazelcast.Util
             return string.Equals(ClassName, other.ClassName) && string.Equals(MethodName, other.MethodName) &&
                    string.Equals(FileName, other.FileName) && LineNumber == other.LineNumber;
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0} : {1} : {2} : [{3}] ", FileName, ClassName, MethodName, LineNumber);
+        }
     }
 }
