@@ -15,7 +15,7 @@ IF -%2-==-- (
 set HAZELCAST_TEST_VERSION=3.8-SNAPSHOT
 set HAZELCAST_VERSION=3.8-SNAPSHOT
 set HAZELCAST_ENTERPRISE_VERSION=3.8-SNAPSHOT
-set HAZELCAST_RC_VERSION=0.1-SNAPSHOT
+set HAZELCAST_RC_VERSION=0.2-SNAPSHOT
 
 set SNAPSHOT_REPO=https://oss.sonatype.org/content/repositories/snapshots
 set RELEASE_REPO=http://repo1.maven.apache.org/maven2
