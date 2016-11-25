@@ -69,7 +69,7 @@ namespace Hazelcast.Client.Spi
 
         public void RefreshPartitions()
         {
-            _client.GetClientExecutionService().Submit(() => { GetPartitions(); });
+            _client.GetClientExecutionService().Submit(() => { GetPartitions(); }).IgnoreExceptions();
         }
 
         public void Start()

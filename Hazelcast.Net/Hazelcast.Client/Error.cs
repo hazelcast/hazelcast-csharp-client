@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Text;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Util;
@@ -67,6 +68,18 @@ namespace Hazelcast.Client
         public static Error Decode(IClientMessage flyweight)
         {
             return new Error(flyweight);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("ClassName: {0} ({1}) : {2}", ClassName, CauseClassName, Message).AppendLine();
+            sb.Append("STACKTRACE:").AppendLine();
+            foreach (var stackTraceElement in StackTrace)
+            {
+                sb.Append(stackTraceElement).AppendLine();
+            }
+            return base.ToString();
         }
     }
 }

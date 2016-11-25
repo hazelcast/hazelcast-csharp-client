@@ -176,9 +176,20 @@ namespace Hazelcast.Client.Connection
                 Logger.Finest(string.Format("Closing socket, address: {0} id: {1}", GetAddress(), _id));
             }
 
-            _stream.Close();
-            _clientSocket.Shutdown(SocketShutdown.Both);
-            _clientSocket.Close();
+            try
+            {
+                _stream.Close();
+                _clientSocket.Shutdown(SocketShutdown.Both);
+                _clientSocket.Close();
+
+            }
+            catch (Exception e)
+            {
+                if (Logger.IsFinestEnabled())
+                {
+                    Logger.Finest("Exception occured during socket shutdown", e);
+                }
+            }
         }
 
         public Address GetAddress()

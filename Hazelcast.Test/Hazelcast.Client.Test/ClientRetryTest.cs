@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Hazelcast.Config;
 using Hazelcast.Logging;
 using Hazelcast.Remote;
+using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -92,7 +93,7 @@ namespace Hazelcast.Client.Test
             var map = client.GetMap<int, string>(TestSupport.RandomString());
             for (var i = 0; i < count; i++)
             {
-                map.PutAsync(i, TestSupport.RandomString());
+                map.PutAsync(i, TestSupport.RandomString()).IgnoreExceptions();
             }
 
             _remoteController.shutdownMember(_cluster.Id, member2.Uuid);
@@ -156,6 +157,7 @@ namespace Hazelcast.Client.Test
                     map.Put("key", "value");
                 }).ContinueWith(t =>
                 {
+                    var e = t.Exception;//observe the exception
                     if (t.IsFaulted) resetEvent.Set();
                     else Assert.Fail("Method invocation did not fail as expected");
                 });
