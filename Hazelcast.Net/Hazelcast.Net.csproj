@@ -41,9 +41,8 @@
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\Release\AnyCPU\Hazelcast.Net.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
     <MSBuildCommunityTasksPath>..\.build</MSBuildCommunityTasksPath>
@@ -65,6 +64,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnKeyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnKeysCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteWithPredicateCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapRemoveAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapRemoveInterceptorCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapSubmitToKeyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferAddAllCodec.cs" />
