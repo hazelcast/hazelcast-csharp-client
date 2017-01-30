@@ -886,6 +886,17 @@ namespace Hazelcast.Core
         /// <param name="id">registration id of map interceptor</param>
         void RemoveInterceptor(string id);
 
+        /// <summary>
+        /// Removes all entries which match with the supplied predicate.
+        /// </summary>
+        /// <remarks>
+        /// If this map has index, matching entries will be found via index search, otherwise they will be found by full-scan.
+        ///
+        /// Note that calling this method also removes all entries from callers near cache.
+        /// </remarks>
+        /// <param name="predicate">matching entries with this predicate will be removed from this map</param>
+        void RemoveAll(IPredicate predicate);
+
         /// <summary>Replaces the entry for a key only if currently mapped to some value.</summary>
         /// <remarks>
         ///     Replaces the entry for a key only if currently mapped to some value.

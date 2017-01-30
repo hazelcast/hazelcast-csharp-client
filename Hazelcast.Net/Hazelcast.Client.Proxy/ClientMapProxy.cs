@@ -277,6 +277,16 @@ namespace Hazelcast.Client.Proxy
             return MapReplaceIfSameCodec.DecodeResponse(clientMessage).response;
         }
 
+        public void RemoveAll(IPredicate predicate)
+        {
+            var request = MapRemoveAllCodec.EncodeRequest(GetName(), ToData(predicate));
+            Invoke(request);
+            if (_nearCache != null)
+            {
+                _nearCache.InvalidateAll();
+            }
+        }
+
         public TValue Replace(TKey key, TValue value)
         {
             var keyData = ToData(key);

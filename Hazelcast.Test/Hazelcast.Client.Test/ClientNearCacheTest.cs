@@ -247,6 +247,28 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        public void TestNearCacheInvalidationOnRemoveAllPredicate()
+        {
+            var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
+            for (var i = 0; i < 100; i++)
+            {
+                map.Put("key" + i, "value" + i);
+            }
+
+            for (var i = 0; i < 100; i++)
+            {
+                map.Get("key" + i);
+            }
+
+            var clientNearCache = GetNearCache(map);
+
+            Assert.AreEqual(100, clientNearCache.Cache.Count);
+
+            map.RemoveAll(new SqlPredicate("this == 'value2'"));
+            Assert.AreEqual(0, clientNearCache.Cache.Count);
+        }
+
+        [Test]
         public void TestNearCacheInvalidationOnEvict()
         {
             TestInvalidate((m, k) => m.EvictAll());

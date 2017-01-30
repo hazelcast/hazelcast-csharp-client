@@ -958,6 +958,16 @@ namespace Hazelcast.Client.Test
             map.RemoveInterceptor("interceptor");
         }
 
+        [Test]
+        public void TestRemoveAllWithPredicate()
+        {
+            FillMap();
+
+            map.RemoveAll(new SqlPredicate("this != value1"));
+            Assert.AreEqual(1, map.Values().Count);
+            Assert.AreEqual("value1", map.Get("key1"));
+        }
+
         /// <exception cref="System.Exception"></exception>
         [Test]
         public virtual void TestReplace()

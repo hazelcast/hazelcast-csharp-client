@@ -71,6 +71,8 @@ namespace Hazelcast.Client.Protocol.Codec
         MapKeySetWithPagingPredicate = 0x0138,
         MapValuesWithPagingPredicate = 0x0139,
         MapEntriesWithPagingPredicate = 0x013a,
-        MapClearNearCache = 0x013b
+        MapClearNearCache = 0x013b,
+        MapRemoveAll = 0x0144
+
     }
 }
