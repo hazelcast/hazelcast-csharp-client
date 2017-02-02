@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.IO;
 using System.Text;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
@@ -148,14 +149,24 @@ namespace Hazelcast.Client.Protocol
 
         public virtual bool ReadFrom(ByteBuffer source)
         {
-            if (Index() == 0)
+            var frameLength = 0;
+            if (Buffer == null)
             {
-                InitFrameSize(source);
+                //init internal buffer
+                var remaining = source.Remaining();
+                if (remaining < Bits.IntSizeInBytes) {
+                    //we don't have even the frame length ready
+                    return false;
+                }
+                frameLength = Bits.ReadIntL(source.Array(), source.Position);
+                if (frameLength < HeaderSize)
+                {
+                    throw new InvalidDataException("Client message frame length cannot be smaller than header size.");
+                }
+                Wrap(new SafeBuffer(new byte[frameLength]), 0);
             }
-            while (Index() >= Bits.IntSizeInBytes && source.HasRemaining() && !IsComplete())
-            {
-                Accumulate(source, GetFrameLength() - Index());
-            }
+            frameLength = frameLength > 0 ? frameLength : GetFrameLength();
+            Accumulate(source, frameLength - Index());
             return IsComplete();
         }
 
@@ -198,9 +209,7 @@ namespace Hazelcast.Client.Protocol
 
         public static ClientMessage Create()
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.Wrap(new SafeBuffer(new byte[InitialBufferSize]), 0);
-            return clientMessage;
+            return new ClientMessage();
         }
 
         public static ClientMessage CreateForDecode(IClientProtocolBuffer buffer, int offset)
@@ -347,8 +356,6 @@ namespace Hazelcast.Client.Protocol
             var readLength = remaining < length ? remaining : length;
             if (readLength > 0)
             {
-                var requiredCapacity = Index() + readLength;
-                EnsureCapacity(requiredCapacity);
                 Buffer.PutBytes(Index(), byteBuffer.Array(), byteBuffer.Position, readLength);
                 byteBuffer.Position = byteBuffer.Position + readLength;
                 Index(Index() + readLength);
@@ -357,17 +364,6 @@ namespace Hazelcast.Client.Protocol
             return 0;
         }
 
-        private void EnsureCapacity(int requiredCapacity)
-        {
-            var capacity = Buffer.Capacity() > 0 ? Buffer.Capacity() : 1;
-            if (requiredCapacity > capacity)
-            {
-                var newCapacity = QuickMath.NextPowerOfTwo(requiredCapacity);
-                var newBuffer = new byte[newCapacity];
-                Array.Copy(Buffer.ByteArray(), 0, newBuffer, 0, capacity);
-                Buffer.Wrap(newBuffer);
-            }
-        }
 
         private void EnsureHeaderSize(int offset, int length)
         {
@@ -376,15 +372,6 @@ namespace Hazelcast.Client.Protocol
                 throw new IndexOutOfRangeException("ClientMessage buffer must contain at least " + HeaderSize +
                                                    " bytes! length: " + length + ", offset: " + offset);
             }
-        }
-
-        private int InitFrameSize(ByteBuffer byteBuffer)
-        {
-            if (byteBuffer.Remaining() < Bits.IntSizeInBytes)
-            {
-                return 0;
-            }
-            return Accumulate(byteBuffer, Bits.IntSizeInBytes);
         }
     }
 }
