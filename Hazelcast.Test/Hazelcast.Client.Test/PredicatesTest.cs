@@ -390,6 +390,14 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(predicate, map.Get("key"));
         }        
         
+        [Test]
+        public virtual void TestInstanceOfSerialize()
+        {
+            var predicate = CreateInstanceOf();
+            map.Put("key", predicate);
+            Assert.AreEqual(predicate, map.Get("key"));
+        }
+
         private IPredicate CreateAndPredicate()
         {
             var predicate0 = Predicates.IsLessThan("this", "value-2");
@@ -478,6 +486,11 @@ namespace Hazelcast.Client.Test
         private IPredicate CreateTrue()
         {
             return Predicates.True();
+        }
+
+        private IPredicate CreateInstanceOf()
+        {
+            return Predicates.InstanceOf("java.lang.Integer");
         }
     }
 }
