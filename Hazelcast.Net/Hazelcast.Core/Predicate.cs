@@ -25,6 +25,29 @@ namespace Hazelcast.Core
     /// </summary>
     public static class Predicates
     {
+        private const string KeyConst = "__key";
+        private const string ThisConst = "this";
+
+        public static PredicateProperty Key(string property = null)
+        {
+            return new PredicateProperty(property != null ? KeyConst + "#" + property : KeyConst);
+        }
+
+        public static PredicateProperty Property(string property)
+        {
+            return new PredicateProperty(property);
+        }
+
+        public static PredicateProperty This()
+        {
+            return new PredicateProperty(ThisConst);
+        }
+
+        public static InstanceofPredicate InstanceOf(string fullJavaClassName)
+        {
+            return new InstanceofPredicate(fullJavaClassName);
+        }
+
         public static AndPredicate And(params IPredicate[] predicates)
         {
             return new AndPredicate(predicates);
@@ -108,6 +131,95 @@ namespace Hazelcast.Core
         public static TruePredicate True()
         {
             return new TruePredicate();
+        }
+    }
+
+    public class PredicateProperty
+    {
+        private readonly string property;
+
+        public PredicateProperty(string property)
+        {
+            this.property = property;
+        }
+
+        public string Property
+        {
+            get { return property; }
+        }
+    }
+
+    public static class PredicateExt
+    {
+
+        public static AndPredicate And(this IPredicate firstPredicate, IPredicate secondPredicate)
+        {
+            return new AndPredicate(firstPredicate, secondPredicate);
+        }
+
+        public static BetweenPredicate Between(this PredicateProperty predicateProperty, object from, object to)
+        {
+            return new BetweenPredicate(predicateProperty.Property,  from, to);
+        }
+
+        public static EqualPredicate Equal(this PredicateProperty predicateProperty, object value)
+        {
+            return new EqualPredicate(predicateProperty.Property, value);
+        }
+
+        public static GreaterLessPredicate GreaterThan(this PredicateProperty predicateProperty, object value)
+        {
+            return new GreaterLessPredicate(predicateProperty.Property, value, false, false);
+        }
+
+        public static GreaterLessPredicate GreaterThanOrEqual(this PredicateProperty predicateProperty, object value)
+        {
+            return new GreaterLessPredicate(predicateProperty.Property, value, true, false);
+        }
+
+        public static ILikePredicate ILike(this PredicateProperty predicateProperty, string expression)
+        {
+            return new ILikePredicate(predicateProperty.Property, expression);
+        }
+
+        public static InPredicate In(this PredicateProperty predicateProperty, params object[] values)
+        {
+            return new InPredicate(predicateProperty.Property, values);
+        }
+
+        public static GreaterLessPredicate LessThan(this PredicateProperty predicateProperty, object value)
+        {
+            return new GreaterLessPredicate(predicateProperty.Property, value, false, true);
+        }
+
+        public static GreaterLessPredicate LessThanOrEqual(this PredicateProperty predicateProperty, object value)
+        {
+            return new GreaterLessPredicate(predicateProperty.Property, value, true, true);
+        }
+
+        public static LikePredicate Like(this PredicateProperty predicateProperty, string expression)
+        {
+            return new LikePredicate(predicateProperty.Property, expression);
+        }
+
+        public static NotEqualPredicate NotEqual(this PredicateProperty predicateProperty, object value)
+        {
+            return new NotEqualPredicate(predicateProperty.Property, value);
+        }
+
+        public static RegexPredicate MatchesRegex(this PredicateProperty predicateProperty, string regex)
+        {
+            return new RegexPredicate(predicateProperty.Property, regex);
+        }
+
+        public static NotPredicate Not(this IPredicate predicate)
+        {
+            return new NotPredicate(predicate);
+        }
+
+        public static OrPredicate Or(this IPredicate firstPredicate, IPredicate secondPredicate)
+        {
+            return new OrPredicate(firstPredicate, secondPredicate);
         }
     }
 
@@ -656,6 +768,24 @@ namespace Hazelcast.Core
         public int GetId()
         {
             return PredicateDataSerializerHook.InstanceofPredicate;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((InstanceofPredicate) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return _className != null ? _className.GetHashCode() : 0;
+        }
+
+        protected bool Equals(InstanceofPredicate other)
+        {
+            return string.Equals(_className, other._className);
         }
 
         public override string ToString()
