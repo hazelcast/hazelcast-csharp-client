@@ -3,7 +3,7 @@
   <metadata>
     <id>Hazelcast.Net</id>
 	<title>Hazelcast .NET Client</title>
-    <version>3.8-alpha1</version>
+    <version>3.8</version>
     <authors>Hazelcast</authors>
     <projectUrl>https://github.com/hazelcast/hazelcast-csharp-client</projectUrl>
     <owners>Hazelcast</owners>
@@ -13,7 +13,7 @@
     <description>Open source .NET/C# client for Hazelcast, the open source in memory distributed computing platform.	
 	</description>
     <releaseNotes></releaseNotes>
-    <copyright>Copyright (c) 2008-2015, Hazelcast, Inc.</copyright>
+    <copyright>Copyright (c) 2008, Hazelcast, Inc.</copyright>
     <tags>hazelcast cache</tags>
   </metadata>
   <files>
