@@ -55,6 +55,9 @@
   </PropertyGroup>
   <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Hazelcast.Client.Connection\ClientConnectionManager.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionListener.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionHeartbeatListener.cs" />
@@ -596,23 +599,5 @@
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Hazelcast.Client.Spi" />
-    <Folder Include="Hazelcast.Map" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="BeforeBuild">
-    <Message Text="Version: $(Major).$(Minor).$(Build).$(Revision)" />
-    <GitVersion LocalPath="$(MSBuildProjectDirectory)">
-      <Output TaskParameter="CommitHash" PropertyName="CommitHash" />
-    </GitVersion>
-    <Message Text="Commit Hash: $(CommitHash)" />
-    <FileUpdate Files="Properties\AssemblyInfo.cs" Regex="AssemblyConfiguration\(&quot;Commit.*&quot;\)" ReplacementText="AssemblyConfiguration(&quot;Commit $(CommitHash)&quot;)" />
-  </Target>
-  <Target Name="Nightly">
-    <Message Text="Build Committed Revision: $(Revision)" />
-  </Target>
-  <Target Name="Release" DependsOnTargets="Build">
-    <Message Text="Build Committed Revision: $(Revision)" />
-  </Target>
 </Project>
