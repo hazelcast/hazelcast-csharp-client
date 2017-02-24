@@ -16,6 +16,6 @@
   </metadata>
   <files>
     <file src="bin\Release\AnyCpu\Hazelcast.Net.dll" target="lib\net40" />
-    <file src="bin\Release\AnyCpu\Hazelcast.Net.dll.xml" target="lib\net40" />
+    <file src="bin\Release\AnyCpu\Hazelcast.Net.xml" target="lib\net40" />
   </files>
 </package>
