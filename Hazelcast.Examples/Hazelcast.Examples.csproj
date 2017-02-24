@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties/SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="App.cs" />
     <Compile Include="Client\LifecycleExample.cs" />
     <Compile Include="Client\MemberListenerExample.cs" />
