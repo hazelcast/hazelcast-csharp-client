@@ -1,1 +1,1 @@
-nuget.exe pack Hazelcast.Net/Package.nuspec
+nuget.exe pack Hazelcast.Net/Hazelcast.Net.csproj -Prop Configuration=Release
