@@ -24,6 +24,7 @@ namespace Hazelcast.Client.Protocol
         byte GetByte();
         long GetCorrelationId();
         IData GetData();
+        short GetShort();
         int GetInt();
         long GetLong();
         KeyValuePair<IData, IData> GetMapEntry();
@@ -32,6 +33,7 @@ namespace Hazelcast.Client.Protocol
         string GetStringUtf8();
         bool IsFlagSet(short listenerEventFlag);
         bool IsRetryable();
+        bool IsComplete();
 
         /// <summary>Sets the correlation id field.</summary>
         /// <param name="correlationId">The value to set in the correlation id field.</param>

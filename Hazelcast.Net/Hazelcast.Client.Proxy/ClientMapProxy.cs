@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
@@ -708,11 +709,10 @@ namespace Hazelcast.Client.Proxy
 
         public ISet<TKey> KeySet(IPredicate predicate)
         {
-            //TODO not supported yet
-            //if (predicate is PagingPredicate)
-            //{
-            //    return KeySetWithPagingPredicate((PagingPredicate)predicate);
-            //}
+            if (predicate is PagingPredicate)
+            {
+                return KeySetWithPagingPredicate((PagingPredicate)predicate);
+            }
             var request = MapKeySetWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
             var keys = Invoke(request, m => MapKeySetWithPredicateCodec.DecodeResponse(m).list);
             return ToSet<TKey>(keys);
@@ -720,6 +720,11 @@ namespace Hazelcast.Client.Proxy
 
         public ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate predicate)
         {
+            if (predicate is PagingPredicate)
+            {
+                return EntrySetWithPagingPredicate((PagingPredicate) predicate);
+            }
+
             var request = MapEntriesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
             var entries = Invoke(request, m => MapEntriesWithPredicateCodec.DecodeResponse(m).entrySet);
             ISet<KeyValuePair<TKey, TValue>> entrySet = new HashSet<KeyValuePair<TKey, TValue>>();
@@ -734,6 +739,11 @@ namespace Hazelcast.Client.Proxy
 
         public ICollection<TValue> Values(IPredicate predicate)
         {
+            if (predicate is PagingPredicate)
+            {
+                return ValuesForPagingPredicate((PagingPredicate) predicate);
+            }
+
             var request = MapValuesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
             var result = Invoke(request, m => MapValuesWithPredicateCodec.DecodeResponse(m).list);
             IList<TValue> values = new List<TValue>(result.Count);
@@ -851,6 +861,59 @@ namespace Hazelcast.Client.Proxy
                 keyList.Add(keyData);
             }
             return partitionToKeyData;
+        }
+
+        private ISet<KeyValuePair<TKey, TValue>> EntrySetWithPagingPredicate(PagingPredicate pagingPredicate)
+        {
+            pagingPredicate.IterationType = IterationType.Entry;
+
+            var request = MapEntriesWithPagingPredicateCodec.EncodeRequest(GetName(), ToData(pagingPredicate));
+            var response = Invoke(request);
+            var resultParameters = MapEntriesWithPagingPredicateCodec.DecodeResponse(response);
+
+            var entryList = new List<KeyValuePair<object, object>>();
+            foreach (var dataEntry in resultParameters.response)
+            {
+                var key = ToObject<TKey>(dataEntry.Key);
+                var value = ToObject<TValue>(dataEntry.Value);
+                entryList.Add(new KeyValuePair<object, object>(key, value));
+            }
+            var resultEnumerator = SortingUtil.GetSortedQueryResultSet(entryList, pagingPredicate, IterationType.Entry);
+            return new HashSet<KeyValuePair<TKey, TValue>>(resultEnumerator.Cast<KeyValuePair<TKey, TValue>>());
+        }
+
+        private ISet<TKey> KeySetWithPagingPredicate(PagingPredicate pagingPredicate)
+        {
+            pagingPredicate.IterationType = IterationType.Key;
+            var request = MapKeySetWithPagingPredicateCodec.EncodeRequest(GetName(), ToData(pagingPredicate));
+            var response = Invoke(request);
+            var resultParameters = MapKeySetWithPagingPredicateCodec.DecodeResponse(response);
+
+            var resultList = new List<KeyValuePair<object, object>>();
+            foreach (var keyData in resultParameters.response) {
+                var key = ToObject<TKey>(keyData);
+                resultList.Add(new KeyValuePair<object, object>(key, default(TValue)));
+            }
+            var resultEnumerator = SortingUtil.GetSortedQueryResultSet(resultList, pagingPredicate, IterationType.Key);
+            return new HashSet<TKey>(resultEnumerator.Cast<TKey>());
+        }
+
+        private ICollection<TValue> ValuesForPagingPredicate(PagingPredicate pagingPredicate)
+        {
+            pagingPredicate.IterationType = IterationType.Value;
+
+            var request = MapValuesWithPagingPredicateCodec.EncodeRequest(GetName(), ToData(pagingPredicate));
+            var response = Invoke(request);
+            var resultParameters = MapValuesWithPagingPredicateCodec.DecodeResponse(response);
+
+            var resultList = new List<KeyValuePair<object, object>>();
+            foreach (var dataEntry in resultParameters.response) {
+                var key = ToObject<TKey>(dataEntry.Key);
+                var value = ToObject<TValue>(dataEntry.Value);
+                resultList.Add(new KeyValuePair<object, object>(key, value));
+            }
+            var resultEnumerator =  SortingUtil.GetSortedQueryResultSet(resultList, pagingPredicate, IterationType.Value);
+            return resultEnumerator.Cast<TValue>().ToList();
         }
     }
 }

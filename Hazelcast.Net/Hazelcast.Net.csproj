@@ -62,14 +62,17 @@
     <Compile Include="Hazelcast.Client.Connection\IConnectionListener.cs" />
     <Compile Include="Hazelcast.Client.Connection\IConnectionHeartbeatListener.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapAddInterceptorCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapEntriesWithPagingPredicateCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapEvictAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnAllKeysCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnKeyCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteOnKeysCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapExecuteWithPredicateCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapKeySetWithPagingPredicateCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapRemoveAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapRemoveInterceptorCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\MapSubmitToKeyCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\MapValuesWithPagingPredicateCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferAddAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferAddCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferCapacityCodec.cs" />
@@ -80,6 +83,7 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferRemainingCapacityCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferSizeCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\RingbufferTailSequenceCodec.cs" />
+    <Compile Include="Hazelcast.Client.Protocol.Codec\UidCodec.cs" />
     <Compile Include="Hazelcast.Client.Proxy\ClientRingbufferProxy.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientInvocation.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\AddressCodec.cs" />
@@ -387,6 +391,7 @@
     <Compile Include="Hazelcast.Core\MemberAttributeEvent.cs" />
     <Compile Include="Hazelcast.Core\MembershipListener.cs" />
     <Compile Include="Hazelcast.Core\OverflowPolicy.cs" />
+    <Compile Include="Hazelcast.Core\PagingPredicate.cs" />
     <Compile Include="Hazelcast.Core\Predicate.cs" />
     <Compile Include="Hazelcast.IO.Serialization\ArrayDataSerializableFactory.cs" />
     <Compile Include="Hazelcast.IO.Serialization\HeapData.cs" />
@@ -562,9 +567,11 @@
     <Compile Include="Hazelcast.Util\EnvironmentUtil.cs" />
     <Compile Include="Hazelcast.Util\ExceptionUtil.cs" />
     <Compile Include="Hazelcast.Util\HashUtil.cs" />
+    <Compile Include="Hazelcast.Util\IterationType.cs" />
     <Compile Include="Hazelcast.Util\QuickMath.cs" />
     <Compile Include="Hazelcast.Util\RandomLB.cs" />
     <Compile Include="Hazelcast.Util\RoundRobinLB.cs" />
+    <Compile Include="Hazelcast.Util\SortingUtil.cs" />
     <Compile Include="Hazelcast.Util\StackTraceElement.cs" />
     <Compile Include="Hazelcast.Util\StaticLB.cs" />
     <Compile Include="Hazelcast.Util\StripedTaskScheduler.cs" />

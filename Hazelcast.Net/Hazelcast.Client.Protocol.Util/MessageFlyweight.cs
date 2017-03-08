@@ -90,6 +90,13 @@ namespace Hazelcast.Client.Protocol.Util
             return result;
         }
 
+        public virtual short GetShort()
+        {
+            var result = Buffer.GetShort(_index + _offset);
+            _index += Bits.ShortSizeInBytes;
+            return result;
+        }
+
         public virtual int GetInt()
         {
             var result = Buffer.GetInt(_index + _offset);
