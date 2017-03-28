@@ -65,6 +65,7 @@ namespace Hazelcast.Client
         private readonly ProxyManager _proxyManager;
         private readonly ISerializationService _serializationService;
         private readonly ConcurrentDictionary<string, object> _userContext;
+        private readonly ClientLockReferenceIdGenerator _lockReferenceIdGenerator;
 
         private HazelcastClient(ClientConfig config)
         {
@@ -103,6 +104,7 @@ namespace Hazelcast.Client
             _loadBalancer.Init(GetCluster(), config);
             _proxyManager.Init(config);
             _partitionService = new ClientPartitionService(this);
+            _lockReferenceIdGenerator = new ClientLockReferenceIdGenerator();
         }
 
         public string GetName()
@@ -197,7 +199,7 @@ namespace Hazelcast.Client
                 var request = ClientGetDistributedObjectsCodec.EncodeRequest();
                 var task = _invocationService.InvokeOnRandomTarget(request);
                 var response = ThreadUtil.GetResult(task);
-                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).infoCollection;
+                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).response;
                 foreach (var data in result)
                 {
                     var o = _serializationService.ToObject<DistributedObjectInfo>(data);
@@ -399,6 +401,11 @@ namespace Hazelcast.Client
         internal ISerializationService GetSerializationService()
         {
             return _serializationService;
+        }
+
+        internal ClientLockReferenceIdGenerator GetLockReferenceIdGenerator()
+        {
+            return _lockReferenceIdGenerator;
         }
 
         private IClientInvocationService GetInvocationService(ClientConfig config)

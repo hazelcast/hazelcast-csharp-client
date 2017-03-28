@@ -186,7 +186,7 @@ namespace Hazelcast.Client
             }
         }
 
-        private void HandleIMapBatchInvalidation(IList<IData> keys)
+        private void HandleIMapBatchInvalidation(IList<IData> keys, IList<string> sourceUuids, IList<Guid> partitionUuids, IList<long> sequences)
         {
             foreach (var data in keys)
             {
@@ -194,7 +194,7 @@ namespace Hazelcast.Client
             }
         }
 
-        private void HandleIMapInvalidation(IData key)
+        private void HandleIMapInvalidation(IData key, string sourceUuid, Guid? partitionUuid, long? sequence)
         {
             if (key == null)
             {

@@ -24,6 +24,8 @@ namespace Hazelcast.Client.Proxy
 {
     internal class ClientMultiMapProxy<TKey, TValue> : ClientProxy, IMultiMap<TKey, TValue>
     {
+        private ClientLockReferenceIdGenerator _lockReferenceIdGenerator;
+
         public ClientMultiMapProxy(string serviceName, string name) : base(serviceName, name)
         {
         }
@@ -41,7 +43,7 @@ namespace Hazelcast.Client.Proxy
         {
             var keyData = ToData(key);
             var request = MultiMapGetCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
-            var list = Invoke(request, keyData, m => MultiMapGetCodec.DecodeResponse(m).list);
+            var list = Invoke(request, keyData, m => MultiMapGetCodec.DecodeResponse(m).response);
 
             return ToList<TValue>(list);
         }
@@ -60,14 +62,14 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
 
             var request = MultiMapRemoveCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
-            var list = Invoke(request, keyData, m => MultiMapRemoveCodec.DecodeResponse(m).list);
+            var list = Invoke(request, keyData, m => MultiMapRemoveCodec.DecodeResponse(m).response);
             return ToList<TValue>(list);
         }
 
         public virtual ISet<TKey> KeySet()
         {
             var request = MultiMapKeySetCodec.EncodeRequest(GetName());
-            var keySet = Invoke(request, m => MultiMapKeySetCodec.DecodeResponse(m).list);
+            var keySet = Invoke(request, m => MultiMapKeySetCodec.DecodeResponse(m).response);
 
             return ToSet<TKey>(keySet);
         }
@@ -75,14 +77,14 @@ namespace Hazelcast.Client.Proxy
         public virtual ICollection<TValue> Values()
         {
             var request = MultiMapValuesCodec.EncodeRequest(GetName());
-            var result = Invoke(request, m => MultiMapValuesCodec.DecodeResponse(m).list);
+            var result = Invoke(request, m => MultiMapValuesCodec.DecodeResponse(m).response);
             return ToList<TValue>(result);
         }
 
         public virtual ISet<KeyValuePair<TKey, TValue>> EntrySet()
         {
             var request = MultiMapEntrySetCodec.EncodeRequest(GetName());
-            var dataEntrySet = Invoke(request, m => MultiMapEntrySetCodec.DecodeResponse(m).entrySet);
+            var dataEntrySet = Invoke(request, m => MultiMapEntrySetCodec.DecodeResponse(m).response);
             return ToEntrySet<TKey, TValue>(dataEntrySet);
         }
 
@@ -177,7 +179,7 @@ namespace Hazelcast.Client.Proxy
 
             var keyData = ToData(key);
             var request = MultiMapLockCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId(),
-                timeUnit.ToMillis(leaseTime));
+                timeUnit.ToMillis(leaseTime), _lockReferenceIdGenerator.GetNextReferenceId());
             Invoke(request, keyData);
         }
 
@@ -216,7 +218,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = MultiMapTryLockCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId(),
                 leaseUnit.ToMillis(leaseTime),
-                timeunit.ToMillis(timeout));
+                timeunit.ToMillis(timeout), _lockReferenceIdGenerator.GetNextReferenceId());
             return Invoke(request, keyData, m => MultiMapTryLockCodec.DecodeResponse(m).response);
         }
 
@@ -225,7 +227,7 @@ namespace Hazelcast.Client.Proxy
             ThrowExceptionIfNull(key);
 
             var keyData = ToData(key);
-            var request = MultiMapUnlockCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
+            var request = MultiMapUnlockCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId(), _lockReferenceIdGenerator.GetNextReferenceId());
             Invoke(request, keyData);
         }
 
@@ -234,7 +236,7 @@ namespace Hazelcast.Client.Proxy
             ThrowExceptionIfNull(key);
 
             var keyData = ToData(key);
-            var request = MultiMapForceUnlockCodec.EncodeRequest(GetName(), keyData);
+            var request = MultiMapForceUnlockCodec.EncodeRequest(GetName(), keyData, _lockReferenceIdGenerator.GetNextReferenceId());
             Invoke(request, keyData);
         }
 
@@ -273,5 +275,12 @@ namespace Hazelcast.Client.Proxy
                 }
             }
         }
+
+        internal override void PostInit()
+        {
+            base.PostInit();
+            _lockReferenceIdGenerator = GetContext().GetClient().GetLockReferenceIdGenerator();
+        }
+
     }
 }

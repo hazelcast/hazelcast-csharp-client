@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Protocol
     public sealed class EventMessageConst
     {
         public const int EventMember = 200;
-        public const int EventMemberSet = 201;
+        public const int EventMemberList = 201;
         public const int EventMemberAttributeChange = 202;
         public const int EventEntry = 203;
         public const int EventItem = 204;

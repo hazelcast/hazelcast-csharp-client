@@ -15,6 +15,8 @@
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO.Serialization;
 
+// Client Protocol version, Since:1.4 - Update:1.4
+
 namespace Hazelcast.Client.Protocol.Codec
 {
     internal sealed class MapRemoveAllCodec
@@ -52,17 +54,6 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-
-
-        public class ResponseParameters
-        {
-        }
-
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
-        {
-            var parameters = new ResponseParameters();
-            return parameters;
-        }
+        //************************ RESPONSE IS EMPTY *****************//
     }
 }

@@ -264,6 +264,10 @@ namespace Hazelcast.Client.Spi
             return Activator.CreateInstance(proxyType, name, id) as ClientProxy;
         }
 
+        public HazelcastClient GetHazelcastInstance()
+        {
+            return _client;
+        }
         private Address FindNextAddressToCreateARequest()
         {
             var clusterSize = _client.GetClientClusterService().GetSize();

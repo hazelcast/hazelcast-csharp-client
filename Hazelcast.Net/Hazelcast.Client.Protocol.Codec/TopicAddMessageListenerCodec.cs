@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,24 +15,32 @@
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Logging;
+
+// Client Protocol version, Since:1.0 - Update:1.0
 
 namespace Hazelcast.Client.Protocol.Codec
 {
     internal sealed class TopicAddMessageListenerCodec
     {
-        public const int ResponseType = 104;
-        public const bool Retryable = true;
-
         public static readonly TopicMessageType RequestType = TopicMessageType.TopicAddMessageListener;
+        public const int ResponseType = 104;
+        public const bool Retryable = false;
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        //************************ REQUEST *************************//
+
+        public class RequestParameters
         {
-            var parameters = new ResponseParameters();
-            string response = null;
-            response = clientMessage.GetStringUtf8();
-            parameters.response = response;
-            return parameters;
+            public static readonly TopicMessageType TYPE = RequestType;
+            public string name;
+            public bool localOnly;
+
+            public static int CalculateDataSize(string name, bool localOnly)
+            {
+                var dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += Bits.BooleanSizeInBytes;
+                return dataSize;
+            }
         }
 
         public static ClientMessage EncodeRequest(string name, bool localOnly)
@@ -47,54 +55,39 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
-        {
-            public static readonly TopicMessageType TYPE = RequestType;
-            public bool localOnly;
-            public string name;
-
-            public static int CalculateDataSize(string name, bool localOnly)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.BooleanSizeInBytes;
-                return dataSize;
-            }
-        }
-
         //************************ RESPONSE *************************//
-
-
         public class ResponseParameters
         {
             public string response;
         }
 
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            var parameters = new ResponseParameters();
+            var response = clientMessage.GetStringUtf8();
+            parameters.response = response;
+            return parameters;
+        }
 
-        //************************ EVENTS *************************//
+//************************ EVENTS *************************//
         public abstract class AbstractEventHandler
         {
-            public delegate void HandleTopic(IData item, long publishTime, string uuid);
-
             public static void Handle(IClientMessage clientMessage, HandleTopic handleTopic)
             {
                 var messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventTopic)
                 {
-                    IData item = null;
-                    item = clientMessage.GetData();
-                    long publishTime;
-                    publishTime = clientMessage.GetLong();
-                    string uuid = null;
-                    uuid = clientMessage.GetStringUtf8();
+                    var item = clientMessage.GetData();
+                    var publishTime = clientMessage.GetLong();
+                    var uuid = clientMessage.GetStringUtf8();
                     handleTopic(item, publishTime, uuid);
                     return;
                 }
-                Logger.GetLogger(typeof (AbstractEventHandler))
+                Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler))
                     .Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
             }
+
+            public delegate void HandleTopic(IData item, long publishTime, string uuid);
         }
     }
 }

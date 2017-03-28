@@ -1,17 +1,3 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
-// 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-// http://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 namespace Hazelcast.Client.Protocol.Codec
 {
     internal enum MapMessageType
@@ -72,7 +58,15 @@ namespace Hazelcast.Client.Protocol.Codec
         MapValuesWithPagingPredicate = 0x0139,
         MapEntriesWithPagingPredicate = 0x013a,
         MapClearNearCache = 0x013b,
-        MapRemoveAll = 0x0144
-
+        MapFetchKeys = 0x013c,
+        MapFetchEntries = 0x013d,
+        MapAggregate = 0x013e,
+        MapAggregateWithPredicate = 0x013f,
+        MapProject = 0x0140,
+        MapProjectWithPredicate = 0x0141,
+        MapFetchNearCacheInvalidationMetadata = 0x0142,
+        MapAssignAndGetUuids = 0x0143,
+        MapRemoveAll = 0x0144,
+        MapAddNearCacheInvalidationListener = 0x0145
     }
 }

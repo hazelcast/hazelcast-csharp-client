@@ -84,5 +84,10 @@ namespace Hazelcast.Client.Spi
         {
             _proxyManager.RemoveProxy(proxy.GetServiceName(), proxy.GetName());
         }
+
+        public HazelcastClient GetClient()
+        {
+            return _proxyManager.GetHazelcastInstance();
+        }
     }
 }

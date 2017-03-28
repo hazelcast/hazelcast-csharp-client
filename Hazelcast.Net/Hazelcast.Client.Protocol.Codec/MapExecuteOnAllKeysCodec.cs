@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO.Serialization;
-using System.Collections.Generic;
+
+// Client Protocol version, Since:1.0 - Update:1.0
 
 namespace Hazelcast.Client.Protocol.Codec
 {
@@ -34,7 +36,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
             public static int CalculateDataSize(string name, IData entryProcessor)
             {
-                int dataSize = ClientMessage.HeaderSize;
+                var dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
                 dataSize += ParameterUtil.CalculateDataSize(entryProcessor);
                 return dataSize;
@@ -43,8 +45,8 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public static ClientMessage EncodeRequest(string name, IData entryProcessor)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize(name, entryProcessor);
-            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            var requiredDataSize = RequestParameters.CalculateDataSize(name, entryProcessor);
+            var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int) RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
@@ -54,8 +56,6 @@ namespace Hazelcast.Client.Protocol.Codec
         }
 
         //************************ RESPONSE *************************//
-
-
         public class ResponseParameters
         {
             public IList<KeyValuePair<IData, IData>> response;
@@ -63,19 +63,15 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
-            ResponseParameters parameters = new ResponseParameters();
-            IList<KeyValuePair<IData, IData>> response = null;
-            int response_size = clientMessage.GetInt();
-            response = new List<KeyValuePair<IData, IData>>();
-            for (int response_index = 0; response_index < response_size; response_index++)
+            var parameters = new ResponseParameters();
+            var response = new List<KeyValuePair<IData, IData>>();
+            var responseSize = clientMessage.GetInt();
+            for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
             {
-                KeyValuePair<IData, IData> response_item;
-                IData response_item_key;
-                IData response_item_val;
-                response_item_key = clientMessage.GetData();
-                response_item_val = clientMessage.GetData();
-                response_item = new KeyValuePair<IData, IData>(response_item_key, response_item_val);
-                response.Add(response_item);
+                var responseItemKey = clientMessage.GetData();
+                var responseItemVal = clientMessage.GetData();
+                var responseItem = new KeyValuePair<IData, IData>(responseItemKey, responseItemVal);
+                response.Add(responseItem);
             }
             parameters.response = response;
             return parameters;

@@ -112,7 +112,7 @@ namespace Hazelcast.Client.Proxy
         protected override ICollection<T> GetAll()
         {
             var request = SetGetAllCodec.EncodeRequest(GetName());
-            var result = Invoke(request, m => SetGetAllCodec.DecodeResponse(m).list);
+            var result = Invoke(request, m => SetGetAllCodec.DecodeResponse(m).response);
             return ToList<T>(result);
         }
     }

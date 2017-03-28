@@ -105,7 +105,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = ListSubCodec.EncodeRequest(GetName(), fromIndex, toIndex);
             var response = Invoke(request);
-            ICollection<IData> collection = ListSubCodec.DecodeResponse(response).list;
+            ICollection<IData> collection = ListSubCodec.DecodeResponse(response).response;
             return ToList<T>(collection);
         }
 
@@ -200,7 +200,7 @@ namespace Hazelcast.Client.Proxy
         protected override ICollection<T> GetAll()
         {
             var request = ListGetAllCodec.EncodeRequest(GetName());
-            var result = Invoke(request, m => ListGetAllCodec.DecodeResponse(m).list);
+            var result = Invoke(request, m => ListGetAllCodec.DecodeResponse(m).response);
             return ToList<T>(result);
         }
     }
