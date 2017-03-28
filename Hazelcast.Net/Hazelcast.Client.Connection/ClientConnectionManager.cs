@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
@@ -288,13 +289,13 @@ namespace Hazelcast.Client.Connection
             {
                 request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
                     usernamePasswordCr.GetPassword(), uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
             }
             else
             {
                 var data = ss.ToData(_credentials);
                 request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
             }
 
             IClientMessage response;

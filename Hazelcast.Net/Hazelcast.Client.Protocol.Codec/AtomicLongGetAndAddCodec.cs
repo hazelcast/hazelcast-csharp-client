@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,22 +15,31 @@
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
+// Client Protocol version, Since:1.0 - Update:1.0
+
 namespace Hazelcast.Client.Protocol.Codec
 {
     internal sealed class AtomicLongGetAndAddCodec
     {
+        public static readonly AtomicLongMessageType RequestType = AtomicLongMessageType.AtomicLongGetAndAdd;
         public const int ResponseType = 103;
         public const bool Retryable = false;
 
-        public static readonly AtomicLongMessageType RequestType = AtomicLongMessageType.AtomicLongGetAndAdd;
+        //************************ REQUEST *************************//
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        public class RequestParameters
         {
-            var parameters = new ResponseParameters();
-            long response;
-            response = clientMessage.GetLong();
-            parameters.response = response;
-            return parameters;
+            public static readonly AtomicLongMessageType TYPE = RequestType;
+            public string name;
+            public long delta;
+
+            public static int CalculateDataSize(string name, long delta)
+            {
+                var dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += Bits.LongSizeInBytes;
+                return dataSize;
+            }
         }
 
         public static ClientMessage EncodeRequest(string name, long delta)
@@ -45,29 +54,18 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
-        {
-            public static readonly AtomicLongMessageType TYPE = RequestType;
-            public long delta;
-            public string name;
-
-            public static int CalculateDataSize(string name, long delta)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
-        }
-
         //************************ RESPONSE *************************//
-
-
         public class ResponseParameters
         {
             public long response;
+        }
+
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            var parameters = new ResponseParameters();
+            var response = clientMessage.GetLong();
+            parameters.response = response;
+            return parameters;
         }
     }
 }

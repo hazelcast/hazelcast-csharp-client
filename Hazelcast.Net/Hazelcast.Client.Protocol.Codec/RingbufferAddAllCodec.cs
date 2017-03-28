@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,22 +17,37 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
+// Client Protocol version, Since:1.0 - Update:1.0
+
 namespace Hazelcast.Client.Protocol.Codec
 {
     internal sealed class RingbufferAddAllCodec
     {
+        public static readonly RingbufferMessageType RequestType = RingbufferMessageType.RingbufferAddAll;
         public const int ResponseType = 103;
         public const bool Retryable = false;
 
-        public static readonly RingbufferMessageType RequestType = RingbufferMessageType.RingbufferAddAll;
+        //************************ REQUEST *************************//
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        public class RequestParameters
         {
-            var parameters = new ResponseParameters();
-            long response;
-            response = clientMessage.GetLong();
-            parameters.response = response;
-            return parameters;
+            public static readonly RingbufferMessageType TYPE = RequestType;
+            public string name;
+            public IList<IData> valueList;
+            public int overflowPolicy;
+
+            public static int CalculateDataSize(string name, IList<IData> valueList, int overflowPolicy)
+            {
+                var dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += Bits.IntSizeInBytes;
+                foreach (var valueListItem in valueList)
+                {
+                    dataSize += ParameterUtil.CalculateDataSize(valueListItem);
+                }
+                dataSize += Bits.IntSizeInBytes;
+                return dataSize;
+            }
         }
 
         public static ClientMessage EncodeRequest(string name, IList<IData> valueList, int overflowPolicy)
@@ -43,44 +58,27 @@ namespace Hazelcast.Client.Protocol.Codec
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
             clientMessage.Set(valueList.Count);
-            foreach (var valueList_item in valueList)
+            foreach (var valueListItem in valueList)
             {
-                clientMessage.Set(valueList_item);
+                clientMessage.Set(valueListItem);
             }
             clientMessage.Set(overflowPolicy);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
-        {
-            public static readonly RingbufferMessageType TYPE = RequestType;
-            public string name;
-            public int overflowPolicy;
-            public IList<IData> valueList;
-
-            public static int CalculateDataSize(string name, IList<IData> valueList, int overflowPolicy)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                foreach (var valueList_item in valueList)
-                {
-                    dataSize += ParameterUtil.CalculateDataSize(valueList_item);
-                }
-                dataSize += Bits.IntSizeInBytes;
-                return dataSize;
-            }
-        }
-
         //************************ RESPONSE *************************//
-
-
         public class ResponseParameters
         {
             public long response;
+        }
+
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            var parameters = new ResponseParameters();
+            var response = clientMessage.GetLong();
+            parameters.response = response;
+            return parameters;
         }
     }
 }

@@ -40,7 +40,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = TransactionalMultiMapGetCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData);
-            var list = Invoke(request, m => TransactionalMultiMapGetCodec.DecodeResponse(m).list);
+            var list = Invoke(request, m => TransactionalMultiMapGetCodec.DecodeResponse(m).response);
             return ToList<TValue>(list);
         }
 
@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Proxy
             var request = TransactionalMultiMapRemoveCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData);
 
-            var result = Invoke(request, m => TransactionalMultiMapRemoveCodec.DecodeResponse(m).list);
+            var result = Invoke(request, m => TransactionalMultiMapRemoveCodec.DecodeResponse(m).response);
             return ToList<TValue>(result);
         }
 

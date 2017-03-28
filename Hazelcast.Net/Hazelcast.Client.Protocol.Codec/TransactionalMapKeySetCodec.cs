@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,30 +17,35 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
+// Client Protocol version, Since:1.0 - Update:1.0
+
 namespace Hazelcast.Client.Protocol.Codec
 {
     internal sealed class TransactionalMapKeySetCodec
     {
-        public const int ResponseType = 113;
-        public const bool Retryable = false;
-
         public static readonly TransactionalMapMessageType RequestType =
             TransactionalMapMessageType.TransactionalMapKeySet;
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        public const int ResponseType = 106;
+        public const bool Retryable = false;
+
+        //************************ REQUEST *************************//
+
+        public class RequestParameters
         {
-            var parameters = new ResponseParameters();
-            IList<IData> set = null;
-            var set_size = clientMessage.GetInt();
-            set = new List<IData>();
-            for (var set_index = 0; set_index < set_size; set_index++)
+            public static readonly TransactionalMapMessageType TYPE = RequestType;
+            public string name;
+            public string txnId;
+            public long threadId;
+
+            public static int CalculateDataSize(string name, string txnId, long threadId)
             {
-                IData set_item;
-                set_item = clientMessage.GetData();
-                set.Add(set_item);
+                var dataSize = ClientMessage.HeaderSize;
+                dataSize += ParameterUtil.CalculateDataSize(name);
+                dataSize += ParameterUtil.CalculateDataSize(txnId);
+                dataSize += Bits.LongSizeInBytes;
+                return dataSize;
             }
-            parameters.set = set;
-            return parameters;
         }
 
         public static ClientMessage EncodeRequest(string name, string txnId, long threadId)
@@ -56,31 +61,24 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
-        {
-            public static readonly TransactionalMapMessageType TYPE = RequestType;
-            public string name;
-            public long threadId;
-            public string txnId;
-
-            public static int CalculateDataSize(string name, string txnId, long threadId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(txnId);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
-        }
-
         //************************ RESPONSE *************************//
-
-
         public class ResponseParameters
         {
-            public IList<IData> set;
+            public IList<IData> response;
+        }
+
+        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        {
+            var parameters = new ResponseParameters();
+            var response = new List<IData>();
+            var responseSize = clientMessage.GetInt();
+            for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
+            {
+                var responseItem = clientMessage.GetData();
+                response.Add(responseItem);
+            }
+            parameters.response = response;
+            return parameters;
         }
     }
 }

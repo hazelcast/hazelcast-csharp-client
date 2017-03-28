@@ -16,6 +16,8 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
+// Client Protocol version, Since:1.0 - Update:1.0
+
 namespace Hazelcast.Client.Protocol.Codec
 {
     internal sealed class MapSubmitToKeyCodec
@@ -36,7 +38,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
             public static int CalculateDataSize(string name, IData entryProcessor, IData key, long threadId)
             {
-                int dataSize = ClientMessage.HeaderSize;
+                var dataSize = ClientMessage.HeaderSize;
                 dataSize += ParameterUtil.CalculateDataSize(name);
                 dataSize += ParameterUtil.CalculateDataSize(entryProcessor);
                 dataSize += ParameterUtil.CalculateDataSize(key);
@@ -47,8 +49,8 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public static ClientMessage EncodeRequest(string name, IData entryProcessor, IData key, long threadId)
         {
-            int requiredDataSize = RequestParameters.CalculateDataSize(name, entryProcessor, key, threadId);
-            ClientMessage clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
+            var requiredDataSize = RequestParameters.CalculateDataSize(name, entryProcessor, key, threadId);
+            var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int) RequestType);
             clientMessage.SetRetryable(Retryable);
             clientMessage.Set(name);
@@ -60,8 +62,6 @@ namespace Hazelcast.Client.Protocol.Codec
         }
 
         //************************ RESPONSE *************************//
-
-
         public class ResponseParameters
         {
             public IData response;
@@ -69,12 +69,11 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
-            ResponseParameters parameters = new ResponseParameters();
-            IData response = null;
-            bool response_isNull = clientMessage.GetBoolean();
-            if (!response_isNull)
+            var parameters = new ResponseParameters();
+            var responseIsNull = clientMessage.GetBoolean();
+            if (!responseIsNull)
             {
-                response = clientMessage.GetData();
+                var response = clientMessage.GetData();
                 parameters.response = response;
             }
             return parameters;

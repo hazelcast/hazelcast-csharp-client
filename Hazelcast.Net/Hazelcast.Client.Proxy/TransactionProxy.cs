@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Proxy
                 }
                 CheckThread();
                 CheckTimeout();
-                var request = TransactionCommitCodec.EncodeRequest(GetTxnId(), _threadId, prepareAndCommit);
+                var request = TransactionCommitCodec.EncodeRequest(_txnId, _threadId);
                 Invoke(request);
                 _state = TransactionState.Committed;
             }

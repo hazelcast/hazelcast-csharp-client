@@ -133,7 +133,7 @@ namespace Hazelcast.Client.Proxy
         public int DrainTo<TE>(ICollection<TE> c) where TE : T
         {
             var request = QueueDrainToCodec.EncodeRequest(GetName());
-            var result = Invoke(request, m => QueueDrainToCodec.DecodeResponse(m).list);
+            var result = Invoke(request, m => QueueDrainToCodec.DecodeResponse(m).response);
             foreach (var data in result)
             {
                 var e = ToObject<T>(data);
@@ -145,7 +145,7 @@ namespace Hazelcast.Client.Proxy
         public int DrainTo<TE>(ICollection<TE> c, int maxElements) where TE : T
         {
             var request = QueueDrainToMaxSizeCodec.EncodeRequest(GetName(), maxElements);
-            var result = Invoke(request, m => QueueDrainToMaxSizeCodec.DecodeResponse(m).list);
+            var result = Invoke(request, m => QueueDrainToMaxSizeCodec.DecodeResponse(m).response);
             foreach (var data in result)
             {
                 var e = ToObject<T>(data);
@@ -282,7 +282,7 @@ namespace Hazelcast.Client.Proxy
         public void Clear()
         {
             var request = QueueClearCodec.EncodeRequest(GetName());
-            Invoke(request, QueueClearCodec.DecodeResponse);
+            Invoke(request);
         }
 
         public void CopyTo(T[] array, int arrayIndex)
@@ -304,7 +304,7 @@ namespace Hazelcast.Client.Proxy
         private ICollection<IData> GetAll()
         {
             var request = QueueIteratorCodec.EncodeRequest(GetName());
-            return Invoke(request, m => QueueIteratorCodec.DecodeResponse(m).list);
+            return Invoke(request, m => QueueIteratorCodec.DecodeResponse(m).response);
         }
 
         private void HandleItemListener(IData itemData, string uuid, ItemEventType eventType, IItemListener<T> listener,

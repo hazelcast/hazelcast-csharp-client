@@ -122,6 +122,7 @@
     <Compile Include="Hazelcast.Client.Spi\IFuture.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientListenerService.cs" />
     <Compile Include="Hazelcast.Client.Spi\SettableFuture.cs" />
+    <Compile Include="Hazelcast.Client\ClientLockReferenceIdGenerator.cs" />
     <Compile Include="Hazelcast.Client\Error.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\ListAddAllWithIndexCodec.cs" />

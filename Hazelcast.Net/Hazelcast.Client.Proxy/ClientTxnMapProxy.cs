@@ -150,7 +150,7 @@ namespace Hazelcast.Client.Proxy
         public virtual ICollection<TKey> KeySet()
         {
             var request = TransactionalMapKeySetCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            var dataKeySet = Invoke(request, m => TransactionalMapKeySetCodec.DecodeResponse(m).set);
+            var dataKeySet = Invoke(request, m => TransactionalMapKeySetCodec.DecodeResponse(m).response);
             return ToSet<TKey>(dataKeySet);
         }
 
@@ -159,14 +159,14 @@ namespace Hazelcast.Client.Proxy
             var data = ToData(predicate);
             var request = TransactionalMapKeySetWithPredicateCodec.EncodeRequest(GetName(), GetTransactionId(),
                 GetThreadId(), data);
-            var dataKeySet = Invoke(request, m => TransactionalMapKeySetWithPredicateCodec.DecodeResponse(m).set);
+            var dataKeySet = Invoke(request, m => TransactionalMapKeySetWithPredicateCodec.DecodeResponse(m).response);
             return ToSet<TKey>(dataKeySet);
         }
 
         public virtual ICollection<TValue> Values()
         {
             var request = TransactionalMapValuesCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            var dataValues = Invoke(request, m => TransactionalMapValuesCodec.DecodeResponse(m).list);
+            var dataValues = Invoke(request, m => TransactionalMapValuesCodec.DecodeResponse(m).response);
             return ToList<TValue>(dataValues);
         }
 
@@ -175,7 +175,7 @@ namespace Hazelcast.Client.Proxy
             var data = ToData(predicate);
             var request = TransactionalMapValuesWithPredicateCodec.EncodeRequest(GetName(), GetTransactionId(),
                 GetThreadId(), data);
-            var dataValues = Invoke(request, m => TransactionalMapValuesWithPredicateCodec.DecodeResponse(m).list);
+            var dataValues = Invoke(request, m => TransactionalMapValuesWithPredicateCodec.DecodeResponse(m).response);
             return ToList<TValue>(dataValues);
         }
 

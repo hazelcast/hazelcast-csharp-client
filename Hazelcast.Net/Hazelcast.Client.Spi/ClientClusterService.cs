@@ -454,13 +454,13 @@ namespace Hazelcast.Client.Spi
                 var usernamePasswordCr = (UsernamePasswordCredentials) _credentials;
                 request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
                     usernamePasswordCr.GetPassword(), uuid, ownerUuid, true,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
             }
             else
             {
                 var data = ss.ToData(_credentials);
                 request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
             }
 
             IClientMessage response;

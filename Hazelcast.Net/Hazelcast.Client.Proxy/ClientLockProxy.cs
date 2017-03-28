@@ -24,6 +24,8 @@ namespace Hazelcast.Client.Proxy
 {
     internal class ClientLockProxy : ClientProxy, ILock
     {
+        private ClientLockReferenceIdGenerator _lockReferenceIdGenerator;
+
         private volatile IData _key;
 
         public ClientLockProxy(string serviceName, string objectId) : base(serviceName, objectId)
@@ -57,13 +59,13 @@ namespace Hazelcast.Client.Proxy
         public virtual void Lock(long leaseTime, TimeUnit? timeUnit)
         {
             var request = LockLockCodec.EncodeRequest(GetName(), GetTimeInMillis(leaseTime, timeUnit),
-                ThreadUtil.GetThreadId());
+                ThreadUtil.GetThreadId(), _lockReferenceIdGenerator.GetNextReferenceId());
             Invoke(request);
         }
 
         public virtual void ForceUnlock()
         {
-            var request = LockForceUnlockCodec.EncodeRequest(GetName());
+            var request = LockForceUnlockCodec.EncodeRequest(GetName(), _lockReferenceIdGenerator.GetNextReferenceId());
             Invoke(request);
         }
 
@@ -88,13 +90,13 @@ namespace Hazelcast.Client.Proxy
         public virtual bool TryLock(long time, TimeUnit? unit)
         {
             var request = LockTryLockCodec.EncodeRequest(GetName(), ThreadUtil.GetThreadId(), long.MaxValue,
-                GetTimeInMillis(time, unit));
+                GetTimeInMillis(time, unit), _lockReferenceIdGenerator.GetNextReferenceId());
             return Invoke(request, m => LockTryLockCodec.DecodeResponse(m).response);
         }
 
         public virtual void Unlock()
         {
-            var request = LockUnlockCodec.EncodeRequest(GetName(), ThreadUtil.GetThreadId());
+            var request = LockUnlockCodec.EncodeRequest(GetName(), ThreadUtil.GetThreadId(), _lockReferenceIdGenerator.GetNextReferenceId());
             Invoke(request);
         }
 
@@ -102,6 +104,13 @@ namespace Hazelcast.Client.Proxy
         {
             return base.Invoke(request, GetKeyData());
         }
+
+        internal override void PostInit()
+        {
+            base.PostInit();
+            _lockReferenceIdGenerator = GetContext().GetClient().GetLockReferenceIdGenerator();
+        }
+
 
         private IData GetKeyData()
         {
