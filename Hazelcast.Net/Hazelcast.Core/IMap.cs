@@ -177,6 +177,74 @@ namespace Hazelcast.Core
         string AddInterceptor(IMapInterceptor interceptor);
 
         /// <summary>
+        /// Applies the aggregation logic on all map entries and returns the result
+        /// </summary>
+        /// <remarks>
+        /// Fast-Aggregations are the successor of the Map-Reduce Aggregators.
+        /// They are equivalent to the Map-Reduce Aggregators in most of the use-cases, but instead of running on the
+        /// Map-Reduce engine they run on the Query infrastructure. Their performance is tens to hundreds times better
+        /// due to the fact that they run in parallel for each partition and are highly optimized for speed and low
+        /// memory consumption
+        /// </remarks>
+        /// <param name="aggregator">
+        /// Aggregator to aggregate the entries with.
+        /// This must be serializable via hazelcast serialization and have a counterpart on server side.
+        /// One of the builtin <see cref="Aggregators"/> or a custom <see cref="IAggregator{TResult}"/> implementation can be used.
+        /// </param>
+        /// <typeparam name="TResult">type of the result</typeparam>
+        /// <returns>the result of the given type</returns>
+        TResult Aggregate<TResult>(IAggregator<TResult> aggregator);
+
+        /// <summary>
+        /// Applies the aggregation logic on all map entries and returns the result
+        /// </summary>
+        /// <remarks>
+        /// Fast-Aggregations are the successor of the Map-Reduce Aggregators.
+        /// They are equivalent to the Map-Reduce Aggregators in most of the use-cases, but instead of running on the
+        /// Map-Reduce engine they run on the Query infrastructure. Their performance is tens to hundreds times better
+        /// due to the fact that they run in parallel for each partition and are highly optimized for speed and low
+        /// memory consumption
+        /// </remarks>
+        /// <param name="aggregator">
+        /// Aggregator to aggregate the entries with.
+        /// This must be serializable via hazelcast serialization and have a counterpart on server side.
+        /// One of the builtin <see cref="Aggregators"/> or a custom <see cref="IAggregator{TResult}"/> implementation can be used.
+        /// </param>
+        /// <param name="predicate">
+        /// predicate to filter the entries with.
+        /// This must be serializable via hazelcast serialization and have a counterpart on server side.
+        /// </param>
+        /// <typeparam name="TResult">type of the result</typeparam>
+        /// <returns>the result of the given type</returns>
+        TResult Aggregate<TResult>(IAggregator<TResult> aggregator, IPredicate predicate);
+
+        /// <summary>
+        /// Applies the projection logic on all map entries and returns the result
+        /// </summary>
+        /// <param name="projection">
+        /// Projection to transform the entries with. May return null.
+        /// This must be serializable via hazelcast serialization and have a counterpart on server side.
+        /// </param>
+        /// <typeparam name="TResult">type of the result</typeparam>
+        /// <returns>the result of the given type</returns>
+        ICollection<TResult> Project<TResult>(IProjection projection);
+
+        /// <summary>
+        /// Applies the projection logic on all map entries and returns the result
+        /// </summary>
+        /// <param name="projection">
+        /// Projection to transform the entries with. May return null.
+        /// This must be serializable via hazelcast serialization and have a counterpart on server side.
+        /// </param>
+        /// <param name="predicate">
+        /// predicate to filter the entries with.
+        /// This must be serializable via hazelcast serialization and have a counterpart on server side.
+        /// </param>
+        /// <typeparam name="TResult">type of the result</typeparam>
+        /// <returns>the result of the given type</returns>
+        ICollection<TResult> Project<TResult>(IProjection projection, IPredicate predicate);
+
+        /// <summary>
         ///     Removes all of the mappings from this map (optional operation).
         /// </summary>
         /// <remarks>

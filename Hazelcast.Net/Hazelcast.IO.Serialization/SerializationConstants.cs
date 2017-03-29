@@ -54,5 +54,7 @@ namespace Hazelcast.IO.Serialization
     internal static class FactoryIds
     {
         public const int PredicateFactoryId = -32;
+        public const int AggregatorDsFactoryId = -41;
+        public const int ProjectionDsFactoryId = -42;
     }
 }
