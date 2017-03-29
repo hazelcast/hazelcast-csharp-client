@@ -50,8 +50,9 @@ namespace Hazelcast.IO.Serialization
         private void RegisterHooks()
         {
             //TODO: Assembly scan for all hooks
-            var hook = new PredicateDataSerializerHook();
-            Register(hook.GetFactoryId(), hook.CreateFactory());
+            RegisterHook(new PredicateDataSerializerHook());
+            RegisterHook(new AggregatorDataSerializerHook());
+            RegisterHook(new ProjectionDataSerializerHook());
         }
 
         public int GetTypeId()
@@ -118,6 +119,11 @@ namespace Hazelcast.IO.Serialization
         public void Destroy()
         {
             _factories.Clear();
+        }
+
+        private void RegisterHook(IDataSerializerHook hook)
+        {
+            Register(hook.GetFactoryId(), hook.CreateFactory());
         }
 
         private void Register(int factoryId, IDataSerializableFactory factory)

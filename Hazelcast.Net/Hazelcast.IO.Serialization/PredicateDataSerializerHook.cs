@@ -17,7 +17,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.IO.Serialization
 {
-    public class PredicateDataSerializerHook : IDataSerializerHook
+    internal class PredicateDataSerializerHook : IDataSerializerHook
     {
         private const int FactoryId = FactoryIds.PredicateFactoryId;
         public const int SqlPredicate = 0;

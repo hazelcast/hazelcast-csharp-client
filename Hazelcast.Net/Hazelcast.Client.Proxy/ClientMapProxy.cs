@@ -42,6 +42,44 @@ namespace Hazelcast.Client.Proxy
             get { return _nearCache; }
         }
 
+        public TResult Aggregate<TResult>(IAggregator<TResult> aggregator)
+        {
+            ValidationUtil.IsNotNull(aggregator, "aggregator");
+            var request = MapAggregateCodec.EncodeRequest(GetName(), ToData(aggregator));
+            var response = Invoke(request);
+            var resultParameters = MapAggregateCodec.DecodeResponse(response);
+            return ToObject<TResult>(resultParameters.response);
+        }
+
+        public TResult Aggregate<TResult>(IAggregator<TResult> aggregator, IPredicate predicate)
+        {
+            ValidationUtil.IsNotNull(aggregator, "aggregator");
+            ValidationUtil.IsNotNull(predicate, "predicate");
+            var request = MapAggregateWithPredicateCodec.EncodeRequest(GetName(), ToData(aggregator), ToData(predicate));
+            var response = Invoke(request);
+            var resultParameters = MapAggregateWithPredicateCodec.DecodeResponse(response);
+            return ToObject<TResult>(resultParameters.response);
+        }
+
+        public ICollection<TResult> Project<TResult>(IProjection projection)
+        {
+            ValidationUtil.IsNotNull(projection, "projection");
+            var request = MapProjectCodec.EncodeRequest(GetName(), ToData(projection));
+            var response = Invoke(request);
+            var resultParameters = MapProjectCodec.DecodeResponse(response);
+            return new ReadOnlyLazyList<TResult>(resultParameters.response, GetContext().GetSerializationService());
+        }
+
+        public ICollection<TResult> Project<TResult>(IProjection projection, IPredicate predicate)
+        {
+            ValidationUtil.IsNotNull(projection, "projection");
+            ValidationUtil.IsNotNull(predicate, "predicate");
+            var request = MapProjectWithPredicateCodec.EncodeRequest(GetName(), ToData(projection), ToData(predicate));
+            var response = Invoke(request);
+            var resultParameters = MapProjectWithPredicateCodec.DecodeResponse(response);
+            return new ReadOnlyLazyList<TResult>(resultParameters.response, GetContext().GetSerializationService());
+        }
+
         public bool ContainsKey(object key)
         {
             var keyData = ToData(key);
