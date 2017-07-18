@@ -79,6 +79,7 @@
     <Compile Include="Hazelcast.Client.Model\IdentifiedFactory.cs" />
     <Compile Include="Hazelcast.Client.Test\AggregatorAndProjectionTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientExecutorServiceTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientLongRunningTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSSLTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PagingPredicateTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PredicateExtTest.cs" />
@@ -258,6 +259,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\hazelcast-ssl.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hazelcast-delay.xml" />
   </ItemGroup>
   <PropertyGroup>
     <NUnitResultsFile>$(OutputPath)nunit-result.xml</NUnitResultsFile>

@@ -12,17 +12,23 @@ IF -%2-==-- (
 	set EXLUDE_PARAM=
 )
 
-set HAZELCAST_TEST_VERSION=3.8.1-SNAPSHOT
-set HAZELCAST_VERSION=3.8.1-SNAPSHOT
-set HAZELCAST_ENTERPRISE_VERSION=3.8.1-SNAPSHOT
-set HAZELCAST_RC_VERSION=0.2-SNAPSHOT
-
+set HZ_VERSION=3.8.3
+set HAZELCAST_TEST_VERSION=%HZ_VERSION%
+set HAZELCAST_VERSION=%HZ_VERSION%
+set HAZELCAST_ENTERPRISE_VERSION=%HZ_VERSION%
+set HAZELCAST_RC_VERSION=0.3-SNAPSHOT
 set SNAPSHOT_REPO=https://oss.sonatype.org/content/repositories/snapshots
 set RELEASE_REPO=http://repo1.maven.apache.org/maven2
-set ENTERPRISE_REPO=https://repository-hazelcast-l337.forge.cloudbees.com/release/
+set ENTERPRISE_RELEASE_REPO=https://repository-hazelcast-l337.forge.cloudbees.com/release/
 set ENTERPRISE_SNAPSHOT_REPO=https://repository-hazelcast-l337.forge.cloudbees.com/snapshot/
 
-set CLASSPATH=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar;hazelcast-%HAZELCAST_VERSION%.jar;hazelcast-%HAZELCAST_TEST_VERSION%-tests.jar
+if not "x%HZ_VERSION:SNAPSHOT=%"=="x%HZ_VERSION%" (
+    set REPO=%SNAPSHOT_REPO%
+	set ENTERPRISE_REPO=%ENTERPRISE_SNAPSHOT_REPO%
+) else (
+	set REPO=%RELEASE_REPO%
+	set ENTERPRISE_REPO=%ENTERPRISE_RELEASE_REPO%
+)
 
 echo "PARAMETERS:" 
 echo %COVERAGE%
@@ -35,15 +41,19 @@ msbuild Build.proj /p:Configuration=Release /p:Platform="Any CPU" /target:Build
 
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
-echo Downlading Hazelcast %HAZELCAST_VERSION% ...
-call mvn dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast-remote-controller:%HAZELCAST_RC_VERSION% -Ddest=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar
-call mvn dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_VERSION% -Ddest=hazelcast-%HAZELCAST_VERSION%.jar
-call mvn dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_TEST_VERSION%:jar:tests -Ddest=hazelcast-%HAZELCAST_TEST_VERSION%-tests.jar
+echo Downlading ...
+call mvn -q dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast-remote-controller:%HAZELCAST_RC_VERSION% -Ddest=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar
+call mvn -q dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_TEST_VERSION%:jar:tests -Ddest=hazelcast-%HAZELCAST_TEST_VERSION%-tests.jar
 
+set CLASSPATH=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar;hazelcast-%HAZELCAST_TEST_VERSION%-tests.jar
 if %SERVER_TYPE%==--enterprise (
 	echo Downlading Hazelcast Enterprise %HAZELCAST_ENTERPRISE_VERSION%...
-	call mvn dependency:get -DrepoUrl=%ENTERPRISE_SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast-enterprise:%HAZELCAST_ENTERPRISE_VERSION% -Ddest=hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar
+	call mvn -q dependency:get -DrepoUrl=%ENTERPRISE_REPO% -Dartifact=com.hazelcast:hazelcast-enterprise:%HAZELCAST_ENTERPRISE_VERSION% -Ddest=hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar
 	set CLASSPATH=%CLASSPATH%;hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar
+) else (
+    echo Downlading Hazelcast %HAZELCAST_VERSION% ...
+    call mvn -q dependency:get -DrepoUrl=%REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_VERSION% -Ddest=hazelcast-%HAZELCAST_VERSION%.jar
+	set CLASSPATH=%CLASSPATH%;hazelcast-%HAZELCAST_VERSION%.jar
 )
 
 taskkill /T /F /FI "WINDOWTITLE eq hazelcast-remote-controller"

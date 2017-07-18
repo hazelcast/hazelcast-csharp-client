@@ -82,12 +82,6 @@ namespace Hazelcast.Client.Connection
             }
             _socketInterceptor = null;
 
-            var timeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.invocation.timeout.seconds");
-            if (timeout > 0)
-            {
-                ThreadUtil.TaskOperationTimeOutMilliseconds = timeout.Value*1000;
-            }
-
             _heartbeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ??
                                 _heartbeatTimeout;
             _heartbeatInterval = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.interval") ??
