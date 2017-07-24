@@ -696,10 +696,11 @@ namespace Hazelcast.IO.Serialization
 
         private sealed class ThreadLocalOutputCache
         {
+            //this should probably go on a Client.xml config file
             private readonly int MaxQueue = 10240;
 
             private readonly int _bufferSize;
-            //private readonly ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>> _map;
+            
             private readonly ConcurrentQueue<IBufferObjectDataOutput> _buffersQueue;
             private readonly SerializationService _serializationService;
 
