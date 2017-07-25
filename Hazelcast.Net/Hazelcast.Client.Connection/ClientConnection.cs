@@ -393,7 +393,7 @@ namespace Hazelcast.Client.Connection
                             _lastWritable = _writeQueue.Take();
                         }
                     }
-                    catch (InvalidOperationException)
+                    catch (Exception)
                     {
                         //BlockingCollection is empty
                         if (_writeQueue.IsAddingCompleted)

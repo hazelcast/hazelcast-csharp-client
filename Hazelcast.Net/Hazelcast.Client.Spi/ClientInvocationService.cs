@@ -269,9 +269,16 @@ namespace Hazelcast.Client.Spi
                     }
                 }
                 //Fail with exception
-                if (!invocation.Future.IsComplete)
+                try
                 {
                     invocation.Future.Exception = exception;
+                }
+                catch (InvalidOperationException e)
+                {
+                    if (Logger.IsFinestEnabled())
+                    {
+                        Logger.Finest("Invocation already completed:", e);
+                    }
                 }
             }
             catch (Exception ex)
@@ -300,7 +307,7 @@ namespace Hazelcast.Client.Spi
                    || exception is SocketException
                    || exception is HazelcastInstanceNotActiveException
                    || exception is AuthenticationException
-            // above exceptions OR retryable excaption case as below
+            // above exceptions OR retryable exception case as below
                    || exception is RetryableHazelcastException && (_redoOperations || invocation.Message.IsRetryable());
         }
 
@@ -403,14 +410,7 @@ namespace Hazelcast.Client.Spi
                     //re-register listener on a new node
                     if (!_isShutDown)
                     {
-                        _client.GetClientExecutionService().Schedule(() =>
-                            {
-                                ReregisterListener(invocation)
-                                    .ToTask()
-                                    .ContinueWith(t => { Logger.Warning("Cannot reregister listener.", t.Exception); },
-                                        TaskContinuationOptions.OnlyOnFaulted |
-                                        TaskContinuationOptions.ExecuteSynchronously);
-                            }, RetryWaitTime, TimeUnit.Milliseconds);
+                        ReregisterListener(invocation).ToTask().IgnoreExceptions();
                     }
                 }
             }
@@ -520,7 +520,7 @@ namespace Hazelcast.Client.Spi
                     var newRegistrationId = listenerInvocation.ResponseDecoder(response);
                     _client.GetListenerService()
                         .ReregisterListener(originalRegistrationId, newRegistrationId,
-                            invocation.Message.GetCorrelationId());
+                            listenerInvocation.Message.GetCorrelationId());
                     if (Logger.IsFinestEnabled())
                     {
                         Logger.Finest(string.Format("Re-registered listener for {0} of type {1:X}",
@@ -530,7 +530,17 @@ namespace Hazelcast.Client.Spi
                 }
                 else
                 {
-                    invocation.Future.Result = response;
+                    try
+                    {
+                        invocation.Future.Result = response;
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        if (Logger.IsFinestEnabled())
+                        {
+                            Logger.Finest("Invocation already completed:", e);
+                        }
+                    }
                 }
             }
             else
@@ -564,7 +574,10 @@ namespace Hazelcast.Client.Spi
             {
                 Logger.Finest("Re-registering listener for " + invocation.Message);
             }
-            return Invoke(invocation);
+            var newInvocation = new ClientListenerInvocation(invocation.Message, invocation.Handler,
+                invocation.ResponseDecoder,
+                invocation.PartitionId);
+            return Invoke(newInvocation);
         }
 
         private void UnregisterInvocation(long correlationId)

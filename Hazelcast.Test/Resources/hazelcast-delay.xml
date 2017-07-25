@@ -18,7 +18,7 @@
 <hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd"
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <group>
+    <group>
         <name>dev</name>
         <password>dev-pass</password>
     </group>
@@ -42,20 +42,14 @@
             </tcp-ip>
         </join>
         <public-address>127.0.0.1</public-address>
-        <ssl enabled="true">
-          <factory-class-name>
-            com.hazelcast.nio.ssl.ClasspathSSLContextFactory
-          </factory-class-name>
-          <properties>
-            <property name="keyStore">com/hazelcast/nio/ssl/hazelcast.keystore</property>
-            <property name="trustStore">com/hazelcast/nio/ssl/hazelcast.truststore</property>
-            <property name="keyStorePassword">123456</property>
-            <property name="trustStorePassword">123456</property>
-            <property name="keyManagerAlgorithm">SunX509</property>
-            <property name="trustManagerAlgorithm">SunX509</property>
-            <property name="protocol">TLS</property>
-          </properties>
-        </ssl>
-    </network>	
 
+    </network>
+    <security enabled="true">
+        <client-permissions>
+            <all-permissions principal="dev"/>
+        </client-permissions>
+        <security-interceptors>
+            <interceptor class-name="com.hazelcast.security.DelaySecurityInterceptor"/>
+        </security-interceptors>
+    </security>
 </hazelcast>

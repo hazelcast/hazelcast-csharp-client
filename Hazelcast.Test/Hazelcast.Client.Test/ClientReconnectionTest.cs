@@ -60,6 +60,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        //TODO Fix required for listener (re)registration 
         public void TestListenerReconnect()
         {
             var member = StartMember(_remoteController, _cluster);

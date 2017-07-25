@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Test
         public void SetupCluster()
         {
             RemoteController = CreateRemoteController();
-            var cluster = CreateCluster(RemoteController);
+            var cluster = CreateCluster(RemoteController, GetServerConfig());
             RemoteController.startMember(cluster.Id);
             Client = CreateClient();
         }
@@ -38,6 +38,11 @@ namespace Hazelcast.Client.Test
         {
             HazelcastClient.ShutdownAll();
             StopRemoteController(RemoteController);
+        }
+
+        protected virtual string GetServerConfig()
+        {
+            return Resources.hazelcast;
         }
     }
 }
