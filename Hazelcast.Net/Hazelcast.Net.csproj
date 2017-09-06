@@ -399,6 +399,7 @@
     <Compile Include="Hazelcast.Core\MembershipListener.cs" />
     <Compile Include="Hazelcast.Core\OverflowPolicy.cs" />
     <Compile Include="Hazelcast.Core\PagingPredicate.cs" />
+    <Compile Include="Hazelcast.Core\PartitionPredicate.cs" />
     <Compile Include="Hazelcast.Core\Predicate.cs" />
     <Compile Include="Hazelcast.Core\Projection.cs" />
     <Compile Include="Hazelcast.IO.Serialization\AggregatorDataSerializerHook.cs" />

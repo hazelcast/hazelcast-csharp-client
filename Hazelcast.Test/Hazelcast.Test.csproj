@@ -82,6 +82,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientLongRunningTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSSLTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PagingPredicateTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\PartitionPredicateTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PredicateExtTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PredicatesTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ReadOnlyLazyListTest.cs" />

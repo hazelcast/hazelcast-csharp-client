@@ -753,7 +753,7 @@ namespace Hazelcast.Client.Proxy
                 return KeySetWithPagingPredicate((PagingPredicate)predicate);
             }
             var request = MapKeySetWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
-            var keys = Invoke(request, m => MapKeySetWithPredicateCodec.DecodeResponse(m).response);
+            var keys = Invoke(request, predicate, m => MapKeySetWithPredicateCodec.DecodeResponse(m).response);
             return ToSet<TKey>(keys);
         }
 
@@ -765,7 +765,7 @@ namespace Hazelcast.Client.Proxy
             }
 
             var request = MapEntriesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
-            var entries = Invoke(request, m => MapEntriesWithPredicateCodec.DecodeResponse(m).response);
+            var entries = Invoke(request, predicate, m => MapEntriesWithPredicateCodec.DecodeResponse(m).response);
             ISet<KeyValuePair<TKey, TValue>> entrySet = new HashSet<KeyValuePair<TKey, TValue>>();
             foreach (var dataEntry in entries)
             {
@@ -784,7 +784,7 @@ namespace Hazelcast.Client.Proxy
             }
 
             var request = MapValuesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
-            var result = Invoke(request, m => MapValuesWithPredicateCodec.DecodeResponse(m).response);
+            var result = Invoke(request, predicate, m => MapValuesWithPredicateCodec.DecodeResponse(m).response);
             IList<TValue> values = new List<TValue>(result.Count);
             foreach (var data in result)
             {
@@ -792,6 +792,16 @@ namespace Hazelcast.Client.Proxy
                 values.Add(value);
             }
             return values;
+        }
+
+        private T Invoke<T>(IClientMessage request, IPredicate predicate, Func<IClientMessage, T> decodeResponse)
+        {
+            var partitionPredicate = predicate as PartitionPredicate;
+            if (partitionPredicate != null)
+            {
+                return Invoke(request, partitionPredicate.GetPartitionKey(), decodeResponse);
+            }
+            return Invoke(request, decodeResponse);
         }
 
         public void OnEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValue,
