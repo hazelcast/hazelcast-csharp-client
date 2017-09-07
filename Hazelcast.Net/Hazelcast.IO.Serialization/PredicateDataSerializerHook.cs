@@ -36,10 +36,12 @@ namespace Hazelcast.IO.Serialization
         public const int FalsePredicate = 13;
         public const int TruePredicate = 14;
         public const int PagingPredicate = 15;
+        public const int PartitionPredicate = 16;
+        public const int FactorySize = 17;
 
         public IDataSerializableFactory CreateFactory()
         {
-            var constructors = new Func<IIdentifiedDataSerializable>[PagingPredicate];
+            var constructors = new Func<IIdentifiedDataSerializable>[FactorySize];
             constructors[SqlPredicate] = () => new SqlPredicate();
             constructors[AndPredicate] = () => new AndPredicate();
             constructors[BetweenPredicate] = () => new BetweenPredicate();
@@ -55,6 +57,8 @@ namespace Hazelcast.IO.Serialization
             constructors[RegexPredicate] = () => new RegexPredicate();
             constructors[FalsePredicate] = () => new FalsePredicate();
             constructors[TruePredicate] = () => new TruePredicate();
+            constructors[PagingPredicate] = () => new PagingPredicate();
+            constructors[PartitionPredicate] = () => new PartitionPredicate();
             return new ArrayDataSerializableFactory(constructors);
         }
 

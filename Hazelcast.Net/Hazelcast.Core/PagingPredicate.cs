@@ -66,6 +66,10 @@ namespace Hazelcast.Core
 
         private IterationType? iterationType;
 
+        public PagingPredicate()
+        {
+        }
+        
         /// <summary>
         /// Creates a Paging predicate with provided page size and optional predicate and comparer.
         /// </summary>

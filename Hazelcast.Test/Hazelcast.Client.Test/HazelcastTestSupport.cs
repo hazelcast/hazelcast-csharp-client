@@ -200,5 +200,17 @@ namespace Hazelcast.Client.Test
         {
             remoteController.suspendMember(cluster.Id, member.Uuid);
         }
+
+        protected object GenerateKeyForPartition(IHazelcastInstance client, int partitionId)
+        {
+            var partitionService = ((HazelcastClientProxy) client).GetClient().GetClientPartitionService();
+            while (true) {
+                var randomKey = TestSupport.RandomString();
+                if (partitionService.GetPartitionId(randomKey) == partitionId) {
+                    return randomKey;
+                }
+            }
+
+        }
     }
 }
