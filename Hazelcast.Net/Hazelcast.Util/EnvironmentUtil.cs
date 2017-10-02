@@ -42,7 +42,8 @@ namespace Hazelcast.Util
         public static string GetDllVersion()
         {
             var version = typeof(EnvironmentUtil).Assembly.GetName().Version;
-            var versionStr = string.Format("{0}.{1}.{2}", version.Major, version.Minor, version.Revision);
+            var versionStr = version.Build == 0 ? string.Format("{0}.{1}", version.Major, version.Minor)
+                : string.Format("{0}.{1}.{2}", version.Major, version.Minor, version.Build);
             return versionStr;
         }
     }
