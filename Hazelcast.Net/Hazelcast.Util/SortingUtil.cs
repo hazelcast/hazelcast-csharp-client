@@ -23,12 +23,12 @@ namespace Hazelcast.Util
 {
     internal class SortingUtil
     {
-        public static IEnumerable GetSortedQueryResultSet(List<KeyValuePair<object, object>> list,
+        public static IEnumerable GetSortedQueryResultSet<TKey, TValue>(List<KeyValuePair<object, object>> list,
             PagingPredicate pagingPredicate, IterationType iterationType)
         {
             if (list.Count == 0)
             {
-                return new ArrayList();
+                return new List<KeyValuePair<TKey, TValue>>();
             }
 
             var comparator = NewComparer(pagingPredicate.Comparer, iterationType);
@@ -43,7 +43,7 @@ namespace Hazelcast.Util
 
             if (begin > size)
             {
-                return new ArrayList();
+                return new List<KeyValuePair<TKey, TValue>>();
             }
 
             SetAnchor(list, pagingPredicate, nearestPage);
@@ -56,14 +56,14 @@ namespace Hazelcast.Util
                 case IterationType.Value:
                     return subList.Select(pair => pair.Value);
                 case IterationType.Entry:
-                    return subList;
+                    return subList.Select(pair => new KeyValuePair<TKey, TValue>((TKey) pair.Key, (TValue) pair.Value));
                 default:
                     throw new ArgumentOutOfRangeException("iterationType", iterationType, null);
             }
         }
 
-        private static IComparer<KeyValuePair<object, object>> NewComparer(
-            IComparer<KeyValuePair<object, object>> pagingPredicateComparer, IterationType iterationType)
+        private static IComparer<KeyValuePair<object, object>> NewComparer(IComparer<KeyValuePair<object, object>> 
+            pagingPredicateComparer, IterationType iterationType)
         {
             return new ComparerImpl(pagingPredicateComparer, iterationType);
         }
@@ -74,7 +74,7 @@ namespace Hazelcast.Util
             int result;
             if (comparer != null)
             {
-                result = comparer.Compare(x, y);
+                result = comparer.Compare(x , y);
                 return result != 0 ? result : CompareIntegers(x.Key.GetHashCode(), y.Key.GetHashCode());
             }
 

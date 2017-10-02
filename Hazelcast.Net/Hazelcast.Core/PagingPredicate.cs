@@ -59,7 +59,7 @@ namespace Hazelcast.Core
         private static readonly KeyValuePair<int, KeyValuePair<object, object>> NullAnchor = new KeyValuePair<int, KeyValuePair<object, object>>(-1, new KeyValuePair<object, object>(null, null));
 
         private IList<KeyValuePair<int, KeyValuePair<object, object>>> anchorList;
-        private IPredicate predicate;
+        private readonly IPredicate predicate;
         private IComparer<KeyValuePair<object, object>> comparer;
         private int pageSize;
         private int page;
@@ -136,21 +136,7 @@ namespace Hazelcast.Core
 
         public void ReadData(IObjectDataInput input)
         {
-            predicate = input.ReadObject<IPredicate>();
-            comparer = input.ReadObject<IComparer<KeyValuePair<object, object>>>();
-            page = input.ReadInt();
-            pageSize = input.ReadInt();
-            iterationType = (IterationType) Enum.Parse(typeof(IterationType), input.ReadUTF(), true);
-            var size = input.ReadInt();
-            anchorList = new List<KeyValuePair<int, KeyValuePair<object, object>>>(size);
-            for (var i = 0; i < size; i++)
-            {
-                var anchorPage = input.ReadInt();
-                var anchorKey = input.ReadObject<object>();
-                var anchorValue = input.ReadObject<object>();
-                var anchorEntry = new KeyValuePair<object, object>(anchorKey, anchorValue);
-                anchorList.Add(new KeyValuePair<int, KeyValuePair<object, object>>(anchorPage, anchorEntry));
-            }
+            throw new NotSupportedException("Client should not need to use ReadData method.");
         }
 
         public void WriteData(IObjectDataOutput output)

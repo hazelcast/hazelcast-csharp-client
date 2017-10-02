@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -928,7 +929,8 @@ namespace Hazelcast.Client.Proxy
                 var value = ToObject<TValue>(dataEntry.Value);
                 entryList.Add(new KeyValuePair<object, object>(key, value));
             }
-            var resultEnumerator = SortingUtil.GetSortedQueryResultSet(entryList, pagingPredicate, IterationType.Entry);
+            var resultEnumerator = SortingUtil.GetSortedQueryResultSet<TKey, TValue>(entryList, pagingPredicate, 
+                IterationType.Entry);
             return new HashSet<KeyValuePair<TKey, TValue>>(resultEnumerator.Cast<KeyValuePair<TKey, TValue>>());
         }
 
@@ -944,7 +946,8 @@ namespace Hazelcast.Client.Proxy
                 var key = ToObject<TKey>(keyData);
                 resultList.Add(new KeyValuePair<object, object>(key, default(TValue)));
             }
-            var resultEnumerator = SortingUtil.GetSortedQueryResultSet(resultList, pagingPredicate, IterationType.Key);
+            var resultEnumerator = SortingUtil.GetSortedQueryResultSet<TKey, TValue>(resultList, pagingPredicate, 
+                IterationType.Key);
             return new HashSet<TKey>(resultEnumerator.Cast<TKey>());
         }
 
@@ -962,7 +965,8 @@ namespace Hazelcast.Client.Proxy
                 var value = ToObject<TValue>(dataEntry.Value);
                 resultList.Add(new KeyValuePair<object, object>(key, value));
             }
-            var resultEnumerator =  SortingUtil.GetSortedQueryResultSet(resultList, pagingPredicate, IterationType.Value);
+            var resultEnumerator =  SortingUtil.GetSortedQueryResultSet<TKey, TValue>(resultList, pagingPredicate, 
+                IterationType.Value);
             return resultEnumerator.Cast<TValue>().ToList();
         }
     }
