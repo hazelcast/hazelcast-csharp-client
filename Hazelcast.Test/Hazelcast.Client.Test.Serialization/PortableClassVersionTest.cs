@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading.Tasks;
 using Hazelcast.IO.Serialization;
 using NUnit.Framework;
 
@@ -133,6 +134,7 @@ namespace Hazelcast.Client.Test.Serialization
             var data = serializationService.ToData(p1);
             var p2 = new NamedPortableV2("named-portable", 123);
             var data2 = serializationService2.ToData(p2);
+            Parallel.For(0, 100, i => {serializationService2.ToObject<NamedPortableV2>(data); });
             var o1 = serializationService2.ToObject<NamedPortableV2>(data);
             var o2 = serializationService.ToObject<NamedPortable>(data2);
             Assert.AreEqual(o1.name, o2.name);

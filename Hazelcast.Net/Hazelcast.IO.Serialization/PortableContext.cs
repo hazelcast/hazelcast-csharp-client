@@ -277,7 +277,7 @@ namespace Hazelcast.IO.Serialization
             internal void SetClassVersion(int classId, int version)
             {
                 var hasAdded = _currentClassVersions.TryAdd(classId, version);
-                if (!hasAdded)
+                if (!hasAdded && _currentClassVersions[classId] != version)
                 {
                     throw new ArgumentException("Class-id: " + classId + " is already registered!");
                 }
