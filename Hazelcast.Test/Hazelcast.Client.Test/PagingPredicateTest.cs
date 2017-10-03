@@ -173,5 +173,16 @@ namespace Hazelcast.Client.Test
             Assert.That(new[] {new KeyValuePair<object, object>("key-65","A"),
                 new KeyValuePair<object, object>("key-66","BB")}, Is.EquivalentTo(page1.ToArray()));
         }
+
+        [Test]
+        public virtual void TestEntrySetCount()
+        {
+            var map = Client.GetMap<int, int>("testMap");
+            for (var i = 0; i < 10; i++)
+            {
+                map.Put(i, 2* i);
+            }
+            map.EntrySet(new PagingPredicate(3, Predicates.IsGreaterThan("this", 5)));
+        }
     }
 }
