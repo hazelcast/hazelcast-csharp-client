@@ -77,15 +77,17 @@ namespace Hazelcast.Client.Connection
             {
                 _clientSocket = new Socket(isa.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-
-                var lingerOption = new LingerOption(true, 5);
                 if (socketOptions.GetLingerSeconds() > 0)
                 {
-                    lingerOption.LingerTime = socketOptions.GetLingerSeconds();
+                    var lingerOption = new LingerOption(true, socketOptions.GetLingerSeconds());
+                    _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lingerOption);
                 }
-                _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lingerOption);
+                else
+                {
+                    var lingerOption = new LingerOption(true, 0);
+                    _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, lingerOption);
+                }
                 _clientSocket.NoDelay = socketOptions.IsTcpNoDelay();
-
                 _clientSocket.ReceiveTimeout = socketOptions.GetTimeout() > 0 ? socketOptions.GetTimeout() : -1;
 
                 var bufferSize = socketOptions.GetBufferSize() * 1024;
