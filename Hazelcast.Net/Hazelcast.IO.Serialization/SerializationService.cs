@@ -696,8 +696,12 @@ namespace Hazelcast.IO.Serialization
 
         private sealed class ThreadLocalOutputCache
         {
+            //this should probably go on a Client.xml config file
+            private readonly int MaxQueue = 10240;
+
             private readonly int _bufferSize;
-            private readonly ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>> _map;
+            
+            private readonly ConcurrentQueue<IBufferObjectDataOutput> _buffersQueue;
             private readonly SerializationService _serializationService;
 
             internal ThreadLocalOutputCache(SerializationService serializationService)
@@ -705,47 +709,46 @@ namespace Hazelcast.IO.Serialization
                 _serializationService = serializationService;
                 _bufferSize = serializationService._outputBufferSize;
                 var initialCapacity = Environment.ProcessorCount;
-                _map = new ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>>(1, initialCapacity);
+                _buffersQueue = new ConcurrentQueue<IBufferObjectDataOutput>();
+                //new ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>>(1, initialCapacity);
             }
 
             internal void Clear()
             {
-                _map.Clear();
+                //slower dequeue
+                //_map.Clear();
+                IBufferObjectDataOutput output;
+                while (_buffersQueue.TryDequeue(out output))
+                {
+                    //IO Util consumes all exceptions
+                    //so no try catch
+                    IOUtil.CloseResource(output);
+                    output = null;
+                }
             }
 
             internal IBufferObjectDataOutput Pop()
             {
-                ConcurrentQueue<IBufferObjectDataOutput> outputQueue;
-                var t = Thread.CurrentThread;
-                _map.TryGetValue(t, out outputQueue);
-                if (outputQueue == null)
+                IBufferObjectDataOutput output = null;
+                if (_buffersQueue.TryDequeue(out output))
                 {
-                    outputQueue = new ConcurrentQueue<IBufferObjectDataOutput>();
-                    _map.TryAdd(t, outputQueue);
+                    return output;
                 }
-                IBufferObjectDataOutput output;
-                outputQueue.TryDequeue(out output);
-                return output ?? _serializationService.CreateObjectDataOutput(_bufferSize);
+                return _serializationService.CreateObjectDataOutput(_bufferSize);
             }
 
             internal void Push(IBufferObjectDataOutput output)
             {
-                if (output == null) return;
-                output.Clear();
-                ConcurrentQueue<IBufferObjectDataOutput> outputQueue;
-                _map.TryGetValue(Thread.CurrentThread, out outputQueue);
-                if (outputQueue == null)
-                {
-                    IOUtil.CloseResource(output);
+                if (output == null)
                     return;
-                }
-                try
-                {
-                    outputQueue.Enqueue(output);
-                }
-                catch (Exception)
+                if (_buffersQueue.Count > MaxQueue)
                 {
                     IOUtil.CloseResource(output);
+                }
+                else
+                {
+                    output.Clear();
+                    _buffersQueue.Enqueue(output);
                 }
             }
         }
