@@ -37,7 +37,7 @@ namespace Hazelcast.IO.Serialization
         private readonly Dictionary<Type, ISerializerAdapter> _constantTypesMap =
             new Dictionary<Type, ISerializerAdapter>(ConstantSerializersSize);
 
-        private readonly ThreadLocalOutputCache _dataOutputQueue;
+        private readonly BufferPoolThreadLocal _bufferPoolThreadLocal;
         private readonly ISerializerAdapter _dataSerializerAdapter;
         private readonly AtomicReference<ISerializerAdapter> _global = new AtomicReference<ISerializerAdapter>();
 
@@ -72,7 +72,7 @@ namespace Hazelcast.IO.Serialization
             _managedContext = managedContext;
             GlobalPartitioningStrategy = partitionStrategy;
             _outputBufferSize = initialOutputBufferSize;
-            _dataOutputQueue = new ThreadLocalOutputCache(this);
+            _bufferPoolThreadLocal = new BufferPoolThreadLocal(this);
             _portableContext = new PortableContext(this, version);
             _dataSerializerAdapter =
                 CreateSerializerAdapterByGeneric<IIdentifiedDataSerializable>(
@@ -103,7 +103,8 @@ namespace Hazelcast.IO.Serialization
             {
                 return (IData) obj;
             }
-            var @out = Pop();
+            var pool = _bufferPoolThreadLocal.Get();
+            var @out = pool.TakeOutputBuffer();
             try
             {
                 var serializer = SerializerFor(obj);
@@ -119,7 +120,7 @@ namespace Hazelcast.IO.Serialization
             }
             finally
             {
-                Push(@out);
+                pool.ReturnOutputBuffer(@out);
             }
         }
 
@@ -127,14 +128,15 @@ namespace Hazelcast.IO.Serialization
         {
             if (!(@object is IData))
             {
-                return @object == null ? default(T) : (T) @object;
+                return @object == null ? default(T) : (T)@object;
             }
             var data = (IData) @object;
             if (IsNullData(data))
             {
                 return default(T);
             }
-            var @in = CreateObjectDataInput(data);
+            var pool = _bufferPoolThreadLocal.Get();
+            var @in = pool.TakeInputBuffer(data);
             try
             {
                 var typeId = data.GetTypeId();
@@ -161,7 +163,7 @@ namespace Hazelcast.IO.Serialization
             }
             finally
             {
-                IOUtil.CloseResource(@in);
+                pool.ReturnInputBuffer(@in);
             }
         }
 
@@ -244,6 +246,11 @@ namespace Hazelcast.IO.Serialization
             return _inputOutputFactory.CreateOutput(size, this);
         }
 
+        public IBufferObjectDataOutput CreateObjectDataOutput()
+        {
+            return _inputOutputFactory.CreateOutput(_outputBufferSize, this);
+        }
+
         public virtual IPortableContext GetPortableContext()
         {
             return _portableContext;
@@ -271,7 +278,7 @@ namespace Hazelcast.IO.Serialization
             _idMap.Clear();
             _global.Set(null);
             _constantTypesMap.Clear();
-            _dataOutputQueue.Clear();
+            _bufferPoolThreadLocal.Dispose();
         }
 
         public IManagedContext GetManagedContext()
@@ -336,16 +343,6 @@ namespace Hazelcast.IO.Serialization
                 }
             }
             return partitionHash;
-        }
-
-        protected internal IBufferObjectDataOutput Pop()
-        {
-            return _dataOutputQueue.Pop();
-        }
-
-        protected internal void Push(IBufferObjectDataOutput output)
-        {
-            _dataOutputQueue.Push(output);
         }
 
         protected internal ISerializerAdapter SerializerFor(int typeId)
@@ -692,62 +689,6 @@ namespace Hazelcast.IO.Serialization
                 throw new HazelcastInstanceNotActiveException();
             }
             return serializer;
-        }
-
-        private sealed class ThreadLocalOutputCache
-        {
-            private readonly int _bufferSize;
-            private readonly ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>> _map;
-            private readonly SerializationService _serializationService;
-
-            internal ThreadLocalOutputCache(SerializationService serializationService)
-            {
-                _serializationService = serializationService;
-                _bufferSize = serializationService._outputBufferSize;
-                var initialCapacity = Environment.ProcessorCount;
-                _map = new ConcurrentDictionary<Thread, ConcurrentQueue<IBufferObjectDataOutput>>(1, initialCapacity);
-            }
-
-            internal void Clear()
-            {
-                _map.Clear();
-            }
-
-            internal IBufferObjectDataOutput Pop()
-            {
-                ConcurrentQueue<IBufferObjectDataOutput> outputQueue;
-                var t = Thread.CurrentThread;
-                _map.TryGetValue(t, out outputQueue);
-                if (outputQueue == null)
-                {
-                    outputQueue = new ConcurrentQueue<IBufferObjectDataOutput>();
-                    _map.TryAdd(t, outputQueue);
-                }
-                IBufferObjectDataOutput output;
-                outputQueue.TryDequeue(out output);
-                return output ?? _serializationService.CreateObjectDataOutput(_bufferSize);
-            }
-
-            internal void Push(IBufferObjectDataOutput output)
-            {
-                if (output == null) return;
-                output.Clear();
-                ConcurrentQueue<IBufferObjectDataOutput> outputQueue;
-                _map.TryGetValue(Thread.CurrentThread, out outputQueue);
-                if (outputQueue == null)
-                {
-                    IOUtil.CloseResource(output);
-                    return;
-                }
-                try
-                {
-                    outputQueue.Enqueue(output);
-                }
-                catch (Exception)
-                {
-                    IOUtil.CloseResource(output);
-                }
-            }
         }
 
         private sealed class EmptyPartitioningStrategy : IPartitioningStrategy

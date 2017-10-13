@@ -81,6 +81,7 @@ namespace Hazelcast.Util
                     task.Value.Dispose();
                 }
                 _tasks = null;
+                _threads.Clear();
             }
         }
 
