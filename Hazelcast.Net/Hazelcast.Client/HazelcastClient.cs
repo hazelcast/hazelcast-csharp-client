@@ -56,8 +56,6 @@ namespace Hazelcast.Client
         private readonly string _instanceName;
         private readonly IClientInvocationService _invocationService;
 
-        //private readonly ThreadGroup threadGroup;
-
         private readonly LifecycleService _lifecycleService;
         private readonly ClientListenerService _listenerService;
         private readonly ILoadBalancer _loadBalancer;
@@ -73,7 +71,6 @@ namespace Hazelcast.Client
             var groupConfig = config.GetGroupConfig();
             _instanceName = "hz.client_" + _id + (groupConfig != null ? "_" + groupConfig.GetName() : string.Empty);
 
-            //threadGroup = new ThreadGroup(instanceName);
             _lifecycleService = new LifecycleService(this);
             try
             {
@@ -361,6 +358,7 @@ namespace Hazelcast.Client
             _connectionManager.Shutdown();
             _proxyManager.Destroy();
             _invocationService.Shutdown();
+            _serializationService.Destroy();
         }
 
         internal IClientClusterService GetClientClusterService()

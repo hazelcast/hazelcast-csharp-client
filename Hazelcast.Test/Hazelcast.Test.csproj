@@ -77,6 +77,7 @@
     <Compile Include="Hazelcast.Client.Model\CustomComparator.cs" />
     <Compile Include="Hazelcast.Client.Model\IdentifiedEntryProcessor.cs" />
     <Compile Include="Hazelcast.Client.Model\IdentifiedFactory.cs" />
+    <Compile Include="Hazelcast.Client.Test.Serialization\BufferPoolTest.cs" />
     <Compile Include="Hazelcast.Client.Test\AggregatorAndProjectionTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientExecutorServiceTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientLongRunningTest.cs" />

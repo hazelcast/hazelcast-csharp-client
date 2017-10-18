@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client;
@@ -146,8 +147,8 @@ namespace Hazelcast.Test
 
         private static void Main(string[] args)
         {
+            Environment.SetEnvironmentVariable("hazelcast.logging.level", "Info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
-            Environment.SetEnvironmentVariable("hazelcast.client.request.timeout", "250000");
 
             var clientConfig = new ClientConfig();
             clientConfig.GetNetworkConfig().AddAddress("192.168.2.50:5701");
