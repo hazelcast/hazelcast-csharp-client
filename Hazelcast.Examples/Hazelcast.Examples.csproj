@@ -59,6 +59,7 @@
     <Compile Include="Map\MapListenerExample.cs" />
     <Compile Include="Map\MapLockExample.cs" />
     <Compile Include="Map\MapNearCacheExample.cs" />
+    <Compile Include="Map\MapPartitionPredicateExample.cs" />
     <Compile Include="Map\MapPortableExample.cs" />
     <Compile Include="Map\MapSimpleExample.cs" />
     <Compile Include="Map\MultiMapExample.cs" />
