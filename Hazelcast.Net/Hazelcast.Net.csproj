@@ -119,12 +119,13 @@
     <Compile Include="Hazelcast.Client.Protocol.Codec\CountDownLatchTrySetCountCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\DistributedObjectInfoCodec.cs" />
     <Compile Include="Hazelcast.Client.Protocol.Codec\EntryViewCodec.cs" />
-    <Compile Include="Hazelcast.Client.Spi\ClientListenerInvocation.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientListenerService.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientNonSmartInvocationService.cs" />
     <Compile Include="Hazelcast.Client.Spi\ClientSmartInvocationService.cs" />
+    <Compile Include="Hazelcast.Client.Spi\EventRegistration.cs" />
     <Compile Include="Hazelcast.Client.Spi\IFuture.cs" />
     <Compile Include="Hazelcast.Client.Spi\IClientListenerService.cs" />
+    <Compile Include="Hazelcast.Client.Spi\ListenerRegistrationKey.cs" />
     <Compile Include="Hazelcast.Client.Spi\SettableFuture.cs" />
     <Compile Include="Hazelcast.Client\ClientLockReferenceIdGenerator.cs" />
     <Compile Include="Hazelcast.Client\Error.cs" />

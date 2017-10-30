@@ -59,7 +59,8 @@ namespace Hazelcast.Client.Spi
 
         public string AddDistributedObjectListener(IDistributedObjectListener listener)
         {
-            var request = ClientAddDistributedObjectListenerCodec.EncodeRequest(false);
+            var isSmart = _client.GetClientConfig().GetNetworkConfig().IsSmartRouting();
+            var request = ClientAddDistributedObjectListenerCodec.EncodeRequest(isSmart);
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
                 _client.GetListenerService(),
@@ -93,9 +94,10 @@ namespace Hazelcast.Client.Spi
                     });
             };
             //PortableDistributedObjectEvent
-            return context.GetListenerService()
-                .StartListening(request, eventHandler,
-                    m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response);
+            return context.GetListenerService().RegisterListener(request, 
+                m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response,
+                ClientRemoveDistributedObjectListenerCodec.EncodeRequest,
+                eventHandler);
         }
 
         public void Destroy()
@@ -241,9 +243,8 @@ namespace Hazelcast.Client.Spi
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
                 _client.GetListenerService(), this, _client.GetClientConfig());
-            return context.GetListenerService().StopListening(
-                ClientRemoveDistributedObjectListenerCodec.EncodeRequest,
-                m => ClientRemoveDistributedObjectListenerCodec.DecodeResponse(m).response, id);
+            return context.GetListenerService().DeregisterListener(id, 
+                ClientRemoveDistributedObjectListenerCodec.EncodeRequest);
         }
 
         public ClientProxy RemoveProxy(string service, string id)

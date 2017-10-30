@@ -25,37 +25,6 @@ namespace Hazelcast.Client.Spi
         {
         }
 
-        public override IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key,
-            DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder)
-        {
-            var partitionService = (ClientPartitionService) Client.GetClientPartitionService();
-            var partitionId = partitionService.GetPartitionId(key);
-
-            return SendToOwner(new ClientListenerInvocation(request, handler, responseDecoder, partitionId));
-        }
-
-        public override IFuture<IClientMessage> InvokeListenerOnPartition(IClientMessage request, int partitionId,
-            DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder)
-        {
-            return SendToOwner(new ClientListenerInvocation(request, handler, responseDecoder, partitionId));
-        }
-
-        public override IFuture<IClientMessage> InvokeListenerOnRandomTarget(IClientMessage request,
-            DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder)
-        {
-            return SendToOwner(new ClientListenerInvocation(request, handler, responseDecoder));
-        }
-
-        public override IFuture<IClientMessage> InvokeListenerOnTarget(IClientMessage request, Address target,
-            DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder)
-        {
-            return SendToOwner(new ClientListenerInvocation(request, handler, responseDecoder));
-        }
-
         public override IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key)
         {
             var partitionService = (ClientPartitionService) Client.GetClientPartitionService();
