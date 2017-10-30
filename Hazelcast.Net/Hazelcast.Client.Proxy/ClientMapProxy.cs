@@ -442,7 +442,7 @@ namespace Hazelcast.Client.Proxy
         public string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue)
         {
             var listenerFlags = GetListenerFlags(listener);
-            var request = MapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, listenerFlags, false);
+            var request = MapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, listenerFlags, IsSmart());
             DistributedEventHandler handler =
                 eventData => MapAddEntryListenerCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -450,20 +450,20 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, includeValue, listener);
                     });
 
-            return Listen(request, message => MapAddEntryListenerCodec.DecodeResponse(message).response, handler);
+            return RegisterListener(request, message => MapAddEntryListenerCodec.DecodeResponse(message).response,
+                id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
-        public bool RemoveEntryListener(string id)
+        public bool RemoveEntryListener(string registrationId)
         {
-            return StopListening(s => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), s),
-                message => MapRemoveEntryListenerCodec.DecodeResponse(message).response, id);
+            return DeregisterListener(registrationId, id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id));
         }
 
         public string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey keyK, bool includeValue)
         {
             var keyData = ToData(keyK);
             var flags = GetListenerFlags(listener);
-            var request = MapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, flags, false);
+            var request = MapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, flags, IsSmart());
             DistributedEventHandler handler =
                 eventData => MapAddEntryListenerToKeyCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -471,8 +471,8 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, includeValue, listener);
                     });
 
-            return Listen(request, message => MapAddEntryListenerToKeyCodec.DecodeResponse(message).response, keyData,
-                handler);
+            return RegisterListener(request, message => MapAddEntryListenerToKeyCodec.DecodeResponse(message).response,
+                id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
         public IEntryView<TKey, TValue> GetEntryView(TKey key)
@@ -716,16 +716,15 @@ namespace Hazelcast.Client.Proxy
             var predicateData = ToData(predicate);
             var flags = GetListenerFlags(listener);
             var request = MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(GetName(), keyData, predicateData,
-                includeValue, flags, false);
+                includeValue, flags, IsSmart());
             DistributedEventHandler handler =
                 eventData => MapAddEntryListenerToKeyWithPredicateCodec.AbstractEventHandler.Handle(eventData,
                     (k, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
                         OnEntryEvent(k, value, oldValue, mergingValue, type, uuid, entries, includeValue, listener);
                     });
-
-            return Listen(request, message => MapAddEntryListenerCodec.DecodeResponse(message).response, keyData,
-                handler);
+            return RegisterListener(request, message => MapAddEntryListenerCodec.DecodeResponse(message).response,
+                id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
         public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate,
@@ -734,7 +733,7 @@ namespace Hazelcast.Client.Proxy
             var predicateData = ToData(predicate);
             var flags = GetListenerFlags(listener);
             var request = MapAddEntryListenerWithPredicateCodec.EncodeRequest(GetName(), predicateData, includeValue,
-                flags, false);
+                flags, IsSmart());
             DistributedEventHandler handler =
                 eventData => MapAddEntryListenerWithPredicateCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -742,9 +741,8 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, includeValue, listener);
                     });
 
-            return Listen(request, message => MapAddEntryListenerWithPredicateCodec.DecodeResponse(message).response,
-                null,
-                handler);
+            return RegisterListener(request, message => MapAddEntryListenerWithPredicateCodec.DecodeResponse(message).response,
+                id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
         public ISet<TKey> KeySet(IPredicate predicate)

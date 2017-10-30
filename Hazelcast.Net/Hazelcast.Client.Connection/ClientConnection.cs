@@ -491,5 +491,22 @@ namespace Hazelcast.Client.Connection
             }
             return validation;
         }
+
+        private bool Equals(ClientConnection other)
+        {
+            return _id == other._id;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is ClientConnection && Equals((ClientConnection) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return _id;
+        }
     }
 }

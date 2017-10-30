@@ -19,12 +19,17 @@ namespace Hazelcast.Client.Spi
 {
     public interface IClientListenerService
     {
-        void ReregisterListener(string originalRegistrationId, string newRegistrationId, long correlationId);
+        bool AddEventHandler(long correlationId, DistributedEventHandler eventHandler);
 
-        string StartListening(IClientMessage request, DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder, object key = null);
+        bool RemoveEventHandler(long correlationId);
 
-        bool StopListening(EncodeStopListenerRequest requestEncoder, DecodeStopListenerResponse responseDecoder,
-            string registrationId);
+        string RegisterListener(IClientMessage registrationMessage, DecodeRegistrationResponse responseDecoder,
+            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest, DistributedEventHandler eventHandler);
+
+        bool DeregisterListener(string userRegistrationId,
+            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest);
+        
+        void HandleResponseMessage(IClientMessage message);
+        
     }
 }
