@@ -132,7 +132,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue)
         {
-            var request = MultiMapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, false);
+            var request = MultiMapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, IsSmart());
 
             DistributedEventHandler handler =
                 eventData => MultiMapAddEntryListenerCodec.AbstractEventHandler.Handle(eventData,
@@ -141,19 +141,19 @@ namespace Hazelcast.Client.Proxy
                             includeValue, listener)
                     );
 
-            return Listen(request, message => MultiMapAddEntryListenerCodec.DecodeResponse(message).response, handler);
+            return RegisterListener(request, message => MultiMapAddEntryListenerCodec.DecodeResponse(message).response,
+                id => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
         public virtual bool RemoveEntryListener(string registrationId)
         {
-            return StopListening(s => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), s),
-                m => MultiMapRemoveEntryListenerCodec.DecodeResponse(m).response, registrationId);
+            return DeregisterListener(registrationId, id => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id));
         }
 
         public virtual string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue)
         {
             var keyData = ToData(key);
-            var request = MultiMapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, false);
+            var request = MultiMapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, IsSmart());
 
             DistributedEventHandler handler =
                 eventData => MultiMapAddEntryListenerToKeyCodec.AbstractEventHandler.Handle(eventData,
@@ -162,8 +162,8 @@ namespace Hazelcast.Client.Proxy
                             includeValue, listener)
                     );
 
-            return Listen(request, message => MultiMapAddEntryListenerToKeyCodec.DecodeResponse(message).response,
-                handler);
+            return RegisterListener(request, message => MultiMapAddEntryListenerToKeyCodec.DecodeResponse(message).response,
+                id => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
         public virtual void Lock(TKey key)

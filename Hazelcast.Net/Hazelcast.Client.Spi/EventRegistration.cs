@@ -12,11 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Client.Connection
+using Hazelcast.Client.Connection;
+
+namespace Hazelcast.Client.Spi
 {
-    internal interface IConnectionHeartbeatListener
+    internal class EventRegistration
     {
-        void HeartBeatResumed(ClientConnection connection);
-        void HeartBeatStopped(ClientConnection connection);
+        public string ServerRegistrationId { get; private set; }
+        public long CorrelationId { get; private set; }
+        public ClientConnection ClientConnection { get; private set; }
+
+        public EventRegistration(string serverRegistrationId, long correlationId, ClientConnection clientConnection)
+        {
+            ServerRegistrationId = serverRegistrationId;
+            CorrelationId = correlationId;
+            ClientConnection = clientConnection;
+        }
     }
 }

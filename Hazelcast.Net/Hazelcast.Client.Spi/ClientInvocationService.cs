@@ -32,25 +32,19 @@ namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener
     {
-        private const int DefaultEventThreadCount = 3;
         private const int DefaultInvocationTimeout = 120;
         private const int RetryWaitTime = 1000;
 
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientInvocationService));
         private readonly HazelcastClient _client;
-        private readonly ClientConnectionManager _clientConnectionManager;
+        private ClientConnectionManager _clientConnectionManager;
+        private IClientListenerService _clientListenerService;
 
         private readonly ConcurrentDictionary<long, ClientInvocation> _invocations =
             new ConcurrentDictionary<long, ClientInvocation>();
 
         private readonly int _invocationTimeoutMillis;
-
-        private readonly ConcurrentDictionary<long, ClientListenerInvocation> _listenerInvocations =
-            new ConcurrentDictionary<long, ClientListenerInvocation>();
-
         private readonly bool _redoOperations;
-
-        private readonly StripedTaskScheduler _taskScheduler;
         private long _correlationIdCounter = 1;
         private volatile bool _isShutDown;
 
@@ -58,17 +52,9 @@ namespace Hazelcast.Client.Spi
         {
             _client = client;
             _redoOperations = client.GetClientConfig().GetNetworkConfig().IsRedoOperation();
-
-            var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count") ??
-                                  DefaultEventThreadCount;
-            _taskScheduler = new StripedTaskScheduler(eventTreadCount);
-
             _invocationTimeoutMillis =
             (EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.invocation.timeout.seconds") ??
              DefaultInvocationTimeout) * 1000;
-
-            _clientConnectionManager = client.GetConnectionManager();
-            _clientConnectionManager.AddConnectionListener(this);
         }
 
         protected HazelcastClient Client
@@ -85,39 +71,22 @@ namespace Hazelcast.Client.Spi
         {
             get { return RetryWaitTime; }
         }
-
-        public abstract IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key,
-            DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder);
-
-        public abstract IFuture<IClientMessage> InvokeListenerOnRandomTarget(IClientMessage request,
-            DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder);
-
-        public abstract IFuture<IClientMessage> InvokeListenerOnTarget(IClientMessage request, Address target,
-            DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder);
-
-        public abstract IFuture<IClientMessage> InvokeListenerOnPartition(IClientMessage request, int partitionId,
-            DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder);
-
-        public abstract IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
-        public abstract IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
-        public abstract IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
-        public abstract IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
-        public abstract IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId);
-
-        public bool RemoveEventHandler(long correlationId)
+        
+        public int InvocationTimeoutMillis
         {
-            ClientListenerInvocation invocationWithHandler;
-            return _listenerInvocations.TryRemove(correlationId, out invocationWithHandler);
+            get { return _invocationTimeoutMillis; }
+        }
+
+        public void Start()
+        {
+            _clientConnectionManager = _client.GetConnectionManager();
+            _clientListenerService = _client.GetListenerService();
+            _clientConnectionManager.AddConnectionListener(this);
         }
 
         public void Shutdown()
         {
             _isShutDown = true;
-            _taskScheduler.Dispose();
         }
 
         public void ConnectionAdded(ClientConnection connection)
@@ -134,22 +103,13 @@ namespace Hazelcast.Client.Spi
         {
             Logger.Finest("Cleaning up connection resources for " + connection.Id);
             CleanupInvocations(connection);
-            CleanupEventHandlers(connection);
         }
 
         public void HandleClientMessage(IClientMessage message)
         {
             if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
             {
-                object state = message.GetPartitionId();
-                var eventTask = new Task(o =>
-                {
-                    if (!_isShutDown)
-                    {
-                        HandleEventMessage(message);
-                    }
-                }, state);
-                eventTask.Start(_taskScheduler);
+                _clientListenerService.HandleResponseMessage(message);
             }
             else
             {
@@ -163,10 +123,10 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        public IFuture<IClientMessage> InvokeListenerOnConnection(IClientMessage request,
-            DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder, ClientConnection connection)
+        public IFuture<IClientMessage> InvokeListenerOnConnection(IClientMessage request, 
+            DistributedEventHandler eventHandler, ClientConnection connection)
         {
-            var clientInvocation = new ClientListenerInvocation(request, handler, responseDecoder, connection);
+            var clientInvocation = new ClientInvocation(request, connection, eventHandler);
             InvokeInternal(clientInvocation, null, connection);
             return clientInvocation.Future;
         }
@@ -385,35 +345,8 @@ namespace Hazelcast.Client.Spi
                 Logger.Finest("Unable to write request " + clientInvocation.Message + " to connection " + connection);
             }
             UnregisterInvocation(correlationId);
-            RemoveEventHandler(correlationId);
+            _clientListenerService.RemoveEventHandler(correlationId);
             return false;
-        }
-
-        private void CleanupEventHandlers(ClientConnection connection)
-        {
-            var keys = new List<long>();
-            foreach (var entry in _listenerInvocations)
-            {
-                if (entry.Value.SentConnection == connection && entry.Value.BoundConnection == null)
-                {
-                    keys.Add(entry.Key);
-                }
-            }
-
-            foreach (var key in keys)
-            {
-                ClientListenerInvocation invocation;
-                _listenerInvocations.TryRemove(key, out invocation);
-
-                if (invocation.Future.IsComplete && invocation.Future.Result != null)
-                {
-                    //re-register listener on a new node
-                    if (!_isShutDown)
-                    {
-                        ReregisterListener(invocation).ToTask().IgnoreExceptions();
-                    }
-                }
-            }
         }
 
         private void CleanupInvocations(ClientConnection connection)
@@ -473,26 +406,6 @@ namespace Hazelcast.Client.Spi
             throw new IOException("Could not find any available address");
         }
 
-        private static string GetRegistrationIdFromResponse(ClientListenerInvocation invocation)
-        {
-            var originalResponse = (ClientMessage) invocation.Future.Result;
-            originalResponse.Index(originalResponse.GetDataOffset());
-            return invocation.ResponseDecoder(originalResponse);
-        }
-
-        private void HandleEventMessage(IClientMessage eventMessage)
-        {
-            var correlationId = eventMessage.GetCorrelationId();
-            ClientListenerInvocation invocationWithHandler;
-            if (!_listenerInvocations.TryGetValue(correlationId, out invocationWithHandler))
-            {
-                // no event handler found, could be that the event is already unregistered
-                Logger.Warning("No eventHandler for correlationId: " + correlationId + ", event: " + eventMessage);
-                return;
-            }
-            invocationWithHandler.Handler(eventMessage);
-        }
-
         private void HandleResponseMessage(IClientMessage response)
         {
             var correlationId = response.GetCorrelationId();
@@ -510,23 +423,6 @@ namespace Hazelcast.Client.Spi
 
                     // retry only specific exceptions
                     HandleInvocationException(invocation, exception);
-                }
-                // if this was a re-registration operation, then we will throw away the response and just store the alias
-                else if ((invocation is ClientListenerInvocation) &&
-                         (invocation.Future.IsComplete && invocation.Future.Result != null))
-                {
-                    var listenerInvocation = (ClientListenerInvocation) invocation;
-                    var originalRegistrationId = GetRegistrationIdFromResponse(listenerInvocation);
-                    var newRegistrationId = listenerInvocation.ResponseDecoder(response);
-                    _client.GetListenerService()
-                        .ReregisterListener(originalRegistrationId, newRegistrationId,
-                            listenerInvocation.Message.GetCorrelationId());
-                    if (Logger.IsFinestEnabled())
-                    {
-                        Logger.Finest(string.Format("Re-registered listener for {0} of type {1:X}",
-                            originalRegistrationId,
-                            listenerInvocation.Message.GetMessageType()));
-                    }
                 }
                 else
                 {
@@ -557,27 +453,14 @@ namespace Hazelcast.Client.Spi
         private bool TryRegisterInvocation(long correlationId, ClientInvocation request)
         {
             if (!_invocations.TryAdd(correlationId, request)) return false;
-            var listenerInvocation = request as ClientListenerInvocation;
-            if (listenerInvocation != null)
+
+            if (request.EventHandler != null &&
+                !_clientListenerService.AddEventHandler(correlationId, request.EventHandler))
             {
-                if (!_listenerInvocations.TryAdd(correlationId, listenerInvocation))
-                {
-                    _invocations.TryRemove(correlationId, out request);
-                }
+                _invocations.TryRemove(correlationId, out request);
+                return false;
             }
             return true;
-        }
-
-        private IFuture<IClientMessage> ReregisterListener(ClientListenerInvocation invocation)
-        {
-            if (Logger.IsFinestEnabled())
-            {
-                Logger.Finest("Re-registering listener for " + invocation.Message);
-            }
-            var newInvocation = new ClientListenerInvocation(invocation.Message, invocation.Handler,
-                invocation.ResponseDecoder,
-                invocation.PartitionId);
-            return Invoke(newInvocation);
         }
 
         private void UnregisterInvocation(long correlationId)
@@ -585,5 +468,11 @@ namespace Hazelcast.Client.Spi
             ClientInvocation ignored;
             _invocations.TryRemove(correlationId, out ignored);
         }
+        
+        public abstract IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
+        public abstract IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
+        public abstract IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
+        public abstract IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
+        public abstract IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId);
     }
 }
