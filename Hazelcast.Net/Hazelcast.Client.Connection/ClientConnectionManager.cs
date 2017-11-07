@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Connection
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConnectionManager));
 
-        private readonly ConcurrentDictionary<Address, ClientConnection> _addresses =
+        private readonly ConcurrentDictionary<Address, ClientConnection> _activeConnections =
             new ConcurrentDictionary<Address, ClientConnection>();
 
         private readonly HazelcastClient _client;
@@ -116,7 +116,7 @@ namespace Hazelcast.Client.Connection
             try
             {
                 _heartbeatToken.Cancel();
-                foreach (var kvPair in _addresses)
+                foreach (var kvPair in _activeConnections)
                 {
                     try
                     {
@@ -145,6 +145,11 @@ namespace Hazelcast.Client.Connection
         {
             get { return _live; }
         }
+        
+        public ICollection<ClientConnection> ActiveConnections
+        {
+            get { return _activeConnections.Values; }
+        }
 
         public void AddConnectionListener(IConnectionListener connectionListener)
         {
@@ -166,15 +171,15 @@ namespace Hazelcast.Client.Connection
             lock (_connectionMutex)
             {
                 ClientConnection connection;
-                if (!_addresses.ContainsKey(address))
+                if (!_activeConnections.ContainsKey(address))
                 {
                     connection = InitializeConnection(address, authenticator);
                     FireConnectionListenerEvent(f => f.ConnectionAdded(connection));
-                    _addresses.TryAdd(connection.GetAddress(), connection);
-                    Logger.Finest("Active list of connections: " + string.Join(", ", _addresses.Values));
+                    _activeConnections.TryAdd(connection.GetAddress(), connection);
+                    Logger.Finest("Active list of connections: " + string.Join(", ", _activeConnections.Values));
                 }
                 else
-                    connection = _addresses[address];
+                    connection = _activeConnections[address];
 
                 if (connection == null)
                 {
@@ -192,7 +197,7 @@ namespace Hazelcast.Client.Connection
         public ClientConnection GetConnection(Address address)
         {
             ClientConnection connection;
-            return _addresses.TryGetValue(address, out connection) ? connection : null;
+            return _activeConnections.TryGetValue(address, out connection) ? connection : null;
         }
 
         /// <summary>
@@ -212,7 +217,7 @@ namespace Hazelcast.Client.Connection
             if (address != null)
             {
                 ClientConnection conn;
-                if (_addresses.TryRemove(address, out conn))
+                if (_activeConnections.TryRemove(address, out conn))
                 {
                     connection.Close();
                     FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
@@ -221,7 +226,7 @@ namespace Hazelcast.Client.Connection
                 {
                     Logger.Warning("Could not find connection " + connection +
                                    " in list of connections, could not destroy connection. Current list of connections are " +
-                                   string.Join(", ", _addresses.Keys));
+                                   string.Join(", ", _activeConnections.Keys));
                     connection.Close();
                 }
             }
@@ -338,7 +343,7 @@ namespace Hazelcast.Client.Connection
         {
             if (!_live) return;
 
-            foreach (var connection in _addresses.Values)
+            foreach (var connection in _activeConnections.Values)
             {
                 if (DateTime.Now - connection.LastRead > TimeSpan.FromMilliseconds(_heartbeatTimeout))
                 {
@@ -367,7 +372,7 @@ namespace Hazelcast.Client.Connection
                         Logger.Warning("Heartbeat is back to healthy for connection: " + connection);
                         connection.HeartbeatSucceeded();
                         var local = connection;
-                        FireHeartBeatEvent(l => l.HeartBeatStarted(local));
+                        FireHeartBeatEvent(l => l.HeartBeatResumed(local));
                     }
                 }
             }

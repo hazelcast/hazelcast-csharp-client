@@ -54,7 +54,7 @@ namespace Hazelcast.Client
         private readonly IClientExecutionService _executionService;
         private readonly int _id = ClientId.GetAndIncrement();
         private readonly string _instanceName;
-        private readonly IClientInvocationService _invocationService;
+        private readonly ClientInvocationService _invocationService;
 
         private readonly LifecycleService _lifecycleService;
         private readonly ClientListenerService _listenerService;
@@ -95,11 +95,9 @@ namespace Hazelcast.Client
             _clusterService = new ClientClusterService(this);
             _loadBalancer = config.GetLoadBalancer() ?? new RoundRobinLB();
             _connectionManager = new ClientConnectionManager(this);
-            _invocationService = GetInvocationService(config);
+            _invocationService = CreateInvocationService();
             _listenerService = new ClientListenerService(this);
             _userContext = new ConcurrentDictionary<string, object>();
-            _loadBalancer.Init(GetCluster(), config);
-            _proxyManager.Init(config);
             _partitionService = new ClientPartitionService(this);
             _lockReferenceIdGenerator = new ClientLockReferenceIdGenerator();
         }
@@ -358,6 +356,7 @@ namespace Hazelcast.Client
             _connectionManager.Shutdown();
             _proxyManager.Destroy();
             _invocationService.Shutdown();
+            _listenerService.Dispose();
             _serializationService.Destroy();
         }
 
@@ -406,10 +405,10 @@ namespace Hazelcast.Client
             return _lockReferenceIdGenerator;
         }
 
-        private IClientInvocationService GetInvocationService(ClientConfig config)
+        private ClientInvocationService CreateInvocationService()
         {
-            return config.GetNetworkConfig().IsSmartRouting()
-                ? (IClientInvocationService) new ClientSmartInvocationService(this)
+            return _config.GetNetworkConfig().IsSmartRouting()
+                ? (ClientInvocationService) new ClientSmartInvocationService(this)
                 : new ClientNonSmartInvocationService(this);
         }
 
@@ -418,8 +417,12 @@ namespace Hazelcast.Client
             _lifecycleService.SetStarted();
             try
             {
+                _invocationService.Start();
                 _connectionManager.Start();
                 _clusterService.Start();
+                _proxyManager.Init(_config);
+                _listenerService.Start();
+                _loadBalancer.Init(GetCluster(), _config);
                 _partitionService.Start();
             }
             catch (InvalidOperationException)

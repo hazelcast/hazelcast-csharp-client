@@ -87,9 +87,9 @@ namespace Hazelcast.Client
             {
                 if (_cacheType == ClientNearCacheType.Map)
                 {
-                    _context.GetListenerService().StopListening(
-                        s => MapRemoveEntryListenerCodec.EncodeRequest(_mapName, s),
-                        m => MapRemoveEntryListenerCodec.DecodeResponse(m).response, _registrationId);
+                    _context.GetListenerService().DeregisterListener(_registrationId,
+                        s => MapRemoveEntryListenerCodec.EncodeRequest(_mapName, s)
+                    );
                 }
                 else if (_cacheType == ClientNearCacheType.ReplicatedMap)
                 {
@@ -176,9 +176,10 @@ namespace Hazelcast.Client
                 {
                     throw new NotImplementedException("Near cache is not available for this type of data structure");
                 }
-
-                _registrationId = _context.GetListenerService().StartListening(request,
-                    handler, m => MapAddNearCacheEntryListenerCodec.DecodeResponse(m).response);
+                
+                _registrationId = _context.GetListenerService()
+                    .RegisterListener(request, message => MapAddNearCacheEntryListenerCodec.DecodeResponse(message).response,
+                        id => MapRemoveEntryListenerCodec.EncodeRequest(_mapName, id), handler);
             }
             catch (Exception e)
             {
