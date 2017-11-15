@@ -424,6 +424,7 @@
     <Compile Include="Hazelcast.Logging\LogLevel.cs" />
     <Compile Include="Hazelcast.Logging\ConsoleLogFactory.cs" />
     <Compile Include="Hazelcast.Logging\TraceLogFactory.cs" />
+    <Compile Include="Hazelcast.Map\EntryListenerAdapter.cs" />
     <Compile Include="Hazelcast.Net.Ext\ByteBuffer.cs" />
     <Compile Include="Hazelcast.Net.Ext\ByteOrder.cs" />
     <Compile Include="Hazelcast.Net.Ext\InputOutputStreams.cs" />
@@ -583,6 +584,7 @@
     <Compile Include="Hazelcast.Util\IterationType.cs" />
     <Compile Include="Hazelcast.Util\QuickMath.cs" />
     <Compile Include="Hazelcast.Util\RandomLB.cs" />
+    <Compile Include="Hazelcast.Util\ReadOnlyLazySet.cs" />
     <Compile Include="Hazelcast.Util\RoundRobinLB.cs" />
     <Compile Include="Hazelcast.Util\SortingUtil.cs" />
     <Compile Include="Hazelcast.Util\StackTraceElement.cs" />
