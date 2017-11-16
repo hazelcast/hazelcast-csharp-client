@@ -396,7 +396,7 @@ namespace Hazelcast.Client.Spi
             return _client.GetConnectionManager().GetConnection(address);
         }
 
-        private Address GetRandomAddress()
+        protected virtual Address GetRandomAddress()
         {
             var member = _client.GetLoadBalancer().Next();
             if (member != null)

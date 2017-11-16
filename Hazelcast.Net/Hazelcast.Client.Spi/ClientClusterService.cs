@@ -125,7 +125,7 @@ namespace Hazelcast.Client.Spi
 
         public IClient GetLocalClient()
         {
-            var cm = (ClientConnectionManager) _client.GetConnectionManager();
+            var cm = _client.GetConnectionManager();
             var cp = GetPrincipal();
             var ownerConnection = cm.GetConnection(_ownerConnectionAddress);
 
@@ -209,12 +209,6 @@ namespace Hazelcast.Client.Spi
         public ClientPrincipal GetPrincipal()
         {
             return _principal;
-        }
-
-        public IMember GetRandomMember()
-        {
-            var rand = new Random();
-            return GetMemberList().OrderBy(m => rand.Next()).FirstOrDefault();
         }
 
         /// <exception cref="System.Exception" />

@@ -22,48 +22,49 @@ namespace Hazelcast.Client.Proxy
 {
     internal class TransactionContextProxy : ITransactionContext
     {
-        internal const int TxOwnerNodeTryCount = 5;
-
         private readonly IDictionary<TransactionalObjectKey, ITransactionalObject> _txnObjectMap =
             new Dictionary<TransactionalObjectKey, ITransactionalObject>(2);
 
-        internal readonly HazelcastClient Client;
-        internal readonly TransactionProxy Transaction;
+        private readonly HazelcastClient _client;
+        private readonly TransactionProxy _transaction;
 
-        internal IMember TxnOwnerNode;
+        internal readonly IMember TxnOwnerNode;
 
         public TransactionContextProxy(HazelcastClient client, TransactionOptions options)
         {
-            Client = client;
-
+            _client = client;
             var clusterService = (ClientClusterService) client.GetClientClusterService();
-            TxnOwnerNode = clusterService.GetRandomMember();
+
+            TxnOwnerNode = client.GetClientConfig().GetNetworkConfig().IsSmartRouting() ?
+                client.GetLoadBalancer().Next():
+                clusterService.GetMember(clusterService.GetOwnerConnectionAddress());
+
             if (TxnOwnerNode == null)
             {
                 throw new HazelcastException("Could not find matching member");
             }
-            Transaction = new TransactionProxy(client, options, TxnOwnerNode);
+            _transaction = new TransactionProxy(client, options, TxnOwnerNode);
         }
 
         public virtual string GetTxnId()
         {
-            return Transaction.GetTxnId();
+            return _transaction.GetTxnId();
         }
 
         public virtual void BeginTransaction()
         {
-            Transaction.Begin();
+            _transaction.Begin();
         }
 
         /// <exception cref="Hazelcast.Transaction.TransactionException"></exception>
         public virtual void CommitTransaction()
         {
-            Transaction.Commit(true);
+            _transaction.Commit(true);
         }
 
         public virtual void RollbackTransaction()
         {
-            Transaction.Rollback();
+            _transaction.Rollback();
         }
 
         public virtual ITransactionalMap<TKey, TValue> GetMap<TKey, TValue>(string name)
@@ -93,7 +94,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual T GetTransactionalObject<T>(string serviceName, string name) where T : ITransactionalObject
         {
-            if (Transaction.GetState() != TransactionState.Active)
+            if (_transaction.GetState() != TransactionState.Active)
             {
                 throw new TransactionNotActiveException("No transaction is found while accessing " +
                                                         "transactional object -> " + serviceName + "[" + name + "]!");
@@ -115,7 +116,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual HazelcastClient GetClient()
         {
-            return Client;
+            return _client;
         }
 
         private ClientTxnProxy CreateProxy<T>(string serviceName, string name)

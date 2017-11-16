@@ -82,6 +82,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientExecutorServiceTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientLongRunningTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSSLTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientTxnNonSmartTest.cs" />
     <Compile Include="Hazelcast.Client.Test\EntryEventTest.cs" />
     <Compile Include="Hazelcast.Client.Test\EnvironmentUtilTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PagingPredicateTest.cs" />

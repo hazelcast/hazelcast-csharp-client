@@ -53,6 +53,11 @@ namespace Hazelcast.Client.Spi
             return SendToOwner(new ClientInvocation(request));
         }
 
+        protected override Address GetRandomAddress()
+        {
+            return Client.GetClientClusterService().GetOwnerConnectionAddress();
+        }
+
         private IFuture<IClientMessage> SendToOwner(ClientInvocation invocation)
         {
             var clusterService = Client.GetClientClusterService();
