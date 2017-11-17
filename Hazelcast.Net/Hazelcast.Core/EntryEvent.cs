@@ -13,9 +13,58 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Core
 {
+    [Serializable]
+    public class DataAwareEntryEvent<TKey, TValue> : EntryEvent<TKey, TValue>
+    {
+        [NonSerialized] private readonly Lazy<TKey> _key;
+        [NonSerialized] private readonly Lazy<TValue> _value;
+        [NonSerialized] private readonly Lazy<TValue> _oldValue;
+        [NonSerialized] private readonly Lazy<TValue> _mergingValue;
+
+        [NonSerialized] private readonly ISerializationService _serializationService;
+
+        public DataAwareEntryEvent(string source, IMember member, EntryEventType eventType, IData keyData,
+            IData valueData, IData oldValueData, IData mergingValueData, ISerializationService serializationService)
+            : base(source, member, eventType, default(TKey), default(TValue), default(TValue), default(TValue))
+        {
+            _serializationService = serializationService;
+            _key = new Lazy<TKey>(() => ValueFactory<TKey>(keyData));
+            _value = new Lazy<TValue>(() => ValueFactory<TValue>(valueData));
+            _oldValue = new Lazy<TValue>(() => ValueFactory<TValue>(oldValueData));
+            _mergingValue = new Lazy<TValue>(() => ValueFactory<TValue>(mergingValueData));
+        }
+        
+        public override TKey GetKey()
+        {
+            return _key.Value;
+        }
+
+        public override TValue GetOldValue()
+        {
+            return _oldValue.Value;
+        }
+
+        public override TValue GetValue()
+        {
+            return _value.Value;
+        }
+
+        public override TValue GetMergingValue()
+        {
+            return _mergingValue.Value;
+        }
+
+        private TOut ValueFactory<TOut>(object input)
+        {
+            return _serializationService.ToObject<TOut>(input);
+        }
+    }
+
     /// <summary>Map Entry event.</summary>
     /// <remarks>Map Entry event.</remarks>
     /// <typeparam name="TKey">type of key</typeparam>
@@ -26,21 +75,18 @@ namespace Hazelcast.Core
     public class EntryEvent<TKey, TValue> : AbstractMapEvent
     {
         private readonly TKey _key;
-        private readonly TValue _oldValue;
         private readonly TValue _value;
+        private readonly TValue _oldValue;
+        private readonly TValue _mergingValue;
 
-        public EntryEvent(object source, IMember member, EntryEventType eventType, TKey key, TValue value)
-            : this(source, member, eventType, key, default(TValue), value)
-        {
-        }
-
-        public EntryEvent(object source, IMember member, EntryEventType eventType, TKey key, TValue oldValue,
-            TValue value)
+        public EntryEvent(string source, IMember member, EntryEventType eventType, TKey key, TValue value,
+            TValue oldValue = default(TValue), TValue mergingValue = default(TValue))
             : base(source, member, eventType)
         {
             _key = key;
-            _oldValue = oldValue;
             _value = value;
+            _oldValue = oldValue;
+            _mergingValue = mergingValue;
         }
 
         /// <summary>Returns the key of the entry event</summary>
@@ -57,22 +103,24 @@ namespace Hazelcast.Core
             return _oldValue;
         }
 
-        public override object GetSource()
-        {
-            return Name;
-        }
-
         /// <summary>Returns the value of the entry event</summary>
-        /// <returns>the valueS</returns>
+        /// <returns>the value</returns>
         public virtual TValue GetValue()
         {
             return _value;
         }
 
+        /// <summary>Returns the incoming merging value of the entry event.</summary>
+        /// <returns>merge value</returns>
+        public virtual TValue GetMergingValue()
+        {
+            return _mergingValue;
+        }
+
         public override string ToString()
         {
-            return "EntryEvent {" + GetSource() + "} key=" + GetKey() + ", oldValue=" + GetOldValue() + ", value=" +
-                   GetValue() + ", event=" + GetEventType() + ", by " + Member;
+            return string.Format("EntryEvent{ {0}, key={1}, oldValue={2}, value={3}, mergingValue={4} }",
+                base.ToString(), GetKey(), GetOldValue(), GetValue(), GetMergingValue());
         }
     }
 
@@ -83,10 +131,10 @@ namespace Hazelcast.Core
         protected internal readonly IMember Member;
         protected internal readonly string Name;
 
-        protected AbstractMapEvent(object source, IMember member, EntryEventType eventType)
+        protected AbstractMapEvent(string source, IMember member, EntryEventType eventType)
             : base(source)
         {
-            Name = (string) source;
+            Name = source;
             Member = member;
             _entryEventType = eventType;
         }
@@ -99,7 +147,6 @@ namespace Hazelcast.Core
         }
 
         /// <summary>Returns the member fired this event.</summary>
-        /// <remarks>Returns the member fired this event.</remarks>
         /// <returns>the member fired this event.</returns>
         public virtual IMember GetMember()
         {
@@ -107,7 +154,6 @@ namespace Hazelcast.Core
         }
 
         /// <summary>Returns the name of the map for this event.</summary>
-        /// <remarks>Returns the name of the map for this event.</remarks>
         /// <returns>name of the map.</returns>
         public virtual string GetName()
         {
@@ -121,7 +167,7 @@ namespace Hazelcast.Core
 
         public override string ToString()
         {
-            return "AbstractMapEvent {" + GetName() + "} eventType=" + _entryEventType + ", by " + Member;
+            return string.Format("entryEventType={0}, member={1}, name={2}", _entryEventType, Member, GetName());
         }
     }
 

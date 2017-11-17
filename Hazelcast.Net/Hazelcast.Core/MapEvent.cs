@@ -18,7 +18,7 @@ namespace Hazelcast.Core
     {
         private readonly int _numberofEntriesAffected;
 
-        public MapEvent(object source, IMember member, EntryEventType eventType, int numberofEntriesAffected)
+        public MapEvent(string source, IMember member, EntryEventType eventType, int numberofEntriesAffected)
             : base(source, member, eventType)
         {
             _numberofEntriesAffected = numberofEntriesAffected;

@@ -27,7 +27,9 @@ namespace Hazelcast.Core
         Evicted = 1 << 3,
         EvictAll = 1 << 4,
         ClearAll = 1 << 5,
+        Merged = 1 << 6,
+        Expired = 1 << 7,
         Invalidation = 1 << 8,
-        All = Added | Removed | Updated | Evicted | EvictAll | ClearAll
+        All = Added | Removed | Updated | Evicted | EvictAll | ClearAll | Merged | Expired
     }
 }

@@ -82,6 +82,7 @@
     <Compile Include="Hazelcast.Client.Test\ClientExecutorServiceTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientLongRunningTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSSLTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\EntryEventTest.cs" />
     <Compile Include="Hazelcast.Client.Test\EnvironmentUtilTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PagingPredicateTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PagingPredicateWithPrimitiveTest.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="Hazelcast.Client.Test\PredicateExtTest.cs" />
     <Compile Include="Hazelcast.Client.Test\PredicatesTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ReadOnlyLazyListTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ReadOnlyLazySetTest.cs" />
     <Compile Include="Hazelcast.Client.Test\SingleMemberBaseTest.cs" />
     <Compile Include="Hazelcast.Remote\Cluster.cs" />
     <Compile Include="Hazelcast.Client.Model\Item.cs" />
