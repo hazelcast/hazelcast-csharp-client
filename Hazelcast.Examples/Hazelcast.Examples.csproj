@@ -63,6 +63,7 @@
     <Compile Include="Map\MapPortableExample.cs" />
     <Compile Include="Map\MapSimpleExample.cs" />
     <Compile Include="Map\MultiMapExample.cs" />
+    <Compile Include="Map\ReplicatedMapExample.cs" />
     <Compile Include="Models\Customer.cs" />
     <Compile Include="Models\Employee.cs" />
     <Compile Include="Models\ExamplePortableFactory.cs" />
