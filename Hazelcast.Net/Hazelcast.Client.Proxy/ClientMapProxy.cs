@@ -821,7 +821,7 @@ namespace Hazelcast.Client.Proxy
             return Invoke(request, decodeResponse);
         }
 
-        public void OnEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValue,
+        private void OnEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValue,
             int eventTypeInt, string uuid, int numberOfAffectedEntries,
             EntryListenerAdapter<TKey, TValue> listenerAdapter)
         {

@@ -81,6 +81,7 @@
     <Compile Include="Hazelcast.Client.Test\AggregatorAndProjectionTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientExecutorServiceTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientLongRunningTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientReplicateMapTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientSSLTest.cs" />
     <Compile Include="Hazelcast.Client.Test\EntryEventTest.cs" />
     <Compile Include="Hazelcast.Client.Test\EnvironmentUtilTest.cs" />
@@ -122,75 +123,35 @@
     <Compile Include="Hazelcast.Client.Test.Serialization\SerializationServiceBuilderTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\StringSerializationTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\TestSerializationConstants.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientAtomicLongTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientAtomicLongTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientClusterServiceTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientCountDownLatchTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientDistributedObjectTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientCountDownLatchTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientDistributedObjectTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientHeartBeatTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientIdGeneratorTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientIpV6AddressTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientListTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientLockTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientIdGeneratorTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientIpV6AddressTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientListTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientLockTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientLoggingTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientMapTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientMultiMapTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientMapTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientMultiMapTest.cs" />
     <Compile Include="Hazelcast.Client.Test.Config\ClientNearCacheConfigTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientNearCacheTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientNearCacheTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientPartitionTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientQueueTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientQueueTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientReconnectionTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientRetryTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientRingbufferTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientSemaphoreTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientSetTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientSemaphoreTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientSetTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientShutdownTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientTopicTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientTxnListTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientTxnMapTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientTxnMultiMapTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientTxnQueueTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test\ClientTxnSetTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Hazelcast.Client.Test.Config\ClientXmlTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Hazelcast.Client.Test\ClientTopicTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientTxnListTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientTxnMapTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientTxnMultiMapTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientTxnQueueTest.cs" />
+    <Compile Include="Hazelcast.Client.Test\ClientTxnSetTest.cs" />
+    <Compile Include="Hazelcast.Client.Test.Config\ClientXmlTest.cs" />
     <Compile Include="Hazelcast.Client.Test\ClientTxnTest.cs" />
     <Compile Include="Hazelcast.Client.Test\HazelcastTestSupport.cs" />
     <Compile Include="Hazelcast.Client.Test.Serialization\ClientCustomSerializationTest.cs" />

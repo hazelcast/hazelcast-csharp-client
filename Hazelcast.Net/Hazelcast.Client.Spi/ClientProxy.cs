@@ -161,10 +161,29 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        protected virtual T Invoke<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
+        protected T Invoke<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
         {
             var response = Invoke(request, key);
             return decodeResponse(response);
+        }
+
+        protected T InvokeOnPartition<T>(IClientMessage request,int partitionId, Func<IClientMessage, T> decodeResponse)
+        {
+            var response = InvokeOnPartition(request, partitionId);
+            return decodeResponse(response);
+        }
+        
+        protected IClientMessage InvokeOnPartition(IClientMessage request, int partitionId)
+        {
+            try
+            {
+                var task = GetContext().GetInvocationService().InvokeOnPartition(request, partitionId);
+                return ThreadUtil.GetResult(task);
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
         }
 
         protected virtual IClientMessage Invoke(IClientMessage request)
