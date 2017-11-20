@@ -47,6 +47,7 @@ namespace Hazelcast.Core
         public const string DistributedExecutor = "hz:impl:distributedExecutorService";
 
         public const string Ringbuffer = "hz:impl:ringbufferService";
-        //FIXME REFACTOR BURAYI DUZELT
+
+        public const string ReplicatedMap = "hz:impl:replicatedMapService";
     }
 }

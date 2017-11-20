@@ -179,6 +179,15 @@ namespace Hazelcast.Core
         /// <returns>distributed multimap instance with the specified name</returns>
         IMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name);
 
+        /// <summary>
+        /// Returns the replicated map instance with the specified name.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys in the map</typeparam>
+        /// <typeparam name="TValue">The type of the values in the map</typeparam>
+        /// <param name="name">name of the distributed map</param>
+        /// <returns>distributed map instance with the specified name</returns>
+        IReplicatedMap<TKey, TValue> GetReplicatedMap<TKey, TValue>(string name);
+
         /// <summary>Returns the name of this Hazelcast instance</summary>
         /// <returns>name of this Hazelcast instance</returns>
         string GetName();

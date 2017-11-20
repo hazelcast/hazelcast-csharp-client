@@ -200,6 +200,8 @@ namespace Hazelcast.Client.Spi
                 (type, id) => ProxyFactory(typeof (ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
             Register(ServiceNames.Ringbuffer,
                 (type, id) => ProxyFactory(typeof (ClientRingbufferProxy<>), type, ServiceNames.Ringbuffer, id));
+            Register(ServiceNames.ReplicatedMap,
+                (type, id) => ProxyFactory(typeof (ClientReplicatedMapProxy<,>), type, ServiceNames.ReplicatedMap, id));
 
             Register(ServiceNames.IdGenerator, delegate(Type type, string id)
             {

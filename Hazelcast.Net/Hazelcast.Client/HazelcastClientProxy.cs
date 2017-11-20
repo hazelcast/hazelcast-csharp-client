@@ -70,6 +70,11 @@ namespace Hazelcast.Client
             return GetClient().GetMultiMap<TKey, TValue>(name);
         }
 
+        public IReplicatedMap<TKey, TValue> GetReplicatedMap<TKey, TValue>(string name)
+        {
+            return GetClient().GetReplicatedMap<TKey, TValue>(name);
+        }
+
         public ILock GetLock(string key)
         {
             return GetClient().GetLock(key);

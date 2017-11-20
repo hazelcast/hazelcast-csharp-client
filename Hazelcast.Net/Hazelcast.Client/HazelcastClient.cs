@@ -142,6 +142,11 @@ namespace Hazelcast.Client
             return GetDistributedObject<IMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name);
         }
 
+        public IReplicatedMap<TKey, TValue> GetReplicatedMap<TKey, TValue>(string name)
+        {
+            return GetDistributedObject<IReplicatedMap<TKey, TValue>>(ServiceNames.ReplicatedMap, name);
+        }
+
         public ILock GetLock(string key)
         {
             return GetDistributedObject<ILock>(ServiceNames.Lock, key);
