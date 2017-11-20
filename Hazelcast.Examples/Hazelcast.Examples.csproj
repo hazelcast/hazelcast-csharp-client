@@ -74,6 +74,7 @@
     <Compile Include="Primitives\SemaphoreExample.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Topic\TopicExample.cs" />
+    <Compile Include="Transactions\TransactionBenchmark.cs" />
     <Compile Include="Transactions\SimpleTransactionExample.cs" />
     <Compile Include="Transactions\TransactionRollbackExample.cs" />
   </ItemGroup>

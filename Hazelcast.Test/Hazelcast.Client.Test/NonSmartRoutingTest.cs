@@ -102,5 +102,18 @@ namespace Hazelcast.Client.Test
 
             Assert.AreEqual(toInsert, resp);
         }
+
+        [Test]
+        public void TestPutWithNonSmartRouting()
+        {
+            var cm  = ((HazelcastClientProxy) _client).GetClient().GetConnectionManager();
+            var map = _client.GetMap<int, int>(TestSupport.RandomString());
+            var n = 1000;
+            for (var i = 0; i < n; i++)
+            {
+                map.Put(i, i);
+                Assert.AreEqual(1, cm.ActiveConnections.Count);
+            }
+        }
     }
 }
