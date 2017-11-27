@@ -21,5 +21,5 @@
 [assembly: System.Reflection.AssemblyConfiguration("Release")]
 #endif
 [assembly: System.Runtime.InteropServices.ComVisible(false)]
-[assembly: System.Reflection.AssemblyVersion("3.9.1")]
-[assembly: System.Reflection.AssemblyInformationalVersion("3.9.1")]
+[assembly: System.Reflection.AssemblyVersion("3.9.2")]
+[assembly: System.Reflection.AssemblyInformationalVersion("3.9.2")]
