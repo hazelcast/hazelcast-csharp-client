@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Test.Config
         [Test]
         public virtual void TestXmlParserWithReader()
         {
-            var clientConfig = XmlClientConfigBuilder.Build(new StringReader(Resources.hazelcast_config_full));
+            var clientConfig = XmlClientConfigBuilder.Build(new StringReader(Hazelcast.Test.Resources.hazelcast_config_full));
             Assert.NotNull(clientConfig);
         }
     }

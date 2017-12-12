@@ -117,17 +117,287 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="hazelcast" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\hazelcast.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  <data name="hazelcast" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd"
+           xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+    &lt;group&gt;
+        &lt;name&gt;dev&lt;/name&gt;
+        &lt;password&gt;dev-pass&lt;/password&gt;
+    &lt;/group&gt;
+    &lt;management-center enabled="false"&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
+    &lt;network&gt;
+        &lt;port auto-increment="true" port-count="100"&gt;5701&lt;/port&gt;
+        &lt;outbound-ports&gt;
+            &lt;!--
+            Allowed port range when connecting to other nodes.
+            0 or * means use system provided port.
+            --&gt;
+            &lt;ports&gt;0&lt;/ports&gt;
+        &lt;/outbound-ports&gt;
+        &lt;join&gt;
+            &lt;multicast enabled="true"&gt;
+                &lt;multicast-group&gt;224.7.7.7&lt;/multicast-group&gt;
+                &lt;multicast-port&gt;54327&lt;/multicast-port&gt;
+            &lt;/multicast&gt;
+            &lt;tcp-ip enabled="false"&gt;
+                &lt;interface&gt;127.0.0.1&lt;/interface&gt;
+            &lt;/tcp-ip&gt;
+        &lt;/join&gt;
+        &lt;public-address&gt;127.0.0.1&lt;/public-address&gt;
+        &lt;ssl enabled="false"/&gt;
+        &lt;socket-interceptor enabled="false"/&gt;
+    &lt;/network&gt;
+    &lt;serialization&gt;
+        &lt;data-serializable-factories&gt;
+            &lt;data-serializable-factory factory-id="66"&gt;com.hazelcast.client.test.IdentifiedFactory
+            &lt;/data-serializable-factory&gt;
+        &lt;/data-serializable-factories&gt;
+    &lt;/serialization&gt;
+
+    &lt;queue name="ClientQueueTest*"&gt;
+        &lt;!--
+            Maximum size of the queue. When a JVM's local queue size reaches the maximum,
+            all put/offer operations will get blocked until the queue size
+            of the JVM goes down below the maximum.
+            Any integer between 0 and Integer.MAX_VALUE. 0 means
+            Integer.MAX_VALUE. Default is 0.
+        --&gt;
+        &lt;max-size&gt;6&lt;/max-size&gt;
+    &lt;/queue&gt;
+    &lt;ringbuffer name="ClientRingbufferTest*"&gt;
+        &lt;capacity&gt;10&lt;/capacity&gt;
+    &lt;/ringbuffer&gt;
+    &lt;ringbuffer name="ClientRingbufferTestWithTTL*"&gt;
+        &lt;capacity&gt;10&lt;/capacity&gt;
+        &lt;time-to-live-seconds&gt;180&lt;/time-to-live-seconds&gt;
+    &lt;/ringbuffer&gt;
+
+&lt;/hazelcast&gt;</value>
   </data>
-  <data name="hazelcast_config_full" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\hazelcast-client-full.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  <data name="hazelcast_config_full" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;hazelcast-client xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.8.xsd"
+                  xmlns="http://www.hazelcast.com/schema/client-config"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+
+  &lt;group&gt;
+    &lt;name&gt;dev&lt;/name&gt;
+    &lt;password&gt;dev-pass&lt;/password&gt;
+  &lt;/group&gt;
+
+  &lt;network&gt;
+    &lt;cluster-members&gt;
+      &lt;address&gt;127.0.0.1&lt;/address&gt;
+      &lt;address&gt;127.0.0.2&lt;/address&gt;
+    &lt;/cluster-members&gt;
+    &lt;smart-routing&gt;true&lt;/smart-routing&gt;
+    &lt;redo-operation&gt;true&lt;/redo-operation&gt;
+    &lt;connection-timeout&gt;60000&lt;/connection-timeout&gt;
+    &lt;connection-attempt-period&gt;3000&lt;/connection-attempt-period&gt;
+    &lt;connection-attempt-limit&gt;2&lt;/connection-attempt-limit&gt;
+    &lt;socket-interceptor enabled="true"&gt;
+      &lt;class-name&gt;com.hazelcast.examples.MySocketInterceptor&lt;/class-name&gt;
+      &lt;properties&gt;
+        &lt;property name="foo"&gt;bar&lt;/property&gt;
+      &lt;/properties&gt;
+    &lt;/socket-interceptor&gt;
+    &lt;socket-options&gt;
+      &lt;tcp-no-delay&gt;false&lt;/tcp-no-delay&gt;
+      &lt;keep-alive&gt;true&lt;/keep-alive&gt;
+      &lt;reuse-address&gt;true&lt;/reuse-address&gt;
+      &lt;linger-seconds&gt;3&lt;/linger-seconds&gt;
+      &lt;timeout&gt;-1&lt;/timeout&gt;
+      &lt;buffer-size&gt;32&lt;/buffer-size&gt;
+    &lt;/socket-options&gt;
+    &lt;ssl enabled="false"&gt;
+      &lt;properites&gt;
+        &lt;property name="CertificateName"&gt;The_Certificate_Name&lt;/property&gt;
+        &lt;property name="ValidateCertificateChain"&gt;true&lt;/property&gt;
+        &lt;property name="ValidateCertificateName"&gt;true&lt;/property&gt;
+      &lt;/properites&gt;
+    &lt;/ssl&gt;
+  &lt;/network&gt;
+
+  &lt;executor-pool-size&gt;40&lt;/executor-pool-size&gt;
+
+
+  &lt;security&gt;
+    &lt;credentials&gt;com.hazelcast.security.UsernamePasswordCredentials&lt;/credentials&gt;
+    &lt;login-credentials&gt;
+      &lt;username&gt;dev-user&lt;/username&gt;
+      &lt;password&gt;pass123&lt;/password&gt;
+    &lt;/login-credentials&gt;
+  &lt;/security&gt;
+
+  &lt;listeners&gt;
+    &lt;listener&gt;Hazelcast.Examples.MembershipListener&lt;/listener&gt;
+    &lt;listener&gt;Hazelcast.Examples.InstanceListener&lt;/listener&gt;
+    &lt;listener&gt;Hazelcast.Examples.MigrationListener&lt;/listener&gt;
+  &lt;/listeners&gt;
+
+  &lt;serialization&gt;
+    &lt;portable-version&gt;3&lt;/portable-version&gt;
+    &lt;use-native-byte-order&gt;true&lt;/use-native-byte-order&gt;
+    &lt;byte-order&gt;BIG_ENDIAN&lt;/byte-order&gt;
+    &lt;enable-shared-object&gt;true&lt;/enable-shared-object&gt;
+    &lt;check-class-def-errors&gt;true&lt;/check-class-def-errors&gt;
+    &lt;enable-compression&gt;true&lt;/enable-compression&gt;&gt;
+    &lt;data-serializable-factories&gt;
+      &lt;data-serializable-factory factory-id="1"&gt;com.hazelcast.examples.DataSerializableFactory&lt;/data-serializable-factory&gt;
+    &lt;/data-serializable-factories&gt;
+    &lt;portable-factories&gt;
+      &lt;portable-factory factory-id="1"&gt;com.hazelcast.examples.PortableFactory&lt;/portable-factory&gt;
+    &lt;/portable-factories&gt;
+    &lt;serializers&gt;
+      &lt;global-serializer&gt;com.hazelcast.examples.GlobalSerializerFactory&lt;/global-serializer&gt;
+      &lt;serializer type-class="com.hazelcast.examples.DummyType"&gt;com.hazelcast.examples.SerializerFactory&lt;/serializer&gt;
+    &lt;/serializers&gt;
+    &lt;check-class-def-errors&gt;true&lt;/check-class-def-errors&gt;
+  &lt;/serialization&gt;
+
+  &lt;proxy-factories&gt;
+    &lt;proxy-factory class-name="com.hazelcast.examples.ProxyXYZ1" service="sampleService1" /&gt;
+    &lt;proxy-factory class-name="com.hazelcast.examples.ProxyXYZ2" service="sampleService2" /&gt;
+    &lt;proxy-factory class-name="com.hazelcast.examples.ProxyXYZ3" service="sampleService3" /&gt;
+
+  &lt;/proxy-factories&gt;
+
+  &lt;load-balancer type="random"&gt;&lt;/load-balancer&gt;
+
+  &lt;near-cache name="asd"&gt;
+    &lt;max-size&gt;2000&lt;/max-size&gt;
+    &lt;time-to-live-seconds&gt;100&lt;/time-to-live-seconds&gt;
+    &lt;max-idle-seconds&gt;100&lt;/max-idle-seconds&gt;
+    &lt;eviction-policy&gt;LFU&lt;/eviction-policy&gt;
+    &lt;invalidate-on-change&gt;true&lt;/invalidate-on-change&gt;
+    &lt;in-memory-format&gt;OBJECT&lt;/in-memory-format&gt;
+  &lt;/near-cache&gt;
+
+  &lt;license-key&gt;ENTERPRISE_KEY&lt;/license-key&gt;
+
+
+&lt;/hazelcast-client&gt;</value>
   </data>
-  <data name="hazelcast_delay" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\hazelcast-delay.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  <data name="hazelcast_delay" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd"
+           xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+    &lt;group&gt;
+        &lt;name&gt;dev&lt;/name&gt;
+        &lt;password&gt;dev-pass&lt;/password&gt;
+    &lt;/group&gt;
+    &lt;management-center enabled="false"&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
+    &lt;network&gt;
+        &lt;port auto-increment="true" port-count="100"&gt;5701&lt;/port&gt;
+        &lt;outbound-ports&gt;
+            &lt;!--
+            Allowed port range when connecting to other nodes.
+            0 or * means use system provided port.
+            --&gt;
+            &lt;ports&gt;0&lt;/ports&gt;
+        &lt;/outbound-ports&gt;
+        &lt;join&gt;
+            &lt;multicast enabled="true"&gt;
+                &lt;multicast-group&gt;224.7.7.7&lt;/multicast-group&gt;
+                &lt;multicast-port&gt;54327&lt;/multicast-port&gt;
+            &lt;/multicast&gt;
+            &lt;tcp-ip enabled="false"&gt;
+                &lt;interface&gt;127.0.0.1&lt;/interface&gt;
+            &lt;/tcp-ip&gt;
+        &lt;/join&gt;
+        &lt;public-address&gt;127.0.0.1&lt;/public-address&gt;
+
+    &lt;/network&gt;
+    &lt;security enabled="true"&gt;
+        &lt;client-permissions&gt;
+            &lt;all-permissions principal="dev"/&gt;
+        &lt;/client-permissions&gt;
+        &lt;security-interceptors&gt;
+            &lt;interceptor class-name="com.hazelcast.security.DelaySecurityInterceptor"/&gt;
+        &lt;/security-interceptors&gt;
+    &lt;/security&gt;
+&lt;/hazelcast&gt;</value>
   </data>
-  <data name="hazelcast_ssl" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\hazelcast-ssl.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;iso-8859-1</value>
+  <data name="hazelcast_ipv6" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd"
+           xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;group&gt;
+    &lt;name&gt;dev&lt;/name&gt;
+    &lt;password&gt;dev-pass&lt;/password&gt;
+  &lt;/group&gt;
+  &lt;management-center enabled="false"&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
+  &lt;network&gt;
+    &lt;port auto-increment="true" port-count="100"&gt;5701&lt;/port&gt;
+    &lt;outbound-ports&gt;
+      &lt;!--
+            Allowed port range when connecting to other nodes.
+            0 or * means use system provided port.
+            --&gt;
+      &lt;ports&gt;0&lt;/ports&gt;
+    &lt;/outbound-ports&gt;
+    &lt;join&gt;
+      &lt;multicast enabled="true"&gt;
+        &lt;multicast-group&gt;FF02:0:0:0:0:0:0:1&lt;/multicast-group&gt;
+        &lt;multicast-port&gt;54327&lt;/multicast-port&gt;
+      &lt;/multicast&gt;
+      &lt;tcp-ip enabled="false" /&gt;
+    &lt;/join&gt;
+    &lt;public-address&gt;PUBLIC_IP&lt;/public-address&gt;
+  &lt;/network&gt;
+&lt;/hazelcast&gt;</value>
+  </data>
+  <data name="hazelcast_ssl" xml:space="preserve">
+    <value>&lt;hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd"
+           xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+    &lt;group&gt;
+        &lt;name&gt;dev&lt;/name&gt;
+        &lt;password&gt;dev-pass&lt;/password&gt;
+    &lt;/group&gt;
+    &lt;management-center enabled="false"&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
+    &lt;network&gt;
+        &lt;port auto-increment="true" port-count="100"&gt;5701&lt;/port&gt;
+        &lt;outbound-ports&gt;
+            &lt;!--
+            Allowed port range when connecting to other nodes.
+            0 or * means use system provided port.
+            --&gt;
+            &lt;ports&gt;0&lt;/ports&gt;
+        &lt;/outbound-ports&gt;
+        &lt;join&gt;
+            &lt;multicast enabled="true"&gt;
+                &lt;multicast-group&gt;224.7.7.7&lt;/multicast-group&gt;
+                &lt;multicast-port&gt;54327&lt;/multicast-port&gt;
+            &lt;/multicast&gt;
+            &lt;tcp-ip enabled="false"&gt;
+                &lt;interface&gt;127.0.0.1&lt;/interface&gt;
+            &lt;/tcp-ip&gt;
+        &lt;/join&gt;
+        &lt;public-address&gt;127.0.0.1&lt;/public-address&gt;
+        &lt;ssl enabled="true"&gt;
+            &lt;factory-class-name&gt;
+                com.hazelcast.nio.ssl.ClasspathSSLContextFactory
+            &lt;/factory-class-name&gt;
+            &lt;properties&gt;
+                &lt;property name="keyStore"&gt;com/hazelcast/nio/ssl-mutual-auth/server1.keystore&lt;/property&gt;
+                &lt;property name="keyStorePassword"&gt;password&lt;/property&gt;
+                &lt;!--
+                &lt;property name="trustStore"&gt;com/hazelcast/nio/ssl-mutual-auth/server1.truststore&lt;/property&gt;
+                &lt;property name="trustStorePassword"&gt;password&lt;/property&gt;
+                &lt;property name="trustManagerAlgorithm"&gt;SunX509&lt;/property&gt;
+                --&gt;
+                &lt;property name="keyManagerAlgorithm"&gt;SunX509&lt;/property&gt;
+                &lt;property name="protocol"&gt;TLS&lt;/property&gt;
+            &lt;/properties&gt;
+        &lt;/ssl&gt;
+    &lt;/network&gt;
+
+&lt;/hazelcast&gt;</value>
   </data>
 </root>

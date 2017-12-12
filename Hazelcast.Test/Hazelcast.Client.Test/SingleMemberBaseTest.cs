@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
         protected IHazelcastInstance Client { get; private set; }
         protected RemoteController.Client RemoteController { get; private set; }
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void SetupCluster()
         {
             RemoteController = CreateRemoteController();
@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Test
             Client = CreateClient();
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void ShutdownRemoteController()
         {
             HazelcastClient.ShutdownAll();

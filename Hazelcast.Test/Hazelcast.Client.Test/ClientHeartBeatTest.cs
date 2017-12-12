@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Test
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", "1000");
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void RestoreEnvironmentVariables()
         {
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.timeout", null);

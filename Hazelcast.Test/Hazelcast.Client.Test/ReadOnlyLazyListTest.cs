@@ -30,7 +30,7 @@ namespace Hazelcast.Client.Test
         public void Init()
         {
             _ss = new SerializationServiceBuilder().Build();
-            var dataList = new List<IData>{_ss.ToData(0), _ss.ToData(1), _ss.ToData(2), _ss.ToData(3), _ss.ToData(4)};
+            var dataList = new List<IData> {_ss.ToData(0), _ss.ToData(1), _ss.ToData(2), _ss.ToData(3), _ss.ToData(4)};
             testList = new ReadOnlyLazyList<int>(dataList, _ss);
         }
 
@@ -96,35 +96,34 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public virtual void TestListAdd()
+        [Test]
+        public void TestListAdd()
         {
-            testList.Add(4);
+            Assert.Throws<NotSupportedException>(() => { testList.Add(4); });
         }
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public virtual void TestListRemove()
+        [Test]
+        public void TestListRemove()
         {
-            testList.Remove(4);
+            Assert.Throws<NotSupportedException>(() => { testList.Remove(4); });
         }
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public virtual void TestListRemoveAt()
+        [Test]
+        public void TestListRemoveAt()
         {
-            testList.RemoveAt(4);
+            Assert.Throws<NotSupportedException>(() => { testList.RemoveAt(4); });
         }
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public virtual void TestListClear()
+        [Test]
+        public void TestListClear()
         {
-            testList.Clear();
+            Assert.Throws<NotSupportedException>(() => { testList.Clear(); });
         }
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public virtual void TestListInsert()
+        [Test]
+        public void TestListInsert()
         {
-            testList.Insert(1, 1);
+            Assert.Throws<NotSupportedException>(() => { testList.Insert(1, 1); });
         }
-
     }
 }

@@ -81,83 +81,122 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestAdd()
+        [Test]
+		public void TestAdd()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.Add(4);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestRemove()
+        [Test]
+		public void TestRemove()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.Remove(4);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestClear()
+        [Test]
+		public void TestClear()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.Clear();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestExceptWith()
+        [Test]
+		public void TestExceptWith()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.ExceptWith(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestIntersectWith()
+        [Test]
+		public void TestIntersectWith()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.IntersectWith(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestIsProperSubsetOf()
+        [Test]
+		public void TestIsProperSubsetOf()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.IsProperSubsetOf(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestIsProperSupersetOf()
+        [Test]
+		public void TestIsProperSupersetOf()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.IsProperSupersetOf(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestIsSubsetOf()
+        [Test]
+		public void TestIsSubsetOf()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.IsSubsetOf(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestIsSupersetOf()
+        [Test]
+		public void TestIsSupersetOf()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.IsSupersetOf(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestOverlaps()
+        [Test]
+		public void TestOverlaps()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.Overlaps(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestSymmetricExceptWith()
+        [Test]
+		public void TestSymmetricExceptWith()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.SymmetricExceptWith(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestUnionWith()
+        [Test]
+		public void TestUnionWith()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.UnionWith(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
-        public void TestSetEquals()
+        [Test]
+		public void TestSetEquals()
+		{
+			Assert.Throws<NotSupportedException>(() =>
         {
             testSet.SetEquals(null);
-        }
+        });
+		}
 
     }
 }

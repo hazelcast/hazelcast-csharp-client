@@ -14,7 +14,7 @@ namespace Hazelcast.Client.Test
     [Category("enterprise")]
     public class ClientSSLTest : HazelcastTestSupport
     {
-        private const string ValidCertName = "Hazelcast, Inc";
+        private const string ValidCertName = "foo.bar.com";
 
         protected IHazelcastInstance Client { get; private set; }
         protected RemoteController.Client RemoteController { get; private set; }
@@ -55,17 +55,23 @@ namespace Hazelcast.Client.Test
         }
 
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
-        public void TestMapSSLEnabled_validateName_invalideName()
+        [Test]
+		public void TestMapSSLEnabled_validateName_invalideName()
+		{
+			Assert.Throws<InvalidOperationException>(() =>
         {
             Setup(true, false, true, "Invalid Cert Name");
-        }
+        });
+		}
  
-        [Test, ExpectedException(typeof(InvalidOperationException))]
-        public void TestMapSSLEnabled_validateChain_DoNotValidateName_invalideName()
+        [Test]
+		public void TestMapSSLEnabled_validateChain_DoNotValidateName_invalideName()
+		{
+			Assert.Throws<InvalidOperationException>(() =>
         {
             Setup(true, true, false, "Invalid Cert Name");
-        }
+        });
+		}
  
         [Test]
         public void TestMapSSLEnabled_DoNotValidateName()

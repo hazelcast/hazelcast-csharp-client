@@ -1,251 +1,52 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{20F910E8-C1BC-4D44-8460-351FDF0DD54D}</ProjectGuid>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\shared.project.props" />
+  <PropertyGroup Label="build">
+    <AssemblyName>Hazelcast.Test</AssemblyName>
+    <title>Hazelcast .Net Client Test</title>
+    <Description>Hazelcast .Net Client Unit Tests Project</Description>
+    <TargetFrameworks>net40;netcoreapp2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>
-    </RootNamespace>
-    <AssemblyName>Hazelcast.Test</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-    <keyfile>..\hazelcast.snk</keyfile>
     <LangVersion>4</LangVersion>
+    <RootNamespace/>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>
-    </StartupObject>
-  </PropertyGroup>
-  <PropertyGroup>
-    <MSBuildCommunityTasksPath>..\.build</MSBuildCommunityTasksPath>
-  </PropertyGroup>
-  <PropertyGroup>
+  <PropertyGroup Label="sign">
     <SignAssembly>true</SignAssembly>
+    <PublicSign>true</PublicSign>
+    <AssemblyOriginatorKeyFile>..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>../hazelcast.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
-  <Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
+  <ItemGroup Condition="'$(TargetFramework)'=='netcoreapp2.0'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
+  </ItemGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework">
-      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <None Remove="Resources\hazelcast-client-full.xml" />
+    <None Remove="Resources\hazelcast-delay.xml" />
+    <None Remove="Resources\hazelcast-ssl.xml" />
+    <None Remove="Resources\hazelcast.xml" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="Thrift">
       <HintPath>..\packages\ApacheThrift.0.9.3\lib\Thrift.dll</HintPath>
     </Reference>
+    <PackageReference Include="NUnit" Version="3.9.0" />
+    <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="ClientQueuePerformanceTest.cs" />
-    <Compile Include="Hazelcast.Client.Model\CustomComparator.cs" />
-    <Compile Include="Hazelcast.Client.Model\IdentifiedEntryProcessor.cs" />
-    <Compile Include="Hazelcast.Client.Model\IdentifiedFactory.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\BufferPoolTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\AggregatorAndProjectionTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientExecutorServiceTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientLongRunningTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientReplicateMapTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientSSLTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientTxnNonSmartTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\EntryEventTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\EnvironmentUtilTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\PagingPredicateTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\PagingPredicateWithPrimitiveTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\PartitionPredicateTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\PredicateExtTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\PredicatesTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ReadOnlyLazyListTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ReadOnlyLazySetTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\SingleMemberBaseTest.cs" />
-    <Compile Include="Hazelcast.Remote\Cluster.cs" />
-    <Compile Include="Hazelcast.Client.Model\Item.cs" />
-    <Compile Include="Hazelcast.Client.Test.Config\ClientXmlConfigTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Config\MatchingPointConfigPatternMatcherTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\ByteArrayObjectDataInputTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\ByteArrayObjectDataOutputTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\ClassAndFieldDefinitionTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\ConstantSerializerTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\KitchenSinkDataSerializable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\KitchenSinkPortable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\ByteArrayDataSerializable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\ComplexDataSerializable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\DataDataSerializable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\DataInputOutputTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\InnerPortable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\InvalidRawDataPortable2.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\InvalidRawDataPortable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\MainPortable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\MorphingPortable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\MorphingPortableReaderTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\NamedPortableV2.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\NamedPortable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\ObjectCarryingPortable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\PortableClassVersionTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\PortableSerializationTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\SampleIdentifiedDataSerializable.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\SerializationConcurrencyTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\SerializationServiceBuilderTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\StringSerializationTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\TestSerializationConstants.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientAtomicLongTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientClusterServiceTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientCountDownLatchTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientDistributedObjectTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientHeartBeatTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientIdGeneratorTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientIpV6AddressTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientListTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientLockTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientLoggingTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientMapTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientMultiMapTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Config\ClientNearCacheConfigTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientNearCacheTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientPartitionTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientQueueTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientReconnectionTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientRetryTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientRingbufferTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientSemaphoreTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientSetTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientShutdownTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientTopicTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientTxnListTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientTxnMapTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientTxnMultiMapTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientTxnQueueTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientTxnSetTest.cs" />
-    <Compile Include="Hazelcast.Client.Test.Config\ClientXmlTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ClientTxnTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\HazelcastTestSupport.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\ClientCustomSerializationTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\HazelcastClientFactory.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\DataSerializableType.cs" />
-    <Compile Include="Hazelcast.Client.Test\GenericEvent.cs" />
-    <Compile Include="Hazelcast.Client.Test.Serialization\RawDataPortable.cs" />
-    <Compile Include="Hazelcast.Client.Test\NonSmartRoutingTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\ProcessUtil.cs" />
-    <Compile Include="Hazelcast.Client.Test\SettableFutureTest.cs" />
-    <Compile Include="Hazelcast.Client.Test\TestSupport.cs" />
-    <Compile Include="Hazelcast.Remote\Lang.cs" />
-    <Compile Include="Hazelcast.Remote\Member.cs" />
-    <Compile Include="Hazelcast.Remote\Response.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
+    <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Hazelcast.Remote\RemoteController.cs" />
-    <Compile Include="Hazelcast.Remote\ServerException.cs" />
-    <Compile Include="SimpleMapTestFromClient.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj">
-      <Project>{CD084DC3-3FD9-4BC2-B9A2-66711F2B3F61}</Project>
-      <Name>Hazelcast.Net</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="bin\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
+    <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Hazelcast.Test</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\hazelcast-client-full.xml" />
+    <Folder Include="Resources\" />
   </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 4.5</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hazelcast.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hazelcast-ssl.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\hazelcast-delay.xml" />
-  </ItemGroup>
-  <PropertyGroup>
-    <NUnitResultsFile>$(OutputPath)nunit-result.xml</NUnitResultsFile>
-  </PropertyGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="RunTests">
-    <CreateItem Include="$(OutputPath)*.Test.dll">
-      <Output TaskParameter="Include" ItemName="TestAssembly" />
-    </CreateItem>
-    <NUnit Assemblies="@(TestAssembly)" ToolPath="C:\Program Files (x86)\NUnit 2.6.3\bin" OutputXmlFile="$(NUnitResultsFile)" />
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

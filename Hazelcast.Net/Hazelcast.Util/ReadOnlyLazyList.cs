@@ -19,7 +19,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
-    public class ReadOnlyLazyList<T> : IList<T>
+    internal class ReadOnlyLazyList<T> : IList<T>
     {
         private readonly IList<IData> list;
         private readonly ISerializationService serializationService;

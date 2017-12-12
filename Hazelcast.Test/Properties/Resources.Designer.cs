@@ -19,7 +19,7 @@ namespace Hazelcast.Test {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -62,18 +62,16 @@ namespace Hazelcast.Test {
         
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-        ///&lt;!--
-        ///  ~ Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
-        ///  ~
-        ///  ~ Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
-        ///  ~ you may not use this file except in compliance with the License.
-        ///  ~ You may obtain a copy of the License at
-        ///  ~
-        ///  ~ http://www.apache.org/licenses/LICENSE-2.0
-        ///  ~
-        ///  ~ Unless required by applicable law or agreed to in writing, software
-        ///  ~ distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-        ///  ~ WITHOUT WARRANTI [rest of string was truncated]&quot;;.
+        ///&lt;hazelcast xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd&quot;
+        ///           xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;
+        ///    &lt;group&gt;
+        ///        &lt;name&gt;dev&lt;/name&gt;
+        ///        &lt;password&gt;dev-pass&lt;/password&gt;
+        ///    &lt;/group&gt;
+        ///    &lt;management-center enabled=&quot;false&quot;&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
+        ///    &lt;network&gt;
+        ///        &lt;port auto-increment=&quot;true&quot; port-count=&quot;10 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string hazelcast {
             get {
@@ -83,19 +81,20 @@ namespace Hazelcast.Test {
         
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;hazelcast-client xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.8.xsd&quot;
+        ///                  xmlns=&quot;http://www.hazelcast.com/schema/client-config&quot;
+        ///                  xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;
         ///
-        ///&lt;!--
-        ///  ~ Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
-        ///  ~
-        ///  ~ Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
-        ///  ~ you may not use this file except in compliance with the License.
-        ///  ~ You may obtain a copy of the License at
-        ///  ~
-        ///  ~ http://www.apache.org/licenses/LICENSE-2.0
-        ///  ~
-        ///  ~ Unless required by applicable law or agreed to in writing, software
-        ///  ~ distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-        ///  ~ WITHOUT WARRANT [rest of string was truncated]&quot;;.
+        ///  &lt;group&gt;
+        ///    &lt;name&gt;dev&lt;/name&gt;
+        ///    &lt;password&gt;dev-pass&lt;/password&gt;
+        ///  &lt;/group&gt;
+        ///
+        ///  &lt;network&gt;
+        ///    &lt;cluster-members&gt;
+        ///      &lt;address&gt;127.0.0.1&lt;/address&gt;
+        ///      &lt;address&gt;127.0.0.2&lt;/address&gt;
+        ///    &lt;/cluster-m [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string hazelcast_config_full {
             get {
@@ -105,18 +104,16 @@ namespace Hazelcast.Test {
         
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-        ///&lt;!--
-        ///  ~ Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
-        ///  ~
-        ///  ~ Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
-        ///  ~ you may not use this file except in compliance with the License.
-        ///  ~ You may obtain a copy of the License at
-        ///  ~
-        ///  ~ http://www.apache.org/licenses/LICENSE-2.0
-        ///  ~
-        ///  ~ Unless required by applicable law or agreed to in writing, software
-        ///  ~ distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-        ///  ~ WITHOUT WARRANTI [rest of string was truncated]&quot;;.
+        ///&lt;hazelcast xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd&quot;
+        ///           xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;
+        ///    &lt;group&gt;
+        ///        &lt;name&gt;dev&lt;/name&gt;
+        ///        &lt;password&gt;dev-pass&lt;/password&gt;
+        ///    &lt;/group&gt;
+        ///    &lt;management-center enabled=&quot;false&quot;&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
+        ///    &lt;network&gt;
+        ///        &lt;port auto-increment=&quot;true&quot; port-count=&quot;10 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string hazelcast_delay {
             get {
@@ -126,18 +123,37 @@ namespace Hazelcast.Test {
         
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-        ///&lt;!--
-        ///  ~ Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
-        ///  ~
-        ///  ~ Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
-        ///  ~ you may not use this file except in compliance with the License.
-        ///  ~ You may obtain a copy of the License at
-        ///  ~
-        ///  ~ http://www.apache.org/licenses/LICENSE-2.0
-        ///  ~
-        ///  ~ Unless required by applicable law or agreed to in writing, software
-        ///  ~ distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-        ///  ~ WITHOUT WARRANTI [rest of string was truncated]&quot;;.
+        ///
+        ///&lt;hazelcast xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd&quot;
+        ///           xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;
+        ///  &lt;group&gt;
+        ///    &lt;name&gt;dev&lt;/name&gt;
+        ///    &lt;password&gt;dev-pass&lt;/password&gt;
+        ///  &lt;/group&gt;
+        ///  &lt;management-center enabled=&quot;false&quot;&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
+        ///  &lt;network&gt;
+        ///    &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
+        ///    &lt;outbound- [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string hazelcast_ipv6 {
+            get {
+                return ResourceManager.GetString("hazelcast_ipv6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;hazelcast xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd&quot;
+        ///           xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;
+        ///    &lt;group&gt;
+        ///        &lt;name&gt;dev&lt;/name&gt;
+        ///        &lt;password&gt;dev-pass&lt;/password&gt;
+        ///    &lt;/group&gt;
+        ///    &lt;management-center enabled=&quot;false&quot;&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
+        ///    &lt;network&gt;
+        ///        &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
+        ///        &lt;outbound-ports&gt; [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string hazelcast_ssl {
             get {

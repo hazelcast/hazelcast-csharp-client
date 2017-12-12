@@ -79,12 +79,14 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        [ExpectedException(typeof (ArgumentException))]
         public void TestInitNeg()
         {
-            var semInit = Client.GetSemaphore(TestSupport.RandomString());
-            semInit.Init(-2);
-            semInit.Destroy();
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var semInit = Client.GetSemaphore(TestSupport.RandomString());
+                semInit.Init(-2);
+                semInit.Destroy();
+            });
         }
 
         /// <exception cref="System.Exception"></exception>

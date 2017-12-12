@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+    <metadata>
+        <id>Hazelcast.Net</id>
+        <title>$title$</title>
+        <version>$version$</version>
+        <authors>Hazelcast</authors>
+        <owners>Hazelcast</owners>
+        <projectUrl>https://github.com/hazelcast/hazelcast-csharp-client</projectUrl>
+        <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+        <iconUrl>https://s3.amazonaws.com/hazelcast/logo/HazelcastLogo-Orange_Dark_NoText_200w.png</iconUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>$description$</description>
+        <summary>$summary$</summary>
+        <copyright>$copyright$</copyright>
+        <tags>hazelcast cache imdg big-data in-memory datagrid clustering scalabilty distributed caching</tags>
+        <dependencies>
+            <group targetFramework=".NETFramework4.0" />
+            <group targetFramework=".NETStandard2.0" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="bin\Release\net40\Hazelcast.Net.dll" target="lib\net40\Hazelcast.Net.dll" />
+        <file src="bin\Release\net40\Hazelcast.Net.xml" target="lib\net40\Hazelcast.Net.xml" />
+        <file src="bin\Release\netstandard2.0\Hazelcast.Net.dll" target="lib\netstandard2.0\Hazelcast.Net.dll" />
+        <file src="bin\Release\netstandard2.0\Hazelcast.Net.xml" target="lib\netstandard2.0\Hazelcast.Net.xml" />
+    </files>
+</package>

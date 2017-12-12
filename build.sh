@@ -1,4 +1,15 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+cleanup() {
+    echo "cleanup is being performed."
+    if [ "x${serverPid}" != "x" ]
+    then
+        echo "Killing server with pid ${serverPid}"
+        kill -9 ${serverPid}
+    fi
+}
+
+trap cleanup EXIT
 
 HZ_VERSION="3.9.1"
 
@@ -11,6 +22,9 @@ RELEASE_REPO="http://repo1.maven.apache.org/maven2"
 ENTERPRISE_RELEASE_REPO="https://repository-hazelcast-l337.forge.cloudbees.com/release/"
 ENTERPRISE_SNAPSHOT_REPO="https://repository-hazelcast-l337.forge.cloudbees.com/snapshot/"
 
+#DOTNET BUILD
+
+dotnet build Hazelcast.Test/Hazelcast.Test.csproj --configuration Release --framework netcoreapp2.0
 
 if [[ ${HZ_VERSION} == *-SNAPSHOT ]]
 then
@@ -73,4 +87,9 @@ else
     echo "Starting Remote Controller ... oss ..."
 fi
 
-java -Dhazelcast.enterprise.license.key=${HAZELCAST_ENTERPRISE_KEY} -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main
+java -Dhazelcast.enterprise.license.key=${HAZELCAST_ENTERPRISE_KEY} -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main>rc_stdout.log 2>rc_stderr.log &
+serverPid=$!
+
+sleep 15
+
+dotnet test Hazelcast.Test/Hazelcast.Test.csproj -c Release --no-build --no-restore -f netcoreapp2.0 -v n

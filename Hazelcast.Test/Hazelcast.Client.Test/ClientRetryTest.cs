@@ -51,8 +51,10 @@ namespace Hazelcast.Client.Test
             config.GetNetworkConfig().SetRedoOperation(true);
         }
 
-        [Test, ExpectedException(typeof (InvalidOperationException))]
-        public void ClientTransactionRetry()
+        [Test]
+		public void entTransactionRetry()
+		{
+			Assert.Throws<InvalidOperationException>(() =>
         {
             var member = _remoteController.startMember(_cluster.Id);
             var client = CreateClient();
@@ -80,9 +82,10 @@ namespace Hazelcast.Client.Test
             {
                 context.RollbackTransaction();
             }
-        }
+        });
+		}
 
-        [Test, Ignore] // https://github.com/hazelcast/hazelcast-csharp-client/issues/28
+        [Test, Ignore("https://github.com/hazelcast/hazelcast-csharp-client/issues/28")]
         public void TestRetryAsyncRequest()
         {
             var member = _remoteController.startMember(_cluster.Id);

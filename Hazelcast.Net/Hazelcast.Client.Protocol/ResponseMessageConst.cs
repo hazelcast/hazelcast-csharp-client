@@ -19,7 +19,7 @@ namespace Hazelcast.Client.Protocol
     ///     Message type ids of responses in client protocol. They also used to bind a request to a response inside Request
     ///     annotation.
     /// </remarks>
-    public sealed class ResponseMessageConst
+    internal sealed class ResponseMessageConst
     {
         public const int Void = 100;
         public const int Boolean = 101;

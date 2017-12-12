@@ -31,17 +31,20 @@ namespace Hazelcast.Client.Test.Config
             config.GetNearCacheConfig("com.hazelcast");
         }
 
-        [Test, ExpectedException(typeof (ConfigurationException))]
-        public virtual void TestDuplicateConfig()
+        [Test]
+        public void TestDuplicateConfig()
         {
-            var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast.*ap");
-            var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast*map");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig1);
-            config.AddNearCacheConfig(nearCacheConfig2);
+            Assert.Throws<ConfigurationException>(() =>
+            {
+                var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast.*ap");
+                var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast*map");
+                var config = new ClientConfig();
+                config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
+                config.AddNearCacheConfig(nearCacheConfig1);
+                config.AddNearCacheConfig(nearCacheConfig2);
 
-            config.GetNearCacheConfig("com.hazelcast.map");
+                config.GetNearCacheConfig("com.hazelcast.map");
+            });
         }
 
         [Test]

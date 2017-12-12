@@ -51,47 +51,62 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsInstanceOf<DataSerializableBasicType>(obj);
         }
 
-        [Test, ExpectedException(typeof (ArgumentException))]
+        [Test]
         public void TestAddDataSerializableFactoryClassWithBadId()
         {
-            var config = new SerializationConfig();
-            config.AddDataSerializableFactoryClass(-1, typeof (MyDataSerializableFactory));
-            var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.AddDataSerializableFactoryClass(-1, typeof(MyDataSerializableFactory));
+                var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            });
         }
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestAddDataSerializableFactoryClassWithDuplicateId()
+        [Test]
+		public void TestAddDataSerializableFactoryClassWithDuplicateId()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationConfig();
             config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
             config.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (HazelcastSerializationException))]
-        public void TestAddDataSerializableFactoryClassWithNoEmptyConstructor()
+        [Test]
+		public void TestAddDataSerializableFactoryClassWithNoEmptyConstructor()
+		{
+			Assert.Throws<HazelcastSerializationException>(() =>
         {
             var config = new SerializationConfig();
             config.AddDataSerializableFactoryClass(1, typeof (SerializableFactory));
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestAddDataSerializableFactoryWitDuplicateId()
+        [Test]
+		public void TestAddDataSerializableFactoryWitDuplicateId()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationConfig();
             config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
             var service = new SerializationServiceBuilder().SetConfig(config).
                 AddDataSerializableFactory(1, new MyDataSerializableFactory()).Build();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestAddDataSerializableFactoryWithBadId()
+        [Test]
+		public void TestAddDataSerializableFactoryWithBadId()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationConfig();
             config.AddDataSerializableFactory(-1, new MyDataSerializableFactory());
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        }
+        });
+		}
 
         [Test]
         public void TestAddPortableFactory()
@@ -123,61 +138,79 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsInstanceOf<KitchenSinkPortable>(obj);
         }
 
-        [Test, ExpectedException(typeof (HazelcastSerializationException))]
-        public void TestAddPortableFactoryClassWhichDoesNotImplementPortableFactory()
+        [Test]
+		public void TestAddPortableFactoryClassWhichDoesNotImplementPortableFactory()
+		{
+			Assert.Throws<HazelcastSerializationException>(() =>
         {
             var config = new SerializationConfig();
             config.AddPortableFactoryClass(1, typeof (SerializableFactory));
 
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestAddPortableFactoryClassWithBadId()
+        [Test]
+		public void TestAddPortableFactoryClassWithBadId()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationConfig();
             config.AddPortableFactoryClass(-1, typeof (KitchenSinkPortableFactory));
 
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestAddPortableFactoryClassWithDuplicateId()
+        [Test]
+		public void TestAddPortableFactoryClassWithDuplicateId()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationConfig();
             config.AddPortableFactory(1, new KitchenSinkPortableFactory());
             config.AddPortableFactoryClass(1, typeof (KitchenSinkPortableFactory));
 
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (MissingMethodException))]
-        public void TestAddPortableFactoryClassWithNoEmptyConstructor()
+        [Test]
+		public void TestAddPortableFactoryClassWithNoEmptyConstructor()
+		{
+			Assert.Throws<MissingMethodException>(() =>
         {
             var config = new SerializationConfig();
             config.AddPortableFactoryClass(1, typeof (PortableFactory));
 
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestAddPortableFactoryWithBadId()
+        [Test]
+		public void TestAddPortableFactoryWithBadId()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationConfig();
             config.AddPortableFactory(-1, new KitchenSinkPortableFactory());
 
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestAddPortableFactoryWithDuplicateId()
+        [Test]
+		public void TestAddPortableFactoryWithDuplicateId()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationConfig();
             config.AddPortableFactory(1, new KitchenSinkPortableFactory());
 
             var service = new SerializationServiceBuilder().AddPortableFactory(1,
                 new KitchenSinkPortableFactory()).SetConfig(config).Build();
-        }
+        });
+		}
 
         public void TestHazelcastInstanceAware()
         {

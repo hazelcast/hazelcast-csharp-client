@@ -145,7 +145,7 @@ namespace Hazelcast.Test
             }
         }
 
-        private static void Main(string[] args)
+        private static void Main2(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "Info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");

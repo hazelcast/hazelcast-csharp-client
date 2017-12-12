@@ -227,11 +227,14 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(10, map.Aggregate(Aggregators.Count("enabled[any]")));
         }
 
-        [Test, ExpectedException(typeof(ArgumentException))]
-        public void testAggregate_NullPredicate()
+        [Test]
+		public void testAggregate_NullPredicate()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             map.Aggregate(Aggregators.LongSum("id"), null);
-        }
+        });
+		}
 
         //Projection tests
         [Test]
@@ -253,22 +256,31 @@ namespace Hazelcast.Client.Test
             CollectionAssert.AreEquivalent(expected, result);
         }
 
-        [Test, ExpectedException(typeof(ArgumentException))]
-        public void test_NullProjection()
+        [Test]
+		public void test_NullProjection()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             map.Project<long>(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(ArgumentException))]
-        public void testProjection_NullPredicate()
+        [Test]
+		public void testProjection_NullPredicate()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             map.Project<long>(new SingleAttributeProjection("id"), null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(ArgumentException))]
-        public void test_NullPredicateAndProjection()
+        [Test]
+		public void test_NullPredicateAndProjection()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             map.Project<long>(null, null);
-        }
+        });
+		}
     }
 }

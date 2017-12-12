@@ -215,11 +215,14 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(value, "value1");
         }
 
-        [Test, ExpectedException(typeof(NullReferenceException))]
-        public void TestPut_null()
+        [Test]
+		public void TestPut_null()
+		{
+			Assert.Throws<NullReferenceException>(() =>
         {
             ReplicatedMap.Put(1, null);
-        }
+        });
+		}
 
         [Test]
         public void TestPut_ttl()
