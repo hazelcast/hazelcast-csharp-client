@@ -77,17 +77,23 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(Capacity, _ringBuffer.Capacity());
         }
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestExcessiveMaxCount()
+        [Test]
+		public void TestExcessiveMaxCount()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             _ringBuffer.ReadManyAsync(0, 0, ClientRingbufferProxy<string>.MaxBatchSize + 1);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestExcessiveMinCount()
+        [Test]
+		public void TestExcessiveMinCount()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             _ringBuffer.ReadManyAsync(0, Capacity + 1, Capacity + 1);
-        }
+        });
+		}
 
         [Test]
         public void TestHeadSequence()
@@ -100,17 +106,23 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(Capacity, _ringBuffer.HeadSequence());
         }
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestInvalidReadCount()
+        [Test]
+		public void TestInvalidReadCount()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             _ringBuffer.ReadManyAsync(0, 2, 1);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestInvalidSequence()
+        [Test]
+		public void TestInvalidSequence()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             _ringBuffer.ReadOne(-1);
-        }
+        });
+		}
 
         [Test]
         public void TestReadManyAsync()
@@ -167,15 +179,18 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(1, _ringBuffer.Size());
         }
 
-        [Test, ExpectedException(typeof (StaleSequenceException))]
-        public void TestStaleSequence()
+        [Test]
+		public void TestStaleSequence()
+		{
+			Assert.Throws<StaleSequenceException>(() =>
         {
             for (var k = 0; k < Capacity*2; k++)
             {
                 _ringBuffer.Add("foo");
             }
             _ringBuffer.ReadOne(_ringBuffer.HeadSequence() - 1);
-        }
+        });
+		}
 
         [Test]
         public void TestTailSequence()

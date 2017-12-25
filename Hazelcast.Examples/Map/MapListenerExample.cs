@@ -33,10 +33,15 @@ namespace Hazelcast.Examples.Map
 
             var map = client.GetMap<string, string>("listener-example");
 
-            var cdown = new CountdownEvent(2);
+            var cdown = new CountdownEvent(3);
             map.AddEntryListener(new EntryAdapter<string, string>
             {
                 Added = e =>
+                {
+                    Console.WriteLine("Key '{0}' with value ' {1}' was added.", e.GetKey(), e.GetValue());
+                    cdown.Signal();
+                },
+                Updated = e =>
                 {
                     Console.WriteLine("Key '{0}' with value ' {1}' was added.", e.GetKey(), e.GetValue());
                     cdown.Signal();
@@ -48,7 +53,8 @@ namespace Hazelcast.Examples.Map
                 }
             }, true);
 
-            map.Put("key", "value");
+            map.Put("key", "value");//first put
+            map.Put("key", "valueNew");//makes update
             map.Remove("key");
 
             cdown.Wait();

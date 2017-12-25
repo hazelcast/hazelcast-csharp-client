@@ -140,12 +140,16 @@ namespace Hazelcast.Client.Test
             map.AddIndex("name", true);
         }
 
-        [Test, Ignore, ExpectedException(typeof(HazelcastException))]
+        [Ignore("not currently possible to test this")]
+        [Test]
         public void TestAddInterceptor()
         {
-            //TODO: not currently possible to test this
+            Assert.Throws<HazelcastException>(() =>
+            {
+                //TODO: not currently possible to test this
 
-            var id = map.AddInterceptor(new Interceptor());
+                var id = map.AddInterceptor(new Interceptor());
+            });
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -331,14 +335,17 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(result, map.Get(key));
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
-        public virtual void TestExecuteOnKey_nullKey()
+        [Test]
+        public void TestExecuteOnKey_nullKey()
         {
-            FillMap();
-            const string key = null;
-            const string value = "value10";
-            var entryProcessor = new IdentifiedEntryProcessor(value);
-            map.ExecuteOnKey(key, entryProcessor);
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                FillMap();
+                const string key = null;
+                const string value = "value10";
+                var entryProcessor = new IdentifiedEntryProcessor(value);
+                map.ExecuteOnKey(key, entryProcessor);
+            });
         }
 
         [Test]
@@ -356,14 +363,17 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
-        public virtual void TestExecuteOnKeys_keysNotNull()
+        [Test]
+        public void TestExecuteOnKeys_keysNotNull()
         {
-            FillMap();
-            ISet<object> keys = null;
-            const string value = "valueX";
-            var entryProcessor = new IdentifiedEntryProcessor(value);
-            map.ExecuteOnKeys(keys, entryProcessor);
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                FillMap();
+                ISet<object> keys = null;
+                const string value = "valueX";
+                var entryProcessor = new IdentifiedEntryProcessor(value);
+                map.ExecuteOnKeys(keys, entryProcessor);
+            });
         }
 
         [Test]
@@ -418,16 +428,18 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(task.Result, map.Get(key));
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
-        public virtual void TestSubmitToKey_nullKey()
+        [Test]
+        public void TestSubmitToKey_nullKey()
         {
-            const string key = null;
-            const string value = "value10";
-            var entryProcessor = new IdentifiedEntryProcessor(value);
-            map.SubmitToKey(key, entryProcessor);
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                const string key = null;
+                const string value = "value10";
+                var entryProcessor = new IdentifiedEntryProcessor(value);
+                map.SubmitToKey(key, entryProcessor);
+            });
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
         public virtual void TestForceUnlock()
         {
@@ -600,26 +612,26 @@ namespace Hazelcast.Client.Test
 
             map.Put("key1", "value1");
             Assert.IsTrue(listener.GetLatch(EntryEventType.Added).WaitOne(TimeSpan.FromSeconds(10)));
-            
+
             map.Put("key1", "value2");
             Assert.IsTrue(listener.GetLatch(EntryEventType.Updated).WaitOne(TimeSpan.FromSeconds(10)));
-            
+
             map.Remove("key1");
             Assert.IsTrue(listener.GetLatch(EntryEventType.Removed).WaitOne(TimeSpan.FromSeconds(10)));
-            
+
             map.Put("key1", "value2");
             map.Clear();
             Assert.IsTrue(listener.GetLatch(EntryEventType.ClearAll).WaitOne(TimeSpan.FromSeconds(10)));
-            
+
             map.Put("key1", "value2");
             map.EvictAll();
             Assert.IsTrue(listener.GetLatch(EntryEventType.EvictAll).WaitOne(TimeSpan.FromSeconds(10)));
-            
+
             map.Put("key2", "value2");
             map.Evict("key2");
             Assert.IsTrue(listener.GetLatch(EntryEventType.Evicted).WaitOne(TimeSpan.FromSeconds(10)));
-            
-            map.Put("key3", "value2", 1l, TimeUnit.Seconds);
+
+            map.Put("key3", "value2", 1L, TimeUnit.Seconds);
             Assert.IsTrue(listener.GetLatch(EntryEventType.Expired).WaitOne(TimeSpan.FromSeconds(10)));
 
             Assert.IsTrue(map.RemoveEntryListener(reg1));

@@ -110,8 +110,10 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(ss.ReadObject<object>(input));
         }
 
-        [Test, ExpectedException(typeof (HazelcastSerializationException))]
-        public void TestNullValue_When_ValueType()
+        [Test]
+		public void TestNullValue_When_ValueType()
+		{
+			Assert.Throws<HazelcastSerializationException>(() =>
         {
             var ss = new SerializationServiceBuilder()
                .Build();
@@ -121,6 +123,7 @@ namespace Hazelcast.Client.Test.Serialization
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
             ss.ReadObject<int>(input);
+			});
         }
 
         [Test]

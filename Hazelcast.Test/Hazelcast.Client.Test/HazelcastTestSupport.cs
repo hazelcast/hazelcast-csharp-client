@@ -64,7 +64,7 @@ namespace Hazelcast.Client.Test
         }
 
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void ShutdownAllClients()
         {
             HazelcastClient.ShutdownAll();

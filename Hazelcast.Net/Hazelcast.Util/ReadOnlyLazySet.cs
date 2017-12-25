@@ -18,7 +18,7 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
-    public class ReadOnlyLazySet<T> : ISet<T>
+    internal class ReadOnlyLazySet<T> : ISet<T>
     {
         //builtin data list
         private readonly IList<IData> list;

@@ -153,6 +153,7 @@ namespace Hazelcast.Core
     /// An entry event is fired after the changes that affects a specific entry e.g. <see cref="EntryEventType.Added"/>,
     ///  <see cref="EntryEventType.Updated"/>
     /// </li>
+    /// </lu>
     /// An implementer of this interface should extend one of the sub-interfaces of it to receive a corresponding event.
     /// </remarks>
     /// <seealso cref="EntryAddedListener{TKey,TValue}"/>

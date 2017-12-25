@@ -23,36 +23,48 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientTxnTest : SingleMemberBaseTest
     {
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestNegativeDurability()
+        [Test]
+		public void TestNegativeDurability()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             var options = new TransactionOptions();
             options.SetDurability(-1);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (ArgumentException))]
-        public void TestNegativeTimeout()
+        [Test]
+		public void TestNegativeTimeout()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             var options = new TransactionOptions();
             options.SetTimeout(-1, TimeUnit.Milliseconds);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (TransactionNotActiveException))]
-        public void TestTxnNotActi()
+        [Test]
+		public void TestTxnNotActi()
+		{
+			Assert.Throws<TransactionNotActiveException>(() =>
         {
             var context = Client.NewTransactionContext();
             context.CommitTransaction();
             context.CommitTransaction();
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof (TransactionNotActiveException))]
-        public void TestTxnTimeOut()
+        [Test]
+		public void TestTxnTimeOut()
+		{
+			Assert.Throws<TransactionNotActiveException>(() =>
         {
             var options = new TransactionOptions();
             options.SetTimeout(100, TimeUnit.Milliseconds);
             var context = Client.NewTransactionContext(options);
             Thread.Sleep(500);
             context.CommitTransaction();
-        }
+        });
+		}
     }
 }

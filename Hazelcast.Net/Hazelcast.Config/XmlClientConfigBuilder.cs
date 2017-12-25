@@ -15,10 +15,10 @@
 using System;
 using System.IO;
 using System.Xml;
+using Hazelcast.Client.Properties;
 using Hazelcast.Logging;
 using Hazelcast.Security;
 using Hazelcast.Util;
-using Properties;
 
 namespace Hazelcast.Config
 {

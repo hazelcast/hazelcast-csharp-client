@@ -12,7 +12,22 @@ IF -%2-==-- (
 	set EXLUDE_PARAM=
 )
 
-set HZ_VERSION=3.9
+IF -%3-==-- (
+	set FRAMEWORK=net40
+) ELSE (
+	IF -%3-==-net40- (
+		set FRAMEWORK=net40
+	) ELSE (
+		IF -%3-==-netcore- (
+			set FRAMEWORK=netstandard2.0
+		) ELSE (
+			echo "Invalide .Net Framework type, use net40 or netcore"
+			exit /b
+		)
+	)
+)
+
+set HZ_VERSION=3.9.1
 set HAZELCAST_TEST_VERSION=%HZ_VERSION%
 set HAZELCAST_VERSION=%HZ_VERSION%
 set HAZELCAST_ENTERPRISE_VERSION=%HZ_VERSION%
@@ -35,9 +50,17 @@ echo %COVERAGE%
 echo %SERVER_TYPE% 
 echo %CP_PARAM%
 echo Exclude param: %EXCLUDE_PARAM%
-
+echo Framework : %FRAMEWORK%
 echo Starting build...
-msbuild Build.proj /p:Configuration=Release /p:Platform="Any CPU" /target:Build
+
+REM nuget locals all -clear
+nuget restore
+
+if -%FRAMEWORK%-==-net40- (
+	msbuild Hazelcast.Net.sln /p:Configuration=Release /p:Platform="Any CPU" /p:TargetFramework=net40 /target:Restore;Build
+) ELSE (
+	msbuild Hazelcast.Test\Hazelcast.Test.csproj /p:Configuration=Release /p:TargetFramework=netcoreapp2.0 /target:Restore;Build
+)
 
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
@@ -71,12 +94,21 @@ if exist errorlevel (
 )
 
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
-IF %COVERAGE%==--coverage (
-  echo Running Unit Tests with coverage...
-  dotcover analyse /TargetExecutable="packages\NUnit.Runners.2.6.4\tools\nunit-console.exe" /TargetArguments="/labels /xml:"console-text.xml" Hazelcast.Test/bin/Release/Hazelcast.Test.dll" /TargetWorkingDir=. /Output=Coverage.html /ReportType=HTML %EXCLUDE_PARAM%
+
+set TEST_PARAMETERS="Hazelcast.Test/bin/Release/net40/Hazelcast.Test.dll" --labels=All --result=console-text.xml;format=nunit2 --framework=v4.0
+if -%FRAMEWORK%-==-net40- (
+	
+	IF %COVERAGE%==--coverage (
+	  echo Running Unit Tests with coverage...
+	  dotcover analyse /TargetExecutable="packages\NUnit.ConsoleRunner.3.7.0\tools\nunit3-console.exe" /TargetArguments="%TEST_PARAMETERS%" /Filter=-:Hazelcast.Test /TargetWorkingDir=. /Output=Coverage.html /ReportType=HTML %EXCLUDE_PARAM%
+	) ELSE (
+	  echo Running Unit Tests...
+	  packages\NUnit.ConsoleRunner.3.7.0\tools\nunit3-console.exe %TEST_PARAMETERS%
+	)
+
 ) ELSE (
-  echo Running Unit Tests...
-  packages\NUnit.Runners.2.6.4\tools\nunit-console /labels /xml:"console-text.xml" "Hazelcast.Test/bin/Release/Hazelcast.Test.dll" /noshadow %EXCLUDE_PARAM% 
+	REM dotnet core test
+	dotnet test Hazelcast.Test\Hazelcast.Test.csproj -c Release --no-build --no-restore -f netcoreapp2.0 -v n
 )
 taskkill /T /F /FI "WINDOWTITLE eq hazelcast-remote-controller"
 popd

@@ -136,7 +136,7 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(l.IsLocked());
             Assert.IsTrue(l.IsLockedByCurrentThread());
             Assert.AreEqual(1, l.GetLockCount());
-            Assert.IsTrue(l.GetRemainingLeaseTime() > 1000*30);
+            Assert.IsTrue(l.GetRemainingLeaseTime() > 1000 * 30);
 
             var latch2 = new CountdownEvent(1);
 
@@ -145,7 +145,7 @@ namespace Hazelcast.Client.Test
                 Assert.IsTrue(l.IsLocked());
                 Assert.IsFalse(l.IsLockedByCurrentThread());
                 Assert.AreEqual(1, l.GetLockCount());
-                Assert.IsTrue(l.GetRemainingLeaseTime() > 1000*30);
+                Assert.IsTrue(l.GetRemainingLeaseTime() > 1000 * 30);
                 latch2.Signal();
             });
             t2.Start();
@@ -213,10 +213,9 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        [ExpectedException(typeof (SynchronizationLockException))]
         public void TestUnlockBeforeLock_ShouldThrowException()
         {
-            l.Unlock();
+            Assert.Throws<SynchronizationLockException>(() => { l.Unlock(); });
         }
     }
 }

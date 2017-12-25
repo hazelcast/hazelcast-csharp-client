@@ -18,7 +18,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.IO.Serialization
 {
-    public sealed class HeapData : IData
+    internal sealed class HeapData : IData
     {
         internal const int PartitionHashOffset = 0;
         internal const int TypeOffset = 4;

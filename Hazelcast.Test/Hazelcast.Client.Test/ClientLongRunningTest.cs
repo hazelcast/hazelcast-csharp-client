@@ -21,7 +21,7 @@ namespace Hazelcast.Client.Test
 {
     [TestFixture]
     [Category("enterprise")]
-    [Ignore]
+    [Ignore("")]
     public class ClientLongRunningTest : SingleMemberBaseTest
     {
         private static IMap<object, object> map;
