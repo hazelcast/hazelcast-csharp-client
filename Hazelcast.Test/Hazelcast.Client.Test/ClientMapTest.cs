@@ -1116,7 +1116,9 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual("value1", enumerator.Current);
         }
 
-        private class ListenerImpl<TKey, TValue> : IEntryListener<TKey, TValue>,
+        private class ListenerImpl<TKey, TValue> : EntryAddedListener<TKey, TValue>,
+            EntryUpdatedListener<TKey, TValue>, EntryRemovedListener<TKey, TValue>, EntryEvictedListener<TKey, TValue>,
+            MapClearedListener, MapEvictedListener,
             EntryMergedListener<TKey, TValue>, EntryExpiredListener<TKey, TValue>
         {
             private readonly ConcurrentDictionary<EntryEventType, AutoResetEvent> latches;
