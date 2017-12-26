@@ -440,27 +440,27 @@ namespace Hazelcast.Client.Proxy
             Invoke(request);
         }
 
-        public string AddEntryListener(MapListener listener, TKey key, bool includeValue)
+        public string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue)
         {
-            return AddEntryListener(listener, key, includeValue);
+            return AddEntryListener((MapListener)listener, key, includeValue);
         }
 
-        public string AddEntryListener(MapListener listener, IPredicate predicate, TKey key, bool includeValue)
+        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key, bool includeValue)
         {
-            return AddEntryListener(listener, predicate, key, includeValue);
+            return AddEntryListener((MapListener)listener, predicate, key, includeValue);
         }
 
-        public string AddEntryListener(MapListener listener, IPredicate predicate, bool includeValue)
+        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, bool includeValue)
         {
-            return AddEntryListener(listener, predicate, includeValue);
-        }
-
-        public string AddEntryListener(MapListener listener, bool includeValue)
-        {
-            return AddEntryListener(listener, includeValue);
+            return AddEntryListener((MapListener)listener, predicate, includeValue);
         }
 
         public string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue)
+        {
+            return AddEntryListener((MapListener)listener, includeValue);
+        }
+
+        public string AddEntryListener(MapListener listener, bool includeValue)
         {
             var listenerAdapter =
                 EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
@@ -477,9 +477,9 @@ namespace Hazelcast.Client.Proxy
                 id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey keyK, bool includeValue)
+        public string AddEntryListener(MapListener listener, TKey key, bool includeValue)
         {
-            var keyData = ToData(keyK);
+            var keyData = ToData(key);
             var listenerAdapter =
                 EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
             var listenerFlags = (int) listenerAdapter.ListenerFlags;
@@ -487,18 +487,16 @@ namespace Hazelcast.Client.Proxy
                 MapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, listenerFlags, IsSmart());
             DistributedEventHandler handler =
                 eventData => MapAddEntryListenerToKeyCodec.AbstractEventHandler.Handle(eventData,
-                    (key, value, oldValue, mergingValue, type, uuid, entries) =>
+                    (key_, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
-                        OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
+                        OnEntryEvent(key_, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                     });
 
             return RegisterListener(request, message => MapAddEntryListenerToKeyCodec.DecodeResponse(message).response,
                 id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate,
-            TKey key,
-            bool includeValue)
+        public string AddEntryListener(MapListener listener, IPredicate predicate, TKey key, bool includeValue)
         {
             var keyData = ToData(key);
             var predicateData = ToData(predicate);
@@ -517,7 +515,7 @@ namespace Hazelcast.Client.Proxy
                 id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, bool includeValue)
+        public string AddEntryListener(MapListener listener, IPredicate predicate, bool includeValue)
         {
             var predicateData = ToData(predicate);
             var listenerAdapter =
