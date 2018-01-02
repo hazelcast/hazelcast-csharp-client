@@ -247,6 +247,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.8")]
         public void TestNearCacheInvalidationOnRemoveAllPredicate()
         {
             var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());

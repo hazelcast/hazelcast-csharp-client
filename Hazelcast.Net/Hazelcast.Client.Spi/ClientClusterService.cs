@@ -31,7 +31,7 @@ using Hazelcast.Net.Ext;
 using Hazelcast.Security;
 using Hazelcast.Util;
 using ICredentials = Hazelcast.Security.ICredentials;
-
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     /// <summary>

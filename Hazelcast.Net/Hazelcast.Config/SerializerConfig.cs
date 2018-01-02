@@ -18,6 +18,9 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Config
 {
+    /// <summary>
+    /// Contains the serialization configuration for a particular class.
+    /// </summary>
     public class SerializerConfig
     {
         private string _className;
@@ -82,6 +85,7 @@ namespace Hazelcast.Config
             return this;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var sb = new StringBuilder("SerializerConfig{");

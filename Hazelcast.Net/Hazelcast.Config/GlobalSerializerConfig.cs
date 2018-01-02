@@ -17,6 +17,9 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Config
 {
+    /// <summary>
+    /// Contains the configuration for global serializer.
+    /// </summary>
     public class GlobalSerializerConfig
     {
         private string _className;
@@ -57,6 +60,7 @@ namespace Hazelcast.Config
             return _overrideClrSerialization;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return string.Format("ClassName: {0}, Implementation: {1}, OverrideClrSerialization: {2}",

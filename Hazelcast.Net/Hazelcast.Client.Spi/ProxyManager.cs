@@ -28,6 +28,7 @@ using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     internal sealed class ProxyManager

@@ -17,8 +17,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
+    /// <summary>
+    /// Executor service for Hazelcast clients.
+    /// </summary>
     public interface IClientExecutionService
     {
         Task Schedule(Action command, long delay, TimeUnit unit);

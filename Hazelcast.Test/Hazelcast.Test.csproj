@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <LangVersion>4</LangVersion>
-    <RootNamespace/>
+    <RootNamespace />
   </PropertyGroup>
   <PropertyGroup Label="sign">
     <SignAssembly>true</SignAssembly>
@@ -20,7 +20,6 @@
     <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Resources\hazelcast-client-full.xml" />
     <None Remove="Resources\hazelcast-delay.xml" />
     <None Remove="Resources\hazelcast-ssl.xml" />
     <None Remove="Resources\hazelcast.xml" />
@@ -45,8 +44,5 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Hazelcast.Test</CustomToolNamespace>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
   </ItemGroup>
 </Project>

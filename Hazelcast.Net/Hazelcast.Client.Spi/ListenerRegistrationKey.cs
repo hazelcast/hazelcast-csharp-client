@@ -15,6 +15,7 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Util;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     internal class ListenerRegistrationKey

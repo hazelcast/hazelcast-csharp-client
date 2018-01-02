@@ -15,6 +15,7 @@
 using System;
 using System.Text;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     [Serializable]

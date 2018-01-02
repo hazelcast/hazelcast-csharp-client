@@ -15,7 +15,8 @@
 using Hazelcast.Config;
 using Hazelcast.IO.Serialization;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal sealed class ClientContext
     {

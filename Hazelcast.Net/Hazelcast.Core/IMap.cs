@@ -926,13 +926,13 @@ namespace Hazelcast.Core
         TValue PutIfAbsent(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
         /// <summary>
-        ///     Same as <see cref="IMap{K, V}.Put(TKey, TValue, long, TimeUnit)" />
+        ///     Same as <see cref="IMap{TKey, TValue}.Put(TKey, TValue, long, TimeUnit)" />
         ///     but MapStore, if defined,
         ///     will not be called to store/persist the entry.  If ttl is 0, then
         ///     the entry lives forever.
         /// </summary>
         /// <remarks>
-        ///     Same as <see cref="IMap{K, V}.Put(TKey, TValue, long, TimeUnit)" />
+        ///     Same as <see cref="IMap{TKey, TValue}.Put(TKey, TValue, long, TimeUnit)" />
         ///     but MapStore, if defined,
         ///     will not be called to store/persist the entry.  If ttl is 0, then
         ///     the entry lives forever.

@@ -19,7 +19,7 @@ namespace Hazelcast.Client.Protocol
     ///     Message type ids of event responses in client protocol. They also used to bind a request to event inside Request
     ///     annotation.
     /// </remarks>
-    public sealed class EventMessageConst
+    internal sealed class EventMessageConst
     {
         public const int EventMember = 200;
         public const int EventMemberList = 201;

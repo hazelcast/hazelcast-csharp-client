@@ -14,6 +14,7 @@
 
 using System;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     internal delegate ClientProxy ClientProxyFactory(Type type, string id);

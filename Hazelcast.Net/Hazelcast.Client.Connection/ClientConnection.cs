@@ -70,9 +70,6 @@ namespace Hazelcast.Client.Connection
 
             var isa = address.GetInetSocketAddress();
             var socketOptions = clientNetworkConfig.GetSocketOptions();
-            var socketFactory = socketOptions.GetSocketFactory() ?? new DefaultSocketFactory();
-            _clientSocket = socketFactory.CreateSocket();
-
             try
             {
                 _clientSocket = new Socket(isa.AddressFamily, SocketType.Stream, ProtocolType.Tcp);

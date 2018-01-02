@@ -27,7 +27,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client
 {
-    public enum ClientNearCacheType
+    internal enum ClientNearCacheType
     {
         Map,
         ReplicatedMap

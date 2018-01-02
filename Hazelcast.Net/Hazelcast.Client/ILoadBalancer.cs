@@ -32,6 +32,11 @@ namespace Hazelcast.Client
     /// </summary>
     public interface ILoadBalancer
     {
+        /// <summary>
+        /// Initializes the LoadBalancer.
+        /// </summary>
+        /// <param name="cluster">the Cluster this LoadBalancer uses to select members from</param>
+        /// <param name="config">the ClientConfig</param>
         void Init(ICluster cluster, ClientConfig config);
 
         /// <summary>Returns the next member to route to</summary>

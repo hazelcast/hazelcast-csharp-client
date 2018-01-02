@@ -19,6 +19,9 @@ using Hazelcast.IO;
 
 namespace Hazelcast.Config
 {
+    /// <summary>
+    /// Contains the configuration for interceptor socket.
+    /// </summary>
     public class SocketInterceptorConfig
     {
         private string _className;
@@ -142,6 +145,7 @@ namespace Hazelcast.Config
             return this;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var sb = new StringBuilder();
