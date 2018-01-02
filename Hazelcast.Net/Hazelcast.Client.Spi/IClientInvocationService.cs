@@ -17,6 +17,7 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Util;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     /// <summary>

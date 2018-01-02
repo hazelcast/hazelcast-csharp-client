@@ -25,6 +25,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
+    [Category("3.9")]
     public class PartitionPredicateTest : SingleMemberBaseTest
     {
         private const int ItemsPerPartition = 10;

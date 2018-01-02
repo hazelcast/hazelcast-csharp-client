@@ -24,6 +24,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
+    [Category("3.8")]
     public class AggregatorAndProjectionTest : SingleMemberBaseTest
     {
         internal static IMap<object, object> map;

@@ -14,8 +14,15 @@
 
 using Hazelcast.IO;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
+    /// <summary>
+    /// Partition service for Hazelcast clients.
+    /// </summary>
+    /// <remarks>
+    /// Allows to retrieve information about the partition count, partition owner or partition ID of a key.
+    /// </remarks>
     public interface IClientPartitionService
     {
         int GetPartitionCount();

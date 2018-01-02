@@ -1005,6 +1005,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.8")]
         public void TestRemoveAllWithPredicate()
         {
             FillMap();

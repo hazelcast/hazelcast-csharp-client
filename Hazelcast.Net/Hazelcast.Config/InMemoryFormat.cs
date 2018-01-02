@@ -17,8 +17,14 @@ namespace Hazelcast.Config
     /// <summary>Storage format type of values stored in cluster</summary>
     public enum InMemoryFormat
     {
+        /// <summary>
+        /// Binary format
+        /// </summary>
         Binary,
+
+        /// <summary>
+        /// Object data
+        /// </summary>
         Object
-        // Offheap
     }
 }

@@ -16,7 +16,8 @@ using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.IO;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     /// <author>mdogan 5/16/13</author>
     public interface IClientClusterService

@@ -79,6 +79,7 @@ namespace Hazelcast.Config
             return GetProperty(CertificateName);
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var sb = new StringBuilder();

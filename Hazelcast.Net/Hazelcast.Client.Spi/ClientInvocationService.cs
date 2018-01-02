@@ -28,7 +28,8 @@ using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener
     {

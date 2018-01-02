@@ -15,6 +15,7 @@
 using System;
 using System.Threading.Tasks;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     public interface IFuture<T>

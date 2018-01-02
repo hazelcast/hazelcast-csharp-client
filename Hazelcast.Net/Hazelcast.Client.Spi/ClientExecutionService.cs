@@ -18,7 +18,8 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal sealed class ClientExecutionService : IClientExecutionService
     {

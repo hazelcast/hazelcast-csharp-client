@@ -21,6 +21,9 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Config
 {
+    /// <summary>
+    /// Main configuration to setup a Hazelcast Client.
+    /// </summary>
     public class ClientConfig
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConfig));
@@ -79,30 +82,55 @@ namespace Hazelcast.Config
 
         private SerializationConfig _serializationConfig = new SerializationConfig();
 
+        /// <summary>
+        /// Helper method to add a new ListenerConfig.
+        /// </summary>
+        /// <param name="listenerConfig">ListnerConfig</param>
+        /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig AddListenerConfig(ListenerConfig listenerConfig)
         {
             GetListenerConfigs().Add(listenerConfig);
             return this;
         }
 
+        /// <summary>
+        /// Helper method to add a new NearCacheConfig.
+        /// </summary>
+        /// <param name="nearCacheConfig">NearCacheConfig</param>
+        /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig AddNearCacheConfig(NearCacheConfig nearCacheConfig)
         {
             _nearCacheConfigMap.Add(nearCacheConfig.GetName(), nearCacheConfig);
             return this;
         }
 
+        /// <summary>
+        /// Helper method to add a new NearCacheConfig.
+        /// </summary>
+        /// <param name="mapName">name of the IMap / ICache that Near Cache config will be applied to</param>
+        /// <param name="nearCacheConfig">NearCacheConfig</param>
+        /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig AddNearCacheConfig(string mapName, NearCacheConfig nearCacheConfig)
         {
             _nearCacheConfigMap.Add(mapName, nearCacheConfig);
             return this;
         }
 
+        /// <summary>
+        /// Helper method to add a new <see cref="ProxyFactoryConfig"/>.
+        /// </summary>
+        /// <param name="proxyFactoryConfig">ProxyFactoryConfig</param>
+        /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig AddProxyFactoryConfig(ProxyFactoryConfig proxyFactoryConfig)
         {
             _proxyFactoryConfigs.Add(proxyFactoryConfig);
             return this;
         }
 
+        /// <summary>
+        /// Gets <see cref="ICredentials"/>.
+        /// </summary>
+        /// <returns>Credentials</returns>
         public virtual ICredentials GetCredentials()
         {
             if (_credentials == null)
@@ -113,113 +141,191 @@ namespace Hazelcast.Config
             return _credentials;
         }
 
+        /// <summary>
+        /// Gets pool-size for internal ExecutorService which handles responses etc.
+        /// </summary>
         public virtual int GetExecutorPoolSize()
         {
             return _executorPoolSize;
         }
 
+        /// <summary>
+        /// Gets <see cref="GroupConfig"/>.
+        /// </summary>
+        /// <returns><see cref="GroupConfig"/></returns>
         public virtual GroupConfig GetGroupConfig()
         {
             return _groupConfig;
         }
 
+        /// <summary>
+        /// Gets list of configured <see cref="ListenerConfig"/>.
+        /// </summary>
+        /// <returns>list of configured <see cref="ListenerConfig"/></returns>
         public virtual IList<ListenerConfig> GetListenerConfigs()
         {
             return _listenerConfigs;
         }
 
+        /// <summary>
+        /// Gets <see cref="IManagedContext"/>.
+        /// </summary>
+        /// <returns><see cref="IManagedContext"/></returns>
         public virtual IManagedContext GetManagedContext()
         {
             return _managedContext;
         }
 
+        /// <summary>
+        /// Gets <see cref="NearCacheConfig"/>.
+        /// </summary>
+        /// <param name="mapName">name of map</param>
+        /// <returns><see cref="NearCacheConfig"/></returns>
         public virtual NearCacheConfig GetNearCacheConfig(string mapName)
         {
             return LookupByPattern(_nearCacheConfigMap, mapName);
         }
 
+        /// <summary>
+        /// Gets dictionary of all configured <see cref="NearCacheConfig"/>'s with the name key and configuration as the value.
+        /// </summary>
+        /// <returns>Dictionary of NearCacheConfig</returns>
         public virtual IDictionary<string, NearCacheConfig> GetNearCacheConfigMap()
         {
             return _nearCacheConfigMap;
         }
 
-        //public virtual ClientSecurityConfig GetSecurityConfig()
-        //{
-        //    return securityConfig;
-        //}
-
-        //public virtual void SetSecurityConfig(ClientSecurityConfig securityConfig)
-        //{
-        //    this.securityConfig = securityConfig;
-        //}
-
+        /// <summary>
+        /// Gets <see cref="ClientNetworkConfig"/>.
+        /// </summary>
+        /// <returns><see cref="ClientNetworkConfig"/></returns>
         public virtual ClientNetworkConfig GetNetworkConfig()
         {
             return _networkConfig;
         }
 
+        /// <summary>
+        /// Gets <see cref="ProxyFactoryConfig"/>.
+        /// </summary>
+        /// <returns><see cref="ProxyFactoryConfig"/></returns>
         public virtual IList<ProxyFactoryConfig> GetProxyFactoryConfigs()
         {
             return _proxyFactoryConfigs;
         }
 
+        /// <summary>
+        /// Gets <see cref="SerializationConfig"/>.
+        /// </summary>
+        /// <returns><see cref="SerializationConfig"/></returns>
         public virtual SerializationConfig GetSerializationConfig()
         {
             return _serializationConfig;
         }
 
-        public void SetConfigPatternMatcher(IConfigPatternMatcher matchingPointConfigPatternMatcher)
+        /// <summary>
+        /// Sets <see cref="IConfigPatternMatcher"/>.
+        /// </summary>
+        /// <param name="matchingPointConfigPatternMatcher"><see cref="IConfigPatternMatcher"/></param>
+        /// <returns><see cref="SerializationConfig"/></returns>
+        public ClientConfig SetConfigPatternMatcher(IConfigPatternMatcher matchingPointConfigPatternMatcher)
         {
             _configPatternMatcher = matchingPointConfigPatternMatcher;
+            return this;
         }
 
+        /// <summary>
+        /// Sets <see cref="ICredentials"/> object.
+        /// </summary>
+        /// <param name="credentials"><see cref="ICredentials"/> to be set</param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig SetCredentials(ICredentials credentials)
         {
             _credentials = credentials;
             return this;
         }
 
+        /// <summary>
+        /// Sets pool-size for internal ExecutorService which handles responses etc.
+        /// </summary>
+        /// <param name="executorPoolSize">executor pool size</param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig SetExecutorPoolSize(int executorPoolSize)
         {
             _executorPoolSize = executorPoolSize;
             return this;
         }
 
+        /// <summary>
+        /// Sets <see cref="GroupConfig"/> object.
+        /// </summary>
+        /// <param name="groupConfig"><see cref="GroupConfig"/> to be set</param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig SetGroupConfig(GroupConfig groupConfig)
         {
             _groupConfig = groupConfig;
             return this;
         }
 
+        /// <summary>
+        /// Sets <see cref="ListenerConfig"/> object.
+        /// </summary>
+        /// <param name="listenerConfigs"><see cref="ListenerConfig"/> to be set</param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig SetListenerConfigs(IList<ListenerConfig> listenerConfigs)
         {
             _listenerConfigs = listenerConfigs;
             return this;
         }
 
+        /// <summary>
+        /// Sets <see cref="IManagedContext"/> object.
+        /// </summary>
+        /// <param name="managedContext"><see cref="IManagedContext"/></param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig SetManagedContext(IManagedContext managedContext)
         {
             _managedContext = managedContext;
             return this;
         }
 
+        /// <summary>
+        /// Sets all near cache configs.
+        /// </summary>
+        /// <param name="nearCacheConfigMap">Dictionary of map-name to NearCacheConfig</param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig SetNearCacheConfigMap(IDictionary<string, NearCacheConfig> nearCacheConfigMap)
         {
             _nearCacheConfigMap = nearCacheConfigMap;
             return this;
         }
 
-        public virtual void SetNetworkConfig(ClientNetworkConfig networkConfig)
+        /// <summary>
+        /// Sets <see cref="ClientNetworkConfig"/>.
+        /// </summary>
+        /// <param name="networkConfig"><see cref="ClientNetworkConfig"/></param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
+        public virtual ClientConfig SetNetworkConfig(ClientNetworkConfig networkConfig)
         {
             _networkConfig = networkConfig;
+            return this;
         }
 
+        /// <summary>
+        /// Sets <see cref="ProxyFactoryConfig"/>.
+        /// </summary>
+        /// <param name="proxyFactoryConfigs"><see cref="ProxyFactoryConfig"/></param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig SetProxyFactoryConfigs(IList<ProxyFactoryConfig> proxyFactoryConfigs)
         {
             _proxyFactoryConfigs = proxyFactoryConfigs;
             return this;
         }
 
+        /// <summary>
+        /// Sets <see cref="SerializationConfig"/>.
+        /// </summary>
+        /// <param name="serializationConfig"><see cref="SerializationConfig"/></param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig SetSerializationConfig(SerializationConfig serializationConfig)
         {
             _serializationConfig = serializationConfig;
