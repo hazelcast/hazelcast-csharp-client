@@ -1,8 +1,9 @@
-# Hazelcast C# Client
+# Hazelcast .Net Client
 
-C#/.NET client implementation for [Hazelcast](https://github.com/hazelcast/hazelcast), the open source in-memory data grid. A comparison of features supported by the C# Client vs the Java client can be found [here](http://docs.hazelcast.org/docs/3.5/manual/html/javaclient.html).
+C# client implementation for [Hazelcast](https://github.com/hazelcast/hazelcast), the open source in-memory data grid. 
+A comparison of features supported by various clients can be found [here](https://hazelcast.org/clients-languages/).
 
-C# client is implemented using the [Hazelcast Open Binary Client Protocol](http://hazelcast.org/docs/protocol/1.0-developer-preview/client-protocol.html) 
+It is implemented using the [Hazelcast Open Binary Client Protocol](http://hazelcast.org/docs/protocol/1.0-developer-preview/client-protocol.html) 
 
 ## Getting Started
 
@@ -13,6 +14,10 @@ You can install .net client from [NuGet Repo](https://www.nuget.org/packages/Haz
 ```
 PM> Install-Package Hazelcast.Net
 ```
+
+### Net Core and .Net Framework Support
+
+Hazelcast .Net Client supports .Net Framemork 4.0+ and Net Core 2.0+ . 
 
 ### Configuration
 You can configure the Hazelcast .Net Client via API or XML. To start the client, you can pass a configuration or leave it empty to use default values.
