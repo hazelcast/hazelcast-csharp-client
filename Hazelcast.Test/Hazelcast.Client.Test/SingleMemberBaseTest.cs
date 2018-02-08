@@ -22,15 +22,18 @@ namespace Hazelcast.Client.Test
     public class SingleMemberBaseTest : HazelcastTestSupport
     {
         protected IHazelcastInstance Client { get; private set; }
+        protected HazelcastClient ClientInternal { get; private set; }
         protected RemoteController.Client RemoteController { get; private set; }
+        protected Cluster HzCluster { get; private set; }
 
         [OneTimeSetUp]
         public void SetupCluster()
         {
             RemoteController = CreateRemoteController();
-            var cluster = CreateCluster(RemoteController, GetServerConfig());
-            RemoteController.startMember(cluster.Id);
+            HzCluster = CreateCluster(RemoteController, GetServerConfig());
+            RemoteController.startMember(HzCluster.Id);
             Client = CreateClient();
+            ClientInternal = ((HazelcastClientProxy) Client).GetClient();
         }
 
         [OneTimeTearDown]

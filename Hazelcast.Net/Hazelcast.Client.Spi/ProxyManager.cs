@@ -63,11 +63,10 @@ namespace Hazelcast.Client.Spi
             var isSmart = _client.GetClientConfig().GetNetworkConfig().IsSmartRouting();
             var request = ClientAddDistributedObjectListenerCodec.EncodeRequest(isSmart);
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(),
+                _client.GetClientPartitionService(), _client.GetInvocationService(),
+                _client.GetClientExecutionService(),
+                _client.GetListenerService(), _client.GetNearCacheManager(),
                 this, _client.GetClientConfig());
-            //EventHandler<PortableDistributedObjectEvent> eventHandler = new _EventHandler_211(this, listener);
-
             DistributedEventHandler eventHandler = delegate(IClientMessage message)
             {
                 ClientAddDistributedObjectListenerCodec.AbstractEventHandler.Handle(message,
@@ -94,7 +93,6 @@ namespace Hazelcast.Client.Spi
                         }
                     });
             };
-            //PortableDistributedObjectEvent
             return context.GetListenerService().RegisterListener(request, 
                 m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response,
                 ClientRemoveDistributedObjectListenerCodec.EncodeRequest,
@@ -139,11 +137,9 @@ namespace Hazelcast.Client.Spi
                 InitializeWithRetry(proxy);
             }
 
-            proxy.SetContext(new ClientContext(_client.GetSerializationService(),
-                _client.GetClientClusterService(),
+            proxy.SetContext(new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(),
-                this, _client.GetClientConfig()));
+                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig()));
             proxy.PostInit();
 
             _proxies.AddOrUpdate(ns, n => proxy, (n, oldProxy) => {
@@ -245,7 +241,7 @@ namespace Hazelcast.Client.Spi
         {
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(), this, _client.GetClientConfig());
+                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig());
             return context.GetListenerService().DeregisterListener(id, 
                 ClientRemoveDistributedObjectListenerCodec.EncodeRequest);
         }

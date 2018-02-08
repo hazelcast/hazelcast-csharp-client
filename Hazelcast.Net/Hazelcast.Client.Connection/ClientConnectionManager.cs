@@ -27,6 +27,7 @@ using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
+using Hazelcast.Net.Ext;
 using Hazelcast.Security;
 using Hazelcast.Util;
 
@@ -59,7 +60,7 @@ namespace Hazelcast.Client.Connection
 
         private readonly ISocketInterceptor _socketInterceptor;
         private CancellationTokenSource _heartbeatToken;
-        private volatile bool _live;
+        private readonly AtomicBoolean _live = new AtomicBoolean(false);
         private int _nextConnectionId;
 
         public ClientConnectionManager(HazelcastClient client)
@@ -82,20 +83,19 @@ namespace Hazelcast.Client.Connection
             }
             _socketInterceptor = null;
 
-            _heartbeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ??
+            _heartbeatTimeout = EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.timeout") ??
                                 _heartbeatTimeout;
-            _heartbeatInterval = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.interval") ??
+            _heartbeatInterval = EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.interval") ??
                                  _heartbeatInterval;
         }
 
         public void Start()
         {
-            if (_live)
+            if (!_live.CompareAndSet(false, true))
             {
                 return;
             }
-            _live = true;
-
+            
             //start Heartbeat
             _heartbeatToken = new CancellationTokenSource();
             _client.GetClientExecutionService().ScheduleWithFixedDelay(Heartbeat,
@@ -107,12 +107,11 @@ namespace Hazelcast.Client.Connection
 
         public void Shutdown()
         {
-            if (!_live)
+            if (!_live.CompareAndSet(true, false))
             {
                 return;
             }
 
-            _live = false;
             try
             {
                 _heartbeatToken.Cancel();
@@ -143,7 +142,7 @@ namespace Hazelcast.Client.Connection
 
         public bool Live
         {
-            get { return _live; }
+            get { return _live.Get(); }
         }
         
         public ICollection<ClientConnection> ActiveConnections
@@ -267,7 +266,7 @@ namespace Hazelcast.Client.Connection
         /// <exception cref="HazelcastException"></exception>
         private void CheckLive()
         {
-            if (!_live)
+            if (!_live.Get())
             {
                 throw new HazelcastException("ConnectionManager is not active");
             }
@@ -288,13 +287,13 @@ namespace Hazelcast.Client.Connection
             {
                 request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
                     usernamePasswordCr.GetPassword(), uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
             }
             else
             {
                 var data = ss.ToData(_credentials);
                 request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
             }
 
             IClientMessage response;
@@ -341,7 +340,7 @@ namespace Hazelcast.Client.Connection
 
         private void Heartbeat()
         {
-            if (!_live) return;
+            if (!_live.Get()) return;
 
             foreach (var connection in _activeConnections.Values)
             {

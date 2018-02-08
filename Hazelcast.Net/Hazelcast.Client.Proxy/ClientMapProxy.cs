@@ -31,14 +31,14 @@ namespace Hazelcast.Client.Proxy
     internal sealed class ClientMapProxy<TKey, TValue> : ClientProxy, IMap<TKey, TValue>
     {
         private readonly AtomicBoolean _nearCacheInitialized = new AtomicBoolean();
-        private volatile ClientNearCache _nearCache;
+        private volatile NearCache _nearCache;
         private ClientLockReferenceIdGenerator _lockReferenceIdGenerator;
 
         public ClientMapProxy(string serviceName, string name) : base(serviceName, name)
         {
         }
 
-        internal ClientNearCache NearCache
+        internal NearCache NearCache
         {
             get { return _nearCache; }
         }
@@ -90,7 +90,7 @@ namespace Hazelcast.Client.Proxy
                 var cached = _nearCache.Get(keyData);
                 if (cached != null)
                 {
-                    if (cached.Equals(ClientNearCache.NullObject))
+                    if (cached.Equals(NearCache.NullObject))
                     {
                         return false;
                     }
@@ -117,7 +117,7 @@ namespace Hazelcast.Client.Proxy
                 var cached = _nearCache.Get(keyData);
                 if (cached != null)
                 {
-                    if (cached.Equals(ClientNearCache.NullObject))
+                    if (cached.Equals(NearCache.NullObject))
                     {
                         return default(TValue);
                     }
@@ -182,7 +182,7 @@ namespace Hazelcast.Client.Proxy
                 {
                     var task = GetContext().GetExecutionService().Submit(() =>
                     {
-                        if (cached.Equals(ClientNearCache.NullObject))
+                        if (cached.Equals(NearCache.NullObject))
                         {
                             return default(TValue);
                         }
@@ -647,7 +647,7 @@ namespace Hazelcast.Client.Proxy
                     {
                         var keyData = kvp.Value[i];
                         var cached = _nearCache.Get(keyData);
-                        if (cached != null && cached != ClientNearCache.NullObject)
+                        if (cached != null && cached != NearCache.NullObject)
                         {
                             list.RemoveAt(i);
                             result.Add(ToObject<TKey>(keyData), (TValue) cached);
@@ -833,7 +833,7 @@ namespace Hazelcast.Client.Proxy
         {
             if (_nearCache != null)
             {
-                _nearCache.Destroy();
+                GetContext().GetNearCacheManager().DestroyNearCache(GetName());
             }
         }
 
@@ -847,7 +847,8 @@ namespace Hazelcast.Client.Proxy
                 {
                     return;
                 }
-                _nearCache = new ClientNearCache(GetName(), ClientNearCacheType.Map, GetContext(), nearCacheConfig);
+
+                _nearCache = GetContext().GetNearCacheManager().GetOrCreateNearCache(GetName(), nearCacheConfig);
             }
         }
 

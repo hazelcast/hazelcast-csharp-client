@@ -64,7 +64,9 @@ namespace Hazelcast.Client
         private readonly ISerializationService _serializationService;
         private readonly ConcurrentDictionary<string, object> _userContext;
         private readonly ClientLockReferenceIdGenerator _lockReferenceIdGenerator;
-
+        private readonly Statistics _statistics;
+        private readonly NearCacheManager _nearCacheManager;
+        
         private HazelcastClient(ClientConfig config)
         {
             _config = config;
@@ -100,6 +102,8 @@ namespace Hazelcast.Client
             _userContext = new ConcurrentDictionary<string, object>();
             _partitionService = new ClientPartitionService(this);
             _lockReferenceIdGenerator = new ClientLockReferenceIdGenerator();
+            _statistics = new Statistics(this);
+            _nearCacheManager = new NearCacheManager(this);
         }
 
         /// <inheritdoc />
@@ -388,11 +392,13 @@ namespace Hazelcast.Client
         {
             HazelcastClientProxy _out;
             Clients.TryRemove(_id, out _out);
+            _statistics.Destroy();
             _executionService.Shutdown();
             _partitionService.Stop();
             _connectionManager.Shutdown();
             _proxyManager.Destroy();
             _invocationService.Shutdown();
+            _nearCacheManager.Shutdown();
             _listenerService.Dispose();
             _serializationService.Destroy();
         }
@@ -442,6 +448,16 @@ namespace Hazelcast.Client
             return _lockReferenceIdGenerator;
         }
 
+        internal NearCacheManager GetNearCacheManager()
+        {
+            return _nearCacheManager;
+        }
+
+        internal Statistics GetStatistics()
+        {
+            return _statistics;
+        }
+
         private ClientInvocationService CreateInvocationService()
         {
             return _config.GetNetworkConfig().IsSmartRouting()
@@ -461,6 +477,7 @@ namespace Hazelcast.Client
                 _listenerService.Start();
                 _loadBalancer.Init(GetCluster(), _config);
                 _partitionService.Start();
+                _statistics.Start();
             }
             catch (InvalidOperationException)
             {

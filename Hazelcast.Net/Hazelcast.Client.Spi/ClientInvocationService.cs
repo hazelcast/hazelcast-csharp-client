@@ -54,7 +54,7 @@ using Hazelcast.Util;
             _client = client;
             _redoOperations = client.GetClientConfig().GetNetworkConfig().IsRedoOperation();
             _invocationTimeoutMillis =
-            (EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.invocation.timeout.seconds") ??
+            (EnvironmentUtil.ReadInt("hazelcast.client.invocation.timeout.seconds") ??
              DefaultInvocationTimeout) * 1000;
         }
 

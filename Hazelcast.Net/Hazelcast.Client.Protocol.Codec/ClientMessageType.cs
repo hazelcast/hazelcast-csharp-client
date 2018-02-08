@@ -28,6 +28,9 @@ namespace Hazelcast.Client.Protocol.Codec
         ClientGetDistributedObjects = 0x000c,
         ClientAddDistributedObjectListener = 0x000d,
         ClientRemoveDistributedObjectListener = 0x000e,
-        ClientPing = 0x000f
+        ClientPing = 0x000f,
+        ClientStatistics = 0x0010,
+        ClientDeployClasses = 0x0011,
+        ClientAddPartitionListener = 0x0012
     }
 }

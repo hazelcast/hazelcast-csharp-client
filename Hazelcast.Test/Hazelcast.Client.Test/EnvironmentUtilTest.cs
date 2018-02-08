@@ -21,12 +21,5 @@ namespace Hazelcast.Client.Test
 {
     public class EnvironmentUtilTest
     {
-        [Test]
-        public void TestDLLVersion()
-        {
-            var version = typeof(EnvironmentUtil).Assembly.GetName().Version.ToString();
-            Assert.True(version.StartsWith(EnvironmentUtil.GetDllVersion()));
-            Assert.False(EnvironmentUtil.GetDllVersion().EndsWith(".0"));
-        }
     }
 }

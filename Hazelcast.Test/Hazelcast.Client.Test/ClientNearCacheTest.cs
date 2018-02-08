@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Test
 
         private IMap<object, object> _map;
 
-        private ClientNearCache GetNearCache<TK, TV>(IMap<TK, TV> map)
+        private NearCache GetNearCache<TK, TV>(IMap<TK, TV> map)
         {
             return (map as ClientMapProxy<TK, TV>).NearCache;
         }

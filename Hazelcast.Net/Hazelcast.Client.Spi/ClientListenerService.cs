@@ -62,10 +62,10 @@ using Hazelcast.Util;
             _client = client;
             _connectionManager = client.GetConnectionManager();
 
-            var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count") ??
+            var eventTreadCount = EnvironmentUtil.ReadInt("hazelcast.client.event.thread.count") ??
                                   DefaultEventThreadCount;
 
-            var eventQueueCapacity = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.queue.capacity") ??
+            var eventQueueCapacity = EnvironmentUtil.ReadInt("hazelcast.client.event.queue.capacity") ??
                                      DefaultEventQueueCapacity;
 
             _eventExecutor = new StripedTaskScheduler(eventTreadCount, eventQueueCapacity, client.GetName() + ".event");
