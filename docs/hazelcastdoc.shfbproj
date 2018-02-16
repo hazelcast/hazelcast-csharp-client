@@ -42,10 +42,10 @@
     <HelpTitle>Hazelcast .Net Client Class Library</HelpTitle>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
     <VisibleItems>InheritedMembers, InheritedFrameworkMembers</VisibleItems>
-    <CopyrightText>Copyright %28c%29 2008-2017, Hazelcast, Inc. All Rights Reserved.</CopyrightText>
+    <CopyrightText>Copyright %28c%29 2008-2018, Hazelcast, Inc. All Rights Reserved.</CopyrightText>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <TransformComponentArguments>
-      <Argument Key="logoFile" Value="HazelcastLogo_Dark_200w.jpg" />
+      <Argument Key="logoFile" Value="Hazelcast-IMDG-Logo-Orange_Dark_200px.jpg" />
       <Argument Key="logoHeight" Value="" />
       <Argument Key="logoWidth" Value="" />
       <Argument Key="logoAltText" Value="" />
@@ -82,13 +82,9 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Win32' ">
   </PropertyGroup>
   <ItemGroup>
-    <Image Include="icons\HazelcastLogo_Dark_200w.png">
-      <ImageId>HazelcastLogo_Dark_200w</ImageId>
-      <AlternateText>Hazelcast Logo Dark 200w</AlternateText>
-    </Image>
-    <Content Include="icons\HazelcastLogo_Dark_200w.jpg">
-      <ImageId>HazelcastLogo_Dark_200w</ImageId>
-      <AlternateText>Hazelcast Logo Dark 200w</AlternateText>
+    <Content Include="icons\Hazelcast-IMDG-Logo-Orange_Dark_200px.jpg">
+      <ImageId>Hazelcast-IMDG-Logo-Orange_Dark_200px</ImageId>
+      <AlternateText>Hazelcast IMDG Logo</AlternateText>
       <CopyToMedia>True</CopyToMedia>
       <ExcludeFromToc>True</ExcludeFromToc>
     </Content>
