@@ -41,7 +41,7 @@ namespace Hazelcast.Net.Ext
 
         public void Set(T t)
         {
-            _val = t;
+            Interlocked.Exchange(ref _val, t);
         }
     }
 }

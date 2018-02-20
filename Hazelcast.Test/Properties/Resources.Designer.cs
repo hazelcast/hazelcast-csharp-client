@@ -134,7 +134,7 @@ namespace Hazelcast.Test {
         ///  &lt;management-center enabled=&quot;false&quot;&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
         ///  &lt;network&gt;
         ///    &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
-        ///    &lt;outbound- [rest of string was truncated]&quot;;.
+        ///   [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string hazelcast_ipv6 {
             get {
@@ -158,6 +158,25 @@ namespace Hazelcast.Test {
         internal static string hazelcast_ssl {
             get {
                 return ResourceManager.GetString("hazelcast_ssl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;hazelcast xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd&quot;
+        ///           xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;
+        ///    &lt;group&gt;
+        ///        &lt;name&gt;dev&lt;/name&gt;
+        ///        &lt;password&gt;dev-pass&lt;/password&gt;
+        ///    &lt;/group&gt;
+        ///    &lt;management-center enabled=&quot;true&quot;&gt;http://localhost:8083/mancenter&lt;/management-center&gt;
+        ///    &lt;network&gt;
+        ///        &lt;port auto-increment=&quot;true&quot; port-count=&quot;100 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string hazelcast_stat {
+            get {
+                return ResourceManager.GetString("hazelcast_stat", resourceCulture);
             }
         }
     }

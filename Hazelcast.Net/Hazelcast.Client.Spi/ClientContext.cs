@@ -31,10 +31,12 @@ using Hazelcast.IO.Serialization;
         private readonly ProxyManager _proxyManager;
         private readonly ISerializationService _serializationService;
 
+        private readonly NearCacheManager _nearCacheManager;
+
         internal ClientContext(ISerializationService serializationService, IClientClusterService clusterService,
             IClientPartitionService partitionService, IClientInvocationService invocationService,
-            IClientExecutionService executionService, IClientListenerService listenerService, ProxyManager proxyManager,
-            ClientConfig clientConfig)
+            IClientExecutionService executionService, IClientListenerService listenerService, 
+            NearCacheManager nearCacheManager, ProxyManager proxyManager, ClientConfig clientConfig)
         {
             _serializationService = serializationService;
             _clusterService = clusterService;
@@ -44,6 +46,7 @@ using Hazelcast.IO.Serialization;
             _listenerService = listenerService;
             _proxyManager = proxyManager;
             _clientConfig = clientConfig;
+            _nearCacheManager = nearCacheManager;
         }
 
         public ClientConfig GetClientConfig()
@@ -84,6 +87,11 @@ using Hazelcast.IO.Serialization;
         public void RemoveProxy(ClientProxy proxy)
         {
             _proxyManager.RemoveProxy(proxy.GetServiceName(), proxy.GetName());
+        }
+
+        public NearCacheManager GetNearCacheManager()
+        {
+            return _nearCacheManager;
         }
 
         public HazelcastClient GetClient()

@@ -75,12 +75,12 @@ namespace Hazelcast.Net.Ext
 
         public void Set(int newValue)
         {
-            _val = newValue;
+            Interlocked.Exchange(ref _val, newValue);
         }
 
         private bool CompareAndSet(int expect, int update)
         {
-            return (Interlocked.CompareExchange(ref _val, update, expect) == expect);
+            return Interlocked.CompareExchange(ref _val, update, expect) == expect;
         }
     }
 }

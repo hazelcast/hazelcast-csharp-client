@@ -53,7 +53,7 @@ namespace Hazelcast.Net.Ext
 
         public void Set(bool newValue)
         {
-            _value = newValue ? 1 : 0;
+            Interlocked.Exchange(ref _value, newValue ? 1 : 0);
         }
 
         public bool WeakCompareAndSet(bool expect, bool update)

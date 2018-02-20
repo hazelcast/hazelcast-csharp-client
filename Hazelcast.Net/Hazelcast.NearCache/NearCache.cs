@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
@@ -27,28 +28,26 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client
 {
-    internal enum ClientNearCacheType
+    internal class NearCache
     {
-        Map,
-        ReplicatedMap
-    }
-
-    internal class ClientNearCache
-    {
+        internal const long TimeNotSet = -1;
         internal const int EvictionPercentage = 20;
         internal const int CleanupInterval = 5000;
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientNearCache));
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(NearCache));
         public static readonly object NullObject = new object();
 
-        private readonly ClientNearCacheType _cacheType;
+        private readonly string _name;
+        private readonly HazelcastClient _client;
+
         private readonly AtomicBoolean _canCleanUp;
         private readonly AtomicBoolean _canEvict;
-        private readonly ClientContext _context;
+
         private readonly EvictionPolicy _evictionPolicy;
         private readonly InMemoryFormat _inMemoryFormat;
-        private readonly string _mapName;
         private readonly long _maxIdleMillis;
+
         private readonly int _maxSize;
+
         private readonly IComparer<CacheRecord> _selectedComparer;
         private readonly long _timeToLiveMillis;
 
@@ -57,93 +56,98 @@ namespace Hazelcast.Client
 
         private long _lastCleanup;
         private string _registrationId;
+        private readonly NearCacheStatistics _stat;
 
-        public ClientNearCache(string mapName, ClientNearCacheType cacheType, ClientContext context,
-            NearCacheConfig nearCacheConfig)
+        public NearCache(string name, HazelcastClient client, NearCacheConfig nearCacheConfig)
         {
-            _mapName = mapName;
-            _cacheType = cacheType;
-            _context = context;
+            _name = name;
+            _client = client;
             _maxSize = nearCacheConfig.GetMaxSize();
-            _maxIdleMillis = nearCacheConfig.GetMaxIdleSeconds()*1000;
+            _maxIdleMillis = nearCacheConfig.GetMaxIdleSeconds() * 1000;
             _inMemoryFormat = nearCacheConfig.GetInMemoryFormat();
-            _timeToLiveMillis = nearCacheConfig.GetTimeToLiveSeconds()*1000;
+            _timeToLiveMillis = nearCacheConfig.GetTimeToLiveSeconds() * 1000;
             InvalidateOnChange = nearCacheConfig.IsInvalidateOnChange();
-            _evictionPolicy = (EvictionPolicy) Enum.Parse(typeof (EvictionPolicy), nearCacheConfig.GetEvictionPolicy());
+            _evictionPolicy = (EvictionPolicy) Enum.Parse(typeof(EvictionPolicy), nearCacheConfig.GetEvictionPolicy(), true);
             Cache = new ConcurrentDictionary<IData, CacheRecord>();
             _canCleanUp = new AtomicBoolean(true);
             _canEvict = new AtomicBoolean(true);
             _lastCleanup = Clock.CurrentTimeMillis();
             _selectedComparer = GetComparer(_evictionPolicy);
+            _stat = new NearCacheStatistics();
             if (InvalidateOnChange)
             {
                 AddInvalidateListener();
             }
         }
+        
+        public string Name
+        {
+            get { return _name; }
+        }
 
-        public virtual void Destroy()
+        public NearCacheStatistics NearCacheStatistics
+        {
+            get { return _stat; }
+        }
+
+        public void Destroy()
         {
             if (_registrationId != null)
             {
-                if (_cacheType == ClientNearCacheType.Map)
-                {
-                    _context.GetListenerService().DeregisterListener(_registrationId,
-                        s => MapRemoveEntryListenerCodec.EncodeRequest(_mapName, s)
-                    );
-                }
-                else if (_cacheType == ClientNearCacheType.ReplicatedMap)
-                {
-                    //TODO REPLICATED MAP
-                    throw new NotImplementedException();
-                }
-                else
-                {
-                    throw new NotImplementedException("Near cache is not available for this type of data structure");
-                }
+                _client.GetListenerService().DeregisterListener(_registrationId,
+                    s => MapRemoveEntryListenerCodec.EncodeRequest(_name, s)
+                );
             }
+
             Cache.Clear();
         }
 
-        public virtual object Get(IData key)
+        public object Get(IData key)
         {
             FireTtlCleanup();
             CacheRecord record;
-            Cache.TryGetValue(key, out record);
-            if (record != null)
+            if(Cache.TryGetValue(key, out record) && record != null)
             {
                 record.Access();
-                if (record.Expired())
+                _stat.IncrementHit();
+                if (IsRecordExpired(record))
                 {
                     Invalidate(key);
+                    _stat.IncrementExpiration();
                     return null;
                 }
+
                 if (record.Value.Equals(NullObject))
                 {
                     return NullObject;
                 }
+
                 return _inMemoryFormat.Equals(InMemoryFormat.Binary)
-                    ? _context.GetSerializationService().ToObject<object>(record.Value)
+                    ? _client.GetSerializationService().ToObject<object>(record.Value)
                     : record.Value;
             }
+            _stat.IncrementMiss();
             return null;
         }
 
-        public virtual void InvalidateAll()
+        public void InvalidateAll()
         {
             Cache.Clear();
         }
 
-        public virtual void Put(IData key, object @object)
+        public void Put(IData key, object @object)
         {
             FireTtlCleanup();
             if (_evictionPolicy == EvictionPolicy.None && Cache.Count >= _maxSize)
             {
                 return;
             }
+
             if (_evictionPolicy != EvictionPolicy.None && Cache.Count >= _maxSize)
             {
                 FireEvictCache();
             }
+
             object value;
             if (@object == null)
             {
@@ -152,10 +156,25 @@ namespace Hazelcast.Client
             else
             {
                 value = _inMemoryFormat.Equals(InMemoryFormat.Binary)
-                    ? _context.GetSerializationService().ToData(@object)
-                    : _context.GetSerializationService().ToObject<object>(@object);
+                    ? _client.GetSerializationService().ToData(@object)
+                    : _client.GetSerializationService().ToObject<object>(@object);
             }
-            Cache.TryAdd(key, new CacheRecord(this, key, value));
+
+            var newRecord = CreateRecord(key, value);
+            if (Cache.TryAdd(key, newRecord))
+            {
+                _stat.IncrementOwnedEntryCount();
+            }
+            else
+            {
+                Cache[key] = newRecord;
+            }
+        }
+
+        private CacheRecord CreateRecord(IData key, object value)
+        {
+            var now = Clock.CurrentTimeMillis();
+            return new CacheRecord(key, value, now, _timeToLiveMillis > 0 ? now + _timeToLiveMillis : TimeNotSet);
         }
 
         private void AddInvalidateListener()
@@ -164,22 +183,19 @@ namespace Hazelcast.Client
             {
                 IClientMessage request;
                 DistributedEventHandler handler;
-                if (_cacheType == ClientNearCacheType.Map)
-                {
-                    request = MapAddNearCacheEntryListenerCodec.EncodeRequest(_mapName, (int) EntryEventType.Invalidation,
-                        false);
 
-                    handler = message
-                        => MapAddNearCacheEntryListenerCodec.AbstractEventHandler.Handle(message, HandleIMapInvalidation, HandleIMapBatchInvalidation);
-                }
-                else
-                {
-                    throw new NotImplementedException("Near cache is not available for this type of data structure");
-                }
-                
-                _registrationId = _context.GetListenerService()
-                    .RegisterListener(request, message => MapAddNearCacheEntryListenerCodec.DecodeResponse(message).response,
-                        id => MapRemoveEntryListenerCodec.EncodeRequest(_mapName, id), handler);
+                request = MapAddNearCacheEntryListenerCodec.EncodeRequest(_name,
+                    (int) EntryEventType.Invalidation,
+                    false);
+
+                handler = message
+                    => MapAddNearCacheEntryListenerCodec.AbstractEventHandler.Handle(message,
+                        HandleIMapInvalidation, HandleIMapBatchInvalidation);
+
+                _registrationId = _client.GetListenerService()
+                    .RegisterListener(request,
+                        message => MapAddNearCacheEntryListenerCodec.DecodeResponse(message).response,
+                        id => MapRemoveEntryListenerCodec.EncodeRequest(_name, id), handler);
             }
             catch (Exception e)
             {
@@ -187,7 +203,8 @@ namespace Hazelcast.Client
             }
         }
 
-        private void HandleIMapBatchInvalidation(IList<IData> keys, IList<string> sourceUuids, IList<Guid> partitionUuids, IList<long> sequences)
+        private void HandleIMapBatchInvalidation(IList<IData> keys, IList<string> sourceUuids,
+            IList<Guid> partitionUuids, IList<long> sequences)
         {
             foreach (var data in keys)
             {
@@ -213,7 +230,7 @@ namespace Hazelcast.Client
             {
                 try
                 {
-                    _context.GetExecutionService().Submit(FireEvictCacheFunc);
+                    _client.GetClientExecutionService().Submit(FireEvictCacheFunc);
                 }
                 catch (Exception e)
                 {
@@ -228,15 +245,19 @@ namespace Hazelcast.Client
             try
             {
                 var records = new SortedSet<CacheRecord>(Cache.Values, _selectedComparer);
-                var evictSize = Cache.Count*EvictionPercentage/100;
+                var evictSize = Cache.Count * EvictionPercentage / 100;
                 var i = 0;
                 foreach (var record in records)
                 {
                     CacheRecord removed;
-                    Cache.TryRemove(record.Key, out removed);
-                    if (++i > evictSize)
+                    if (Cache.TryRemove(record.Key, out removed))
                     {
-                        break;
+                        _stat.DecrementOwnedEntryCount();
+                        _stat.IncrementEviction();
+                        if (++i > evictSize)
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -244,6 +265,7 @@ namespace Hazelcast.Client
             {
                 _canEvict.Set(true);
             }
+
             if (Cache.Count >= _maxSize)
             {
                 FireEvictCache();
@@ -256,11 +278,12 @@ namespace Hazelcast.Client
             {
                 return;
             }
+
             if (_canCleanUp.CompareAndSet(true, false))
             {
                 try
                 {
-                    _context.GetExecutionService().Submit(FireTtlCleanupFunc);
+                    _client.GetClientExecutionService().Submit(FireTtlCleanupFunc);
                 }
                 catch (Exception e)
                 {
@@ -277,10 +300,10 @@ namespace Hazelcast.Client
                 _lastCleanup = Clock.CurrentTimeMillis();
                 foreach (var entry in Cache)
                 {
-                    if (entry.Value.Expired())
+                    if (IsRecordExpired(entry.Value))
                     {
-                        CacheRecord removed;
-                        Cache.TryRemove(entry.Key, out removed);
+                        Invalidate(entry.Key);
+                        _stat.IncrementExpiration();
                     }
                 }
             }
@@ -299,51 +322,71 @@ namespace Hazelcast.Client
                 case EvictionPolicy.Lru:
                     return new LruComparer();
             }
+
             return new DefaultComparer();
         }
 
         public void Invalidate(IData key)
         {
             CacheRecord removed;
-            Cache.TryRemove(key, out removed);
+            if (Cache.TryRemove(key, out removed))
+            {
+                _stat.DecrementOwnedEntryCount();
+            }
+        }
+
+        private bool IsRecordExpired(CacheRecord record)
+        {
+            var now = Clock.CurrentTimeMillis();
+            return record.IsExpiredAt(now) || record.IsIdleAt(_maxIdleMillis, now);
         }
 
         internal class CacheRecord
         {
-            private readonly ClientNearCache _enclosing;
-            internal readonly long CreationTime;
+            private readonly long _creationTime;
+            private readonly long _expirationTime;
+            private long _lastAccessTime;
             internal readonly AtomicInteger Hit;
+            
             internal readonly IData Key;
             internal readonly object Value;
-            //TODO volatile
-            internal long LastAccessTime;
 
-            internal CacheRecord(ClientNearCache enclosing, IData key, object value)
+            internal CacheRecord(IData key, object value, long creationTime, long expirationTime)
             {
-                _enclosing = enclosing;
                 Key = key;
                 Value = value;
-                var time = Clock.CurrentTimeMillis();
-                LastAccessTime = time;
-                CreationTime = time;
+                _lastAccessTime = creationTime;
+                _creationTime = creationTime;
+                _expirationTime = expirationTime;
                 Hit = new AtomicInteger(0);
             }
 
-            internal virtual void Access()
+            internal long LastAccessTime
             {
-                Hit.IncrementAndGet();
-                LastAccessTime = Clock.CurrentTimeMillis();
+                get { return Interlocked.Read(ref _lastAccessTime); }
             }
 
-            internal virtual bool Expired()
+            internal void Access()
             {
-                var time = Clock.CurrentTimeMillis();
-                return (_enclosing._maxIdleMillis > 0 && time > LastAccessTime + _enclosing._maxIdleMillis) ||
-                       (_enclosing._timeToLiveMillis > 0 && time > CreationTime + _enclosing._timeToLiveMillis);
+                Hit.IncrementAndGet();
+                Interlocked.Exchange(ref _lastAccessTime, Clock.CurrentTimeMillis());
+            }
+
+            internal bool IsIdleAt(long maxIdleMillis, long now)
+            {
+                if (maxIdleMillis <= 0) return false;
+                return LastAccessTime > TimeNotSet
+                    ? LastAccessTime + maxIdleMillis < now
+                    : _creationTime + maxIdleMillis < now;
+            }
+
+            internal bool IsExpiredAt(long now)
+            {
+                return _expirationTime > TimeNotSet && _expirationTime <= now;
             }
         }
 
-        internal class LruComparer : IComparer<CacheRecord>
+        private class LruComparer : IComparer<CacheRecord>
         {
             public int Compare(CacheRecord x, CacheRecord y)
             {
@@ -354,7 +397,7 @@ namespace Hazelcast.Client
             }
         }
 
-        internal class LfuComparer : IComparer<CacheRecord>
+        private class LfuComparer : IComparer<CacheRecord>
         {
             public int Compare(CacheRecord x, CacheRecord y)
             {
@@ -365,7 +408,7 @@ namespace Hazelcast.Client
             }
         }
 
-        internal class DefaultComparer : IComparer<CacheRecord>
+        private class DefaultComparer : IComparer<CacheRecord>
         {
             public int Compare(CacheRecord x, CacheRecord y)
             {
@@ -373,7 +416,7 @@ namespace Hazelcast.Client
             }
         }
 
-        internal enum EvictionPolicy
+        private enum EvictionPolicy
         {
             None,
             Lru,

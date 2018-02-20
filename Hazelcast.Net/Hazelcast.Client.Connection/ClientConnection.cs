@@ -29,6 +29,7 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Connection
 {
@@ -57,7 +58,8 @@ namespace Hazelcast.Client.Connection
         private readonly AtomicBoolean _live;
         private volatile IMember _member;
         private Thread _writeThread;
-
+        private readonly long _connectionStartTime;
+        
         /// <exception cref="System.IO.IOException"></exception>
         public ClientConnection(ClientConnectionManager clientConnectionManager,
             ClientInvocationService invocationService,
@@ -128,6 +130,7 @@ namespace Hazelcast.Client.Connection
                     _stream = networkStream;
                 }
                 _live = new AtomicBoolean(true);
+                _connectionStartTime = Clock.CurrentTimeMillis();
             }
             catch (Exception e)
             {
@@ -137,6 +140,21 @@ namespace Hazelcast.Client.Connection
                     _stream.Close();
                 }
                 throw new IOException("Cannot connect! Socket error:" + e.Message);
+            }
+        }
+
+        public string ConnectedServerVersionStr { get; set; }
+
+        public int ConnectedServerVersionInt
+        {
+            get
+            {
+                if (ConnectedServerVersionStr == null)
+                {
+                    return -1;
+                }
+
+                return VersionUtil.ParseServerVersion(ConnectedServerVersionStr);
             }
         }
 
@@ -155,6 +173,11 @@ namespace Hazelcast.Client.Connection
         public bool IsHeartBeating
         {
             get { return _isHeartBeating; }
+        }
+        
+        public long ConnectionStartTime
+        {
+            get { return _connectionStartTime; }
         }
 
         /// <exception cref="System.IO.IOException"></exception>
