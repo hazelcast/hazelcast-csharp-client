@@ -29,27 +29,22 @@ namespace Hazelcast.Util
         private readonly List<Thread> _threads;
         private IDictionary<int, BlockingCollection<Task>> _tasks;
 
-        public StripedTaskScheduler(int numberOfThreads, int maximumQueueCapacity=1000000, string threadNamePrefix="hz-striped-scheduler")
+        public StripedTaskScheduler(int numberOfThreads)
         {
             if (numberOfThreads < 1) throw new ArgumentOutOfRangeException("numberOfThreads");
 
             _numberOfThreads = numberOfThreads;
-            // `maximumQueueCapacity` is the given max capacity for this executor. Each worker in this executor should consume
-            // only a portion of that capacity. Otherwise we will have `threadCount * maximumQueueCapacity` instead of
-            // `maximumQueueCapacity`.
-            var perThreadMaxQueueCapacity = (int) Math.Ceiling(1D * maximumQueueCapacity / numberOfThreads);
-
             _tasks = new Dictionary<int, BlockingCollection<Task>>();
             for (var i = 0; i < numberOfThreads; i++)
             {
-                _tasks.Add(i, new BlockingCollection<Task>(perThreadMaxQueueCapacity));
+                _tasks.Add(i, new BlockingCollection<Task>());
             }
 
             // Create the threads to be used by this scheduler
             _threads = Enumerable.Range(0, numberOfThreads).Select(i =>
             {
                 var thread = new Thread(() => ThreadLoop(i))
-                {IsBackground = true, Name = threadNamePrefix +"-" + i};
+                {IsBackground = true, Name = "hz-striped-scheduler-" + i};
                 return thread;
             }).ToList();
 

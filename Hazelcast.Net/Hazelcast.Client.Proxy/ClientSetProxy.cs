@@ -27,21 +27,20 @@ namespace Hazelcast.Client.Proxy
 
         public override string AddItemListener(IItemListener<T> listener, bool includeValue)
         {
-            var request = SetAddListenerCodec.EncodeRequest(GetName(), includeValue, IsSmart());
+            var request = SetAddListenerCodec.EncodeRequest(GetName(), includeValue, false);
 
             DistributedEventHandler handler = message => SetAddListenerCodec.AbstractEventHandler.Handle(message,
-                (item, uuid, type) =>
-                {
-                    HandleItemListener(item, uuid, (ItemEventType) type, listener, includeValue);
-                });
+                ((item, uuid, type) => { HandleItemListener(item, uuid, (ItemEventType) type, listener, includeValue); }));
 
-            return RegisterListener(request, m => SetAddListenerCodec.DecodeResponse(m).response,
-                id => SetRemoveListenerCodec.EncodeRequest(GetName(), id), handler);
+            return Listen(request,
+                m => SetAddListenerCodec.DecodeResponse(m).response, GetPartitionKey(), handler);
         }
 
         public override bool RemoveItemListener(string registrationId)
         {
-            return DeregisterListener(registrationId, id => SetRemoveListenerCodec.EncodeRequest(GetName(), id));
+            return StopListening(s => SetRemoveListenerCodec.EncodeRequest(GetName(), s),
+                message => SetRemoveListenerCodec.DecodeResponse(message).response,
+                registrationId);
         }
 
         public override bool Add(T item)

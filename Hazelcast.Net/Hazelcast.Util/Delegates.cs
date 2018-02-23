@@ -25,7 +25,9 @@ namespace Hazelcast.Util
 
     public delegate void DistributedEventHandler(IClientMessage eventMessage);
 
-    public delegate string DecodeRegistrationResponse(IClientMessage requestMessage);
+    public delegate string DecodeStartListenerResponse(IClientMessage requestMessage);
 
-    public delegate IClientMessage EncodeDeregisterListenerRequest(string registrationId);
+    public delegate bool DecodeStopListenerResponse(IClientMessage requestMessage);
+
+    public delegate IClientMessage EncodeStopListenerRequest(string registrationId);
 }

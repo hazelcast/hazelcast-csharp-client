@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Proxy
 
         public string AddItemListener(IItemListener<T> listener, bool includeValue)
         {
-            var request = QueueAddListenerCodec.EncodeRequest(GetName(), includeValue, IsSmart());
+            var request = QueueAddListenerCodec.EncodeRequest(GetName(), includeValue, false);
 
             DistributedEventHandler handler = m =>
                 QueueAddListenerCodec.AbstractEventHandler.Handle(m,
@@ -42,13 +42,13 @@ namespace Hazelcast.Client.Proxy
                         HandleItemListener(item, uuid, (ItemEventType) type, listener, includeValue);
                     });
 
-            return RegisterListener(request, m => QueueAddListenerCodec.DecodeResponse(m).response,
-                id => QueueRemoveListenerCodec.EncodeRequest(GetName(), id), handler);
+            return Listen(request, m => QueueAddListenerCodec.DecodeResponse(m).response, GetPartitionKey(), handler);
         }
 
         public bool RemoveItemListener(string registrationId)
         {
-            return DeregisterListener(registrationId, id => QueueRemoveListenerCodec.EncodeRequest(GetName(), id));
+            return StopListening(s => QueueRemoveListenerCodec.EncodeRequest(GetName(), s),
+                m => QueueRemoveListenerCodec.DecodeResponse(m).response, registrationId);
         }
 
         public bool Add(T e)

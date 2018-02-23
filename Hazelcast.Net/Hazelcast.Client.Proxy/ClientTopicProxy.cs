@@ -44,21 +44,17 @@ namespace Hazelcast.Client.Proxy
 
         public virtual string AddMessageListener(Action<Message<T>> listener)
         {
-            var request = TopicAddMessageListenerCodec.EncodeRequest(GetName(), IsSmart());
-            DistributedEventHandler handler = m =>
-                TopicAddMessageListenerCodec.AbstractEventHandler.Handle(m,
-                    (item, time, uuid) =>
-                    {
-                        HandleMessageListener(item, time, uuid, listener);
-                    });
-            return RegisterListener(request, m => TopicAddMessageListenerCodec.DecodeResponse(m).response,
-                id => TopicRemoveMessageListenerCodec.EncodeRequest(GetName(), id), handler);
+            var request = TopicAddMessageListenerCodec.EncodeRequest(GetName(), false);
+            DistributedEventHandler handler = m => TopicAddMessageListenerCodec.AbstractEventHandler.Handle(m,
+                (item, time, uuid) => HandleMessageListener(item, time, uuid, listener));
+            return Listen(request, m => TopicAddMessageListenerCodec.DecodeResponse(m).response,
+                GetKey(), handler);
         }
 
         public virtual bool RemoveMessageListener(string registrationId)
         {
-            return DeregisterListener(registrationId,
-                id => TopicRemoveMessageListenerCodec.EncodeRequest(GetName(), id));
+            return StopListening(s => TopicRemoveMessageListenerCodec.EncodeRequest(GetName(), s),
+                m => TopicRemoveMessageListenerCodec.DecodeResponse(m).response, registrationId);
         }
 
         protected override IClientMessage Invoke(IClientMessage request)

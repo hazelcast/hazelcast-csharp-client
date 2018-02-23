@@ -145,8 +145,9 @@ namespace Hazelcast.Client.Spi
                             + ownerConnectionAddress);
                     }
                     var invocationService = (ClientInvocationService) _client.GetInvocationService();
-                    var future = invocationService.InvokeListenerOnConnection(clientMessage, handler, connection);
-                    var response = ThreadUtil.GetResult(future);
+                    var response =
+                        ThreadUtil.GetResult(invocationService.InvokeListenerOnConnection(clientMessage, handler,
+                            m => ClientAddMembershipListenerCodec.DecodeResponse(m).response, connection));
                     //registraiton id is ignored as this listener will never be removed
                     var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
                     WaitInitialMemberListFetched();

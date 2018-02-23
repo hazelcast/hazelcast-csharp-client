@@ -166,7 +166,7 @@ namespace Hazelcast.Client.Spi
             return _listeners.TryRemove(registrationId, out removed);
         }
 
-        public void HeartBeatResumed(ClientConnection connection)
+        public void HeartBeatStarted(ClientConnection connection)
         {
         }
 

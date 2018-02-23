@@ -186,29 +186,29 @@ namespace Hazelcast.Client.Spi
             return decodeResponse(response);
         }
 
-        protected virtual string RegisterListener(IClientMessage registrationMessage,
-            DecodeRegistrationResponse responseDecoder,
-            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest, DistributedEventHandler eventHandler)
+        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse responseDecoder,
+            object partitionKey, DistributedEventHandler handler)
         {
             return _context.GetListenerService()
-                .RegisterListener(registrationMessage, responseDecoder, encodeDeregisterListenerRequest, eventHandler);
+                .StartListening(registrationRequest, handler, responseDecoder, partitionKey);
+        }
+
+        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse responseDecoder,
+            DistributedEventHandler handler)
+        {
+            return _context.GetListenerService().StartListening(registrationRequest, handler, responseDecoder);
         }
 
         protected virtual void OnDestroy()
         {
         }
 
-        protected virtual bool DeregisterListener(string userRegistrationId,
-            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest)
+        protected virtual bool StopListening(EncodeStopListenerRequest responseEncoder,
+            DecodeStopListenerResponse responseDecoder, string registrationId)
         {
-            return _context.GetListenerService()
-                .DeregisterListener(userRegistrationId, encodeDeregisterListenerRequest);
+            return _context.GetListenerService().StopListening(responseEncoder, responseDecoder, registrationId);
         }
 
-        protected virtual bool IsSmart()
-        {
-            return _context.GetClientConfig().GetNetworkConfig().IsSmartRouting();
-        }
         protected IList<IData> ToDataList<T>(ICollection<T> c)
         {
             ThrowExceptionIfNull(c, "Collection cannot be null.");
@@ -221,16 +221,14 @@ namespace Hazelcast.Client.Spi
             return values;
         }
 
-        protected IDictionary<TKey, object> DeserializeEntries<TKey>(IList<KeyValuePair<IData, IData>> entries)
-        {
+        protected IDictionary<TKey, object> DeserializeEntries<TKey>(IList<KeyValuePair<IData, IData>> entries) {
             if (entries.Count == 0)
             {
                 return new Dictionary<TKey, object>();
             }
             var result = new Dictionary<TKey, object>();
-            foreach (var entry in entries)
-            {
-                var key = (TKey) ToObject<object>(entry.Key);
+            foreach(var entry in entries) {
+                var key = (TKey)ToObject<object>(entry.Key);
                 result.Add(key, ToObject<object>(entry.Value));
             }
             return result;

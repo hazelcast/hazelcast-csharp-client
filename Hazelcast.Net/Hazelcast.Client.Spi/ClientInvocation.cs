@@ -29,8 +29,6 @@ namespace Hazelcast.Client.Spi
 
         // the point at which the request should be considered timed out
         private readonly long _invocationTimeMillis; 
-        
-        private readonly DistributedEventHandler _eventHandler;
 
         public ClientInvocation(IClientMessage message)
         {
@@ -54,11 +52,10 @@ namespace Hazelcast.Client.Spi
             Address = address;
         }
 
-        public ClientInvocation(IClientMessage message, ClientConnection boundConnection, DistributedEventHandler eventHandler = null)
+        public ClientInvocation(IClientMessage message, ClientConnection boundConnection)
             : this(message)
         {
             _boundConnection = boundConnection;
-            _eventHandler = eventHandler;
         }
 
         public string MemberUuid
@@ -96,11 +93,6 @@ namespace Hazelcast.Client.Spi
         public long InvocationTimeMillis
         {
             get { return _invocationTimeMillis; }
-        }
-
-        public DistributedEventHandler EventHandler 
-        {
-            get { return _eventHandler; }
         }
     }
 }

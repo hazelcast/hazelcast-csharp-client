@@ -16,7 +16,7 @@ namespace Hazelcast.Client.Connection
 {
     internal interface IConnectionHeartbeatListener
     {
-        void HeartBeatResumed(ClientConnection connection);
+        void HeartBeatStarted(ClientConnection connection);
         void HeartBeatStopped(ClientConnection connection);
     }
 }
