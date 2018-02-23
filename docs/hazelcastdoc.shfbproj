@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- The configuration and platform will be used to determine which assemblies to include from solution and
 				 project documentation sources -->
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{9588f8fa-c516-4bb7-abc2-24e02dca5848}</ProjectGuid>
@@ -13,15 +13,16 @@
     <RootNamespace>Documentation</RootNamespace>
     <Name>Documentation</Name>
     <!-- SHFB properties -->
-    <FrameworkVersion>.NET Framework 4.0</FrameworkVersion>
+    <FrameworkVersion>.NET Framework 4.5</FrameworkVersion>
     <OutputPath>output\</OutputPath>
     <HtmlHelpName>HazelcastClientDoc</HtmlHelpName>
     <Language>en-US</Language>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\Hazelcast.Net\Hazelcast.Net.csproj" configuration="Release" />
+      <DocumentationSource sourceFile="..\Hazelcast.Net\bin\Release\net40\Hazelcast.Net.xml" />
+      <DocumentationSource sourceFile="..\Hazelcast.Net\bin\Release\net40\Hazelcast.Net.dll" />
     </DocumentationSources>
     <BuildAssemblerVerbosity>OnlyErrors</BuildAssemblerVerbosity>
-    <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
+    <HelpFileFormat>Website</HelpFileFormat>
     <IndentHtml>False</IndentHtml>
     <KeepLogFile>True</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
@@ -35,16 +36,16 @@
     <SyntaxFilters>Standard</SyntaxFilters>
     <SdkLinkTarget>Blank</SdkLinkTarget>
     <RootNamespaceContainer>False</RootNamespaceContainer>
-    <PresentationStyle>VS2010</PresentationStyle>
+    <PresentationStyle>VS2013</PresentationStyle>
     <Preliminary>False</Preliminary>
-    <NamingMethod>Guid</NamingMethod>
+    <NamingMethod>MemberName</NamingMethod>
     <HelpTitle>Hazelcast .Net Client Class Library</HelpTitle>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
     <VisibleItems>InheritedMembers, InheritedFrameworkMembers</VisibleItems>
-    <CopyrightText>Copyright %28c%29 2008-2017, Hazelcast, Inc. All Rights Reserved.</CopyrightText>
+    <CopyrightText>Copyright %28c%29 2008-2018, Hazelcast, Inc. All Rights Reserved.</CopyrightText>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <TransformComponentArguments>
-      <Argument Key="logoFile" Value="HazelcastLogo_Dark_200w.jpg" />
+      <Argument Key="logoFile" Value="Hazelcast-IMDG-Logo-Orange_Dark_200px.jpg" />
       <Argument Key="logoHeight" Value="" />
       <Argument Key="logoWidth" Value="" />
       <Argument Key="logoAltText" Value="" />
@@ -59,6 +60,8 @@
     <RootNamespaceTitle>Hazelcast-Client</RootNamespaceTitle>
     <HeaderText>
     </HeaderText>
+    <HelpFileVersion>1.0.0.0</HelpFileVersion>
+    <SaveComponentCacheCapacity>100</SaveComponentCacheCapacity>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->
@@ -79,13 +82,9 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Win32' ">
   </PropertyGroup>
   <ItemGroup>
-    <Image Include="icons\HazelcastLogo_Dark_200w.png">
-      <ImageId>HazelcastLogo_Dark_200w</ImageId>
-      <AlternateText>Hazelcast Logo Dark 200w</AlternateText>
-    </Image>
-    <Content Include="icons\HazelcastLogo_Dark_200w.jpg">
-      <ImageId>HazelcastLogo_Dark_200w</ImageId>
-      <AlternateText>Hazelcast Logo Dark 200w</AlternateText>
+    <Content Include="icons\Hazelcast-IMDG-Logo-Orange_Dark_200px.jpg">
+      <ImageId>Hazelcast-IMDG-Logo-Orange_Dark_200px</ImageId>
+      <AlternateText>Hazelcast IMDG Logo</AlternateText>
       <CopyToMedia>True</CopyToMedia>
       <ExcludeFromToc>True</ExcludeFromToc>
     </Content>

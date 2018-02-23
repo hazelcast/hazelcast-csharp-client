@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,7 +54,7 @@ namespace Hazelcast.Core
     ///                 <see cref="IMap{K,V}.Get(object)">IMap&lt;K, V&gt;.Get(object)</see>
     ///             </li>
     ///             <li>
-    ///                 Methods, including but not limited to <c>keySet</c>, <c>values</c>, <c>entrySet</c>,
+    ///                 Methods, including but not limited to <c>KeySet</c>, <c>Values</c>, <c>EntrySet</c>,
     ///                 return a collection clone of the values. The collection is <b>NOT</b> backed by the map,
     ///                 so changes to the map are <b>NOT</b> reflected in the collection, and vice-versa.
     ///             </li>
@@ -65,6 +66,66 @@ namespace Hazelcast.Core
     public interface IMap<TKey, TValue> : IDistributedObject
     {
         /// <summary>
+        /// Adds a <see cref="MapListener"/> for this map.To receive an event, you should implement a corresponding 
+        /// <see cref="MapListener"/> sub-interface for that event.
+        /// </summary>
+        /// <param name="listener"><see cref="MapListener"/> for this map</param>
+        /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
+        /// <returns>a registration Id which is used as a key to remove the listener.</returns>
+        /// <exception cref="ArgumentNullException">the specified listener is null.</exception>      
+        string AddEntryListener(MapListener listener, bool includeValue);
+
+        /// <summary>
+        /// Adds a <see cref="MapListener"/> for the specified key, you should implement a corresponding 
+        /// <see cref="MapListener"/> sub-interface for that event.
+        /// </summary>
+        /// <remarks>
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="listener"><see cref="MapListener"/> for this map</param>
+        /// <param name="key">key to listen</param>
+        /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
+        /// <returns>a registration Id which is used as a key to remove the listener.</returns>
+        /// <exception cref="ArgumentNullException">the specified listener or the key is null.</exception>      
+        string AddEntryListener(MapListener listener, TKey key, bool includeValue);
+
+        /// <summary>
+        /// Adds a <see cref="MapListener"/> for the specified key, you should implement a corresponding 
+        /// <see cref="MapListener"/> sub-interface for that event.
+        /// </summary>
+        /// <remarks>
+        ///     Adds a continuous <see cref="MapListener"/> for this map. Listener will get notified
+        ///     for registered map events filtered by given predicate.
+        /// </remarks>
+        /// <param name="listener"><see cref="MapListener"/> for this map</param>
+        /// <param name="predicate">predicate for filtering entries</param>
+        /// <param name="key">key to listen</param>
+        /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
+        /// <returns>a registration Id which is used as a key to remove the listener.</returns>
+        /// <exception cref="ArgumentNullException">the specified listener, predicate or the key is null.</exception>      
+        string AddEntryListener(MapListener listener, IPredicate predicate, TKey key, bool includeValue);
+
+        /// <summary>
+        /// Adds a <see cref="MapListener"/> for this map.To receive an event, you should implement a corresponding 
+        /// <see cref="MapListener"/> sub-interface for that event.
+        /// </summary>
+        /// <remarks>
+        ///     Adds a continuous <see cref="MapListener"/> for this map. Listener will get notified
+        ///     for registered map events filtered by given predicate.
+        /// </remarks>
+        /// <param name="listener"><see cref="MapListener"/> for this map</param>
+        /// <param name="predicate">predicate for filtering entries</param>
+        /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
+        /// <returns>a registration Id which is used as a key to remove the listener.</returns>
+        /// <exception cref="ArgumentNullException">the specified listener or predicate is null.</exception>      
+        string AddEntryListener(MapListener listener, IPredicate predicate, bool includeValue);
+
+        /// <summary>
         ///     Adds an entry listener for this map.
         /// </summary>
         /// <remarks>
@@ -73,6 +134,7 @@ namespace Hazelcast.Core
         /// <param name="listener">entry listener</param>
         /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
         /// <returns>returns registration id</returns>
+        [Obsolete]
         string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue);
 
         /// <summary>Adds the specified entry listener for the specified key.</summary>
@@ -95,6 +157,7 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
+        [Obsolete]
         string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
@@ -110,8 +173,8 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key,
-            bool includeValue);
+        [Obsolete]
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key, bool includeValue);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
@@ -125,8 +188,8 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate,
-            bool includeValue);
+        [Obsolete]
+        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, bool includeValue);
 
         /// <summary>
         ///     Adds an index to this map for the specified entries so
@@ -305,7 +368,7 @@ namespace Hazelcast.Core
 
         /// <summary>
         ///     Returns a
-        ///     <see cref="ICollection{E}" />
+        ///     <see cref="ISet{E}" />
         ///     clone of the mappings contained in this map.
         ///     The set is <b>NOT</b> backed by the map,
         ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
@@ -863,13 +926,13 @@ namespace Hazelcast.Core
         TValue PutIfAbsent(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
         /// <summary>
-        ///     Same as <see cref="IMap{K, V}.Put(TKey, TValue, long, TimeUnit)" />
+        ///     Same as <see cref="IMap{TKey, TValue}.Put(TKey, TValue, long, TimeUnit)" />
         ///     but MapStore, if defined,
         ///     will not be called to store/persist the entry.  If ttl is 0, then
         ///     the entry lives forever.
         /// </summary>
         /// <remarks>
-        ///     Same as <see cref="IMap{K, V}.Put(TKey, TValue, long, TimeUnit)" />
+        ///     Same as <see cref="IMap{TKey, TValue}.Put(TKey, TValue, long, TimeUnit)" />
         ///     but MapStore, if defined,
         ///     will not be called to store/persist the entry.  If ttl is 0, then
         ///     the entry lives forever.

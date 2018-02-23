@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,29 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
+    /// <summary>
+    /// Client service to add/remove remote listeners.
+    /// </summary>
+    /// <remarks>
+    /// For smart client, it registers local  listeners to all nodes in the cluster.
+    /// For dummy client, it registers global listener to one node.
+    /// </remarks>
     public interface IClientListenerService
     {
-        void ReregisterListener(string originalRegistrationId, string newRegistrationId, long correlationId);
+        bool AddEventHandler(long correlationId, DistributedEventHandler eventHandler);
 
-        string StartListening(IClientMessage request, DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder, object key = null);
+        bool RemoveEventHandler(long correlationId);
 
-        bool StopListening(EncodeStopListenerRequest requestEncoder, DecodeStopListenerResponse responseDecoder,
-            string registrationId);
+        string RegisterListener(IClientMessage registrationMessage, DecodeRegistrationResponse responseDecoder,
+            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest, DistributedEventHandler eventHandler);
+
+        bool DeregisterListener(string userRegistrationId,
+            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest);
+        
+        void HandleResponseMessage(IClientMessage message);
+        
     }
 }

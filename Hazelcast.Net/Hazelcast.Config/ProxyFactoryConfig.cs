@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
 
 namespace Hazelcast.Config
 {
+    /// <summary>
+    /// This class is related to SPI; it is used to register custom services to client.
+    /// </summary>
     public class ProxyFactoryConfig
     {
         private string _className;
@@ -29,21 +32,37 @@ namespace Hazelcast.Config
             _service = service;
         }
 
+        /// <summary>
+        /// Gets class name of proxy factory
+        /// </summary>
+        /// <returns>class name of proxy factory</returns>
         public virtual string GetClassName()
         {
             return _className;
         }
 
+        /// <summary>
+        /// Gets service name of related proxy factory
+        /// </summary>
+        /// <returns>service name of related proxy factory</returns>
         public virtual string GetService()
         {
             return _service;
         }
 
+        /// <summary>
+        /// Sets class name of proxy factory
+        /// </summary>
+        /// <param name="className">class name of proxy factory</param>
         public virtual void SetClassName(string className)
         {
             _className = className;
         }
 
+        /// <summary>
+        /// Sets service name of related proxy factory
+        /// </summary>
+        /// <param name="service">service name of related proxy factory</param>
         public virtual void SetService(string service)
         {
             _service = service;

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,9 +25,7 @@ namespace Hazelcast.Util
 
     public delegate void DistributedEventHandler(IClientMessage eventMessage);
 
-    public delegate string DecodeStartListenerResponse(IClientMessage requestMessage);
+    public delegate string DecodeRegistrationResponse(IClientMessage requestMessage);
 
-    public delegate bool DecodeStopListenerResponse(IClientMessage requestMessage);
-
-    public delegate IClientMessage EncodeStopListenerRequest(string registrationId);
+    public delegate IClientMessage EncodeDeregisterListenerRequest(string registrationId);
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ using Hazelcast.Net.Ext;
 using Hazelcast.Security;
 using Hazelcast.Util;
 using ICredentials = Hazelcast.Security.ICredentials;
-
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     /// <summary>
@@ -125,7 +125,7 @@ namespace Hazelcast.Client.Spi
 
         public IClient GetLocalClient()
         {
-            var cm = (ClientConnectionManager) _client.GetConnectionManager();
+            var cm = _client.GetConnectionManager();
             var cp = GetPrincipal();
             var ownerConnection = cm.GetConnection(_ownerConnectionAddress);
 
@@ -166,7 +166,7 @@ namespace Hazelcast.Client.Spi
             return _listeners.TryRemove(registrationId, out removed);
         }
 
-        public void HeartBeatStarted(ClientConnection connection)
+        public void HeartBeatResumed(ClientConnection connection)
         {
         }
 
@@ -209,12 +209,6 @@ namespace Hazelcast.Client.Spi
         public ClientPrincipal GetPrincipal()
         {
             return _principal;
-        }
-
-        public IMember GetRandomMember()
-        {
-            var rand = new Random();
-            return GetMemberList().OrderBy(m => rand.Next()).FirstOrDefault();
         }
 
         /// <exception cref="System.Exception" />
@@ -454,13 +448,13 @@ namespace Hazelcast.Client.Spi
                 var usernamePasswordCr = (UsernamePasswordCredentials) _credentials;
                 request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
                     usernamePasswordCr.GetPassword(), uuid, ownerUuid, true,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
             }
             else
             {
                 var data = ss.ToData(_credentials);
                 request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
             }
 
             IClientMessage response;
@@ -485,6 +479,7 @@ namespace Hazelcast.Client.Spi
 
             connection.Member  =member;
             connection.SetOwner();
+            connection.ConnectedServerVersionStr = result.serverHazelcastVersion;
         }
     }
 }

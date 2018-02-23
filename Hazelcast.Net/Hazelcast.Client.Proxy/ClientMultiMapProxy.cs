@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Map;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
@@ -44,8 +45,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = MultiMapGetCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             var list = Invoke(request, keyData, m => MultiMapGetCodec.DecodeResponse(m).response);
-
-            return ToList<TValue>(list);
+            return new ReadOnlyLazyList<TValue>(list, GetContext().GetSerializationService());
         }
 
         public virtual bool Remove(object key, object value)
@@ -63,22 +63,21 @@ namespace Hazelcast.Client.Proxy
 
             var request = MultiMapRemoveCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             var list = Invoke(request, keyData, m => MultiMapRemoveCodec.DecodeResponse(m).response);
-            return ToList<TValue>(list);
+            return new ReadOnlyLazyList<TValue>(list, GetContext().GetSerializationService());
         }
 
         public virtual ISet<TKey> KeySet()
         {
             var request = MultiMapKeySetCodec.EncodeRequest(GetName());
-            var keySet = Invoke(request, m => MultiMapKeySetCodec.DecodeResponse(m).response);
-
-            return ToSet<TKey>(keySet);
+            var result = Invoke(request, m => MultiMapKeySetCodec.DecodeResponse(m).response);
+            return new ReadOnlyLazySet<TKey>(result, GetContext().GetSerializationService());
         }
 
         public virtual ICollection<TValue> Values()
         {
             var request = MultiMapValuesCodec.EncodeRequest(GetName());
-            var result = Invoke(request, m => MultiMapValuesCodec.DecodeResponse(m).response);
-            return ToList<TValue>(result);
+            var list = Invoke(request, m => MultiMapValuesCodec.DecodeResponse(m).response);
+            return new ReadOnlyLazyList<TValue>(list, GetContext().GetSerializationService());
         }
 
         public virtual ISet<KeyValuePair<TKey, TValue>> EntrySet()
@@ -132,38 +131,42 @@ namespace Hazelcast.Client.Proxy
 
         public virtual string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue)
         {
-            var request = MultiMapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, false);
+            var listenerAdapter =
+                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
+            var request = MultiMapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, IsSmart());
 
             DistributedEventHandler handler =
                 eventData => MultiMapAddEntryListenerCodec.AbstractEventHandler.Handle(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
-                        OnEntryEvent(key, value, oldValue, mergingValue, (EntryEventType) type, uuid, entries,
-                            includeValue, listener)
-                    );
+                    {
+                        OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
+                    });
 
-            return Listen(request, message => MultiMapAddEntryListenerCodec.DecodeResponse(message).response, handler);
+            return RegisterListener(request, message => MultiMapAddEntryListenerCodec.DecodeResponse(message).response,
+                id => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
         public virtual bool RemoveEntryListener(string registrationId)
         {
-            return StopListening(s => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), s),
-                m => MultiMapRemoveEntryListenerCodec.DecodeResponse(m).response, registrationId);
+            return DeregisterListener(registrationId, id => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id));
         }
 
         public virtual string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue)
         {
+            var listenerAdapter =
+                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
             var keyData = ToData(key);
-            var request = MultiMapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, false);
+            var request = MultiMapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, IsSmart());
 
             DistributedEventHandler handler =
                 eventData => MultiMapAddEntryListenerToKeyCodec.AbstractEventHandler.Handle(eventData,
-                    (thekey, value, oldValue, mergingValue, type, uuid, entries) =>
-                        OnEntryEvent(thekey, value, oldValue, mergingValue, (EntryEventType) type, uuid, entries,
-                            includeValue, listener)
-                    );
+                    (k, value, oldValue, mergingValue, type, uuid, entries) =>
+                    {
+                        OnEntryEvent(k, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
+                    });
 
-            return Listen(request, message => MultiMapAddEntryListenerToKeyCodec.DecodeResponse(message).response,
-                handler);
+            return RegisterListener(request, message => MultiMapAddEntryListenerToKeyCodec.DecodeResponse(message).response,
+                id => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
         public virtual void Lock(TKey key)
@@ -240,40 +243,14 @@ namespace Hazelcast.Client.Proxy
             Invoke(request, keyData);
         }
 
-        public void OnEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData,
-            EntryEventType eventType, string uuid,
-            int numberOfAffectedEntries, bool includeValue, IEntryListener<TKey, TValue> listener)
+        public void OnEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValue,
+            int eventTypeInt, string uuid, int numberOfAffectedEntries,
+            EntryListenerAdapter<TKey, TValue> listenerAdapter)
         {
-            var value = default(TValue);
-            var oldValue = default(TValue);
-            if (includeValue)
-            {
-                value = ToObject<TValue>(valueData);
-                oldValue = ToObject<TValue>(oldValueData);
-            }
-            var key = ToObject<TKey>(keyData);
             var member = GetContext().GetClusterService().GetMember(uuid);
-            switch (eventType)
-            {
-                case EntryEventType.Added:
-                {
-                    listener.EntryAdded(new EntryEvent<TKey, TValue>(GetName(), member, eventType, key, oldValue,
-                        value));
-                    break;
-                }
-                case EntryEventType.Removed:
-                {
-                    listener.EntryRemoved(new EntryEvent<TKey, TValue>(GetName(), member, eventType, key, oldValue,
-                        value));
-                    break;
-                }
-                case EntryEventType.ClearAll:
-                {
-                    listener.MapCleared(new MapEvent(GetName(), member, eventType,
-                        numberOfAffectedEntries));
-                    break;
-                }
-            }
+            listenerAdapter.OnEntryEvent(GetName(), keyData, valueData, oldValueData, mergingValue,
+                (EntryEventType) eventTypeInt, member,
+                numberOfAffectedEntries);
         }
 
         internal override void PostInit()

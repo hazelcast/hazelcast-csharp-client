@@ -1,37 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net", "Hazelcast.Net\Hazelcast.Net.csproj", "{538C038C-9681-42CB-9F2C-22017547A53E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net", "Hazelcast.Net\Hazelcast.Net.csproj", "{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Test", "Hazelcast.Test\Hazelcast.Test.csproj", "{20F910E8-C1BC-4D44-8460-351FDF0DD54D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{538C038C-9681-42CB-9F2C-22017547A53E} = {538C038C-9681-42CB-9F2C-22017547A53E}
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Test", "Hazelcast.Test\Hazelcast.Test.csproj", "{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{8BE8E132-51F1-41AA-80A5-FD21AA8200AA}"
-	ProjectSection(SolutionItems) = preProject
-		Build.proj = Build.proj
-		.build\MSBuild.Community.Tasks.dll = .build\MSBuild.Community.Tasks.dll
-		.build\MSBuild.Community.Tasks.targets = .build\MSBuild.Community.Tasks.targets
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Examples", "Hazelcast.Examples\Hazelcast.Examples.csproj", "{0A545288-EF38-4594-9E53-65163B0C12CD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3A7C7799-9A87-4D78-9797-81A5FDDBFFF8}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9D8841A5-B15F-45D4-BB4E-C3AD198AFB61}"
 	ProjectSection(SolutionItems) = preProject
 		build-docs.bat = build-docs.bat
 		build-nuget.bat = build-nuget.bat
 		build.bat = build.bat
+		shared.project.props = shared.project.props
 		README.md = README.md
-		SharedAssemblyInfo.cs = SharedAssemblyInfo.cs
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{1CE633B4-743D-4C57-8709-3A7E939509E3}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\packages.config = .nuget\packages.config
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Examples", "Hazelcast.Examples\Hazelcast.Examples.csproj", "{A66895CE-9106-4CE2-AA55-FFFFDB2F28ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,20 +24,23 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{538C038C-9681-42CB-9F2C-22017547A53E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{538C038C-9681-42CB-9F2C-22017547A53E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{538C038C-9681-42CB-9F2C-22017547A53E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{538C038C-9681-42CB-9F2C-22017547A53E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{20F910E8-C1BC-4D44-8460-351FDF0DD54D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{20F910E8-C1BC-4D44-8460-351FDF0DD54D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{20F910E8-C1BC-4D44-8460-351FDF0DD54D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{20F910E8-C1BC-4D44-8460-351FDF0DD54D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A66895CE-9106-4CE2-AA55-FFFFDB2F28ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A66895CE-9106-4CE2-AA55-FFFFDB2F28ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A66895CE-9106-4CE2-AA55-FFFFDB2F28ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A66895CE-9106-4CE2-AA55-FFFFDB2F28ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A545288-EF38-4594-9E53-65163B0C12CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A545288-EF38-4594-9E53-65163B0C12CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A545288-EF38-4594-9E53-65163B0C12CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A545288-EF38-4594-9E53-65163B0C12CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {71240A11-E6A4-4AA3-8E3A-C91CB4921246}
 	EndGlobalSection
 EndGlobal

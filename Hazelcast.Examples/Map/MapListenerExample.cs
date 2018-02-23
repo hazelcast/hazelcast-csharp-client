@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,10 +33,15 @@ namespace Hazelcast.Examples.Map
 
             var map = client.GetMap<string, string>("listener-example");
 
-            var cdown = new CountdownEvent(2);
+            var cdown = new CountdownEvent(3);
             map.AddEntryListener(new EntryAdapter<string, string>
             {
                 Added = e =>
+                {
+                    Console.WriteLine("Key '{0}' with value ' {1}' was added.", e.GetKey(), e.GetValue());
+                    cdown.Signal();
+                },
+                Updated = e =>
                 {
                     Console.WriteLine("Key '{0}' with value ' {1}' was added.", e.GetKey(), e.GetValue());
                     cdown.Signal();
@@ -48,7 +53,8 @@ namespace Hazelcast.Examples.Map
                 }
             }, true);
 
-            map.Put("key", "value");
+            map.Put("key", "value");//first put
+            map.Put("key", "valueNew");//makes update
             map.Remove("key");
 
             cdown.Wait();

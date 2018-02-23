@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ namespace Hazelcast.Client.Test
         }
 
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void ShutdownAllClients()
         {
             HazelcastClient.ShutdownAll();
@@ -210,7 +210,6 @@ namespace Hazelcast.Client.Test
                     return randomKey;
                 }
             }
-
         }
     }
 }

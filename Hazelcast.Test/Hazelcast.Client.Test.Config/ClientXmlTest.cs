@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Test.Config
         [Test]
         public virtual void TestXmlParserWithReader()
         {
-            var clientConfig = XmlClientConfigBuilder.Build(new StringReader(Resources.hazelcast_config_full));
+            var clientConfig = XmlClientConfigBuilder.Build(new StringReader(Hazelcast.Test.Resources.hazelcast_config_full));
             Assert.NotNull(clientConfig);
         }
     }

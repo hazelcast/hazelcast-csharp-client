@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -139,12 +140,16 @@ namespace Hazelcast.Client.Test
             map.AddIndex("name", true);
         }
 
-        [Test, Ignore, ExpectedException(typeof(HazelcastException))]
+        [Ignore("not currently possible to test this")]
+        [Test]
         public void TestAddInterceptor()
         {
-            //TODO: not currently possible to test this
+            Assert.Throws<HazelcastException>(() =>
+            {
+                //TODO: not currently possible to test this
 
-            var id = map.AddInterceptor(new Interceptor());
+                var id = map.AddInterceptor(new Interceptor());
+            });
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -330,14 +335,17 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(result, map.Get(key));
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
-        public virtual void TestExecuteOnKey_nullKey()
+        [Test]
+        public void TestExecuteOnKey_nullKey()
         {
-            FillMap();
-            const string key = null;
-            const string value = "value10";
-            var entryProcessor = new IdentifiedEntryProcessor(value);
-            map.ExecuteOnKey(key, entryProcessor);
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                FillMap();
+                const string key = null;
+                const string value = "value10";
+                var entryProcessor = new IdentifiedEntryProcessor(value);
+                map.ExecuteOnKey(key, entryProcessor);
+            });
         }
 
         [Test]
@@ -355,14 +363,17 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
-        public virtual void TestExecuteOnKeys_keysNotNull()
+        [Test]
+        public void TestExecuteOnKeys_keysNotNull()
         {
-            FillMap();
-            ISet<object> keys = null;
-            const string value = "valueX";
-            var entryProcessor = new IdentifiedEntryProcessor(value);
-            map.ExecuteOnKeys(keys, entryProcessor);
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                FillMap();
+                ISet<object> keys = null;
+                const string value = "valueX";
+                var entryProcessor = new IdentifiedEntryProcessor(value);
+                map.ExecuteOnKeys(keys, entryProcessor);
+            });
         }
 
         [Test]
@@ -417,16 +428,18 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(task.Result, map.Get(key));
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
-        public virtual void TestSubmitToKey_nullKey()
+        [Test]
+        public void TestSubmitToKey_nullKey()
         {
-            const string key = null;
-            const string value = "value10";
-            var entryProcessor = new IdentifiedEntryProcessor(value);
-            map.SubmitToKey(key, entryProcessor);
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                const string key = null;
+                const string value = "value10";
+                var entryProcessor = new IdentifiedEntryProcessor(value);
+                map.SubmitToKey(key, entryProcessor);
+            });
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
         public virtual void TestForceUnlock()
         {
@@ -592,6 +605,39 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        public void TestListener_SingleEventListeners()
+        {
+            var listener = new ListenerImpl<object, object>();
+            var reg1 = map.AddEntryListener(listener, false);
+
+            map.Put("key1", "value1");
+            Assert.IsTrue(listener.GetLatch(EntryEventType.Added).WaitOne(TimeSpan.FromSeconds(10)));
+
+            map.Put("key1", "value2");
+            Assert.IsTrue(listener.GetLatch(EntryEventType.Updated).WaitOne(TimeSpan.FromSeconds(10)));
+
+            map.Remove("key1");
+            Assert.IsTrue(listener.GetLatch(EntryEventType.Removed).WaitOne(TimeSpan.FromSeconds(10)));
+
+            map.Put("key1", "value2");
+            map.Clear();
+            Assert.IsTrue(listener.GetLatch(EntryEventType.ClearAll).WaitOne(TimeSpan.FromSeconds(10)));
+
+            map.Put("key1", "value2");
+            map.EvictAll();
+            Assert.IsTrue(listener.GetLatch(EntryEventType.EvictAll).WaitOne(TimeSpan.FromSeconds(10)));
+
+            map.Put("key2", "value2");
+            map.Evict("key2");
+            Assert.IsTrue(listener.GetLatch(EntryEventType.Evicted).WaitOne(TimeSpan.FromSeconds(10)));
+
+            map.Put("key3", "value2", 1L, TimeUnit.Seconds);
+            Assert.IsTrue(listener.GetLatch(EntryEventType.Expired).WaitOne(TimeSpan.FromSeconds(10)));
+
+            Assert.IsTrue(map.RemoveEntryListener(reg1));
+        }
+
+        [Test]
         public void TestListenerClearAll()
         {
             var latchClearAll = new CountdownEvent(1);
@@ -607,10 +653,6 @@ namespace Hazelcast.Client.Test
             var reg1 = map.AddEntryListener(listener1, false);
 
             map.Put("key1", "value1");
-            //map.Put("key2", "value2");
-            //map.Put("key3", "value3");
-            //map.Put("key4", "value4");
-            //map.Put("key5", "value5");
 
             map.Clear();
 
@@ -629,7 +671,11 @@ namespace Hazelcast.Client.Test
             var listener = new EntryAdapter<int, int>(
                 e => { },
                 e => { },
-                e => eventDataReceived.Enqueue(e.GetValue()),
+                e =>
+                {
+                    var value = e.GetValue();
+                    eventDataReceived.Enqueue(value);
+                },
                 e => { });
 
             map2.AddEntryListener(listener, true);
@@ -959,6 +1005,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.8")]
         public void TestRemoveAllWithPredicate()
         {
             FillMap();
@@ -1068,6 +1115,68 @@ namespace Hazelcast.Client.Test
             var enumerator = values.GetEnumerator();
             Assert.IsTrue(enumerator.MoveNext());
             Assert.AreEqual("value1", enumerator.Current);
+        }
+
+        private class ListenerImpl<TKey, TValue> : EntryAddedListener<TKey, TValue>,
+            EntryUpdatedListener<TKey, TValue>, EntryRemovedListener<TKey, TValue>, EntryEvictedListener<TKey, TValue>,
+            MapClearedListener, MapEvictedListener,
+            EntryMergedListener<TKey, TValue>, EntryExpiredListener<TKey, TValue>
+        {
+            private readonly ConcurrentDictionary<EntryEventType, AutoResetEvent> latches;
+
+            public ListenerImpl()
+            {
+                latches = new ConcurrentDictionary<EntryEventType, AutoResetEvent>();
+                foreach (EntryEventType et in Enum.GetValues(typeof(EntryEventType)))
+                {
+                    latches.TryAdd(et, new AutoResetEvent(false));
+                }
+            }
+
+            public void EntryAdded(EntryEvent<TKey, TValue> @event)
+            {
+                latches[EntryEventType.Added].Set();
+            }
+
+            public void EntryUpdated(EntryEvent<TKey, TValue> @event)
+            {
+                latches[EntryEventType.Updated].Set();
+            }
+
+            public void EntryRemoved(EntryEvent<TKey, TValue> @event)
+            {
+                latches[EntryEventType.Removed].Set();
+            }
+
+            public void EntryEvicted(EntryEvent<TKey, TValue> @event)
+            {
+                latches[EntryEventType.Evicted].Set();
+            }
+
+            public void MapCleared(MapEvent @event)
+            {
+                latches[EntryEventType.ClearAll].Set();
+            }
+
+            public void MapEvicted(MapEvent @event)
+            {
+                latches[EntryEventType.EvictAll].Set();
+            }
+
+            public void EntryMerged(EntryEvent<TKey, TValue> @event)
+            {
+                latches[EntryEventType.Merged].Set();
+            }
+
+            public void EntryExpired(EntryEvent<TKey, TValue> @event)
+            {
+                latches[EntryEventType.Expired].Set();
+            }
+
+            public AutoResetEvent GetLatch(EntryEventType key)
+            {
+                return latches[key];
+            }
         }
     }
 }

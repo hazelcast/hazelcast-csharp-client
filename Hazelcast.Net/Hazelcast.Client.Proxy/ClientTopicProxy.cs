@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,17 +44,21 @@ namespace Hazelcast.Client.Proxy
 
         public virtual string AddMessageListener(Action<Message<T>> listener)
         {
-            var request = TopicAddMessageListenerCodec.EncodeRequest(GetName(), false);
-            DistributedEventHandler handler = m => TopicAddMessageListenerCodec.AbstractEventHandler.Handle(m,
-                (item, time, uuid) => HandleMessageListener(item, time, uuid, listener));
-            return Listen(request, m => TopicAddMessageListenerCodec.DecodeResponse(m).response,
-                GetKey(), handler);
+            var request = TopicAddMessageListenerCodec.EncodeRequest(GetName(), IsSmart());
+            DistributedEventHandler handler = m =>
+                TopicAddMessageListenerCodec.AbstractEventHandler.Handle(m,
+                    (item, time, uuid) =>
+                    {
+                        HandleMessageListener(item, time, uuid, listener);
+                    });
+            return RegisterListener(request, m => TopicAddMessageListenerCodec.DecodeResponse(m).response,
+                id => TopicRemoveMessageListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
         public virtual bool RemoveMessageListener(string registrationId)
         {
-            return StopListening(s => TopicRemoveMessageListenerCodec.EncodeRequest(GetName(), s),
-                m => TopicRemoveMessageListenerCodec.DecodeResponse(m).response, registrationId);
+            return DeregisterListener(registrationId,
+                id => TopicRemoveMessageListenerCodec.EncodeRequest(GetName(), id));
         }
 
         protected override IClientMessage Invoke(IClientMessage request)

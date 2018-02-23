@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,8 @@ using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal class ClientMembershipListener
     {
@@ -145,9 +146,8 @@ namespace Hazelcast.Client.Spi
                             + ownerConnectionAddress);
                     }
                     var invocationService = (ClientInvocationService) _client.GetInvocationService();
-                    var response =
-                        ThreadUtil.GetResult(invocationService.InvokeListenerOnConnection(clientMessage, handler,
-                            m => ClientAddMembershipListenerCodec.DecodeResponse(m).response, connection));
+                    var future = invocationService.InvokeListenerOnConnection(clientMessage, handler, connection);
+                    var response = ThreadUtil.GetResult(future);
                     //registraiton id is ignored as this listener will never be removed
                     var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
                     WaitInitialMemberListFetched();

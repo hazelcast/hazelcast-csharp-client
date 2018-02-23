@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
+using Hazelcast.Net.Ext;
 using Hazelcast.Security;
 using Hazelcast.Util;
 
@@ -36,7 +37,7 @@ namespace Hazelcast.Client.Connection
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConnectionManager));
 
-        private readonly ConcurrentDictionary<Address, ClientConnection> _addresses =
+        private readonly ConcurrentDictionary<Address, ClientConnection> _activeConnections =
             new ConcurrentDictionary<Address, ClientConnection>();
 
         private readonly HazelcastClient _client;
@@ -59,7 +60,7 @@ namespace Hazelcast.Client.Connection
 
         private readonly ISocketInterceptor _socketInterceptor;
         private CancellationTokenSource _heartbeatToken;
-        private volatile bool _live;
+        private readonly AtomicBoolean _live = new AtomicBoolean(false);
         private int _nextConnectionId;
 
         public ClientConnectionManager(HazelcastClient client)
@@ -82,20 +83,19 @@ namespace Hazelcast.Client.Connection
             }
             _socketInterceptor = null;
 
-            _heartbeatTimeout = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.timeout") ??
+            _heartbeatTimeout = EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.timeout") ??
                                 _heartbeatTimeout;
-            _heartbeatInterval = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.heartbeat.interval") ??
+            _heartbeatInterval = EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.interval") ??
                                  _heartbeatInterval;
         }
 
         public void Start()
         {
-            if (_live)
+            if (!_live.CompareAndSet(false, true))
             {
                 return;
             }
-            _live = true;
-
+            
             //start Heartbeat
             _heartbeatToken = new CancellationTokenSource();
             _client.GetClientExecutionService().ScheduleWithFixedDelay(Heartbeat,
@@ -107,16 +107,15 @@ namespace Hazelcast.Client.Connection
 
         public void Shutdown()
         {
-            if (!_live)
+            if (!_live.CompareAndSet(true, false))
             {
                 return;
             }
 
-            _live = false;
             try
             {
                 _heartbeatToken.Cancel();
-                foreach (var kvPair in _addresses)
+                foreach (var kvPair in _activeConnections)
                 {
                     try
                     {
@@ -143,7 +142,12 @@ namespace Hazelcast.Client.Connection
 
         public bool Live
         {
-            get { return _live; }
+            get { return _live.Get(); }
+        }
+        
+        public ICollection<ClientConnection> ActiveConnections
+        {
+            get { return _activeConnections.Values; }
         }
 
         public void AddConnectionListener(IConnectionListener connectionListener)
@@ -166,15 +170,15 @@ namespace Hazelcast.Client.Connection
             lock (_connectionMutex)
             {
                 ClientConnection connection;
-                if (!_addresses.ContainsKey(address))
+                if (!_activeConnections.ContainsKey(address))
                 {
                     connection = InitializeConnection(address, authenticator);
                     FireConnectionListenerEvent(f => f.ConnectionAdded(connection));
-                    _addresses.TryAdd(connection.GetAddress(), connection);
-                    Logger.Finest("Active list of connections: " + string.Join(", ", _addresses.Values));
+                    _activeConnections.TryAdd(connection.GetAddress(), connection);
+                    Logger.Finest("Active list of connections: " + string.Join(", ", _activeConnections.Values));
                 }
                 else
-                    connection = _addresses[address];
+                    connection = _activeConnections[address];
 
                 if (connection == null)
                 {
@@ -192,7 +196,7 @@ namespace Hazelcast.Client.Connection
         public ClientConnection GetConnection(Address address)
         {
             ClientConnection connection;
-            return _addresses.TryGetValue(address, out connection) ? connection : null;
+            return _activeConnections.TryGetValue(address, out connection) ? connection : null;
         }
 
         /// <summary>
@@ -212,7 +216,7 @@ namespace Hazelcast.Client.Connection
             if (address != null)
             {
                 ClientConnection conn;
-                if (_addresses.TryRemove(address, out conn))
+                if (_activeConnections.TryRemove(address, out conn))
                 {
                     connection.Close();
                     FireConnectionListenerEvent(f => f.ConnectionRemoved(connection));
@@ -221,7 +225,7 @@ namespace Hazelcast.Client.Connection
                 {
                     Logger.Warning("Could not find connection " + connection +
                                    " in list of connections, could not destroy connection. Current list of connections are " +
-                                   string.Join(", ", _addresses.Keys));
+                                   string.Join(", ", _activeConnections.Keys));
                     connection.Close();
                 }
             }
@@ -262,7 +266,7 @@ namespace Hazelcast.Client.Connection
         /// <exception cref="HazelcastException"></exception>
         private void CheckLive()
         {
-            if (!_live)
+            if (!_live.Get())
             {
                 throw new HazelcastException("ConnectionManager is not active");
             }
@@ -283,13 +287,13 @@ namespace Hazelcast.Client.Connection
             {
                 request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
                     usernamePasswordCr.GetPassword(), uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
             }
             else
             {
                 var data = ss.ToData(_credentials);
                 request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), EnvironmentUtil.GetDllVersion());
+                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
             }
 
             IClientMessage response;
@@ -336,9 +340,9 @@ namespace Hazelcast.Client.Connection
 
         private void Heartbeat()
         {
-            if (!_live) return;
+            if (!_live.Get()) return;
 
-            foreach (var connection in _addresses.Values)
+            foreach (var connection in _activeConnections.Values)
             {
                 if (DateTime.Now - connection.LastRead > TimeSpan.FromMilliseconds(_heartbeatTimeout))
                 {
@@ -367,7 +371,7 @@ namespace Hazelcast.Client.Connection
                         Logger.Warning("Heartbeat is back to healthy for connection: " + connection);
                         connection.HeartbeatSucceeded();
                         var local = connection;
-                        FireHeartBeatEvent(l => l.HeartBeatStarted(local));
+                        FireHeartBeatEvent(l => l.HeartBeatResumed(local));
                     }
                 }
             }

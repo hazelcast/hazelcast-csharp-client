@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,8 @@ using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientProxy : IDistributedObject
     {
@@ -161,10 +162,29 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        protected virtual T Invoke<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
+        protected T Invoke<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
         {
             var response = Invoke(request, key);
             return decodeResponse(response);
+        }
+
+        protected T InvokeOnPartition<T>(IClientMessage request,int partitionId, Func<IClientMessage, T> decodeResponse)
+        {
+            var response = InvokeOnPartition(request, partitionId);
+            return decodeResponse(response);
+        }
+        
+        protected IClientMessage InvokeOnPartition(IClientMessage request, int partitionId)
+        {
+            try
+            {
+                var task = GetContext().GetInvocationService().InvokeOnPartition(request, partitionId);
+                return ThreadUtil.GetResult(task);
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
         }
 
         protected virtual IClientMessage Invoke(IClientMessage request)
@@ -186,29 +206,29 @@ namespace Hazelcast.Client.Spi
             return decodeResponse(response);
         }
 
-        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse responseDecoder,
-            object partitionKey, DistributedEventHandler handler)
+        protected virtual string RegisterListener(IClientMessage registrationMessage,
+            DecodeRegistrationResponse responseDecoder,
+            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest, DistributedEventHandler eventHandler)
         {
             return _context.GetListenerService()
-                .StartListening(registrationRequest, handler, responseDecoder, partitionKey);
-        }
-
-        protected virtual string Listen(ClientMessage registrationRequest, DecodeStartListenerResponse responseDecoder,
-            DistributedEventHandler handler)
-        {
-            return _context.GetListenerService().StartListening(registrationRequest, handler, responseDecoder);
+                .RegisterListener(registrationMessage, responseDecoder, encodeDeregisterListenerRequest, eventHandler);
         }
 
         protected virtual void OnDestroy()
         {
         }
 
-        protected virtual bool StopListening(EncodeStopListenerRequest responseEncoder,
-            DecodeStopListenerResponse responseDecoder, string registrationId)
+        protected virtual bool DeregisterListener(string userRegistrationId,
+            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest)
         {
-            return _context.GetListenerService().StopListening(responseEncoder, responseDecoder, registrationId);
+            return _context.GetListenerService()
+                .DeregisterListener(userRegistrationId, encodeDeregisterListenerRequest);
         }
 
+        protected virtual bool IsSmart()
+        {
+            return _context.GetClientConfig().GetNetworkConfig().IsSmartRouting();
+        }
         protected IList<IData> ToDataList<T>(ICollection<T> c)
         {
             ThrowExceptionIfNull(c, "Collection cannot be null.");
@@ -221,14 +241,16 @@ namespace Hazelcast.Client.Spi
             return values;
         }
 
-        protected IDictionary<TKey, object> DeserializeEntries<TKey>(IList<KeyValuePair<IData, IData>> entries) {
+        protected IDictionary<TKey, object> DeserializeEntries<TKey>(IList<KeyValuePair<IData, IData>> entries)
+        {
             if (entries.Count == 0)
             {
                 return new Dictionary<TKey, object>();
             }
             var result = new Dictionary<TKey, object>();
-            foreach(var entry in entries) {
-                var key = (TKey)ToObject<object>(entry.Key);
+            foreach (var entry in entries)
+            {
+                var key = (TKey) ToObject<object>(entry.Key);
                 result.Add(key, ToObject<object>(entry.Value));
             }
             return result;

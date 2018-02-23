@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,17 +31,20 @@ namespace Hazelcast.Client.Test.Config
             config.GetNearCacheConfig("com.hazelcast");
         }
 
-        [Test, ExpectedException(typeof (ConfigurationException))]
-        public virtual void TestDuplicateConfig()
+        [Test]
+        public void TestDuplicateConfig()
         {
-            var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast.*ap");
-            var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast*map");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig1);
-            config.AddNearCacheConfig(nearCacheConfig2);
+            Assert.Throws<ConfigurationException>(() =>
+            {
+                var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast.*ap");
+                var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast*map");
+                var config = new ClientConfig();
+                config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
+                config.AddNearCacheConfig(nearCacheConfig1);
+                config.AddNearCacheConfig(nearCacheConfig2);
 
-            config.GetNearCacheConfig("com.hazelcast.map");
+                config.GetNearCacheConfig("com.hazelcast.map");
+            });
         }
 
         [Test]

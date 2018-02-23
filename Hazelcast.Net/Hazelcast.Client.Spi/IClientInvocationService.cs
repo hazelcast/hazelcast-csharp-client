@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Util;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     /// <summary>
@@ -24,25 +25,11 @@ namespace Hazelcast.Client.Spi
     /// </summary>
     public interface IClientInvocationService
     {
-        IFuture<IClientMessage> InvokeListenerOnKeyOwner(IClientMessage request, object key,
-            DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder);
-
-        IFuture<IClientMessage> InvokeListenerOnPartition(IClientMessage request, int partitionId,
-            DistributedEventHandler handler,
-            DecodeStartListenerResponse responseDecoder);
-
-        IFuture<IClientMessage> InvokeListenerOnRandomTarget(IClientMessage request,
-            DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder);
-
-        IFuture<IClientMessage> InvokeListenerOnTarget(IClientMessage request, Address target,
-            DistributedEventHandler handler, DecodeStartListenerResponse responseDecoder);
-
         IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
         IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
         IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId);
         IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
         IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
-        bool RemoveEventHandler(long correlationId);
         void Shutdown();
     }
 }

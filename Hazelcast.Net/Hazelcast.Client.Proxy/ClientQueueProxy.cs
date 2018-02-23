@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Proxy
 
         public string AddItemListener(IItemListener<T> listener, bool includeValue)
         {
-            var request = QueueAddListenerCodec.EncodeRequest(GetName(), includeValue, false);
+            var request = QueueAddListenerCodec.EncodeRequest(GetName(), includeValue, IsSmart());
 
             DistributedEventHandler handler = m =>
                 QueueAddListenerCodec.AbstractEventHandler.Handle(m,
@@ -42,13 +42,13 @@ namespace Hazelcast.Client.Proxy
                         HandleItemListener(item, uuid, (ItemEventType) type, listener, includeValue);
                     });
 
-            return Listen(request, m => QueueAddListenerCodec.DecodeResponse(m).response, GetPartitionKey(), handler);
+            return RegisterListener(request, m => QueueAddListenerCodec.DecodeResponse(m).response,
+                id => QueueRemoveListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
         public bool RemoveItemListener(string registrationId)
         {
-            return StopListening(s => QueueRemoveListenerCodec.EncodeRequest(GetName(), s),
-                m => QueueRemoveListenerCodec.DecodeResponse(m).response, registrationId);
+            return DeregisterListener(registrationId, id => QueueRemoveListenerCodec.EncodeRequest(GetName(), id));
         }
 
         public bool Add(T e)

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
 using Hazelcast.Config;
 using Hazelcast.IO.Serialization;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal sealed class ClientContext
     {
@@ -30,10 +31,12 @@ namespace Hazelcast.Client.Spi
         private readonly ProxyManager _proxyManager;
         private readonly ISerializationService _serializationService;
 
+        private readonly NearCacheManager _nearCacheManager;
+
         internal ClientContext(ISerializationService serializationService, IClientClusterService clusterService,
             IClientPartitionService partitionService, IClientInvocationService invocationService,
-            IClientExecutionService executionService, IClientListenerService listenerService, ProxyManager proxyManager,
-            ClientConfig clientConfig)
+            IClientExecutionService executionService, IClientListenerService listenerService, 
+            NearCacheManager nearCacheManager, ProxyManager proxyManager, ClientConfig clientConfig)
         {
             _serializationService = serializationService;
             _clusterService = clusterService;
@@ -43,6 +46,7 @@ namespace Hazelcast.Client.Spi
             _listenerService = listenerService;
             _proxyManager = proxyManager;
             _clientConfig = clientConfig;
+            _nearCacheManager = nearCacheManager;
         }
 
         public ClientConfig GetClientConfig()
@@ -83,6 +87,11 @@ namespace Hazelcast.Client.Spi
         public void RemoveProxy(ClientProxy proxy)
         {
             _proxyManager.RemoveProxy(proxy.GetServiceName(), proxy.GetName());
+        }
+
+        public NearCacheManager GetNearCacheManager()
+        {
+            return _nearCacheManager;
         }
 
         public HazelcastClient GetClient()

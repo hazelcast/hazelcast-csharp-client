@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal class ClientInvocation
     {
@@ -29,6 +30,8 @@ namespace Hazelcast.Client.Spi
 
         // the point at which the request should be considered timed out
         private readonly long _invocationTimeMillis; 
+        
+        private readonly DistributedEventHandler _eventHandler;
 
         public ClientInvocation(IClientMessage message)
         {
@@ -52,10 +55,11 @@ namespace Hazelcast.Client.Spi
             Address = address;
         }
 
-        public ClientInvocation(IClientMessage message, ClientConnection boundConnection)
+        public ClientInvocation(IClientMessage message, ClientConnection boundConnection, DistributedEventHandler eventHandler = null)
             : this(message)
         {
             _boundConnection = boundConnection;
+            _eventHandler = eventHandler;
         }
 
         public string MemberUuid
@@ -93,6 +97,11 @@ namespace Hazelcast.Client.Spi
         public long InvocationTimeMillis
         {
             get { return _invocationTimeMillis; }
+        }
+
+        public DistributedEventHandler EventHandler 
+        {
+            get { return _eventHandler; }
         }
     }
 }

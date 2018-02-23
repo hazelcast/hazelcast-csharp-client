@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -178,6 +178,15 @@ namespace Hazelcast.Core
         /// <param name="name">name of the distributed multimap</param>
         /// <returns>distributed multimap instance with the specified name</returns>
         IMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name);
+
+        /// <summary>
+        /// Returns the replicated map instance with the specified name.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys in the map</typeparam>
+        /// <typeparam name="TValue">The type of the values in the map</typeparam>
+        /// <param name="name">name of the distributed map</param>
+        /// <returns>distributed map instance with the specified name</returns>
+        IReplicatedMap<TKey, TValue> GetReplicatedMap<TKey, TValue>(string name);
 
         /// <summary>Returns the name of this Hazelcast instance</summary>
         /// <returns>name of this Hazelcast instance</returns>
