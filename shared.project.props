@@ -1,0 +1,14 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup Label="build">
+        <Version>3.9.3</Version>
+        <Product>Hazelcast</Product>
+        <Company>Hazelcast Inc.</Company>
+        <Copyright>Copyright (c) 2008-2018, Hazelcast, Inc</Copyright>
+        <Authors>Hazelcast</Authors>
+        <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+        <PackageIconUrl>https://s3.amazonaws.com/hazelcast/logo/HazelcastLogo-Orange_Dark_NoText_200w.png</PackageIconUrl>
+        <PackageProjectUrl>https://github.com/hazelcast/hazelcast-csharp-client</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/hazelcast/hazelcast-csharp-client</RepositoryUrl>
+        <PackageTags>hazelcast cache imdg big-data in-memory datagrid clustering scalabilty distributed caching</PackageTags>
+    </PropertyGroup>
+</Project>

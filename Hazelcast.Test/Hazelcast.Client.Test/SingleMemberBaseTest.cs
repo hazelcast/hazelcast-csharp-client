@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,18 +22,21 @@ namespace Hazelcast.Client.Test
     public class SingleMemberBaseTest : HazelcastTestSupport
     {
         protected IHazelcastInstance Client { get; private set; }
+        protected HazelcastClient ClientInternal { get; private set; }
         protected RemoteController.Client RemoteController { get; private set; }
+        protected Cluster HzCluster { get; private set; }
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void SetupCluster()
         {
             RemoteController = CreateRemoteController();
-            var cluster = CreateCluster(RemoteController, GetServerConfig());
-            RemoteController.startMember(cluster.Id);
+            HzCluster = CreateCluster(RemoteController, GetServerConfig());
+            RemoteController.startMember(HzCluster.Id);
             Client = CreateClient();
+            ClientInternal = ((HazelcastClientProxy) Client).GetClient();
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void ShutdownRemoteController()
         {
             HazelcastClient.ShutdownAll();

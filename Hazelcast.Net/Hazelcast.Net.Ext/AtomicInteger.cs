@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,12 +75,12 @@ namespace Hazelcast.Net.Ext
 
         public void Set(int newValue)
         {
-            _val = newValue;
+            Interlocked.Exchange(ref _val, newValue);
         }
 
         private bool CompareAndSet(int expect, int update)
         {
-            return (Interlocked.CompareExchange(ref _val, update, expect) == expect);
+            return Interlocked.CompareExchange(ref _val, update, expect) == expect;
         }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,21 +25,27 @@ namespace Hazelcast.Config
     /// </remarks>
     public sealed class GroupConfig
     {
+        /// <summary>
+        /// Default group password.
+        /// </summary>
         public const string DefaultGroupPassword = "dev-pass";
 
+        /// <summary>
+        /// Default group name.
+        /// </summary>
         public const string DefaultGroupName = "dev";
 
         private string _name = DefaultGroupName;
 
         private string _password = DefaultGroupPassword;
 
-        /// <summary>Creates a GroupConfig with default group-name and group-password.</summary>
-        /// <remarks>Creates a GroupConfig with default group-name and group-password.</remarks>
+        /// <summary>Creates a <see cref="GroupConfig"/> with default group-name and group-password.</summary>
+        /// <remarks>Creates a <see cref="GroupConfig"/> with default group-name and group-password.</remarks>
         public GroupConfig()
         {
         }
 
-        /// <summary>Creates a GroupConfig with the given group-name and default group-password</summary>
+        /// <summary>Creates a <see cref="GroupConfig"/> with the given group-name and default group-password</summary>
         /// <param name="name">the name of the group</param>
         /// <exception cref="System.ArgumentException">if name is null.</exception>
         public GroupConfig(string name)
@@ -47,7 +53,7 @@ namespace Hazelcast.Config
             SetName(name);
         }
 
-        /// <summary>Creates a GroupConfig with the given group-name and group-password</summary>
+        /// <summary>Creates a <see cref="GroupConfig"/> with the given group-name and group-password</summary>
         /// <param name="name">the name of the group</param>
         /// <param name="password">the password of the group</param>
         /// <exception cref="System.ArgumentException">if name or password is null.</exception>
@@ -57,6 +63,7 @@ namespace Hazelcast.Config
             SetPassword(password);
         }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (this == obj)
@@ -72,6 +79,7 @@ namespace Hazelcast.Config
                    (_password == null ? other._password == null : _password.Equals(other._password));
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             return (_name != null ? _name.GetHashCode() : 0) + 31*(_password != null ? _password.GetHashCode() : 0);
@@ -96,7 +104,7 @@ namespace Hazelcast.Config
         /// <summary>Sets the group name.</summary>
         /// <remarks>Sets the group name.</remarks>
         /// <param name="name">the name to set</param>
-        /// <returns>the updated GroupConfig.</returns>
+        /// <returns>the updated <see cref="GroupConfig"/>.</returns>
         /// <exception cref="System.ArgumentException">if name is null.</exception>
         public GroupConfig SetName(string name)
         {
@@ -107,7 +115,7 @@ namespace Hazelcast.Config
         /// <summary>Sets the password.</summary>
         /// <remarks>Sets the password.</remarks>
         /// <param name="password">the password to set</param>
-        /// <returns>the updated GroupConfig.</returns>
+        /// <returns>the updated <see cref="GroupConfig"/>.</returns>
         /// <exception cref="System.ArgumentException">if password is null.</exception>
         public GroupConfig SetPassword(string password)
         {
@@ -115,6 +123,7 @@ namespace Hazelcast.Config
             return this;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var builder = new StringBuilder();

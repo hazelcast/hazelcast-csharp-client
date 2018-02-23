@@ -164,3 +164,6 @@ rc/
 .idea
 *.jar
 
+.vs
+.DS_Store
+packages/

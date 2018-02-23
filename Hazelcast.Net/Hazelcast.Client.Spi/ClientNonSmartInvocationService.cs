@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal class ClientNonSmartInvocationService : ClientInvocationService
     {
@@ -51,6 +52,11 @@ namespace Hazelcast.Client.Spi
         public override IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target)
         {
             return SendToOwner(new ClientInvocation(request));
+        }
+
+        protected override Address GetRandomAddress()
+        {
+            return Client.GetClientClusterService().GetOwnerConnectionAddress();
         }
 
         private IFuture<IClientMessage> SendToOwner(ClientInvocation invocation)

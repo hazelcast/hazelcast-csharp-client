@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,8 @@ using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientProxy : IDistributedObject
     {
@@ -161,10 +162,29 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        protected virtual T Invoke<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
+        protected T Invoke<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
         {
             var response = Invoke(request, key);
             return decodeResponse(response);
+        }
+
+        protected T InvokeOnPartition<T>(IClientMessage request,int partitionId, Func<IClientMessage, T> decodeResponse)
+        {
+            var response = InvokeOnPartition(request, partitionId);
+            return decodeResponse(response);
+        }
+        
+        protected IClientMessage InvokeOnPartition(IClientMessage request, int partitionId)
+        {
+            try
+            {
+                var task = GetContext().GetInvocationService().InvokeOnPartition(request, partitionId);
+                return ThreadUtil.GetResult(task);
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
         }
 
         protected virtual IClientMessage Invoke(IClientMessage request)

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Config
 {
+#pragma warning disable CS1591
+
     public abstract class AbstractXmlConfigHelper
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (AbstractXmlConfigHelper));

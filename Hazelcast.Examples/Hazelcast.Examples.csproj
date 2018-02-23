@@ -1,100 +1,14 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A66895CE-9106-4CE2-AA55-FFFFDB2F28ED}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Hazelcast.Examples</RootNamespace>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\shared.project.props" />
+  <PropertyGroup Label="build">
+    <TargetFrameworks>net40;netcoreapp2.0</TargetFrameworks>
     <AssemblyName>Hazelcast.Examples</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <RootNamespace>Hazelcast.Examples</RootNamespace>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <OutputType>Exe</OutputType>
+    <LangVersion>4</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties/SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="App.cs" />
-    <Compile Include="Client\LifecycleExample.cs" />
-    <Compile Include="Client\MemberListenerExample.cs" />
-    <Compile Include="Collections\CollectionListenerExample.cs" />
-    <Compile Include="Collections\QueueExample.cs" />
-    <Compile Include="Collections\RingbufferExample.cs" />
-    <Compile Include="Collections\SetExample.cs" />
-    <Compile Include="Collections\ListExample.cs" />
-    <Compile Include="Map\MapAsyncExample.cs" />
-    <Compile Include="Map\MapCustomSerializerExample.cs" />
-    <Compile Include="Map\MapEntryProcessorExample.cs" />
-    <Compile Include="Map\MapIdentifiedDataSerializableExample.cs" />
-    <Compile Include="Map\MapListenerExample.cs" />
-    <Compile Include="Map\MapLockExample.cs" />
-    <Compile Include="Map\MapNearCacheExample.cs" />
-    <Compile Include="Map\MapPartitionPredicateExample.cs" />
-    <Compile Include="Map\MapPortableExample.cs" />
-    <Compile Include="Map\MapSimpleExample.cs" />
-    <Compile Include="Map\MultiMapExample.cs" />
-    <Compile Include="Models\Customer.cs" />
-    <Compile Include="Models\Employee.cs" />
-    <Compile Include="Models\ExamplePortableFactory.cs" />
-    <Compile Include="Models\EntryProcessor.cs" />
-    <Compile Include="Primitives\AtomicLongExample.cs" />
-    <Compile Include="Primitives\CountdownLatchExample.cs" />
-    <Compile Include="Primitives\IdGeneratorExample.cs" />
-    <Compile Include="Primitives\LockExample.cs" />
-    <Compile Include="Primitives\SemaphoreExample.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Topic\TopicExample.cs" />
-    <Compile Include="Transactions\SimpleTransactionExample.cs" />
-    <Compile Include="Transactions\TransactionRollbackExample.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj">
-      <Project>{538c038c-9681-42cb-9f2c-22017547a53e}</Project>
-      <Name>Hazelcast.Net</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

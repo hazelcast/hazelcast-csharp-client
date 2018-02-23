@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     internal sealed class ProxyManager
@@ -62,11 +63,10 @@ namespace Hazelcast.Client.Spi
             var isSmart = _client.GetClientConfig().GetNetworkConfig().IsSmartRouting();
             var request = ClientAddDistributedObjectListenerCodec.EncodeRequest(isSmart);
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(),
+                _client.GetClientPartitionService(), _client.GetInvocationService(),
+                _client.GetClientExecutionService(),
+                _client.GetListenerService(), _client.GetNearCacheManager(),
                 this, _client.GetClientConfig());
-            //EventHandler<PortableDistributedObjectEvent> eventHandler = new _EventHandler_211(this, listener);
-
             DistributedEventHandler eventHandler = delegate(IClientMessage message)
             {
                 ClientAddDistributedObjectListenerCodec.AbstractEventHandler.Handle(message,
@@ -93,7 +93,6 @@ namespace Hazelcast.Client.Spi
                         }
                     });
             };
-            //PortableDistributedObjectEvent
             return context.GetListenerService().RegisterListener(request, 
                 m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response,
                 ClientRemoveDistributedObjectListenerCodec.EncodeRequest,
@@ -138,11 +137,9 @@ namespace Hazelcast.Client.Spi
                 InitializeWithRetry(proxy);
             }
 
-            proxy.SetContext(new ClientContext(_client.GetSerializationService(),
-                _client.GetClientClusterService(),
+            proxy.SetContext(new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(),
-                this, _client.GetClientConfig()));
+                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig()));
             proxy.PostInit();
 
             _proxies.AddOrUpdate(ns, n => proxy, (n, oldProxy) => {
@@ -200,6 +197,8 @@ namespace Hazelcast.Client.Spi
                 (type, id) => ProxyFactory(typeof (ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
             Register(ServiceNames.Ringbuffer,
                 (type, id) => ProxyFactory(typeof (ClientRingbufferProxy<>), type, ServiceNames.Ringbuffer, id));
+            Register(ServiceNames.ReplicatedMap,
+                (type, id) => ProxyFactory(typeof (ClientReplicatedMapProxy<,>), type, ServiceNames.ReplicatedMap, id));
 
             Register(ServiceNames.IdGenerator, delegate(Type type, string id)
             {
@@ -242,7 +241,7 @@ namespace Hazelcast.Client.Spi
         {
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(), this, _client.GetClientConfig());
+                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig());
             return context.GetListenerService().DeregisterListener(id, 
                 ClientRemoveDistributedObjectListenerCodec.EncodeRequest);
         }

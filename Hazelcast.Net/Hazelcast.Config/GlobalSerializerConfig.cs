@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Config
 {
+    /// <summary>
+    /// Contains the configuration for global serializer.
+    /// </summary>
     public class GlobalSerializerConfig
     {
         private string _className;
@@ -57,6 +60,7 @@ namespace Hazelcast.Config
             return _overrideClrSerialization;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return string.Format("ClassName: {0}, Implementation: {1}, OverrideClrSerialization: {2}",

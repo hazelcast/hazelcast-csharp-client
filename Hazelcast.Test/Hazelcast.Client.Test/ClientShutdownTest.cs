@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,73 +45,77 @@ namespace Hazelcast.Client.Test
         }
 
         //TODO: This test fails intermittently
-        [Test, Ignore, ExpectedException(typeof (HazelcastException))]
+        [Ignore("This test fails intermittently")]
+        [Test]
         public void TestAsyncOperationDuringClientShutdown()
         {
-            var member = _remoteController.startMember(_cluster.Id);
-            var client = CreateClient();
-
-            var map = client.GetMap<int, string>(TestSupport.RandomString());
-
-            var count = 100;
-            var tasks = new List<Task>();
-            var reset = new ManualResetEventSlim();
-            Task.Factory.StartNew(() =>
+            Assert.Throws<HazelcastException>(() =>
             {
-                for (var i = 0; i < count; i++)
+                var member = _remoteController.startMember(_cluster.Id);
+                var client = CreateClient();
+
+                var map = client.GetMap<int, string>(TestSupport.RandomString());
+
+                var count = 100;
+                var tasks = new List<Task>();
+                var reset = new ManualResetEventSlim();
+                Task.Factory.StartNew(() =>
                 {
-                    tasks.Add(map.PutAsync(i, TestSupport.RandomString()));
+                    for (var i = 0; i < count; i++)
+                    {
+                        tasks.Add(map.PutAsync(i, TestSupport.RandomString()));
+                    }
+                    reset.Set();
+                });
+                Task.Factory.StartNew(() => { client.Shutdown(); });
+                try
+                {
+                    reset.Wait();
+                    Assert.IsFalse(Task.WaitAll(tasks.ToArray(), 30 * 1000));
                 }
-                reset.Set();
+                catch (AggregateException e)
+                {
+                    throw e.InnerExceptions.First();
+                }
             });
-            Task.Factory.StartNew(() =>
-            {
-                client.Shutdown();
-            });
-            try
-            {
-                reset.Wait();
-                Assert.IsFalse(Task.WaitAll(tasks.ToArray(), 30*1000));
-            }
-            catch (AggregateException e)
-            {
-                throw e.InnerExceptions.First();
-            }
         }
 
-        [Test, ExpectedException(typeof (HazelcastException), ExpectedMessage = "Client is shut down.")]
+        [Test]
         public void TestOperationAfterShutdown()
         {
-            var member = _remoteController.startMember(_cluster.Id);
-            var client = CreateClient();
-
-            var map = client.GetMap<int, string>(TestSupport.RandomString());
-            for (var i = 0; i < 100; i++)
+            Assert.Throws<HazelcastException>(() =>
             {
-                map.Put(i, TestSupport.RandomString());
-            }
-            client.Shutdown();
-            map.Get(0);
+                var member = _remoteController.startMember(_cluster.Id);
+                var client = CreateClient();
+
+                var map = client.GetMap<int, string>(TestSupport.RandomString());
+                for (var i = 0; i < 100; i++)
+                {
+                    map.Put(i, TestSupport.RandomString());
+                }
+                client.Shutdown();
+                map.Get(0);
+            }, "Client is shut down.");
         }
 
-        [Test, ExpectedException(typeof (HazelcastException)), Repeat(10)]
+        [Test, Repeat(10)]
         public void TestOperationDuringClientShutdown()
         {
-            var member = _remoteController.startMember(_cluster.Id);
-            var client = CreateClient();
-
-            var map = client.GetMap<int, string>(TestSupport.RandomString());
-            for (var i = 0; i < 10000; i++)
+            Assert.Throws<HazelcastException>(() =>
             {
-                map.Put(i, TestSupport.RandomString());
-                if (i == 0)
+                var member = _remoteController.startMember(_cluster.Id);
+                var client = CreateClient();
+
+                var map = client.GetMap<int, string>(TestSupport.RandomString());
+                for (var i = 0; i < 10000; i++)
                 {
-                    Task.Factory.StartNew(() =>
+                    map.Put(i, TestSupport.RandomString());
+                    if (i == 0)
                     {
-                        client.Shutdown();
-                    });
+                        Task.Factory.StartNew(() => { client.Shutdown(); });
+                    }
                 }
-            }
+            });
         }
     }
 }

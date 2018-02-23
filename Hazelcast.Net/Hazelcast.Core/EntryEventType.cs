@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,9 @@ namespace Hazelcast.Core
         Evicted = 1 << 3,
         EvictAll = 1 << 4,
         ClearAll = 1 << 5,
+        Merged = 1 << 6,
+        Expired = 1 << 7,
         Invalidation = 1 << 8,
-        All = Added | Removed | Updated | Evicted | EvictAll | ClearAll
+        All = Added | Removed | Updated | Evicted | EvictAll | ClearAll | Merged | Expired
     }
 }

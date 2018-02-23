@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ namespace Hazelcast.Util
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (EnvironmentUtil));
 
-        public static int? ReadEnvironmentVar(string var)
+        public static int? ReadInt(string var)
         {
             var param = Environment.GetEnvironmentVariable(var);
             try
@@ -39,12 +39,23 @@ namespace Hazelcast.Util
             return null;
         }
 
-        public static string GetDllVersion()
+        public static bool? ReadBool(string var)
         {
-            var version = typeof(EnvironmentUtil).Assembly.GetName().Version;
-            var versionStr = version.Build == 0 ? string.Format("{0}.{1}", version.Major, version.Minor)
-                : string.Format("{0}.{1}.{2}", version.Major, version.Minor, version.Build);
-            return versionStr;
+            var param = Environment.GetEnvironmentVariable(var);
+            try
+            {
+                if (param != null)
+                {
+                    return param.ToLower().Equals("true");
+                }
+            }
+            catch (Exception)
+            {
+                Logger.Warning("Provided value is not a valid value : " + param);
+                return null;
+            }
+            return null;
         }
+
     }
 }

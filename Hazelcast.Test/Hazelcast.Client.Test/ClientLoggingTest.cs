@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,14 +25,17 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientLoggingTest
     {
-        [Test, ExpectedException(typeof (ConfigurationException))]
-        public void TestConsoleLoggingInvalidLevel()
+        [Test]
+		public void TestConsoleLoggingInvalidLevel()
+		{
+			Assert.Throws<ConfigurationException>(() =>
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "asdf");
             var logger = new ConsoleLogFactory().GetLogger("logger");
 
             Assert.IsFalse(logger.IsFinestEnabled());
-        }
+        });
+		}
 
         [Test]
         public void TestConsoleLoggingLevel()
@@ -55,8 +58,8 @@ namespace Hazelcast.Client.Test
 
                 Assert.IsFalse(logger.IsFinestEnabled());
                 Assert.That(logger.GetLevel(), Is.EqualTo(LogLevel.Info));
-                Assert.That(log, Is.StringContaining(message1));
-                Assert.That(log, Is.Not.StringContaining(message2));
+                Assert.That(log, Does.Contain(message1));
+                Assert.That(log, Does.Not.Contain(message2));
             }
             finally
             {
@@ -110,9 +113,9 @@ namespace Hazelcast.Client.Test
 
             stream.Seek(0, SeekOrigin.Begin);
             var log = new StreamReader(stream).ReadToEnd();
-            Assert.That(log, Is.StringContaining("Information: 0 : " + logMsg));
-            Assert.That(log, Is.StringContaining("Warning: 0 : " + logMsg));
-            Assert.That(log, Is.StringContaining("Error: 0 : " + logMsg));
+            Assert.That(log, Does.Contain("Information: 0 : " + logMsg));
+            Assert.That(log, Does.Contain("Warning: 0 : " + logMsg));
+            Assert.That(log, Does.Contain("Error: 0 : " + logMsg));
         }
     }
 

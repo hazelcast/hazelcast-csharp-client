@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,16 @@
 using System;
 using System.IO;
 using System.Xml;
+using Hazelcast.Client.Properties;
 using Hazelcast.Logging;
 using Hazelcast.Security;
 using Hazelcast.Util;
-using Properties;
 
 namespace Hazelcast.Config
 {
+    /// <summary>
+    /// Loads the <see cref="ClientConfig"/> using XML.
+    /// </summary>
     public class XmlClientConfigBuilder : AbstractXmlConfigHelper
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (XmlClientConfigBuilder));
@@ -96,16 +99,30 @@ namespace Hazelcast.Config
             }
         }
 
+        /// <summary>
+        /// Build a <see cref="ClientConfig"/> from an XML file
+        /// </summary>
+        /// <param name="configFile">hazelcast client XML config file</param>
+        /// <returns>ClientConfig</returns>
         public static ClientConfig Build(string configFile = null)
         {
             return new XmlClientConfigBuilder(configFile).Init();
         }
 
+        /// <summary>
+        /// Build a <see cref="ClientConfig"/> from an XML file
+        /// </summary>
+        /// <param name="reader">Text reader to provide hazelcast client XML</param>
+        /// <returns>ClientConfig</returns>
         public static ClientConfig Build(TextReader reader)
         {
             return new XmlClientConfigBuilder(reader).Init();
         }
 
+        /// <summary>
+        /// Creates a <see cref="ClientConfig"/> using the XML content 
+        /// </summary>
+        /// <returns></returns>
         protected ClientConfig Init()
         {
             _clientConfig = new ClientConfig();

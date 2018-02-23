@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,21 +41,27 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual("done", future.GetResult(100));
         }
 
-        [Test, ExpectedException(typeof(Exception), ExpectedMessage = "Failed")]
+        [Test]
         public void TestGetResult_WhenException()
         {
-            var future = new SettableFuture<string>();
+            Assert.Throws<Exception>(() =>
+            {
+                var future = new SettableFuture<string>();
 
-            Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
-            Assert.AreEqual("done", future.GetResult(100));
+                Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
+                Assert.AreEqual("done", future.GetResult(100));
+            }, "Failed");
         }
 
-        [Test, ExpectedException(typeof(TimeoutException))]
+        [Test]
         public void TestGetResult_WhenResultNotSet()
         {
-            var future = new SettableFuture<string>();
+            Assert.Throws<TimeoutException>(() =>
+            {
+                var future = new SettableFuture<string>();
 
-            Assert.AreEqual("done", future.GetResult(100));
+                Assert.AreEqual("done", future.GetResult(100));
+            });
         }
 
 
@@ -65,27 +71,27 @@ namespace Hazelcast.Client.Test
             var future = new SettableFuture<string>();
             var exception = new Exception();
             Task.Factory.StartNew(() => future.Exception = exception);
-           
+
             Assert.AreEqual(exception, future.Exception);
         }
 
-        [Test, ExpectedException(typeof(Exception), ExpectedMessage = "Failed")]
+        [Test]
         public void TestResult_WhenException()
         {
-            var future = new SettableFuture<string>();
-            Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
+            Assert.Throws<Exception>(() =>
+            {
+                var future = new SettableFuture<string>();
+                Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
 
-            var result = future.Result;
+                var result = future.Result;
+            }, "Failed");
         }
 
         [Test]
         public void TestResult_WhenException_withContinue()
         {
             var future = new SettableFuture<string>();
-            future.ToTask().ContinueWith(t =>
-            {
-                Assert.NotNull(t.Exception);
-            });
+            future.ToTask().ContinueWith(t => { Assert.NotNull(t.Exception); });
             Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
             try
             {
@@ -115,36 +121,48 @@ namespace Hazelcast.Client.Test
             Assert.IsFalse(future.Wait(100));
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestSetResult_WhenResultSet()
         {
-            var future = new SettableFuture<string>();
-            future.Result = "done";
-            future.Result = "done";
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var future = new SettableFuture<string>();
+                future.Result = "done";
+                future.Result = "done";
+            });
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestSetException_WhenResultSet()
         {
-            var future = new SettableFuture<string>();
-            future.Result = "done";
-            future.Exception = new Exception();
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var future = new SettableFuture<string>();
+                future.Result = "done";
+                future.Exception = new Exception();
+            });
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestSetResult_WhenExceptionSet()
         {
-            var future = new SettableFuture<string>();
-            future.Exception = new Exception();
-            future.Result = "done";
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var future = new SettableFuture<string>();
+                future.Exception = new Exception();
+                future.Result = "done";
+            });
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestSetException_WhenExceptionSet()
         {
-            var future = new SettableFuture<string>();
-            future.Exception = new Exception();
-            future.Exception = new Exception();
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var future = new SettableFuture<string>();
+                future.Exception = new Exception();
+                future.Exception = new Exception();
+            });
         }
 
         [Test]
@@ -169,28 +187,31 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual("done", task.Result);
         }
 
-        [Test, ExpectedException(typeof(Exception), ExpectedMessage = "Failed")]
+        [Test]
         public void TestToTask_WhenExceptionIsSet()
         {
-            var future = new SettableFuture<String>();
-            var task = future.ToTask();
-
-            Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
-
-            try
+            Assert.Throws<Exception>(() =>
             {
-                var result = task.Result;
-            }
-            catch (AggregateException e)
-            {
-                throw e.InnerExceptions.First();
-            }
+                var future = new SettableFuture<String>();
+                var task = future.ToTask();
+
+                Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
+
+                try
+                {
+                    var result = task.Result;
+                }
+                catch (AggregateException e)
+                {
+                    throw e.InnerExceptions.First();
+                }
+            }, "Failed");
         }
 
         [Test]
         public void Test_StressTestFuture_WhenGetResult()
         {
-            var futures = Enumerable.Range(0, 100*1000).Select(i => new SettableFuture<string>()).ToList();
+            var futures = Enumerable.Range(0, 100 * 1000).Select(i => new SettableFuture<string>()).ToList();
 
             var tasks = new List<Task>();
             foreach (var future in futures)
@@ -235,7 +256,7 @@ namespace Hazelcast.Client.Test
             }
 
             Assert.NotNull(future.Exception);
-            Assert.True(future.IsComplete); 
+            Assert.True(future.IsComplete);
         }
 
         [Test]
@@ -248,6 +269,5 @@ namespace Hazelcast.Client.Test
             Assert.True(future.IsComplete);
             Assert.Null(future.Exception);
         }
-
     }
 }

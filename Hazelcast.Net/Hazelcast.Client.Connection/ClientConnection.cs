@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Connection
 {
@@ -57,7 +58,8 @@ namespace Hazelcast.Client.Connection
         private readonly AtomicBoolean _live;
         private volatile IMember _member;
         private Thread _writeThread;
-
+        private readonly long _connectionStartTime;
+        
         /// <exception cref="System.IO.IOException"></exception>
         public ClientConnection(ClientConnectionManager clientConnectionManager,
             ClientInvocationService invocationService,
@@ -70,9 +72,6 @@ namespace Hazelcast.Client.Connection
 
             var isa = address.GetInetSocketAddress();
             var socketOptions = clientNetworkConfig.GetSocketOptions();
-            var socketFactory = socketOptions.GetSocketFactory() ?? new DefaultSocketFactory();
-            _clientSocket = socketFactory.CreateSocket();
-
             try
             {
                 _clientSocket = new Socket(isa.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -131,6 +130,7 @@ namespace Hazelcast.Client.Connection
                     _stream = networkStream;
                 }
                 _live = new AtomicBoolean(true);
+                _connectionStartTime = Clock.CurrentTimeMillis();
             }
             catch (Exception e)
             {
@@ -140,6 +140,21 @@ namespace Hazelcast.Client.Connection
                     _stream.Close();
                 }
                 throw new IOException("Cannot connect! Socket error:" + e.Message);
+            }
+        }
+
+        public string ConnectedServerVersionStr { get; set; }
+
+        public int ConnectedServerVersionInt
+        {
+            get
+            {
+                if (ConnectedServerVersionStr == null)
+                {
+                    return -1;
+                }
+
+                return VersionUtil.ParseServerVersion(ConnectedServerVersionStr);
             }
         }
 
@@ -158,6 +173,11 @@ namespace Hazelcast.Client.Connection
         public bool IsHeartBeating
         {
             get { return _isHeartBeating; }
+        }
+        
+        public long ConnectionStartTime
+        {
+            get { return _connectionStartTime; }
         }
 
         /// <exception cref="System.IO.IOException"></exception>

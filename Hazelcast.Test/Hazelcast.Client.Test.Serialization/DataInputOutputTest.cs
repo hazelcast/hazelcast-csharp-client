@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -110,8 +110,10 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsNull(ss.ReadObject<object>(input));
         }
 
-        [Test, ExpectedException(typeof (HazelcastSerializationException))]
-        public void TestNullValue_When_ValueType()
+        [Test]
+		public void TestNullValue_When_ValueType()
+		{
+			Assert.Throws<HazelcastSerializationException>(() =>
         {
             var ss = new SerializationServiceBuilder()
                .Build();
@@ -121,6 +123,7 @@ namespace Hazelcast.Client.Test.Serialization
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
             ss.ReadObject<int>(input);
+			});
         }
 
         [Test]

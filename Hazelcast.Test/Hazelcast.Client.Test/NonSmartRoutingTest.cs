@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,6 +101,19 @@ namespace Hazelcast.Client.Test
             var resp = map.GetAll(toInsert.Keys);
 
             Assert.AreEqual(toInsert, resp);
+        }
+
+        [Test]
+        public void TestPutWithNonSmartRouting()
+        {
+            var cm  = ((HazelcastClientProxy) _client).GetClient().GetConnectionManager();
+            var map = _client.GetMap<int, int>(TestSupport.RandomString());
+            var n = 1000;
+            for (var i = 0; i < n; i++)
+            {
+                map.Put(i, i);
+                Assert.AreEqual(1, cm.ActiveConnections.Count);
+            }
         }
     }
 }

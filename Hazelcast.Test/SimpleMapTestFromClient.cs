@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ namespace Hazelcast.Test
             }
         }
 
-        private static void Main(string[] args)
+        private static void Main2(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "Info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");

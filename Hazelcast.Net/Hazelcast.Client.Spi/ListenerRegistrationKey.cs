@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Util;
 
+#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     internal class ListenerRegistrationKey

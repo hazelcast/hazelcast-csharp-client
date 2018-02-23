@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client.Spi
+#pragma warning disable CS1591
+ namespace Hazelcast.Client.Spi
 {
     internal class
         ClientListenerService : IClientListenerService, IConnectionListener, IConnectionHeartbeatListener, IDisposable
@@ -61,10 +62,10 @@ namespace Hazelcast.Client.Spi
             _client = client;
             _connectionManager = client.GetConnectionManager();
 
-            var eventTreadCount = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.thread.count") ??
+            var eventTreadCount = EnvironmentUtil.ReadInt("hazelcast.client.event.thread.count") ??
                                   DefaultEventThreadCount;
 
-            var eventQueueCapacity = EnvironmentUtil.ReadEnvironmentVar("hazelcast.client.event.queue.capacity") ??
+            var eventQueueCapacity = EnvironmentUtil.ReadInt("hazelcast.client.event.queue.capacity") ??
                                      DefaultEventQueueCapacity;
 
             _eventExecutor = new StripedTaskScheduler(eventTreadCount, eventQueueCapacity, client.GetName() + ".event");
@@ -84,7 +85,7 @@ namespace Hazelcast.Client.Spi
         public string RegisterListener(IClientMessage registrationMessage, DecodeRegistrationResponse responseDecoder,
             EncodeDeregisterListenerRequest encodeDeregisterListenerRequest, DistributedEventHandler eventHandler)
         {
-            Debug.Assert(!Thread.CurrentThread.Name.Contains("eventRegistration"));
+            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             TrySyncConnectToAllConnections();
             var registrationTask = new Task<string>(() =>
@@ -127,7 +128,7 @@ namespace Hazelcast.Client.Spi
         public bool DeregisterListener(string userRegistrationId,
             EncodeDeregisterListenerRequest encodeDeregisterListenerRequest)
         {
-            Debug.Assert(!Thread.CurrentThread.Name.Contains("eventRegistration"));
+            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
             try
             {
                 return Task<bool>.Factory.StartNew(
@@ -144,7 +145,7 @@ namespace Hazelcast.Client.Spi
         private bool DeregisterListenerInternal(string userRegistrationId,
             EncodeDeregisterListenerRequest encodeDeregisterListenerRequest)
         {
-            Debug.Assert(!Thread.CurrentThread.Name.Contains("eventRegistration"));
+            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             var key = new ListenerRegistrationKey(userRegistrationId);
             ConcurrentDictionary<ClientConnection, EventRegistration> registrationMap;
@@ -190,7 +191,7 @@ namespace Hazelcast.Client.Spi
         private void RegisterListenerOnConnection(ListenerRegistrationKey registrationKey, ClientConnection connection)
         {
             //This method should only be called from registrationExecutor
-            Debug.Assert(!Thread.CurrentThread.Name.Contains("eventRegistration"));
+            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             ConcurrentDictionary<ClientConnection, EventRegistration> registrationMap;
             if (_registrations.TryGetValue(registrationKey, out registrationMap) &&
@@ -317,7 +318,7 @@ namespace Hazelcast.Client.Spi
         public void ConnectionAdded(ClientConnection connection)
         {
             //This method should only be called from registrationExecutor
-            Debug.Assert(!Thread.CurrentThread.Name.Contains("eventRegistration"));
+            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             SubmitToRegistrationScheduler(() =>
             {
@@ -331,7 +332,7 @@ namespace Hazelcast.Client.Spi
         public void ConnectionRemoved(ClientConnection connection)
         {
             //This method should only be called from registrationExecutor
-            Debug.Assert(!Thread.CurrentThread.Name.Contains("eventRegistration"));
+            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             SubmitToRegistrationScheduler(() =>
             {
@@ -351,7 +352,7 @@ namespace Hazelcast.Client.Spi
         public void HeartBeatResumed(ClientConnection connection)
         {
             //This method should only be called from registrationExecutor
-            Debug.Assert(!Thread.CurrentThread.Name.Contains("eventRegistration"));
+            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             SubmitToRegistrationScheduler(() =>
             {

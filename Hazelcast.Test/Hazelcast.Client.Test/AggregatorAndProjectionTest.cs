@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
+    [Category("3.8")]
     public class AggregatorAndProjectionTest : SingleMemberBaseTest
     {
         internal static IMap<object, object> map;
@@ -227,11 +228,14 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(10, map.Aggregate(Aggregators.Count("enabled[any]")));
         }
 
-        [Test, ExpectedException(typeof(ArgumentException))]
-        public void testAggregate_NullPredicate()
+        [Test]
+		public void testAggregate_NullPredicate()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             map.Aggregate(Aggregators.LongSum("id"), null);
-        }
+        });
+		}
 
         //Projection tests
         [Test]
@@ -253,22 +257,31 @@ namespace Hazelcast.Client.Test
             CollectionAssert.AreEquivalent(expected, result);
         }
 
-        [Test, ExpectedException(typeof(ArgumentException))]
-        public void test_NullProjection()
+        [Test]
+		public void test_NullProjection()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             map.Project<long>(null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(ArgumentException))]
-        public void testProjection_NullPredicate()
+        [Test]
+		public void testProjection_NullPredicate()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             map.Project<long>(new SingleAttributeProjection("id"), null);
-        }
+        });
+		}
 
-        [Test, ExpectedException(typeof(ArgumentException))]
-        public void test_NullPredicateAndProjection()
+        [Test]
+		public void test_NullPredicateAndProjection()
+		{
+			Assert.Throws<ArgumentException>(() =>
         {
             map.Project<long>(null, null);
-        }
+        });
+		}
     }
 }

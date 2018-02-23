@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@ using Hazelcast.IO;
 
 namespace Hazelcast.Config
 {
+    /// <summary>
+    /// Contains the configuration for interceptor socket.
+    /// </summary>
     public class SocketInterceptorConfig
     {
         private string _className;
@@ -142,6 +145,7 @@ namespace Hazelcast.Config
             return this;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             var sb = new StringBuilder();

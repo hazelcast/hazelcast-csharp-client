@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Test
 
         private IMap<object, object> _map;
 
-        private ClientNearCache GetNearCache<TK, TV>(IMap<TK, TV> map)
+        private NearCache GetNearCache<TK, TV>(IMap<TK, TV> map)
         {
             return (map as ClientMapProxy<TK, TV>).NearCache;
         }
@@ -247,6 +247,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.8")]
         public void TestNearCacheInvalidationOnRemoveAllPredicate()
         {
             var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());

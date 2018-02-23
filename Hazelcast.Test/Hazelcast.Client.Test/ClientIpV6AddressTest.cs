@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using Hazelcast.Remote;
+using Hazelcast.Test;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
+    [Ignore("IPv6 not configured")]
     internal class ClientIpV6AddressTest : HazelcastTestSupport
     {
         [SetUp]
         public void Setup()
         {
             _remoteController = CreateRemoteController();
-            _cluster = CreateCluster(_remoteController);
+            var configStr = Resources.hazelcast_ipv6;
+            configStr=configStr.Replace("PUBLIC_IP", GetLocalIpV6Address());
+
+            _cluster = CreateCluster(_remoteController, configStr);
             StartMember(_remoteController, _cluster);
         }
 

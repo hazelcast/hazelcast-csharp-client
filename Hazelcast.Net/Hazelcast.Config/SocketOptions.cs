@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Client.Connection;
 
 namespace Hazelcast.Config
 {
+    /// <summary>
+    /// TCP Socket options
+    /// </summary>
     public class SocketOptions
     {
         private int _bufferSize = 32;
@@ -38,6 +42,7 @@ namespace Hazelcast.Config
             return _lingerSeconds;
         }
 
+        [Obsolete("This configuration is not used.")]
         public virtual ISocketFactory GetSocketFactory()
         {
             return _socketFactory;
@@ -89,6 +94,7 @@ namespace Hazelcast.Config
             return this;
         }
 
+        [Obsolete("This configuration is not used.")]
         public virtual SocketOptions SetSocketFactory(ISocketFactory socketFactory)
         {
             _socketFactory = socketFactory;

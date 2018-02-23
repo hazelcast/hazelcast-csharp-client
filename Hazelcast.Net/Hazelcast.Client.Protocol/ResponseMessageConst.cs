@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ namespace Hazelcast.Client.Protocol
     ///     Message type ids of responses in client protocol. They also used to bind a request to a response inside Request
     ///     annotation.
     /// </remarks>
-    public sealed class ResponseMessageConst
+    internal sealed class ResponseMessageConst
     {
         public const int Void = 100;
         public const int Boolean = 101;
