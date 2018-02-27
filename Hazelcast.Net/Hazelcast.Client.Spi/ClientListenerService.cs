@@ -85,6 +85,7 @@ using Hazelcast.Util;
         public string RegisterListener(IClientMessage registrationMessage, DecodeRegistrationResponse responseDecoder,
             EncodeDeregisterListenerRequest encodeDeregisterListenerRequest, DistributedEventHandler eventHandler)
         {
+            //This method should not be called from registrationExecutor
             Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             TrySyncConnectToAllConnections();
@@ -128,6 +129,7 @@ using Hazelcast.Util;
         public bool DeregisterListener(string userRegistrationId,
             EncodeDeregisterListenerRequest encodeDeregisterListenerRequest)
         {
+            //This method should not be called from registrationExecutor
             Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
             try
             {
@@ -145,7 +147,8 @@ using Hazelcast.Util;
         private bool DeregisterListenerInternal(string userRegistrationId,
             EncodeDeregisterListenerRequest encodeDeregisterListenerRequest)
         {
-            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
+            //This method should only be called from registrationExecutor
+            Debug.Assert(Thread.CurrentThread.Name != null && Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             var key = new ListenerRegistrationKey(userRegistrationId);
             ConcurrentDictionary<ClientConnection, EventRegistration> registrationMap;
@@ -191,7 +194,7 @@ using Hazelcast.Util;
         private void RegisterListenerOnConnection(ListenerRegistrationKey registrationKey, ClientConnection connection)
         {
             //This method should only be called from registrationExecutor
-            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
+            Debug.Assert(Thread.CurrentThread.Name != null && Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             ConcurrentDictionary<ClientConnection, EventRegistration> registrationMap;
             if (_registrations.TryGetValue(registrationKey, out registrationMap) &&
@@ -277,6 +280,8 @@ using Hazelcast.Util;
 
         private void RegisterListenerFromInternal(ListenerRegistrationKey registrationKey, ClientConnection connection)
         {
+            //This method should only be called from registrationExecutor
+            Debug.Assert(Thread.CurrentThread.Name != null && Thread.CurrentThread.Name.Contains("eventRegistration"));
             try
             {
                 RegisterListenerOnConnection(registrationKey, connection);
@@ -317,7 +322,7 @@ using Hazelcast.Util;
 
         public void ConnectionAdded(ClientConnection connection)
         {
-            //This method should only be called from registrationExecutor
+            //This method should not be called from registrationExecutor
             Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             SubmitToRegistrationScheduler(() =>
@@ -331,7 +336,7 @@ using Hazelcast.Util;
 
         public void ConnectionRemoved(ClientConnection connection)
         {
-            //This method should only be called from registrationExecutor
+            //This method should not be called from registrationExecutor
             Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             SubmitToRegistrationScheduler(() =>
@@ -351,7 +356,7 @@ using Hazelcast.Util;
 
         public void HeartBeatResumed(ClientConnection connection)
         {
-            //This method should only be called from registrationExecutor
+            //This method should not be called from registrationExecutor
             Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
 
             SubmitToRegistrationScheduler(() =>

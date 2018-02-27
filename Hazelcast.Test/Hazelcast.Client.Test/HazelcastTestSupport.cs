@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,7 +37,7 @@ namespace Hazelcast.Client.Test
 
         private readonly ILogger _logger;
 
-        private bool wasUnobservedException;
+        private readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions = new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
 
         public HazelcastTestSupport()
         {
@@ -51,7 +52,7 @@ namespace Hazelcast.Client.Test
         {
             _logger.Warning("UnobservedTaskException Error sender:" + sender);
             _logger.Warning("UnobservedTaskException Error.", e.Exception);
-            wasUnobservedException = true;
+            _unobservedExceptions.Enqueue(e);
         }
 
         [TearDown]
@@ -59,10 +60,11 @@ namespace Hazelcast.Client.Test
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Assert.False(wasUnobservedException, "UnobservedTaskException occured.");
-            wasUnobservedException = false;
+            foreach (var exceptionEventArg in _unobservedExceptions)
+            {
+                Assert.Fail("UnobservedTaskException occured. {0}", exceptionEventArg.Exception.StackTrace);
+            }
         }
-
 
         [OneTimeTearDown]
         public void ShutdownAllClients()

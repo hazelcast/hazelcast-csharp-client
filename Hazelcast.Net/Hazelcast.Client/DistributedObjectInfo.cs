@@ -12,21 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Text;
+
 namespace Hazelcast.Client
 {
     internal class DistributedObjectInfo
     {
-        private readonly string _name;
+        private readonly string _objectName;
         private readonly string _serviceName;
 
-        internal DistributedObjectInfo()
+        public DistributedObjectInfo(string serviceName, string objectName)
         {
+            _objectName = objectName;
+            _serviceName = serviceName;
+        }
+        
+        public string ObjectName
+        {
+            get { return _objectName; }
         }
 
-        public DistributedObjectInfo(string serviceName, string name)
+        public  string ServiceName
         {
-            _name = name;
-            _serviceName = serviceName;
+            get { return _serviceName; }
         }
 
         public override bool Equals(object obj)
@@ -34,33 +42,27 @@ namespace Hazelcast.Client
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((DistributedObjectInfo) obj);
+            var other= (DistributedObjectInfo) obj;
+            return string.Equals(_objectName, other._objectName) && string.Equals(_serviceName, other._serviceName);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((_name != null ? _name.GetHashCode() : 0)*397) ^
+                return ((_objectName != null ? _objectName.GetHashCode() : 0) * 397) ^
                        (_serviceName != null ? _serviceName.GetHashCode() : 0);
             }
         }
 
-        public virtual string GetName()
+        public override string ToString()
         {
-            return _name;
-        }
-
-        //REQUIRED
-
-        public virtual string GetServiceName()
-        {
-            return _serviceName;
-        }
-
-        protected bool Equals(DistributedObjectInfo other)
-        {
-            return string.Equals(_name, other._name) && string.Equals(_serviceName, other._serviceName);
+            var sb = new StringBuilder();
+            sb.Append("DistributedObjectInfo");
+            sb.Append("{service='").Append(_serviceName).Append('\'');
+            sb.Append(", objectName=").Append(_objectName);
+            sb.Append('}');
+            return sb.ToString();
         }
     }
 }
