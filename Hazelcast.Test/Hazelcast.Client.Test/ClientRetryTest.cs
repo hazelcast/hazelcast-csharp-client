@@ -52,7 +52,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-		public void entTransactionRetry()
+		public void TestClientTransactionRetry()
 		{
 			Assert.Throws<InvalidOperationException>(() =>
         {

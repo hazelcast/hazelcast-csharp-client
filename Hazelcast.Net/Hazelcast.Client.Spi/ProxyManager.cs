@@ -25,6 +25,7 @@ using Hazelcast.Client.Proxy;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
@@ -33,11 +34,11 @@ namespace Hazelcast.Client.Spi
 {
     internal sealed class ProxyManager
     {
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ProxyManager));
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ProxyManager));
         private readonly HazelcastClient _client;
 
-        private readonly ConcurrentDictionary<ObjectNamespace, ClientProxy> _proxies =
-            new ConcurrentDictionary<ObjectNamespace, ClientProxy>();
+        private readonly ConcurrentDictionary<DistributedObjectInfo, ClientProxy> _proxies =
+            new ConcurrentDictionary<DistributedObjectInfo, ClientProxy>();
 
         private readonly ConcurrentDictionary<string, ClientProxyFactory> _proxyFactories =
             new ConcurrentDictionary<string, ClientProxyFactory>();
@@ -50,8 +51,8 @@ namespace Hazelcast.Client.Spi
             {
                 foreach (
                     var listenerConfig in
-                        listenerConfigs.Where(
-                            listenerConfig => listenerConfig.GetImplementation() is IDistributedObjectListener))
+                    listenerConfigs.Where(
+                        listenerConfig => listenerConfig.GetImplementation() is IDistributedObjectListener))
                 {
                     AddDistributedObjectListener((IDistributedObjectListener) listenerConfig.GetImplementation());
                 }
@@ -70,30 +71,25 @@ namespace Hazelcast.Client.Spi
             DistributedEventHandler eventHandler = delegate(IClientMessage message)
             {
                 ClientAddDistributedObjectListenerCodec.AbstractEventHandler.Handle(message,
-                    (name, serviceName, type) =>
+                    (name, serviceName, eventType) =>
                     {
-                        var ns = new ObjectNamespace(serviceName, name);
-                        ClientProxy proxy;
-                        _proxies.TryGetValue(ns, out proxy);
-                        if (proxy == null)
+                        var _event = new LazyDistributedObjectEvent(eventType, serviceName, name, this);
+                        switch (eventType)
                         {
-                            proxy = GetProxy(serviceName, name);
-                        }
-                        var _event = new DistributedObjectEvent(type, serviceName, proxy);
-                        if (DistributedObjectEvent.EventType.Created.Equals(type))
-                        {
-                            listener.DistributedObjectCreated(_event);
-                        }
-                        else
-                        {
-                            if (DistributedObjectEvent.EventType.Destroyed.Equals(type))
-                            {
+                            case DistributedObjectEvent.EventType.Created:
+                                listener.DistributedObjectCreated(_event);
+                                break;
+                            case DistributedObjectEvent.EventType.Destroyed:
                                 listener.DistributedObjectDestroyed(_event);
-                            }
+                                break;
+                            default:
+                                Logger.Warning(string.Format(
+                                    "Undefined DistributedObjectListener event type received: {0} !!!", eventType));
+                                break;
                         }
                     });
             };
-            return context.GetListenerService().RegisterListener(request, 
+            return context.GetListenerService().RegisterListener(request,
                 m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response,
                 ClientRemoveDistributedObjectListenerCodec.EncodeRequest,
                 eventHandler);
@@ -106,50 +102,87 @@ namespace Hazelcast.Client.Spi
 
         public ICollection<IDistributedObject> GetDistributedObjects()
         {
+            try
+            {
+                var request = ClientGetDistributedObjectsCodec.EncodeRequest();
+                var task = _client.GetInvocationService().InvokeOnRandomTarget(request);
+                var response = ThreadUtil.GetResult(task);
+                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).response;
+                foreach (var distributedObjectInfo in result)
+                {
+                    var proxy = InitProxyLocal(distributedObjectInfo.ServiceName, distributedObjectInfo.ObjectName,
+                        typeof(IDistributedObject));
+                    _proxies.TryAdd(distributedObjectInfo, proxy);
+                }
+
+                return GetLocalDistributedObjects();
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
+        }
+
+        private ICollection<IDistributedObject> GetLocalDistributedObjects()
+        {
             return new ReadOnlyCollection<IDistributedObject>(_proxies.Values.ToList<IDistributedObject>());
+        }
+
+        private ClientProxy InitProxyLocal(string service, string id, Type requestedInterface)
+        {
+            var proxy = MakeProxy(service, id, requestedInterface);
+            proxy.SetContext(new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
+                _client.GetClientPartitionService(), _client.GetInvocationService(),
+                _client.GetClientExecutionService(),
+                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig()));
+            proxy.PostInit();
+            return proxy;
         }
 
         public ClientProxy GetOrCreateProxy<T>(string service, string id) where T : IDistributedObject
         {
-            var ns = new ObjectNamespace(service, id);
-            ClientProxy proxy;
-            _proxies.TryGetValue(ns, out proxy);
-            var requestedInterface = typeof (T);
-            if (proxy != null)
-            {
-                // only return the existing proxy, if the requested type args match
-                var proxyInterface = proxy.GetType().GetInterface(requestedInterface.Name);
-                var proxyArgs = proxyInterface.GetGenericArguments();
-                var requestedArgs = requestedInterface.GetGenericArguments();
-                if (proxyArgs.SequenceEqual(requestedArgs))
-                {
-                    // the proxy we found matches what we were looking for
-                    return proxy;
-                }
-                
-                // create a new proxy, which matches the interface requested
-                proxy = makeProxy<T>(service, id, requestedInterface);
-            }
-            else
+            var objectInfo = new DistributedObjectInfo(service, id);
+            var requestedInterface = typeof(T);
+            var clientProxy = _proxies.GetOrAdd(objectInfo, distributedObjectInfo =>
             {
                 // create a new proxy, which needs initialization on server.
-                proxy = makeProxy<T>(service, id, requestedInterface);
+                var proxy = InitProxyLocal(service, id, requestedInterface);
                 InitializeWithRetry(proxy);
-            }
-
-            proxy.SetContext(new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig()));
-            proxy.PostInit();
-
-            _proxies.AddOrUpdate(ns, n => proxy, (n, oldProxy) => {
-                Logger.Warning("Replacing old proxy for " + oldProxy.GetName() + " of type " + oldProxy.GetType() + " with " + proxy.GetType());
                 return proxy;
             });
-            return proxy;
+
+            // only return the existing proxy, if the requested type args match
+            var proxyInterface = clientProxy.GetType().GetInterface(requestedInterface.Name);
+            var proxyArgs = proxyInterface.GetGenericArguments();
+            var requestedArgs = requestedInterface.GetGenericArguments();
+            if (proxyArgs.SequenceEqual(requestedArgs))
+            {
+                // the proxy we found matches what we were looking for
+                return clientProxy;
+            }
+
+            var isAssignable = true;
+            for (int i = 0; i < proxyArgs.Length; i++)
+            {
+                if (!proxyArgs[i].IsAssignableFrom(requestedArgs[i]))
+                {
+                    isAssignable = false;
+                    break;
+                }
+            }
+
+            if (isAssignable)
+            {
+                _proxies.TryRemove(objectInfo, out clientProxy);
+                return GetOrCreateProxy<T>(service, id);
+            }
+
+            throw new InvalidCastException(string.Format(
+                "Distributed object is already created with incompatible types [{0}]",
+                string.Join(", ", (object[]) proxyArgs)));
         }
 
-        private ClientProxy makeProxy<T>(string service, string id, Type requestedInterface)
+        private ClientProxy MakeProxy(string service, string id, Type requestedInterface)
         {
             ClientProxyFactory factory;
             _proxyFactories.TryGetValue(service, out factory);
@@ -157,54 +190,51 @@ namespace Hazelcast.Client.Spi
             {
                 throw new ArgumentException("No factory registered for service: " + service);
             }
+
             var clientProxy = factory(requestedInterface, id);
             return clientProxy;
         }
 
         public ClientProxy GetProxy(string service, string id)
         {
-            var ns = new ObjectNamespace(service, id);
             ClientProxy proxy;
-            _proxies.TryGetValue(ns, out proxy);
-            if (proxy != null)
-            {
-                return proxy;
-            }
-            return null;
+            _proxies.TryGetValue(new DistributedObjectInfo(service, id), out proxy);
+            return proxy;
         }
 
         public void Init(ClientConfig config)
         {
             // register defaults
             Register(ServiceNames.Map,
-                (type, id) => ProxyFactory(typeof (ClientMapProxy<,>), type, ServiceNames.Map, id));
+                (type, id) => ProxyFactory(typeof(ClientMapProxy<,>), type, ServiceNames.Map, id));
             Register(ServiceNames.Queue,
-                (type, id) => ProxyFactory(typeof (ClientQueueProxy<>), type, ServiceNames.Queue, id));
+                (type, id) => ProxyFactory(typeof(ClientQueueProxy<>), type, ServiceNames.Queue, id));
             Register(ServiceNames.MultiMap,
-                (type, id) => ProxyFactory(typeof (ClientMultiMapProxy<,>), type, ServiceNames.MultiMap, id));
+                (type, id) => ProxyFactory(typeof(ClientMultiMapProxy<,>), type, ServiceNames.MultiMap, id));
             Register(ServiceNames.List,
-                (type, id) => ProxyFactory(typeof (ClientListProxy<>), type, ServiceNames.List, id));
-            Register(ServiceNames.Set, (type, id) => ProxyFactory(typeof (ClientSetProxy<>), type, ServiceNames.Set, id));
+                (type, id) => ProxyFactory(typeof(ClientListProxy<>), type, ServiceNames.List, id));
+            Register(ServiceNames.Set,
+                (type, id) => ProxyFactory(typeof(ClientSetProxy<>), type, ServiceNames.Set, id));
             Register(ServiceNames.Topic,
-                (type, id) => ProxyFactory(typeof (ClientTopicProxy<>), type, ServiceNames.Topic, id));
+                (type, id) => ProxyFactory(typeof(ClientTopicProxy<>), type, ServiceNames.Topic, id));
             Register(ServiceNames.AtomicLong,
-                (type, id) => ProxyFactory(typeof (ClientAtomicLongProxy), type, ServiceNames.AtomicLong, id));
+                (type, id) => ProxyFactory(typeof(ClientAtomicLongProxy), type, ServiceNames.AtomicLong, id));
             Register(ServiceNames.Lock,
-                (type, id) => ProxyFactory(typeof (ClientLockProxy), type, ServiceNames.Lock, id));
+                (type, id) => ProxyFactory(typeof(ClientLockProxy), type, ServiceNames.Lock, id));
             Register(ServiceNames.CountDownLatch,
-                (type, id) => ProxyFactory(typeof (ClientCountDownLatchProxy), type, ServiceNames.CountDownLatch, id));
+                (type, id) => ProxyFactory(typeof(ClientCountDownLatchProxy), type, ServiceNames.CountDownLatch, id));
             Register(ServiceNames.Semaphore,
-                (type, id) => ProxyFactory(typeof (ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
+                (type, id) => ProxyFactory(typeof(ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
             Register(ServiceNames.Ringbuffer,
-                (type, id) => ProxyFactory(typeof (ClientRingbufferProxy<>), type, ServiceNames.Ringbuffer, id));
+                (type, id) => ProxyFactory(typeof(ClientRingbufferProxy<>), type, ServiceNames.Ringbuffer, id));
             Register(ServiceNames.ReplicatedMap,
-                (type, id) => ProxyFactory(typeof (ClientReplicatedMapProxy<,>), type, ServiceNames.ReplicatedMap, id));
+                (type, id) => ProxyFactory(typeof(ClientReplicatedMapProxy<,>), type, ServiceNames.ReplicatedMap, id));
 
             Register(ServiceNames.IdGenerator, delegate(Type type, string id)
             {
                 var atomicLong = _client.GetAtomicLong("IdGeneratorService.ATOMIC_LONG_NAME" + id);
                 return
-                    Activator.CreateInstance(typeof (ClientIdGeneratorProxy), ServiceNames.IdGenerator, id, atomicLong)
+                    Activator.CreateInstance(typeof(ClientIdGeneratorProxy), ServiceNames.IdGenerator, id, atomicLong)
                         as ClientProxy;
             });
 
@@ -219,6 +249,7 @@ namespace Hazelcast.Client.Spi
                     {
                         clientProxyFactory = (ClientProxyFactory) Activator.CreateInstance(type);
                     }
+
                     Register(proxyFactoryConfig.GetService(), clientProxyFactory);
                 }
                 catch (Exception e)
@@ -234,21 +265,23 @@ namespace Hazelcast.Client.Spi
             {
                 throw new ArgumentException("Factory for service: " + serviceName + " is already registered!");
             }
+
             _proxyFactories.GetOrAdd(serviceName, factory);
         }
 
         public bool RemoveDistributedObjectListener(string id)
         {
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
+                _client.GetClientPartitionService(), _client.GetInvocationService(),
+                _client.GetClientExecutionService(),
                 _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig());
-            return context.GetListenerService().DeregisterListener(id, 
+            return context.GetListenerService().DeregisterListener(id,
                 ClientRemoveDistributedObjectListenerCodec.EncodeRequest);
         }
 
         public ClientProxy RemoveProxy(string service, string id)
         {
-            var ns = new ObjectNamespace(service, id);
+            var ns = new DistributedObjectInfo(service, id);
             ClientProxy removed;
             _proxies.TryRemove(ns, out removed);
             return removed;
@@ -261,6 +294,7 @@ namespace Hazelcast.Client.Spi
                 var typeWithParams = GetTypeWithParameters(proxyType, interfaceType);
                 return Activator.CreateInstance(typeWithParams, name, id) as ClientProxy;
             }
+
             return Activator.CreateInstance(proxyType, name, id) as ClientProxy;
         }
 
@@ -268,6 +302,7 @@ namespace Hazelcast.Client.Spi
         {
             return _client;
         }
+
         private Address FindNextAddressToCreateARequest()
         {
             var clusterSize = _client.GetClientClusterService().GetSize();
@@ -281,11 +316,13 @@ namespace Hazelcast.Client.Spi
                 {
                     return member.GetAddress();
                 }
+
                 if (liteMember == null)
                 {
                     liteMember = member;
                 }
             }
+
             return liteMember != null ? liteMember.GetAddress() : null;
         }
 
@@ -296,11 +333,13 @@ namespace Hazelcast.Client.Spi
             {
                 return proxyType.MakeGenericType(genericTypeArguments);
             }
+
             var types = new Type[proxyType.GetGenericArguments().Length];
             for (var i = 0; i < types.Length; i++)
             {
-                types[i] = typeof (object);
+                types[i] = typeof(object);
             }
+
             return proxyType.MakeGenericType(types);
         }
 
@@ -366,7 +405,8 @@ namespace Hazelcast.Client.Spi
         private bool IsRetryable(Exception exception)
         {
             return exception is RetryableHazelcastException || exception is IOException
-                   || exception is AuthenticationException || exception is HazelcastInstanceNotActiveException;
+                                                            || exception is AuthenticationException ||
+                                                            exception is HazelcastInstanceNotActiveException;
         }
     }
 }

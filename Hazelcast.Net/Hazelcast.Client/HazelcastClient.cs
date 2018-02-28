@@ -217,23 +217,7 @@ namespace Hazelcast.Client
         /// <inheritdoc />
         public ICollection<IDistributedObject> GetDistributedObjects()
         {
-            try
-            {
-                var request = ClientGetDistributedObjectsCodec.EncodeRequest();
-                var task = _invocationService.InvokeOnRandomTarget(request);
-                var response = ThreadUtil.GetResult(task);
-                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).response;
-                foreach (var data in result)
-                {
-                    var o = _serializationService.ToObject<DistributedObjectInfo>(data);
-                    GetDistributedObject<IDistributedObject>(o.GetServiceName(), o.GetName());
-                }
-                return _proxyManager.GetDistributedObjects();
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
+            return _proxyManager.GetDistributedObjects();
         }
 
         /// <inheritdoc />

@@ -13,20 +13,34 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     internal class ClientDistributedObjectTest : SingleMemberBaseTest
     {
+        [TearDown]
+        public void TearDown()
+        {
+            foreach (var distributedObject in Client.GetDistributedObjects())
+            {
+                distributedObject.Destroy();
+            }
+        }
+
         [Test]
         public void TestDistributedObjectListener()
         {
             var createdLatch = new CountdownEvent(1);
             var destroyedLatch = new CountdownEvent(1);
-            var regId = Client.AddDistributedObjectListener(new DistributedObjectListener(createdLatch, destroyedLatch));
+            var regId = Client.AddDistributedObjectListener(
+                new DistributedObjectListener(createdLatch, destroyedLatch));
             Assert.IsNotNull(regId, "regisrationId");
 
             var name = TestSupport.RandomString();
@@ -35,7 +49,28 @@ namespace Hazelcast.Client.Test
             topic.Destroy();
             TestSupport.AssertOpenEventually(destroyedLatch, 10);
 
-            Assert.IsTrue(Client.RemoveDistributedObjectListener(regId), "Client.RemoveDistributedObjectListener(regId)");
+            Assert.IsTrue(Client.RemoveDistributedObjectListener(regId),
+                "Client.RemoveDistributedObjectListener(regId)");
+        }
+
+        [Test]
+        public void TestDistributedObjectListener_validateEventContent()
+        {
+            var listener = new DistributedObjectListenerWithAssert();
+            var regId = Client.AddDistributedObjectListener(listener);
+            Assert.IsNotNull(regId, "regisrationId");
+            var client2 = CreateClient();
+            client2.GetMap<string, int>(TestSupport.RandomString());
+
+            var distributedObjectEvent = listener.Events.Take();
+
+            Assert.NotNull(distributedObjectEvent);
+            Assert.True(distributedObjectEvent.GetDistributedObject() is IMap<object, object>);
+
+            var distributedObject = distributedObjectEvent.GetDistributedObject<IMap<string, int>>();
+            Assert.True(distributedObject is IMap<string, int>);
+            Assert.NotNull(distributedObjectEvent.GetObjectName());
+            Assert.AreEqual(ServiceNames.Map, distributedObjectEvent.GetServiceName());
         }
 
         [Test]
@@ -45,7 +80,6 @@ namespace Hazelcast.Client.Test
             var topic = Client.GetTopic<int>(TestSupport.RandomString());
             var semaphore = Client.GetSemaphore(TestSupport.RandomString());
 
-            
             Assert.AreEqual(3, Client.GetDistributedObjects().Count);
 
             map.Destroy();
@@ -72,6 +106,31 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(1, map2.Get(1));
         }
 
+
+        [Test]
+        public void TestProxyManager_getOrCreate_Assignable()
+        {
+            var distributedObject = Client.GetDistributedObject<IDistributedObject>(ServiceNames.Map, "testNameId");
+            var map = Client.GetDistributedObject<IMap<string, long>>(ServiceNames.Map, "testNameId");
+            Assert.NotNull(distributedObject);
+            Assert.True(map is IMap<string, long>);
+        }
+
+        [Test]
+        public void TestProxyManager_getOrCreate_NotAssignable()
+        {
+            var distributedObject = Client.GetDistributedObject<IMap<string, string>>(ServiceNames.Map, "testNameId");
+            Assert.NotNull(distributedObject);
+            try
+            {
+                Client.GetDistributedObject<IMap<string, long>>(ServiceNames.Map, "testNameId");
+            }
+            catch (InvalidCastException e)
+            {
+                Assert.IsNotEmpty(e.Message);
+            }
+        }
+
         private class DistributedObjectListener : IDistributedObjectListener
         {
             private readonly CountdownEvent _createdLatch;
@@ -91,6 +150,25 @@ namespace Hazelcast.Client.Test
             public void DistributedObjectDestroyed(DistributedObjectEvent @event)
             {
                 _destroyedLatch.Signal();
+            }
+        }
+
+        private class DistributedObjectListenerWithAssert : IDistributedObjectListener
+        {
+            private readonly BlockingCollection<DistributedObjectEvent> events = new BlockingCollection<DistributedObjectEvent>();
+
+            public void DistributedObjectCreated(DistributedObjectEvent distributedObjectEvent)
+            {
+                events.Add(distributedObjectEvent);
+            }
+
+            public void DistributedObjectDestroyed(DistributedObjectEvent @event)
+            {
+            }
+
+            public BlockingCollection<DistributedObjectEvent> Events
+            {
+                get { return events; }
             }
         }
     }
