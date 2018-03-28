@@ -1,5 +1,5 @@
-<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\shared.project.props" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\shared.project.props" />
   <PropertyGroup Label="build">
     <TargetFrameworks>net40;netcoreapp2.0</TargetFrameworks>
     <AssemblyName>Hazelcast.Examples</AssemblyName>
