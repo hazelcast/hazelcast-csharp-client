@@ -17,40 +17,25 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ListAddWithIndexCodec
+    internal static class ListAddWithIndexCodec
     {
-        public static readonly ListMessageType RequestType = ListMessageType.ListAddWithIndex;
-        public const int ResponseType = 100;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, int index, IData value)
         {
-            public static readonly ListMessageType TYPE = RequestType;
-            public string name;
-            public int index;
-            public IData value;
-
-            public static int CalculateDataSize(string name, int index, IData value)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                dataSize += ParameterUtil.CalculateDataSize(value);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            dataSize += ParameterUtil.CalculateDataSize(value);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, int index, IData value)
+        internal static ClientMessage EncodeRequest(string name, int index, IData value)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, index, value);
+            var requiredDataSize = CalculateRequestDataSize(name, index, value);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ListMessageType.ListAddWithIndex);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(index);
             clientMessage.Set(value);

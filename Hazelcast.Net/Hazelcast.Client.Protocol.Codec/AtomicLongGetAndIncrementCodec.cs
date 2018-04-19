@@ -15,48 +15,34 @@
 using Hazelcast.Client.Protocol.Util;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class AtomicLongGetAndIncrementCodec
+    internal static class AtomicLongGetAndIncrementCodec
     {
-        public static readonly AtomicLongMessageType RequestType = AtomicLongMessageType.AtomicLongGetAndIncrement;
-        public const int ResponseType = 103;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name)
         {
-            public static readonly AtomicLongMessageType TYPE = RequestType;
-            public string name;
-
-            public static int CalculateDataSize(string name)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name)
+        internal static ClientMessage EncodeRequest(string name)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name);
+            var requiredDataSize = CalculateRequestDataSize(name);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) AtomicLongMessageType.AtomicLongGetAndIncrement);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public long response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetLong();

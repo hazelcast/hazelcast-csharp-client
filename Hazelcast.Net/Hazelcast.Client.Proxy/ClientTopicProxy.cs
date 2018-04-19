@@ -46,7 +46,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = TopicAddMessageListenerCodec.EncodeRequest(GetName(), IsSmart());
             DistributedEventHandler handler = m =>
-                TopicAddMessageListenerCodec.AbstractEventHandler.Handle(m,
+                TopicAddMessageListenerCodec.EventHandler.HandleEvent(m,
                     (item, time, uuid) =>
                     {
                         HandleMessageListener(item, time, uuid, listener);

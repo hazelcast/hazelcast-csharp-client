@@ -17,45 +17,32 @@ using Hazelcast.Client.Protocol.Util;
 // Client Protocol version, Since:1.0 - Update:1.0
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ReplicatedMapIsEmptyCodec
+    internal static class ReplicatedMapIsEmptyCodec
     {
-        public static readonly ReplicatedMapMessageType RequestType = ReplicatedMapMessageType.ReplicatedMapIsEmpty;
-        public const int ResponseType = 101;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name)
         {
-            public static readonly ReplicatedMapMessageType TYPE = RequestType;
-            public string name;
-
-            public static int CalculateDataSize(string name)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name)
+        internal static ClientMessage EncodeRequest(string name)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name);
+            var requiredDataSize = CalculateRequestDataSize(name);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ReplicatedMapMessageType.ReplicatedMapIsEmpty);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

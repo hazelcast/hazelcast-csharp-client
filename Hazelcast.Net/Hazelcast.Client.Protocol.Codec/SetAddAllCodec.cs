@@ -18,42 +18,28 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class SetAddAllCodec
+    internal static class SetAddAllCodec
     {
-        public static readonly SetMessageType RequestType = SetMessageType.SetAddAll;
-        public const int ResponseType = 101;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IList<IData> valueList)
         {
-            public static readonly SetMessageType TYPE = RequestType;
-            public string name;
-            public IList<IData> valueList;
-
-            public static int CalculateDataSize(string name, IList<IData> valueList)
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            foreach (var valueListItem in valueList)
             {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                foreach (var valueListItem in valueList)
-                {
-                    dataSize += ParameterUtil.CalculateDataSize(valueListItem);
-                }
-                return dataSize;
+                dataSize += ParameterUtil.CalculateDataSize(valueListItem);
             }
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IList<IData> valueList)
+        internal static ClientMessage EncodeRequest(string name, IList<IData> valueList)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, valueList);
+            var requiredDataSize = CalculateRequestDataSize(name, valueList);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) SetMessageType.SetAddAll);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(valueList.Count);
             foreach (var valueListItem in valueList)
@@ -64,13 +50,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

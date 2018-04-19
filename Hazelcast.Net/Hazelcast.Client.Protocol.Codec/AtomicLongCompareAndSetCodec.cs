@@ -16,40 +16,25 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class AtomicLongCompareAndSetCodec
+    internal static class AtomicLongCompareAndSetCodec
     {
-        public static readonly AtomicLongMessageType RequestType = AtomicLongMessageType.AtomicLongCompareAndSet;
-        public const int ResponseType = 101;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, long expected, long updated)
         {
-            public static readonly AtomicLongMessageType TYPE = RequestType;
-            public string name;
-            public long expected;
-            public long updated;
-
-            public static int CalculateDataSize(string name, long expected, long updated)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, long expected, long updated)
+        internal static ClientMessage EncodeRequest(string name, long expected, long updated)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, expected, updated);
+            var requiredDataSize = CalculateRequestDataSize(name, expected, updated);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) AtomicLongMessageType.AtomicLongCompareAndSet);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(expected);
             clientMessage.Set(updated);
@@ -57,13 +42,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

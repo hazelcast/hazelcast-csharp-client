@@ -16,42 +16,26 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.2
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class LockLockCodec
+    internal static class LockLockCodec
     {
-        public static readonly LockMessageType RequestType = LockMessageType.LockLock;
-        public const int ResponseType = 100;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, long leaseTime, long threadId, long referenceId)
         {
-            public static readonly LockMessageType TYPE = RequestType;
-            public string name;
-            public long leaseTime;
-            public long threadId;
-            public long referenceId;
-
-            public static int CalculateDataSize(string name, long leaseTime, long threadId, long referenceId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, long leaseTime, long threadId, long referenceId)
+        internal static ClientMessage EncodeRequest(string name, long leaseTime, long threadId, long referenceId)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, leaseTime, threadId, referenceId);
+            var requiredDataSize = CalculateRequestDataSize(name, leaseTime, threadId, referenceId);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) LockMessageType.LockLock);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(leaseTime);
             clientMessage.Set(threadId);

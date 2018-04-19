@@ -16,51 +16,36 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class CountDownLatchAwaitCodec
+    internal static class CountDownLatchAwaitCodec
     {
-        public static readonly CountDownLatchMessageType RequestType = CountDownLatchMessageType.CountDownLatchAwait;
-        public const int ResponseType = 101;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, long timeout)
         {
-            public static readonly CountDownLatchMessageType TYPE = RequestType;
-            public string name;
-            public long timeout;
-
-            public static int CalculateDataSize(string name, long timeout)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, long timeout)
+        internal static ClientMessage EncodeRequest(string name, long timeout)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, timeout);
+            var requiredDataSize = CalculateRequestDataSize(name, timeout);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) CountDownLatchMessageType.CountDownLatchAwait);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(timeout);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

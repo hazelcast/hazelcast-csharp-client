@@ -133,8 +133,8 @@ using Hazelcast.Util;
             try
             {
                 var clientMessage = ClientAddMembershipListenerCodec.EncodeRequest(false);
-                DistributedEventHandler handler = m => ClientAddMembershipListenerCodec.AbstractEventHandler
-                    .Handle(m, HandleMember, HandleMemberCollection, HandleMemberAttributeChange);
+                DistributedEventHandler handler = m => ClientAddMembershipListenerCodec.EventHandler
+                    .HandleEvent(m, HandleMember, HandleMemberCollection, HandleMemberAttributeChange);
 
                 try
                 {

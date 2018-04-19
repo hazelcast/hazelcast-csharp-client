@@ -467,7 +467,7 @@ namespace Hazelcast.Client.Proxy
             var listenerFlags = (int) listenerAdapter.ListenerFlags;
             var request = MapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, listenerFlags, IsSmart());
             DistributedEventHandler handler =
-                eventData => MapAddEntryListenerCodec.AbstractEventHandler.Handle(eventData,
+                eventData => MapAddEntryListenerCodec.EventHandler.HandleEvent(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
@@ -486,7 +486,7 @@ namespace Hazelcast.Client.Proxy
             var request =
                 MapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, listenerFlags, IsSmart());
             DistributedEventHandler handler =
-                eventData => MapAddEntryListenerToKeyCodec.AbstractEventHandler.Handle(eventData,
+                eventData => MapAddEntryListenerToKeyCodec.EventHandler.HandleEvent(eventData,
                     (key_, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
                         OnEntryEvent(key_, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
@@ -506,7 +506,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(GetName(), keyData, predicateData,
                 includeValue, listenerFlags, IsSmart());
             DistributedEventHandler handler =
-                eventData => MapAddEntryListenerToKeyWithPredicateCodec.AbstractEventHandler.Handle(eventData,
+                eventData => MapAddEntryListenerToKeyWithPredicateCodec.EventHandler.HandleEvent(eventData,
                     (k, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
                         OnEntryEvent(k, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
@@ -524,7 +524,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapAddEntryListenerWithPredicateCodec.EncodeRequest(GetName(), predicateData, includeValue,
                 listenerFlags, IsSmart());
             DistributedEventHandler handler =
-                eventData => MapAddEntryListenerWithPredicateCodec.AbstractEventHandler.Handle(eventData,
+                eventData => MapAddEntryListenerWithPredicateCodec.EventHandler.HandleEvent(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);

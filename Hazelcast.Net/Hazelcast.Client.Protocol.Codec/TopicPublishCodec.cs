@@ -16,38 +16,24 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class TopicPublishCodec
+    internal static class TopicPublishCodec
     {
-        public static readonly TopicMessageType RequestType = TopicMessageType.TopicPublish;
-        public const int ResponseType = 100;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData message)
         {
-            public static readonly TopicMessageType TYPE = RequestType;
-            public string name;
-            public IData message;
-
-            public static int CalculateDataSize(string name, IData message)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(message);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(message);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData message)
+        internal static ClientMessage EncodeRequest(string name, IData message)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, message);
+            var requiredDataSize = CalculateRequestDataSize(name, message);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) TopicMessageType.TopicPublish);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(message);
             clientMessage.UpdateFrameLength();

@@ -25,8 +25,8 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public static Guid Decode(IClientMessage cm)
         {
-            return new Guid(cm.GetInt(), cm.GetShort(), cm.GetShort(), cm.GetByte(), cm.GetByte(), cm.GetByte(),
-                cm.GetByte(), cm.GetByte(), cm.GetByte(), cm.GetByte(), cm.GetByte());
+            return new Guid(cm.GetInt(), cm.GetShort(), cm.GetShort(), cm.GetByte(), cm.GetByte(), cm.GetByte(), cm.GetByte(),
+                cm.GetByte(), cm.GetByte(), cm.GetByte(), cm.GetByte());
         }
 
         public static void Encode(Guid uuid, ClientMessage clientMessage)

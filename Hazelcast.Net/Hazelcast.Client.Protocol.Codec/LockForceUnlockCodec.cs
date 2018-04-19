@@ -16,38 +16,24 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.2
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class LockForceUnlockCodec
+    internal static class LockForceUnlockCodec
     {
-        public static readonly LockMessageType RequestType = LockMessageType.LockForceUnlock;
-        public const int ResponseType = 100;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, long referenceId)
         {
-            public static readonly LockMessageType TYPE = RequestType;
-            public string name;
-            public long referenceId;
-
-            public static int CalculateDataSize(string name, long referenceId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, long referenceId)
+        internal static ClientMessage EncodeRequest(string name, long referenceId)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, referenceId);
+            var requiredDataSize = CalculateRequestDataSize(name, referenceId);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) LockMessageType.LockForceUnlock);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(referenceId);
             clientMessage.UpdateFrameLength();

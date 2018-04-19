@@ -17,42 +17,28 @@ using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Logging;
 
 // Client Protocol version, Since:1.0 - Update:1.4
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapAddNearCacheEntryListenerCodec
+    internal static class MapAddNearCacheEntryListenerCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapAddNearCacheEntryListener;
-        public const int ResponseType = 104;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, int listenerFlags, bool localOnly)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public int listenerFlags;
-            public bool localOnly;
-
-            public static int CalculateDataSize(string name, int listenerFlags, bool localOnly)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                dataSize += Bits.BooleanSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            dataSize += Bits.BooleanSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, int listenerFlags, bool localOnly)
+        internal static ClientMessage EncodeRequest(string name, int listenerFlags, bool localOnly)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, listenerFlags, localOnly);
+            var requiredDataSize = CalculateRequestDataSize(name, listenerFlags, localOnly);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapAddNearCacheEntryListener);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(listenerFlags);
             clientMessage.Set(localOnly);
@@ -60,13 +46,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public string response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetStringUtf8();
@@ -74,105 +59,84 @@ namespace Hazelcast.Client.Protocol.Codec
             return parameters;
         }
 
-//************************ EVENTS *************************//
-        public abstract class AbstractEventHandler
+        internal class EventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleIMapInvalidation handleIMapInvalidation,
-                HandleIMapBatchInvalidation handleIMapBatchInvalidation)
+            internal static void HandleEvent(IClientMessage clientMessage,
+                HandleIMapInvalidationEventV10 handleIMapInvalidationEventV10,
+                HandleIMapInvalidationEventV14 handleIMapInvalidationEventV14,
+                HandleIMapBatchInvalidationEventV10 handleIMapBatchInvalidationEventV10,
+                HandleIMapBatchInvalidationEventV14 handleIMapBatchInvalidationEventV14)
             {
                 var messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventIMapInvalidation)
                 {
-                    var IMapInvalidationMessageFinished = false;
                     IData key = null;
                     var keyIsNull = clientMessage.GetBoolean();
                     if (!keyIsNull)
                     {
                         key = clientMessage.GetData();
                     }
-                    if (!IMapInvalidationMessageFinished)
+                    if (clientMessage.IsComplete())
                     {
-                        IMapInvalidationMessageFinished = clientMessage.IsComplete();
+                        handleIMapInvalidationEventV10(key);
+                        return;
                     }
-                    string sourceUuid = null;
-                    if (!IMapInvalidationMessageFinished)
-                    {
-                        sourceUuid = clientMessage.GetStringUtf8();
-                    }
-                    Guid? partitionUuid = null;
-                    if (!IMapInvalidationMessageFinished)
-                    {
-                        partitionUuid = UUIDCodec.Decode(clientMessage);
-                    }
-                    long? sequence = null;
-                    if (!IMapInvalidationMessageFinished)
-                    {
-                        sequence = clientMessage.GetLong();
-                    }
-                    handleIMapInvalidation(key, sourceUuid, partitionUuid, sequence);
+                    var sourceUuid = clientMessage.GetStringUtf8();
+                    var partitionUuid = UUIDCodec.Decode(clientMessage);
+                    var sequence = clientMessage.GetLong();
+                    handleIMapInvalidationEventV14(key, sourceUuid, partitionUuid, sequence);
                     return;
                 }
                 if (messageType == EventMessageConst.EventIMapBatchInvalidation)
                 {
-                    var IMapBatchInvalidationMessageFinished = false;
-                    var keys = new List<IData>();
                     var keysSize = clientMessage.GetInt();
+                    var keys = new List<IData>(keysSize);
                     for (var keysIndex = 0; keysIndex < keysSize; keysIndex++)
                     {
                         var keysItem = clientMessage.GetData();
                         keys.Add(keysItem);
                     }
-                    if (!IMapBatchInvalidationMessageFinished)
+                    if (clientMessage.IsComplete())
                     {
-                        IMapBatchInvalidationMessageFinished = clientMessage.IsComplete();
+                        handleIMapBatchInvalidationEventV10(keys);
+                        return;
                     }
-                    IList<string> sourceUuids = null;
-                    if (!IMapBatchInvalidationMessageFinished)
+                    var sourceUuidsSize = clientMessage.GetInt();
+                    var sourceUuids = new List<string>(sourceUuidsSize);
+                    for (var sourceUuidsIndex = 0; sourceUuidsIndex < sourceUuidsSize; sourceUuidsIndex++)
                     {
-                        sourceUuids = new List<string>();
-                        var sourceUuidsSize = clientMessage.GetInt();
-                        for (var sourceUuidsIndex = 0; sourceUuidsIndex < sourceUuidsSize; sourceUuidsIndex++)
-                        {
-                            var sourceUuidsItem = clientMessage.GetStringUtf8();
-                            sourceUuids.Add(sourceUuidsItem);
-                        }
+                        var sourceUuidsItem = clientMessage.GetStringUtf8();
+                        sourceUuids.Add(sourceUuidsItem);
                     }
-                    IList<Guid> partitionUuids = null;
-                    if (!IMapBatchInvalidationMessageFinished)
+                    var partitionUuidsSize = clientMessage.GetInt();
+                    var partitionUuids = new List<Guid>(partitionUuidsSize);
+                    for (var partitionUuidsIndex = 0; partitionUuidsIndex < partitionUuidsSize; partitionUuidsIndex++)
                     {
-                        partitionUuids = new List<Guid>();
-                        var partitionUuidsSize = clientMessage.GetInt();
-                        for (var partitionUuidsIndex = 0;
-                            partitionUuidsIndex < partitionUuidsSize;
-                            partitionUuidsIndex++)
-                        {
-                            var partitionUuidsItem = UUIDCodec.Decode(clientMessage);
-                            partitionUuids.Add(partitionUuidsItem);
-                        }
+                        var partitionUuidsItem = UUIDCodec.Decode(clientMessage);
+                        partitionUuids.Add(partitionUuidsItem);
                     }
-                    IList<long> sequences = null;
-                    if (!IMapBatchInvalidationMessageFinished)
+                    var sequencesSize = clientMessage.GetInt();
+                    var sequences = new List<long>(sequencesSize);
+                    for (var sequencesIndex = 0; sequencesIndex < sequencesSize; sequencesIndex++)
                     {
-                        sequences = new List<long>();
-                        var sequencesSize = clientMessage.GetInt();
-                        for (var sequencesIndex = 0; sequencesIndex < sequencesSize; sequencesIndex++)
-                        {
-                            var sequencesItem = clientMessage.GetLong();
-                            sequences.Add(sequencesItem);
-                        }
+                        var sequencesItem = clientMessage.GetLong();
+                        sequences.Add(sequencesItem);
                     }
-                    handleIMapBatchInvalidation(keys, sourceUuids, partitionUuids, sequences);
+                    handleIMapBatchInvalidationEventV14(keys, sourceUuids, partitionUuids, sequences);
                     return;
                 }
-                Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler))
-                    .Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
+                Logger.GetLogger(typeof(EventHandler)).Warning("Unknown message type received on event handler :" + messageType);
             }
 
-            public delegate void HandleIMapInvalidation(
-                IData key, string sourceUuid, Guid? partitionUuid, long? sequence);
+            internal delegate void HandleIMapInvalidationEventV10(IData key);
 
-            public delegate void HandleIMapBatchInvalidation(
-                IList<IData> keys, IList<string> sourceUuids, IList<Guid> partitionUuids, IList<long> sequences);
+            internal delegate void
+                HandleIMapInvalidationEventV14(IData key, string sourceUuid, Guid partitionUuid, long sequence);
+
+            internal delegate void HandleIMapBatchInvalidationEventV10(IList<IData> keys);
+
+            internal delegate void HandleIMapBatchInvalidationEventV14(IList<IData> keys, IList<string> sourceUuids,
+                IList<Guid> partitionUuids, IList<long> sequences);
         }
     }
 }

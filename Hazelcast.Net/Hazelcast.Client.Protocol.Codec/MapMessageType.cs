@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -81,6 +81,9 @@ namespace Hazelcast.Client.Protocol.Codec
         MapFetchNearCacheInvalidationMetadata = 0x0142,
         MapAssignAndGetUuids = 0x0143,
         MapRemoveAll = 0x0144,
-        MapAddNearCacheInvalidationListener = 0x0145
+        MapAddNearCacheInvalidationListener = 0x0145,
+        MapFetchWithQuery = 0x0146,
+        MapEventJournalSubscribe = 0x0147,
+        MapEventJournalRead = 0x0148
     }
 }

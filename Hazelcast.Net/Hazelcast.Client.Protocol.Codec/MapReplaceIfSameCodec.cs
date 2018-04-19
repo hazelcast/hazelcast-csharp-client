@@ -17,44 +17,27 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapReplaceIfSameCodec
+    internal static class MapReplaceIfSameCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapReplaceIfSame;
-        public const int ResponseType = 101;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData key, IData testValue, IData value, long threadId)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IData key;
-            public IData testValue;
-            public IData value;
-            public long threadId;
-
-            public static int CalculateDataSize(string name, IData key, IData testValue, IData value, long threadId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(key);
-                dataSize += ParameterUtil.CalculateDataSize(testValue);
-                dataSize += ParameterUtil.CalculateDataSize(value);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(key);
+            dataSize += ParameterUtil.CalculateDataSize(testValue);
+            dataSize += ParameterUtil.CalculateDataSize(value);
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData testValue, IData value, long threadId)
+        internal static ClientMessage EncodeRequest(string name, IData key, IData testValue, IData value, long threadId)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, key, testValue, value, threadId);
+            var requiredDataSize = CalculateRequestDataSize(name, key, testValue, value, threadId);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapReplaceIfSame);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(key);
             clientMessage.Set(testValue);
@@ -64,13 +47,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

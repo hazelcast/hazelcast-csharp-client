@@ -19,39 +19,24 @@ using Hazelcast.IO.Serialization;
 // Client Protocol version, Since:1.0 - Update:1.0
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ReplicatedMapPutCodec
+    internal static class ReplicatedMapPutCodec
     {
-        public static readonly ReplicatedMapMessageType RequestType = ReplicatedMapMessageType.ReplicatedMapPut;
-        public const int ResponseType = 105;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData key, IData value, long ttl)
         {
-            public static readonly ReplicatedMapMessageType TYPE = RequestType;
-            public string name;
-            public IData key;
-            public IData value;
-            public long ttl;
-
-            public static int CalculateDataSize(string name, IData key, IData value, long ttl)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(key);
-                dataSize += ParameterUtil.CalculateDataSize(value);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(key);
+            dataSize += ParameterUtil.CalculateDataSize(value);
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData value, long ttl)
+        internal static ClientMessage EncodeRequest(string name, IData key, IData value, long ttl)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, key, value, ttl);
+            var requiredDataSize = CalculateRequestDataSize(name, key, value, ttl);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ReplicatedMapMessageType.ReplicatedMapPut);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(key);
             clientMessage.Set(value);
@@ -60,13 +45,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IData response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var responseIsNull = clientMessage.GetBoolean();

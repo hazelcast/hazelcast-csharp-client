@@ -17,51 +17,32 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
-// Client Protocol version, Since:1.0 - Update:1.0
-
+// Client Protocol version, Since:1.0 - Update:1.6
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class RingbufferReadManyCodec
+    internal static class RingbufferReadManyCodec
     {
-        public static readonly RingbufferMessageType RequestType = RingbufferMessageType.RingbufferReadMany;
-        public const int ResponseType = 115;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, long startSequence, int minCount, int maxCount, IData filter)
         {
-            public static readonly RingbufferMessageType TYPE = RequestType;
-            public string name;
-            public long startSequence;
-            public int minCount;
-            public int maxCount;
-            public IData filter;
-
-            public static int CalculateDataSize(string name, long startSequence, int minCount, int maxCount,
-                IData filter)
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += Bits.IntSizeInBytes;
+            dataSize += Bits.IntSizeInBytes;
+            dataSize += Bits.BooleanSizeInBytes;
+            if (filter != null)
             {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.IntSizeInBytes;
-                dataSize += Bits.IntSizeInBytes;
-                dataSize += Bits.BooleanSizeInBytes;
-                if (filter != null)
-                {
-                    dataSize += ParameterUtil.CalculateDataSize(filter);
-                }
-                return dataSize;
+                dataSize += ParameterUtil.CalculateDataSize(filter);
             }
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, long startSequence, int minCount, int maxCount,
-            IData filter)
+        internal static ClientMessage EncodeRequest(string name, long startSequence, int minCount, int maxCount, IData filter)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, startSequence, minCount, maxCount, filter);
+            var requiredDataSize = CalculateRequestDataSize(name, startSequence, minCount, maxCount, filter);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) RingbufferMessageType.RingbufferReadMany);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(startSequence);
             clientMessage.Set(minCount);
@@ -75,26 +56,53 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public int readCount;
             public IList<IData> items;
+            public long[] itemSeqs;
+            public bool itemSeqsExist;
+            public long nextSeq;
+            public bool nextSeqExist;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var readCount = clientMessage.GetInt();
             parameters.readCount = readCount;
-            var items = new List<IData>();
             var itemsSize = clientMessage.GetInt();
+            var items = new List<IData>(itemsSize);
             for (var itemsIndex = 0; itemsIndex < itemsSize; itemsIndex++)
             {
                 var itemsItem = clientMessage.GetData();
                 items.Add(itemsItem);
             }
             parameters.items = items;
+            if (clientMessage.IsComplete())
+            {
+                return parameters;
+            }
+            var itemSeqsIsNull = clientMessage.GetBoolean();
+            if (!itemSeqsIsNull)
+            {
+                var itemSeqsSize = clientMessage.GetInt();
+                var itemSeqs = new long[itemSeqsSize];
+                for (var itemSeqsIndex = 0; itemSeqsIndex < itemSeqsSize; itemSeqsIndex++)
+                {
+                    var itemSeqsItem = clientMessage.GetLong();
+                    itemSeqs[itemSeqsIndex] = itemSeqsItem;
+                }
+                parameters.itemSeqs = itemSeqs;
+            }
+            parameters.itemSeqsExist = true;
+            if (clientMessage.IsComplete())
+            {
+                return parameters;
+            }
+            var nextSeq = clientMessage.GetLong();
+            parameters.nextSeq = nextSeq;
+            parameters.nextSeqExist = true;
             return parameters;
         }
     }

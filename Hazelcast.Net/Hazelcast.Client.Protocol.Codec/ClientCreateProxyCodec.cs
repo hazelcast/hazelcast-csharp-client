@@ -16,40 +16,25 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ClientCreateProxyCodec
+    internal static class ClientCreateProxyCodec
     {
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientCreateProxy;
-        public const int ResponseType = 100;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, string serviceName, Address target)
         {
-            public static readonly ClientMessageType TYPE = RequestType;
-            public string name;
-            public string serviceName;
-            public Address target;
-
-            public static int CalculateDataSize(string name, string serviceName, Address target)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(serviceName);
-                dataSize += AddressCodec.CalculateDataSize(target);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(serviceName);
+            dataSize += AddressCodec.CalculateDataSize(target);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, string serviceName, Address target)
+        internal static ClientMessage EncodeRequest(string name, string serviceName, Address target)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, serviceName, target);
+            var requiredDataSize = CalculateRequestDataSize(name, serviceName, target);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ClientMessageType.ClientCreateProxy);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(serviceName);
             AddressCodec.Encode(target, clientMessage);

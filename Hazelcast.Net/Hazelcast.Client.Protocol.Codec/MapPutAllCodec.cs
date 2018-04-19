@@ -18,45 +18,31 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapPutAllCodec
+    internal static class MapPutAllCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapPutAll;
-        public const int ResponseType = 100;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IList<KeyValuePair<IData, IData>> entries)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IList<KeyValuePair<IData, IData>> entries;
-
-            public static int CalculateDataSize(string name, IList<KeyValuePair<IData, IData>> entries)
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            foreach (var entriesItem in entries)
             {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                foreach (var entriesItem in entries)
-                {
-                    var entriesItemKey = entriesItem.Key;
-                    var entriesItemVal = entriesItem.Value;
-                    dataSize += ParameterUtil.CalculateDataSize(entriesItemKey);
-                    dataSize += ParameterUtil.CalculateDataSize(entriesItemVal);
-                }
-                return dataSize;
+                var entriesItemKey = entriesItem.Key;
+                var entriesItemVal = entriesItem.Value;
+                dataSize += ParameterUtil.CalculateDataSize(entriesItemKey);
+                dataSize += ParameterUtil.CalculateDataSize(entriesItemVal);
             }
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IList<KeyValuePair<IData, IData>> entries)
+        internal static ClientMessage EncodeRequest(string name, IList<KeyValuePair<IData, IData>> entries)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, entries);
+            var requiredDataSize = CalculateRequestDataSize(name, entries);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapPutAll);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(entries.Count);
             foreach (var entriesItem in entries)

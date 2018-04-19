@@ -15,51 +15,36 @@
 using Hazelcast.Client.Protocol.Util;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapRemoveInterceptorCodec
+    internal static class MapRemoveInterceptorCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapRemoveInterceptor;
-        public const int ResponseType = 101;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, string id)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public string id;
-
-            public static int CalculateDataSize(string name, string id)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(id);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(id);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, string id)
+        internal static ClientMessage EncodeRequest(string name, string id)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, id);
+            var requiredDataSize = CalculateRequestDataSize(name, id);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapRemoveInterceptor);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(id);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

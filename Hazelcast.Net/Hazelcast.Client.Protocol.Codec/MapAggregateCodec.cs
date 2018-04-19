@@ -12,73 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
-using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.4 - Update:1.4
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapAggregateCodec
+    internal static class MapAggregateCodec
     {
-
-        public static readonly MapMessageType RequestType = MapMessageType.MapAggregate;
-        public const int ResponseType = 105;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData aggregator)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IData aggregator;
-
-            public static int CalculateDataSize(string name, IData aggregator)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(aggregator);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(aggregator);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData aggregator)
+        internal static ClientMessage EncodeRequest(string name, IData aggregator)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, aggregator);
+            var requiredDataSize = CalculateRequestDataSize(name, aggregator);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int)RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapAggregate);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(aggregator);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IData response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            if (clientMessage.IsComplete())
+            var responseIsNull = clientMessage.GetBoolean();
+            if (!responseIsNull)
             {
-                return parameters;
+                var response = clientMessage.GetData();
+                parameters.response = response;
             }
-    var responseIsNull = clientMessage.GetBoolean();
-    if (!responseIsNull)
-    {
-            var response = clientMessage.GetData();
-    parameters.response = response;
-    }
             return parameters;
         }
-
     }
 }

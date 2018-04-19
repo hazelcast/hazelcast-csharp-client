@@ -18,40 +18,25 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ListSubCodec
+    internal static class ListSubCodec
     {
-        public static readonly ListMessageType RequestType = ListMessageType.ListSub;
-        public const int ResponseType = 106;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, int from, int to)
         {
-            public static readonly ListMessageType TYPE = RequestType;
-            public string name;
-            public int from;
-            public int to;
-
-            public static int CalculateDataSize(string name, int from, int to)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                dataSize += Bits.IntSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            dataSize += Bits.IntSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, int from, int to)
+        internal static ClientMessage EncodeRequest(string name, int from, int to)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, from, to);
+            var requiredDataSize = CalculateRequestDataSize(name, from, to);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ListMessageType.ListSub);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(from);
             clientMessage.Set(to);
@@ -59,17 +44,16 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IList<IData> response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            var response = new List<IData>();
             var responseSize = clientMessage.GetInt();
+            var response = new List<IData>(responseSize);
             for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
             {
                 var responseItem = clientMessage.GetData();

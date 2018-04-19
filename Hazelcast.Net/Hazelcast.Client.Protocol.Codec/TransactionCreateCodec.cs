@@ -15,42 +15,26 @@
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class TransactionCreateCodec
+    internal static class TransactionCreateCodec
     {
-        public static readonly TransactionMessageType RequestType = TransactionMessageType.TransactionCreate;
-        public const int ResponseType = 104;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(long timeout, int durability, int transactionType, long threadId)
         {
-            public static readonly TransactionMessageType TYPE = RequestType;
-            public long timeout;
-            public int durability;
-            public int transactionType;
-            public long threadId;
-
-            public static int CalculateDataSize(long timeout, int durability, int transactionType, long threadId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.IntSizeInBytes;
-                dataSize += Bits.IntSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += Bits.IntSizeInBytes;
+            dataSize += Bits.IntSizeInBytes;
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(long timeout, int durability, int transactionType, long threadId)
+        internal static ClientMessage EncodeRequest(long timeout, int durability, int transactionType, long threadId)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(timeout, durability, transactionType, threadId);
+            var requiredDataSize = CalculateRequestDataSize(timeout, durability, transactionType, threadId);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) TransactionMessageType.TransactionCreate);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(timeout);
             clientMessage.Set(durability);
             clientMessage.Set(transactionType);
@@ -59,13 +43,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public string response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetStringUtf8();

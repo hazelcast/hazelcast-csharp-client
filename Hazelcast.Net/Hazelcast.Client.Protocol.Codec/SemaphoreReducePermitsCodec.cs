@@ -16,38 +16,24 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class SemaphoreReducePermitsCodec
+    internal static class SemaphoreReducePermitsCodec
     {
-        public static readonly SemaphoreMessageType RequestType = SemaphoreMessageType.SemaphoreReducePermits;
-        public const int ResponseType = 100;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, int reduction)
         {
-            public static readonly SemaphoreMessageType TYPE = RequestType;
-            public string name;
-            public int reduction;
-
-            public static int CalculateDataSize(string name, int reduction)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, int reduction)
+        internal static ClientMessage EncodeRequest(string name, int reduction)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, reduction);
+            var requiredDataSize = CalculateRequestDataSize(name, reduction);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) SemaphoreMessageType.SemaphoreReducePermits);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(reduction);
             clientMessage.UpdateFrameLength();

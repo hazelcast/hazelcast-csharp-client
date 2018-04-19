@@ -16,51 +16,36 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class AtomicLongGetAndAddCodec
+    internal static class AtomicLongGetAndAddCodec
     {
-        public static readonly AtomicLongMessageType RequestType = AtomicLongMessageType.AtomicLongGetAndAdd;
-        public const int ResponseType = 103;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, long delta)
         {
-            public static readonly AtomicLongMessageType TYPE = RequestType;
-            public string name;
-            public long delta;
-
-            public static int CalculateDataSize(string name, long delta)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, long delta)
+        internal static ClientMessage EncodeRequest(string name, long delta)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, delta);
+            var requiredDataSize = CalculateRequestDataSize(name, delta);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) AtomicLongMessageType.AtomicLongGetAndAdd);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(delta);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public long response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetLong();

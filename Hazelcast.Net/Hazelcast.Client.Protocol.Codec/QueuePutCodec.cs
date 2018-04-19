@@ -16,38 +16,24 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class QueuePutCodec
+    internal static class QueuePutCodec
     {
-        public static readonly QueueMessageType RequestType = QueueMessageType.QueuePut;
-        public const int ResponseType = 100;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData value)
         {
-            public static readonly QueueMessageType TYPE = RequestType;
-            public string name;
-            public IData value;
-
-            public static int CalculateDataSize(string name, IData value)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(value);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(value);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData value)
+        internal static ClientMessage EncodeRequest(string name, IData value)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, value);
+            var requiredDataSize = CalculateRequestDataSize(name, value);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) QueueMessageType.QueuePut);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(value);
             clientMessage.UpdateFrameLength();

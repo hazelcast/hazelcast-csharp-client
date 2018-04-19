@@ -17,42 +17,26 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapSubmitToKeyCodec
+    internal static class MapSubmitToKeyCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapSubmitToKey;
-        public const int ResponseType = 105;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData entryProcessor, IData key, long threadId)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IData entryProcessor;
-            public IData key;
-            public long threadId;
-
-            public static int CalculateDataSize(string name, IData entryProcessor, IData key, long threadId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(entryProcessor);
-                dataSize += ParameterUtil.CalculateDataSize(key);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(entryProcessor);
+            dataSize += ParameterUtil.CalculateDataSize(key);
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData entryProcessor, IData key, long threadId)
+        internal static ClientMessage EncodeRequest(string name, IData entryProcessor, IData key, long threadId)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, entryProcessor, key, threadId);
+            var requiredDataSize = CalculateRequestDataSize(name, entryProcessor, key, threadId);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapSubmitToKey);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(entryProcessor);
             clientMessage.Set(key);
@@ -61,13 +45,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IData response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var responseIsNull = clientMessage.GetBoolean();

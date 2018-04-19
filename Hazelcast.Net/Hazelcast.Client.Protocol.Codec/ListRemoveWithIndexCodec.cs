@@ -17,51 +17,36 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ListRemoveWithIndexCodec
+    internal static class ListRemoveWithIndexCodec
     {
-        public static readonly ListMessageType RequestType = ListMessageType.ListRemoveWithIndex;
-        public const int ResponseType = 105;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, int index)
         {
-            public static readonly ListMessageType TYPE = RequestType;
-            public string name;
-            public int index;
-
-            public static int CalculateDataSize(string name, int index)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, int index)
+        internal static ClientMessage EncodeRequest(string name, int index)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, index);
+            var requiredDataSize = CalculateRequestDataSize(name, index);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ListMessageType.ListRemoveWithIndex);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(index);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IData response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var responseIsNull = clientMessage.GetBoolean();

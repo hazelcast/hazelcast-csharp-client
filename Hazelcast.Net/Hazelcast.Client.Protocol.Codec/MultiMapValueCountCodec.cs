@@ -17,40 +17,25 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MultiMapValueCountCodec
+    internal static class MultiMapValueCountCodec
     {
-        public static readonly MultiMapMessageType RequestType = MultiMapMessageType.MultiMapValueCount;
-        public const int ResponseType = 102;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData key, long threadId)
         {
-            public static readonly MultiMapMessageType TYPE = RequestType;
-            public string name;
-            public IData key;
-            public long threadId;
-
-            public static int CalculateDataSize(string name, IData key, long threadId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(key);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(key);
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData key, long threadId)
+        internal static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, key, threadId);
+            var requiredDataSize = CalculateRequestDataSize(name, key, threadId);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MultiMapMessageType.MultiMapValueCount);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(key);
             clientMessage.Set(threadId);
@@ -58,13 +43,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public int response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetInt();

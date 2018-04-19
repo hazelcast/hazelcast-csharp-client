@@ -15,38 +15,24 @@
 using Hazelcast.Client.Protocol.Util;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ClientDestroyProxyCodec
+    internal static class ClientDestroyProxyCodec
     {
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientDestroyProxy;
-        public const int ResponseType = 100;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, string serviceName)
         {
-            public static readonly ClientMessageType TYPE = RequestType;
-            public string name;
-            public string serviceName;
-
-            public static int CalculateDataSize(string name, string serviceName)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(serviceName);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(serviceName);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, string serviceName)
+        internal static ClientMessage EncodeRequest(string name, string serviceName)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, serviceName);
+            var requiredDataSize = CalculateRequestDataSize(name, serviceName);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ClientMessageType.ClientDestroyProxy);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(serviceName);
             clientMessage.UpdateFrameLength();

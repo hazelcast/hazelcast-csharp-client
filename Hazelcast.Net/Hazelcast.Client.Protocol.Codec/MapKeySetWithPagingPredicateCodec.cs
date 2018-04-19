@@ -17,55 +17,40 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapKeySetWithPagingPredicateCodec
+    internal static class MapKeySetWithPagingPredicateCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapKeySetWithPagingPredicate;
-        public const int ResponseType = 106;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData predicate)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IData predicate;
-
-            public static int CalculateDataSize(string name, IData predicate)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(predicate);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(predicate);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData predicate)
+        internal static ClientMessage EncodeRequest(string name, IData predicate)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, predicate);
+            var requiredDataSize = CalculateRequestDataSize(name, predicate);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapKeySetWithPagingPredicate);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(predicate);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IList<IData> response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            var response = new List<IData>();
             var responseSize = clientMessage.GetInt();
+            var response = new List<IData>(responseSize);
             for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
             {
                 var responseItem = clientMessage.GetData();

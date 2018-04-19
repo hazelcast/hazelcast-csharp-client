@@ -18,42 +18,28 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class QueueCompareAndRemoveAllCodec
+    internal static class QueueCompareAndRemoveAllCodec
     {
-        public static readonly QueueMessageType RequestType = QueueMessageType.QueueCompareAndRemoveAll;
-        public const int ResponseType = 101;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IList<IData> dataList)
         {
-            public static readonly QueueMessageType TYPE = RequestType;
-            public string name;
-            public IList<IData> dataList;
-
-            public static int CalculateDataSize(string name, IList<IData> dataList)
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            foreach (var dataListItem in dataList)
             {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                foreach (var dataListItem in dataList)
-                {
-                    dataSize += ParameterUtil.CalculateDataSize(dataListItem);
-                }
-                return dataSize;
+                dataSize += ParameterUtil.CalculateDataSize(dataListItem);
             }
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IList<IData> dataList)
+        internal static ClientMessage EncodeRequest(string name, IList<IData> dataList)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, dataList);
+            var requiredDataSize = CalculateRequestDataSize(name, dataList);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) QueueMessageType.QueueCompareAndRemoveAll);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(dataList.Count);
             foreach (var dataListItem in dataList)
@@ -64,13 +50,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

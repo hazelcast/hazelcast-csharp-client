@@ -16,40 +16,25 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class SemaphoreTryAcquireCodec
+    internal static class SemaphoreTryAcquireCodec
     {
-        public static readonly SemaphoreMessageType RequestType = SemaphoreMessageType.SemaphoreTryAcquire;
-        public const int ResponseType = 101;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, int permits, long timeout)
         {
-            public static readonly SemaphoreMessageType TYPE = RequestType;
-            public string name;
-            public int permits;
-            public long timeout;
-
-            public static int CalculateDataSize(string name, int permits, long timeout)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, int permits, long timeout)
+        internal static ClientMessage EncodeRequest(string name, int permits, long timeout)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, permits, timeout);
+            var requiredDataSize = CalculateRequestDataSize(name, permits, timeout);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) SemaphoreMessageType.SemaphoreTryAcquire);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(permits);
             clientMessage.Set(timeout);
@@ -57,13 +42,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

@@ -17,55 +17,40 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapEntriesWithPredicateCodec
+    internal static class MapEntriesWithPredicateCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapEntriesWithPredicate;
-        public const int ResponseType = 117;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData predicate)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IData predicate;
-
-            public static int CalculateDataSize(string name, IData predicate)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(predicate);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(predicate);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData predicate)
+        internal static ClientMessage EncodeRequest(string name, IData predicate)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, predicate);
+            var requiredDataSize = CalculateRequestDataSize(name, predicate);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapEntriesWithPredicate);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(predicate);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IList<KeyValuePair<IData, IData>> response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            var response = new List<KeyValuePair<IData, IData>>();
             var responseSize = clientMessage.GetInt();
+            var response = new List<KeyValuePair<IData, IData>>(responseSize);
             for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
             {
                 var responseItemKey = clientMessage.GetData();

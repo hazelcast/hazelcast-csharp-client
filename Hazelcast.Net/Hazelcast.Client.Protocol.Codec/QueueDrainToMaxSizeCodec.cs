@@ -18,55 +18,40 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class QueueDrainToMaxSizeCodec
+    internal static class QueueDrainToMaxSizeCodec
     {
-        public static readonly QueueMessageType RequestType = QueueMessageType.QueueDrainToMaxSize;
-        public const int ResponseType = 106;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, int maxSize)
         {
-            public static readonly QueueMessageType TYPE = RequestType;
-            public string name;
-            public int maxSize;
-
-            public static int CalculateDataSize(string name, int maxSize)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.IntSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.IntSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, int maxSize)
+        internal static ClientMessage EncodeRequest(string name, int maxSize)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, maxSize);
+            var requiredDataSize = CalculateRequestDataSize(name, maxSize);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) QueueMessageType.QueueDrainToMaxSize);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(maxSize);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IList<IData> response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            var response = new List<IData>();
             var responseSize = clientMessage.GetInt();
+            var response = new List<IData>(responseSize);
             for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
             {
                 var responseItem = clientMessage.GetData();

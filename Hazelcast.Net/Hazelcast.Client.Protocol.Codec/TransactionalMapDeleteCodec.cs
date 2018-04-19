@@ -17,44 +17,26 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class TransactionalMapDeleteCodec
+    internal static class TransactionalMapDeleteCodec
     {
-        public static readonly TransactionalMapMessageType RequestType =
-            TransactionalMapMessageType.TransactionalMapDelete;
-
-        public const int ResponseType = 100;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, string txnId, long threadId, IData key)
         {
-            public static readonly TransactionalMapMessageType TYPE = RequestType;
-            public string name;
-            public string txnId;
-            public long threadId;
-            public IData key;
-
-            public static int CalculateDataSize(string name, string txnId, long threadId, IData key)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(txnId);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += ParameterUtil.CalculateDataSize(key);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(txnId);
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += ParameterUtil.CalculateDataSize(key);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, string txnId, long threadId, IData key)
+        internal static ClientMessage EncodeRequest(string name, string txnId, long threadId, IData key)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, txnId, threadId, key);
+            var requiredDataSize = CalculateRequestDataSize(name, txnId, threadId, key);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) TransactionalMapMessageType.TransactionalMapDelete);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(txnId);
             clientMessage.Set(threadId);
