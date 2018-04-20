@@ -16,40 +16,25 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapAddIndexCodec
+    internal static class MapAddIndexCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapAddIndex;
-        public const int ResponseType = 100;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, string attribute, bool ordered)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public string attribute;
-            public bool ordered;
-
-            public static int CalculateDataSize(string name, string attribute, bool ordered)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(attribute);
-                dataSize += Bits.BooleanSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(attribute);
+            dataSize += Bits.BooleanSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, string attribute, bool ordered)
+        internal static ClientMessage EncodeRequest(string name, string attribute, bool ordered)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, attribute, ordered);
+            var requiredDataSize = CalculateRequestDataSize(name, attribute, ordered);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapAddIndex);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(attribute);
             clientMessage.Set(ordered);

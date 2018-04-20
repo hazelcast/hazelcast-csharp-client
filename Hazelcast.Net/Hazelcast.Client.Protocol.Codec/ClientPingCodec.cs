@@ -12,35 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Client Protocol version, Since:1.0 - Update:0.-1
 
+
+// Client Protocol version, Since:1.0 - Update:1.0
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ClientPingCodec
+    internal static class ClientPingCodec
     {
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientPing;
-        public const int ResponseType = 100;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize()
         {
-            public static readonly ClientMessageType TYPE = RequestType;
-
-            public static int CalculateDataSize()
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest()
+        internal static ClientMessage EncodeRequest()
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize();
+            var requiredDataSize = CalculateRequestDataSize();
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ClientMessageType.ClientPing);
+            clientMessage.SetRetryable(true);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }

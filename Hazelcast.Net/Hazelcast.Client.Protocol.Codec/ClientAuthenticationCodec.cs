@@ -14,64 +14,45 @@
 
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
+using Hazelcast.Core;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.3
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ClientAuthenticationCodec
+    internal static class ClientAuthenticationCodec
     {
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientAuthentication;
-        public const int ResponseType = 107;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
-        {
-            public static readonly ClientMessageType TYPE = RequestType;
-            public string username;
-            public string password;
-            public string uuid;
-            public string ownerUuid;
-            public bool isOwnerConnection;
-            public string clientType;
-            public byte serializationVersion;
-            public string clientHazelcastVersion;
-
-            public static int CalculateDataSize(string username, string password, string uuid, string ownerUuid,
-                bool isOwnerConnection, string clientType, byte serializationVersion, string clientHazelcastVersion)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(username);
-                dataSize += ParameterUtil.CalculateDataSize(password);
-                dataSize += Bits.BooleanSizeInBytes;
-                if (uuid != null)
-                {
-                    dataSize += ParameterUtil.CalculateDataSize(uuid);
-                }
-                dataSize += Bits.BooleanSizeInBytes;
-                if (ownerUuid != null)
-                {
-                    dataSize += ParameterUtil.CalculateDataSize(ownerUuid);
-                }
-                dataSize += Bits.BooleanSizeInBytes;
-                dataSize += ParameterUtil.CalculateDataSize(clientType);
-                dataSize += Bits.ByteSizeInBytes;
-                dataSize += ParameterUtil.CalculateDataSize(clientHazelcastVersion);
-                return dataSize;
-            }
-        }
-
-        public static ClientMessage EncodeRequest(string username, string password, string uuid, string ownerUuid,
+        private static int CalculateRequestDataSize(string username, string password, string uuid, string ownerUuid,
             bool isOwnerConnection, string clientType, byte serializationVersion, string clientHazelcastVersion)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(username, password, uuid, ownerUuid,
-                isOwnerConnection, clientType, serializationVersion, clientHazelcastVersion);
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(username);
+            dataSize += ParameterUtil.CalculateDataSize(password);
+            dataSize += Bits.BooleanSizeInBytes;
+            if (uuid != null)
+            {
+                dataSize += ParameterUtil.CalculateDataSize(uuid);
+            }
+            dataSize += Bits.BooleanSizeInBytes;
+            if (ownerUuid != null)
+            {
+                dataSize += ParameterUtil.CalculateDataSize(ownerUuid);
+            }
+            dataSize += Bits.BooleanSizeInBytes;
+            dataSize += ParameterUtil.CalculateDataSize(clientType);
+            dataSize += Bits.ByteSizeInBytes;
+            dataSize += ParameterUtil.CalculateDataSize(clientHazelcastVersion);
+            return dataSize;
+        }
+
+        internal static ClientMessage EncodeRequest(string username, string password, string uuid, string ownerUuid,
+            bool isOwnerConnection, string clientType, byte serializationVersion, string clientHazelcastVersion)
+        {
+            var requiredDataSize = CalculateRequestDataSize(username, password, uuid, ownerUuid, isOwnerConnection, clientType,
+                serializationVersion, clientHazelcastVersion);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ClientMessageType.ClientAuthentication);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(username);
             clientMessage.Set(password);
             clientMessage.Set(uuid == null);
@@ -92,8 +73,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public byte status;
             public Address address;
@@ -102,11 +82,11 @@ namespace Hazelcast.Client.Protocol.Codec
             public byte serializationVersion;
             public string serverHazelcastVersion;
             public bool serverHazelcastVersionExist;
-            public IList<Core.IMember> clientUnregisteredMembers;
+            public IList<IMember> clientUnregisteredMembers;
             public bool clientUnregisteredMembersExist;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var status = clientMessage.GetByte();
@@ -141,8 +121,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var clientUnregisteredMembersIsNull = clientMessage.GetBoolean();
             if (!clientUnregisteredMembersIsNull)
             {
-                var clientUnregisteredMembers = new List<Core.IMember>();
                 var clientUnregisteredMembersSize = clientMessage.GetInt();
+                var clientUnregisteredMembers = new List<IMember>(clientUnregisteredMembersSize);
                 for (var clientUnregisteredMembersIndex = 0;
                     clientUnregisteredMembersIndex < clientUnregisteredMembersSize;
                     clientUnregisteredMembersIndex++)

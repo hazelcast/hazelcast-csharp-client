@@ -70,7 +70,7 @@ namespace Hazelcast.Client.Spi
                 this, _client.GetClientConfig());
             DistributedEventHandler eventHandler = delegate(IClientMessage message)
             {
-                ClientAddDistributedObjectListenerCodec.AbstractEventHandler.Handle(message,
+                ClientAddDistributedObjectListenerCodec.EventHandler.HandleEvent(message,
                     (name, serviceName, eventType) =>
                     {
                         var _event = new LazyDistributedObjectEvent(eventType, serviceName, name, this);

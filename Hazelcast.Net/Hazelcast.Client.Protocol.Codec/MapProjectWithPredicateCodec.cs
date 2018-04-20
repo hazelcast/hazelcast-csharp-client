@@ -12,48 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
-using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.4 - Update:1.4
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapProjectWithPredicateCodec
+    internal static class MapProjectWithPredicateCodec
     {
-
-        public static readonly MapMessageType RequestType = MapMessageType.MapProjectWithPredicate;
-        public const int ResponseType = 119;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData projection, IData predicate)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IData projection;
-            public IData predicate;
-
-            public static int CalculateDataSize(string name, IData projection, IData predicate)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(projection);
-                dataSize += ParameterUtil.CalculateDataSize(predicate);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(projection);
+            dataSize += ParameterUtil.CalculateDataSize(predicate);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData projection, IData predicate)
+        internal static ClientMessage EncodeRequest(string name, IData projection, IData predicate)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, projection, predicate);
+            var requiredDataSize = CalculateRequestDataSize(name, projection, predicate);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int)RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapProjectWithPredicate);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(projection);
             clientMessage.Set(predicate);
@@ -61,27 +43,22 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IList<IData> response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            if (clientMessage.IsComplete())
-            {
-                return parameters;
-            }
-            var response = new List<IData>();
             var responseSize = clientMessage.GetInt();
-            for (var responseIndex = 0; responseIndex<responseSize; responseIndex++)
+            var response = new List<IData>(responseSize);
+            for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
             {
                 var responseItemIsNull = clientMessage.GetBoolean();
                 if (!responseItemIsNull)
                 {
-            var responseItem = clientMessage.GetData();
+                    var responseItem = clientMessage.GetData();
                     response.Add(responseItem);
                 }
                 else
@@ -89,9 +66,8 @@ namespace Hazelcast.Client.Protocol.Codec
                     response.Add(null);
                 }
             }
-    parameters.response = response;
+            parameters.response = response;
             return parameters;
         }
-
     }
 }

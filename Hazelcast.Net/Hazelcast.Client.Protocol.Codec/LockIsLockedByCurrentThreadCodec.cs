@@ -16,51 +16,36 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class LockIsLockedByCurrentThreadCodec
+    internal static class LockIsLockedByCurrentThreadCodec
     {
-        public static readonly LockMessageType RequestType = LockMessageType.LockIsLockedByCurrentThread;
-        public const int ResponseType = 101;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, long threadId)
         {
-            public static readonly LockMessageType TYPE = RequestType;
-            public string name;
-            public long threadId;
-
-            public static int CalculateDataSize(string name, long threadId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, long threadId)
+        internal static ClientMessage EncodeRequest(string name, long threadId)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, threadId);
+            var requiredDataSize = CalculateRequestDataSize(name, threadId);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) LockMessageType.LockIsLockedByCurrentThread);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(threadId);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

@@ -14,63 +14,45 @@
 
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
+using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.3
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ClientAuthenticationCustomCodec
+    internal static class ClientAuthenticationCustomCodec
     {
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientAuthenticationCustom;
-        public const int ResponseType = 107;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(IData credentials, string uuid, string ownerUuid, bool isOwnerConnection,
+            string clientType, byte serializationVersion, string clientHazelcastVersion)
         {
-            public static readonly ClientMessageType TYPE = RequestType;
-            public IData credentials;
-            public string uuid;
-            public string ownerUuid;
-            public bool isOwnerConnection;
-            public string clientType;
-            public byte serializationVersion;
-            public string clientHazelcastVersion;
-
-            public static int CalculateDataSize(IData credentials, string uuid, string ownerUuid, bool isOwnerConnection,
-                string clientType, byte serializationVersion, string clientHazelcastVersion)
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(credentials);
+            dataSize += Bits.BooleanSizeInBytes;
+            if (uuid != null)
             {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(credentials);
-                dataSize += Bits.BooleanSizeInBytes;
-                if (uuid != null)
-                {
-                    dataSize += ParameterUtil.CalculateDataSize(uuid);
-                }
-                dataSize += Bits.BooleanSizeInBytes;
-                if (ownerUuid != null)
-                {
-                    dataSize += ParameterUtil.CalculateDataSize(ownerUuid);
-                }
-                dataSize += Bits.BooleanSizeInBytes;
-                dataSize += ParameterUtil.CalculateDataSize(clientType);
-                dataSize += Bits.ByteSizeInBytes;
-                dataSize += ParameterUtil.CalculateDataSize(clientHazelcastVersion);
-                return dataSize;
+                dataSize += ParameterUtil.CalculateDataSize(uuid);
             }
+            dataSize += Bits.BooleanSizeInBytes;
+            if (ownerUuid != null)
+            {
+                dataSize += ParameterUtil.CalculateDataSize(ownerUuid);
+            }
+            dataSize += Bits.BooleanSizeInBytes;
+            dataSize += ParameterUtil.CalculateDataSize(clientType);
+            dataSize += Bits.ByteSizeInBytes;
+            dataSize += ParameterUtil.CalculateDataSize(clientHazelcastVersion);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(IData credentials, string uuid, string ownerUuid,
-            bool isOwnerConnection, string clientType, byte serializationVersion, string clientHazelcastVersion)
+        internal static ClientMessage EncodeRequest(IData credentials, string uuid, string ownerUuid, bool isOwnerConnection,
+            string clientType, byte serializationVersion, string clientHazelcastVersion)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(credentials, uuid, ownerUuid, isOwnerConnection,
-                clientType, serializationVersion, clientHazelcastVersion);
+            var requiredDataSize = CalculateRequestDataSize(credentials, uuid, ownerUuid, isOwnerConnection, clientType,
+                serializationVersion, clientHazelcastVersion);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ClientMessageType.ClientAuthenticationCustom);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(credentials);
             clientMessage.Set(uuid == null);
             if (uuid != null)
@@ -90,8 +72,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public byte status;
             public Address address;
@@ -100,11 +81,11 @@ namespace Hazelcast.Client.Protocol.Codec
             public byte serializationVersion;
             public string serverHazelcastVersion;
             public bool serverHazelcastVersionExist;
-            public IList<Core.IMember> clientUnregisteredMembers;
+            public IList<IMember> clientUnregisteredMembers;
             public bool clientUnregisteredMembersExist;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var status = clientMessage.GetByte();
@@ -139,8 +120,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var clientUnregisteredMembersIsNull = clientMessage.GetBoolean();
             if (!clientUnregisteredMembersIsNull)
             {
-                var clientUnregisteredMembers = new List<Core.IMember>();
                 var clientUnregisteredMembersSize = clientMessage.GetInt();
+                var clientUnregisteredMembers = new List<IMember>(clientUnregisteredMembersSize);
                 for (var clientUnregisteredMembersIndex = 0;
                     clientUnregisteredMembersIndex < clientUnregisteredMembersSize;
                     clientUnregisteredMembersIndex++)

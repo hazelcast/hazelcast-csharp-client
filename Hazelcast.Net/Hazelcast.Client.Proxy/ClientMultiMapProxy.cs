@@ -136,7 +136,7 @@ namespace Hazelcast.Client.Proxy
             var request = MultiMapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, IsSmart());
 
             DistributedEventHandler handler =
-                eventData => MultiMapAddEntryListenerCodec.AbstractEventHandler.Handle(eventData,
+                eventData => MultiMapAddEntryListenerCodec.EventHandler.HandleEvent(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
@@ -159,7 +159,7 @@ namespace Hazelcast.Client.Proxy
             var request = MultiMapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, IsSmart());
 
             DistributedEventHandler handler =
-                eventData => MultiMapAddEntryListenerToKeyCodec.AbstractEventHandler.Handle(eventData,
+                eventData => MultiMapAddEntryListenerToKeyCodec.EventHandler.HandleEvent(eventData,
                     (k, value, oldValue, mergingValue, type, uuid, entries) =>
                     {
                         OnEntryEvent(k, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);

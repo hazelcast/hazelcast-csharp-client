@@ -15,49 +15,36 @@
 using System.Collections.Generic;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ClientGetDistributedObjectsCodec
+    internal static class ClientGetDistributedObjectsCodec
     {
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientGetDistributedObjects;
-        public const int ResponseType = 110;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize()
         {
-            public static readonly ClientMessageType TYPE = RequestType;
-
-            public static int CalculateDataSize()
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest()
+        internal static ClientMessage EncodeRequest()
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize();
+            var requiredDataSize = CalculateRequestDataSize();
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ClientMessageType.ClientGetDistributedObjects);
+            clientMessage.SetRetryable(false);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IList<DistributedObjectInfo> response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            var response = new List<DistributedObjectInfo>();
             var responseSize = clientMessage.GetInt();
+            var response = new List<DistributedObjectInfo>(responseSize);
             for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
             {
                 var responseItem = DistributedObjectInfoCodec.Decode(clientMessage);

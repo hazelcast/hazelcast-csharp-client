@@ -181,21 +181,14 @@ namespace Hazelcast.Client
         {
             try
             {
-                IClientMessage request;
-                DistributedEventHandler handler;
+                var request = MapAddNearCacheEntryListenerCodec.EncodeRequest(_name, (int) EntryEventType.Invalidation, false);
+                DistributedEventHandler handler = message => MapAddNearCacheEntryListenerCodec.EventHandler.HandleEvent(message,
+                    HandleIMapInvalidationEvent_v1_0, HandleIMapInvalidationEvent_v1_4, HandleIMapBatchInvalidationEvent_v1_0,
+                    HandleIMapBatchInvalidationEvent_v1_4);
 
-                request = MapAddNearCacheEntryListenerCodec.EncodeRequest(_name,
-                    (int) EntryEventType.Invalidation,
-                    false);
-
-                handler = message
-                    => MapAddNearCacheEntryListenerCodec.AbstractEventHandler.Handle(message,
-                        HandleIMapInvalidation, HandleIMapBatchInvalidation);
-
-                _registrationId = _client.GetListenerService()
-                    .RegisterListener(request,
-                        message => MapAddNearCacheEntryListenerCodec.DecodeResponse(message).response,
-                        id => MapRemoveEntryListenerCodec.EncodeRequest(_name, id), handler);
+                _registrationId = _client.GetListenerService().RegisterListener(request,
+                    message => MapAddNearCacheEntryListenerCodec.DecodeResponse(message).response,
+                    id => MapRemoveEntryListenerCodec.EncodeRequest(_name, id), handler);
             }
             catch (Exception e)
             {
@@ -203,8 +196,18 @@ namespace Hazelcast.Client
             }
         }
 
-        private void HandleIMapBatchInvalidation(IList<IData> keys, IList<string> sourceUuids,
-            IList<Guid> partitionUuids, IList<long> sequences)
+        private void HandleIMapInvalidationEvent_v1_4(IData key, string sourceUuid, Guid partitionUuid, long sequence)
+        {
+            HandleIMapInvalidationEvent_v1_0(key);
+        }
+
+        private void HandleIMapBatchInvalidationEvent_v1_4(IList<IData> keys, IList<string> sourceuuids,
+            IList<Guid> partitionuuids, IList<long> sequences)
+        {
+            HandleIMapBatchInvalidationEvent_v1_0(keys);
+        }
+
+        private void HandleIMapBatchInvalidationEvent_v1_0(IList<IData> keys)
         {
             foreach (var data in keys)
             {
@@ -212,7 +215,7 @@ namespace Hazelcast.Client
             }
         }
 
-        private void HandleIMapInvalidation(IData key, string sourceUuid, Guid? partitionUuid, long? sequence)
+        private void HandleIMapInvalidationEvent_v1_0(IData key)
         {
             if (key == null)
             {

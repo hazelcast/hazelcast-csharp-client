@@ -15,53 +15,39 @@
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Logging;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class TopicAddMessageListenerCodec
+    internal static class TopicAddMessageListenerCodec
     {
-        public static readonly TopicMessageType RequestType = TopicMessageType.TopicAddMessageListener;
-        public const int ResponseType = 104;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, bool localOnly)
         {
-            public static readonly TopicMessageType TYPE = RequestType;
-            public string name;
-            public bool localOnly;
-
-            public static int CalculateDataSize(string name, bool localOnly)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.BooleanSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.BooleanSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, bool localOnly)
+        internal static ClientMessage EncodeRequest(string name, bool localOnly)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, localOnly);
+            var requiredDataSize = CalculateRequestDataSize(name, localOnly);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) TopicMessageType.TopicAddMessageListener);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public string response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetStringUtf8();
@@ -69,10 +55,9 @@ namespace Hazelcast.Client.Protocol.Codec
             return parameters;
         }
 
-//************************ EVENTS *************************//
-        public abstract class AbstractEventHandler
+        internal class EventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleTopic handleTopic)
+            internal static void HandleEvent(IClientMessage clientMessage, HandleTopicEventV10 handleTopicEventV10)
             {
                 var messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventTopic)
@@ -80,14 +65,13 @@ namespace Hazelcast.Client.Protocol.Codec
                     var item = clientMessage.GetData();
                     var publishTime = clientMessage.GetLong();
                     var uuid = clientMessage.GetStringUtf8();
-                    handleTopic(item, publishTime, uuid);
+                    handleTopicEventV10(item, publishTime, uuid);
                     return;
                 }
-                Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler))
-                    .Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
+                Logger.GetLogger(typeof(EventHandler)).Warning("Unknown message type received on event handler :" + messageType);
             }
 
-            public delegate void HandleTopic(IData item, long publishTime, string uuid);
+            internal delegate void HandleTopicEventV10(IData item, long publishTime, string uuid);
         }
     }
 }

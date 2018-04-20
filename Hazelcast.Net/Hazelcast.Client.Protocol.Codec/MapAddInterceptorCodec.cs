@@ -16,51 +16,36 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapAddInterceptorCodec
+    internal static class MapAddInterceptorCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapAddInterceptor;
-        public const int ResponseType = 104;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData interceptor)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IData interceptor;
-
-            public static int CalculateDataSize(string name, IData interceptor)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(interceptor);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(interceptor);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData interceptor)
+        internal static ClientMessage EncodeRequest(string name, IData interceptor)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, interceptor);
+            var requiredDataSize = CalculateRequestDataSize(name, interceptor);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapAddInterceptor);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(interceptor);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public string response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetStringUtf8();

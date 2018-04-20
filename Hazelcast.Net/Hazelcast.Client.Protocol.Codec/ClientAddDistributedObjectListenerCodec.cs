@@ -13,50 +13,37 @@
 // limitations under the License.
 
 using Hazelcast.IO;
+using Hazelcast.Logging;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ClientAddDistributedObjectListenerCodec
+    internal static class ClientAddDistributedObjectListenerCodec
     {
-        public static readonly ClientMessageType RequestType = ClientMessageType.ClientAddDistributedObjectListener;
-        public const int ResponseType = 104;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(bool localOnly)
         {
-            public static readonly ClientMessageType TYPE = RequestType;
-            public bool localOnly;
-
-            public static int CalculateDataSize(bool localOnly)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += Bits.BooleanSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += Bits.BooleanSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(bool localOnly)
+        internal static ClientMessage EncodeRequest(bool localOnly)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(localOnly);
+            var requiredDataSize = CalculateRequestDataSize(localOnly);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ClientMessageType.ClientAddDistributedObjectListener);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(localOnly);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public string response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetStringUtf8();
@@ -64,10 +51,10 @@ namespace Hazelcast.Client.Protocol.Codec
             return parameters;
         }
 
-//************************ EVENTS *************************//
-        public abstract class AbstractEventHandler
+        internal class EventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleDistributedObject handleDistributedObject)
+            internal static void HandleEvent(IClientMessage clientMessage,
+                HandleDistributedObjectEventV10 handleDistributedObjectEventV10)
             {
                 var messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventDistributedObject)
@@ -75,14 +62,13 @@ namespace Hazelcast.Client.Protocol.Codec
                     var name = clientMessage.GetStringUtf8();
                     var serviceName = clientMessage.GetStringUtf8();
                     var eventType = clientMessage.GetStringUtf8();
-                    handleDistributedObject(name, serviceName, eventType);
+                    handleDistributedObjectEventV10(name, serviceName, eventType);
                     return;
                 }
-                Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler))
-                    .Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
+                Logger.GetLogger(typeof(EventHandler)).Warning("Unknown message type received on event handler :" + messageType);
             }
 
-            public delegate void HandleDistributedObject(string name, string serviceName, string eventType);
+            internal delegate void HandleDistributedObjectEventV10(string name, string serviceName, string eventType);
         }
     }
 }

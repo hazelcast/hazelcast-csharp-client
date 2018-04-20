@@ -12,48 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
-using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.4 - Update:1.4
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapAggregateWithPredicateCodec
+    internal static class MapAggregateWithPredicateCodec
     {
-
-        public static readonly MapMessageType RequestType = MapMessageType.MapAggregateWithPredicate;
-        public const int ResponseType = 105;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData aggregator, IData predicate)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IData aggregator;
-            public IData predicate;
-
-            public static int CalculateDataSize(string name, IData aggregator, IData predicate)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(aggregator);
-                dataSize += ParameterUtil.CalculateDataSize(predicate);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(aggregator);
+            dataSize += ParameterUtil.CalculateDataSize(predicate);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData aggregator, IData predicate)
+        internal static ClientMessage EncodeRequest(string name, IData aggregator, IData predicate)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, aggregator, predicate);
+            var requiredDataSize = CalculateRequestDataSize(name, aggregator, predicate);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int)RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapAggregateWithPredicate);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(aggregator);
             clientMessage.Set(predicate);
@@ -61,27 +42,21 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IData response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
-            if (clientMessage.IsComplete())
+            var responseIsNull = clientMessage.GetBoolean();
+            if (!responseIsNull)
             {
-                return parameters;
+                var response = clientMessage.GetData();
+                parameters.response = response;
             }
-    var responseIsNull = clientMessage.GetBoolean();
-    if (!responseIsNull)
-    {
-            var response = clientMessage.GetData();
-    parameters.response = response;
-    }
             return parameters;
         }
-
     }
 }

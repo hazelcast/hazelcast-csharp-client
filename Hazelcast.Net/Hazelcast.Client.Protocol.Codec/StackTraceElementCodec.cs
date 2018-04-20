@@ -28,6 +28,7 @@ namespace Hazelcast.Client.Protocol.Codec
             {
                 fileName = clientMessage.GetStringUtf8();
             }
+
             var lineNumber = clientMessage.GetInt();
             return new StackTraceElement(declaringClass, methodName, fileName, lineNumber);
         }

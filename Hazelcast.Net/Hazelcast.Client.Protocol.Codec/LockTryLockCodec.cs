@@ -16,44 +16,27 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 
 // Client Protocol version, Since:1.0 - Update:1.2
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class LockTryLockCodec
+    internal static class LockTryLockCodec
     {
-        public static readonly LockMessageType RequestType = LockMessageType.LockTryLock;
-        public const int ResponseType = 101;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, long threadId, long lease, long timeout, long referenceId)
         {
-            public static readonly LockMessageType TYPE = RequestType;
-            public string name;
-            public long threadId;
-            public long lease;
-            public long timeout;
-            public long referenceId;
-
-            public static int CalculateDataSize(string name, long threadId, long lease, long timeout, long referenceId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, long threadId, long lease, long timeout, long referenceId)
+        internal static ClientMessage EncodeRequest(string name, long threadId, long lease, long timeout, long referenceId)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, threadId, lease, timeout, referenceId);
+            var requiredDataSize = CalculateRequestDataSize(name, threadId, lease, timeout, referenceId);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) LockMessageType.LockTryLock);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(threadId);
             clientMessage.Set(lease);
@@ -63,13 +46,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

@@ -15,48 +15,30 @@
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Logging;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MapAddEntryListenerToKeyCodec
+    internal static class MapAddEntryListenerToKeyCodec
     {
-        public static readonly MapMessageType RequestType = MapMessageType.MapAddEntryListenerToKey;
-        public const int ResponseType = 104;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData key, bool includeValue, int listenerFlags, bool localOnly)
         {
-            public static readonly MapMessageType TYPE = RequestType;
-            public string name;
-            public IData key;
-            public bool includeValue;
-            public int listenerFlags;
-            public bool localOnly;
-
-            public static int CalculateDataSize(string name, IData key, bool includeValue, int listenerFlags,
-                bool localOnly)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(key);
-                dataSize += Bits.BooleanSizeInBytes;
-                dataSize += Bits.IntSizeInBytes;
-                dataSize += Bits.BooleanSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(key);
+            dataSize += Bits.BooleanSizeInBytes;
+            dataSize += Bits.IntSizeInBytes;
+            dataSize += Bits.BooleanSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData key, bool includeValue, int listenerFlags,
-            bool localOnly)
+        internal static ClientMessage EncodeRequest(string name, IData key, bool includeValue, int listenerFlags, bool localOnly)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, key, includeValue, listenerFlags, localOnly);
+            var requiredDataSize = CalculateRequestDataSize(name, key, includeValue, listenerFlags, localOnly);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MapMessageType.MapAddEntryListenerToKey);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(key);
             clientMessage.Set(includeValue);
@@ -66,13 +48,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public string response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetStringUtf8();
@@ -80,10 +61,9 @@ namespace Hazelcast.Client.Protocol.Codec
             return parameters;
         }
 
-//************************ EVENTS *************************//
-        public abstract class AbstractEventHandler
+        internal class EventHandler
         {
-            public static void Handle(IClientMessage clientMessage, HandleEntry handleEntry)
+            internal static void HandleEvent(IClientMessage clientMessage, HandleEntryEventV10 handleEntryEventV10)
             {
                 var messageType = clientMessage.GetMessageType();
                 if (messageType == EventMessageConst.EventEntry)
@@ -115,16 +95,14 @@ namespace Hazelcast.Client.Protocol.Codec
                     var eventType = clientMessage.GetInt();
                     var uuid = clientMessage.GetStringUtf8();
                     var numberOfAffectedEntries = clientMessage.GetInt();
-                    handleEntry(key, value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
+                    handleEntryEventV10(key, value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
                     return;
                 }
-                Hazelcast.Logging.Logger.GetLogger(typeof(AbstractEventHandler))
-                    .Warning("Unknown message type received on event handler :" + clientMessage.GetMessageType());
+                Logger.GetLogger(typeof(EventHandler)).Warning("Unknown message type received on event handler :" + messageType);
             }
 
-            public delegate void HandleEntry(
-                IData key, IData value, IData oldValue, IData mergingValue, int eventType, string uuid,
-                int numberOfAffectedEntries);
+            internal delegate void HandleEntryEventV10(IData key, IData value, IData oldValue, IData mergingValue, int eventType,
+                string uuid, int numberOfAffectedEntries);
         }
     }
 }

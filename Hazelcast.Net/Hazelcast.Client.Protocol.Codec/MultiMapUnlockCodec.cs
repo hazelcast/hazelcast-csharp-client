@@ -17,42 +17,26 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.2
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class MultiMapUnlockCodec
+    internal static class MultiMapUnlockCodec
     {
-        public static readonly MultiMapMessageType RequestType = MultiMapMessageType.MultiMapUnlock;
-        public const int ResponseType = 100;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData key, long threadId, long referenceId)
         {
-            public static readonly MultiMapMessageType TYPE = RequestType;
-            public string name;
-            public IData key;
-            public long threadId;
-            public long referenceId;
-
-            public static int CalculateDataSize(string name, IData key, long threadId, long referenceId)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(key);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(key);
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData key, long threadId, long referenceId)
+        internal static ClientMessage EncodeRequest(string name, IData key, long threadId, long referenceId)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, key, threadId, referenceId);
+            var requiredDataSize = CalculateRequestDataSize(name, key, threadId, referenceId);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) MultiMapMessageType.MultiMapUnlock);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(key);
             clientMessage.Set(threadId);

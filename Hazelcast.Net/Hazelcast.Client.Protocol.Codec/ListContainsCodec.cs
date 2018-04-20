@@ -16,51 +16,36 @@ using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class ListContainsCodec
+    internal static class ListContainsCodec
     {
-        public static readonly ListMessageType RequestType = ListMessageType.ListContains;
-        public const int ResponseType = 101;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, IData value)
         {
-            public static readonly ListMessageType TYPE = RequestType;
-            public string name;
-            public IData value;
-
-            public static int CalculateDataSize(string name, IData value)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(value);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(value);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData value)
+        internal static ClientMessage EncodeRequest(string name, IData value)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, value);
+            var requiredDataSize = CalculateRequestDataSize(name, value);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) ListMessageType.ListContains);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(value);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

@@ -17,46 +17,27 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class TransactionalMultiMapPutCodec
+    internal static class TransactionalMultiMapPutCodec
     {
-        public static readonly TransactionalMultiMapMessageType RequestType =
-            TransactionalMultiMapMessageType.TransactionalMultiMapPut;
-
-        public const int ResponseType = 101;
-        public const bool Retryable = false;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, string txnId, long threadId, IData key, IData value)
         {
-            public static readonly TransactionalMultiMapMessageType TYPE = RequestType;
-            public string name;
-            public string txnId;
-            public long threadId;
-            public IData key;
-            public IData value;
-
-            public static int CalculateDataSize(string name, string txnId, long threadId, IData key, IData value)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += ParameterUtil.CalculateDataSize(txnId);
-                dataSize += Bits.LongSizeInBytes;
-                dataSize += ParameterUtil.CalculateDataSize(key);
-                dataSize += ParameterUtil.CalculateDataSize(value);
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += ParameterUtil.CalculateDataSize(txnId);
+            dataSize += Bits.LongSizeInBytes;
+            dataSize += ParameterUtil.CalculateDataSize(key);
+            dataSize += ParameterUtil.CalculateDataSize(value);
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, string txnId, long threadId, IData key, IData value)
+        internal static ClientMessage EncodeRequest(string name, string txnId, long threadId, IData key, IData value)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, txnId, threadId, key, value);
+            var requiredDataSize = CalculateRequestDataSize(name, txnId, threadId, key, value);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) TransactionalMultiMapMessageType.TransactionalMultiMapPut);
+            clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(txnId);
             clientMessage.Set(threadId);
@@ -66,13 +47,12 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public bool response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var response = clientMessage.GetBoolean();

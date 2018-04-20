@@ -17,51 +17,36 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.0 - Update:1.0
-
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal sealed class RingbufferReadOneCodec
+    internal static class RingbufferReadOneCodec
     {
-        public static readonly RingbufferMessageType RequestType = RingbufferMessageType.RingbufferReadOne;
-        public const int ResponseType = 105;
-        public const bool Retryable = true;
-
-        //************************ REQUEST *************************//
-
-        public class RequestParameters
+        private static int CalculateRequestDataSize(string name, long sequence)
         {
-            public static readonly RingbufferMessageType TYPE = RequestType;
-            public string name;
-            public long sequence;
-
-            public static int CalculateDataSize(string name, long sequence)
-            {
-                var dataSize = ClientMessage.HeaderSize;
-                dataSize += ParameterUtil.CalculateDataSize(name);
-                dataSize += Bits.LongSizeInBytes;
-                return dataSize;
-            }
+            var dataSize = ClientMessage.HeaderSize;
+            dataSize += ParameterUtil.CalculateDataSize(name);
+            dataSize += Bits.LongSizeInBytes;
+            return dataSize;
         }
 
-        public static ClientMessage EncodeRequest(string name, long sequence)
+        internal static ClientMessage EncodeRequest(string name, long sequence)
         {
-            var requiredDataSize = RequestParameters.CalculateDataSize(name, sequence);
+            var requiredDataSize = CalculateRequestDataSize(name, sequence);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) RequestType);
-            clientMessage.SetRetryable(Retryable);
+            clientMessage.SetMessageType((int) RingbufferMessageType.RingbufferReadOne);
+            clientMessage.SetRetryable(true);
             clientMessage.Set(name);
             clientMessage.Set(sequence);
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        //************************ RESPONSE *************************//
-        public class ResponseParameters
+        internal class ResponseParameters
         {
             public IData response;
         }
 
-        public static ResponseParameters DecodeResponse(IClientMessage clientMessage)
+        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
         {
             var parameters = new ResponseParameters();
             var responseIsNull = clientMessage.GetBoolean();
