@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace Hazelcast.Util
 {
-    public class VersionUtil
+    internal class VersionUtil
     {
         public const int UnknownVersion = -1;
         private const int MajorVersionMultiplier = 10000;
@@ -53,5 +51,7 @@ namespace Hazelcast.Util
             }
             return calculatedVersion;
         }
+
+        public const int Version38 = MajorVersionMultiplier * 3 + MinorVersionMultiplier * 8;
     }
 }

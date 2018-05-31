@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,23 +15,21 @@
 using System.Threading;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client
+namespace Hazelcast.NearCache
 {
     internal class NearCacheStatistics
     {
         private readonly long _creationTime;
-        private long _hits;
-        private long _misses;
         private long _evictions;
         private long _expirations;
+        private long _hits;
+        private long _misses;
         private long _ownedEntryCount;
-        private long _ownedEntryMemoryCost;
 
         public NearCacheStatistics()
         {
             _creationTime = Clock.CurrentTimeMillis();
         }
-
 
         public long CreationTime
         {
@@ -61,21 +59,12 @@ namespace Hazelcast.Client
         public long OwnedEntryCount
         {
             get { return Interlocked.Read(ref _ownedEntryCount); }
+            set { _ownedEntryCount = value; }
         }
 
-        public long OwnedEntryMemoryCost
+        public void DecrementOwnedEntryCount()
         {
-            get { return Interlocked.Read(ref _ownedEntryMemoryCost); }
-        }
-
-        public void IncrementHit()
-        {
-            Interlocked.Increment(ref _hits);
-        }
-
-        public void IncrementMiss()
-        {
-            Interlocked.Increment(ref _misses);
+            Interlocked.Decrement(ref _ownedEntryCount);
         }
 
         public void IncrementEviction()
@@ -88,24 +77,19 @@ namespace Hazelcast.Client
             Interlocked.Increment(ref _expirations);
         }
 
+        public void IncrementHit()
+        {
+            Interlocked.Increment(ref _hits);
+        }
+
+        public void IncrementMiss()
+        {
+            Interlocked.Increment(ref _misses);
+        }
+
         public void IncrementOwnedEntryCount()
         {
             Interlocked.Increment(ref _ownedEntryCount);
-        }
-
-        public void DecrementOwnedEntryCount()
-        {
-            Interlocked.Decrement(ref _ownedEntryCount);
-        }
-
-        public void IncrementOwnedEntryMemoryCost(long value)
-        {
-            Interlocked.Add(ref _ownedEntryMemoryCost, value);
-        }
-
-        public void DecrementOwnedEntryMemoryCost(long value)
-        {
-            Interlocked.Add(ref _ownedEntryMemoryCost, -1 * value);
         }
     }
 }

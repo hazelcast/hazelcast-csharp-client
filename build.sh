@@ -11,12 +11,12 @@ cleanup() {
 
 trap cleanup EXIT
 
-HZ_VERSION="3.9.3"
+HZ_VERSION="3.10.2"
 
 HAZELCAST_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_VERSION=${HZ_VERSION}
 HAZELCAST_ENTERPRISE_VERSION=${HZ_VERSION}
-HAZELCAST_RC_VERSION="0.3-SNAPSHOT"
+HAZELCAST_RC_VERSION="0.5-SNAPSHOT"
 SNAPSHOT_REPO="https://oss.sonatype.org/content/repositories/snapshots"
 RELEASE_REPO="http://repo1.maven.apache.org/maven2"
 ENTERPRISE_RELEASE_REPO="https://repository-hazelcast-l337.forge.cloudbees.com/release/"

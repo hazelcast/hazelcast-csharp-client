@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Proxy
 
         public bool RemoveItemListener(string registrationId)
         {
-            return DeregisterListener(registrationId, id => QueueRemoveListenerCodec.EncodeRequest(GetName(), id));
+            return DeregisterListener(registrationId);
         }
 
         public bool Add(T e)

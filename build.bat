@@ -27,11 +27,11 @@ IF -%3-==-- (
 	)
 )
 
-set HZ_VERSION=3.9.3
+set HZ_VERSION=3.10.2
 set HAZELCAST_TEST_VERSION=%HZ_VERSION%
 set HAZELCAST_VERSION=%HZ_VERSION%
 set HAZELCAST_ENTERPRISE_VERSION=%HZ_VERSION%
-set HAZELCAST_RC_VERSION=0.3-SNAPSHOT
+set HAZELCAST_RC_VERSION=0.5-SNAPSHOT
 set SNAPSHOT_REPO=https://oss.sonatype.org/content/repositories/snapshots
 set RELEASE_REPO=http://repo1.maven.apache.org/maven2
 set ENTERPRISE_RELEASE_REPO=https://repository-hazelcast-l337.forge.cloudbees.com/release/
@@ -65,18 +65,29 @@ if -%FRAMEWORK%-==-net40- (
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
 echo Downlading ...
-call mvn -q dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast-remote-controller:%HAZELCAST_RC_VERSION% -Ddest=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar
-call mvn -q dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_TEST_VERSION%:jar:tests -Ddest=hazelcast-%HAZELCAST_TEST_VERSION%-tests.jar
-
+if not exist hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar (
+    call mvn -q dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast-remote-controller:%HAZELCAST_RC_VERSION% -Ddest=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar
+    call mvn -q dependency:get -DrepoUrl=%SNAPSHOT_REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_TEST_VERSION%:jar:tests -Ddest=hazelcast-%HAZELCAST_TEST_VERSION%-tests.jar
+) else (
+    echo remote controller already exist, not downloading from maven.
+)
 set CLASSPATH=hazelcast-remote-controller-%HAZELCAST_RC_VERSION%.jar;hazelcast-%HAZELCAST_TEST_VERSION%-tests.jar
 if %SERVER_TYPE%==--enterprise (
-	echo Downlading Hazelcast Enterprise %HAZELCAST_ENTERPRISE_VERSION%...
-	call mvn -q dependency:get -DrepoUrl=%ENTERPRISE_REPO% -Dartifact=com.hazelcast:hazelcast-enterprise:%HAZELCAST_ENTERPRISE_VERSION% -Ddest=hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar
-	set CLASSPATH=%CLASSPATH%;hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar
+    if exist hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar (
+        echo hazelcast-enterprise.jar already exists, not downloading from maven.
+    ) else (
+    	echo Downlading Hazelcast Enterprise %HAZELCAST_ENTERPRISE_VERSION%...
+	    call mvn -q dependency:get -DrepoUrl=%ENTERPRISE_REPO% -Dartifact=com.hazelcast:hazelcast-enterprise:%HAZELCAST_ENTERPRISE_VERSION% -Ddest=hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar
+	    set CLASSPATH=%CLASSPATH%;hazelcast-enterprise-%HAZELCAST_ENTERPRISE_VERSION%.jar
+    ) 
 ) else (
-    echo Downlading Hazelcast %HAZELCAST_VERSION% ...
-    call mvn -q dependency:get -DrepoUrl=%REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_VERSION% -Ddest=hazelcast-%HAZELCAST_VERSION%.jar
-	set CLASSPATH=%CLASSPATH%;hazelcast-%HAZELCAST_VERSION%.jar
+    if exist hazelcast-%HAZELCAST_VERSION%.jar (
+        echo hazelcast.jar already exists, not downloading from maven.
+    ) else (
+        echo Downlading Hazelcast %HAZELCAST_VERSION% ...
+        call mvn -q dependency:get -DrepoUrl=%REPO% -Dartifact=com.hazelcast:hazelcast:%HAZELCAST_VERSION% -Ddest=hazelcast-%HAZELCAST_VERSION%.jar
+	    set CLASSPATH=%CLASSPATH%;hazelcast-%HAZELCAST_VERSION%.jar
+	)
 )
 
 taskkill /T /F /FI "WINDOWTITLE eq hazelcast-remote-controller"
@@ -100,10 +111,10 @@ if -%FRAMEWORK%-==-net40- (
 	
 	IF %COVERAGE%==--coverage (
 	  echo Running Unit Tests with coverage...
-	  dotcover analyse /TargetExecutable="packages\NUnit.ConsoleRunner.3.7.0\tools\nunit3-console.exe" /TargetArguments="%TEST_PARAMETERS%" /Filter=-:Hazelcast.Test /TargetWorkingDir=. /Output=Coverage.html /ReportType=HTML %EXCLUDE_PARAM%
+	  dotcover analyse /TargetExecutable="packages\NUnit.ConsoleRunner.3.8.0\tools\nunit3-console.exe" /TargetArguments="%TEST_PARAMETERS%" /Filter=-:Hazelcast.Test /TargetWorkingDir=. /Output=Coverage.html /ReportType=HTML %EXCLUDE_PARAM%
 	) ELSE (
 	  echo Running Unit Tests...
-	  packages\NUnit.ConsoleRunner.3.7.0\tools\nunit3-console.exe %TEST_PARAMETERS%
+	  packages\NUnit.ConsoleRunner.3.8.0\tools\nunit3-console.exe %TEST_PARAMETERS%
 	)
 
 ) ELSE (

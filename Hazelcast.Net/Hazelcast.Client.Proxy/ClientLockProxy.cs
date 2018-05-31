@@ -105,9 +105,9 @@ namespace Hazelcast.Client.Proxy
             return base.Invoke(request, GetKeyData());
         }
 
-        internal override void PostInit()
+        protected override void OnInitialize()
         {
-            base.PostInit();
+            base.OnInitialize();
             _lockReferenceIdGenerator = GetContext().GetClient().GetLockReferenceIdGenerator();
         }
 

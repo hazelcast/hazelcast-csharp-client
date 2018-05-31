@@ -31,11 +31,10 @@ using Hazelcast.Util;
 
         bool RemoveEventHandler(long correlationId);
 
-        string RegisterListener(IClientMessage registrationMessage, DecodeRegistrationResponse responseDecoder,
-            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest, DistributedEventHandler eventHandler);
+        string RegisterListener(IClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
+            EncodeDeregisterRequest encodeDeregisterRequest, DistributedEventHandler eventHandler);
 
-        bool DeregisterListener(string userRegistrationId,
-            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest);
+        bool DeregisterListener(string userRegistrationId);
         
         void HandleResponseMessage(IClientMessage message);
         

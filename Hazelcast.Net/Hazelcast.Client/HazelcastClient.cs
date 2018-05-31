@@ -22,6 +22,7 @@ using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
+using Hazelcast.NearCache;
 using Hazelcast.Net.Ext;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Transaction;
@@ -380,7 +381,7 @@ namespace Hazelcast.Client
             _executionService.Shutdown();
             _partitionService.Stop();
             _connectionManager.Shutdown();
-            _proxyManager.Destroy();
+            _proxyManager.Shutdown();
             _invocationService.Shutdown();
             _nearCacheManager.Shutdown();
             _listenerService.Dispose();

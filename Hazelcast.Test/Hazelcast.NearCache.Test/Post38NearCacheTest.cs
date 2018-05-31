@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Client.Connection;
-using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Test;
+using NUnit.Framework;
 
-namespace Hazelcast.Util
+namespace Hazelcast.NearCache.Test
 {
-    public delegate void Runnable();
-
-    public delegate T Callable<T>();
-
-    internal delegate void Authenticator(ClientConnection connection);
-
-    public delegate void DistributedEventHandler(IClientMessage eventMessage);
-
-    public delegate string DecodeRegisterResponse(IClientMessage requestMessage);
-
-    public delegate IClientMessage EncodeDeregisterRequest(string registrationId);
+    [TestFixture]
+    public class Post38NearCacheTest : BaseNearCacheTest
+    {
+        [SetUp]
+        public void Init()
+        {
+            _map = Client.GetMap<object, object>("nearCachedMap-" + TestSupport.RandomString());
+            var nc = GetNearCache(_map);
+            Assert.AreEqual(typeof(NearCache), nc.GetType());
+        }
+    }
 }

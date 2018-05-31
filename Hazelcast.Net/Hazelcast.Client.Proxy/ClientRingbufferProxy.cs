@@ -19,6 +19,7 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -71,7 +72,7 @@ namespace Hazelcast.Client.Proxy
 
         public long Add(T item)
         {
-            ThrowExceptionIfNull(item, "Item cannot be null");
+            ValidationUtil.ThrowExceptionIfNull(item, "Item cannot be null");
 
             var request = RingbufferAddCodec.EncodeRequest(GetName(), (int) OverflowPolicy.Overwrite, ToData(item));
             return Invoke(request, m => RingbufferAddCodec.DecodeResponse(m).response);
@@ -79,7 +80,7 @@ namespace Hazelcast.Client.Proxy
 
         public Task<long> AddAsync(T item, OverflowPolicy overflowPolicy)
         {
-            ThrowExceptionIfNull(item, "Item cannot be null");
+            ValidationUtil.ThrowExceptionIfNull(item, "Item cannot be null");
 
             var request = RingbufferAddCodec.EncodeRequest(GetName(), (int) OverflowPolicy.Overwrite, ToData(item));
             return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddCodec.DecodeResponse(m).response);
@@ -96,7 +97,7 @@ namespace Hazelcast.Client.Proxy
 
         public Task<long> AddAllAsync<TE>(ICollection<TE> collection, OverflowPolicy overflowPolicy) where TE : T
         {
-            ThrowExceptionIfTrue(collection.Count == 0, "Collection cannot be empty");
+            ValidationUtil.ThrowExceptionIfTrue(collection.Count == 0, "Collection cannot be empty");
 
             var valueList = ToDataList(collection);
             var request = RingbufferAddAllCodec.EncodeRequest(GetName(), valueList, (int) overflowPolicy);
@@ -106,10 +107,10 @@ namespace Hazelcast.Client.Proxy
         public Task<IList<T>> ReadManyAsync(long startSequence, int minCount, int maxCount)
         {
             CheckSequence(startSequence);
-            ThrowExceptionIfTrue(minCount < 0, "minCount can't be smaller than 0");
-            ThrowExceptionIfTrue(maxCount < minCount, "maxCount should be equal or larger than minCount");
-            ThrowExceptionIfTrue(minCount > Capacity(), "the minCount should be smaller than or equal to the capacity");
-            ThrowExceptionIfTrue(maxCount > MaxBatchSize, "maxCount can't be larger than " + MaxBatchSize);
+            ValidationUtil.ThrowExceptionIfTrue(minCount < 0, "minCount can't be smaller than 0");
+            ValidationUtil.ThrowExceptionIfTrue(maxCount < minCount, "maxCount should be equal or larger than minCount");
+            ValidationUtil.ThrowExceptionIfTrue(minCount > Capacity(), "the minCount should be smaller than or equal to the capacity");
+            ValidationUtil.ThrowExceptionIfTrue(maxCount > MaxBatchSize, "maxCount can't be larger than " + MaxBatchSize);
 
             var request = RingbufferReadManyCodec.EncodeRequest(GetName(), startSequence, minCount, maxCount, null);
 

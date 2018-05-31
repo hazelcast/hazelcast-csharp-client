@@ -30,9 +30,8 @@ namespace Hazelcast.Client.Test
     {
         private const string ValidCertName = "foo.bar.com";
 
-        protected IHazelcastInstance Client { get; private set; }
-        protected RemoteController.Client RemoteController { get; private set; }
-
+        private IHazelcastInstance Client { get; set; }
+        private RemoteController.Client RemoteController { get; set; }
 
         private ClientConfig ConfigureClient(bool ssl, bool validateCertificateChain, bool validateCertificateName, string certificateName)
         {
@@ -45,13 +44,14 @@ namespace Hazelcast.Client.Test
             return clientConfig;
         }
 
-
-        public void Setup(bool ssl, bool validateCertificateChain, bool validateCertificateName, string certificateName)
+        private void Setup(bool ssl, bool validateCertificateChain, bool validateCertificateName, string certificateName)
         {
             RemoteController = CreateRemoteController();
             var cluster = CreateCluster(RemoteController, ssl?Resources.hazelcast_ssl:Resources.hazelcast);
             RemoteController.startMember(cluster.Id);
-            Client = HazelcastClient.NewHazelcastClient(ConfigureClient(ssl, validateCertificateChain, validateCertificateName, certificateName));
+            var clientConfig = ConfigureClient(ssl, validateCertificateChain, validateCertificateName, certificateName);
+            clientConfig.GetGroupConfig().SetName(cluster.Id).SetPassword(cluster.Id);
+            Client = HazelcastClient.NewHazelcastClient(clientConfig);
         }
 
         [TearDown]

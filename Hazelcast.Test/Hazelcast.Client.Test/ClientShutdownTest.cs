@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Remote;
 using NUnit.Framework;
@@ -42,6 +43,11 @@ namespace Hazelcast.Client.Test
             HazelcastClient.ShutdownAll();
             StopCluster(_remoteController, _cluster);
             StopRemoteController(_remoteController);
+        }
+        
+        protected override void ConfigureGroup(ClientConfig config)
+        {
+            config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
         }
 
         //TODO: This test fails intermittently

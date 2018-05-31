@@ -20,6 +20,7 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -77,7 +78,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual void CopyTo(T[] array, int index)
         {
-            ThrowExceptionIfNull(array);
+            ValidationUtil.ThrowExceptionIfNull(array);
             if (index < 0) throw new IndexOutOfRangeException("Index cannot be negative.");
 
             var all = GetAll();

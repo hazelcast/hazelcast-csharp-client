@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
@@ -30,7 +31,7 @@ namespace Hazelcast.Client.Proxy
 
         public int IndexOf(T item)
         {
-            ThrowExceptionIfNull(item);
+            ValidationUtil.ThrowExceptionIfNull(item);
             var value = ToData(item);
             var request = ListIndexOfCodec.EncodeRequest(GetName(), value);
             var response = Invoke(request);
@@ -62,7 +63,7 @@ namespace Hazelcast.Client.Proxy
 
         public T Set(int index, T element)
         {
-            ThrowExceptionIfNull(element);
+            ValidationUtil.ThrowExceptionIfNull(element);
             var value = ToData(element);
             var request = ListSetCodec.EncodeRequest(GetName(), index, value);
             var response = Invoke(request);
@@ -71,7 +72,7 @@ namespace Hazelcast.Client.Proxy
 
         public void Add(int index, T element)
         {
-            ThrowExceptionIfNull(element);
+            ValidationUtil.ThrowExceptionIfNull(element);
             var value = ToData(element);
             var request = ListAddWithIndexCodec.EncodeRequest(GetName(), index, value);
             Invoke(request);
@@ -86,7 +87,7 @@ namespace Hazelcast.Client.Proxy
 
         public int LastIndexOf(T item)
         {
-            ThrowExceptionIfNull(item);
+            ValidationUtil.ThrowExceptionIfNull(item);
             var value = ToData(item);
             var request = ListLastIndexOfCodec.EncodeRequest(GetName(), value);
             var response = Invoke(request);
@@ -126,7 +127,7 @@ namespace Hazelcast.Client.Proxy
 
         public override bool RemoveItemListener(string registrationId)
         {
-            return DeregisterListener(registrationId, id => ListRemoveListenerCodec.EncodeRequest(GetName(), id));
+            return DeregisterListener(registrationId);
         }
 
         public override bool Add(T item)

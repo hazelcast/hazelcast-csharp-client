@@ -219,6 +219,20 @@ namespace Hazelcast.Client.Spi
             InitMembershipListener();
         }
 
+        internal int ServerVersion
+        {
+            get
+            {
+                if (_ownerConnectionAddress != null)
+                {
+                    var cm = _client.GetConnectionManager();
+                    var ownerConnection = cm.GetConnection(_ownerConnectionAddress);
+                    return ownerConnection != null ? ownerConnection.ConnectedServerVersionInt : -1;
+                }
+                return -1;
+            }
+        }
+
         internal virtual void FireMemberAttributeEvent(MemberAttributeEvent @event)
         {
             _client.GetClientExecutionService().Submit(() =>
@@ -335,6 +349,7 @@ namespace Hazelcast.Client.Spi
             var connAttemptLimit = networkConfig.GetConnectionAttemptLimit();
             var connectionAttemptPeriod = networkConfig.GetConnectionAttemptPeriod();
             var connectionAttemptLimit = connAttemptLimit == 0 ? int.MaxValue : connAttemptLimit;
+            var shuffleMemberList = EnvironmentUtil.ReadBool("hazelcast.client.shuffle.member.list") ?? false;
             var attempt = 0;
             ICollection<IPEndPoint> triedAddresses = new HashSet<IPEndPoint>();
             while (attempt < connectionAttemptLimit)

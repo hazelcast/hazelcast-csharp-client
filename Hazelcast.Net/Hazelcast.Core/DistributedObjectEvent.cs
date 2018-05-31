@@ -27,7 +27,7 @@ namespace Hazelcast.Core
     /// <seealso cref="IDistributedObjectListener">IDistributedObjectListener</seealso>
     public class DistributedObjectEvent
     {
-        protected IDistributedObject _distributedObject;
+        protected IDistributedObject DistributedObject;
 
         private readonly string _eventType;
 
@@ -58,12 +58,12 @@ namespace Hazelcast.Core
                 throw new DistributedObjectDestroyedException();
             }
 
-            if (!(_distributedObject is T) )
+            if (!(DistributedObject is T) )
             {
                 InitDistributedObject<T>();
             }
 
-            return (T) _distributedObject;
+            return (T) DistributedObject;
         }
         
         protected  virtual void InitDistributedObject<T>() where T : IDistributedObject
@@ -108,7 +108,7 @@ namespace Hazelcast.Core
             sb.Append("eventType=").Append(_eventType);
             sb.Append(", serviceName='").Append(_serviceName).Append('\'');
             sb.Append(", objectName='").Append(_serviceName).Append('\'');
-            sb.Append(", distributedObject=").Append(_distributedObject);
+            sb.Append(", distributedObject=").Append(DistributedObject);
             sb.Append('}');
             return sb.ToString();
         }
@@ -142,7 +142,7 @@ namespace Hazelcast.Core
 
         protected override void InitDistributedObject<T>()
         {
-            _distributedObject = _proxyManager.GetOrCreateProxy<T>(GetServiceName(), GetObjectName());
+            DistributedObject = _proxyManager.GetOrCreateProxy<T>(GetServiceName(), GetObjectName());
         }
     }
 }

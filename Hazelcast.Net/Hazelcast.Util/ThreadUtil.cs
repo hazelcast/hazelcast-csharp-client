@@ -22,11 +22,13 @@ using Hazelcast.Client.Spi;
 
 namespace Hazelcast.Util
 {
-    internal sealed class ThreadUtil
+    internal static class ThreadUtil
     {
         public static IList<IClientMessage> GetResult(IEnumerable<IFuture<IClientMessage>> futures)
         {
-            return futures.Select(future => GetResult(future)).ToList();
+            var tasks = futures.Select(future => future.ToTask()).ToArray();
+            Task.WaitAll(tasks);
+            return tasks.Select(task => task.Result).ToList();
         }
 
         public static IClientMessage GetResult(IFuture<IClientMessage> future)
@@ -44,11 +46,11 @@ namespace Hazelcast.Util
             return GetResult(task, Timeout.Infinite);
         }
 
-        public static IClientMessage GetResult(Task<IClientMessage> task, int timeout)
+        public static IClientMessage GetResult(Task<IClientMessage> task, int timeoutMillis)
         {
             try
             {
-                var responseReady = task.Wait(timeout);
+                var responseReady = task.Wait(timeoutMillis);
                 if (!responseReady)
                 {
                     throw new TimeoutException("Operation time-out! No response received from the server.");

@@ -12,27 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Remote;
 using Hazelcast.Test;
 using NUnit.Framework;
+using Member = Hazelcast.Remote.Member;
 
 namespace Hazelcast.Client.Test
 {
-    public class SingleMemberBaseTest : HazelcastTestSupport
+    public class MultiMemberBaseTest : HazelcastTestSupport
     {
         protected IHazelcastInstance Client { get; private set; }
         protected HazelcastClient ClientInternal { get; private set; }
-        protected RemoteController.Client RemoteController { get; private set; }
+        protected ThreadSafeRemoteController RemoteController { get; private set; }
         protected Cluster HzCluster { get; private set; }
+        protected readonly List<Member> MemberList = new List<Member>(); 
 
         [OneTimeSetUp]
         public virtual void SetupCluster()
         {
-            RemoteController = CreateRemoteController();
+            RemoteController = (ThreadSafeRemoteController) CreateRemoteController();
             HzCluster = CreateCluster(RemoteController, GetServerConfig());
-            RemoteController.startMember(HzCluster.Id);
+            InitMembers();
             Client = CreateClient();
             ClientInternal = ((HazelcastClientProxy) Client).GetClient();
         }
@@ -44,15 +47,19 @@ namespace Hazelcast.Client.Test
             StopRemoteController(RemoteController);
         }
 
+        protected virtual void InitMembers()
+        {
+            MemberList.Add(RemoteController.startMember(HzCluster.Id));
+        }
+
         protected virtual string GetServerConfig()
         {
             return Resources.hazelcast;
         }
-                
+
         protected override void ConfigureGroup(ClientConfig config)
         {
             config.GetGroupConfig().SetName(HzCluster.Id).SetPassword(HzCluster.Id);
         }
-
     }
 }

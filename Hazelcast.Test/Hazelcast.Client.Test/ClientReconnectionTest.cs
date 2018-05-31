@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Remote;
 using NUnit.Framework;
@@ -24,6 +25,9 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     internal class ClientReconnectionTest : HazelcastTestSupport
     {
+        private RemoteController.Client _remoteController;
+        private Cluster _cluster;
+
         [SetUp]
         public void Setup()
         {
@@ -39,8 +43,10 @@ namespace Hazelcast.Client.Test
             StopRemoteController(_remoteController);
         }
 
-        private RemoteController.Client _remoteController;
-        private Cluster _cluster;
+        protected override void ConfigureGroup(ClientConfig config)
+        {
+            config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
+        }
 
         [Test]
         public void TestStartClientBeforeMember()

@@ -19,10 +19,10 @@ using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 
-// Client Protocol version, Since:1.0 - Update:1.4
+// Client Protocol version, Since:1.4 - Update:1.4
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal static class MapAddNearCacheEntryListenerCodec
+    internal static class MapAddNearCacheInvalidationListenerCodec
     {
         private static int CalculateRequestDataSize(string name, int listenerFlags, bool localOnly)
         {
@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Protocol.Codec
         {
             var requiredDataSize = CalculateRequestDataSize(name, listenerFlags, localOnly);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
-            clientMessage.SetMessageType((int) MapMessageType.MapAddNearCacheEntryListener);
+            clientMessage.SetMessageType((int) MapMessageType.MapAddNearCacheInvalidationListener);
             clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(listenerFlags);

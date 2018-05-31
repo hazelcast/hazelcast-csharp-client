@@ -198,7 +198,7 @@ namespace Hazelcast.Client.Proxy
 
         public bool RemoveEntryListener(string registrationId)
         {
-            return DeregisterListener(registrationId, id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id));
+            return DeregisterListener(registrationId);
         }
 
         public int Size()
@@ -224,7 +224,7 @@ namespace Hazelcast.Client.Proxy
                 numberOfAffectedEntries);
         }
 
-        internal override void PostInit()
+        protected override void OnInitialize()
         {
             var partitionCount = GetContext().GetPartitionService().GetPartitionCount();
             lock (_randomLock)

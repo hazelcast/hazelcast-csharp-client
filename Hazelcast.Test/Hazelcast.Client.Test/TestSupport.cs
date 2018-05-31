@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Util;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 
 namespace Hazelcast.Client.Test
 {
@@ -27,66 +28,65 @@ namespace Hazelcast.Client.Test
         private const int TimeoutSeconds = 30;
         private static readonly Random Random = new Random();
 
-        public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds,
-            string taskName = "")
+        public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds, string taskName = "")
         {
-            Assert.IsTrue(task.Wait(timeoutSeconds*1000),
+            Assert.IsTrue(task.Wait(timeoutSeconds * 1000),
                 "Task " + taskName + " did not complete in " + timeoutSeconds + " seconds");
         }
 
-        public static void AssertOpenEventually(CountdownEvent latch, int timeoutSeconds = TimeoutSeconds,
-            string message = null)
+        public static void AssertOpenEventually(CountdownEvent latch, int timeoutSeconds = TimeoutSeconds, string message = null)
         {
-            var completed = latch.Wait(timeoutSeconds*1000);
+            var completed = latch.Wait(timeoutSeconds * 1000);
             if (message == null)
             {
                 Assert.IsTrue(completed,
-                    string.Format("CountDownLatch failed to complete within {0} seconds , count left: {1}",
-                        timeoutSeconds,
+                    string.Format("CountDownLatch failed to complete within {0} seconds , count left: {1}", timeoutSeconds,
                         latch.CurrentCount));
             }
             else
             {
                 Assert.IsTrue(completed,
                     string.Format("{0}, CountDownLatch failed to complete within {1} seconds , count left: {2}", message,
-                        timeoutSeconds,
-                        latch.CurrentCount));
+                        timeoutSeconds, latch.CurrentCount));
             }
         }
 
         public static void AssertTrueEventually(Func<bool> assertFunc, int timeoutSeconds = TimeoutSeconds,
             string assertion = null)
         {
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            while (stopWatch.ElapsedMilliseconds < timeoutSeconds*1000)
+            using (new TestExecutionContext.IsolatedContext())
             {
-                if (assertFunc()) return;
-                Thread.Sleep(250);
+                var startTimeMillis = Clock.CurrentTimeMillis();
+                var timeoutMillis = timeoutSeconds * 1000;
+    
+                while (Clock.CurrentTimeMillis() - startTimeMillis < timeoutMillis)
+                {
+                    if (assertFunc()) return;
+                    Thread.Sleep(250);
+                }                
             }
-
             Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds");
         }
 
-        public static void AssertTrueEventually(Action asserAction, int timeoutSeconds = TimeoutSeconds,
-            string assertion = null)
+        public static void AssertTrueEventually(Action asserAction, int timeoutSeconds = TimeoutSeconds, string assertion = null)
         {
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
-
             Exception last = null;
-            while (stopWatch.ElapsedMilliseconds < timeoutSeconds*1000)
+            var startTimeMillis = Clock.CurrentTimeMillis();
+            var timeoutMillis = timeoutSeconds * 1000;
+            while (Clock.CurrentTimeMillis() - startTimeMillis < timeoutMillis)
             {
-                try
+                using (new TestExecutionContext.IsolatedContext())
                 {
-                    asserAction();
-                    return;
-                }
-                catch (AssertionException e)
-                {
-                    Thread.Sleep(250);
-                    last = e;
+                    try
+                    {
+                        asserAction();
+                        return;
+                    }
+                    catch (AssertionException e)
+                    {
+                        Thread.Sleep(250);
+                        last = e;
+                    }
                 }
             }
             Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds: " + last);
@@ -167,8 +167,7 @@ namespace Hazelcast.Client.Test
                 }
             }));
 
-            task.Task.ContinueWith(f => { instance.GetLifecycleService().RemoveLifecycleListener(regId); })
-                .IgnoreExceptions();
+            task.Task.ContinueWith(f => { instance.GetLifecycleService().RemoveLifecycleListener(regId); }).IgnoreExceptions();
 
             return task.Task;
         }

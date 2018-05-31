@@ -49,10 +49,8 @@ namespace Hazelcast.Client.Spi
             var listenerConfigs = client.GetClientConfig().GetListenerConfigs();
             if (listenerConfigs != null && listenerConfigs.Count > 0)
             {
-                foreach (
-                    var listenerConfig in
-                    listenerConfigs.Where(
-                        listenerConfig => listenerConfig.GetImplementation() is IDistributedObjectListener))
+                foreach (var listenerConfig in listenerConfigs.Where(listenerConfig =>
+                    listenerConfig.GetImplementation() is IDistributedObjectListener))
                 {
                     AddDistributedObjectListener((IDistributedObjectListener) listenerConfig.GetImplementation());
                 }
@@ -64,39 +62,39 @@ namespace Hazelcast.Client.Spi
             var isSmart = _client.GetClientConfig().GetNetworkConfig().IsSmartRouting();
             var request = ClientAddDistributedObjectListenerCodec.EncodeRequest(isSmart);
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(),
-                _client.GetClientExecutionService(),
-                _client.GetListenerService(), _client.GetNearCacheManager(),
-                this, _client.GetClientConfig());
+                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
+                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig());
             DistributedEventHandler eventHandler = delegate(IClientMessage message)
             {
-                ClientAddDistributedObjectListenerCodec.EventHandler.HandleEvent(message,
-                    (name, serviceName, eventType) =>
+                ClientAddDistributedObjectListenerCodec.EventHandler.HandleEvent(message, (name, serviceName, eventType) =>
+                {
+                    var _event = new LazyDistributedObjectEvent(eventType, serviceName, name, this);
+                    switch (eventType)
                     {
-                        var _event = new LazyDistributedObjectEvent(eventType, serviceName, name, this);
-                        switch (eventType)
-                        {
-                            case DistributedObjectEvent.EventType.Created:
-                                listener.DistributedObjectCreated(_event);
-                                break;
-                            case DistributedObjectEvent.EventType.Destroyed:
-                                listener.DistributedObjectDestroyed(_event);
-                                break;
-                            default:
-                                Logger.Warning(string.Format(
-                                    "Undefined DistributedObjectListener event type received: {0} !!!", eventType));
-                                break;
-                        }
-                    });
+                        case DistributedObjectEvent.EventType.Created:
+                            listener.DistributedObjectCreated(_event);
+                            break;
+                        case DistributedObjectEvent.EventType.Destroyed:
+                            listener.DistributedObjectDestroyed(_event);
+                            break;
+                        default:
+                            Logger.Warning(string.Format("Undefined DistributedObjectListener event type received: {0} !!!",
+                                eventType));
+                            break;
+                    }
+                });
             };
             return context.GetListenerService().RegisterListener(request,
                 m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response,
-                ClientRemoveDistributedObjectListenerCodec.EncodeRequest,
-                eventHandler);
+                ClientRemoveDistributedObjectListenerCodec.EncodeRequest, eventHandler);
         }
 
-        public void Destroy()
+        public void Shutdown()
         {
+            foreach (var proxy in _proxies)
+            {
+                proxy.Value.OnShutdown();
+            }
             _proxies.Clear();
         }
 
@@ -132,10 +130,9 @@ namespace Hazelcast.Client.Spi
         {
             var proxy = MakeProxy(service, id, requestedInterface);
             proxy.SetContext(new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(),
-                _client.GetClientExecutionService(),
+                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
                 _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig()));
-            proxy.PostInit();
+            proxy.Init();
             return proxy;
         }
 
@@ -177,8 +174,7 @@ namespace Hazelcast.Client.Spi
                 return GetOrCreateProxy<T>(service, id);
             }
 
-            throw new InvalidCastException(string.Format(
-                "Distributed object is already created with incompatible types [{0}]",
+            throw new InvalidCastException(string.Format("Distributed object is already created with incompatible types [{0}]",
                 string.Join(", ", (object[]) proxyArgs)));
         }
 
@@ -195,18 +191,16 @@ namespace Hazelcast.Client.Spi
             return clientProxy;
         }
 
-        public ClientProxy GetProxy(string service, string id)
-        {
-            ClientProxy proxy;
-            _proxies.TryGetValue(new DistributedObjectInfo(service, id), out proxy);
-            return proxy;
-        }
-
         public void Init(ClientConfig config)
         {
             // register defaults
-            Register(ServiceNames.Map,
-                (type, id) => ProxyFactory(typeof(ClientMapProxy<,>), type, ServiceNames.Map, id));
+            Register(ServiceNames.Map, (type, id) =>
+            {
+                var clientConfig = _client.GetClientConfig();
+                var nearCacheConfig = clientConfig.GetNearCacheConfig(id);
+                var proxyType = nearCacheConfig != null ? typeof(ClientMapNearCacheProxy<,>) : typeof(ClientMapProxy<,>);
+                return ProxyFactory(proxyType, type, ServiceNames.Map, id);
+            });
             Register(ServiceNames.Queue,
                 (type, id) => ProxyFactory(typeof(ClientQueueProxy<>), type, ServiceNames.Queue, id));
             Register(ServiceNames.MultiMap,
@@ -219,8 +213,7 @@ namespace Hazelcast.Client.Spi
                 (type, id) => ProxyFactory(typeof(ClientTopicProxy<>), type, ServiceNames.Topic, id));
             Register(ServiceNames.AtomicLong,
                 (type, id) => ProxyFactory(typeof(ClientAtomicLongProxy), type, ServiceNames.AtomicLong, id));
-            Register(ServiceNames.Lock,
-                (type, id) => ProxyFactory(typeof(ClientLockProxy), type, ServiceNames.Lock, id));
+            Register(ServiceNames.Lock, (type, id) => ProxyFactory(typeof(ClientLockProxy), type, ServiceNames.Lock, id));
             Register(ServiceNames.CountDownLatch,
                 (type, id) => ProxyFactory(typeof(ClientCountDownLatchProxy), type, ServiceNames.CountDownLatch, id));
             Register(ServiceNames.Semaphore,
@@ -233,11 +226,9 @@ namespace Hazelcast.Client.Spi
             Register(ServiceNames.IdGenerator, delegate(Type type, string id)
             {
                 var atomicLong = _client.GetAtomicLong("IdGeneratorService.ATOMIC_LONG_NAME" + id);
-                return
-                    Activator.CreateInstance(typeof(ClientIdGeneratorProxy), ServiceNames.IdGenerator, id, atomicLong)
-                        as ClientProxy;
+                return Activator.CreateInstance(typeof(ClientIdGeneratorProxy), ServiceNames.IdGenerator, id, atomicLong) as
+                    ClientProxy;
             });
-
 
             foreach (var proxyFactoryConfig in config.GetProxyFactoryConfigs())
             {
@@ -272,11 +263,9 @@ namespace Hazelcast.Client.Spi
         public bool RemoveDistributedObjectListener(string id)
         {
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(),
-                _client.GetClientExecutionService(),
+                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
                 _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig());
-            return context.GetListenerService().DeregisterListener(id,
-                ClientRemoveDistributedObjectListenerCodec.EncodeRequest);
+            return context.GetListenerService().DeregisterListener(id);
         }
 
         public ClientProxy RemoveProxy(string service, string id)
@@ -347,8 +336,7 @@ namespace Hazelcast.Client.Spi
         {
             var initializationTarget = FindNextAddressToCreateARequest();
             var invocationTarget = initializationTarget;
-            if (initializationTarget != null &&
-                _client.GetConnectionManager().GetConnection(initializationTarget) == null)
+            if (initializationTarget != null && _client.GetConnectionManager().GetConnection(initializationTarget) == null)
             {
                 invocationTarget = _client.GetClientClusterService().GetOwnerConnectionAddress();
             }
@@ -358,8 +346,8 @@ namespace Hazelcast.Client.Spi
                 throw new IOException("Not able to setup owner connection!");
             }
 
-            var request = ClientCreateProxyCodec.EncodeRequest(clientProxy.GetName(), clientProxy.GetServiceName(),
-                initializationTarget);
+            var request =
+                ClientCreateProxyCodec.EncodeRequest(clientProxy.GetName(), clientProxy.GetServiceName(), initializationTarget);
             try
             {
                 ThreadUtil.GetResult(_client.GetInvocationService().InvokeOnTarget(request, invocationTarget));
@@ -404,9 +392,8 @@ namespace Hazelcast.Client.Spi
 
         private bool IsRetryable(Exception exception)
         {
-            return exception is RetryableHazelcastException || exception is IOException
-                                                            || exception is AuthenticationException ||
-                                                            exception is HazelcastInstanceNotActiveException;
+            return exception is RetryableHazelcastException || exception is IOException || exception is AuthenticationException ||
+                   exception is HazelcastInstanceNotActiveException;
         }
     }
 }

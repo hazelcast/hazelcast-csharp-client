@@ -14,6 +14,7 @@
 
 using Hazelcast.Config;
 using Hazelcast.IO.Serialization;
+using Hazelcast.NearCache;
 
 #pragma warning disable CS1591
  namespace Hazelcast.Client.Spi

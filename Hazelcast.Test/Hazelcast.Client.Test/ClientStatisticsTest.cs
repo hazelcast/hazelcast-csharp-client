@@ -89,7 +89,7 @@ namespace Hazelcast.Client.Test
                 Assert.NotNull(stat);
                 Assert.True(stat.Contains("nc.nearCachedMap1.hits=1"));
                 Assert.True(stat.Contains("nc.nearCachedMap1.misses=2"));
-                Assert.True(stat.Contains("nc.nearCachedMap1.ownedEntryCount=2"));
+                Assert.True(stat.Contains("nc.nearCachedMap1.ownedEntryCount=1"));
             });
         }
         

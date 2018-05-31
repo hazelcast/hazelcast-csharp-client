@@ -12,29 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Concurrent;
+using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Util;
 
 #pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
-    internal class ListenerRegistrationKey
+    internal class ListenerRegistration
     {
         public string UserRegistrationId { get; private set; }
         public IClientMessage RegistrationRequest { get; private set; }
-        public DecodeRegistrationResponse ResponseDecoder { get; private set; }
+        public DecodeRegisterResponse DecodeRegisterResponse { get; private set; }
+        public EncodeDeregisterRequest EncodeDeregisterRequest { get; private set; }
         public DistributedEventHandler EventHandler { get; private set; }
+        public ConcurrentDictionary<ClientConnection, EventRegistration> ConnectionRegistrations { get; private set; }
 
-        public ListenerRegistrationKey(string userRegistrationId, IClientMessage registrationRequest = null,
-            DecodeRegistrationResponse responseDecoder = null, DistributedEventHandler eventHandler = null)
+        public ListenerRegistration(string userRegistrationId, IClientMessage registrationRequest = null,
+            DecodeRegisterResponse decodeRegisterResponse = null, EncodeDeregisterRequest encodeDeregisterRequest = null,
+            DistributedEventHandler eventHandler = null)
         {
             UserRegistrationId = userRegistrationId;
             RegistrationRequest = registrationRequest;
-            ResponseDecoder = responseDecoder;
+            EncodeDeregisterRequest = encodeDeregisterRequest;
+            DecodeRegisterResponse = decodeRegisterResponse;
             EventHandler = eventHandler;
+            ConnectionRegistrations  = new ConcurrentDictionary<ClientConnection, EventRegistration>();
         }
 
-        protected bool Equals(ListenerRegistrationKey other)
+        protected bool Equals(ListenerRegistration other)
         {
             return string.Equals(UserRegistrationId, other.UserRegistrationId);
         }
@@ -44,7 +51,7 @@ namespace Hazelcast.Client.Spi
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((ListenerRegistrationKey) obj);
+            return Equals((ListenerRegistration) obj);
         }
 
         public override int GetHashCode()

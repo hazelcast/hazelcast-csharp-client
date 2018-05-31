@@ -41,12 +41,12 @@ namespace Hazelcast.Client.Proxy
 
         public override bool RemoveItemListener(string registrationId)
         {
-            return DeregisterListener(registrationId, id => SetRemoveListenerCodec.EncodeRequest(GetName(), id));
+            return DeregisterListener(registrationId);
         }
 
         public override bool Add(T item)
         {
-            ThrowExceptionIfNull(item);
+            ValidationUtil.ThrowExceptionIfNull(item);
             var value = ToData(item);
             var request = SetAddCodec.EncodeRequest(GetName(), value);
             return Invoke(request, m => SetAddCodec.DecodeResponse(m).response);
