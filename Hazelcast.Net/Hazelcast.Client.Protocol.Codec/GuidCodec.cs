@@ -16,7 +16,7 @@ using System;
 
 namespace Hazelcast.Client.Protocol.Codec
 {
-    internal static class UUIDCodec
+    internal static class GuidCodec
     {
         public static int CalculateDataSize(Guid address)
         {

@@ -33,8 +33,6 @@ namespace Hazelcast.Client.Test
 {
     public class HazelcastTestSupport
     {
-        protected static Random Random = new Random((int) Clock.CurrentTimeMillis());
-
         private readonly ILogger _logger;
 
         private readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions = new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
@@ -79,6 +77,10 @@ namespace Hazelcast.Client.Test
             config.GetNetworkConfig().SetConnectionAttemptPeriod(2000);
         }
 
+        protected virtual void ConfigureGroup(ClientConfig config)
+        {
+        }
+
         protected virtual IHazelcastInstance CreateClient()
         {
             _logger.Info("Creating new client");
@@ -94,6 +96,7 @@ namespace Hazelcast.Client.Test
             var client = clientFactory.CreateClient(c =>
             {
                 ConfigureClient(c);
+                ConfigureGroup(c);
                 //c.AddListenerConfig(listener);
             });
             //Assert.IsTrue(resetEvent.Wait(30*1000), "Client did not start after 30 seconds");
@@ -118,10 +121,11 @@ namespace Hazelcast.Client.Test
 
         protected RemoteController.Client CreateRemoteController()
         {
-            TTransport transport = new TSocket("localhost", 9701);
+            
+            TTransport transport = new TFramedTransport(new TSocket("localhost", 9701));
             transport.Open();
             TProtocol protocol = new TBinaryProtocol(transport);
-            return new RemoteController.Client(protocol);
+            return new ThreadSafeRemoteController(protocol);
         }
 
         protected void StopRemoteController(RemoteController.Client client)

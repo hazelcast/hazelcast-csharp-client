@@ -33,6 +33,7 @@ namespace Hazelcast.Config
         private bool _cacheLocalEntries;
         private InMemoryFormat _inMemoryFormat = DefaultMemoryFormat;
         private bool _invalidateOnChange = true;
+        private bool _serializeKeys = false;
         private int _maxIdleSeconds = DefaultMaxIdleSeconds;
         private int _maxSize = DefaultMaxSize;
         private string _name = "default";
@@ -154,6 +155,17 @@ namespace Hazelcast.Config
         public virtual bool IsInvalidateOnChange()
         {
             return _invalidateOnChange;
+        }
+
+        public bool IsSerializeKeys()
+        {
+            return _serializeKeys;
+        }
+
+        public NearCacheConfig SetSerializeKeys(bool serializeKeys)
+        {
+            _serializeKeys = serializeKeys;
+            return this;
         }
 
         /// <summary>

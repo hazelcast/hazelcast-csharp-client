@@ -27,10 +27,9 @@ using Hazelcast.Logging;
 using Hazelcast.Util;
 
 #pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Spi
 {
-    internal class
-        ClientListenerService : IClientListenerService, IConnectionListener, IConnectionHeartbeatListener, IDisposable
+    internal class ClientListenerService : IClientListenerService, IConnectionListener, IConnectionHeartbeatListener, IDisposable
     {
         private const int DefaultEventThreadCount = 3;
         private const int DefaultEventQueueCapacity = 1000000;
@@ -45,13 +44,8 @@ using Hazelcast.Util;
 
         private Timer _connectionReopener;
 
-        private readonly ConcurrentDictionary<ClientConnection, ICollection<ListenerRegistrationKey>>
-            _failedRegistrations;
-
-        private readonly
-            ConcurrentDictionary<ListenerRegistrationKey, ConcurrentDictionary<ClientConnection, EventRegistration>>
-            _registrations;
-
+        private readonly ConcurrentDictionary<ClientConnection, ICollection<ListenerRegistration>> _failedRegistrations;
+        private readonly ConcurrentDictionary<string, ListenerRegistration> _registrations;
         private readonly ConcurrentDictionary<long, DistributedEventHandler> _eventHandlers;
 
         public bool IsSmart { get; private set; }
@@ -61,29 +55,19 @@ using Hazelcast.Util;
         {
             _client = client;
             _connectionManager = client.GetConnectionManager();
-
-            var eventTreadCount = EnvironmentUtil.ReadInt("hazelcast.client.event.thread.count") ??
-                                  DefaultEventThreadCount;
-
-            var eventQueueCapacity = EnvironmentUtil.ReadInt("hazelcast.client.event.queue.capacity") ??
-                                     DefaultEventQueueCapacity;
-
+            var eventTreadCount = EnvironmentUtil.ReadInt("hazelcast.client.event.thread.count") ?? DefaultEventThreadCount;
+            var eventQueueCapacity =
+                EnvironmentUtil.ReadInt("hazelcast.client.event.queue.capacity") ?? DefaultEventQueueCapacity;
             _eventExecutor = new StripedTaskScheduler(eventTreadCount, eventQueueCapacity, client.GetName() + ".event");
-            _registrationScheduler =
-                new StripedTaskScheduler(1, eventQueueCapacity, client.GetName() + ".eventRegistration");
-
-            _registrations =
-                new ConcurrentDictionary<ListenerRegistrationKey,
-                    ConcurrentDictionary<ClientConnection, EventRegistration>>();
+            _registrationScheduler = new StripedTaskScheduler(1, eventQueueCapacity, client.GetName() + ".eventRegistration");
+            _registrations = new ConcurrentDictionary<string, ListenerRegistration>();
             _eventHandlers = new ConcurrentDictionary<long, DistributedEventHandler>();
-
-            _failedRegistrations = new ConcurrentDictionary<ClientConnection, ICollection<ListenerRegistrationKey>>();
-
+            _failedRegistrations = new ConcurrentDictionary<ClientConnection, ICollection<ListenerRegistration>>();
             IsSmart = client.GetClientConfig().GetNetworkConfig().IsSmartRouting();
         }
 
-        public string RegisterListener(IClientMessage registrationMessage, DecodeRegistrationResponse responseDecoder,
-            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest, DistributedEventHandler eventHandler)
+        public string RegisterListener(IClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
+            EncodeDeregisterRequest encodeDeregisterRequest, DistributedEventHandler eventHandler)
         {
             //This method should not be called from registrationExecutor
             Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
@@ -93,22 +77,23 @@ using Hazelcast.Util;
             {
                 var userRegistrationId = Guid.NewGuid().ToString();
 
-                var registrationKey =
-                    new ListenerRegistrationKey(userRegistrationId, registrationMessage, responseDecoder, eventHandler);
+                var listenerRegistration = new ListenerRegistration(userRegistrationId, registrationMessage, responseDecoder,
+                    encodeDeregisterRequest, eventHandler);
 
-                _registrations.TryAdd(registrationKey, new ConcurrentDictionary<ClientConnection, EventRegistration>());
+                _registrations.TryAdd(userRegistrationId, listenerRegistration);
+
                 var connections = _connectionManager.ActiveConnections;
                 foreach (var connection in connections)
                 {
                     try
                     {
-                        RegisterListenerOnConnection(registrationKey, connection);
+                        RegisterListenerOnConnection(listenerRegistration, connection);
                     }
                     catch (Exception e)
                     {
                         if (connection.Live)
                         {
-                            DeregisterListenerInternal(userRegistrationId, encodeDeregisterListenerRequest);
+                            DeregisterListenerInternal(userRegistrationId);
                             throw new HazelcastException("Listener cannot be added ", e);
                         }
                     }
@@ -126,17 +111,15 @@ using Hazelcast.Util;
             }
         }
 
-        public bool DeregisterListener(string userRegistrationId,
-            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest)
+
+        public bool DeregisterListener(string userRegistrationId)
         {
             //This method should not be called from registrationExecutor
             Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
             try
             {
-                return Task<bool>.Factory.StartNew(
-                    () => DeregisterListenerInternal(userRegistrationId, encodeDeregisterListenerRequest),
-                    Task<bool>.Factory.CancellationToken,
-                    Task<bool>.Factory.CreationOptions, _registrationScheduler).Result;
+                return Task<bool>.Factory.StartNew(() => DeregisterListenerInternal(userRegistrationId),
+                    Task<bool>.Factory.CancellationToken, Task<bool>.Factory.CreationOptions, _registrationScheduler).Result;
             }
             catch (Exception e)
             {
@@ -144,34 +127,32 @@ using Hazelcast.Util;
             }
         }
 
-        private bool DeregisterListenerInternal(string userRegistrationId,
-            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest)
+        private bool DeregisterListenerInternal(string userRegistrationId)
         {
-            //This method should only be called from registrationExecutor
-            Debug.Assert(Thread.CurrentThread.Name != null && Thread.CurrentThread.Name.Contains("eventRegistration"));
-
-            var key = new ListenerRegistrationKey(userRegistrationId);
-            ConcurrentDictionary<ClientConnection, EventRegistration> registrationMap;
-            if (!_registrations.TryGetValue(key, out registrationMap))
+            //This method should not be called from registrationExecutor
+            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
+            ListenerRegistration listenerRegistration;
+            if (!_registrations.TryGetValue(userRegistrationId, out listenerRegistration))
             {
                 return false;
             }
+
             var successful = true;
-            foreach (var registration in registrationMap.Values)
+            foreach (var connectionRegistration in listenerRegistration.ConnectionRegistrations.Values)
             {
-                var connection = registration.ClientConnection;
+                var connection = connectionRegistration.ClientConnection;
                 try
                 {
-                    var serverRegistrationId = registration.ServerRegistrationId;
-                    var request = encodeDeregisterListenerRequest(serverRegistrationId);
+                    var serverRegistrationId = connectionRegistration.ServerRegistrationId;
+                    var request = listenerRegistration.EncodeDeregisterRequest(serverRegistrationId);
 
-                    var future = ((ClientInvocationService) _client.GetInvocationService())
-                        .InvokeOnConnection(request, connection);
+                    var future =
+                        ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request, connection);
                     ThreadUtil.GetResult(future);
                     DistributedEventHandler removed;
-                    _eventHandlers.TryRemove(registration.CorrelationId, out removed);
+                    _eventHandlers.TryRemove(connectionRegistration.CorrelationId, out removed);
                     EventRegistration reg;
-                    registrationMap.TryRemove(connection, out reg);
+                    listenerRegistration.ConnectionRegistrations.TryRemove(connection, out reg);
                 }
                 catch (Exception e)
                 {
@@ -179,32 +160,29 @@ using Hazelcast.Util;
                     {
                         successful = false;
                         Logger.Warning(
-                            string.Format("Deregistration of listener with ID  {0} has failed to address {1}",
-                                userRegistrationId, connection.GetLocalSocketAddress()), e);
+                            string.Format("Deregistration of listener with ID  {0} has failed to address {1}", userRegistrationId,
+                                connection.GetLocalSocketAddress()), e);
                     }
                 }
             }
             if (successful)
             {
-                _registrations.TryRemove(key, out registrationMap);
+                _registrations.TryRemove(userRegistrationId, out listenerRegistration);
             }
             return successful;
         }
 
-        private void RegisterListenerOnConnection(ListenerRegistrationKey registrationKey, ClientConnection connection)
+        private void RegisterListenerOnConnection(ListenerRegistration listenerRegistration, ClientConnection connection)
         {
             //This method should only be called from registrationExecutor
             Debug.Assert(Thread.CurrentThread.Name != null && Thread.CurrentThread.Name.Contains("eventRegistration"));
 
-            ConcurrentDictionary<ClientConnection, EventRegistration> registrationMap;
-            if (_registrations.TryGetValue(registrationKey, out registrationMap) &&
-                registrationMap.ContainsKey(connection))
+            if (listenerRegistration.ConnectionRegistrations.ContainsKey(connection))
             {
                 return;
             }
-            var future = ((ClientInvocationService) _client.GetInvocationService())
-                .InvokeListenerOnConnection(registrationKey.RegistrationRequest, registrationKey.EventHandler,
-                    connection);
+            var future = ((ClientInvocationService) _client.GetInvocationService()).InvokeListenerOnConnection(
+                listenerRegistration.RegistrationRequest, listenerRegistration.EventHandler, connection);
 
             IClientMessage clientMessage;
             try
@@ -216,12 +194,12 @@ using Hazelcast.Util;
                 throw ExceptionUtil.Rethrow(e);
             }
 
-            var serverRegistrationId = registrationKey.ResponseDecoder(clientMessage);
-            var correlationId = registrationKey.RegistrationRequest.GetCorrelationId();
+            var serverRegistrationId = listenerRegistration.DecodeRegisterResponse(clientMessage);
+            var correlationId = listenerRegistration.RegistrationRequest.GetCorrelationId();
             var registration = new EventRegistration(serverRegistrationId, correlationId, connection);
 
-            Debug.Assert(registrationMap != null, "registrationMap should be created!");
-            registrationMap[connection] = registration;
+            Debug.Assert(listenerRegistration.ConnectionRegistrations != null, "registrationMap should be created!");
+            listenerRegistration.ConnectionRegistrations[connection] = registration;
         }
 
         public bool AddEventHandler(long correlationId, DistributedEventHandler eventHandler)
@@ -262,7 +240,7 @@ using Hazelcast.Util;
                     var start = Clock.CurrentTimeMillis();
                     try
                     {
-                        if (Task.WaitAll(tasks, (int)timeLeftMillis, token))
+                        if (Task.WaitAll(tasks, (int) timeLeftMillis, token))
                         {
                             //All succeed
                             return;
@@ -278,28 +256,28 @@ using Hazelcast.Util;
             throw new TimeoutException("Registering listeners is timed out.");
         }
 
-        private void RegisterListenerFromInternal(ListenerRegistrationKey registrationKey, ClientConnection connection)
+        private void RegisterListenerFromInternal(ListenerRegistration listenerRegistration, ClientConnection connection)
         {
             //This method should only be called from registrationExecutor
             Debug.Assert(Thread.CurrentThread.Name != null && Thread.CurrentThread.Name.Contains("eventRegistration"));
             try
             {
-                RegisterListenerOnConnection(registrationKey, connection);
+                RegisterListenerOnConnection(listenerRegistration, connection);
             }
             catch (IOException)
             {
-                ICollection<ListenerRegistrationKey> failedRegsToConnection;
+                ICollection<ListenerRegistration> failedRegsToConnection;
                 if (!_failedRegistrations.TryGetValue(connection, out failedRegsToConnection))
                 {
-                    failedRegsToConnection = new HashSet<ListenerRegistrationKey>();
+                    failedRegsToConnection = new HashSet<ListenerRegistration>();
                     _failedRegistrations[connection] = failedRegsToConnection;
                 }
-                failedRegsToConnection.Add(registrationKey);
+                failedRegsToConnection.Add(listenerRegistration);
             }
             catch (Exception e)
             {
                 Logger.Warning(string.Format("Listener {0} can not be added to a new connection: {1}, reason: {2}",
-                    registrationKey, connection, e.Message));
+                    listenerRegistration, connection, e.Message));
             }
         }
 
@@ -312,8 +290,8 @@ using Hazelcast.Util;
                 DistributedEventHandler eventHandler;
                 if (!_eventHandlers.TryGetValue(correlationId, out eventHandler))
                 {
-                    Logger.Warning(string.Format("No eventHandler for correlationId: {0} , event: {1} .",
-                        correlationId, message));
+                    Logger.Warning(string.Format("No eventHandler for correlationId: {0} , event: {1} .", correlationId,
+                        message));
                     return;
                 }
                 eventHandler(message);
@@ -327,9 +305,9 @@ using Hazelcast.Util;
 
             SubmitToRegistrationScheduler(() =>
             {
-                foreach (var registrationKey in _registrations.Keys)
+                foreach (var listenerRegistration in _registrations.Values)
                 {
-                    RegisterListenerFromInternal(registrationKey, connection);
+                    RegisterListenerFromInternal(listenerRegistration, connection);
                 }
             });
         }
@@ -341,12 +319,12 @@ using Hazelcast.Util;
 
             SubmitToRegistrationScheduler(() =>
             {
-                ICollection<ListenerRegistrationKey> removed;
+                ICollection<ListenerRegistration> removed;
                 _failedRegistrations.TryRemove(connection, out removed);
-                foreach (var registrationMap in _registrations.Values)
+                foreach (var listenerRegistration in _registrations.Values)
                 {
                     EventRegistration registration;
-                    if (registrationMap.TryRemove(connection, out registration))
+                    if (listenerRegistration.ConnectionRegistrations.TryRemove(connection, out registration))
                     {
                         RemoveEventHandler(registration.CorrelationId);
                     }
@@ -361,7 +339,7 @@ using Hazelcast.Util;
 
             SubmitToRegistrationScheduler(() =>
             {
-                ICollection<ListenerRegistrationKey> registrationKeys;
+                ICollection<ListenerRegistration> registrationKeys;
                 if (_failedRegistrations.TryGetValue(connection, out registrationKeys))
                 {
                     foreach (var registrationKey in registrationKeys)
@@ -399,8 +377,7 @@ using Hazelcast.Util;
 
         private void SubmitToRegistrationScheduler(Action action)
         {
-            Task.Factory.StartNew(action, Task.Factory.CancellationToken, Task.Factory.CreationOptions,
-                _registrationScheduler);
+            Task.Factory.StartNew(action, Task.Factory.CancellationToken, Task.Factory.CreationOptions, _registrationScheduler);
         }
 
         private void ReOpenAllConnectionsIfNotOpen(object state)

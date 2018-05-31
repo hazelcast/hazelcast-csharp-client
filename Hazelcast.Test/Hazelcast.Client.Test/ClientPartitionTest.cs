@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using Hazelcast.Client.Spi;
+using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Remote;
@@ -47,6 +48,11 @@ namespace Hazelcast.Client.Test
             StopRemoteController(_remoteController);
         }
 
+        protected override void ConfigureGroup(ClientConfig config)
+        {
+            config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
+        }
+
         private static HashSet<Address> GetPartitionOwners(int partitionCount, IClientPartitionService partitionService)
         {
             var partitionOwners = new HashSet<Address>();
@@ -56,7 +62,6 @@ namespace Hazelcast.Client.Test
             }
             return partitionOwners;
         }
-
 
         [Test]
         public void TestPartitionsUpdatedAfterNewNode()

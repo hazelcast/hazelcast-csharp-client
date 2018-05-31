@@ -17,12 +17,14 @@ using System;
 namespace Hazelcast.Util
 {
     /// <summary>A utility class for validating arguments and state.</summary>
-    /// <remarks>A utility class for validating arguments and state.</remarks>
-    internal class ValidationUtil
+    internal static class ValidationUtil
     {
-        private ValidationUtil()
-        {
-        }
+        public const string NULL_LISTENER_IS_NOT_ALLOWED = "Null listener is not allowed!";
+        public const string NULL_KEY_IS_NOT_ALLOWED = "Null key is not allowed!";
+        public const string NULL_VALUE_IS_NOT_ALLOWED = "Null value is not allowed!";
+        public const string NULL_PREDICATE_IS_NOT_ALLOWED = "Predicate should not be null!";
+        public const string NULL_AGGREGATOR_IS_NOT_ALLOWED = "Aggregator should not be null!";
+        public const string NULL_PROJECTION_IS_NOT_ALLOWED = "Projection should not be null!";
 
         public static string HasText(string argument, string argName)
         {
@@ -42,5 +44,38 @@ namespace Hazelcast.Util
             }
             return argument;
         }
+
+        public static T CheckNotNull<T>(T argument, string errorMessage)
+        {
+            if (argument == null)
+            {
+                throw new NullReferenceException(errorMessage);
+            }
+            return argument;
+        }
+        
+        public static int CheckNotNegative(int value, string errorMessage) {
+            if (value < 0) {
+                throw new ArgumentException(errorMessage);
+            }
+            return value;
+        }
+        
+        public static void ThrowExceptionIfNull(object o, string message = null)
+        {
+            if (o == null)
+            {
+                throw new ArgumentNullException(message);
+            }
+        }
+
+        public static void ThrowExceptionIfTrue(bool expression, string message)
+        {
+            if (expression)
+            {
+                throw new ArgumentException(message);
+            }
+        }
+
     }
 }

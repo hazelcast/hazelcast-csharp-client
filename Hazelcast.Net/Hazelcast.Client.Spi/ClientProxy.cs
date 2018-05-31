@@ -24,7 +24,7 @@ using Hazelcast.Partition.Strategy;
 using Hazelcast.Util;
 
 #pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientProxy : IDistributedObject
     {
@@ -54,17 +54,7 @@ using Hazelcast.Util;
             return _serviceName;
         }
 
-        public void Destroy()
-        {
-            OnDestroy();
-            var request = ClientDestroyProxyCodec.EncodeRequest(_objectName, GetServiceName());
-            Invoke(request);
-            _context.RemoveProxy(this);
-            _context = null;
-        }
-
-        public virtual Task<T> InvokeAsync<T>(IClientMessage request, object key,
-            Func<IClientMessage, T> decodeResponse)
+        protected virtual Task<T> InvokeAsync<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
         {
             var future = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
             var continueTask = future.ToTask().ContinueWith(t =>
@@ -80,28 +70,33 @@ using Hazelcast.Util;
             return continueTask;
         }
 
-        protected internal virtual void ThrowExceptionIfNull(object o, string message = null)
+        protected virtual IData ToData(object Object)
         {
-            if (o == null)
+            return GetContext().GetSerializationService().ToData(Object);
+        }
+
+        protected virtual T ToObject<T>(object Object)
+        {
+            return GetContext().GetSerializationService().ToObject<T>(Object);
+        }
+
+        protected ClientContext GetContext()
+        {
+            var ctx = _context;
+            if (ctx == null)
             {
-                throw new ArgumentNullException(message);
+                throw new HazelcastInstanceNotActiveException();
             }
+
+            return ctx;
         }
 
-        protected internal virtual void ThrowExceptionIfTrue(bool expression, string message)
+        internal void SetContext(ClientContext context)
         {
-            if (expression)
-            {
-                throw new ArgumentException(message);
-            }
+            _context = context;
         }
 
-        protected internal virtual IData ToData(object o)
-        {
-            return GetContext().GetSerializationService().ToData(o);
-        }
-
-        protected internal virtual ISet<KeyValuePair<TKey, TValue>> ToEntrySet<TKey, TValue>(
+        protected virtual ISet<KeyValuePair<TKey, TValue>> ToEntrySet<TKey, TValue>(
             ICollection<KeyValuePair<IData, IData>> entryCollection)
         {
             ISet<KeyValuePair<TKey, TValue>> entrySet = new HashSet<KeyValuePair<TKey, TValue>>();
@@ -111,22 +106,19 @@ using Hazelcast.Util;
                 var val = ToObject<TValue>(entry.Value);
                 entrySet.Add(new KeyValuePair<TKey, TValue>(key, val));
             }
+
             return entrySet;
         }
 
-        protected internal virtual IList<T> ToList<T>(ICollection<IData> dataList)
+        protected virtual IList<T> ToList<T>(ICollection<IData> dataList)
         {
             var list = new List<T>(dataList.Count);
             foreach (var data in dataList)
             {
                 list.Add(ToObject<T>(data));
             }
-            return list;
-        }
 
-        protected internal virtual T ToObject<T>(IData data)
-        {
-            return GetContext().GetSerializationService().ToObject<T>(data);
+            return list;
         }
 
         protected internal virtual ISet<T> ToSet<T>(ICollection<IData> dataList)
@@ -136,17 +128,51 @@ using Hazelcast.Util;
             {
                 set.Add(ToObject<T>(data));
             }
+
             return set;
         }
 
-        protected virtual ClientContext GetContext()
+        protected IList<IData> ToDataList<T>(ICollection<T> c)
         {
-            var ctx = _context;
-            if (ctx == null)
+            ValidationUtil.ThrowExceptionIfNull(c, "Collection cannot be null.");
+            var values = new List<IData>(c.Count);
+            foreach (var o in c)
             {
-                throw new HazelcastInstanceNotActiveException();
+                ValidationUtil.ThrowExceptionIfNull(o, "Collection cannot contain null items.");
+                values.Add(ToData(o));
             }
-            return ctx;
+
+            return values;
+        }
+
+        protected IDictionary<TKey, object> DeserializeEntries<TKey>(IList<KeyValuePair<IData, IData>> entries)
+        {
+            if (entries.Count == 0)
+            {
+                return new Dictionary<TKey, object>();
+            }
+
+            var result = new Dictionary<TKey, object>();
+            foreach (var entry in entries)
+            {
+                var key = (TKey) ToObject<object>(entry.Key);
+                result.Add(key, ToObject<object>(entry.Value));
+            }
+
+            return result;
+        }
+
+        protected ISet<IData> ToDataSet<T>(ICollection<T> c)
+        {
+            ValidationUtil.ThrowExceptionIfNull(c);
+            var valueSet = new HashSet<IData>();
+            foreach (var o in c)
+            {
+                ValidationUtil.ThrowExceptionIfNull(o);
+                valueSet.Add(ToData(o));
+            }
+
+            return valueSet;
         }
 
         protected virtual IClientMessage Invoke(IClientMessage request, object key)
@@ -168,12 +194,12 @@ using Hazelcast.Util;
             return decodeResponse(response);
         }
 
-        protected T InvokeOnPartition<T>(IClientMessage request,int partitionId, Func<IClientMessage, T> decodeResponse)
+        protected T InvokeOnPartition<T>(IClientMessage request, int partitionId, Func<IClientMessage, T> decodeResponse)
         {
             var response = InvokeOnPartition(request, partitionId);
             return decodeResponse(response);
         }
-        
+
         protected IClientMessage InvokeOnPartition(IClientMessage request, int partitionId)
         {
             try
@@ -206,75 +232,52 @@ using Hazelcast.Util;
             return decodeResponse(response);
         }
 
-        protected virtual string RegisterListener(IClientMessage registrationMessage,
-            DecodeRegistrationResponse responseDecoder,
-            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest, DistributedEventHandler eventHandler)
+        protected virtual string RegisterListener(IClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
+            EncodeDeregisterRequest encodeDeregisterRequest, DistributedEventHandler eventHandler)
         {
             return _context.GetListenerService()
-                .RegisterListener(registrationMessage, responseDecoder, encodeDeregisterListenerRequest, eventHandler);
+                .RegisterListener(registrationMessage, responseDecoder, encodeDeregisterRequest, eventHandler);
         }
 
-        protected virtual void OnDestroy()
+        protected virtual bool DeregisterListener(string userRegistrationId)
         {
-        }
-
-        protected virtual bool DeregisterListener(string userRegistrationId,
-            EncodeDeregisterListenerRequest encodeDeregisterListenerRequest)
-        {
-            return _context.GetListenerService()
-                .DeregisterListener(userRegistrationId, encodeDeregisterListenerRequest);
+            return _context.GetListenerService().DeregisterListener(userRegistrationId);
         }
 
         protected virtual bool IsSmart()
         {
             return _context.GetClientConfig().GetNetworkConfig().IsSmartRouting();
         }
-        protected IList<IData> ToDataList<T>(ICollection<T> c)
+
+        public void Destroy()
         {
-            ThrowExceptionIfNull(c, "Collection cannot be null.");
-            var values = new List<IData>(c.Count);
-            foreach (var o in c)
-            {
-                ThrowExceptionIfNull(o, "Collection cannot contain null items.");
-                values.Add(ToData(o));
-            }
-            return values;
+            OnDestroy();
+            _context.RemoveProxy(this);
+            var request = ClientDestroyProxyCodec.EncodeRequest(_objectName, GetServiceName());
+            Invoke(request);
+            PostDestroy();
+            _context = null;
         }
 
-        protected IDictionary<TKey, object> DeserializeEntries<TKey>(IList<KeyValuePair<IData, IData>> entries)
+        internal void Init()
         {
-            if (entries.Count == 0)
-            {
-                return new Dictionary<TKey, object>();
-            }
-            var result = new Dictionary<TKey, object>();
-            foreach (var entry in entries)
-            {
-                var key = (TKey) ToObject<object>(entry.Key);
-                result.Add(key, ToObject<object>(entry.Value));
-            }
-            return result;
+            OnInitialize();
         }
 
-        protected ISet<IData> ToDataSet<T>(ICollection<T> c)
-        {
-            ThrowExceptionIfNull(c);
-            var valueSet = new HashSet<IData>();
-            foreach (var o in c)
-            {
-                ThrowExceptionIfNull(o);
-                valueSet.Add(ToData(o));
-            }
-            return valueSet;
-        }
-
-        internal virtual void PostInit()
+        protected virtual void OnInitialize()
         {
         }
 
-        internal virtual void SetContext(ClientContext context)
+        protected virtual void OnDestroy()
         {
-            _context = context;
+        }
+
+        protected internal virtual void OnShutdown()
+        {
+        }
+
+        protected virtual void PostDestroy()
+        {
         }
     }
 }

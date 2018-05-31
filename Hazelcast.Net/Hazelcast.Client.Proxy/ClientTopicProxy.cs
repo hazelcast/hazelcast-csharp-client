@@ -57,8 +57,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool RemoveMessageListener(string registrationId)
         {
-            return DeregisterListener(registrationId,
-                id => TopicRemoveMessageListenerCodec.EncodeRequest(GetName(), id));
+            return DeregisterListener(registrationId);
         }
 
         protected override IClientMessage Invoke(IClientMessage request)

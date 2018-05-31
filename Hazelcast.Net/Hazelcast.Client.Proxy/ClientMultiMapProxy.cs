@@ -148,7 +148,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool RemoveEntryListener(string registrationId)
         {
-            return DeregisterListener(registrationId, id => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id));
+            return DeregisterListener(registrationId);
         }
 
         public virtual string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue)
@@ -171,14 +171,14 @@ namespace Hazelcast.Client.Proxy
 
         public virtual void Lock(TKey key)
         {
-            ThrowExceptionIfNull(key);
+            ValidationUtil.ThrowExceptionIfNull(key);
 
             Lock(key, long.MaxValue, TimeUnit.Milliseconds);
         }
 
         public virtual void Lock(TKey key, long leaseTime, TimeUnit timeUnit)
         {
-            ThrowExceptionIfNull(key);
+            ValidationUtil.ThrowExceptionIfNull(key);
 
             var keyData = ToData(key);
             var request = MultiMapLockCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId(),
@@ -188,7 +188,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual bool IsLocked(TKey key)
         {
-            ThrowExceptionIfNull(key);
+            ValidationUtil.ThrowExceptionIfNull(key);
 
             var keyData = ToData(key);
             var request = MultiMapIsLockedCodec.EncodeRequest(GetName(), keyData);
@@ -216,7 +216,7 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public virtual bool TryLock(TKey key, long timeout, TimeUnit timeunit, long leaseTime, TimeUnit leaseUnit)
         {
-            ThrowExceptionIfNull(key);
+            ValidationUtil.ThrowExceptionIfNull(key);
 
             var keyData = ToData(key);
             var request = MultiMapTryLockCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId(),
@@ -227,7 +227,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual void Unlock(TKey key)
         {
-            ThrowExceptionIfNull(key);
+            ValidationUtil.ThrowExceptionIfNull(key);
 
             var keyData = ToData(key);
             var request = MultiMapUnlockCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId(), _lockReferenceIdGenerator.GetNextReferenceId());
@@ -236,7 +236,7 @@ namespace Hazelcast.Client.Proxy
 
         public virtual void ForceUnlock(TKey key)
         {
-            ThrowExceptionIfNull(key);
+            ValidationUtil.ThrowExceptionIfNull(key);
 
             var keyData = ToData(key);
             var request = MultiMapForceUnlockCodec.EncodeRequest(GetName(), keyData, _lockReferenceIdGenerator.GetNextReferenceId());
@@ -253,9 +253,9 @@ namespace Hazelcast.Client.Proxy
                 numberOfAffectedEntries);
         }
 
-        internal override void PostInit()
+        protected override void OnInitialize()
         {
-            base.PostInit();
+            base.OnInitialize();
             _lockReferenceIdGenerator = GetContext().GetClient().GetLockReferenceIdGenerator();
         }
 

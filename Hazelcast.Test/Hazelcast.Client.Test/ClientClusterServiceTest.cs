@@ -14,6 +14,7 @@
 
 using System.Linq;
 using System.Threading;
+using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Remote;
 using NUnit.Framework;
@@ -41,6 +42,11 @@ namespace Hazelcast.Client.Test
             _client.Shutdown();
             _remoteController.shutdownCluster(_cluster.Id);
             StopRemoteController(_remoteController);
+        }
+        
+        protected override void ConfigureGroup(ClientConfig config)
+        {
+            config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
         }
 
         [Test]

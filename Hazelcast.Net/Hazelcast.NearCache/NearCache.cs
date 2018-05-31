@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2017, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,417 +13,112 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
-using Hazelcast.Client.Protocol;
+using Hazelcast.Client;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Logging;
-using Hazelcast.Net.Ext;
 using Hazelcast.Util;
 
-namespace Hazelcast.Client
+namespace Hazelcast.NearCache
 {
-    internal class NearCache
+    internal class NearCache : BaseNearCache
     {
-        internal const long TimeNotSet = -1;
-        internal const int EvictionPercentage = 20;
-        internal const int CleanupInterval = 5000;
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(NearCache));
-        public static readonly object NullObject = new object();
+        private RepairingHandler _repairingHandler;
 
-        private readonly string _name;
-        private readonly HazelcastClient _client;
-
-        private readonly AtomicBoolean _canCleanUp;
-        private readonly AtomicBoolean _canEvict;
-
-        private readonly EvictionPolicy _evictionPolicy;
-        private readonly InMemoryFormat _inMemoryFormat;
-        private readonly long _maxIdleMillis;
-
-        private readonly int _maxSize;
-
-        private readonly IComparer<CacheRecord> _selectedComparer;
-        private readonly long _timeToLiveMillis;
-
-        internal readonly ConcurrentDictionary<IData, CacheRecord> Cache;
-        internal readonly bool InvalidateOnChange;
-
-        private long _lastCleanup;
-        private string _registrationId;
-        private readonly NearCacheStatistics _stat;
-
-        public NearCache(string name, HazelcastClient client, NearCacheConfig nearCacheConfig)
+        public NearCache(string name, HazelcastClient client, NearCacheConfig nearCacheConfig) : base(name, client,
+            nearCacheConfig)
         {
-            _name = name;
-            _client = client;
-            _maxSize = nearCacheConfig.GetMaxSize();
-            _maxIdleMillis = nearCacheConfig.GetMaxIdleSeconds() * 1000;
-            _inMemoryFormat = nearCacheConfig.GetInMemoryFormat();
-            _timeToLiveMillis = nearCacheConfig.GetTimeToLiveSeconds() * 1000;
-            InvalidateOnChange = nearCacheConfig.IsInvalidateOnChange();
-            _evictionPolicy = (EvictionPolicy) Enum.Parse(typeof(EvictionPolicy), nearCacheConfig.GetEvictionPolicy(), true);
-            Cache = new ConcurrentDictionary<IData, CacheRecord>();
-            _canCleanUp = new AtomicBoolean(true);
-            _canEvict = new AtomicBoolean(true);
-            _lastCleanup = Clock.CurrentTimeMillis();
-            _selectedComparer = GetComparer(_evictionPolicy);
-            _stat = new NearCacheStatistics();
+        }
+
+        public RepairingHandler RepairingHandler
+        {
+            get { return _repairingHandler; }
+        }
+
+        public override void Init()
+        {
             if (InvalidateOnChange)
             {
-                AddInvalidateListener();
-            }
-        }
-        
-        public string Name
-        {
-            get { return _name; }
-        }
-
-        public NearCacheStatistics NearCacheStatistics
-        {
-            get { return _stat; }
-        }
-
-        public void Destroy()
-        {
-            if (_registrationId != null)
-            {
-                _client.GetListenerService().DeregisterListener(_registrationId,
-                    s => MapRemoveEntryListenerCodec.EncodeRequest(_name, s)
-                );
-            }
-
-            Cache.Clear();
-        }
-
-        public object Get(IData key)
-        {
-            FireTtlCleanup();
-            CacheRecord record;
-            if(Cache.TryGetValue(key, out record) && record != null)
-            {
-                record.Access();
-                _stat.IncrementHit();
-                if (IsRecordExpired(record))
-                {
-                    Invalidate(key);
-                    _stat.IncrementExpiration();
-                    return null;
-                }
-
-                if (record.Value.Equals(NullObject))
-                {
-                    return NullObject;
-                }
-
-                return _inMemoryFormat.Equals(InMemoryFormat.Binary)
-                    ? _client.GetSerializationService().ToObject<object>(record.Value)
-                    : record.Value;
-            }
-            _stat.IncrementMiss();
-            return null;
-        }
-
-        public void InvalidateAll()
-        {
-            Cache.Clear();
-        }
-
-        public void Put(IData key, object @object)
-        {
-            FireTtlCleanup();
-            if (_evictionPolicy == EvictionPolicy.None && Cache.Count >= _maxSize)
-            {
-                return;
-            }
-
-            if (_evictionPolicy != EvictionPolicy.None && Cache.Count >= _maxSize)
-            {
-                FireEvictCache();
-            }
-
-            object value;
-            if (@object == null)
-            {
-                value = NullObject;
-            }
-            else
-            {
-                value = _inMemoryFormat.Equals(InMemoryFormat.Binary)
-                    ? _client.GetSerializationService().ToData(@object)
-                    : _client.GetSerializationService().ToObject<object>(@object);
-            }
-
-            var newRecord = CreateRecord(key, value);
-            if (Cache.TryAdd(key, newRecord))
-            {
-                _stat.IncrementOwnedEntryCount();
-            }
-            else
-            {
-                Cache[key] = newRecord;
+                var localUuid = Client.GetClientClusterService().GetLocalClient().GetUuid();
+                _repairingHandler = new RepairingHandler(localUuid, this, Client.GetClientPartitionService());
+                RegisterInvalidateListener();
             }
         }
 
-        private CacheRecord CreateRecord(IData key, object value)
+        protected override NearCacheRecord CreateRecord(IData key, object value)
         {
-            var now = Clock.CurrentTimeMillis();
-            return new CacheRecord(key, value, now, _timeToLiveMillis > 0 ? now + _timeToLiveMillis : TimeNotSet);
+            var record = base.CreateRecord(key, value);
+            InitInvalidationMetadata(record);
+            return record;
         }
 
-        private void AddInvalidateListener()
+        protected override bool IsStaleRead(IData key, NearCacheRecord record)
         {
-            try
+            if (_repairingHandler == null)
             {
-                var request = MapAddNearCacheEntryListenerCodec.EncodeRequest(_name, (int) EntryEventType.Invalidation, false);
-                DistributedEventHandler handler = message => MapAddNearCacheEntryListenerCodec.EventHandler.HandleEvent(message,
-                    HandleIMapInvalidationEvent_v1_0, HandleIMapInvalidationEvent_v1_4, HandleIMapBatchInvalidationEvent_v1_0,
-                    HandleIMapBatchInvalidationEvent_v1_4);
-
-                _registrationId = _client.GetListenerService().RegisterListener(request,
-                    message => MapAddNearCacheEntryListenerCodec.DecodeResponse(message).response,
-                    id => MapRemoveEntryListenerCodec.EncodeRequest(_name, id), handler);
+                return false;
             }
-            catch (Exception e)
-            {
-                Logger.Severe("-----------------\n Near Cache is not initialized!!! \n-----------------", e);
-            }
+            var latestMetaData = _repairingHandler.GetMetaDataContainer(record.PartitionId);
+            return record.Guid != latestMetaData.Guid || record.Sequence < latestMetaData.StaleSequence;
         }
 
-        private void HandleIMapInvalidationEvent_v1_4(IData key, string sourceUuid, Guid partitionUuid, long sequence)
+        private void HandleIMapBatchInvalidationEvent_v1_0(IList<IData> keys)
         {
-            HandleIMapInvalidationEvent_v1_0(key);
+            Logger.Severe("Unexpected event from server");
         }
 
         private void HandleIMapBatchInvalidationEvent_v1_4(IList<IData> keys, IList<string> sourceuuids,
             IList<Guid> partitionuuids, IList<long> sequences)
         {
-            HandleIMapBatchInvalidationEvent_v1_0(keys);
-        }
-
-        private void HandleIMapBatchInvalidationEvent_v1_0(IList<IData> keys)
-        {
-            foreach (var data in keys)
-            {
-                Invalidate(data);
-            }
+            _repairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
         }
 
         private void HandleIMapInvalidationEvent_v1_0(IData key)
         {
-            if (key == null)
-            {
-                InvalidateAll();
-            }
-            else
-            {
-                Invalidate(key);
-            }
+            Logger.Severe("Unexpected event from server");
         }
 
-        private void FireEvictCache()
+        private void HandleIMapInvalidationEvent_v1_4(IData key, string sourceUuid, Guid partitionUuid, long sequence)
         {
-            if (_canEvict.CompareAndSet(true, false))
-            {
-                try
-                {
-                    _client.GetClientExecutionService().Submit(FireEvictCacheFunc);
-                }
-                catch (Exception e)
-                {
-                    _canEvict.Set(true);
-                    throw ExceptionUtil.Rethrow(e);
-                }
-            }
+            _repairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);
         }
 
-        private void FireEvictCacheFunc()
+        private void InitInvalidationMetadata(NearCacheRecord newRecord)
         {
-            try
-            {
-                var records = new SortedSet<CacheRecord>(Cache.Values, _selectedComparer);
-                var evictSize = Cache.Count * EvictionPercentage / 100;
-                var i = 0;
-                foreach (var record in records)
-                {
-                    CacheRecord removed;
-                    if (Cache.TryRemove(record.Key, out removed))
-                    {
-                        _stat.DecrementOwnedEntryCount();
-                        _stat.IncrementEviction();
-                        if (++i > evictSize)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                _canEvict.Set(true);
-            }
-
-            if (Cache.Count >= _maxSize)
-            {
-                FireEvictCache();
-            }
-        }
-
-        private void FireTtlCleanup()
-        {
-            if (Clock.CurrentTimeMillis() < (_lastCleanup + CleanupInterval))
+            if (_repairingHandler == null)
             {
                 return;
             }
-
-            if (_canCleanUp.CompareAndSet(true, false))
-            {
-                try
-                {
-                    _client.GetClientExecutionService().Submit(FireTtlCleanupFunc);
-                }
-                catch (Exception e)
-                {
-                    _canCleanUp.Set(true);
-                    throw ExceptionUtil.Rethrow(e);
-                }
-            }
+            var partitionId = Client.GetClientPartitionService().GetPartitionId(newRecord.Key);
+            var metadataContainer = _repairingHandler.GetMetaDataContainer(partitionId);
+            newRecord.PartitionId = partitionId;
+            newRecord.Sequence = metadataContainer.Sequence;
+            newRecord.Guid = metadataContainer.Guid;
         }
 
-        private void FireTtlCleanupFunc()
+
+        private void RegisterInvalidateListener()
         {
             try
             {
-                _lastCleanup = Clock.CurrentTimeMillis();
-                foreach (var entry in Cache)
-                {
-                    if (IsRecordExpired(entry.Value))
-                    {
-                        Invalidate(entry.Key);
-                        _stat.IncrementExpiration();
-                    }
-                }
+                var request =
+                    MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int)EntryEventType.Invalidation,
+                        false);
+                DistributedEventHandler handler = message =>
+                    MapAddNearCacheInvalidationListenerCodec.EventHandler.HandleEvent(message,
+                        HandleIMapInvalidationEvent_v1_0, HandleIMapInvalidationEvent_v1_4,
+                        HandleIMapBatchInvalidationEvent_v1_0, HandleIMapBatchInvalidationEvent_v1_4);
+
+                RegistrationId = Client.GetListenerService().RegisterListener(request,
+                    message => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).response,
+                    id => MapRemoveEntryListenerCodec.EncodeRequest(Name, id), handler);
             }
-            finally
+            catch (Exception e)
             {
-                _canCleanUp.Set(true);
+                Logger.Severe("-----------------\n Near Cache is not initialized!!! \n-----------------", e);
             }
-        }
-
-        private IComparer<CacheRecord> GetComparer(EvictionPolicy policy)
-        {
-            switch (policy)
-            {
-                case EvictionPolicy.Lfu:
-                    return new LfuComparer();
-                case EvictionPolicy.Lru:
-                    return new LruComparer();
-            }
-
-            return new DefaultComparer();
-        }
-
-        public void Invalidate(IData key)
-        {
-            CacheRecord removed;
-            if (Cache.TryRemove(key, out removed))
-            {
-                _stat.DecrementOwnedEntryCount();
-            }
-        }
-
-        private bool IsRecordExpired(CacheRecord record)
-        {
-            var now = Clock.CurrentTimeMillis();
-            return record.IsExpiredAt(now) || record.IsIdleAt(_maxIdleMillis, now);
-        }
-
-        internal class CacheRecord
-        {
-            private readonly long _creationTime;
-            private readonly long _expirationTime;
-            private long _lastAccessTime;
-            internal readonly AtomicInteger Hit;
-            
-            internal readonly IData Key;
-            internal readonly object Value;
-
-            internal CacheRecord(IData key, object value, long creationTime, long expirationTime)
-            {
-                Key = key;
-                Value = value;
-                _lastAccessTime = creationTime;
-                _creationTime = creationTime;
-                _expirationTime = expirationTime;
-                Hit = new AtomicInteger(0);
-            }
-
-            internal long LastAccessTime
-            {
-                get { return Interlocked.Read(ref _lastAccessTime); }
-            }
-
-            internal void Access()
-            {
-                Hit.IncrementAndGet();
-                Interlocked.Exchange(ref _lastAccessTime, Clock.CurrentTimeMillis());
-            }
-
-            internal bool IsIdleAt(long maxIdleMillis, long now)
-            {
-                if (maxIdleMillis <= 0) return false;
-                return LastAccessTime > TimeNotSet
-                    ? LastAccessTime + maxIdleMillis < now
-                    : _creationTime + maxIdleMillis < now;
-            }
-
-            internal bool IsExpiredAt(long now)
-            {
-                return _expirationTime > TimeNotSet && _expirationTime <= now;
-            }
-        }
-
-        private class LruComparer : IComparer<CacheRecord>
-        {
-            public int Compare(CacheRecord x, CacheRecord y)
-            {
-                var c = x.LastAccessTime.CompareTo(y.LastAccessTime);
-                if (c != 0) return c;
-
-                return x.Key.GetHashCode().CompareTo(y.Key.GetHashCode());
-            }
-        }
-
-        private class LfuComparer : IComparer<CacheRecord>
-        {
-            public int Compare(CacheRecord x, CacheRecord y)
-            {
-                var c = x.Hit.Get().CompareTo(y.Hit.Get());
-                if (c != 0) return c;
-
-                return x.Key.GetHashCode().CompareTo(y.Key.GetHashCode());
-            }
-        }
-
-        private class DefaultComparer : IComparer<CacheRecord>
-        {
-            public int Compare(CacheRecord x, CacheRecord y)
-            {
-                return x.Key.GetHashCode().CompareTo(y.Key.GetHashCode());
-            }
-        }
-
-        private enum EvictionPolicy
-        {
-            None,
-            Lru,
-            Lfu
         }
     }
 }

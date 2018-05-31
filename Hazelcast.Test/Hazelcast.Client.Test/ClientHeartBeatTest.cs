@@ -42,6 +42,11 @@ namespace Hazelcast.Client.Test
             StopCluster(_remoteController, _cluster);
             StopRemoteController(_remoteController);
         }
+        
+        protected override void ConfigureGroup(ClientConfig config)
+        {
+            config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
+        }
 
         protected override void ConfigureClient(ClientConfig config)
         {

@@ -15,23 +15,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Client;
 using Hazelcast.Client.Proxy;
+using Hazelcast.Client.Test;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 using NUnit.Framework;
 
-namespace Hazelcast.Client.Test
+namespace Hazelcast.NearCache.Test
 {
-    [TestFixture]
-    public class ClientNearCacheTest : SingleMemberBaseTest
+    public abstract class BaseNearCacheTest : SingleMemberBaseTest
     {
-        [SetUp]
-        public void Init()
-        {
-            _map = Client.GetMap<object, object>("nearCachedMap-" + TestSupport.RandomString());
-        }
+        private const int MaxSize = 1000;
+
+        protected IMap<object, object> _map;
 
         [TearDown]
         public void Destroy()
@@ -40,113 +39,25 @@ namespace Hazelcast.Client.Test
             _map.Destroy();
         }
 
-        private const int MaxSize = 1000;
-
-        protected override void ConfigureClient(ClientConfig config)
-        {
-            base.ConfigureClient(config);
-
-            var defaultConfig = new NearCacheConfig()
-                .SetInvalidateOnChange(false)
-                .SetInMemoryFormat(InMemoryFormat.Object)
-                .SetEvictionPolicy("None")
-                .SetMaxSize(MaxSize);
-            config.AddNearCacheConfig("nearCachedMap*", defaultConfig);
-
-            var invalidateConfig = new NearCacheConfig()
-                .SetInvalidateOnChange(true);
-            config.AddNearCacheConfig("nearCacheMapInvalidate*", invalidateConfig);
-
-            var lruConfig = new NearCacheConfig()
-                .SetEvictionPolicy("Lru")
-                .SetInvalidateOnChange(false)
-                .SetMaxSize(MaxSize);
-            config.AddNearCacheConfig("nearCacheMapLru*", lruConfig);
-
-            var lfuConfig = new NearCacheConfig()
-                .SetEvictionPolicy("Lfu")
-                .SetInvalidateOnChange(false)
-                .SetMaxSize(MaxSize);
-            config.AddNearCacheConfig("nearCacheMapLfu*", lfuConfig);
-
-            var ttlConfig = new NearCacheConfig()
-                .SetInvalidateOnChange(false)
-                .SetTimeToLiveSeconds(1);
-            config.AddNearCacheConfig("nearCacheTtl*", ttlConfig);
-
-            var idleConfig = new NearCacheConfig()
-                .SetInvalidateOnChange(false)
-                .SetMaxIdleSeconds(1);
-            config.AddNearCacheConfig("nearCacheIdle*", idleConfig);
-        }
-
-        private IMap<object, object> _map;
-
-        private NearCache GetNearCache<TK, TV>(IMap<TK, TV> map)
-        {
-            return (map as ClientMapProxy<TK, TV>).NearCache;
-        }
-
-        private IData ToKeyData(object k)
-        {
-            return ((HazelcastClientProxy) Client).GetClient().GetSerializationService().ToData(k);
-        }
-
-        private void TestInvalidate(Action<IMap<string, string>, string> invalidatingAction)
-        {
-            var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
-            try
-            {
-                map.Put("key", "value");
-
-                var val = map.Get("key");
-                Assert.AreEqual("value", val);
-
-                var clientNearCache = GetNearCache(map);
-
-                Assert.AreEqual(1, clientNearCache.Cache.Count);
-
-                var client = CreateClient();
-                try
-                {
-                    invalidatingAction(client.GetMap<string, string>(map.GetName()), "key");
-                }
-                finally
-                {
-                    client.Shutdown();
-                }
-
-                TestSupport.AssertTrueEventually(() =>
-                {
-                    Assert.IsFalse(clientNearCache.Cache.ContainsKey(ToKeyData("key")),
-                        "key should have been invalidated");
-                });
-            }
-            finally
-            {
-                map.Destroy();
-            }
-        }
-
         [Test]
         public void TestNearCache()
         {
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < MaxSize; i++)
             {
                 _map.Put("key" + i, "value" + i);
             }
-            var begin = Clock.CurrentTimeMillis();
-            for (var i = 0; i < 100; i++)
+            var begin = DateTime.Now;
+            for (var i = 0; i < MaxSize; i++)
             {
                 _map.Get("key" + i);
             }
-            var firstRead = Clock.CurrentTimeMillis() - begin;
-            begin = Clock.CurrentTimeMillis();
-            for (var i = 0; i < 100; i++)
+            var firstRead = DateTime.Now - begin;
+            begin = DateTime.Now;
+            for (var i = 0; i < MaxSize; i++)
             {
                 _map.Get("key" + i);
             }
-            var secondRead = Clock.CurrentTimeMillis() - begin;
+            var secondRead = DateTime.Now - begin;
             Assert.IsTrue(secondRead < firstRead);
         }
 
@@ -164,12 +75,15 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestNearCacheGet()
         {
+            //TODO FIXME
             _map.Put("key", "value");
             _map.Get("key");
 
             var clientNearCache = GetNearCache(_map);
 
-            Assert.AreEqual("value", clientNearCache.Get(ToKeyData("key")));
+            object value;
+            clientNearCache.TryGetValue(ToKeyData("key"), out value);
+            Assert.AreEqual("value", value);
         }
 
         [Test]
@@ -186,7 +100,7 @@ namespace Hazelcast.Client.Test
 
             var clientNearCache = GetNearCache(_map);
 
-            Assert.AreEqual(100, clientNearCache.Cache.Count);
+            Assert.AreEqual(100, clientNearCache.Records.Count);
         }
 
         [Test]
@@ -201,14 +115,14 @@ namespace Hazelcast.Client.Test
 
             var clientNearCache = GetNearCache(_map);
 
-            TestSupport.AssertTrueEventually(() => { Assert.AreEqual(1, clientNearCache.Cache.Count); });
+            TestSupport.AssertTrueEventually(() => { Assert.AreEqual(1, clientNearCache.Records.Count); });
 
             val = _map.GetAsync("key");
             result = val.Result;
             Assert.AreEqual("value", result);
 
-            var cacheRecord = clientNearCache.Cache.Values.ToArray()[0];
-            Assert.AreEqual(1, cacheRecord.Hit.Get());
+            var cacheRecord = clientNearCache.Records.Values.ToArray()[0];
+            Assert.AreEqual(1, cacheRecord.Value.Hit.Get());
         }
 
         [Test]
@@ -226,17 +140,17 @@ namespace Hazelcast.Client.Test
             map.GetAll(keys);
             var cache = GetNearCache(map);
 
-            Assert.AreEqual(keys.Count, cache.Cache.Count);
+            Assert.AreEqual(keys.Count, cache.Records.Count);
             TestSupport.AssertTrueEventually(() =>
             {
                 map.Get(nonIdleKey); //force ttl check 
                 foreach (var k in keys)
                 {
                     var keyData = ToKeyData(k);
-                    Assert.IsFalse(cache.Cache.ContainsKey(keyData), "key " + k + " should have expired.");
+                    Assert.IsFalse(cache.Records.ContainsKey(keyData), "key " + k + " should have expired.");
                 }
                 var nonIdleKeyData = ToKeyData(nonIdleKey);
-                Assert.IsTrue(cache.Cache.ContainsKey(nonIdleKeyData), "key 100 should not have expired.");
+                Assert.IsTrue(cache.Records.ContainsKey(nonIdleKeyData), "key 100 should not have expired.");
             });
         }
 
@@ -244,29 +158,6 @@ namespace Hazelcast.Client.Test
         public void TestNearCacheInvalidationOnClear()
         {
             TestInvalidate((m, k) => m.Clear());
-        }
-
-        [Test]
-        [Category("3.8")]
-        public void TestNearCacheInvalidationOnRemoveAllPredicate()
-        {
-            var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
-            for (var i = 0; i < 100; i++)
-            {
-                map.Put("key" + i, "value" + i);
-            }
-
-            for (var i = 0; i < 100; i++)
-            {
-                map.Get("key" + i);
-            }
-
-            var clientNearCache = GetNearCache(map);
-
-            Assert.AreEqual(100, clientNearCache.Cache.Count);
-
-            map.RemoveAll(new SqlPredicate("this == 'value2'"));
-            Assert.AreEqual(0, clientNearCache.Cache.Count);
         }
 
         [Test]
@@ -288,6 +179,29 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.8")]
+        public void TestNearCacheInvalidationOnRemoveAllPredicate()
+        {
+            var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
+            for (var i = 0; i < 100; i++)
+            {
+                map.Put("key" + i, "value" + i);
+            }
+
+            for (var i = 0; i < 100; i++)
+            {
+                map.Get("key" + i);
+            }
+
+            var clientNearCache = GetNearCache(map);
+
+            Assert.AreEqual(100, clientNearCache.Records.Count);
+
+            map.RemoveAll(new SqlPredicate("this == 'value2'"));
+            Assert.AreEqual(0, clientNearCache.Records.Count);
+        }
+
+        [Test]
         public void TestNearCacheLfuEviction()
         {
             var lfuMap = Client.GetMap<object, object>("nearCacheMapLfu-" + TestSupport.RandomString());
@@ -302,7 +216,7 @@ namespace Hazelcast.Client.Test
             lfuMap.GetAll(keys);
 
             // make keys in sublist accessed again
-            var subList = keys.Take(MaxSize/2).ToList();
+            var subList = keys.Take(MaxSize / 2).ToList();
             lfuMap.GetAll(subList);
 
             // add another item, triggering eviction
@@ -313,11 +227,11 @@ namespace Hazelcast.Client.Test
 
             TestSupport.AssertTrueEventually(() =>
             {
-                Assert.IsTrue(cache.Cache.Count <= MaxSize, cache.Cache.Count + " should be less than " + MaxSize);
+                Assert.IsTrue(cache.Records.Count <= MaxSize, cache.Records.Count + " should be less than " + MaxSize);
                 foreach (var key in subList)
                 {
                     var keyData = ((HazelcastClientProxy) Client).GetClient().GetSerializationService().ToData(key);
-                    Assert.IsTrue(cache.Cache.ContainsKey(keyData), "key " + key + " not found in cache");
+                    Assert.IsTrue(cache.Records.ContainsKey(keyData), "key " + key + " not found in cache");
                 }
             });
         }
@@ -333,7 +247,7 @@ namespace Hazelcast.Client.Test
 
             var clientNearCache = GetNearCache(map);
 
-            Assert.AreEqual(1, clientNearCache.Cache.Count);
+            Assert.AreEqual(1, clientNearCache.Records.Count);
 
             map.Remove("key");
             Assert.Null(map.Get("key"));
@@ -354,7 +268,7 @@ namespace Hazelcast.Client.Test
             lruMap.GetAll(keys);
 
             // make keys in sublist accessed again
-            var subList = keys.Take(MaxSize/2).ToList();
+            var subList = keys.Take(MaxSize / 2).ToList();
             lruMap.GetAll(subList);
 
             // add another item, triggering eviction
@@ -365,11 +279,11 @@ namespace Hazelcast.Client.Test
 
             TestSupport.AssertTrueEventually(() =>
             {
-                Assert.IsTrue(cache.Cache.Count <= MaxSize, cache.Cache.Count + " should be less than " + MaxSize);
+                Assert.IsTrue(cache.Records.Count <= MaxSize, cache.Records.Count + " should be less than " + MaxSize);
                 foreach (var key in subList)
                 {
                     var keyData = ((HazelcastClientProxy) Client).GetClient().GetSerializationService().ToData(key);
-                    Assert.IsTrue(cache.Cache.ContainsKey(keyData), "key " + key + " not found in cache");
+                    Assert.IsTrue(cache.Records.ContainsKey(keyData), "key " + key + " not found in cache");
                 }
             });
         }
@@ -378,14 +292,14 @@ namespace Hazelcast.Client.Test
         public void TestNearCacheNoEviction()
         {
             var keys = new List<object>();
-            for (var i = 0; i < MaxSize*2; i++)
+            for (var i = 0; i < MaxSize * 2; i++)
             {
                 _map.Put(i, i);
                 keys.Add(i);
             }
             _map.GetAll(keys);
             var cache = GetNearCache(_map);
-            Assert.AreEqual(MaxSize, cache.Cache.Count);
+            Assert.AreEqual(MaxSize, cache.Records.Count);
         }
 
         [Test]
@@ -401,16 +315,88 @@ namespace Hazelcast.Client.Test
             map.GetAll(keys);
             var cache = GetNearCache(map);
 
-            Assert.AreEqual(keys.Count, cache.Cache.Count);
+            Assert.AreEqual(keys.Count, cache.Records.Count);
             TestSupport.AssertTrueEventually(() =>
             {
                 map.Get(100); //force ttl check 
                 foreach (var k in keys)
                 {
                     var keyData = ((HazelcastClientProxy) Client).GetClient().GetSerializationService().ToData(k);
-                    Assert.IsFalse(cache.Cache.ContainsKey(keyData), "key " + k + " should have expired.");
+                    Assert.IsFalse(cache.Records.ContainsKey(keyData), "key " + k + " should have expired.");
                 }
             });
+        }
+
+        protected override void ConfigureClient(ClientConfig config)
+        {
+            base.ConfigureClient(config);
+
+            var defaultConfig = new NearCacheConfig().SetInvalidateOnChange(false)
+                .SetInMemoryFormat(InMemoryFormat.Object).SetEvictionPolicy("None").SetMaxSize(MaxSize);
+            config.AddNearCacheConfig("nearCachedMap*", defaultConfig);
+
+            var invalidateConfig = new NearCacheConfig().SetInvalidateOnChange(true);
+            config.AddNearCacheConfig("nearCacheMapInvalidate*", invalidateConfig);
+
+            var lruConfig = new NearCacheConfig().SetEvictionPolicy("Lru").SetInvalidateOnChange(false)
+                .SetMaxSize(MaxSize);
+            config.AddNearCacheConfig("nearCacheMapLru*", lruConfig);
+
+            var lfuConfig = new NearCacheConfig().SetEvictionPolicy("Lfu").SetInvalidateOnChange(false)
+                .SetMaxSize(MaxSize);
+            config.AddNearCacheConfig("nearCacheMapLfu*", lfuConfig);
+
+            var ttlConfig = new NearCacheConfig().SetInvalidateOnChange(false).SetTimeToLiveSeconds(1);
+            config.AddNearCacheConfig("nearCacheTtl*", ttlConfig);
+
+            var idleConfig = new NearCacheConfig().SetInvalidateOnChange(false).SetMaxIdleSeconds(1);
+            config.AddNearCacheConfig("nearCacheIdle*", idleConfig);
+        }
+
+        internal BaseNearCache GetNearCache<TK, TV>(IMap<TK, TV> map)
+        {
+            return (map as ClientMapNearCacheProxy<TK, TV>).NearCache;
+        }
+
+        private void TestInvalidate(Action<IMap<string, string>, string> invalidatingAction)
+        {
+            var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
+            try
+            {
+                map.Put("key", "value");
+
+                var val = map.Get("key");
+                Assert.AreEqual("value", val);
+
+                var clientNearCache = GetNearCache(map);
+
+                Assert.AreEqual(1, clientNearCache.Records.Count);
+
+                var client = CreateClient();
+                try
+                {
+                    invalidatingAction(client.GetMap<string, string>(map.GetName()), "key");
+                }
+                finally
+                {
+                    client.Shutdown();
+                }
+
+                TestSupport.AssertTrueEventually(() =>
+                {
+                    Assert.IsFalse(clientNearCache.Records.ContainsKey(ToKeyData("key")),
+                        "key should have been invalidated");
+                });
+            }
+            finally
+            {
+                map.Destroy();
+            }
+        }
+
+        private IData ToKeyData(object k)
+        {
+            return ((HazelcastClientProxy) Client).GetClient().GetSerializationService().ToData(k);
         }
     }
 }

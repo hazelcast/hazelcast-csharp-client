@@ -51,6 +51,11 @@ namespace Hazelcast.Client.Test
             config.GetNetworkConfig().SetRedoOperation(true);
         }
 
+        protected override void ConfigureGroup(ClientConfig config)
+        {
+            config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
+        }
+
         [Test]
 		public void TestClientTransactionRetry()
 		{
@@ -134,7 +139,7 @@ namespace Hazelcast.Client.Test
                 var keys = map.KeySet();
                 for (var i = 0; i < Count; i++)
                 {
-                    Assert.IsTrue(keys.Contains(i), "Key " + i + " was not found");
+                    Assert.True(keys.Contains(i), "Key " + i + " was not found");
                 }
                 Assert.AreEqual(Count, map.Size());
             }, 60);
@@ -145,8 +150,7 @@ namespace Hazelcast.Client.Test
         {
             var member = _remoteController.startMember(_cluster.Id);
             Environment.SetEnvironmentVariable("hazelcast.client.invocation.timeout.seconds", "2");
-            var client =
-               new HazelcastClientFactory().CreateClient(c => c.GetNetworkConfig().AddAddress("127.0.0.1:5701"));
+            var client = CreateClient();
             try
             {
                 var map = client.GetMap<string, string>(TestSupport.RandomString());
@@ -165,7 +169,7 @@ namespace Hazelcast.Client.Test
                     else Assert.Fail("Method invocation did not fail as expected");
                 });
 
-                Assert.IsTrue(resetEvent.Wait(4000), "Did not get an exception within seconds");
+                Assert.True(resetEvent.Wait(4000), "Did not get an exception within seconds");
             }
             finally
             {
