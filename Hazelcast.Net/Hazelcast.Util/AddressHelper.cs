@@ -25,7 +25,7 @@ namespace Hazelcast.Util
     {
         private const int MaxPortTries = 3;
 
-        public static ICollection<IPEndPoint> GetPossibleSocketAddresses(IPAddress ipAddress, int port,
+        public static ICollection<Address> GetPossibleSocketAddresses(IPAddress ipAddress, int port,
             string scopedAddress)
         {
             var portTryCount = 1;
@@ -34,7 +34,7 @@ namespace Hazelcast.Util
                 portTryCount = MaxPortTries;
                 port = 5701;
             }
-            ICollection<IPEndPoint> socketAddresses = new List<IPEndPoint>();
+            ICollection<Address> socketAddresses = new List<Address>();
             if (ipAddress == null)
             {
                 for (var i = 0; i < portTryCount; i++)
@@ -42,7 +42,7 @@ namespace Hazelcast.Util
                     IPAddress addr;
                     if (IPAddress.TryParse(scopedAddress, out addr))
                     {
-                        socketAddresses.Add(new IPEndPoint(addr, port + i));
+                        socketAddresses.Add(new Address(addr, port + i));
                     }
                 }
             }
@@ -52,7 +52,7 @@ namespace Hazelcast.Util
                 {
                     for (var i = 0; i < portTryCount; i++)
                     {
-                        socketAddresses.Add(new IPEndPoint(ipAddress, port + i));
+                        socketAddresses.Add(new Address(ipAddress, port + i));
                     }
                 }
                 else
@@ -62,7 +62,7 @@ namespace Hazelcast.Util
                     {
                         for (var i = 0; i < portTryCount; i++)
                         {
-                            socketAddresses.Add(new IPEndPoint(ipa, port + i));
+                            socketAddresses.Add(new Address(ipa, port + i));
                         }
                     }
                 }
@@ -70,7 +70,7 @@ namespace Hazelcast.Util
             return socketAddresses;
         }
 
-        public static ICollection<IPEndPoint> GetSocketAddresses(string address)
+        public static ICollection<Address> GetSocketAddresses(string address)
         {
             var addressHolder = AddressUtil.GetAddressHolder(address, -1);
             var scopedAddress = addressHolder.ScopeId != null

@@ -19,7 +19,6 @@ using Hazelcast.IO;
 #pragma warning disable CS1591
  namespace Hazelcast.Client.Spi
 {
-    /// <author>mdogan 5/16/13</author>
     public interface IClientClusterService
     {
         /// <param name="listener">The listener to be registered.</param>

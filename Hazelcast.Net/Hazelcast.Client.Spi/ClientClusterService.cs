@@ -31,6 +31,7 @@ using Hazelcast.Net.Ext;
 using Hazelcast.Security;
 using Hazelcast.Util;
 using ICredentials = Hazelcast.Security.ICredentials;
+
 #pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
@@ -41,7 +42,7 @@ namespace Hazelcast.Client.Spi
     /// </summary>
     internal class ClientClusterService : IClientClusterService, IConnectionListener, IConnectionHeartbeatListener
     {
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientClusterService));
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientClusterService));
         private readonly HazelcastClient _client;
 
         private readonly ConcurrentDictionary<string, IMembershipListener> _listeners =
@@ -54,11 +55,21 @@ namespace Hazelcast.Client.Spi
         private ClientConnectionManager _connectionManager;
         private ICredentials _credentials;
         private Address _ownerConnectionAddress;
+        private Address _prevOwnerConnectionAddress;
         private ClientPrincipal _principal;
+        private readonly int _connectionAttemptPeriod;
+        private readonly int _connectionAttemptLimit;
+        private readonly bool _shuffleMemberList;
 
         public ClientClusterService(HazelcastClient client)
         {
             _client = client;
+
+            var networkConfig = GetClientConfig().GetNetworkConfig();
+            var connAttemptLimit = networkConfig.GetConnectionAttemptLimit();
+            _connectionAttemptPeriod = networkConfig.GetConnectionAttemptPeriod();
+            _connectionAttemptLimit = connAttemptLimit == 0 ? int.MaxValue : connAttemptLimit;
+            _shuffleMemberList = EnvironmentUtil.ReadBool("hazelcast.client.shuffle.member.list") ?? false;
 
             var listenerConfigs = client.GetClientConfig().GetListenerConfigs();
             foreach (var listenerConfig in listenerConfigs)
@@ -85,6 +96,16 @@ namespace Hazelcast.Client.Spi
                 {
                     AddMembershipListenerWithoutInit(membershipListener);
                 }
+            }
+        }
+
+        private Address OwnerConnectionAddress
+        {
+            get { return _ownerConnectionAddress; }
+            set
+            {
+                _prevOwnerConnectionAddress = _ownerConnectionAddress;
+                _ownerConnectionAddress = value;
             }
         }
 
@@ -127,7 +148,7 @@ namespace Hazelcast.Client.Spi
         {
             var cm = _client.GetConnectionManager();
             var cp = GetPrincipal();
-            var ownerConnection = cm.GetConnection(_ownerConnectionAddress);
+            var ownerConnection = cm.GetConnection(OwnerConnectionAddress);
 
             var socketAddress = ownerConnection != null ? ownerConnection.GetLocalSocketAddress() : null;
             var uuid = cp != null ? cp.GetUuid() : null;
@@ -136,7 +157,7 @@ namespace Hazelcast.Client.Spi
 
         public Address GetOwnerConnectionAddress()
         {
-            return _ownerConnectionAddress;
+            return OwnerConnectionAddress;
         }
 
         public string AddMembershipListener(IMembershipListener listener)
@@ -172,9 +193,9 @@ namespace Hazelcast.Client.Spi
 
         public void HeartBeatStopped(ClientConnection connection)
         {
-            if (connection.GetAddress().Equals(_ownerConnectionAddress))
+            if (connection.GetAddress().Equals(OwnerConnectionAddress))
             {
-                _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(_ownerConnectionAddress));
+                _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(OwnerConnectionAddress));
             }
         }
 
@@ -185,7 +206,7 @@ namespace Hazelcast.Client.Spi
         public void ConnectionRemoved(ClientConnection connection)
         {
             var executionService = (ClientExecutionService) _client.GetClientExecutionService();
-            if (Equals(connection.GetAddress(), _ownerConnectionAddress))
+            if (Equals(connection.GetAddress(), OwnerConnectionAddress))
             {
                 if (_client.GetLifecycleService().IsRunning())
                 {
@@ -223,10 +244,10 @@ namespace Hazelcast.Client.Spi
         {
             get
             {
-                if (_ownerConnectionAddress != null)
+                if (OwnerConnectionAddress != null)
                 {
                     var cm = _client.GetConnectionManager();
-                    var ownerConnection = cm.GetConnection(_ownerConnectionAddress);
+                    var ownerConnection = cm.GetConnection(OwnerConnectionAddress);
                     return ownerConnection != null ? ownerConnection.ConnectedServerVersionInt : -1;
                 }
                 return -1;
@@ -246,31 +267,25 @@ namespace Hazelcast.Client.Spi
 
         internal virtual void FireMembershipEvent(MembershipEvent @event)
         {
-            _client.GetClientExecutionService().Submit(
-                (() =>
+            _client.GetClientExecutionService().Submit((() =>
+            {
+                foreach (var listener in _listeners.Values)
                 {
-                    foreach (var listener in _listeners.Values)
+                    if (@event.GetEventType() == MembershipEvent.MemberAdded)
                     {
-                        if (@event.GetEventType() == MembershipEvent.MemberAdded)
-                        {
-                            listener.MemberAdded(@event);
-                        }
-                        else
-                        {
-                            listener.MemberRemoved(@event);
-                        }
+                        listener.MemberAdded(@event);
                     }
-                }));
+                    else
+                    {
+                        listener.MemberRemoved(@event);
+                    }
+                }
+            }));
         }
 
         internal virtual IDictionary<Address, IMember> GetMembersRef()
         {
             return _membersRef.Get();
-        }
-
-        internal virtual ISerializationService GetSerializationService()
-        {
-            return _client.GetSerializationService();
         }
 
         internal virtual string MembersString()
@@ -304,13 +319,13 @@ namespace Hazelcast.Client.Spi
         /// <exception cref="System.Exception" />
         private bool Connect(ICollection<IPEndPoint> triedAddresses)
         {
-            ICollection<IPEndPoint> socketAddresses = GetEndpoints();
-            foreach (var inetSocketAddress in socketAddresses)
+            var addresses = GetPossibleMemberAddresses();
+            foreach (var address in addresses)
             {
+                var inetSocketAddress = address.GetInetSocketAddress();
                 try
                 {
                     triedAddresses.Add(inetSocketAddress);
-                    var address = new Address(inetSocketAddress);
                     if (Logger.IsFinestEnabled())
                     {
                         Logger.Finest("Trying to connect to " + address);
@@ -323,7 +338,7 @@ namespace Hazelcast.Client.Spi
                         ManagerAuthenticator(connection);
                     }
                     FireConnectionEvent(LifecycleEvent.LifecycleState.ClientConnected);
-                    _ownerConnectionAddress = connection.GetAddress();
+                    OwnerConnectionAddress = connection.GetAddress();
                     return true;
                 }
                 catch (Exception e)
@@ -338,21 +353,17 @@ namespace Hazelcast.Client.Spi
         private void ConnectToCluster()
         {
             ConnectToOne();
-            _clientMembershipListener.ListenMembershipEvents(_ownerConnectionAddress);
+            _clientMembershipListener.ListenMembershipEvents(OwnerConnectionAddress);
             //_clientListenerService.TriggerFailedListeners(); //TODO: triggerfailedlisteners
         }
 
         private void ConnectToOne()
         {
-            _ownerConnectionAddress = null;
-            var networkConfig = GetClientConfig().GetNetworkConfig();
-            var connAttemptLimit = networkConfig.GetConnectionAttemptLimit();
-            var connectionAttemptPeriod = networkConfig.GetConnectionAttemptPeriod();
-            var connectionAttemptLimit = connAttemptLimit == 0 ? int.MaxValue : connAttemptLimit;
-            var shuffleMemberList = EnvironmentUtil.ReadBool("hazelcast.client.shuffle.member.list") ?? false;
+            OwnerConnectionAddress = null;
+
             var attempt = 0;
             ICollection<IPEndPoint> triedAddresses = new HashSet<IPEndPoint>();
-            while (attempt < connectionAttemptLimit)
+            while (attempt < _connectionAttemptLimit)
             {
                 if (!_client.GetLifecycleService().IsRunning())
                 {
@@ -363,16 +374,15 @@ namespace Hazelcast.Client.Spi
                     break;
                 }
                 attempt++;
-                var nextTry = Clock.CurrentTimeMillis() + connectionAttemptPeriod;
+                var nextTry = Clock.CurrentTimeMillis() + _connectionAttemptPeriod;
                 var isConnected = Connect(triedAddresses);
                 if (isConnected)
                 {
                     return;
                 }
                 var remainingTime = nextTry - Clock.CurrentTimeMillis();
-                Logger.Warning(
-                    string.Format("Unable to get alive cluster connection, try in {0} ms later, attempt {1} of {2}.",
-                        Math.Max(0, remainingTime), attempt, connectionAttemptLimit));
+                Logger.Warning(string.Format("Unable to get alive cluster connection, try in {0} ms later, attempt {1} of {2}.",
+                    Math.Max(0, remainingTime), attempt, _connectionAttemptLimit));
                 if (remainingTime > 0)
                 {
                     try
@@ -386,8 +396,7 @@ namespace Hazelcast.Client.Spi
                 }
             }
             throw new InvalidOperationException("Unable to connect to any address in the config! " +
-                                                "The following addresses were tried:" +
-                                                string.Join(", ", triedAddresses));
+                                                "The following addresses were tried:" + string.Join(", ", triedAddresses));
         }
 
         private void FireConnectionEvent(LifecycleEvent.LifecycleState state)
@@ -401,25 +410,52 @@ namespace Hazelcast.Client.Spi
             return _client.GetClientConfig();
         }
 
-        private ICollection<IPEndPoint> GetConfigAddresses()
-        {
-            IEnumerable<IPEndPoint> socketAddresses = new List<IPEndPoint>();
-            foreach (var address in _client.GetClientConfig().GetNetworkConfig().GetAddresses())
-            {
-                var endPoints = AddressHelper.GetSocketAddresses(address);
-                socketAddresses = socketAddresses.Union(endPoints);
-            }
-            return socketAddresses.ToList();
-        }
-
-        private IList<IPEndPoint> GetEndpoints()
+        private IList<Address> GetPossibleMemberAddresses()
         {
             var memberList = _client.GetClientClusterService().GetMemberList();
-            var endpoints = memberList.Select(member => member.GetSocketAddress());
-            endpoints = endpoints.Union(GetConfigAddresses());
+            var addresses = memberList.Select(member => member.GetAddress()).ToList();
 
+            if (_shuffleMemberList)
+            {
+                addresses = Shuffle(addresses);
+            }
+
+            var configAddresses = GetConfigAddresses();
+            if (_shuffleMemberList)
+            {
+                configAddresses = Shuffle(configAddresses);
+            }
+
+            addresses.AddRange(configAddresses);
+            if (_prevOwnerConnectionAddress != null)
+            {
+                /*
+                 * Previous owner address is moved to last item in set so that client will not try to connect to same one immediately.
+                 * It could be the case that address is removed because it is healthy(it not responding to heartbeat/pings)
+                 * In that case, trying other addresses first to upgrade make more sense.
+                 */
+                addresses.Remove(_prevOwnerConnectionAddress);
+                addresses.Add(_prevOwnerConnectionAddress);
+            }
+            return addresses;
+        }
+
+        private IList<Address> GetConfigAddresses()
+        {
+            var configAddresses = _client.GetClientConfig().GetNetworkConfig().GetAddresses();
+            var possibleAddresses = new List<Address>();
+
+            foreach (var cfgAddress in configAddresses)
+            {
+                possibleAddresses.AddRange(AddressHelper.GetSocketAddresses(cfgAddress));
+            }
+            return possibleAddresses;
+        }
+
+        private List<Address> Shuffle(IList<Address> list)
+        {
             var r = new Random();
-            return endpoints.OrderBy(x => r.Next()).ToList();
+            return list.OrderBy(x => r.Next()).ToList();
         }
 
         private void Init()
@@ -462,14 +498,14 @@ namespace Hazelcast.Client.Spi
             {
                 var usernamePasswordCr = (UsernamePasswordCredentials) _credentials;
                 request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
-                    usernamePasswordCr.GetPassword(), uuid, ownerUuid, true,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
+                    usernamePasswordCr.GetPassword(), uuid, ownerUuid, true, ClientTypes.Csharp,
+                    _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
             }
             else
             {
                 var data = ss.ToData(_credentials);
-                request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
+                request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false, ClientTypes.Csharp,
+                    _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
             }
 
             IClientMessage response;
@@ -492,7 +528,7 @@ namespace Hazelcast.Client.Spi
             var member = new Member(result.address, result.ownerUuid);
             _principal = new ClientPrincipal(result.uuid, result.ownerUuid);
 
-            connection.Member  =member;
+            connection.Member = member;
             connection.SetOwner();
             connection.ConnectedServerVersionStr = result.serverHazelcastVersion;
         }
