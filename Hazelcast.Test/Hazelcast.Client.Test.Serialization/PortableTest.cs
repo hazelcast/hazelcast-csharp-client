@@ -98,7 +98,7 @@ namespace Hazelcast.Client.Test.Serialization
 
             public override bool Equals(object obj)
             {
-                if(this == obj)
+                if(ReferenceEquals(this, obj))
                 {
                     return true;
                 }
@@ -149,7 +149,7 @@ namespace Hazelcast.Client.Test.Serialization
 
             public override bool Equals(object obj)
             {
-                if(this == obj)
+                if(ReferenceEquals(this, obj))
                 {
                     return true;
                 }

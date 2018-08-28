@@ -56,10 +56,10 @@ namespace Hazelcast.Client.Test.Serialization
             });
         }
 
-        internal static IClassDefinition CreateNamedPortableClassDefinition()
+        internal static IClassDefinition CreateNamedPortableClassDefinition(int portableVersion)
         {
             var builder = new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID,
-                TestSerializationConstants.NAMED_PORTABLE);
+                TestSerializationConstants.NAMED_PORTABLE, portableVersion);
             builder.AddUTFField("name");
             builder.AddIntField("myint");
             return builder.Build();
@@ -224,6 +224,7 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public void TestClassDefinitionConfig()
         {
+            int portableVersion = 1;
             var serializationConfig = new SerializationConfig();
             serializationConfig.AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID,
                 new TestPortableFactory());
@@ -231,14 +232,14 @@ namespace Hazelcast.Client.Test.Serialization
             serializationConfig
                 .AddClassDefinition(
                     new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID,
-                            TestSerializationConstants.RAW_DATA_PORTABLE)
+                            TestSerializationConstants.RAW_DATA_PORTABLE, portableVersion)
                         .AddLongField("l")
                         .AddCharArrayField("c")
-                        .AddPortableField("p", CreateNamedPortableClassDefinition())
+                        .AddPortableField("p", CreateNamedPortableClassDefinition(portableVersion))
                         .Build())
                 .AddClassDefinition(
                     new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID,
-                            TestSerializationConstants.NAMED_PORTABLE)
+                            TestSerializationConstants.NAMED_PORTABLE, portableVersion)
                         .AddUTFField("name").AddIntField("myint").Build());
 
             var serializationService = new SerializationServiceBuilder()
@@ -263,10 +264,10 @@ namespace Hazelcast.Client.Test.Serialization
             serializationConfig.SetPortableVersion(1);
             serializationConfig.AddClassDefinition(
                 new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID,
-                        TestSerializationConstants.RAW_DATA_PORTABLE)
+                        TestSerializationConstants.RAW_DATA_PORTABLE, 1)
                     .AddLongField("l")
                     .AddCharArrayField("c")
-                    .AddPortableField("p", CreateNamedPortableClassDefinition())
+                    .AddPortableField("p", CreateNamedPortableClassDefinition(1))
                     .Build());
 
             try
@@ -289,13 +290,14 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public void TestRawData()
         {
+            int portableVersion = 1;
             var serializationService = CreateSerializationService(1, ByteOrder.BigEndian);
             var p = new RawDataPortable(DateTime.Now.ToFileTime(), "test chars".ToCharArray(),
                 new NamedPortable("named portable", 34567),
                 9876, "Testing raw portable", new ByteArrayDataSerializable(Encoding.UTF8.GetBytes("test bytes")));
-            var builder = new ClassDefinitionBuilder(p.GetFactoryId(), p.GetClassId());
+            var builder = new ClassDefinitionBuilder(p.GetFactoryId(), p.GetClassId(), portableVersion);
             builder.AddLongField("l").AddCharArrayField("c")
-                .AddPortableField("p", CreateNamedPortableClassDefinition());
+                .AddPortableField("p", CreateNamedPortableClassDefinition(portableVersion));
             serializationService.GetPortableContext().RegisterClassDefinition(builder.Build());
 
             var data = serializationService.ToData(p);
@@ -305,15 +307,16 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public void TestRawDataInvalidWrite()
         {
+            int portableVersion = 1;
             Assert.Throws<HazelcastSerializationException>(() =>
             {
                 var serializationService = CreateSerializationService(1, ByteOrder.BigEndian);
                 var p = new InvalidRawDataPortable(DateTime.Now.ToFileTime(), "test chars".ToCharArray(),
                     new NamedPortable("named portable", 34567),
                     9876, "Testing raw portable", new ByteArrayDataSerializable(Encoding.UTF8.GetBytes("test bytes")));
-                var builder = new ClassDefinitionBuilder(p.GetFactoryId(), p.GetClassId());
+                var builder = new ClassDefinitionBuilder(p.GetFactoryId(), p.GetClassId(), portableVersion);
                 builder.AddLongField("l").AddCharArrayField("c")
-                    .AddPortableField("p", CreateNamedPortableClassDefinition());
+                    .AddPortableField("p", CreateNamedPortableClassDefinition(portableVersion));
                 serializationService.GetPortableContext().RegisterClassDefinition(builder.Build());
 
                 var data = serializationService.ToData(p);
@@ -324,15 +327,16 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public void TestRawDataInvaliRead()
         {
+            int portableVersion = 1;
             Assert.Throws<HazelcastSerializationException>(() =>
             {
                 var serializationService = CreateSerializationService(1, ByteOrder.BigEndian);
                 var p = new InvalidRawDataPortable2(DateTime.Now.ToFileTime(), "test chars".ToCharArray(),
                     new NamedPortable("named portable", 34567),
                     9876, "Testing raw portable", new ByteArrayDataSerializable(Encoding.UTF8.GetBytes("test bytes")));
-                var builder = new ClassDefinitionBuilder(p.GetFactoryId(), p.GetClassId());
+                var builder = new ClassDefinitionBuilder(p.GetFactoryId(), p.GetClassId(), portableVersion);
                 builder.AddLongField("l").AddCharArrayField("c")
-                    .AddPortableField("p", CreateNamedPortableClassDefinition());
+                    .AddPortableField("p", CreateNamedPortableClassDefinition(portableVersion));
                 serializationService.GetPortableContext().RegisterClassDefinition(builder.Build());
 
                 var data = serializationService.ToData(p);
@@ -464,11 +468,13 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public void TestWriteReadWithNullPortableArray()
         {
-            var builder0 = new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID, 1);
-            var builder1 = new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID, 2);
+            int portableVersion = 1;
+            var builder0 = new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID, 1, portableVersion);
+            var builder1 = new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID, 2, portableVersion);
             builder0.AddPortableArrayField("list", builder1.Build());
 
             var ss = new SerializationServiceBuilder()
+                .SetPortableVersion(portableVersion)
                 .AddClassDefinition(builder0.Build())
                 .AddClassDefinition(builder1.Build())
                 .Build();

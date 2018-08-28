@@ -19,6 +19,7 @@ namespace Hazelcast.Client.Test.Serialization
 {
     public class ClassAndFieldDefinitionTest
     {
+        private readonly int portableVersion = 1;
         private static readonly string[] fieldNames = {"f1", "f2", "f3"};
         private ClassDefinition classDefinition;
 
@@ -136,10 +137,10 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public virtual void TestFieldDef_equal_hashCode()
         {
-            var fd0 = new FieldDefinition(0, "name", FieldType.Boolean);
-            var fd0_1 = new FieldDefinition(0, "name", FieldType.Int);
-            var fd1 = new FieldDefinition(1, "name", FieldType.Boolean);
-            var fd2 = new FieldDefinition(0, "namex", FieldType.Boolean);
+            var fd0 = new FieldDefinition(0, "name", FieldType.Boolean, portableVersion);
+            var fd0_1 = new FieldDefinition(0, "name", FieldType.Int, portableVersion);
+            var fd1 = new FieldDefinition(1, "name", FieldType.Boolean, portableVersion);
+            var fd2 = new FieldDefinition(0, "namex", FieldType.Boolean, portableVersion);
             Assert.AreNotEqual(fd0, fd0_1);
             Assert.AreNotEqual(fd0, fd1);
             Assert.AreNotEqual(fd0, fd2);
@@ -153,8 +154,8 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var field0 = classDefinition.GetField(0);
             var field = classDefinition.GetField("f1");
-            var fd = new FieldDefinition(9, "name", FieldType.Portable, 5, 6);
-            var fd_nullName = new FieldDefinition(10, null, FieldType.Portable, 15, 16);
+            var fd = new FieldDefinition(9, "name", FieldType.Portable, 5, 6, 7);
+            var fd_nullName = new FieldDefinition(10, null, FieldType.Portable, 15, 16, 17);
             Assert.AreEqual(field, field0);
             Assert.AreEqual(0, field.GetFactoryId());
             Assert.AreEqual(0, field.GetClassId());
@@ -176,7 +177,7 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public virtual void TestFieldDef_toString()
         {
-            Assert.IsNotNull(new FieldDefinition(0, "name", FieldType.Boolean).ToString());
+            Assert.IsNotNull(new FieldDefinition(0, "name", FieldType.Boolean, portableVersion).ToString());
         }
     }
 }

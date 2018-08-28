@@ -84,9 +84,9 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestPreDefinedDifferentVersionsWithInnerPortable()
         {
             var serializationService = PortableSerializationTest.CreateSerializationService(1);
-            serializationService.GetPortableContext().RegisterClassDefinition(CreateInnerPortableClassDefinition());
+            serializationService.GetPortableContext().RegisterClassDefinition(CreateInnerPortableClassDefinition(1));
             var serializationService2 = PortableSerializationTest.CreateSerializationService(2);
-            serializationService2.GetPortableContext().RegisterClassDefinition(CreateInnerPortableClassDefinition());
+            serializationService2.GetPortableContext().RegisterClassDefinition(CreateInnerPortableClassDefinition(2));
             var nn = new NamedPortable[1];
             nn[0] = new NamedPortable("name", 123);
             var inner = new InnerPortable(new byte[] {0, 1, 2}, new[] {'c', 'h', 'a', 'r'}, new short[] {3, 4, 5},
@@ -103,19 +103,18 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public virtual void TestPreDefinedDifferentVersionsWithNullInnerPortable()
         {
-            var innerPortableClassDefinition = CreateInnerPortableClassDefinition();
             var serializationService = PortableSerializationTest.CreateSerializationService(1);
-            serializationService.GetPortableContext().RegisterClassDefinition(innerPortableClassDefinition);
+            serializationService.GetPortableContext().RegisterClassDefinition(CreateInnerPortableClassDefinition(1));
             var serializationService2 = PortableSerializationTest.CreateSerializationService(2);
-            serializationService2.GetPortableContext().RegisterClassDefinition(innerPortableClassDefinition);
+            serializationService2.GetPortableContext().RegisterClassDefinition(CreateInnerPortableClassDefinition(2));
             var mainWithNullInner = new MainPortable(unchecked(113), true, 'x', -500, 56789, -50992225L, 900.5678f,
                 -897543.3678909d, "this is main portable object created for testing!", null);
             TestPreDefinedDifferentVersions(serializationService, serializationService2, mainWithNullInner);
         }
 
-        internal static IClassDefinition CreateInnerPortableClassDefinition()
+        internal static IClassDefinition CreateInnerPortableClassDefinition(int portableVersion)
         {
-            var builder = new ClassDefinitionBuilder(FactoryId, TestSerializationConstants.INNER_PORTABLE);
+            var builder = new ClassDefinitionBuilder(FactoryId, TestSerializationConstants.INNER_PORTABLE, portableVersion);
             builder.AddByteArrayField("b");
             builder.AddCharArrayField("c");
             builder.AddShortArrayField("s");
@@ -123,7 +122,8 @@ namespace Hazelcast.Client.Test.Serialization
             builder.AddLongArrayField("l");
             builder.AddFloatArrayField("f");
             builder.AddDoubleArrayField("d");
-            builder.AddPortableArrayField("nn", PortableSerializationTest.CreateNamedPortableClassDefinition());
+            builder.AddPortableArrayField("nn", PortableSerializationTest.CreateNamedPortableClassDefinition(portableVersion));
+            
             return builder.Build();
         }
 
