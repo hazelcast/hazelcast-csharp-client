@@ -53,45 +53,51 @@ using Hazelcast.Util;
         public Task ScheduleWithCancellation(Action command, long delay, TimeUnit unit, CancellationToken token)
         {
             var tcs = new TaskCompletionSource<object>();
-            var continueTask = tcs.Task.ContinueWith(t =>
+            object timer = new Timer(o =>
             {
+                var _tcs = (TaskCompletionSource<object>) o;
+                if (token.IsCancellationRequested)
+                {
+                    _tcs.SetCanceled();
+                }
+                else
+                {
+                    _tcs.SetResult(null);
+                }
+            }, tcs, unit.ToMillis(delay), Timeout.Infinite);
+
+            var continueTask = tcs.Task.ContinueWith((t, timerObject) =>
+            {
+                var timerState = (Timer) timerObject;
+                timerState.Dispose();
                 if (!t.IsCanceled)
                 {
                     command();
                 }
-            }, token);
-            new Timer(o =>
-            {
-                if (token.IsCancellationRequested)
-                {
-                    tcs.SetCanceled();
-                }
-                else
-                {
-                    tcs.SetResult(null);
-                }
-            }, null, unit.ToMillis(delay), Timeout.Infinite);
+            }, timer, token);
             return continueTask;
         }
 
         public Task Schedule(Action command, long delay, TimeUnit unit)
         {
             var tcs = new TaskCompletionSource<object>();
-            var continueTask = tcs.Task.ContinueWith(t =>
+            object timer = new Timer(o =>
             {
+                var _tcs = (TaskCompletionSource<object>) o;
+                _tcs.SetResult(null);
+            }, tcs, unit.ToMillis(delay), Timeout.Infinite);
+
+            var continueTask = tcs.Task.ContinueWith((t, timerObject) =>
+            {
+                var timerState = (Timer) timerObject;
+                timerState.Dispose();
                 command();
-            });
-            new Timer(o => tcs.SetResult(null), null, unit.ToMillis(delay), Timeout.Infinite);
+            }, timer);
             return continueTask;
         }
 
         public void Shutdown()
         {
-        }
-
-        public Task<object> ScheduleAtFixedRate(Action command, long initialDelay, long period, TimeUnit unit)
-        {
-            throw new NotImplementedException();
         }
 
         internal Task SubmitInternal(Action action)

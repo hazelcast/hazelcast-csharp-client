@@ -26,10 +26,8 @@ using Hazelcast.Core;
     public interface IClientExecutionService
     {
         Task Schedule(Action command, long delay, TimeUnit unit);
-        Task ScheduleWithCancellation(Action command, long delay, TimeUnit unit,
-            CancellationToken token);
-        void ScheduleWithFixedDelay(Action command, long initialDelay, long period, TimeUnit unit, 
-            CancellationToken token);
+        Task ScheduleWithCancellation(Action command, long delay, TimeUnit unit, CancellationToken token);
+        void ScheduleWithFixedDelay(Action command, long initialDelay, long period, TimeUnit unit, CancellationToken token);
         void Shutdown();
         Task Submit(Action action);
         Task<T> Submit<T>(Func<T> function);
