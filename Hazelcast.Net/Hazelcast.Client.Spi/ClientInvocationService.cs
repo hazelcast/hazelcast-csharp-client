@@ -132,11 +132,10 @@ using Hazelcast.Util;
             return clientInvocation.Future;
         }
 
-        public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection,
-            bool bypassHeartbeat = false)
+        public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
         {
             var clientInvocation = new ClientInvocation(request, connection);
-            InvokeInternal(clientInvocation, null, connection, bypassHeartbeat);
+            InvokeInternal(clientInvocation, null, connection);
             return clientInvocation.Future;
         }
 
@@ -147,8 +146,7 @@ using Hazelcast.Util;
         }
 
         [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        private void InvokeInternal(ClientInvocation invocation, Address address = null,
-            ClientConnection connection = null, bool bypassHeartbeat = false)
+        private void InvokeInternal(ClientInvocation invocation, Address address = null, ClientConnection connection = null)
         {
             try
             {
@@ -183,7 +181,7 @@ using Hazelcast.Util;
                 }
                 //Sending Invocation via connection
                 UpdateInvocation(invocation, connection);
-                ValidateInvocation(invocation, connection, bypassHeartbeat);
+                ValidateInvocation(invocation, connection);
 
                 if (!TrySend(invocation, connection))
                 {
@@ -308,20 +306,13 @@ using Hazelcast.Util;
             }
         }
 
-        private void ValidateInvocation(ClientInvocation clientInvocation, ClientConnection connection,
-            bool bypassHeartbeat)
+        private void ValidateInvocation(ClientInvocation clientInvocation, ClientConnection connection)
         {
             if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.Member.GetUuid())
             {
                 throw new TargetNotMemberException(
                     "The member UUID on the invocation doesn't match the member UUID on the connection.");
             }
-
-            if (!connection.IsHeartBeating && !bypassHeartbeat)
-            {
-                throw new TargetDisconnectedException(connection.GetAddress() + " has stopped heartbeating.");
-            }
-
             if (_isShutDown)
             {
                 throw new HazelcastException("Client is shut down.");

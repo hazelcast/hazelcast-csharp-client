@@ -29,7 +29,7 @@ using Hazelcast.Util;
 #pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
-    internal class ClientListenerService : IClientListenerService, IConnectionListener, IConnectionHeartbeatListener, IDisposable
+    internal class ClientListenerService : IClientListenerService, IConnectionListener, IDisposable
     {
         private const int DefaultEventThreadCount = 3;
         private const int DefaultEventQueueCapacity = 1000000;
@@ -332,35 +332,11 @@ namespace Hazelcast.Client.Spi
             });
         }
 
-        public void HeartBeatResumed(ClientConnection connection)
-        {
-            //This method should not be called from registrationExecutor
-            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
-
-            SubmitToRegistrationScheduler(() =>
-            {
-                ICollection<ListenerRegistration> registrationKeys;
-                if (_failedRegistrations.TryGetValue(connection, out registrationKeys))
-                {
-                    foreach (var registrationKey in registrationKeys)
-                    {
-                        RegisterListenerFromInternal(registrationKey, connection);
-                    }
-                }
-            });
-        }
-
-        public void HeartBeatStopped(ClientConnection connection)
-        {
-            //no op
-        }
-
         public void Start()
         {
             _connectionManager.AddConnectionListener(this);
             if (IsSmart)
             {
-                _connectionManager.AddConnectionHeartBeatListener(this);
                 _connectionReopener = new Timer(ReOpenAllConnectionsIfNotOpen, null, 1000, 1000);
             }
         }

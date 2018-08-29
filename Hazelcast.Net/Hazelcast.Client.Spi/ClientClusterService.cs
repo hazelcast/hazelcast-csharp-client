@@ -25,7 +25,6 @@ using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
 using Hazelcast.Security;
@@ -40,7 +39,7 @@ namespace Hazelcast.Client.Spi
     ///     <see cref="Hazelcast.Client.Spi.ClientClusterService" />
     ///     implementation.
     /// </summary>
-    internal class ClientClusterService : IClientClusterService, IConnectionListener, IConnectionHeartbeatListener
+    internal class ClientClusterService : IClientClusterService, IConnectionListener
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientClusterService));
         private readonly HazelcastClient _client;
@@ -185,18 +184,6 @@ namespace Hazelcast.Client.Spi
             }
             IMembershipListener removed;
             return _listeners.TryRemove(registrationId, out removed);
-        }
-
-        public void HeartBeatResumed(ClientConnection connection)
-        {
-        }
-
-        public void HeartBeatStopped(ClientConnection connection)
-        {
-            if (connection.GetAddress().Equals(OwnerConnectionAddress))
-            {
-                _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(OwnerConnectionAddress));
-            }
         }
 
         public void ConnectionAdded(ClientConnection connection)
@@ -462,7 +449,6 @@ namespace Hazelcast.Client.Spi
         {
             _connectionManager = _client.GetConnectionManager();
             _clientMembershipListener = new ClientMembershipListener(_client);
-            _connectionManager.AddConnectionHeartBeatListener(this);
             _connectionManager.AddConnectionListener(this);
             _credentials = _client.GetClientConfig().GetCredentials();
         }
