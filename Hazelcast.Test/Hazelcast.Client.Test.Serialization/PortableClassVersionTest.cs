@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using NUnit.Framework;
 
@@ -130,40 +131,54 @@ namespace Hazelcast.Client.Test.Serialization
         internal static void TestDifferentClassVersions(ISerializationService serializationService,
             ISerializationService serializationService2)
         {
-            var p1 = new NamedPortable("named-portable", 123);
-            var data = serializationService.ToData(p1);
-            var p2 = new NamedPortableV2("named-portable", 123);
-            var data2 = serializationService2.ToData(p2);
-            Parallel.For(0, 100, i => {serializationService2.ToObject<NamedPortableV2>(data); });
-            var o1 = serializationService2.ToObject<NamedPortableV2>(data);
-            var o2 = serializationService.ToObject<NamedPortable>(data2);
-            Assert.AreEqual(o1.name, o2.name);
+            NamedPortable portableV1 = new NamedPortable("named-portable", 123);
+            IData dataV1 = serializationService.ToData(portableV1);
+
+            NamedPortableV2 portableV2 = new NamedPortableV2("named-portable", 123, 500);
+            IData dataV2 = serializationService2.ToData(portableV2);
+
+            NamedPortable v1FromV2 = serializationService.ToObject<NamedPortable>(dataV2);
+            Assert.AreEqual(portableV2.name, v1FromV2.name);
+            Assert.AreEqual(portableV2.k, v1FromV2.k);
+
+            NamedPortableV2 v2FromV1 = serializationService2.ToObject<NamedPortableV2>(dataV1);
+            Assert.AreEqual(portableV1.name, v2FromV1.name);
+            Assert.AreEqual(portableV1.k, v2FromV1.k);
+
+            Assert.AreEqual(v2FromV1.v, 0);
+            //Assert.IsNull(v2FromV1.v);
+
         }
 
         /// <exception cref="System.IO.IOException" />
         internal static void TestDifferentClassVersionsUsingDataWriteAndRead(ISerializationService serializationService,
             ISerializationService serializationService2)
         {
-            var p1 = new NamedPortable("portable-v1", 111);
-            var data = serializationService.ToData(p1);
+            NamedPortable portableV1 = new NamedPortable("portable-v1", 111);
+            IData dataV1 = serializationService.ToData(portableV1);
+
+
             // emulate socket write by writing data to stream
             var @out = serializationService.CreateObjectDataOutput(1024);
-            @out.WriteData(data);
+            @out.WriteData(dataV1);
             var bytes = @out.ToByteArray();
             // emulate socket read by reading data from stream
             var @in = serializationService2.CreateObjectDataInput(bytes);
-            data = @in.ReadData();
-            // read data
-            var object1 = serializationService2.ToObject<object>(data);
+            dataV1 = @in.ReadData();
+
             // serialize new portable version
-            var p2 = new NamedPortableV2("portable-v2", 123);
-            var data2 = serializationService2.ToData(p2);
-            // de-serialize back using old version
-            var object2 = serializationService.ToObject<object>(data2);
-            Assert.IsNotNull(object1, "object1 should not be null!");
-            Assert.IsNotNull(object2, "object2 should not be null!");
-            Assert.IsInstanceOf<NamedPortableV2>(object1, "Should be instance of NamedPortableV2: " + object1.GetType());
-            Assert.IsInstanceOf<NamedPortable>(object2, "Should be instance of NamedPortable: " + object2.GetType());
+            var portableV2 = new NamedPortableV2("portable-v2", 123, 500);
+            var dataV2 = serializationService2.ToData(portableV2);
+
+            NamedPortable v1FromV2 = serializationService.ToObject<NamedPortable>(dataV2);
+            Assert.AreEqual(portableV2.name, v1FromV2.name);
+            Assert.AreEqual(portableV2.k, v1FromV2.k);
+
+            NamedPortableV2 v2FromV1 = serializationService2.ToObject<NamedPortableV2>(dataV1);
+            Assert.AreEqual(portableV1.name, v2FromV1.name);
+            Assert.AreEqual(portableV1.k, v2FromV1.k);
+
+            Assert.AreEqual(v2FromV1.v, 0);
         }
 
         internal static void TestPreDefinedDifferentVersions(ISerializationService serializationService,

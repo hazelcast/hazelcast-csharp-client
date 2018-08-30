@@ -228,7 +228,7 @@ namespace Hazelcast.Client.Test.Serialization
             var serializationConfig = new SerializationConfig();
             serializationConfig.AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID,
                 new TestPortableFactory());
-            serializationConfig.SetPortableVersion(1);
+            serializationConfig.SetPortableVersion(portableVersion);
             serializationConfig
                 .AddClassDefinition(
                     new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID,
@@ -258,6 +258,7 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public void TestClassDefinitionConfigWithErrors()
         {
+            int portableVersion = 1;
             var serializationConfig = new SerializationConfig();
             serializationConfig.AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID,
                 new TestPortableFactory());
@@ -394,7 +395,7 @@ namespace Hazelcast.Client.Test.Serialization
                 .SetPortableVersion(5)
                 .Build();
 
-            IPortable p1 = new NamedPortableV2("test", 456);
+            IPortable p1 = new NamedPortableV2("test", 456, 500);
             object o1 = new DataDataSerializable(ss.ToData(p1));
 
             var data = ss.ToData(o1);
@@ -457,7 +458,7 @@ namespace Hazelcast.Client.Test.Serialization
                 .SetPortableVersion(5)
                 .Build();
 
-            var o1 = new ComplexDataSerializable(new NamedPortableV2("test", 123),
+            var o1 = new ComplexDataSerializable(new NamedPortableV2("test", 123, 500),
                 new ByteArrayDataSerializable(new byte[3]), null);
             var data = ss.ToData(o1);
 

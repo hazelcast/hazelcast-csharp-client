@@ -108,7 +108,7 @@ namespace Hazelcast.IO.Serialization
                             throw new ArgumentException("Unknown field: " + name);
                         }
                         currentClassDef = LookupClassDefinition(fd.GetFactoryId(), fd.GetClassId(),
-                            currentClassDef.GetVersion());
+                            fd.GetVersion());
                         if (currentClassDef == null)
                         {
                             throw new ArgumentException("Not a registered Portable field: " + fd);

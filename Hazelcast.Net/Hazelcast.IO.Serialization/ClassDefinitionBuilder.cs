@@ -43,7 +43,7 @@ namespace Hazelcast.IO.Serialization
         {
             _factoryId = factoryId;
             _classId = classId;
-            _version = -1;
+            _version = 0;
         }
 
         public ClassDefinitionBuilder(int factoryId, int classId, int version)
