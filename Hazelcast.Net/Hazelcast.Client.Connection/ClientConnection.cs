@@ -52,7 +52,6 @@ namespace Hazelcast.Client.Connection
 
         private readonly Socket _clientSocket;
         private readonly Stream _stream;
-        private volatile bool _isHeartBeating = true;
         private bool _isOwner;
         private volatile ISocketWritable _lastWritable;
         private readonly AtomicBoolean _live;
@@ -170,11 +169,8 @@ namespace Hazelcast.Client.Connection
 
         public DateTime LastRead { get; private set; }
 
-        public bool IsHeartBeating
-        {
-            get { return _isHeartBeating; }
-        }
-        
+        public DateTime LastWrite { get; private set; }
+       
         public long ConnectionStartTime
         {
             get { return _connectionStartTime; }
@@ -236,16 +232,6 @@ namespace Hazelcast.Client.Connection
             get { return _member; }
 
             set { _member = value; }
-        }
-
-        public void HeartbeatFailed()
-        {
-            _isHeartBeating = false;
-        }
-
-        public void HeartbeatSucceeded()
-        {
-            _isHeartBeating = true;
         }
 
         public override string ToString()
@@ -445,6 +431,7 @@ namespace Hazelcast.Client.Connection
                         try
                         {
                             _stream.Write(_sendBuffer.Array(), _sendBuffer.Position, _sendBuffer.Remaining());
+                            LastWrite = DateTime.Now;
                             _sendBuffer.Clear();
                         }
                         catch (Exception e)
