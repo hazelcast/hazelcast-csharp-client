@@ -17,7 +17,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
@@ -47,11 +46,8 @@ namespace Hazelcast.Client.Connection
 
         private readonly object _connectionMutex = new object();
         private readonly ICredentials _credentials;
-        private readonly int _heartbeatInterval = 5000;
-        private readonly int _heartbeatTimeout = 60000;
-
-        private readonly ConcurrentBag<IConnectionHeartbeatListener> _heatHeartbeatListeners =
-            new ConcurrentBag<IConnectionHeartbeatListener>();
+        private readonly TimeSpan _heartbeatTimeout;
+        private readonly TimeSpan _heartbeatInterval;
 
         private readonly ClientNetworkConfig _networkConfig;
 
@@ -83,10 +79,16 @@ namespace Hazelcast.Client.Connection
             }
             _socketInterceptor = null;
 
-            _heartbeatTimeout = EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.timeout") ??
-                                _heartbeatTimeout;
-            _heartbeatInterval = EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.interval") ??
-                                 _heartbeatInterval;
+            const int defaultHeartbeatInterval = 5000;
+            const int defaultHeartbeatTimeout = 60000;
+
+            var heartbeatTimeoutMillis =
+                EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.timeout") ?? defaultHeartbeatInterval;
+            var heartbeatIntervalMillis =
+                EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.interval") ?? defaultHeartbeatTimeout;
+            
+            _heartbeatTimeout = TimeSpan.FromMilliseconds(heartbeatTimeoutMillis);
+            _heartbeatInterval = TimeSpan.FromMilliseconds(heartbeatIntervalMillis);
         }
 
         public void Start()
@@ -99,8 +101,8 @@ namespace Hazelcast.Client.Connection
             //start Heartbeat
             _heartbeatToken = new CancellationTokenSource();
             _client.GetClientExecutionService().ScheduleWithFixedDelay(Heartbeat,
-                _heartbeatInterval,
-                _heartbeatInterval,
+                (long) _heartbeatInterval.TotalMilliseconds,
+                (long) _heartbeatInterval.TotalMilliseconds,
                 TimeUnit.Milliseconds,
                 _heartbeatToken.Token);
         }
@@ -153,11 +155,6 @@ namespace Hazelcast.Client.Connection
         public void AddConnectionListener(IConnectionListener connectionListener)
         {
             _connectionListeners.Add(connectionListener);
-        }
-
-        public void AddConnectionHeartBeatListener(IConnectionHeartbeatListener connectonHeartbeatListener)
-        {
-            _heatHeartbeatListeners.Add(connectonHeartbeatListener);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -330,50 +327,42 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private void FireHeartBeatEvent(Action<IConnectionHeartbeatListener> listenerAction)
-        {
-            foreach (var listener in _heatHeartbeatListeners)
-            {
-                listenerAction(listener);
-            }
-        }
-
         private void Heartbeat()
         {
             if (!_live.Get()) return;
 
+            var now = DateTime.Now;
             foreach (var connection in _activeConnections.Values)
             {
-                if (DateTime.Now - connection.LastRead > TimeSpan.FromMilliseconds(_heartbeatTimeout))
-                {
-                    // heartbeat timed out
-                    if (connection.IsHeartBeating)
-                    {
-                        Logger.Warning("Heartbeat failed to connection " + connection);
-                        connection.HeartbeatFailed();
-                        var local = connection;
-                        FireHeartBeatEvent(l => l.HeartBeatStopped(local));
-                    }
-                }
+                CheckConnection(now, connection);
+            }
+        }
 
-                if (DateTime.Now - connection.LastRead > TimeSpan.FromMilliseconds(_heartbeatInterval))
+        private void CheckConnection(DateTime now, ClientConnection connection)
+        {
+            if (!connection.Live)
+            {
+                return;
+            }
+
+            if (now - connection.LastRead > _heartbeatTimeout)
+            {
+                if (connection.Live)
                 {
-                    var request = ClientPingCodec.EncodeRequest();
+                    Logger.Warning("Heartbeat failed over the connection: " + connection);
+                    DestroyConnection(connection,
+                        new TargetDisconnectedException("Heartbeat timed out to connection " + connection));
+                }
+            }
+
+            if (now - connection.LastWrite > _heartbeatInterval)
+            {
+                if (Logger.IsFinestEnabled())
+                {
                     Logger.Finest("Sending heartbeat to " + connection);
-                    ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request,
-                        connection, true);
                 }
-                else
-                {
-                    // if heartbeat was failing for connection, restore the heartbeat
-                    if (!connection.IsHeartBeating)
-                    {
-                        Logger.Warning("Heartbeat is back to healthy for connection: " + connection);
-                        connection.HeartbeatSucceeded();
-                        var local = connection;
-                        FireHeartBeatEvent(l => l.HeartBeatResumed(local));
-                    }
-                }
+                var request = ClientPingCodec.EncodeRequest();
+                ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request, connection);
             }
         }
 

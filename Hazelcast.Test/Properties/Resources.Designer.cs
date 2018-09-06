@@ -52,6 +52,12 @@ namespace Hazelcast.Test {
             }
         }
         
+        internal static string hazelcast_hb {
+            get {
+                return ResourceManager.GetString("hazelcast_hb", resourceCulture);
+            }
+        }
+        
         internal static string hazelcast_config_full {
             get {
                 return ResourceManager.GetString("hazelcast_config_full", resourceCulture);

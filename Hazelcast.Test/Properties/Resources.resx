@@ -183,6 +183,51 @@
 
 &lt;/hazelcast&gt;</value>
   </data>
+  <data name="hazelcast_hb" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd"
+           xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+
+    &lt;properties&gt;
+        &lt;property name="hazelcast.client.max.no.heartbeat.seconds"&gt;8&lt;/property&gt;
+    &lt;/properties&gt;
+
+    &lt;group&gt;
+        &lt;name&gt;dev&lt;/name&gt;
+        &lt;password&gt;dev-pass&lt;/password&gt;
+    &lt;/group&gt;
+    &lt;management-center enabled="false"&gt;http://localhost:8080/mancenter&lt;/management-center&gt;
+    &lt;network&gt;
+        &lt;port auto-increment="true" port-count="100"&gt;5701&lt;/port&gt;
+        &lt;outbound-ports&gt;
+            &lt;!--
+            Allowed port range when connecting to other nodes.
+            0 or * means use system provided port.
+            --&gt;
+            &lt;ports&gt;0&lt;/ports&gt;
+        &lt;/outbound-ports&gt;
+        &lt;join&gt;
+            &lt;multicast enabled="true"&gt;
+                &lt;multicast-group&gt;224.7.7.7&lt;/multicast-group&gt;
+                &lt;multicast-port&gt;54327&lt;/multicast-port&gt;
+            &lt;/multicast&gt;
+            &lt;tcp-ip enabled="false"&gt;
+                &lt;interface&gt;127.0.0.1&lt;/interface&gt;
+            &lt;/tcp-ip&gt;
+        &lt;/join&gt;
+        &lt;public-address&gt;127.0.0.1&lt;/public-address&gt;
+        &lt;ssl enabled="false"/&gt;
+        &lt;socket-interceptor enabled="false"/&gt;
+    &lt;/network&gt;
+    &lt;serialization&gt;
+        &lt;data-serializable-factories&gt;
+            &lt;data-serializable-factory factory-id="66"&gt;com.hazelcast.client.test.IdentifiedFactory
+            &lt;/data-serializable-factory&gt;
+        &lt;/data-serializable-factories&gt;
+    &lt;/serialization&gt;
+&lt;/hazelcast&gt;</value>
+  </data>
   <data name="hazelcast_config_full" xml:space="preserve">
     <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;hazelcast-client xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.8.xsd"
