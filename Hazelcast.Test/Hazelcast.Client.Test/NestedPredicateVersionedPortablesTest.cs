@@ -74,12 +74,24 @@ namespace Hazelcast.Client.Test
             map.AddIndex("limb.name", true);
         }
         
-        /* TODO
+        
         [Test]
         public void singleAttributeQuery_versionedProtables_predicates()
         {
+            // GIVEN
+            map.Put(1, new Body("body1", new Limb("hand")));
+            map.Put(2, new Body("body2", new Limb("leg")));
 
-        }*/
+            // WHEN
+            IPredicate predicate = Predicates.Property("limb.name").Equal("hand");
+            ICollection<Body> values = map.Values(predicate);
+
+            //THEN
+            Assert.AreEqual(1, values.Count);
+            Body[] bt = new Body[1];
+            values.CopyTo(bt, 0);
+            Assert.AreEqual("body1", bt[0].getName());
+        }
 
         [Test]
         public void nestedAttributeQuery_distributedSql()

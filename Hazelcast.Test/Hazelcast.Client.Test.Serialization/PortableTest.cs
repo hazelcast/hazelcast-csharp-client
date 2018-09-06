@@ -20,7 +20,7 @@ namespace Hazelcast.Client.Test.Serialization
 {
     internal class PortableTest
     {
-        // Test for issue https://github.com/hazelcast/hazelcast/issues/12733
+
         [Test]
         public virtual void TestNestedPortableVersionedSerializer()
         {
