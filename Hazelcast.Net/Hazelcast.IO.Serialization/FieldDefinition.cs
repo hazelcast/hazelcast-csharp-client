@@ -23,23 +23,25 @@ namespace Hazelcast.IO.Serialization
         private readonly string _fieldName;
         private readonly int _index;
         private readonly FieldType _type;
+        private readonly int _version;
 
         internal FieldDefinition()
         {
         }
 
-        internal FieldDefinition(int index, string fieldName, FieldType type)
-            : this(index, fieldName, type, 0, 0)
+        internal FieldDefinition(int index, string fieldName, FieldType type, int version)
+            : this(index, fieldName, type, 0, 0, version)
         {
         }
 
-        internal FieldDefinition(int index, string fieldName, FieldType type, int factoryId, int classId)
+        internal FieldDefinition(int index, string fieldName, FieldType type, int factoryId, int classId, int version)
         {
             _classId = classId;
             _type = type;
             _fieldName = fieldName;
             _index = index;
             _factoryId = factoryId;
+            _version = version;
         }
 
         public virtual FieldType GetFieldType()
@@ -67,6 +69,11 @@ namespace Hazelcast.IO.Serialization
             return _classId;
         }
 
+        public virtual int GetVersion()
+        {
+            return _version;
+        }
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -84,6 +91,7 @@ namespace Hazelcast.IO.Serialization
                 hashCode = (hashCode*397) ^ (_fieldName != null ? _fieldName.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ _index;
                 hashCode = (hashCode*397) ^ (int) _type;
+                hashCode = (hashCode*397) ^ _version;
                 return hashCode;
             }
         }
@@ -96,6 +104,7 @@ namespace Hazelcast.IO.Serialization
             sb.Append(", type=").Append(_type);
             sb.Append(", classId=").Append(_classId);
             sb.Append(", factoryId=").Append(_factoryId);
+            sb.Append(", version=").Append(_version);
             sb.Append('}');
             return sb.ToString();
         }
@@ -104,7 +113,8 @@ namespace Hazelcast.IO.Serialization
         {
             return _classId == other._classId && _factoryId == other._factoryId &&
                    string.Equals(_fieldName, other._fieldName) &&
-                   _index == other._index && _type == other._type;
+                   _index == other._index && _type == other._type &&
+                   _version == other._version;
         }
 
         internal virtual bool IsPortable()

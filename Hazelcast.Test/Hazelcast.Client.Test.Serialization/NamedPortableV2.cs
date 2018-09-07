@@ -18,13 +18,13 @@ namespace Hazelcast.Client.Test.Serialization
 {
     internal class NamedPortableV2 : NamedPortable, IVersionedPortable
     {
-        private int v;
+        public int v;
 
         public NamedPortableV2()
         {
         }
 
-        public NamedPortableV2(string name, int v) : base(name, v*10)
+        public NamedPortableV2(string name, int k, int v) : base(name, k)
         {
             this.v = v;
         }
@@ -39,7 +39,10 @@ namespace Hazelcast.Client.Test.Serialization
         public override void ReadPortable(IPortableReader reader)
         {
             base.ReadPortable(reader);
-            v = reader.ReadInt("v");
+            if (reader.HasField("v"))
+            {
+                v = reader.ReadInt("v");
+            }
         }
 
         public int GetClassVersion()

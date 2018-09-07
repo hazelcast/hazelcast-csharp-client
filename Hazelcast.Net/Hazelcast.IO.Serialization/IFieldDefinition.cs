@@ -31,5 +31,8 @@ namespace Hazelcast.IO.Serialization
 
         /// <returns>field name</returns>
         string GetName();
+
+        /// <returns>field version</returns>
+        int GetVersion();
     }
 }

@@ -108,7 +108,7 @@ namespace Hazelcast.IO.Serialization
                             throw new ArgumentException("Unknown field: " + name);
                         }
                         currentClassDef = LookupClassDefinition(fd.GetFactoryId(), fd.GetClassId(),
-                            currentClassDef.GetVersion());
+                            fd.GetVersion());
                         if (currentClassDef == null)
                         {
                             throw new ArgumentException("Not a registered Portable field: " + fd);
@@ -159,6 +159,7 @@ namespace Hazelcast.IO.Serialization
                 var name = new string(chars);
                 var fieldFactoryId = 0;
                 var fieldClassId = 0;
+                int fieldVersion = version;
                 if (type == FieldType.Portable)
                 {
                     // is null
@@ -170,7 +171,7 @@ namespace Hazelcast.IO.Serialization
                     fieldClassId = @in.ReadInt();
                     if (register)
                     {
-                        var fieldVersion = @in.ReadInt();
+                        fieldVersion = @in.ReadInt();
                         ReadClassDefinition(@in, fieldFactoryId, fieldClassId, fieldVersion);
                     }
                 }
@@ -185,7 +186,7 @@ namespace Hazelcast.IO.Serialization
                         {
                             var p = @in.ReadInt();
                             @in.Position(p);
-                            var fieldVersion = @in.ReadInt();
+                            fieldVersion = @in.ReadInt();
                             ReadClassDefinition(@in, fieldFactoryId, fieldClassId, fieldVersion);
                         }
                         else
@@ -194,7 +195,7 @@ namespace Hazelcast.IO.Serialization
                         }
                     }
                 }
-                builder.AddField(new FieldDefinition(i, name, type, fieldFactoryId, fieldClassId));
+                builder.AddField(new FieldDefinition(i, name, type, fieldFactoryId, fieldClassId, fieldVersion));
             }
             var classDefinition = builder.Build();
             if (register)
