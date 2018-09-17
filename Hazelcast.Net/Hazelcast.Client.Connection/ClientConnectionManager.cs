@@ -83,9 +83,9 @@ namespace Hazelcast.Client.Connection
             const int defaultHeartbeatTimeout = 60000;
 
             var heartbeatTimeoutMillis =
-                EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.timeout") ?? defaultHeartbeatInterval;
+                EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.timeout") ?? defaultHeartbeatTimeout;
             var heartbeatIntervalMillis =
-                EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.interval") ?? defaultHeartbeatTimeout;
+                EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.interval") ?? defaultHeartbeatInterval;
             
             _heartbeatTimeout = TimeSpan.FromMilliseconds(heartbeatTimeoutMillis);
             _heartbeatInterval = TimeSpan.FromMilliseconds(heartbeatIntervalMillis);
