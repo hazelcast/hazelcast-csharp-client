@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Test
             GC.WaitForPendingFinalizers();
             foreach (var exceptionEventArg in _unobservedExceptions)
             {
-                Assert.Fail("UnobservedTaskException occured. {0}", exceptionEventArg.Exception.StackTrace);
+                Assert.Fail("UnobservedTaskException occured. {0}", exceptionEventArg.Exception.Flatten().InnerException.StackTrace);
             }
         }
 

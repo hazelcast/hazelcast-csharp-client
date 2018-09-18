@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Connection
             new ConcurrentBag<IConnectionListener>();
 
         private readonly object _connectionMutex = new object();
-        private readonly ICredentials _credentials;
+        private ICredentialsFactory _credentialsFactory;
         private readonly TimeSpan _heartbeatTimeout;
         private readonly TimeSpan _heartbeatInterval;
 
@@ -68,7 +68,6 @@ namespace Hazelcast.Client.Connection
             _networkConfig = config.GetNetworkConfig();
 
             config.GetNetworkConfig().IsRedoOperation();
-            _credentials = config.GetCredentials();
 
             //init socketInterceptor
             var sic = config.GetNetworkConfig().GetSocketInterceptorConfig();
@@ -97,6 +96,7 @@ namespace Hazelcast.Client.Connection
             {
                 return;
             }
+            _credentialsFactory = _client.GetCredentialsFactory();
             
             //start Heartbeat
             _heartbeatToken = new CancellationTokenSource();
@@ -142,6 +142,10 @@ namespace Hazelcast.Client.Connection
             }
         }
 
+        public ICredentials LastCredentials { get; set; }
+        
+        public ClientPrincipal ClientPrincipal { get; set; }
+
         public bool Live
         {
             get { return _live.Get(); }
@@ -158,7 +162,7 @@ namespace Hazelcast.Client.Connection
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public ClientConnection GetOrConnect(Address address, Authenticator authenticator)
+        public ClientConnection GetOrConnect(Address address, bool isOwner)
         {
             if (address == null)
             {
@@ -169,22 +173,25 @@ namespace Hazelcast.Client.Connection
                 ClientConnection connection;
                 if (!_activeConnections.ContainsKey(address))
                 {
-                    connection = InitializeConnection(address, authenticator);
+                    connection = InitializeConnection(address, isOwner);
                     FireConnectionListenerEvent(f => f.ConnectionAdded(connection));
                     _activeConnections.TryAdd(connection.GetAddress(), connection);
                     Logger.Finest("Active list of connections: " + string.Join(", ", _activeConnections.Values));
                 }
                 else
-                    connection = _activeConnections[address];
-
-                if (connection == null)
                 {
-                    Logger.Severe("CONNECTION Cannot be NULL here");
+                    connection = _activeConnections[address];
+                    // promote connection to owner if not already
+                    if (!connection.IsOwner())
+                    {
+                        Logger.Finest("Promoting connection " + connection + " to owner.");
+                        PromoteToOwner(connection);
+                    }
                 }
                 return connection;
             }
         }
-
+        
         /// <summary>
         /// Gets an existing connection for the given address
         /// </summary>
@@ -194,16 +201,6 @@ namespace Hazelcast.Client.Connection
         {
             ClientConnection connection;
             return _activeConnections.TryGetValue(address, out connection) ? connection : null;
-        }
-
-        /// <summary>
-        /// Gets the connection for the address. If there is no connection, a new one will be created
-        /// </summary>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        public ClientConnection GetOrConnect(Address target)
-        {
-            return GetOrConnect(target, ClusterAuthenticator);
         }
 
         public void DestroyConnection(ClientConnection connection, Exception cause)
@@ -239,7 +236,7 @@ namespace Hazelcast.Client.Connection
             {
                 if (!_pendingConnections.ContainsKey(address))
                 {
-                    var task = _client.GetClientExecutionService().Submit(() => GetOrConnect(address));
+                    var task = _client.GetClientExecutionService().Submit(() => GetOrConnect(address, isOwner:false));
                     task.ContinueWith(t =>
                     {
                         if (t.IsFaulted)
@@ -269,54 +266,84 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private void ClusterAuthenticator(ClientConnection connection)
+        private void Authenticate(ClientConnection connection, bool isOwnerConnection)
         {
-            var ss = _client.GetSerializationService();
-            var clusterService = (ClientClusterService) _client.GetClientClusterService();
-            var principal = clusterService.GetPrincipal();
-
-            var uuid = principal.GetUuid();
-            var ownerUuid = principal.GetOwnerUuid();
-            ClientMessage request;
-
-            var usernamePasswordCr = _credentials as UsernamePasswordCredentials;
-            if (usernamePasswordCr != null)
+            if (Logger.IsFinestEnabled())
             {
-                request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.GetUsername(),
-                    usernamePasswordCr.GetPassword(), uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
+                Logger.Finest(string.Format("Authenticating against the {0} node", isOwnerConnection?"owner":"non-owner"));
+            }
+            string uuid = null;
+            string ownerUuid = null;
+            if (ClientPrincipal != null)
+            {
+                uuid = ClientPrincipal.GetUuid();
+                ownerUuid = ClientPrincipal.GetOwnerUuid();
+            }
+
+            var ss = _client.GetSerializationService();
+            ClientMessage request;
+            var credentials = _credentialsFactory.NewCredentials();
+            LastCredentials = credentials;
+            if (credentials.GetType() == typeof(UsernamePasswordCredentials))
+            {
+                var usernamePasswordCr = (UsernamePasswordCredentials) credentials;
+                request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.Username, usernamePasswordCr.Password, uuid,
+                    ownerUuid, isOwnerConnection, ClientTypes.Csharp, ss.GetVersion(), VersionUtil.GetDllVersion());
             }
             else
             {
-                var data = ss.ToData(_credentials);
-                request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, false,
-                    ClientTypes.Csharp, _client.GetSerializationService().GetVersion(), VersionUtil.GetDllVersion());
+                var data = ss.ToData(credentials);
+                request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, isOwnerConnection,
+                    ClientTypes.Csharp, ss.GetVersion(), VersionUtil.GetDllVersion());
             }
 
             IClientMessage response;
             try
             {
-                var future = ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request,
-                    connection);
-                response = ThreadUtil.GetResult(future);
+                var invocationService = (ClientInvocationService) _client.GetInvocationService();
+                response = ThreadUtil.GetResult(invocationService.InvokeOnConnection(request, connection), _heartbeatTimeout);
             }
             catch (Exception e)
             {
-                throw ExceptionUtil.Rethrow(e);
+                var ue = ExceptionUtil.Rethrow(e);
+                Logger.Finest("Member returned an exception during authentication.", ue);
+                throw ue;
             }
-            var rp = ClientAuthenticationCodec.DecodeResponse(response);
+            var result = ClientAuthenticationCodec.DecodeResponse(response);
 
-            if (rp.address == null)
+            if (result.address == null)
             {
                 throw new HazelcastException("Could not resolve address for member.");
             }
-
-            var member = _client.GetClientClusterService().GetMember(rp.address);
-            if (member == null)
+            switch (result.status)
             {
-                throw new HazelcastException("Node with address '" + rp.address + "' was not found in the member list");
-            }
-            connection.Member = member;
+                case AuthenticationStatus.Authenticated:
+                    if (isOwnerConnection)
+                    {
+                        var member = new Member(result.address, result.ownerUuid);
+                        ClientPrincipal = new ClientPrincipal(result.uuid, result.ownerUuid);
+                        connection.Member = member;
+                        connection.SetOwner();
+                        connection.ConnectedServerVersionStr = result.serverHazelcastVersion;
+                    }
+                    else
+                    {
+                        var member = _client.GetClientClusterService().GetMember(result.address);
+                        if (member == null)
+                        {
+                            throw new HazelcastException(string.Format("Node with address '{0}' was not found in the member list",
+                                result.address));
+                        }
+                        connection.Member = member;
+                    }
+                    break;
+                case AuthenticationStatus.CredentialsFailed:
+                    throw new AuthenticationException("Invalid credentials! Principal: " + ClientPrincipal);
+                case AuthenticationStatus.SerializationVersionMismatch:
+                    throw new InvalidOperationException("Server serialization version does not match to client");
+                default:
+                    throw new AuthenticationException("Authentication status code not supported. status: " + result.status);
+            }           
         }
 
         private void FireConnectionListenerEvent(Action<IConnectionListener> listenerAction)
@@ -366,7 +393,7 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        private ClientConnection InitializeConnection(Address address, Authenticator authenticator)
+        private ClientConnection InitializeConnection(Address address, bool isOwner)
         {
             CheckLive();
             ClientConnection connection = null;
@@ -381,7 +408,7 @@ namespace Hazelcast.Client.Connection
                 connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(), id, address, _networkConfig);
 
                 connection.Init(_socketInterceptor);
-                authenticator(connection);
+                Authenticate(connection, isOwner);
                 Interlocked.Increment(ref _nextConnectionId);
                 Logger.Finest("Authenticated to " + connection);
                 return connection;
@@ -397,9 +424,18 @@ namespace Hazelcast.Client.Connection
                 {
                     connection.Close();
                 }
-                throw ExceptionUtil.Rethrow(e, typeof (IOException), typeof (SocketException),
+                throw ExceptionUtil.Rethrow(e, typeof (IOException), typeof (SocketException), 
                     typeof (TargetDisconnectedException));
             }
+        }
+        
+        private void PromoteToOwner(ClientConnection connection)
+        {
+            if (Logger.IsFinestEnabled())
+            {
+                Logger.Finest("Promoting a non-owner connection to owner connection!");
+            }
+            Authenticate(connection, true);
         }
     }
 }

@@ -109,6 +109,7 @@ namespace Hazelcast.Client.Test
         }
         
         [Test]
+        [Category("3.10")]
         public void TestNegativePermitsJucCompatibility()
         {
             semaphore.Init(0);

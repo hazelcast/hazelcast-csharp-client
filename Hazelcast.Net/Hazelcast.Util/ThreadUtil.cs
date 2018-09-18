@@ -41,6 +41,11 @@ namespace Hazelcast.Util
             return future.GetResult(timeout);
         }
 
+        public static IClientMessage GetResult(IFuture<IClientMessage> future, TimeSpan timeout)
+        {
+            return future.GetResult((int) timeout.TotalMilliseconds);
+        }
+
         public static IClientMessage GetResult(Task<IClientMessage> task)
         {
             return GetResult(task, Timeout.Infinite);

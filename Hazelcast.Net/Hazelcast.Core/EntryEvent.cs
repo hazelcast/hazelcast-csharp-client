@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Core

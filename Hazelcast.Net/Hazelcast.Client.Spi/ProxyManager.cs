@@ -25,7 +25,6 @@ using Hazelcast.Client.Proxy;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 

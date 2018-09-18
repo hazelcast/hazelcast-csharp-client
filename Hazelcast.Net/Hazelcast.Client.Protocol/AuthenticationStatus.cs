@@ -12,26 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace Hazelcast.IO.Serialization
+namespace Hazelcast.Client.Protocol
 {
-    internal class ArrayDataSerializableFactory : IDataSerializableFactory
+    /// <summary>
+    /// Status codes of authentication results
+    /// </summary>
+    internal enum AuthenticationStatus
     {
-        private readonly Func<IIdentifiedDataSerializable>[] _consturctors;
+        Authenticated = 0,
+        CredentialsFailed= 1,
+        SerializationVersionMismatch = 2
 
-        public ArrayDataSerializableFactory(Func<IIdentifiedDataSerializable>[] consturctors)
-        {
-            _consturctors = consturctors;
-        }
-
-        public IIdentifiedDataSerializable Create(int typeId)
-        {
-            if (typeId < 0 && typeId >= _consturctors.Length)
-            {
-                return null;
-            }
-            return _consturctors[typeId]();
-        }
     }
 }

@@ -36,10 +36,7 @@ namespace Hazelcast.Client.Connection
     /// <summary>Holds the clientSocket to one of the members of Hazelcast ICluster. SSL encription is used if configured.</summary>
     internal sealed class ClientConnection
     {
-        public const int BufferSize = 1 << 15; //32k
-        public const int SocketReceiveBufferSize = 1 << 15; //32k
-        public const int SocketSendBufferSize = 1 << 15; //32k
-
+        private const int BufferSize = 1 << 17; //128k
         private const int ConnectionTimeout = 30000;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientConnection));
 

@@ -24,6 +24,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
+    [Category("3.9")]
     public class ClientStatisticsTest : SingleMemberBaseTest
     {
         [TearDown]

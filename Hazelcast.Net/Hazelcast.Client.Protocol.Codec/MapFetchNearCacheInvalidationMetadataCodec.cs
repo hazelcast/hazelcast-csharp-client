@@ -14,11 +14,8 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
-using Hazelcast.Logging;
-using Hazelcast.IO.Serialization;
 
 // Client Protocol version, Since:1.4 - Update:1.4
 namespace Hazelcast.Client.Protocol.Codec

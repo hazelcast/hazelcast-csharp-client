@@ -37,7 +37,7 @@ using Hazelcast.Util;
         private readonly HazelcastClient _client;
         private readonly ConcurrentDictionary<int, Address> _partitions = new ConcurrentDictionary<int, Address>();
         private readonly AtomicBoolean _updating = new AtomicBoolean(false);
-        private volatile bool _isLive;
+        private readonly AtomicBoolean _live = new AtomicBoolean(false);
         private volatile int _partitionCount;
         private CancellationTokenSource _partitionUpdaterToken;
 
@@ -75,7 +75,10 @@ using Hazelcast.Util;
 
         public void Start()
         {
-            _isLive = true;
+            if (!_live.CompareAndSet(false, true))
+            {
+                return;
+            }
             _partitionUpdaterToken = new CancellationTokenSource();
             _client.GetClientExecutionService().ScheduleWithFixedDelay(() => GetPartitions(),
                 0, PartitionRefreshPeriod, TimeUnit.Milliseconds, _partitionUpdaterToken.Token);
@@ -83,16 +86,19 @@ using Hazelcast.Util;
 
         public void Stop()
         {
+            if (!_live.CompareAndSet(true, false))
+            {
+                return;
+            }
             try
             {
-                _isLive = false;
                 try
                 {
                     _partitionUpdaterToken.Cancel();
                 }
                 finally
                 {
-                    _partitionUpdaterToken.Dispose();                    
+                    _partitionUpdaterToken.Dispose();
                 }
             }
             catch (Exception e)
@@ -115,7 +121,7 @@ using Hazelcast.Util;
 
         private bool GetPartitions()
         {
-            if (_isLive && _updating.CompareAndSet(false, true))
+            if (_live.Get() && _updating.CompareAndSet(false, true))
             {
                 try
                 {
@@ -154,7 +160,7 @@ using Hazelcast.Util;
 
         private void GetPartitionsBlocking()
         {
-            while (!GetPartitions() && _isLive)
+            while (!GetPartitions() && _live.Get())
             {
                 Thread.Sleep(PartitionRefreshPeriod);
             }
