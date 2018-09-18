@@ -17,7 +17,6 @@ using System.IO;
 using System.Xml;
 using Hazelcast.Client.Properties;
 using Hazelcast.Logging;
-using Hazelcast.Security;
 using Hazelcast.Util;
 
 namespace Hazelcast.Config
@@ -233,27 +232,6 @@ namespace Hazelcast.Config
             }
         }
 
-        private void HandleLoginCredentials(XmlNode node)
-        {
-            var credentials = new UsernamePasswordCredentials();
-            foreach (XmlNode child in node.ChildNodes)
-            {
-                var nodeName = CleanNodeName(child.Name);
-                if ("username".Equals(nodeName))
-                {
-                    credentials.SetUsername(GetTextContent(child));
-                }
-                else
-                {
-                    if ("password".Equals(nodeName))
-                    {
-                        credentials.SetPassword(GetTextContent(child));
-                    }
-                }
-            }
-            _clientConfig.SetCredentials(credentials);
-        }
-
         private void HandleNearCache(XmlNode node)
         {
             var name = node.Attributes.GetNamedItem("name").Value;
@@ -353,12 +331,34 @@ namespace Hazelcast.Config
         /// <exception cref="System.Exception"></exception>
         private void HandleSecurity(XmlNode node)
         {
+            var clientSecurityConfig = new ClientSecurityConfig();
             foreach (XmlNode child in node.ChildNodes)
             {
-                var nodeName = CleanNodeName(child.Name);
-                if ("login-credentials".Equals(nodeName))
+                var nodeName = CleanNodeName(child);
+                if ("credentials".Equals(nodeName))
                 {
-                    HandleLoginCredentials(child);
+                    var className = GetTextContent(child);
+                    clientSecurityConfig.SetCredentialsClassName(className);
+                }
+                else if ("credentials-factory".Equals(nodeName))
+                {
+                    HandleCredentialsFactory(child, clientSecurityConfig);
+                }
+            }
+            _clientConfig.SetSecurityConfig(clientSecurityConfig);
+        }
+
+        private void HandleCredentialsFactory(XmlNode node, ClientSecurityConfig clientSecurityConfig)
+        {
+            var className = GetAttribute(node, "class-name");
+            var credentialsFactoryConfig = new CredentialsFactoryConfig(className);
+            clientSecurityConfig.SetCredentialsFactoryConfig(credentialsFactoryConfig);
+            foreach (XmlNode child in node.ChildNodes) {
+                var nodeName = CleanNodeName(child.Name);
+                if ("properties".Equals(nodeName))
+                {
+                    FillProperties(child, credentialsFactoryConfig.GetProperties());
+                    break;
                 }
             }
         }

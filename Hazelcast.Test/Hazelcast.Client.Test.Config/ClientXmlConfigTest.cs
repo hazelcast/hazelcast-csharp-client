@@ -111,12 +111,16 @@ namespace Hazelcast.Client.Test.Config
         [Test]
         public void TestSecurity()
         {
-            Assert.That(_clientConfig.GetCredentials(), Is.InstanceOf(typeof (UsernamePasswordCredentials)));
+            var credentialsClassName = _clientConfig.GetSecurityConfig().GetCredentialsClassName();
+            var factoryClassName = _clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig().GetClassName();
+            var properties = _clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig().GetProperties();
+            
+            Assert.That(credentialsClassName, Is.EqualTo("Hazelcast.Security.UsernamePasswordCredentials"));
+            Assert.That(factoryClassName, Is.EqualTo("Hazelcast.Security.DefaultCredentialsFactory"));
 
-            var credentials = (UsernamePasswordCredentials) _clientConfig.GetCredentials();
-
-            Assert.That(credentials.GetUsername(), Is.EqualTo("dev-user"));
-            Assert.That(credentials.GetPassword(), Is.EqualTo("pass123"));
+            Assert.That(properties.Count, Is.EqualTo(2));
+            Assert.That(properties["username"], Is.EqualTo("dev-user"));
+            Assert.That(properties["password"], Is.EqualTo("pass123"));
         }
 
         [Test]

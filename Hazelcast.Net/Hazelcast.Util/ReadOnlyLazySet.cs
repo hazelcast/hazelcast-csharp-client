@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Hazelcast.IO.Serialization;
@@ -74,73 +75,73 @@ namespace Hazelcast.Util
         public bool SetEquals(IEnumerable<T> other)
         {
             //TODO set equal implementation 
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         //Not supported methods to make it readonly
         public void Add(T item)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public void ExceptWith(IEnumerable<T> other)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public void IntersectWith(IEnumerable<T> other)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public bool IsProperSubsetOf(IEnumerable<T> other)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public bool IsProperSupersetOf(IEnumerable<T> other)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public bool IsSubsetOf(IEnumerable<T> other)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public bool IsSupersetOf(IEnumerable<T> other)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public bool Overlaps(IEnumerable<T> other)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public void SymmetricExceptWith(IEnumerable<T> other)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public void UnionWith(IEnumerable<T> other)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         bool ISet<T>.Add(T item)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
         public void Clear()
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
         
         public bool Remove(T item)
         {
-            throw new System.NotSupportedException("Readonly Set");
+            throw new NotSupportedException("Readonly Set");
         }
 
     }

@@ -216,7 +216,7 @@ namespace Hazelcast.Client
             AddStat(stats, "clientAddress", ownerConnection.GetLocalSocketAddress());
             AddStat(stats, "clientName", _client.GetName());
 
-            var credentials = _client.GetClientConfig().GetCredentials();
+            var credentials = _client.GetConnectionManager().LastCredentials;
             AddStat(stats, "credentials.principal", credentials.GetPrincipal());
 
             foreach (var pair in _gauges)

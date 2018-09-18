@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
 using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Config

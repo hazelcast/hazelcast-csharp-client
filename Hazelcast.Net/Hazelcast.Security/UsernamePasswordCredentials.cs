@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 
 namespace Hazelcast.Security
 {
@@ -24,42 +23,39 @@ namespace Hazelcast.Security
     ///     username and password as security attributes.
     /// </summary>
     [Serializable]
-    internal class UsernamePasswordCredentials : AbstractCredentials
+    public class UsernamePasswordCredentials : AbstractCredentials
     {
-        private byte[] _password;
-
-        public UsernamePasswordCredentials()
-        {
-        }
-
+        public UsernamePasswordCredentials() : this("", "") {}
+        
         public UsernamePasswordCredentials(string username, string password) : base(username)
         {
-            _password = Encoding.UTF8.GetBytes(password);
+            Password = password;
         }
 
-        public virtual string GetPassword()
+        /// <summary>
+        /// Username property, act as the principal value of the ICredential interface
+        /// </summary>
+        public string Username
         {
-            return _password == null ? string.Empty : Encoding.UTF8.GetString(_password);
+            get
+            {
+                return GetPrincipal(); 
+            }
+            set
+            {
+                SetPrincipal(value);
+            }
         }
 
-        public virtual string GetUsername()
-        {
-            return GetPrincipal();
-        }
+        /// <summary>
+        /// Password principal
+        /// </summary>
+        public string Password { get; set; }
 
-        public virtual void SetPassword(string password)
-        {
-            _password = Encoding.UTF8.GetBytes(password);
-        }
-
-        public virtual void SetUsername(string username)
-        {
-            SetPrincipal(username);
-        }
-
+        /// <inheritdoc />
         public override string ToString()
         {
-            return "UsernamePasswordCredentials [username=" + GetUsername() + "]";
+            return "UsernamePasswordCredentials [username=" + Username + "]";
         }
     }
 }

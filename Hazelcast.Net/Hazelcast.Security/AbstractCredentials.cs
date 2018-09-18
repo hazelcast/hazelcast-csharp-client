@@ -21,7 +21,7 @@ namespace Hazelcast.Security
     ///     <see cref="ICredentials">ICredentials</see>
     /// </summary>
     [Serializable]
-    internal abstract class AbstractCredentials : ICredentials
+    public abstract class AbstractCredentials : ICredentials
     {
         private string _endpoint;
         private string _principal;

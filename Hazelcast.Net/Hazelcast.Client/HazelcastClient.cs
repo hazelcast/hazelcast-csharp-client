@@ -16,7 +16,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Hazelcast.Client.Connection;
-using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Proxy;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
@@ -25,6 +24,7 @@ using Hazelcast.IO.Serialization;
 using Hazelcast.NearCache;
 using Hazelcast.Net.Ext;
 using Hazelcast.Partition.Strategy;
+using Hazelcast.Security;
 using Hazelcast.Transaction;
 using Hazelcast.Util;
 
@@ -67,6 +67,7 @@ namespace Hazelcast.Client
         private readonly ClientLockReferenceIdGenerator _lockReferenceIdGenerator;
         private readonly Statistics _statistics;
         private readonly NearCacheManager _nearCacheManager;
+        private readonly ICredentialsFactory _credentialsFactory;
         
         private HazelcastClient(ClientConfig config)
         {
@@ -105,6 +106,7 @@ namespace Hazelcast.Client
             _lockReferenceIdGenerator = new ClientLockReferenceIdGenerator();
             _statistics = new Statistics(this);
             _nearCacheManager = new NearCacheManager(this);
+            _credentialsFactory = InitCredentialsFactory(config);
         }
 
         /// <inheritdoc />
@@ -386,6 +388,7 @@ namespace Hazelcast.Client
             _nearCacheManager.Shutdown();
             _listenerService.Dispose();
             _serializationService.Destroy();
+            _credentialsFactory.Destroy();
         }
 
         internal IClientClusterService GetClientClusterService()
@@ -442,6 +445,11 @@ namespace Hazelcast.Client
         {
             return _statistics;
         }
+        
+        internal ICredentialsFactory GetCredentialsFactory()
+        {
+            return _credentialsFactory;
+        }
 
         private ClientInvocationService CreateInvocationService()
         {
@@ -471,6 +479,57 @@ namespace Hazelcast.Client
                 _lifecycleService.Shutdown();
                 throw;
             }
+        }
+
+
+        private ICredentialsFactory InitCredentialsFactory(ClientConfig config)
+        {
+            var securityConfig = config.GetSecurityConfig();
+            ValidateSecurityConfig(securityConfig);
+            var c = GetCredentialsFromFactory(config);
+            if (c == null) {
+                return new DefaultCredentialsFactory(securityConfig, config.GetGroupConfig());
+            }
+            return c;
+        }
+        
+        private void ValidateSecurityConfig(ClientSecurityConfig securityConfig)
+        {
+            var configuredViaCredentials = securityConfig.GetCredentials() != null
+                                               || securityConfig.GetCredentialsClassName() != null;
+
+            var factoryConfig = securityConfig.GetCredentialsFactoryConfig();
+            var configuredViaCredentialsFactory = factoryConfig.GetClassName() != null
+                                                      || factoryConfig.GetImplementation() != null;
+
+            if (configuredViaCredentials && configuredViaCredentialsFactory) {
+                throw new ConfigurationException("Ambiguous Credentials config. Set only one of ICredentials or ICredentialsFactory");
+            }
+        }
+
+ 
+        private ICredentialsFactory GetCredentialsFromFactory(ClientConfig config) {
+            var credentialsFactoryConfig = config.GetSecurityConfig().GetCredentialsFactoryConfig();
+            var factory = credentialsFactoryConfig.GetImplementation();
+            if (factory == null) {
+                var factoryClassName = credentialsFactoryConfig.GetClassName();
+                if (factoryClassName != null) {
+                    try {
+                        var type = Type.GetType(factoryClassName);
+                        if (type != null)
+                        {
+                            factory = Activator.CreateInstance(type) as ICredentialsFactory;
+                        }
+                    } catch (Exception e) {
+                        throw ExceptionUtil.Rethrow(e);
+                    }
+                }
+            }
+            if (factory == null) {
+                return null;
+            }
+            factory.Configure(config.GetGroupConfig(), credentialsFactoryConfig.GetProperties());
+            return factory;
         }
     }
 }

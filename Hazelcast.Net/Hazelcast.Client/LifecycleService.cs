@@ -39,9 +39,27 @@ namespace Hazelcast.Client
             {
                 foreach (var listenerConfig in listenerConfigs)
                 {
-                    if (listenerConfig.GetImplementation() is ILifecycleListener)
+                    var listener = listenerConfig.GetImplementation();
+                    if (listener == null)
                     {
-                        AddLifecycleListener((ILifecycleListener) listenerConfig.GetImplementation());
+                        try
+                        {
+                            var className = listenerConfig.GetClassName();
+                            var type = Type.GetType(className);
+                            if (type != null)
+                            {
+                                listener = Activator.CreateInstance(type) as IEventListener;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Severe(e);
+                        }
+                    }
+                    var lifecycleListener = listener as ILifecycleListener;
+                    if (lifecycleListener != null)
+                    {
+                        AddLifecycleListener(lifecycleListener);
                     }
                 }
             }

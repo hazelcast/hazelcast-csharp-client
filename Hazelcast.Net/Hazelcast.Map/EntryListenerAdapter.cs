@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Client.Proxy;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 

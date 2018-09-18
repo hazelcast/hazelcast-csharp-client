@@ -159,7 +159,7 @@ using Hazelcast.Util;
                     connection = GetConnection(address);
                     if (connection == null)
                     {
-                        //Create an async conneciion and send the invocation afterward.
+                        //Create an async connection and send the invocation afterward.
                         _clientConnectionManager.GetOrConnectAsync(address).ContinueWith(t =>
                             {
                                 if (t.IsFaulted)

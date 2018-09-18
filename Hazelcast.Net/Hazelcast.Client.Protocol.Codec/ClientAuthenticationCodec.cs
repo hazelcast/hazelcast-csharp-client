@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         internal class ResponseParameters
         {
-            public byte status;
+            public AuthenticationStatus status;
             public Address address;
             public string uuid;
             public string ownerUuid;
@@ -90,7 +90,7 @@ namespace Hazelcast.Client.Protocol.Codec
         {
             var parameters = new ResponseParameters();
             var status = clientMessage.GetByte();
-            parameters.status = status;
+            parameters.status = (AuthenticationStatus)status;
             var addressIsNull = clientMessage.GetBoolean();
             if (!addressIsNull)
             {

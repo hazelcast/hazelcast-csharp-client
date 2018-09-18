@@ -33,11 +33,8 @@ namespace Hazelcast.Config
         /// <summary>
         /// The Security Configuration for custom Credentials:
         /// Name and Password that is used to connect to the cluster.
-        ///     Can be used instead of
-        ///     <see cref="GroupConfig">GroupConfig</see>
-        ///     in Hazelcast EE.
         /// </summary>
-        private ICredentials _credentials;
+        private ClientSecurityConfig _securityConfig = new ClientSecurityConfig();
 
         /// <summary>pool-size for internal ExecutorService which handles responses etc.</summary>
         private int _executorPoolSize = -1;
@@ -46,10 +43,6 @@ namespace Hazelcast.Config
         /// The Group Configuration properties like:
         /// Name and Password that is used to connect to the cluster.
         /// </summary>
-        /// <remarks>
-        /// The Group Configuration properties like:
-        /// Name and Password that is used to connect to the cluster.
-        /// </remarks>
         private GroupConfig _groupConfig = new GroupConfig();
 
         /// <summary>List of listeners that Hazelcast will automatically add as a part of initialization process.</summary>
@@ -72,10 +65,6 @@ namespace Hazelcast.Config
         /// The Network Configuration properties like:
         /// addresses to connect, smart-routing, socket-options...
         /// </summary>
-        /// <remarks>
-        /// The Network Configuration properties like:
-        /// addresses to connect, smart-routing, socket-options...
-        /// </remarks>
         private ClientNetworkConfig _networkConfig = new ClientNetworkConfig();
 
         private IList<ProxyFactoryConfig> _proxyFactoryConfigs = new List<ProxyFactoryConfig>();
@@ -133,12 +122,7 @@ namespace Hazelcast.Config
         /// <returns>Credentials</returns>
         public virtual ICredentials GetCredentials()
         {
-            if (_credentials == null)
-            {
-                SetCredentials(new UsernamePasswordCredentials(GetGroupConfig().GetName(),
-                    GetGroupConfig().GetPassword()));
-            }
-            return _credentials;
+            return _securityConfig.GetCredentials();
         }
 
         /// <summary>
@@ -223,10 +207,18 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
+        /// Gets <see cref="ClientSecurityConfig"/>.
+        /// </summary>
+        /// <returns><see cref="ClientSecurityConfig"/></returns>
+        public ClientSecurityConfig GetSecurityConfig() {
+            return _securityConfig;
+        }
+
+        /// <summary>
         /// Sets <see cref="IConfigPatternMatcher"/>.
         /// </summary>
         /// <param name="matchingPointConfigPatternMatcher"><see cref="IConfigPatternMatcher"/></param>
-        /// <returns><see cref="SerializationConfig"/></returns>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public ClientConfig SetConfigPatternMatcher(IConfigPatternMatcher matchingPointConfigPatternMatcher)
         {
             _configPatternMatcher = matchingPointConfigPatternMatcher;
@@ -240,7 +232,7 @@ namespace Hazelcast.Config
         /// <returns><see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig SetCredentials(ICredentials credentials)
         {
-            _credentials = credentials;
+            _securityConfig.SetCredentials(credentials);
             return this;
         }
 
@@ -329,6 +321,16 @@ namespace Hazelcast.Config
         public virtual ClientConfig SetSerializationConfig(SerializationConfig serializationConfig)
         {
             _serializationConfig = serializationConfig;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets <see cref="ClientSecurityConfig"/>.
+        /// </summary>
+        /// <param name="securityConfig"><see cref="ClientSecurityConfig"/></param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
+        public ClientConfig SetSecurityConfig(ClientSecurityConfig securityConfig) {
+            _securityConfig = securityConfig;
             return this;
         }
 

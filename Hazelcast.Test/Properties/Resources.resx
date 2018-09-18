@@ -230,7 +230,7 @@
   </data>
   <data name="hazelcast_config_full" xml:space="preserve">
     <value>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;hazelcast-client xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.8.xsd"
+&lt;hazelcast-client xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.11.xsd"
                   xmlns="http://www.hazelcast.com/schema/client-config"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
 
@@ -274,14 +274,15 @@
 
   &lt;executor-pool-size&gt;40&lt;/executor-pool-size&gt;
 
-
-  &lt;security&gt;
-    &lt;credentials&gt;com.hazelcast.security.UsernamePasswordCredentials&lt;/credentials&gt;
-    &lt;login-credentials&gt;
-      &lt;username&gt;dev-user&lt;/username&gt;
-      &lt;password&gt;pass123&lt;/password&gt;
-    &lt;/login-credentials&gt;
-  &lt;/security&gt;
+    &lt;security&gt;
+        &lt;credentials&gt;Hazelcast.Security.UsernamePasswordCredentials&lt;/credentials&gt;
+        &lt;credentials-factory class-name="Hazelcast.Security.DefaultCredentialsFactory"&gt;
+            &lt;properties&gt;
+                &lt;property name="username"&gt;dev-user&lt;/property&gt;
+                &lt;property name="password"&gt;pass123&lt;/property&gt;
+            &lt;/properties&gt;
+        &lt;/credentials-factory&gt;
+    &lt;/security&gt;
 
   &lt;listeners&gt;
     &lt;listener&gt;Hazelcast.Examples.MembershipListener&lt;/listener&gt;
@@ -448,7 +449,7 @@
             &lt;/data-serializable-factory&gt;
         &lt;/data-serializable-factories&gt;
     &lt;/serialization&gt;
-&lt;/hazelcast&gt;</value>  
+&lt;/hazelcast&gt;</value>
   </data>
   <data name="hazelcast_ssl" xml:space="preserve">
     <value>&lt;hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd"
