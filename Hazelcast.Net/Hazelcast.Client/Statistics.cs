@@ -121,6 +121,10 @@ namespace Hazelcast.Client
 
         private void PeriodicStatisticsSendTask()
         {
+            if (Logger.IsFinestEnabled())
+            {
+                Logger.Finest("Periodic send client statistics to the server.");
+            }
             var ownerConnection = GetOwnerConnection();
             if (null == ownerConnection)
             {
@@ -148,6 +152,10 @@ namespace Hazelcast.Client
 
         private void SendStatsToOwner(StringBuilder stats)
         {
+            if (Logger.IsFinestEnabled())
+            {
+                Logger.Finest("Sending client statistics to the owner connection.");
+            }
             var request = ClientStatisticsCodec.EncodeRequest(stats.ToString());
             try
             {
