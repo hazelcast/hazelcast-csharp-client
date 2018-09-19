@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -323,12 +324,17 @@ namespace Hazelcast.Client.Spi
 
         private void ConnectToCluster()
         {
-            ConnectToOne();
+            var sw = new Stopwatch();
+            sw.Start();
+            var attemptCount = ConnectToOne();
+            Logger.Finest(string.Format("Connect to owner took:{0} ms. Total connection attempts:{1}", sw.ElapsedMilliseconds, attemptCount));
+            sw.Restart();
             _clientMembershipListener.ListenMembershipEvents(_ownerConnectionAddress);
+            Logger.Finest(string.Format("clientMembershipListener initial registration took:{0} ms", sw.ElapsedMilliseconds));
             //_clientListenerService.TriggerFailedListeners(); //TODO: triggerfailedlisteners
         }
 
-        private void ConnectToOne()
+        private int ConnectToOne()
         {
             _ownerConnectionAddress = null;
             var networkConfig = GetClientConfig().GetNetworkConfig();
@@ -352,7 +358,7 @@ namespace Hazelcast.Client.Spi
                 var isConnected = Connect(triedAddresses);
                 if (isConnected)
                 {
-                    return;
+                    return attempt;
                 }
                 var remainingTime = nextTry - Clock.CurrentTimeMillis();
                 Logger.Warning(
