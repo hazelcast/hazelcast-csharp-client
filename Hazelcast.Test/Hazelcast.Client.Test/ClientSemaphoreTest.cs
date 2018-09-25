@@ -22,34 +22,25 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientSemaphoreTest : SingleMemberBaseTest
     {
+        private ISemaphore semaphore;
+        
         [SetUp]
         public void Init()
         {
-            s = Client.GetSemaphore(TestSupport.RandomString());
-
-            s.ReducePermits(100);
-            s.Release(9);
-            s.Release();
+            semaphore = Client.GetSemaphore(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
+            semaphore.Destroy();
         }
 
-        internal const string name = "ClientSemaphoreTest";
-
-
-        internal static ISemaphore s;
-
-
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAcquire()
+        public void TestAcquire()
         {
-            Assert.AreEqual(10, s.DrainPermits());
+            var s = Client.GetSemaphore(TestSupport.RandomString());
             var latch = new CountdownEvent(1);
-
             var t = new Thread(delegate(object o)
             {
                 try
@@ -68,14 +59,20 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
             Assert.AreEqual(1, s.AvailablePermits());
         }
+        
+        [Test]
+        public void testdrainPermits() 
+        {
+            semaphore.Init(10);
+            Assert.AreEqual(10, semaphore.DrainPermits());
+        }
+
 
         [Test]
         public void TestInit()
         {
-            var semInit = Client.GetSemaphore(TestSupport.RandomString());
-            semInit.Init(2);
-            Assert.AreEqual(2, semInit.AvailablePermits());
-            semInit.Destroy();
+            semaphore.Init(2);
+            Assert.AreEqual(2, semaphore.AvailablePermits());
         }
 
         [Test]
@@ -83,29 +80,19 @@ namespace Hazelcast.Client.Test
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                var semInit = Client.GetSemaphore(TestSupport.RandomString());
-                semInit.Init(-2);
-                semInit.Destroy();
+                semaphore.Init(-2);
             });
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TryAcquire()
+        public void TestTryAcquire()
         {
-            Assert.IsTrue(s.TryAcquire());
-            Assert.IsTrue(s.TryAcquire(9));
-            Assert.AreEqual(0, s.AvailablePermits());
-            Assert.IsFalse(s.TryAcquire(1, TimeUnit.Seconds));
-            Assert.IsFalse(s.TryAcquire(2, 1, TimeUnit.Seconds));
-
             var latch = new CountdownEvent(1);
-
             var t = new Thread(delegate(object o)
             {
                 try
                 {
-                    if (s.TryAcquire(2, 5, TimeUnit.Seconds))
+                    if (semaphore.TryAcquire(2, 5, TimeUnit.Seconds))
                     {
                         latch.Signal();
                     }
@@ -116,9 +103,26 @@ namespace Hazelcast.Client.Test
             });
             t.Start();
 
-            s.Release(2);
+            semaphore.Release(2);
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
-            Assert.AreEqual(0, s.AvailablePermits());
+            Assert.AreEqual(0, semaphore.AvailablePermits());
         }
+        
+        [Test]
+        public void TestNegativePermitsJucCompatibility()
+        {
+            semaphore.Init(0);
+            semaphore.ReducePermits(100);
+            semaphore.Release(10);
+    
+            Assert.AreEqual(-90, semaphore.AvailablePermits());
+            Assert.AreEqual(-90, semaphore.DrainPermits());
+    
+            semaphore.Release(10);
+    
+            Assert.AreEqual(10, semaphore.AvailablePermits());
+            Assert.AreEqual(10, semaphore.DrainPermits());
+        }
+
     }
 }
