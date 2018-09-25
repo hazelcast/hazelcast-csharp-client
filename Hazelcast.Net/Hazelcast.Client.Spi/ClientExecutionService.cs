@@ -53,7 +53,7 @@ using Hazelcast.Util;
         public Task ScheduleWithCancellation(Action command, long delay, TimeUnit unit, CancellationToken token)
         {
             var tcs = new TaskCompletionSource<object>();
-            object timer = new Timer(o =>
+            var timer = new Timer(o =>
             {
                 var _tcs = (TaskCompletionSource<object>) o;
                 if (token.IsCancellationRequested)
@@ -66,33 +66,31 @@ using Hazelcast.Util;
                 }
             }, tcs, unit.ToMillis(delay), Timeout.Infinite);
 
-            var continueTask = tcs.Task.ContinueWith((t, timerObject) =>
+            var continueTask = tcs.Task.ContinueWith(t =>
             {
-                var timerState = (Timer) timerObject;
-                timerState.Dispose();
+                timer.Dispose();
                 if (!t.IsCanceled)
                 {
                     command();
                 }
-            }, timer, token);
+            }, token);
             return continueTask;
         }
 
         public Task Schedule(Action command, long delay, TimeUnit unit)
         {
             var tcs = new TaskCompletionSource<object>();
-            object timer = new Timer(o =>
+            var timer = new Timer(o =>
             {
                 var _tcs = (TaskCompletionSource<object>) o;
                 _tcs.SetResult(null);
             }, tcs, unit.ToMillis(delay), Timeout.Infinite);
 
-            var continueTask = tcs.Task.ContinueWith((t, timerObject) =>
+            var continueTask = tcs.Task.ContinueWith(t =>
             {
-                var timerState = (Timer) timerObject;
-                timerState.Dispose();
+                timer.Dispose();
                 command();
-            }, timer);
+            });
             return continueTask;
         }
 
