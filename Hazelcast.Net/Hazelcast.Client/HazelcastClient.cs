@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Proxy;
@@ -23,7 +22,6 @@ using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Transaction;
@@ -44,8 +42,6 @@ namespace Hazelcast.Client
     /// </remarks>
     public sealed class HazelcastClient : IHazelcastInstance
     {
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (HazelcastClient));
-
         public const string PropPartitioningStrategyClass = "hazelcast.partitioning.strategy.class";
         private static readonly AtomicInteger ClientId = new AtomicInteger();
 
@@ -458,40 +454,14 @@ namespace Hazelcast.Client
             _lifecycleService.SetStarted();
             try
             {
-                var sw = new Stopwatch();
-                sw.Start();
                 _invocationService.Start();
-                Logger.Finest(string.Format("_invocationService took:{0} ms.", sw.ElapsedMilliseconds));
-                sw.Restart();
-
                 _connectionManager.Start();
-                Logger.Finest(string.Format("_connectionManager took:{0} ms.", sw.ElapsedMilliseconds));
-                sw.Restart();
-
                 _clusterService.Start();
-                Logger.Finest(string.Format("_clusterService took:{0} ms.", sw.ElapsedMilliseconds));
-                sw.Restart();
-
                 _proxyManager.Init(_config);
-                Logger.Finest(string.Format("_proxyManager took:{0} ms.", sw.ElapsedMilliseconds));
-                sw.Restart();
-
                 _listenerService.Start();
-                Logger.Finest(string.Format("_listenerService took:{0} ms.", sw.ElapsedMilliseconds));
-                sw.Restart();
-
                 _loadBalancer.Init(GetCluster(), _config);
-                Logger.Finest(string.Format("_loadBalancer took:{0} ms.", sw.ElapsedMilliseconds));
-                sw.Restart();
-
                 _partitionService.Start();
-                Logger.Finest(string.Format("_partitionService took:{0} ms.", sw.ElapsedMilliseconds));
-                sw.Restart();
-
                 _statistics.Start();
-                Logger.Finest(string.Format("_statistics took:{0} ms.", sw.ElapsedMilliseconds));
-                sw.Restart();
-
             }
             catch (InvalidOperationException)
             {
