@@ -27,7 +27,7 @@ IF -%3-==-- (
 	)
 )
 
-set HZ_VERSION=3.9.3
+set HZ_VERSION=3.10.5
 set HAZELCAST_TEST_VERSION=%HZ_VERSION%
 set HAZELCAST_VERSION=%HZ_VERSION%
 set HAZELCAST_ENTERPRISE_VERSION=%HZ_VERSION%
@@ -57,7 +57,7 @@ REM nuget locals all -clear
 nuget restore
 
 if -%FRAMEWORK%-==-net40- (
-	msbuild Hazelcast.Net.sln /p:Configuration=Release /p:Platform="Any CPU" /p:TargetFramework=net40 /target:Restore;Build
+	msbuild Hazelcast.Test\Hazelcast.Test.csproj /p:Configuration=Release /p:TargetFramework=net46 /target:Restore;Build
 ) ELSE (
 	msbuild Hazelcast.Test\Hazelcast.Test.csproj /p:Configuration=Release /p:TargetFramework=netcoreapp2.0 /target:Restore;Build
 )
