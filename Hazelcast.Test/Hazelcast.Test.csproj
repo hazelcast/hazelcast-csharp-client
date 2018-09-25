@@ -4,7 +4,7 @@
     <AssemblyName>Hazelcast.Test</AssemblyName>
     <title>Hazelcast .Net Client Test</title>
     <Description>Hazelcast .Net Client Unit Tests Project</Description>
-    <TargetFrameworks>net40;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <LangVersion>4</LangVersion>
