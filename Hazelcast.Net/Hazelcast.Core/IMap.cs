@@ -490,10 +490,12 @@ namespace Hazelcast.Core
         void ForceUnlock(TKey key);
 
         /// <summary>
-        ///     Returns the value for the specified key, or <c>null</c> if this map does not contain this key.
+        ///     Returns the value for the specified key, or the default value for <typeparamref name="TValue"/>
+        ///     if this map does not contain this key.
         /// </summary>
         /// <remarks>
-        ///     Returns the value for the specified key, or <c>null</c> if this map does not contain this key.
+        ///     Returns the value for the specified key, or the default value for <typeparamref name="TValue"/>
+        ///     if this map does not contain this key.
         ///     <p>
         ///         <b>Warning:</b>
         ///     </p>
