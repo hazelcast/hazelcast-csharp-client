@@ -22,7 +22,7 @@ Hazelcast .Net Client supports .Net Framemork 4.0+ and Net Core 2.0+ .
 ### Configuration
 You can configure the Hazelcast .Net Client via API or XML. To start the client, you can pass a configuration or leave it empty to use default values.
 
-For programatic configuration; please see `Hazelcast.Config` packege and related API doc. 
+For programatic configuration; please see `Hazelcast.Config` package and related API doc. 
 
 For XML configuration; .Net Client uses the same [XML schema](http://www.hazelcast.com/schema/client-config) of Hazelcast Java Client.
 
