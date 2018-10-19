@@ -39,8 +39,13 @@ namespace Hazelcast.Client.Test
 
         public HazelcastTestSupport()
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "finest");
+#if DEBUG
+            Environment.SetEnvironmentVariable("hazelcast.logging.type", "trace");
+
+#else
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+#endif
+            Environment.SetEnvironmentVariable("hazelcast.logging.level", "finest");
             _logger = Logger.GetLogger(GetType().Name);
 
             TaskScheduler.UnobservedTaskException += UnobservedTaskException;
