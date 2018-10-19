@@ -80,7 +80,14 @@ namespace Hazelcast.Client.Test
             {
                 TestSupport.AssertTrueEventually(() =>
                 {
-                    owners = GetPartitionOwners(partitionCount, partitionService);
+                    try
+                    {
+                        owners = GetPartitionOwners(partitionCount, partitionService);
+                    }
+                    catch (TargetNotMemberException)
+                    {
+                        Assert.Fail("Partition table is stale.");
+                    }
                     Assert.AreEqual(2, owners.Count);
                 });
             }
@@ -90,9 +97,16 @@ namespace Hazelcast.Client.Test
 
                 TestSupport.AssertTrueEventually(() =>
                 {
-                    owners = GetPartitionOwners(partitionCount, partitionService);
+                    try
+                    {
+                        owners = GetPartitionOwners(partitionCount, partitionService);
+                    }
+                    catch (TargetNotMemberException)
+                    {
+                        Assert.Fail("Partition table is stale.");
+                    }
                     Assert.AreEqual(1, owners.Count);
-                });
+                }, 60);
             }
         }
     }

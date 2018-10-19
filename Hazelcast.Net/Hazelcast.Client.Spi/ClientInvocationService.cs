@@ -192,7 +192,7 @@ using Hazelcast.Util;
                     }
                     throw new HazelcastException("Client is shut down.");
                 }
-                //Successfully sended.
+                //Successfully sent.
             }
             catch (Exception e)
             {

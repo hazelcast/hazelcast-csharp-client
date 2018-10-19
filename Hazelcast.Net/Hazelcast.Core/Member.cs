@@ -142,13 +142,13 @@ namespace Hazelcast.Core
 
         public override string ToString()
         {
-            var sb = new StringBuilder("IMember [");
+            var sb = new StringBuilder("Member [");
             sb.Append(_address.GetHost());
             sb.Append("]");
             sb.Append(":");
             sb.Append(_address.GetPort());
-            if (IsLiteMember)
-            {
+            sb.Append(" - ").Append(_uuid);
+            if (IsLiteMember) {
                 sb.Append(" lite");
             }
             return sb.ToString();

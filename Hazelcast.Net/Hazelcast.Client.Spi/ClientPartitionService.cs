@@ -28,7 +28,7 @@ using Hazelcast.Util;
  namespace Hazelcast.Client.Spi
 {
     internal sealed class
-        ClientPartitionService : IClientPartitionService
+        ClientPartitionService : IClientPartitionService, IConnectionListener
     {
         private const int PartitionTimeout = 60000;
         private const int PartitionRefreshPeriod = 10000;
@@ -48,9 +48,26 @@ using Hazelcast.Util;
 
         public Address GetPartitionOwner(int partitionId)
         {
-            Address rtn;
-            _partitions.TryGetValue(partitionId, out rtn);
-            return rtn;
+            Address partitionOwner = null;
+            while (_live.Get() && !_partitions.TryGetValue(partitionId, out partitionOwner))
+            {
+                if (Logger.IsFinestEnabled())
+                {
+                    Logger.Finest("Address of a partition cannot be null. Retrying to get it...");
+                }
+                Thread.Sleep(100);
+            }
+            if (!_live.Get())
+            {
+                throw new HazelcastException("Client is shut down.");
+            }
+
+            var member = _client.GetClientClusterService().GetMember(partitionOwner);
+            if (member == null)
+            {
+                throw new TargetNotMemberException("Invalid Member address");
+            }
+            return partitionOwner;
         }
 
         public int GetPartitionId(object key)
@@ -79,6 +96,7 @@ using Hazelcast.Util;
             {
                 return;
             }
+            _client.GetConnectionManager().AddConnectionListener(this);
             _partitionUpdaterToken = new CancellationTokenSource();
             _client.GetClientExecutionService().ScheduleWithFixedDelay(() => GetPartitions(),
                 0, PartitionRefreshPeriod, TimeUnit.Milliseconds, _partitionUpdaterToken.Token);
@@ -106,6 +124,16 @@ using Hazelcast.Util;
                 Logger.Finest("Shut down partition refresher thread problem...", e);
             }
             _partitions.Clear();
+        }
+        
+        public void ConnectionAdded(ClientConnection connection)
+        {
+            RefreshPartitions();
+        }
+
+        public void ConnectionRemoved(ClientConnection connection)
+        {
+            RefreshPartitions();
         }
 
         internal int GetPartitionId(IData key)

@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Config;
@@ -57,38 +59,38 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-		public void TestClientTransactionRetry()
-		{
-			Assert.Throws<InvalidOperationException>(() =>
+        public void TestClientTransactionRetry()
         {
-            var member = _remoteController.startMember(_cluster.Id);
-            var client = CreateClient();
-
-            var context = client.NewTransactionContext();
-            context.BeginTransaction();
-
-            var map = context.GetMap<int, string>(TestSupport.RandomString());
-
-            Task.Factory.StartNew(() =>
+            Assert.Throws<InvalidOperationException>(() =>
             {
-                _remoteController.shutdownMember(_cluster.Id, member.Uuid);
-                _remoteController.startMember(_cluster.Id);
-            });
-            try
-            {
-                for (var i = 0; i < Count; i++)
+                var member = _remoteController.startMember(_cluster.Id);
+                var client = CreateClient();
+
+                var context = client.NewTransactionContext();
+                context.BeginTransaction();
+
+                var map = context.GetMap<int, string>(TestSupport.RandomString());
+
+                Task.Factory.StartNew(() =>
                 {
-                    // put should eventually fail as the node which the transaction is running against 
-                    // will be shut down
-                    map.Put(i, TestSupport.RandomString());
+                    _remoteController.shutdownMember(_cluster.Id, member.Uuid);
+                    _remoteController.startMember(_cluster.Id);
+                });
+                try
+                {
+                    for (var i = 0; i < Count; i++)
+                    {
+                        // put should eventually fail as the node which the transaction is running against 
+                        // will be shut down
+                        map.Put(i, TestSupport.RandomString());
+                    }
                 }
-            }
-            finally
-            {
-                context.RollbackTransaction();
-            }
-        });
-		}
+                finally
+                {
+                    context.RollbackTransaction();
+                }
+            });
+        }
 
         [Test, Ignore("https://github.com/hazelcast/hazelcast-csharp-client/issues/28")]
         public void TestRetryAsyncRequest()
@@ -128,7 +130,7 @@ namespace Hazelcast.Client.Test
             for (var i = 0; i < Count; i++)
             {
                 map.Put(i, TestSupport.RandomString());
-                if (i == Count/2)
+                if (i == Count / 2)
                 {
                     StopMember(_remoteController, _cluster, member2);
                 }
@@ -164,7 +166,7 @@ namespace Hazelcast.Client.Test
                     map.Put("key", "value");
                 }).ContinueWith(t =>
                 {
-                    var e = t.Exception;//observe the exception
+                    var e = t.Exception; //observe the exception
                     if (t.IsFaulted) resetEvent.Set();
                     else Assert.Fail("Method invocation did not fail as expected");
                 });
