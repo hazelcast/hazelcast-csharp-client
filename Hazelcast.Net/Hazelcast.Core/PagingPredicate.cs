@@ -33,9 +33,9 @@ namespace Hazelcast.Core
     /// <code>
     /// Predicate lessEqualThanFour = Predicates.IsLessThanOrEqual("this", 4);
     /// // We are constructing our paging predicate with a predicate and page size. In this case query results fetched two by two.
-    /// PagingPredicate predicate = new PagingPredicate(lessEqualThanFour, 2);
+    /// PagingPredicate predicate = new PagingPredicate(2, lessEqualThanFour);
     /// // we are initializing our map with integers from 0 to 10 as keys and values.
-    /// IMap map = hazelcastInstance.getMap("myMap");
+    /// var map = hazelcastInstance.GetMap("myMap");
     /// for (int i = 0; i &lt; 10; i++)
     /// {
     ///     map.Put(i, i);
