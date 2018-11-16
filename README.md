@@ -12,6 +12,8 @@
   * [1.4. Basic Configuration](#14-basic-configuration)
     * [1.4.1. Configuring Hazelcast IMDG](#141-configuring-hazelcast-imdg)
     * [1.4.2. Configuring Hazelcast .NET Client](#142-configuring-hazelcast-net-client)
+        * [1.4.2.1 Group Settings](#1421-group-settings)
+        * [1.4.2.2 Network Settings](#1422-network-settings)
   * [1.5. Basic Usage](#15-basic-usage)
   * [1.6. Code Samples](#16-code-samples)
 * [2. Features](#2-features)
@@ -417,7 +419,7 @@ cfg.GetGroupConfig().SetName("group name of your cluster").SetPassword("group pa
 
 > **NOTE: If you have a Hazelcast IMDG release older than 3.11, you need to provide also a group password along with the group name.**
 
-#### 1.4.2.1 Network Settings
+#### 1.4.2.2 Network Settings
 
 You need to provide the IP address and port of at least one member in your cluster so the client can find it.
 
