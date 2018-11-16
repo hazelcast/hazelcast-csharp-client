@@ -5,9 +5,9 @@
   * [1.1. Requirements](#11-requirements)
   * [1.2. Working with Hazelcast IMDG Clusters](#12-working-with-hazelcast-imdg-clusters)
     * [1.2.1. Setting Up a Hazelcast IMDG Cluster](#121-setting-up-a-hazelcast-imdg-cluster)
-    * [1.2.2. Running Standalone Jars](#122-running-standalone-jars)
-    * [1.2.3. Adding User Library to CLASSPATH](#123-adding-user-library-to-classpath)
-    * [1.2.4. Using hazelcast-member Tool](#124-using-hazelcast-member-tool)
+      * [1.2.1.1. Running Standalone JARs](#1211-running-standalone-jars)
+      * [1.2.1.2. Adding User Library to CLASSPATH](#1212-adding-user-library-to-classpath)
+      * [1.2.1.3. Using hazelcast-member Tool](#1213-using-hazelcast-member-tool)
   * [1.3. Downloading and Installing](#13-downloading-and-installing)
   * [1.4. Basic Configuration](#14-basic-configuration)
     * [1.4.1. Configuring Hazelcast IMDG](#141-configuring-hazelcast-imdg)
@@ -135,7 +135,7 @@ There are following options to start a Hazelcast IMDG cluster easily:
 
 We are going to download JARs from the website and run a standalone member for this guide.
 
-### 1.2.2. Running Standalone JARs
+#### 1.2.1.1. Running Standalone JARs
 
 Follow the instructions below to create a Hazelcast IMDG cluster:
 
@@ -158,7 +158,7 @@ Sep 06, 2018 10:50:23 AM com.hazelcast.core.LifecycleService
 INFO: [192.168.0.3]:5701 [dev] [3.10.4] [192.168.0.3]:5701 is STARTED
 ```
 
-### 1.2.3. Adding User Library to CLASSPATH
+#### 1.2.1.2. Adding User Library to CLASSPATH
 
 When you want to use features such as querying and language interoperability, you might need to add your own Java classes to the Hazelcast member in order to use them from your .NET client. This can be done by adding your own compiled code to the `CLASSPATH`. To do this, compile your code with the `CLASSPATH` and add the compiled files to the `user-lib` directory in the extracted `hazelcast-<version>.zip` (or `tar`). Then, you can start your Hazelcast member by using the start scripts in the `bin` directory. The start scripts will automatically add your compiled classes to the `CLASSPATH`.
 
@@ -181,16 +181,68 @@ The following is an example configuration when you are adding an `IdentifiedData
 ```
 If you want to add a `Portable` class, you should use `<portable-factories>` instead of `<data-serializable-factories>` in the above configuration.
 
-### 1.2.4. Using hazelcast-member Tool
+#### 1.2.1.3. Using hazelcast-member Tool
 
-`hazelcast-member` is a tool to download and run Hazelcast IMDG members easily. If you have brew installed, run the following commands to install this tool:
+`hazelcast-member` is a tool to download and run Hazelcast IMDG members easily. You can find the installation instructions for various platforms in the following sections.
+
+##### Installing on Mac OS X
+
+If you have brew installed, run the following commands to install this tool:
 
 ```
 brew tap hazelcast/homebrew-hazelcast
 brew install hazelcast-member
 ```
 
-Now, you can start a member by running the following command:
+##### Installing on Ubuntu and Debian
+
+To resolve the `.deb` artifacts from Bintray, follow the below instructions.
+
+First, you need to import the Bintray's GPG key using the following command:
+
+```
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
+```
+
+Then, run the following commands to add the `.deb` artifact to your system configuration file and update the lists of packages:
+
+```
+echo "deb https://dl.bintray.com/hazelcast/deb stable main" | sudo tee -a /etc/apt/sources.list
+sudo apt-get update
+``` 
+
+Finally, run the following command to install the `hazelcast-member` tool:
+
+```
+sudo apt-get install hazelcast-member
+```
+
+##### Installing on Red Hat and CentOS
+
+To resolve the `RPM` artifacts from Bintray, follow the below instructions.
+
+First, run the following command to get a generated `.repo` file:
+
+```
+wget https://bintray.com/hazelcast/rpm/rpm -O bintray-hazelcast-rpm.repo
+```
+
+Then, install the `.repo` file using the following command:
+
+
+```
+sudo mv bintray-hazelcast-rpm.repo /etc/yum.repos.d/
+```
+
+Finally, run the following command to install the `hazelcast-member` tool:
+
+```
+sudo yum install hazelcast-member
+```
+
+---
+
+After successfully installing the `hazelcast-member` tool, you can start a member by running the following command:
 
 ```
 hazelcast-member start
@@ -226,14 +278,14 @@ This section describes the most common configuration elements to get you started
 It discusses some member side configuration options to ease the understanding of Hazelcast's ecosystem. Then, the client side configuration options
 regarding the cluster connection are discussed. The configurations for the Hazelcast IMDG data structures that can be used in the .NET client are discussed in the following sections.
 
-See the [Hazelcast IMDG Reference Manual](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html) and [Configuration Overview section](#configuration-overview) for more information.
+See the [Hazelcast IMDG Reference Manual](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html) and [Configuration Overview section](#3-configuration-overview) for more information.
 
 ### 1.4.1. Configuring Hazelcast IMDG
 
 Hazelcast IMDG aims to run out-of-the-box for most common scenarios. However if you have limitations on your network such as multicast being disabled,
 you may have to configure your Hazelcast IMDG members so that they can find each other on the network. Also, since most of the distributed data structures are configurable, you may want to configure them according to your needs. We will show you the basics about network configuration here.
 
-There are two ways to configure Hazelcast IMDG:
+You can use the following options to configure Hazelcast IMDG:
 
 * Using the `hazelcast.xml` configuration file.
 * Programmatically configuring the member before starting it from the Java code.
@@ -299,7 +351,7 @@ There are two ways to configure a Hazelcast .NET client:
 * Programmatically
 * Declaratively (XML)
 
-This section describes some network configuration settings to cover common use cases in connecting the client to a cluster. See the [Configuration Overview section](#configuration-overview)
+This section describes some network configuration settings to cover common use cases in connecting the client to a cluster. See the [Configuration Overview section](#3-configuration-overview)
 and the following sections for information about detailed network configurations and/or additional features of Hazelcast .NET client configuration.
 
 An easy way to configure your Hazelcast .NET client is to create a `ClientConfig` object and set the appropriate options. Then you can
@@ -345,14 +397,16 @@ names as explained in the previous section. If you did, then you need to make ce
 
 #### 1.4.2.1 Group Settings
 
-**Programmatic:**
+You need to provide the group name of the cluster, if it is defined on the server side, to which you want the client to connect.
+
+**Programmatic Configuration:**
 
 ```c#
 var cfg = new ClientConfig();
-cfg.GetGroupConfig().SetName("group name of you cluster").SetPassword("group password");
+cfg.GetGroupConfig().SetName("group name of your cluster").SetPassword("group password");
 ```
 
-**Declarative:**
+**Declarative Configuration:**
 
 ```xml
 <group>
@@ -367,14 +421,14 @@ cfg.GetGroupConfig().SetName("group name of you cluster").SetPassword("group pas
 
 You need to provide the IP address and port of at least one member in your cluster so the client can find it.
 
-**Programmatic:**
+**Programmatic Configuration:**
 
 ```c#
 var cfg = new ClientConfig();
 cfg.GetNetworkConfig().AddAddress("some-ip-address:port");
 ```
 
-**Declarative:**
+**Declarative Configuration:**
 
 ```xml
 <network>
@@ -616,7 +670,7 @@ When Hazelcast .NET client serializes an object into IData:
 
 5. If the above check fails, then Hazelcast looks for a user-specified Custom Serializer, i.e., an implementation of `IByteArraySerializer<T>` or `IStreamSerializer<T>`. Custom serializer is searched using the input Object’s Class and its parent class up to Object. If parent class search fails, all interfaces implemented by the class are also checked.
 
-6. If the above check fails, then Hazelcast checks if it is Serializable ( Type.IsSerializable ) and a Global Serializer is not registered with CLR serialization Override feature.
+6. If the above check fails, then Hazelcast checks if it is Serializable ( `Type.IsSerializable` ) and a Global Serializer is not registered with CLR serialization Override feature.
 
 7. If the above check fails, Hazelcast will use the registered Global Serializer if one exists.
 
@@ -655,7 +709,7 @@ public class Employee : IIdentifiedDataSerializable
     }
 }
 ```
-``
+
 
 IdentifiedDataSerializable uses `GetClassId()` and `GetFactoryId()` to reconstitute the object. To complete the implementation `IDataSerializableFactory` should also be implemented and registered into `SerializationConfig`. The factory's responsibility is to return an instance of the right `IIdentifiedDataSerializable` object, given the class id.
 
@@ -792,8 +846,7 @@ Note that the ID that is passed to the `SerializationConfig` is same as the `fac
 
 Hazelcast lets you plug a custom serializer to be used for serialization of objects.
 
-Let's say you have a class `CustomSerializableType` and you would like to customize the serialization.
-The reason may be you want to use an external serializer for only one class.
+Let's say you have a class `CustomSerializableType` and you would like to customize the serialization, since you may want to use an external serializer for only one class.
 
 ```c#
 public class CustomSerializableType
@@ -926,7 +979,7 @@ clientConfig.GetSerializationConfig().SetGlobalSerializerConfig(
 All network related configuration of Hazelcast .NET client is performed via the `network` element in the declarative configuration file,
 or in the object `ClientNetworkConfig` when using programmatic configuration. Let's first give the examples for these two approaches. Then we will look at its sub-elements and attributes.
 
-**Declarative Client Network Configuration**
+**Declarative Configuration**
 
 Here is an example of configuring network for .NET Client declaratively.
 
@@ -944,7 +997,7 @@ Here is an example of configuring network for .NET Client declaratively.
   </network>
 ```
 
-**Programmatic Client Network Configuration**
+**Programmatic Configuration**
 
 Here is an example of configuring network for .NET Client programmatically.
 
@@ -965,7 +1018,7 @@ Address list is the initial list of cluster addresses which the client will conn
 list to find an alive member. Although it may be enough to give only one address of a member in the cluster
 (since all members communicate with each other), it is recommended that you give the addresses for all the members.
 
-**Declarative:**
+**Declarative Configuration:**
 
 ```xml
 <network>
@@ -976,7 +1029,7 @@ list to find an alive member. Although it may be enough to give only one address
 </network>  
 ```
 
-**Programmatic:**
+**Programmatic Configuration:**
 
 ```c#
 var clientConfig = new ClientConfig();
@@ -990,12 +1043,12 @@ You can specify multiple addresses with or without the port information as seen 
 
 ## 5.2. Setting Smart Routing
 
-Smart routing defines whether the client mode is smart or unisocket. See [.NET Client Operation Modes section](#net-client-operation-modes)
+Smart routing defines whether the client mode is smart or unisocket. See the [.NET Client Operation Modes section](#72-net-client-operation-modes)
 for the description of smart and unisocket modes.
 
 The following are example configurations.
 
-**Declarative:**
+**Declarative Configuration:**
 
 ```xml
 <network>
@@ -1004,7 +1057,7 @@ The following are example configurations.
 
 ```
 
-**Programmatic:**
+**Programmatic Configuration:**
 
 ```c#
 var clientConfig = new ClientConfig();
@@ -1017,7 +1070,7 @@ Its default value is `true` (smart client mode).
 
 It enables/disables redo-able operations. While sending the requests to the related members, the operations can fail due to various reasons. Read-only operations are retried by default. If you want to enable retry for the other operations, you can set the `redoOperation` to `true`.
 
-**Declarative:**
+**Declarative Configuration:**
 
 ```xml
 <network>
@@ -1025,7 +1078,7 @@ It enables/disables redo-able operations. While sending the requests to the rela
 </network>  
 ```
 
-**Programmatic:**
+**Programmatic Configuration:**
 
 ```c#
 var clientConfig = new ClientConfig();
@@ -1042,7 +1095,7 @@ If the member does not respond within the timeout, the client will retry to conn
 The following are the example configurations.
 
 
-**Declarative:**
+**Declarative Configuration:**
 
 ```xml
 <network>
@@ -1050,7 +1103,7 @@ The following are the example configurations.
 </network>
 ```
 
-**Programmatic:**
+**Programmatic Configuration:**
 
 ```c#
 var clientConfig = new ClientConfig();
@@ -1067,7 +1120,7 @@ This is also the case when the previously established connection between the cli
 
 The following are example configurations.
 
-**Declarative:**
+**Declarative Configuration:**
 
 ```xml
 <network>
@@ -1075,7 +1128,7 @@ The following are example configurations.
 </network>
 ```
 
-**Programmatic:**
+**Programmatic Configuration:**
 
 ```c#
 var clientConfig = new ClientConfig();
@@ -1090,7 +1143,7 @@ Connection attempt period is the duration in milliseconds between the connection
 
 The following are example configurations.
 
-**Declarative:**
+**Declarative Configuration:**
 
 ```xml
 <network>
@@ -1098,7 +1151,7 @@ The following are example configurations.
 </network>
 ```
 
-**Programmatic:**
+**Programmatic Configuration:**
 
 ```c#
 var clientConfig = new ClientConfig();
@@ -1110,7 +1163,7 @@ Its default value is `3000` milliseconds.
 ## 5.7. Enabling Client TLS/SSL
 
 You can use TLS/SSL to secure the connection between the clients and members. If you want to enable TLS/SSL
-for the client-cluster connection, you should set an SSL configuration. Please see [TLS/SSL section](#6-tlsssl).
+for the client-cluster connection, you should set an SSL configuration. Please see [TLS/SSL section](#61-tlsssl).
 
 ## 5.8. Enabling Hazelcast Cloud Discovery
 
@@ -1119,7 +1172,7 @@ To enable Hazelcast Cloud Discovery, specify a token for the `discoveryToken` fi
 
 The following are example configurations.
 
-**Declarative:**
+**Declarative Configuration:**
 
 ```xml
 <hazelcast-client>
@@ -1137,7 +1190,7 @@ The following are example configurations.
 </hazelcast-client>
 ```
 
-**Programmatic:**
+**Programmatic Configuration:**
 
 ```c#
 var clientConfig = new ClientConfig();
@@ -1499,7 +1552,7 @@ You can register the following types of member events.
 * `memberRemoved`: An existing member leaves the cluster.
 * `memberAttributeChanged`: An attribute of a member is changed. See the [Defining Member Attributes section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#defining-member-attributes) in the Hazelcast IMDG Reference Manual to learn about member attributes.
 
-You can use the `ICluster` ( `HazelcastClient.GetCluster()` ) interface to register for the membership listeners. There two type of listeners: `IInitialMembershipListener` and `IMembershipListener`.
+You can use the `ICluster` ( `HazelcastClient.GetCluster()` ) interface to register for the membership listeners. There are two types of listeners: `IInitialMembershipListener` and `IMembershipListener`.
 The difference is that `IInitialMembershipListener` also gets notified when the client connects to the cluster and retrieves the whole membership list.
 You need to implement one of these two interfaces and register an instance of the listener to the cluster.
 
@@ -1743,7 +1796,7 @@ public class IdentifiedEntryProcessor : IEntryProcessor, IIdentifiedDataSerializ
 }
 ```
 
-Now, you need to make sure that the Hazelcast member recognizes the entry processor. For this, you need to implement the Java equivalent of your entry processor and its factory, and create your own compiled class or JAR files. For adding your own compiled class or JAR files to the server's `CLASSPATH`, see the [Adding User Library to CLASSPATH section](#adding-user-library-to-classpath).
+Now, you need to make sure that the Hazelcast member recognizes the entry processor. For this, you need to implement the Java equivalent of your entry processor and its factory, and create your own compiled class or JAR files. For adding your own compiled class or JAR files to the server's `CLASSPATH`, see the [Adding User Library to CLASSPATH section](#1212-adding-user-library-to-classpath).
 
 The following is the Java equivalent of the entry processor in .NET client given above:
 
@@ -1932,7 +1985,7 @@ public class Employee : IPortable
 Note that `Employee` is implementing `IPortable`. As portable types are not deserialized on the server side for querying, you don't need to implement its Java equivalent on the server side.
 
 For the non-portable types, you need to implement its Java equivalent and its serializable factory on the server side for server to reconstitute the objects from binary formats. 
-In this case before starting the server, you need to compile the `Employee` and related factory classes with server's `CLASSPATH` and add them to the `user-lib` directory in the extracted `hazelcast-<version>.zip` (or `tar`). See the [Adding User Library to CLASSPATH section](#adding-user-library-to-classpath).
+In this case before starting the server, you need to compile the `Employee` and related factory classes with server's `CLASSPATH` and add them to the `user-lib` directory in the extracted `hazelcast-<version>.zip` (or `tar`). See the [Adding User Library to CLASSPATH section](#1212-adding-user-library-to-classpath).
 
 > **NOTE: Querying with `IPortable` interface is faster as compared to `IdentifiedDataSerializable`.**
 
@@ -2026,7 +2079,7 @@ var startingWithA = employeeMap.Values(predicate);
 You can also use the helper class `Predicates` mentioned earlier. Here is an example:
 
 ```c#
-//continued from provious example
+//continued from previous example
 var predicate = Predicates.Key().IsLike("A%");;
 var startingWithA = personMap.values(predicate);
 ```
@@ -2046,7 +2099,7 @@ var startingWithA = employeeMap.Values(predicate);
 You can use the `this` attribute to perform a predicated search for entry values. See the following example:
 
 ```c#
-//continued from provious example
+//continued from previous example
 var predicate=Predicates.IsGreaterThan("this", 2);
 var result = employeeMap.Values(predicate);
 //result will include only Bob
@@ -2077,7 +2130,7 @@ Also, this comparator class should implement' one of `IIdentifiedDataSerializabl
 you need to implement the Java equivalent of it and its factory. The Java equivalent of the comparator should implement `java.util.Comparator`. 
 Note that the `Compare` function of `Comparator` on the Java side is the equivalent of the `sort` function of `Comparator` on the .NET side. 
 When you implement the `Comparator` and its factory, you can add them to the `CLASSPATH` of the server side.  
-See the [Adding User Library to CLASSPATH section](#adding-user-library-to-classpath).
+See the [Adding User Library to CLASSPATH section](#1212-adding-user-library-to-classpath).
 
 Also, you can access a specific page more easily with the help of the `Page` property. This way, if you make a query for the 100th page, 
 for example, it will get all 100 pages at once instead of reaching the 100th page one by one using the `NextPage` function.
