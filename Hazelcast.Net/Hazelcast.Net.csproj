@@ -12,6 +12,7 @@
     <RootNamespace>
     </RootNamespace>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Hazelcast.Net.xml</DocumentationFile>
+    <NoWarn>1701;1702;1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Label="sign">
     <!--Condition=" '$(OS)' != 'Windows_NT' "-->

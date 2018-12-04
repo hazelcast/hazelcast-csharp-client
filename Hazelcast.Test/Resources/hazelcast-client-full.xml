@@ -34,9 +34,13 @@
     </socket-options>
     <ssl enabled="false">
       <properites>
-        <property name="CertificateName">The_Certificate_Name</property>
+        <property name="CertificateServerName">CERT_NAME</property>
         <property name="ValidateCertificateChain">true</property>
-        <property name="ValidateCertificateName">true</property>
+        <property name="ValidateCertificateName">false</property>
+        <property name="CheckCertificateRevocation">false</property>
+        <property name="CertificateFilePath">CLIENT_CERT_PATH</property>
+        <property name="CertificatePassword">CLIENT_CERT_PASSWORD</property>
+        <property name="SslProtocol">Tls</property>
       </properites>
     </ssl>
   </network>
