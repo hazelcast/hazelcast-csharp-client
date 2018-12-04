@@ -1,6 +1,7 @@
-<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.8.xsd"
-           xmlns="http://www.hazelcast.com/schema/config"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="utf-8"?>
+<hazelcast xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.11.xsd"
+           xmlns="http://www.hazelcast.com/schema/config">
   <group>
     <name>dev</name>
     <password>dev-pass</password>
@@ -30,12 +31,11 @@
         com.hazelcast.nio.ssl.ClasspathSSLContextFactory
       </factory-class-name>
       <properties>
-        <property name="keyStore">com/hazelcast/nio/ssl-mutual-auth/server1.keystore</property>
-        <property name="keyStorePassword">password</property>
+        <property name="keyStore">com/hazelcast/nio/ssl/letsencrypt.jks</property>
+        <property name="keyStorePassword">123456</property>
         <property name="keyManagerAlgorithm">SunX509</property>
-        <property name="protocol">TLS</property>
+        <property name="protocol">TLSv1</property>
       </properties>
     </ssl>
   </network>
-
 </hazelcast>

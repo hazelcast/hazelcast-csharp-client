@@ -1,8 +1,5 @@
 param(
-    [switch]$enterprise = $false,
-    [switch]$netcore =  $false,
-    [string]$serverVersion = $(throw "-serverVersion is required."),
-    [switch]$coverage = $false
+    [string]$serverVersion = "3.11.1-SNAPSHOT"
 )
 
 $hazelcastTestVersion=$serverVersion
@@ -23,30 +20,6 @@ if ($serverVersion.Contains("SNAPSHOT")) {
     $enterpriseRepo=$enterpriseReleaseRepo
 }
 
-if(!($enterprise)) {
-	$testCategory +="cat != enterprise"
-}
-
-Write-Host "PARAMETERS:"
-Write-Host "Server version : $serverVersion"
-Write-Host "Code coverage enabled : $coverage"
-Write-Host "Enterprise server :$enterprise"
-Write-Host "Exclude param: $testCategory"
-Write-Host "Net core: $netcore"
-Write-Host "Starting build..."
-
-nuget restore
-
-if ($netcore) {
-    $targetFramework="netcoreapp2.0"
-}
-else
-{
-    $targetFramework="net46"
-}
-
-msbuild Hazelcast.Test\Hazelcast.Test.csproj /p:Configuration=Release /p:TargetFramework=$targetFramework /target:"Restore;Build"
-
 if(Test-Path "hazelcast-remote-controller-${hazelcastRCVersion}.jar") {
 	Write-Host "remote controller already exist, not downloading from maven."
 } else {
@@ -62,7 +35,7 @@ if(Test-Path "hazelcast-${hazelcastTestVersion}-tests.jar") {
 }
 
 [string]$classpath="hazelcast-remote-controller-${hazelcastRCVersion}.jar;hazelcast-${hazelcastTestVersion}-tests.jar;"
-if($enterprise){
+if("$env:HAZELCAST_ENTERPRISE_KEY" -ne $null){
 	if(Test-Path "hazelcast-enterprise-${hazelcastEnterpriseVersion}.jar") {
 		Write-Host "hazelcast-enterprise-${hazelcastEnterpriseVersion}.jar already exist, not downloading from maven."
 	} else {
@@ -86,30 +59,6 @@ if($enterprise){
 	$classpath += "hazelcast-${hazelcastVersion}.jar"
 }
 
-$remoteControllerApp = Start-Process -FilePath java -ArgumentList ( "-Dhazelcast.enterprise.license.key=$env:HAZELCAST_ENTERPRISE_KEY","-cp", "$classpath", "com.hazelcast.remotecontroller.Main" ) -RedirectStandardOutput "rc_stdout.log" -RedirectStandardError "rc_stderr.log" -PassThru
+Write-Host "Starting hazelcast-remote-controller" 
 
-$testDLL=".\Hazelcast.Test\bin\Release\${targetFramework}\Hazelcast.Test.dll"
-$nunitConsolePath=".\packages\NUnit.ConsoleRunner.3.9.0\tools\nunit3-console.exe"
-$nunitArgs=@("`"${testDLL}`"", "--labels=All", "--result=console-text.xml;format=nunit2")
-
-if($testCategory.Length -gt 0) {
-  $nunitArgs += @("--where", "\`"${testCategory}\`"")
-}
-
-if (!$netcore) {
-	$nunitArgs += "--framework=v4.0"
-	if($coverage) {
-		$dotCoverCmd=".\packages\JetBrains.dotCover.CommandLineTools.2018.2.3\tools\dotCover.exe"
-		$dotCoverArgs=@("cover", "/Filters=-:Hazelcast.Test", "/TargetWorkingDir=.", "/Output=Coverage.html", "/ReportType=HTML", "/TargetExecutable=${nunitConsolePath}", "/TargetArguments=${nunitArgs}")
-		Write-Host "$dotCoverCmd" $dotCoverArgs
-		& "$dotCoverCmd" $dotCoverArgs
-	} else {
-		& $nunitConsolePath $nunitArgs
-	}
-}
-else
-{
-    dotnet test Hazelcast.Test\Hazelcast.Test.csproj -c Release --no-build --no-restore -f netcoreapp2.0 -v n
-}
-
-Stop-Process -Force -Id $remoteControllerApp.Id
+. "java" "-Dhazelcast.enterprise.license.key=$env:HAZELCAST_ENTERPRISE_KEY" -cp "$classpath" "com.hazelcast.remotecontroller.Main"

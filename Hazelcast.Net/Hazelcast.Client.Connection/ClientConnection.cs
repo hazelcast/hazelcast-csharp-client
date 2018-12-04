@@ -18,6 +18,8 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -111,14 +113,41 @@ namespace Hazelcast.Client.Connection
                 _builder = new ClientMessageBuilder(invocationService.HandleClientMessage);
 
                 var networkStream = new NetworkStream(_clientSocket, false);
-                if (clientNetworkConfig.GetSSLConfig().IsEnabled())
+                var sslConfig = clientNetworkConfig.GetSSLConfig();
+                if (sslConfig.IsEnabled())
                 {
                     var sslStream = new SslStream(networkStream, false,
                         (sender, certificate, chain, sslPolicyErrors) =>
                             RemoteCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors,
                                 clientNetworkConfig), null);
-                    var certificateName = clientNetworkConfig.GetSSLConfig().GetCertificateName() ?? "";
-                    sslStream.AuthenticateAsClient(certificateName);
+                    var certificateName = sslConfig.GetCertificateName() ?? "";
+                    var cerPath = sslConfig.GetCertificateFilePath();
+                    if (cerPath != null)
+                    {
+                        var clientCertificates= new X509Certificate2Collection();
+                        try
+                        {
+                            clientCertificates.Import(cerPath, sslConfig.GetCertificatePassword(), X509KeyStorageFlags.DefaultKeySet);
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Finest(string.Format("Cannot load client certificate:{0}.", cerPath));
+                            throw;
+                        }
+                        
+                        var enabledSslProtocols = sslConfig.GetSslProtocol();
+                        var checkCertificateRevocation = sslConfig.IsCheckCertificateRevocation();
+                        sslStream.AuthenticateAsClient(certificateName, clientCertificates, enabledSslProtocols, checkCertificateRevocation);
+                    }
+                    else
+                    {
+                        sslStream.AuthenticateAsClient(certificateName);
+                    }
+
+                    Logger.Info(string.Format(
+                        "Client connection ready. Encrypted:{0}, MutualAuthenticated:{1} using ssl protocol:{2}",
+                        sslStream.IsEncrypted, sslStream.IsMutuallyAuthenticated, sslStream.SslProtocol));
+
                     _stream = sslStream;
                 }
                 else
@@ -135,7 +164,7 @@ namespace Hazelcast.Client.Connection
                 {
                     _stream.Close();
                 }
-                throw new IOException("Cannot connect! Socket error:" + e.Message);
+                throw new IOException("Cannot init connection.", e);
             }
         }
 

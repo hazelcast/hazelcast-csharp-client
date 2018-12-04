@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Authentication;
 using System.Text;
 
 namespace Hazelcast.Config
@@ -23,9 +26,29 @@ namespace Hazelcast.Config
     public class SSLConfig
     {
         /// <summary>
-        /// Certifate Name; CN part of the Certificate Subject.
+        /// Certificate Name to be validated against SAN field of the remote certificate, if not present then the CN part of the Certificate Subject.
         /// </summary>
         public const string CertificateName = "CertificateServerName";
+
+        /// <summary>
+        /// Certificate File path.
+        /// </summary>
+        public const string CertificateFilePath = "CertificateFilePath";
+
+        /// <summary>
+        /// Password need to import the certificates.
+        /// </summary>
+        public const string CertificatePassword = "CertificatePassword";
+
+        /// <summary>
+        /// SSL/TLS protocol. string value of enum type <see cref="System.Security.Authentication.SslProtocols"/>
+        /// </summary>
+        public const string SslProtocol = "SslProtocol";
+
+       /// <summary>
+        /// specifies whether the certificate revocation list is checked during authentication.
+        /// </summary>
+        public const string CheckCertificateRevocation = "CheckCertificateRevocation";
 
         /// <summary>
         /// The property is used to configure ssl to enable certificate chain validation.
@@ -40,6 +63,11 @@ namespace Hazelcast.Config
         private bool _enabled;
 
         private Dictionary<string, string> _properties = new Dictionary<string, string>();
+
+        public SSLConfig()
+        {
+            SetProperty(ValidateCertificateChain, true.ToString());
+        }
 
         public bool IsEnabled()
         {
@@ -57,9 +85,9 @@ namespace Hazelcast.Config
             return _properties;
         }
 
-        public SSLConfig SetProperties(Dictionary<string, string> properites)
+        public SSLConfig SetProperties(Dictionary<string, string> properties)
         {
-            _properties = properites;
+            _properties = properties;
             return this;
         }
 
@@ -72,7 +100,7 @@ namespace Hazelcast.Config
 
         public virtual SSLConfig SetProperty(string name, string value)
         {
-            _properties.Add(name, value);
+            _properties[name] = value;
             return this;
         }
 
@@ -91,6 +119,43 @@ namespace Hazelcast.Config
         internal string GetCertificateName()
         {
             return GetProperty(CertificateName);
+        }
+
+        internal string GetCertificateFilePath()
+        {
+            return GetProperty(CertificateFilePath);
+        }
+
+        internal string GetCertificatePassword()
+        {
+            return GetProperty(CertificatePassword);
+        }
+
+        internal SslProtocols GetSslProtocol()
+        {
+            var sslProtocol = GetProperty(SslProtocol);
+            if (sslProtocol == null)
+            {
+#if NET40
+                return SslProtocols.Tls;
+#else
+                return SslProtocols.None;
+#endif
+            }
+            SslProtocols result;
+            if (Enum.TryParse(sslProtocol, true, out result))
+            {
+                return result;
+            }
+            throw new ArgumentException(
+                "Invalid ssl configuration: SslProtocol. You should use one of SslProtocol enum values: " +
+                string.Join(", ", Enum.GetNames(typeof(SslProtocols))));
+        }
+
+        internal bool IsCheckCertificateRevocation()
+        {
+            var prop = GetProperty(CheckCertificateRevocation);
+            return AbstractXmlConfigHelper.CheckTrue(prop);
         }
 
         /// <inheritdoc />
