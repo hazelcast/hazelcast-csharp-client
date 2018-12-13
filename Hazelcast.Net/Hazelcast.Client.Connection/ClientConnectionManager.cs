@@ -151,6 +151,8 @@ namespace Hazelcast.Client.Connection
             get { return _live.Get(); }
         }
         
+        public GetAddressDictionary AddressProvider { get; set; }
+        
         public ICollection<ClientConnection> ActiveConnections
         {
             get { return _activeConnections.Values; }
@@ -236,19 +238,26 @@ namespace Hazelcast.Client.Connection
             {
                 if (!_pendingConnections.ContainsKey(address))
                 {
-                    var task = _client.GetClientExecutionService().Submit(() => GetOrConnect(address, isOwner:false));
-                    task.ContinueWith(t =>
+                    var task = _client.GetClientExecutionService().Submit(() =>
                     {
-                        if (t.IsFaulted)
+                        try
+                        {
+                            return GetOrConnect(address, isOwner: false);
+                        }
+                        catch (Exception e)
                         {
                             if (Logger.IsFinestEnabled())
                             {
-                                Logger.Finest("Exception in async pending connection:", t.Exception);
+                                Logger.Finest("Exception in async pending connection:", e);
                             }
+                            throw e;
                         }
-                        lock (_pendingConnections)
+                        finally
                         {
-                            _pendingConnections.Remove(address);
+                            lock (_pendingConnections)
+                            {
+                                _pendingConnections.Remove(address);
+                            }
                         }
                     });
                     _pendingConnections[address] = task;
@@ -398,15 +407,16 @@ namespace Hazelcast.Client.Connection
             CheckLive();
             ClientConnection connection = null;
             var id = _nextConnectionId;
+
+            var publicAddress = _client.GetAddressProvider().TranslateToPublic(address);
             try
             {
                 if (Logger.IsFinestEnabled())
                 {
-                    Logger.Finest("Creating new connection for " + address + " with id " + id);
+                    Logger.Finest("Creating new connection for " + publicAddress + " with id " + id);
                 }
-
-                connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(), id, address, _networkConfig);
-
+                connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(), id,
+                    publicAddress, _networkConfig);
                 connection.Init(_socketInterceptor);
                 Authenticate(connection, isOwner);
                 Interlocked.Increment(ref _nextConnectionId);
@@ -417,15 +427,14 @@ namespace Hazelcast.Client.Connection
             {
                 if (Logger.IsFinestEnabled())
                 {
-                    Logger.Finest("Error connecting to " + address + " with id " + id, e);
+                    Logger.Finest("Error connecting to " + publicAddress + " with id " + id, e);
                 }
 
                 if (connection != null)
                 {
                     connection.Close();
                 }
-                throw ExceptionUtil.Rethrow(e, typeof (IOException), typeof (SocketException), 
-                    typeof (TargetDisconnectedException));
+                throw ExceptionUtil.Rethrow(e, typeof(IOException), typeof(SocketException), typeof(TargetDisconnectedException));
             }
         }
         

@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
+using Hazelcast.IO;
 
 namespace Hazelcast.Util
 {
@@ -28,4 +30,6 @@ namespace Hazelcast.Util
     public delegate string DecodeRegisterResponse(IClientMessage requestMessage);
 
     public delegate IClientMessage EncodeDeregisterRequest(string registrationId);
+    
+    internal delegate IDictionary<Address, Address> GetAddressDictionary();
 }

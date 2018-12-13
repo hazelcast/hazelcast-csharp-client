@@ -299,6 +299,9 @@ namespace Hazelcast.Config
                     case "ssl":
                         HandleSSLConfig(child, clientNetworkConfig);
                         break;
+                    case "hazelcast-cloud":
+                        HandleCloudConfig(child, clientNetworkConfig);
+                        break;
                     case "socket-interceptor":
                         HandleSocketInterceptorConfig(child, clientNetworkConfig);
                         break;
@@ -409,5 +412,20 @@ namespace Hazelcast.Config
             var sslConfig = ParseSSLConfig(node);
             clientNetworkConfig.SetSSLConfig(sslConfig);
         }
+        
+        private void HandleCloudConfig(XmlNode node, ClientNetworkConfig clientNetworkConfig) {
+            var cloudConfig = clientNetworkConfig.GetCloudConfig();
+
+            var enabledNode = node.Attributes.GetNamedItem("enabled");
+            var enabled = enabledNode != null && CheckTrue(GetTextContent(enabledNode).Trim());
+            cloudConfig.SetEnabled(enabled);
+            foreach (XmlNode child in node.ChildNodes) {
+                var nodeName = CleanNodeName(child);
+                if ("discovery-token".Equals(nodeName)) {
+                    cloudConfig.SetDiscoveryToken(GetTextContent(child));
+                }
+            }
+        }
+
     }
 }

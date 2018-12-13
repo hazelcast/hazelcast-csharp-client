@@ -99,7 +99,7 @@ namespace Hazelcast.Client.Connection
                 var connectionTimeout = clientNetworkConfig.GetConnectionTimeout() > -1
                     ? clientNetworkConfig.GetConnectionTimeout()
                     : ConnectionTimeout;
-                var socketResult = _clientSocket.BeginConnect(address.GetHost(), address.GetPort(), null, null);
+                var socketResult = _clientSocket.BeginConnect(address.GetInetAddress(), address.GetPort(), null, null);
 
                 if (!socketResult.AsyncWaitHandle.WaitOne(connectionTimeout, true) || !_clientSocket.Connected)
                 {

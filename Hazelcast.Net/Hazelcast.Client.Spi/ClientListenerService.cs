@@ -364,9 +364,9 @@ namespace Hazelcast.Client.Spi
             {
                 try
                 {
-                    _connectionManager.GetOrConnectAsync(member.GetAddress());
+                    _connectionManager.GetOrConnectAsync(member.GetAddress()).IgnoreExceptions();
                 }
-                catch (IOException)
+                catch (Exception)
                 {
                     return;
                 }

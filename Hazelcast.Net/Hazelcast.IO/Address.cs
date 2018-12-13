@@ -57,14 +57,14 @@ namespace Hazelcast.IO
         {
         }
 
-        public Address(string hostname, IPAddress inetAddress, int port)
+        public Address(string hostname, IPAddress ipAddress, int port)
         {
-            if (inetAddress == null)
+            if (ipAddress == null)
             {
-                throw new ArgumentNullException("inetAddress");
+                throw new ArgumentNullException("ipAddress");
             }
-            _type = (inetAddress.AddressFamily == AddressFamily.InterNetwork) ? IPv4 : IPv6;
-            var addressArgs = inetAddress.ToString().Split('%');
+            _type = (ipAddress.AddressFamily == AddressFamily.InterNetwork) ? IPv4 : IPv6;
+            var addressArgs = ipAddress.ToString().Split('%');
             _host = hostname ?? addressArgs[0];
             if (addressArgs.Length == 2)
             {
