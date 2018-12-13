@@ -68,6 +68,7 @@ namespace Hazelcast.Client
         private readonly Statistics _statistics;
         private readonly NearCacheManager _nearCacheManager;
         private readonly ICredentialsFactory _credentialsFactory;
+        private readonly AddressProvider _addressProvider;
         
         private HazelcastClient(ClientConfig config)
         {
@@ -98,6 +99,8 @@ namespace Hazelcast.Client
             _executionService = new ClientExecutionService(_instanceName, config.GetExecutorPoolSize());
             _clusterService = new ClientClusterService(this);
             _loadBalancer = config.GetLoadBalancer() ?? new RoundRobinLB();
+            
+            _addressProvider = new AddressProvider(_config);
             _connectionManager = new ClientConnectionManager(this);
             _invocationService = CreateInvocationService();
             _listenerService = new ClientListenerService(this);
@@ -444,6 +447,11 @@ namespace Hazelcast.Client
         internal Statistics GetStatistics()
         {
             return _statistics;
+        }
+
+        internal AddressProvider GetAddressProvider()
+        {
+            return _addressProvider;
         }
         
         internal ICredentialsFactory GetCredentialsFactory()

@@ -93,6 +93,16 @@ namespace Hazelcast.Client.Test.Config
             Assert.That(socketOptions.IsReuseAddress(), Is.True);
         }
 
+        
+        [Test]
+        public void TestCloudConfig() 
+        {
+            var cloudConfig = _clientConfig.GetNetworkConfig().GetCloudConfig();
+            Assert.That(cloudConfig, Is.Not.Null);
+            Assert.That(cloudConfig.IsEnabled(), Is.False);
+            Assert.That(cloudConfig.GetDiscoveryToken(), Is.EqualTo("EXAMPLE_TOKEN"));
+        }
+
         [Test]
         public void TestProxyFactoryConfig()
         {

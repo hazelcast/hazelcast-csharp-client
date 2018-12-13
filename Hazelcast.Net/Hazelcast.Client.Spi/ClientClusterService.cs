@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -388,20 +389,20 @@ namespace Hazelcast.Client.Spi
             return _client.GetClientConfig();
         }
 
-        private IList<Address> GetPossibleMemberAddresses()
+        private IEnumerable<Address> GetPossibleMemberAddresses()
         {
             var memberList = _client.GetClientClusterService().GetMemberList();
             var addresses = memberList.Select(member => member.GetAddress()).ToList();
 
             if (_shuffleMemberList)
             {
-                addresses = Shuffle(addresses);
+                addresses = AddressUtil.Shuffle(addresses);
             }
 
-            var configAddresses = GetConfigAddresses();
+            var configAddresses = _client.GetAddressProvider().GetAddresses();
             if (_shuffleMemberList)
             {
-                configAddresses = Shuffle(configAddresses);
+                configAddresses = AddressUtil.Shuffle(configAddresses);
             }
 
             addresses.AddRange(configAddresses);
@@ -416,24 +417,6 @@ namespace Hazelcast.Client.Spi
                 addresses.Add(_prevOwnerConnectionAddress);
             }
             return addresses;
-        }
-
-        private IList<Address> GetConfigAddresses()
-        {
-            var configAddresses = _client.GetClientConfig().GetNetworkConfig().GetAddresses();
-            var possibleAddresses = new List<Address>();
-
-            foreach (var cfgAddress in configAddresses)
-            {
-                possibleAddresses.AddRange(AddressHelper.GetSocketAddresses(cfgAddress));
-            }
-            return possibleAddresses;
-        }
-
-        private List<Address> Shuffle(IList<Address> list)
-        {
-            var r = new Random();
-            return list.OrderBy(x => r.Next()).ToList();
         }
 
         private void Init()
@@ -456,7 +439,5 @@ namespace Hazelcast.Client.Spi
                 }
             }
         }
-
-
     }
 }

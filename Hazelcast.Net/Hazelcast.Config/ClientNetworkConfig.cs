@@ -78,6 +78,9 @@ namespace Hazelcast.Config
         private SocketOptions _socketOptions = new SocketOptions();
 
         private SSLConfig _sslConfig = new SSLConfig();
+        
+        private ClientCloudConfig _cloudConfig = new ClientCloudConfig();
+
 
         /// <summary>
         /// Adds given addresses to the list of candidate addresses that client will use to establish initial connection.
@@ -96,10 +99,6 @@ namespace Hazelcast.Config
         /// <returns>list of addresses</returns>
         public virtual IList<string> GetAddresses()
         {
-            if (_addressList.Count == 0)
-            {
-                AddAddress("localhost");
-            }
             return _addressList;
         }
 
@@ -130,6 +129,14 @@ namespace Hazelcast.Config
         public virtual int GetConnectionTimeout()
         {
             return _connectionTimeout;
+        }
+
+        /// <summary>
+        /// Gets <see cref="ClientCloudConfig"/>
+        /// </summary>
+        /// <returns><see cref="ClientCloudConfig"/></returns>
+        public ClientCloudConfig GetCloudConfig() {
+            return _cloudConfig;
         }
 
         /// <summary>
@@ -188,6 +195,18 @@ namespace Hazelcast.Config
             _addressList.AddRange(addresses);
             return this;
         }
+
+        /// <summary>
+        /// Sets <see cref="ClientCloudConfig"/>
+        /// </summary>
+        /// <param name="cloudConfig"><see cref="ClientCloudConfig"/></param>
+        /// <returns><see cref="ClientNetworkConfig"/> for chaining</returns>
+        public ClientNetworkConfig SetCloudConfig(ClientCloudConfig cloudConfig) 
+        {
+            _cloudConfig = cloudConfig;
+            return this;
+        }
+
 
         /// <summary>
         /// While client is trying to connect initially to one of the members in the configured address list,

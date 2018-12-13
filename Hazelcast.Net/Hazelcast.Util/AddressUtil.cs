@@ -14,9 +14,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Hazelcast.IO;
+using Hazelcast.Logging;
 
 namespace Hazelcast.Util
 {
@@ -46,6 +49,8 @@ namespace Hazelcast.Util
 
     internal static class AddressUtil
     {
+        private const int MaxPortTries = 3;
+
         public static AddressHolder GetAddressHolder(string address, int defaultPort)
         {
             var indexBracketStart = address.IndexOf('[');
@@ -92,7 +97,7 @@ namespace Hazelcast.Util
             return new AddressHolder(host, port, scopeId);
         }
 
-        public static ICollection<IPAddress> GetPossibleInetAddressesFor(IPAddress ipAddress)
+        private static ICollection<IPAddress> GetPossibleIpAddressesFor(IPAddress ipAddress)
         {
             if ((ipAddress.IsIPv6SiteLocal || ipAddress.IsIPv6LinkLocal) && ipAddress.ScopeId <= 0)
             {
@@ -109,8 +114,7 @@ namespace Hazelcast.Util
                 }
                 if (possibleAddresses.Count == 0)
                 {
-                    throw new ArgumentException("Could not find a proper network interface" + " to connect to " +
-                                                ipAddress);
+                    throw new ArgumentException("Could not find a proper network interface" + " to connect to " + ipAddress);
                 }
                 return possibleAddresses;
             }
@@ -130,6 +134,88 @@ namespace Hazelcast.Util
             {
                 return false;
             }
+        }
+
+        public static ICollection<Address> ParsePossibleAddresses(string address)
+        {
+            var addressHolder = GetAddressHolder(address, -1);
+            var scopedAddress = addressHolder.ScopeId != null
+                ? addressHolder.Address + "%" + addressHolder.ScopeId
+                : addressHolder.Address;
+            IPAddress ipAddress = null;
+            try
+            {
+                ipAddress = Address.GetAddressByName(scopedAddress);
+            }
+            catch (Exception)
+            {
+                Logger.GetLogger(typeof(AddressUtil)).Finest("Address not available");
+            }
+            var port = addressHolder.Port;
+            var portTryCount = 1;
+            if (port == -1)
+            {
+                portTryCount = MaxPortTries;
+                port = 5701;
+            }
+            ICollection<Address> socketAddresses = new List<Address>();
+            if (ipAddress == null)
+            {
+                for (var i = 0; i < portTryCount; i++)
+                {
+                    if (IPAddress.TryParse(scopedAddress, out ipAddress))
+                    {
+                        socketAddresses.Add(new Address(scopedAddress, ipAddress, port + i));
+                    }
+                }
+            }
+            else
+            {
+                if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    for (var i = 0; i < portTryCount; i++)
+                    {
+                        socketAddresses.Add(new Address(scopedAddress, ipAddress, port + i));
+                    }
+                }
+                else
+                {
+                    var addresses = GetPossibleIpAddressesFor(ipAddress);
+                    foreach (var ipa in addresses)
+                    {
+                        for (var i = 0; i < portTryCount; i++)
+                        {
+                            socketAddresses.Add(new Address(scopedAddress, ipa, port + i));
+                        }
+                    }
+                }
+            }
+            return socketAddresses;
+        }
+
+        public static Address ParseSocketAddress(string address)
+        {
+            var addressHolder = GetAddressHolder(address, -1);
+            var scopedAddress = addressHolder.ScopeId != null
+                ? addressHolder.Address + "%" + addressHolder.ScopeId
+                : addressHolder.Address;
+            try
+            {
+                var ipAddress = Address.GetAddressByName(scopedAddress);
+                return new Address(scopedAddress, ipAddress, addressHolder.Port);
+            }
+            catch (Exception)
+            {
+                Logger.GetLogger(typeof(AddressUtil)).Finest("Address not available");
+            }
+
+            return null;
+        }
+
+        public static List<Address> Shuffle(IEnumerable<Address> list)
+        {
+            var r = new Random();
+            return list.OrderBy(x => r.Next()).ToList();
         }
 
         [Serializable]
