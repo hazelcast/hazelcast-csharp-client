@@ -38,6 +38,8 @@
 * [6. Securing Client Connection](#6-securing-client-connection)
   * [6.1. TLS/SSL](#61-tlsssl)
     * [6.1.1. TLS/SSL for Hazelcast Members](#611-tlsssl-for-hazelcast-members)
+    * [6.1.2. TLS/SSL for Hazelcast .NET Clients](#612-tlsssl-for-hazelcast-net-clients)
+    * [6.1.3. Mutual Authentication](#613-mutual-authentication)
 * [7. Using .NET Client with Hazelcast IMDG](#7-using-net-client-with-hazelcast-imdg)
   * [7.1. .NET Client API Overview](#71-net-client-api-overview)
   * [7.2. .NET Client Operation Modes](#72-net-client-operation-modes)
@@ -1182,13 +1184,11 @@ The following are example configurations.
     <name>hazel</name>
     <password>cast</password>
   </group>
-
   <network>
-    <hazelcast-cloud enabled="false">
+    <hazelcast-cloud enabled="true">
         <discovery-token>EXAMPLE_TOKEN</discovery-token>
     </hazelcast-cloud>
   </network>
-
 </hazelcast-client>
 ```
 
@@ -1224,6 +1224,102 @@ You should set `keyStore` and `trustStore` before starting the members. See the 
 #### 6.1.1. TLS/SSL for Hazelcast Members
 
 Hazelcast allows you to encrypt socket level communication between Hazelcast members and between Hazelcast clients and members, for end to end encryption. To use it, see the [TLS/SSL for Hazelcast Members section](http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#tls-ssl-for-hazelcast-members).
+
+#### 6.1.2. TLS/SSL for Hazelcast .NET Clients
+
+TLS/SSL for the Hazelcast .NET client can be configured using the `SSLConfig` class. Let's first give an example of a sample configuration and then go over the configuration options one by one:
+
+```c#
+    var clientConfig = new ClientConfig();
+    var sslConfig = clientConfig.GetNetworkConfig().GetSSLConfig();
+    sslConfig.SetEnabled(true);
+    sslConfig.SetProperty(SSLConfig.ValidateCertificateChain, "true");
+    sslConfig.SetProperty(SSLConfig.CheckCertificateRevocation, "false");
+    sslConfig.SetProperty(SSLConfig.ValidateCertificateName, "false");
+    sslConfig.SetProperty(SSLConfig.CertificateName, "CN or SAN of server certificate");
+    sslConfig.SetProperty(SSLConfig.CertificateFilePath, "client pfx file path");
+    sslConfig.SetProperty(SSLConfig.CertificatePassword, "client pfx password");
+    sslConfig.SetProperty(SSLConfig.SslProtocol, "tls");
+```
+
+##### Enabling TLS/SSL
+
+TLS/SSL for the Hazelcast .NET client can be enabled/disabled using the `enabled` option. When this option is set to `true`, TLS/SSL will be configured with respect to the other `SSLConfig` options. 
+Setting this option to `false` will result in discarding the other `SSLConfig` options.
+
+The following is an example configuration:
+
+```c#
+clientConfig.GetNetworkConfig().GetSSLConfig().SetEnabled(true)
+```
+
+Default value is `false` (disabled). 
+
+##### Certificate Chain validation
+
+Remote SSL certificate chain validation can be enabled/disabled using the `SSLConfig.ValidateCertificateChain` option. It is enabled by default. If you need to bypass certificate validation for some reason, you can disable it as follows:  
+
+```c#
+sslConfig.SetProperty(SSLConfig.ValidateCertificateChain, "false");
+```
+
+Validation is done by .NET and delegated to OS, and you need to make sure your server certificate is trusted by your OS.
+Please refer to [this blog](https://blogs.msdn.microsoft.com/webdev/2017/11/29/configuring-https-in-asp-net-core-across-different-platforms/) for information on how to configure your OS to trust your server certificates.
+
+##### Certificate Name Validation
+
+Server certificate CN or SAN field can be validated against a value you set into configuration. This option is disabled by default.
+
+An example usage is shown below:
+
+```c#
+sslConfig.SetProperty(SSLConfig.ValidateCertificateName, "true");
+sslConfig.SetProperty(SSLConfig.CertificateName, "hazelcast.org");
+```
+
+##### TLS/SSL Protocol
+
+You can configure the TLS/SSL protocol using the `SSLConfig.SslProtocol` option. Valid options are string values of `System.Security.Authentication.SslProtocols` Enum. 
+Depending on your .Net Framework/Net core version, below values are valid:
+
+* **None**    : Allows the operating system to choose the best protocol to use. 
+* **Ssl2**    : SSL 2.0 Protocol. *RFC 6176 prohibits the usage of SSL 2.0.* 
+* **Ssl3**    : SSL 3.0 Protocol. *RFC 7568 prohibits the usage of SSL 3.0.*
+* **Tls**     : TLS 1.0 Protocol described in RFC 2246.
+* **Tls11**   : TLS 1.1 Protocol described in RFC 4346. (.Net Framework 4.5+)
+* **Tls12**   : TLS 1.2 Protocol described in RFC 5246. (.Net Framework 4.5+)
+
+
+#### 6.1.3. Mutual Authentication
+
+As explained above, Hazelcast members have key stores used to identify themselves (to other members) and Hazelcast clients have trust stores used to define which members they can trust.
+
+Using mutual authentication, the clients also have their key stores and members have their trust stores so that the members can know which clients they can trust.
+
+To enable mutual authentication, firstly, you need to set the following property on the server side in the `hazelcast.xml` file:
+
+```xml
+<network>
+    <ssl enabled="true">
+        <properties>
+            <property name="javax.net.ssl.mutualAuthentication">REQUIRED</property>
+        </properties>
+    </ssl>
+</network>
+```
+
+You can see the details of setting mutual authentication on the server side in the [Mutual Authentication section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#mutual-authentication) of the Hazelcast IMDG Reference Manual.
+
+On the client side, you have to provide the client certificate and its password if there is one. Here is how you do it:
+
+```c#
+sslConfig.SetProperty(SSLConfig.CertificateFilePath, "client pfx file path");
+sslConfig.SetProperty(SSLConfig.CertificatePassword, "client pfx password");
+```
+
+The provided certificate file should be a PFX file that has private and public keys. The file path should be set with `SSLConfig.CertificateFilePath`.
+If you choose to set a password to it, you need to provide it to the configuration using the `SSLConfig.CertificatePassword` option.
+
 
 # 7. Using .NET Client with Hazelcast IMDG
 
