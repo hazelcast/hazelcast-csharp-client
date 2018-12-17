@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Client.Spi;
 using Hazelcast.Client.Test;
+using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.NearCache.Test
@@ -24,8 +26,9 @@ namespace Hazelcast.NearCache.Test
         public void Init()
         {
             _map = Client.GetMap<object, object>("nearCachedMap-" + TestSupport.RandomString());
+            var serverVersion = ((ClientClusterService) ClientInternal.GetClientClusterService()).ServerVersion;
             var nc = GetNearCache(_map);
-            Assert.AreEqual(typeof(NearCache), nc.GetType());
+            Assert.AreEqual(serverVersion >= VersionUtil.Version38?typeof(NearCache): typeof(NearCachePre38), nc.GetType());
         }
     }
 }
