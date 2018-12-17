@@ -11,4 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+  </ItemGroup>
 </Project>
