@@ -2210,7 +2210,7 @@ by page by filtering them with predicates and giving the size of the pages. Also
 
 ```c#
 var map = hazelcastInstance.GetMap<int, Student>( "students" );
-var greaterEqual = Predicates.greaterEqual( "age", 18 );
+var greaterEqual = Predicates.IsGreaterThanOrEqual( "age", 18 );
 var pagingPredicate = new PagingPredicate(pageSize:5, predicate:greaterEqual);
 // Retrieve the first page
 var values = map.Values( pagingPredicate );
