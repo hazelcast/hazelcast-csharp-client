@@ -184,6 +184,8 @@ The following is an example configuration when you are adding an `IdentifiedData
 ```
 If you want to add a `Portable` class, you should use `<portable-factories>` instead of `<data-serializable-factories>` in the above configuration.
 
+See the [Hazelcast IMDG Reference Manual](http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#getting-started) for more information on setting up the clusters.
+
 ## 1.3. Downloading and Installing
 
 Hazelcast .NET client is on [NuGet Repo](https://www.nuget.org/packages/Hazelcast.Net/). Just add `hazelcast-client` as a dependency to your .NET project and you are good to go.
