@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Util;
@@ -173,6 +174,19 @@ namespace Hazelcast.Client.Spi
             }
 
             return valueSet;
+        }
+
+        protected IClientMessage InvokeOnTarget(IClientMessage request, Address target)
+        {
+            try
+            {
+                var task = GetContext().GetInvocationService().InvokeOnTarget(request, target);
+                return ThreadUtil.GetResult(task);
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
         }
 
         protected virtual IClientMessage Invoke(IClientMessage request, object key)

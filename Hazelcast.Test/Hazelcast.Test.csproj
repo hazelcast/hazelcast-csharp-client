@@ -29,4 +29,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\*" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Resources\hazelcast-lite-member.xml" />
+    <None Remove="Resources\hazelcast-quick-node-switching.xml" />
+  </ItemGroup>
 </Project>

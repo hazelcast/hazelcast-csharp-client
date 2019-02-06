@@ -79,7 +79,8 @@ namespace Hazelcast.Util
                 {ClientProtocolErrorCodes.TransactionTimedOut, (m, c) => new TransactionTimedOutException(m)},
                 {ClientProtocolErrorCodes.UriSyntax, (m, c) => new UriFormatException(m)},
                 {ClientProtocolErrorCodes.UtfDataFormat, (m, c) => new InvalidDataException(m)},
-                {ClientProtocolErrorCodes.UnsupportedOperation, (m, c) => new NotSupportedException(m)}
+                {ClientProtocolErrorCodes.UnsupportedOperation, (m, c) => new NotSupportedException(m)},
+                {ClientProtocolErrorCodes.ConsistencyLostException, (m, c) => new ConsistencyLostException(m)}
             };
 
         public Exception CreateException(Error error)

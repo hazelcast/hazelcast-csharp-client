@@ -159,6 +159,11 @@ using Hazelcast.Util;
                     connection = GetConnection(address);
                     if (connection == null)
                     {
+                        if (address != null && _client.GetClientClusterService().GetMember(address) == null)
+                        {
+                            throw new TargetNotMemberException(string.Format("Target {0} is not a member.", address));
+                        }
+
                         //Create an async connection and send the invocation afterward.
                         _clientConnectionManager.GetOrConnectAsync(address).ContinueWith(t =>
                             {
@@ -258,6 +263,15 @@ using Hazelcast.Util;
             }
             if (Clock.CurrentTimeMillis() >= invocation.InvocationTimeMillis + _invocationTimeoutMillis)
             {
+                return false;
+            }
+
+            if (invocation.Address != null && exception is TargetNotMemberException &&
+                _client.GetClientClusterService().GetMember(invocation.Address) == null)
+            {
+                //when invocation send over address
+                //if exception is target not member and
+                //address is not available in member list , don't retry
                 return false;
             }
 
