@@ -588,7 +588,7 @@ cfg.GetNetworkConfig().AddAddress("127.0.0.1:5701");
 var client = HazelcastClient.NewHazelcastClient(cfg);
 ```
 
-See the `ClientConfig` class documentation at [Hazelcast .NET client API Docs](http://docs.hazelcast.org/docs/clients/net/current/) for details.
+See the `ClientConfig` class documentation at [Hazelcast .NET client API Docs](https://docs.hazelcast.org/docs/clients/net/3.10.0/html/G_Hazelcast_Client.htm) for details.
 
 ### 3.1.2. Declarative Configuration (XML)
 
