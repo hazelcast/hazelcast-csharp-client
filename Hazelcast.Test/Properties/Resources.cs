@@ -22,6 +22,8 @@ namespace Hazelcast.Test
         public static string hazelcast_ssl_signed {get { return GetXmlResourceContent("hazelcast-ssl-signed"); }}
         public static string hazelcast_ssl {get { return GetXmlResourceContent("hazelcast-ssl"); }}
         public static string hazelcast_stat {get { return GetXmlResourceContent("hazelcast-stat"); }}
+        public static string hazelcast_quick_node_switching { get { return GetXmlResourceContent("hazelcast-quick-node-switching"); } }
+        public static string hazelcast_lite_member { get { return GetXmlResourceContent("hazelcast-lite-member"); } }
 
         private static byte[] GetBytes(string name)
         {

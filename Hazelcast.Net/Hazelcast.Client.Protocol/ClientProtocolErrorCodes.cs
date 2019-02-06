@@ -91,6 +91,24 @@ namespace Hazelcast.Client.Protocol
         Xa = 67,
         AccessControl = 68,
         Login = 69,
-        UnsupportedCallback = 70
+        UnsupportedCallback = 70,
+        NoDataMemeber = 71,
+        ReplicatedMapCantBeCreated = 72,
+        MaxMessageSizeExceeded = 73,
+        WANReplicationQueueFull = 74,
+        AssertionError = 75,
+        OutOfMemory = 76,
+        StackOverflowError = 77,
+        NativeOutOfMemoryError = 78,
+        ServiceNotFound = 79,
+        StaleTaskId = 80,
+        DuplicateTask = 81,
+        StaleTask = 82,
+        LocalMemberReset = 83,
+        IndeterminateOperationState = 84,
+        FlakeIdNodeIdOutOfRangeException = 85,
+        TargetNotReplicaException = 86,
+        MutationDisallowedException = 87,
+        ConsistencyLostException = 88
     }
 }
