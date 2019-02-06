@@ -215,6 +215,12 @@ namespace Hazelcast.Client
         }
 
         /// <inheritdoc />
+        public IPNCounter GetPNCounter(string name)
+        {
+            return GetDistributedObject<IPNCounter>(ServiceNames.PNCounter, name);
+        }
+
+        /// <inheritdoc />
         public ISemaphore GetSemaphore(string name)
         {
             return GetDistributedObject<ISemaphore>(ServiceNames.Semaphore, name);

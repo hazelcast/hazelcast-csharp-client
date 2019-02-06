@@ -102,4 +102,32 @@ namespace Hazelcast.Core
         {
         }
     }
+
+    /// <summary>
+    /// An exception that is thrown when the session guarantees have been lost
+    /// </summary>
+    [Serializable]
+    public class ConsistencyLostException : HazelcastException
+    {
+        public ConsistencyLostException()
+        {
+        }
+
+        public ConsistencyLostException(string message) : base(message)
+        {
+        }
+    }
+
+    /// <summary>Thrown when invoke operations on a CRDT failed because the cluster does not contain any data members.</summary>
+    /// <remarks>Thrown when invoke operations on a CRDT failed because the cluster does not contain any data members.</remarks>
+    [Serializable]
+    public class NoDataMemberInClusterException : HazelcastException
+    {
+        public NoDataMemberInClusterException()
+        {
+        }
+        public NoDataMemberInClusterException(string message) : base(message)
+        {
+        }
+    }
 }

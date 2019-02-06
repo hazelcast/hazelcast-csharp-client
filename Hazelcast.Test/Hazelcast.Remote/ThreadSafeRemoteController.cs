@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ namespace Hazelcast.Remote
 
         public override bool terminateMember(string clusterId, string memberId)
         {
-            return ThreadSafeCall(() => base.shutdownMember(clusterId, memberId));
+            return ThreadSafeCall(() => base.terminateMember(clusterId, memberId));
         }
 
         public override bool suspendMember(string clusterId, string memberId)
@@ -85,7 +85,7 @@ namespace Hazelcast.Remote
 
         public override bool terminateCluster(string clusterId)
         {
-            return ThreadSafeCall(() => base.shutdownCluster(clusterId));
+            return ThreadSafeCall(() => base.terminateCluster(clusterId));
         }
 
         public override Cluster splitMemberFromCluster(string memberId)
