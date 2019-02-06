@@ -30,7 +30,7 @@ using TimeStampIList = System.Collections.Generic.IList<System.Collections.Gener
 namespace Hazelcast.Client.Proxy
 {
     /// <summary>
-    /// Client proxy implementation for a <see cref="IPNCounter" /> }.
+    /// Client proxy implementation for a <see cref="IPNCounter" />.
     /// </summary>
     internal class ClientPNCounterProxy : ClientProxy, IPNCounter
     {
