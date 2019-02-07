@@ -18,6 +18,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
+    [Category("3.10")]
     public class ClientPNCounterBasicIntegrationTest : SingleMemberBaseTest
     {
         [Test]

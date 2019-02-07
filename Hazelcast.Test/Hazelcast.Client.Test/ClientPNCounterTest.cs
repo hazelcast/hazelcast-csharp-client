@@ -24,6 +24,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
+    [Category("3.10")]
     public class ClientPNCounterTest : SingleMemberBaseTest
     {
         private ClientPNCounterProxy _pnCounter;
@@ -32,22 +33,6 @@ namespace Hazelcast.Client.Test
         public void Setup()
         {
             _pnCounter = Client.GetPNCounter(TestSupport.RandomString()) as ClientPNCounterProxy;
-        }
-
-        protected override void ConfigureGroup(ClientConfig config)
-        {
-            config.GetGroupConfig().SetName(HzCluster.Id).SetPassword(HzCluster.Id);
-        }
-
-        protected override void ConfigureClient(ClientConfig config)
-        {
-            config.GetNetworkConfig().SetConnectionAttemptLimit(1);
-            config.GetNetworkConfig().SetConnectionAttemptPeriod(2000);
-        }
-
-        protected override string GetServerConfig()
-        {
-            return Resources.hazelcast_quick_node_switching;
         }
 
         [Test]

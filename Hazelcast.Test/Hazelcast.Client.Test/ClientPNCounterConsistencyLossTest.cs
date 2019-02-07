@@ -24,6 +24,7 @@ namespace Hazelcast.Client.Test
 {
     [TestFixture("AddAndGet")]
     [TestFixture("Get")]
+    [Category("3.10")]
     public class ClientPNCounterConsistencyLossTest : MultiMemberBaseNoSetupTest
     {
         private readonly string _type;
