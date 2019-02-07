@@ -20,10 +20,11 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Client.Test
 {
+    [TestFixture]
+    [Category("3.10")]
     public class VectorClockTest
     {
-        internal static VectorClock _inst;
-        internal const string name = "ClientPNCounterTest";
+        internal VectorClock _inst;
 
         [SetUp]
         public void Init()
@@ -41,7 +42,7 @@ namespace Hazelcast.Client.Test
         }
 
         [TearDown]
-        public static void Destroy()
+        public  void Destroy()
         {
             _inst = null;
         }
