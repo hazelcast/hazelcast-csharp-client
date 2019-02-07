@@ -20,7 +20,7 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Client.Test
 {
-    public class VectorClockTest : SingleMemberBaseTest
+    public class VectorClockTest
     {
         internal static VectorClock _inst;
         internal const string name = "ClientPNCounterTest";
