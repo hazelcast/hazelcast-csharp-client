@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
     [Category("3.10")]
     public class VectorClockTest
     {
-        internal VectorClock _inst;
+        private VectorClock _inst;
 
         [SetUp]
         public void Init()
