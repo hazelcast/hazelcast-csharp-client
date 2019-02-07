@@ -51,12 +51,6 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Reset_Succeeded()
-        {
-            _pnCounter.Reset();
-        }
-
-        [Test]
         public void AddAndGet_Succeeded()
         {
             var result = _pnCounter.AddAndGet(10);
