@@ -24,7 +24,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    public class ClientPNCounterTest : MultiMemberBaseTest
+    public class ClientPNCounterTest : SingleMemberBaseTest
     {
         private ClientPNCounterProxy _pnCounter;
 
@@ -32,12 +32,6 @@ namespace Hazelcast.Client.Test
         public void Setup()
         {
             _pnCounter = Client.GetPNCounter(TestSupport.RandomString()) as ClientPNCounterProxy;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-           
         }
 
         protected override void ConfigureGroup(ClientConfig config)
