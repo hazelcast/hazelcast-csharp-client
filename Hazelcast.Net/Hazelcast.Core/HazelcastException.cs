@@ -22,18 +22,34 @@ namespace Hazelcast.Core
     [Serializable]
     public class HazelcastException : SystemException
     {
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public HazelcastException()
         {
         }
 
+        /// <summary>
+        /// Constructor version with a message to assign to
+        /// </summary>
+        /// <param name="message"> is message to assign to</param>
         public HazelcastException(string message) : base(message)
         {
         }
 
+        /// <summary>
+        /// Constructor version with a message and Exception instance to assign to
+        /// </summary>
+        /// <param name="message">is a message to assign to</param>
+        /// <param name="cause">is an exception instance to assign to</param>
         public HazelcastException(string message, Exception cause) : base(message, cause)
         {
         }
 
+        /// <summary>
+        /// Constructor version with an exception instance to assign to
+        /// </summary>
+        /// <param name="cause">is an exception instance to assign to</param>
         public HazelcastException(Exception cause) : base(cause.Message)
         {
         }
