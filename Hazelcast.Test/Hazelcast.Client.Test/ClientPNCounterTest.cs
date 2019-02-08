@@ -15,10 +15,8 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Client.Proxy;
-using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
-using Hazelcast.Test;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -152,6 +150,8 @@ namespace Hazelcast.Client.Test
             };
 
             _pnCounter.UpdateObservedReplicaTimestamps(testList);
+
+            Assert.AreEqual(testList, _pnCounter._observedClock.EntrySet());
         }
 
         [Test]
@@ -178,6 +178,8 @@ namespace Hazelcast.Client.Test
             };
 
             _pnCounter.UpdateObservedReplicaTimestamps(testList);
+
+            Assert.AreEqual(initList, _pnCounter._observedClock.EntrySet());
         }
 
         [Test]
@@ -187,7 +189,7 @@ namespace Hazelcast.Client.Test
             Exception lastException = null;
             Address targetAddress = null;
 
-            var ex = Assert.Throws<NoDataMemberInClusterException>(() => _pnCounter.InvokeAddInternal(10, true, excludedAddresses, lastException, targetAddress));
+            Assert.Throws<NoDataMemberInClusterException>(() => _pnCounter.InvokeAddInternal(10, true, excludedAddresses, lastException, targetAddress));
         }
 
         [Test]
@@ -197,7 +199,7 @@ namespace Hazelcast.Client.Test
             Exception lastException = new OutOfMemoryException();
             Address targetAddress = null;
 
-            var ex = Assert.Throws<OutOfMemoryException>(() => _pnCounter.InvokeAddInternal(10, true, excludedAddresses, lastException, targetAddress));
+            Assert.Throws<OutOfMemoryException>(() => _pnCounter.InvokeAddInternal(10, true, excludedAddresses, lastException, targetAddress));
         }
 
         [Test]
@@ -207,7 +209,7 @@ namespace Hazelcast.Client.Test
             Exception lastException = null;
             Address targetAddress = null;
 
-            var ex = Assert.Throws<NoDataMemberInClusterException>(() => _pnCounter.InvokeGetInternal(excludedAddresses, lastException, targetAddress));
+            Assert.Throws<NoDataMemberInClusterException>(() => _pnCounter.InvokeGetInternal(excludedAddresses, lastException, targetAddress));
         }
 
         [Test]
@@ -217,7 +219,7 @@ namespace Hazelcast.Client.Test
             Exception lastException = new OutOfMemoryException();
             Address targetAddress = null;
 
-            var ex = Assert.Throws<OutOfMemoryException>(() => _pnCounter.InvokeGetInternal(excludedAddresses, lastException, targetAddress));
+            Assert.Throws<OutOfMemoryException>(() => _pnCounter.InvokeGetInternal(excludedAddresses, lastException, targetAddress));
         }
     }
 }

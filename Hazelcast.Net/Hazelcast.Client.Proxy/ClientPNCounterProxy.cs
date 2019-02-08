@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Proxy
 
         // The last vector clock observed by this proxy. It is used for maintaining
         // session consistency guarantees when reading from different replicas.
-        private volatile VectorClock _observedClock;
+        internal volatile VectorClock _observedClock;
 
         /// <summary>
         /// Creates a client <see cref="IPNCounter" /> proxy
@@ -357,12 +357,11 @@ namespace Hazelcast.Client.Proxy
 
             while (true)
             {
+                if (_observedClock.IsAfter(newVectorClock))
+                    break;
+
                 // Store the original value just to avoid issue with data capture order
                 var originalValue = _observedClock;
-
-                if (originalValue.IsAfter(newVectorClock))
-                    break;
-                
                 if (Interlocked.CompareExchange(ref _observedClock, newVectorClock, originalValue) == originalValue)
                     break;
             }

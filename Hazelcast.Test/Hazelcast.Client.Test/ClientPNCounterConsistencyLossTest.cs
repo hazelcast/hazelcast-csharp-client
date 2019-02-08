@@ -63,7 +63,7 @@ namespace Hazelcast.Client.Test
 
         protected override string GetServerConfig()
         {
-            return Resources.hazelcast_quick_node_switching;
+            return Resources.hazelcast_crdt_replication;
         }
 
         [Test]

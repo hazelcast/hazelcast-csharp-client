@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Client.Proxy;
+using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -25,8 +25,8 @@ namespace Hazelcast.Client.Test
         public void SimpleReplicationTest()
         {
             var counterName = "counter";
-            var counter1 = Client.GetPNCounter(counterName) as ClientPNCounterProxy;
-            var counter2 = Client.GetPNCounter(counterName) as ClientPNCounterProxy;
+            var counter1 = Client.GetPNCounter(counterName);
+            var counter2 = Client.GetPNCounter(counterName);
 
             Assert.AreEqual(5L, counter1.AddAndGet(5L));
 
@@ -34,7 +34,7 @@ namespace Hazelcast.Client.Test
             AssertCounterValueEventually(5L, counter2);
         }
 
-        private void AssertCounterValueEventually(long expectedValue, ClientPNCounterProxy counter)
+        private void AssertCounterValueEventually(long expectedValue, IPNCounter counter)
         {
             TestSupport.AssertTrueEventually(() => { Assert.AreEqual(expectedValue, counter.Get()); });
         }
