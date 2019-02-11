@@ -63,6 +63,5 @@ namespace Hazelcast.Core
         {
             return _timeStampList;
         }
-
     }
 }

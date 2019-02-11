@@ -357,11 +357,12 @@ namespace Hazelcast.Client.Proxy
 
             while (true)
             {
-                if (_observedClock.IsAfter(newVectorClock))
-                    break;
-
                 // Store the original value just to avoid issue with data capture order
                 var originalValue = _observedClock;
+
+                if (originalValue.IsAfter(newVectorClock))
+                    break;
+               
                 if (Interlocked.CompareExchange(ref _observedClock, newVectorClock, originalValue) == originalValue)
                     break;
             }

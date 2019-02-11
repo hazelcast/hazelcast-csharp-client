@@ -35,6 +35,12 @@ namespace Hazelcast.Client.Test
             _type = type;
         }
 
+        [OneTimeTearDown]
+        public void Cleanup()
+        {
+            StopRemoteController(RemoteController);
+        }
+
         [SetUp]
         public void Setup()
         {
@@ -45,7 +51,7 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public void TearDown()
         {
-            ShutdownRemoteController();
+            RemoteController.shutdownCluster(HzCluster.Id);
         }
 
         protected override void InitMembers()
