@@ -73,6 +73,13 @@ namespace Hazelcast.Core
         /// <returns>ICountDownLatch proxy for the given name</returns>
         ICountDownLatch GetCountDownLatch(string name);
 
+        /// <summary>
+        /// PN (Positive-Negative) CRDT counter.
+        /// </summary>
+        /// <param name="name">name of the IPNCounter proxy</param>
+        /// <returns>IPNCounter proxy for the given name</returns>
+        IPNCounter GetPNCounter(string name);
+
         /// <param name="serviceName">name of the service</param>
         /// <param name="name">name of the object</param>
         /// <returns>IDistributedObject created by the service</returns>

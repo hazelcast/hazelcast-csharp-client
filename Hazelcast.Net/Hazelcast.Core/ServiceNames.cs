@@ -34,6 +34,8 @@ namespace Hazelcast.Core
 
         public const string CountDownLatch = "hz:impl:countDownLatchService";
 
+        public const string PNCounter = "hz:impl:PNCounterService";
+
         public const string Semaphore = "hz:impl:semaphoreService";
 
         public const string Cluster = "hz:impl:clusterService";

@@ -115,6 +115,11 @@ namespace Hazelcast.Client
             return GetClient().GetCountDownLatch(name);
         }
 
+        public IPNCounter GetPNCounter(string name)
+        {
+            return GetClient().GetPNCounter(name);
+        }
+
         public ISemaphore GetSemaphore(string name)
         {
             return GetClient().GetSemaphore(name);
