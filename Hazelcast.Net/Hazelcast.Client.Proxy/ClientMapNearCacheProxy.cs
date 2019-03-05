@@ -297,5 +297,10 @@ namespace Hazelcast.Client.Proxy
                 }
             }
         }
+
+        public override Task<TValue> GetAsync(TKey key)
+        {
+            return GetContext().GetExecutionService().Submit(() => Get(key));
+        }
     }
 }
