@@ -2272,6 +2272,6 @@ Please see the [Licensing section](https://docs.hazelcast.org/docs/latest-dev/ma
 
 # 12. Copyright
 
-Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 
 Visit [www.hazelcast.com](http://www.hazelcast.com) for more information.
