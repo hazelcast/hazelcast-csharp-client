@@ -40,6 +40,26 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
+        internal sealed class JsonSerializer : ConstantSerializers.SingletonSerializer<HazelcastJsonValue>
+        {
+            public override int GetTypeId()
+            {
+                return SerializationConstants.JavascriptJSONSerializationType;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override HazelcastJsonValue Read(IObjectDataInput input)
+            {
+                return HazelcastJsonValue.FromString(input.ReadUTF());
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override void Write(IObjectDataOutput output, HazelcastJsonValue obj)
+            {
+                output.WriteUTF(obj.ToString());
+            }
+        }
+
         public class DateSerializer : ConstantSerializers.SingletonSerializer<DateTime>
         {
             private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
