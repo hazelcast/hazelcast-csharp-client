@@ -190,7 +190,7 @@ using Hazelcast.Util;
         {
             while (!GetPartitions() && _live.Get())
             {
-                Thread.Sleep(PartitionRefreshPeriod);
+                Thread.Sleep(100);
             }
         }
 
