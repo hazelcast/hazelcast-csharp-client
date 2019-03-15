@@ -606,7 +606,7 @@ namespace Hazelcast.IO.Serialization
 
             //TODO: proper support for generic types
             RegisterConstant(typeof (JavaClass), new DefaultSerializers.JavaClassSerializer());
-            RegisterConstant(typeof(HazelcastJsonValue), new DefaultSerializers.JsonSerializer());
+            RegisterConstant(typeof(HazelcastJsonValue), new DefaultSerializers.HazelcastJsonValueSerializer());
             RegisterConstant(typeof (BigInteger), new DefaultSerializers.BigIntegerSerializer());
             RegisterConstant(typeof (JavaEnum), new DefaultSerializers.JavaEnumSerializer());
             RegisterConstant(typeof (List<object>), new DefaultSerializers.ListSerializer<object>());

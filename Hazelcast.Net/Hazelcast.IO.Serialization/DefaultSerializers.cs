@@ -41,7 +41,7 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        internal sealed class JsonSerializer : ConstantSerializers.SingletonSerializer<HazelcastJsonValue>
+        internal sealed class HazelcastJsonValueSerializer : ConstantSerializers.SingletonSerializer<HazelcastJsonValue>
         {
             public override int GetTypeId()
             {
