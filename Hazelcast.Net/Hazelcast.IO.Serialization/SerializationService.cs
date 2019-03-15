@@ -26,7 +26,7 @@ namespace Hazelcast.IO.Serialization
     internal class SerializationService : ISerializationService
     {
         public const byte SerializerVersion = 1;
-        private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersLength;
+        private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersArraySize;
 
         private static readonly IPartitioningStrategy TheEmptyPartitioningStrategy = new EmptyPartitioningStrategy();
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (SerializationService));
@@ -349,7 +349,8 @@ namespace Hazelcast.IO.Serialization
             if (typeId <= 0)
             {
                 var index = IndexForDefaultType(typeId);
-                if (index < ConstantSerializersSize)
+                if (index < ConstantSerializersSize && 
+                    index != IndexForDefaultType(SerializationConstants.DefaultTypeSerializable))
                 {
                     return _constantTypeIds[index];
                 }
@@ -605,6 +606,7 @@ namespace Hazelcast.IO.Serialization
 
             //TODO: proper support for generic types
             RegisterConstant(typeof (JavaClass), new DefaultSerializers.JavaClassSerializer());
+            RegisterConstant(typeof(HazelcastJsonValue), new DefaultSerializers.HazelcastJsonValueSerializer());
             RegisterConstant(typeof (BigInteger), new DefaultSerializers.BigIntegerSerializer());
             RegisterConstant(typeof (JavaEnum), new DefaultSerializers.JavaEnumSerializer());
             RegisterConstant(typeof (List<object>), new DefaultSerializers.ListSerializer<object>());

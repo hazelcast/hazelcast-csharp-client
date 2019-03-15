@@ -25,6 +25,7 @@ namespace Hazelcast.Util
         public const string NULL_PREDICATE_IS_NOT_ALLOWED = "Predicate should not be null!";
         public const string NULL_AGGREGATOR_IS_NOT_ALLOWED = "Aggregator should not be null!";
         public const string NULL_PROJECTION_IS_NOT_ALLOWED = "Projection should not be null!";
+        public const string NULL_JSON_STRING_IS_NOT_ALLOWED = "JSON string cannot be null!";
 
         public static string HasText(string argument, string argName)
         {

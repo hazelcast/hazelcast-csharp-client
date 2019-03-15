@@ -24,7 +24,8 @@
   * [4.1. IdentifiedDataSerializable Serialization](#41-identifieddataserializable-serialization)
   * [4.2. Portable Serialization](#42-portable-serialization)
   * [4.3. Custom Serialization](#43-custom-serialization)
-  * [4.4. Global Serialization](#44-global-serialization)
+  * [4.4. JSON Serialization](#44-json-serialization)
+  * [4.5. Global Serialization](#45-global-serialization)
 * [5. Setting Up Client Network](#5-setting-up-client-network)
   * [5.1. Providing Member Addresses](#51-providing-member-addresses)
   * [5.2. Setting Smart Routing](#52-setting-smart-routing)
@@ -72,7 +73,8 @@
       * [7.7.1.1. Employee Map Query Example](#7711-employee-map-query-example)
       * [7.7.1.2. Querying by Combining Predicates with AND, OR, NOT](#7712-querying-by-combining-predicates-with-and-or-not)
       * [7.7.1.3. Querying with SQL](#7713-querying-with-sql)
-      * [7.7.1.4. Filtering with Paging Predicates](#7714-filtering-with-paging-predicates)
+	  * [7.7.1.4. Querying with JSON Strings](#7714-querying-with-json-strings)
+      * [7.7.1.5. Filtering with Paging Predicates](#7715-filtering-with-paging-predicates)
     * [7.7.2. Fast-Aggregations](#772-fast-aggregations)
   * [7.8. Monitoring and Logging](#78-monitoring-and-logging)
     * [7.8.1. Enabling Client Statistics](#781-enabling-client-statistics)
@@ -491,6 +493,7 @@ Hazelcast .NET client supports the following data structures and features:
 * IdentifiedDataSerializable Serialization
 * Portable Serialization
 * Custom Serialization
+* JSON Serialization
 * Global Serialization
 
 # 3. Configuration Overview
@@ -840,7 +843,40 @@ clientConfig.GetSerializationConfig()
 
 From now on, Hazelcast will use `CustomSerializer` to serialize `CustomSerializableType` objects.
 
-## 4.4. Global Serialization
+## 4.4. JSON Serialization
+
+You can use the JSON formatted strings as objects in Hazelcast cluster. Starting with Hazelcast IMDG 3.12, the JSON serialization is one of the formerly supported serialization methods. Creating JSON objects in the cluster does not require any server side coding and hence you can just send a JSON formatted string object to the cluster and query these objects by fields.
+
+In order to use JSON serialization, you should use the `HazelcastJsonValue` object for the key or value. Here is an example IMap usage:
+
+```c#
+    var config = new ClientConfig();
+    var client = HazelcastClient.NewHazelcastClient(config);
+    var map = client.GetMap<string, HazelcastJsonValue>("map");
+```
+
+We constructed a map in the cluster which has `string` as the key and `HazelcastJsonValue` as the value. `HazelcastJsonValue` is a simple wrapper and identifier for the JSON formatted strings. You can get the JSON string from the `HazelcastJsonValue` object by using the `ToString()` method. 
+
+You can construct a `HazelcastJsonValue` using `HazelcastJsonValue(string jsonString)` constructor. In case `json` parameter is null it will throw `NullReferenceException` exception. No JSON parsing is performed but it is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, and it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.
+
+Here is an example of how you can construct a `HazelcastJsonValue` and put to the map:
+
+```c#
+    map.Put("item1", new HazelcastJsonValue("{ \"age\": 4 }"));
+    map.Put("item2", new HazelcastJsonValue("{ \"age\": 20 }"));
+```
+
+You can query JSON objects in the cluster using the `Predicate`s of your choice. An example JSON query for querying the values whose age is less than 6 is shown below:
+
+```c#
+    // Get the objects whose age is less than 6
+    var result = map.Values(Predicates.IsLessThan("age", 6));
+
+    Console.WriteLine("Retrieved " + result.Count + " values whose age is less than 6.");
+    Console.WriteLine("Entry is: " + result.First().ToString());
+```
+
+## 4.5. Global Serialization
 
 The global serializer is identical to custom serializers from the implementation perspective.
 The global serializer is registered as a fallback serializer to handle all other objects if a serializer cannot be located for them.
@@ -2127,7 +2163,71 @@ var result = employeeMap.Values(predicate);
 //result will include only Bob
 ```
 
-#### 7.7.1.4. Filtering with Paging Predicates
+#### 7.7.1.4. Querying with JSON Strings
+
+You can query JSON strings stored inside your Hazelcast clusters. To query the JSON string,
+you first need to create a `HazelcastJsonValue` from the JSON string using the `HazelcastJsonValue(string jsonString)` constructor.
+You can use ``HazelcastJsonValue``s both as keys and values in the distributed data structures. 
+Then, it is possible to query these objects using the Hazelcast query methods explained in this section.
+
+```c#
+    var person1 = new HazelcastJsonValue("{ \"age\": 35 }");
+    var person2 = new HazelcastJsonValue("{ \"age\": 24 }");
+    var person3 = new HazelcastJsonValue("{ \"age\": 17 }");
+
+    var idPersonMap = client.GetMap<int, HazelcastJsonValue>("jsonValues");
+
+    idPersonMap.Put(1, person1);
+    idPersonMap.Put(2, person2);
+    idPersonMap.Put(3, person3);
+
+    var peopleUnder21 = idPersonMap.Values(Predicates.IsLessThan("age", 21));
+```
+
+When running the queries, Hazelcast treats values extracted from the JSON documents as Java types so they
+can be compared with the query attribute. JSON specification defines five primitive types to be used in the JSON
+documents: `number`,`string`, `true`, `false` and `null`. The `string`, `true/false` and `null` types are treated
+as `String`, `boolean` and `null`, respectively. We treat the extracted `number` values as ``long``s if they
+can be represented by a `long`. Otherwise, ``number``s are treated as ``double``s.
+
+It is possible to query nested attributes and arrays in the JSON documents. The query syntax is the same
+as querying other Hazelcast objects using the ``Predicate``s.
+
+```c#
+/**
+ * Sample JSON object
+ *
+ * {
+ *     "departmentId": 1,
+ *     "room": "alpha",
+ *     "people": [
+ *         {
+ *             "name": "Peter",
+ *             "age": 26,
+ *             "salary": 50000
+ *         },
+ *         {
+ *             "name": "Jonah",
+ *             "age": 50,
+ *             "salary": 140000
+ *         }
+ *     ]
+ * }
+ *
+ *
+ * The following query finds all the departments that have a person named "Peter" working in them.
+ */
+ 
+var departmentWithPeter = departments.Values(Predicates.IsEqual("people[any].name", "Peter"));
+
+```
+
+`HazelcastJsonValue` is a lightweight wrapper around your JSON strings. It is used merely as a way to indicate
+that the contained string should be treated as a valid JSON value. Hazelcast does not check the validity of JSON
+strings put into to the maps. Putting an invalid JSON string into a map is permissible. However, in that case
+whether such an entry is going to be returned or not from a query is not defined.
+
+#### 7.7.1.5. Filtering with Paging Predicates
 
 The .NET client provides paging for defined predicates. With its `PagingPredicate` class, you can get a list of keys, values or entries page 
 by page by filtering them with predicates and giving the size of the pages. Also, you can sort the entries by specifying comparators.
