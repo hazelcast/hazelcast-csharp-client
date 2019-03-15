@@ -46,7 +46,7 @@ namespace Hazelcast.Client.Test
         {
             for (var pos = 1; pos < 30; pos++)
             {
-                var value = HazelcastJsonValue.FromString("{ \"age\": " + pos + " }");
+                var value = new HazelcastJsonValue("{ \"age\": " + pos + " }");
                 _map.Put("key-" + pos, value);
             }
         }
@@ -54,14 +54,14 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void PutJsonValue_Succeeded()
         {
-            var value = HazelcastJsonValue.FromString("{ \"age\": 20 }");
+            var value = new HazelcastJsonValue("{ \"age\": 20 }");
             _map.Put("key-1", value);
         }
 
         [Test]
         public virtual void GetJsonValue_Succeeded()
         {
-            var value = HazelcastJsonValue.FromString("{ \"age\": 20 }");
+            var value = new HazelcastJsonValue("{ \"age\": 20 }");
 
             _map.Put("key-1", value);
             var result = _map.Get("key-1");
@@ -80,7 +80,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void QueryOnTextAndNumberProperty_WhenSomeEntriesDoNotHaveTheField_ShouldNotFail()
         {
-            var value = HazelcastJsonValue.FromString("{ \"email\": \"a@b.com\" }");
+            var value = new HazelcastJsonValue("{ \"email\": \"a@b.com\" }");
             _map.Put("key-001", value);
 
             FillMap();
@@ -92,7 +92,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void QueryOnNestedProperty_Succeeded()
         {
-            var value = HazelcastJsonValue.FromString("{ \"outer\": {\"inner\": 24} }");
+            var value = new HazelcastJsonValue("{ \"outer\": {\"inner\": 24} }");
             _map.Put("key-001", value);
 
             FillMap();

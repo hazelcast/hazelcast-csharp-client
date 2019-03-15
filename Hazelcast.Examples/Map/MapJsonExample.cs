@@ -34,8 +34,8 @@ namespace Hazelcast.Examples.Map
             var client = HazelcastClient.NewHazelcastClient(config);
             var map = client.GetMap<string, HazelcastJsonValue>("json-example");
 
-            map.Put("item1", HazelcastJsonValue.FromString("{ \"age\": 4 }"));
-            map.Put("item2", HazelcastJsonValue.FromString("{ \"age\": 20 }"));
+            map.Put("item1", new HazelcastJsonValue("{ \"age\": 4 }"));
+            map.Put("item2", new HazelcastJsonValue("{ \"age\": 20 }"));
 
             var result = map.Values(Predicates.IsLessThan("age", 6));
 

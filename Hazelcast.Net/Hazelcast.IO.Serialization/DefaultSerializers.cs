@@ -50,7 +50,7 @@ namespace Hazelcast.IO.Serialization
             /// <exception cref="System.IO.IOException"></exception>
             public override HazelcastJsonValue Read(IObjectDataInput input)
             {
-                return HazelcastJsonValue.FromString(input.ReadUTF());
+                return new HazelcastJsonValue(input.ReadUTF());
             }
 
             /// <exception cref="System.IO.IOException"></exception>

@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public void TestSerializeDeserializeJsonValue()
         {
-            var jsonValue = HazelcastJsonValue.FromString("{ \"key\": \"value\" }");
+            var jsonValue = new HazelcastJsonValue("{ \"key\": \"value\" }");
             var jsonData = _serializationService.ToData(jsonValue);
             var jsonDeserialized = _serializationService.ToObject<HazelcastJsonValue>(jsonData);
 
@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Test.Serialization
         [Test]
         public void FromStringShouldThrowExceptionOnNullArgument()
         {
-            Assert.Throws<NullReferenceException>(() => HazelcastJsonValue.FromString(null));
+            Assert.Throws<NullReferenceException>(() => new HazelcastJsonValue(null));
         }
     }
 }

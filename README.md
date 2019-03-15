@@ -857,13 +857,13 @@ In order to use JSON serialization, you should use the `HazelcastJsonValue` obje
 
 We constructed a map in the cluster which has `string` as the key and `HazelcastJsonValue` as the value. `HazelcastJsonValue` is a simple wrapper and identifier for the JSON formatted strings. You can get the JSON string from the `HazelcastJsonValue` object by using the `ToString()` method. 
 
-You can construct a `HazelcastJsonValue` using `HazelcastJsonValue.FromString(string json)` static factory method. In case `json` parameter is null this method will throw `NullReferenceException` exception. No JSON parsing is performed but it is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, and it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.
+You can construct a `HazelcastJsonValue` using `HazelcastJsonValue(string jsonString)` constructor. In case `json` parameter is null it will throw `NullReferenceException` exception. No JSON parsing is performed but it is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, and it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.
 
 Here is an example of how you can construct a `HazelcastJsonValue` and put to the map:
 
 ```c#
-    map.Put("item1", HazelcastJsonValue.FromString("{ \"age\": 4 }"));
-    map.Put("item2", HazelcastJsonValue.FromString("{ \"age\": 20 }"));
+    map.Put("item1", new HazelcastJsonValue("{ \"age\": 4 }"));
+    map.Put("item2", new HazelcastJsonValue("{ \"age\": 20 }"));
 ```
 
 You can query JSON objects in the cluster using the `Predicate`s of your choice. An example JSON query for querying the values whose age is less than 6 is shown below:
@@ -2166,14 +2166,14 @@ var result = employeeMap.Values(predicate);
 #### 7.7.1.4. Querying with JSON Strings
 
 You can query JSON strings stored inside your Hazelcast clusters. To query the JSON string,
-you first need to create a `HazelcastJsonValue` from the JSON string using the `HazelcastJsonValue.FromString(string json)`
-method. You can use ``HazelcastJsonValue``s both as keys and values in the distributed data structures. Then, it is
-possible to query these objects using the Hazelcast query methods explained in this section.
+you first need to create a `HazelcastJsonValue` from the JSON string using the `HazelcastJsonValue(string jsonString)` constructor.
+You can use ``HazelcastJsonValue``s both as keys and values in the distributed data structures. 
+Then, it is possible to query these objects using the Hazelcast query methods explained in this section.
 
 ```c#
-    var person1 = HazelcastJsonValue.FromString("{ \"age\": 35 }");
-    var person2 = HazelcastJsonValue.FromString("{ \"age\": 24 }");
-    var person3 = HazelcastJsonValue.FromString("{ \"age\": 17 }");
+    var person1 = new HazelcastJsonValue("{ \"age\": 35 }");
+    var person2 = new HazelcastJsonValue("{ \"age\": 24 }");
+    var person3 = new HazelcastJsonValue("{ \"age\": 17 }");
 
     var idPersonMap = client.GetMap<int, HazelcastJsonValue>("jsonValues");
 

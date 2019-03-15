@@ -24,9 +24,17 @@ namespace Hazelcast.IO.Serialization
     {
         private string _jsonString;
 
-        private HazelcastJsonValue(string json)
+        /// <summary>
+        /// Creates a HazelcastJsonValue with provided string.
+        /// This method does not the validity of the underlying Json string.
+        /// Invalid Json strings may cause wrong results in queries.
+        /// </summary>
+        /// <param name="jsonString"></param>
+        /// <exception cref="NullReferenceException">when jsonstring param is null</exception>
+        public HazelcastJsonValue(string jsonString)
         {
-            _jsonString = json;
+            ValidationUtil.CheckNotNull(jsonString, ValidationUtil.NULL_VALUE_IS_NOT_ALLOWED);
+            _jsonString = jsonString;
         }
 
         public override bool Equals(object obj)
@@ -55,19 +63,6 @@ namespace Hazelcast.IO.Serialization
         protected bool Equals(HazelcastJsonValue other)
         {
             return string.Equals(_jsonString, other._jsonString);
-        }
-
-        /// <summary>
-        /// Create a HazelcastJsonValue from a string.
-        /// This method does not the validity of the underlying Json string.
-        /// Invalid Json strings may cause wrong results in queries.
-        /// </summary>
-        /// <param name="jsonString"></param>
-        /// <returns></returns>
-        public static HazelcastJsonValue FromString(string jsonString)
-        {
-            ValidationUtil.CheckNotNull(jsonString, ValidationUtil.NULL_VALUE_IS_NOT_ALLOWED);
-            return new HazelcastJsonValue(jsonString);
         }
     }
 }
