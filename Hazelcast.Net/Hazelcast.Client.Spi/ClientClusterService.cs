@@ -39,6 +39,7 @@ namespace Hazelcast.Client.Spi
     internal class ClientClusterService : IClientClusterService, IConnectionListener
     {
         private const int MaxExceptionCount = 10;
+        private const int PreferredPort = 5701;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientClusterService));
         private readonly HazelcastClient _client;
 
@@ -293,11 +294,8 @@ namespace Hazelcast.Client.Spi
             var id = Guid.NewGuid().ToString();
             _listeners[id] = listener;
         }
-
-        /// <exception cref="System.Exception" />
-        private bool ConnectAsOwner(ICollection<IPEndPoint> triedAddresses, IList<Exception> exceptions)
+        private bool TryToConnectTo(IEnumerable<Address> addresses, IList<Exception> exceptions, ICollection<IPEndPoint> triedAddresses)
         {
-            var addresses = GetPossibleMemberAddresses();
             foreach (var address in addresses)
             {
                 var inetSocketAddress = address.GetInetSocketAddress();
@@ -308,7 +306,7 @@ namespace Hazelcast.Client.Spi
                     {
                         Logger.Finest("Trying to connect to " + address);
                     }
-                    var ownerConnection = _connectionManager.GetOrConnect(address, isOwner:true);
+                    var ownerConnection = _connectionManager.GetOrConnect(address, isOwner: true);
                     FireConnectionEvent(LifecycleEvent.LifecycleState.ClientConnected);
                     OwnerConnectionAddress = ownerConnection.GetAddress();
                     return true;
@@ -325,6 +323,36 @@ namespace Hazelcast.Client.Spi
                 }
             }
             return false;
+        }
+
+        /// <exception cref="System.Exception" />
+        private bool ConnectAsOwner(ICollection<IPEndPoint> triedAddresses, IList<Exception> exceptions)
+        {
+            var addresses = GetPossibleMemberAddresses();
+
+            // Try to connect to to any address with the port provided by the user first
+            var addressesWithUserProvidedPort = addresses.Where(address => address.HasUserProvidedPort);
+            var connectionSucceeded = TryToConnectTo(addressesWithUserProvidedPort, exceptions, triedAddresses);
+            if (connectionSucceeded)
+            {
+                return true;
+            }
+
+            // Try to connect to to any adress with the preferred port (5701)
+            var addressesWithPreferredPort = addresses
+                .Where(address => address.GetPort() == PreferredPort && !address.HasUserProvidedPort);
+            connectionSucceeded = TryToConnectTo(addressesWithPreferredPort, exceptions, triedAddresses);
+            if (connectionSucceeded)
+            {
+                return true;
+            }
+
+            // Try to connect to by using rest of the addresses with ports we try to guess
+            var otherAddresses = addresses
+                .Where(address => address.GetPort() != PreferredPort && !address.HasUserProvidedPort);
+            connectionSucceeded = TryToConnectTo(otherAddresses, exceptions, triedAddresses);
+
+            return connectionSucceeded;
         }
 
         private void ConnectToCluster()

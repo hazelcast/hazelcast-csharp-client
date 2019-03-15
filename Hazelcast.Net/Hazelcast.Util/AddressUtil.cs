@@ -153,10 +153,12 @@ namespace Hazelcast.Util
             }
             var port = addressHolder.Port;
             var portTryCount = 1;
+            bool userProvidedPort = true;
             if (port == -1)
             {
                 portTryCount = MaxPortTries;
                 port = 5701;
+                userProvidedPort = false;
             }
             ICollection<Address> socketAddresses = new List<Address>();
             if (ipAddress == null)
@@ -165,7 +167,8 @@ namespace Hazelcast.Util
                 {
                     if (IPAddress.TryParse(scopedAddress, out ipAddress))
                     {
-                        socketAddresses.Add(new Address(scopedAddress, ipAddress, port + i));
+                        socketAddresses.Add(new Address(scopedAddress, ipAddress, port + i)
+                            {HasUserProvidedPort = userProvidedPort});
                     }
                 }
             }
@@ -175,7 +178,8 @@ namespace Hazelcast.Util
                 {
                     for (var i = 0; i < portTryCount; i++)
                     {
-                        socketAddresses.Add(new Address(scopedAddress, ipAddress, port + i));
+                        socketAddresses.Add(new Address(scopedAddress, ipAddress, port + i)
+                            {HasUserProvidedPort = userProvidedPort});
                     }
                 }
                 else
@@ -185,7 +189,8 @@ namespace Hazelcast.Util
                     {
                         for (var i = 0; i < portTryCount; i++)
                         {
-                            socketAddresses.Add(new Address(scopedAddress, ipa, port + i));
+                            socketAddresses.Add(new Address(scopedAddress, ipa, port + i)
+                                {HasUserProvidedPort = userProvidedPort});
                         }
                     }
                 }

@@ -34,6 +34,14 @@ namespace Hazelcast.IO
         private readonly string _host;
         private readonly bool _hostSet;
         private readonly int _port = -1;
+
+        private bool _hasUserProvidedPort  = true;
+        internal bool HasUserProvidedPort
+        {
+            get { return _hasUserProvidedPort; }
+            set { _hasUserProvidedPort = value; }
+        }
+
         private readonly byte _type;
         private string _scopeId;
 

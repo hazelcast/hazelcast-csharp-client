@@ -66,5 +66,23 @@ namespace Hazelcast.Client.Test
                 addressProvider.GetAddresses();
             });
         }
+
+        [Test]
+        public void PortNumberSourceHasBeenMarkedProperly()
+        {
+            var cfg = new ClientConfig();
+            cfg.GetNetworkConfig().AddAddress("10.0.0.1", "10.0.0.2:5702", "10.0.0.3:5703", "10.0.0.4", "10.0.0.5");
+
+            var addressProvider = new AddressProvider(cfg);
+            var addresses = addressProvider.GetAddresses().ToList();
+
+            var portsSpecifiedByUser = addresses.Where(address => address.HasUserProvidedPort);
+            var primaryAutoDiscoveryAddresses= addresses.Where(address => address.GetPort()==5701 && !address.HasUserProvidedPort);
+            var secondaryAutoDiscoveryAddresses = addresses.Where(address => address.GetPort() != 5701 && !address.HasUserProvidedPort);
+
+            Assert.AreEqual(2, portsSpecifiedByUser.Count());
+            Assert.AreEqual(3, primaryAutoDiscoveryAddresses.Count());
+            Assert.AreEqual(6, secondaryAutoDiscoveryAddresses.Count());
+        }
     }
 }
