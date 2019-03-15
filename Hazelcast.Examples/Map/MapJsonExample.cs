@@ -17,7 +17,6 @@ using System.Linq;
 using Hazelcast.Client;
 using Hazelcast.Config;
 using Hazelcast.Core;
-using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Examples.Map
 {
