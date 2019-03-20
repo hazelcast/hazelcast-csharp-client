@@ -130,7 +130,7 @@ namespace Hazelcast.Client.Test
             cfg.GetNetworkConfig().GetCloudConfig().SetEnabled(true).SetDiscoveryToken(DiscoveryToken);
 
             var addressProvider = new AddressProvider(cfg);
-            var providedAddresses = addressProvider.GetAddresses().ToList();
+            var providedAddresses = addressProvider.GetAddresses().Primary;
             Assert.IsNotEmpty(providedAddresses);
             foreach (var key in providedAddresses)
             {

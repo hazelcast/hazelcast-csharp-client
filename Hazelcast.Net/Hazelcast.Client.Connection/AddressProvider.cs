@@ -28,9 +28,17 @@ namespace Hazelcast.Client.Connection
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(AddressProvider));
 
         private readonly HazelcastCloudDiscovery _hzCloudDiscovery;
+
+        // A function to create address translation dictionary (to convert from private address to a public one version)
         private readonly GetAddressDictionary _addressProviderFn;
+
+        // An address list from the configuration info
         private readonly IList<string> _configAddresses;
 
+        // Collection of the addresses divided between primary (first to try) and secondary addresses
+        private readonly Addresses _prioritizedAddresses = new Addresses();
+
+        // A dictionary to translate private address to a public one version
         private IDictionary<Address, Address> _privateToPublic;
         private readonly bool _canTranslate;
 
@@ -66,13 +74,13 @@ namespace Hazelcast.Client.Connection
             }
         }
 
-        public IEnumerable<Address> GetAddresses()
+        public Addresses GetAddresses()
         {
             if (_privateToPublic == null)
             {
                 Refresh();
             }
-            return _privateToPublic != null ? _privateToPublic.Keys : Enumerable.Empty<Address>();
+            return _prioritizedAddresses;
         }
 
         private void Refresh()
@@ -102,21 +110,50 @@ namespace Hazelcast.Client.Connection
             return _privateToPublic != null && _privateToPublic.TryGetValue(address, out publicAddress) ? publicAddress : null;
         }
 
-        //Config address provider
+        // Config address provider
         private IDictionary<Address, Address> GetHzConfigAddresses()
         {
-            var possibleAddresses = new List<Address>();
+            // Remove all the previous addresses
+            _prioritizedAddresses.Clear();
+
             foreach (var cfgAddress in _configAddresses)
             {
-                possibleAddresses.AddRange(AddressUtil.ParsePossibleAddresses(cfgAddress));
+                var parsedAddresses = AddressUtil.ParsePossibleAddresses(cfgAddress);
+                var primaryAddress = parsedAddresses.FirstOrDefault();
+                if (primaryAddress != null)
+                {
+                    // Add the address to the primary list
+                    _prioritizedAddresses.Primary.Add(primaryAddress);
+
+                    // Remove the primary address from the temporary list
+                    parsedAddresses.Remove(primaryAddress);
+
+                    // Add rest of the addresses to the secondary list
+                    _prioritizedAddresses.Secondary.AddRange(parsedAddresses);
+                }
             }
-            return possibleAddresses.ToDictionary(address => address, address => address);
+
+            // Construct a dictionary from obtained addresses
+            var allAddresses = new Dictionary<Address, Address>();
+            _prioritizedAddresses.Primary.ForEach(address=> allAddresses.Add(address, address));
+            _prioritizedAddresses.Secondary.ForEach(address => allAddresses.Add(address, address));
+
+            return allAddresses;
         }
 
         //Hz cloud address provider
         private IDictionary<Address, Address> GetHzCloudConfigAddresses()
         {
-            return _hzCloudDiscovery.DiscoverNodes();
+            // Remove all the previous addresses
+            _prioritizedAddresses.Clear();
+
+            // Obtain list of the addresses from the cloud using disco
+            var result = _hzCloudDiscovery.DiscoverNodes();
+
+            // Register new addresses
+            _prioritizedAddresses.Primary.AddRange(result.Keys);
+
+            return result;
         }
     }
 }

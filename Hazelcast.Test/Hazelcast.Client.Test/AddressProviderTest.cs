@@ -35,10 +35,10 @@ namespace Hazelcast.Client.Test
             cfg.GetNetworkConfig().AddAddress("10.0.0.1:5701", "10.0.0.2:5702", "10.0.0.3:5703");
 
             var addressProvider = new AddressProvider(cfg);
-            var addresses = addressProvider.GetAddresses().ToList();
-            Assert.AreEqual(addresses[0], new Address("10.0.0.1", 5701));
-            Assert.AreEqual(addresses[1], new Address("10.0.0.2", 5702));
-            Assert.AreEqual(addresses[2], new Address("10.0.0.3", 5703));
+            var addresses = addressProvider.GetAddresses();
+            Assert.AreEqual(addresses.Primary[0], new Address("10.0.0.1", 5701));
+            Assert.AreEqual(addresses.Primary[1], new Address("10.0.0.2", 5702));
+            Assert.AreEqual(addresses.Primary[2], new Address("10.0.0.3", 5703));
         }
 
         [Test]
@@ -47,10 +47,10 @@ namespace Hazelcast.Client.Test
             var cfg = new ClientConfig();
 
             var addressProvider = new AddressProvider(cfg);
-            var addresses = addressProvider.GetAddresses().ToList();
-            Assert.AreEqual(addresses[0], new Address("localhost", 5701));
-            Assert.AreEqual(addresses[1], new Address("localhost", 5702));
-            Assert.AreEqual(addresses[2], new Address("localhost", 5703));
+            var addresses = addressProvider.GetAddresses();
+            Assert.AreEqual(addresses.Primary[0], new Address("localhost", 5701));
+            Assert.AreEqual(addresses.Secondary[0], new Address("localhost", 5702));
+            Assert.AreEqual(addresses.Secondary[1], new Address("localhost", 5703));
         }
 
         [Test]
@@ -65,6 +65,19 @@ namespace Hazelcast.Client.Test
                 var addressProvider = new AddressProvider(cfg);
                 addressProvider.GetAddresses();
             });
+        }
+
+        [Test]
+        public void PrioritizedAddressesHasBeenCategorized()
+        {
+            var cfg = new ClientConfig();
+            cfg.GetNetworkConfig().AddAddress("10.0.0.1:5701", "10.0.0.2", "10.0.0.3:5703");
+
+            var addressProvider = new AddressProvider(cfg);
+            var addresses = addressProvider.GetAddresses();
+
+            Assert.AreEqual(3, addresses.Primary.Count);
+            Assert.AreEqual(2, addresses.Secondary.Count);
         }
     }
 }

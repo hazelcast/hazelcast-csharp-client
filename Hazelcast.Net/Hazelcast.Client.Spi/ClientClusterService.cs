@@ -402,10 +402,13 @@ namespace Hazelcast.Client.Spi
             var configAddresses = _client.GetAddressProvider().GetAddresses();
             if (_shuffleMemberList)
             {
-                configAddresses = AddressUtil.Shuffle(configAddresses);
+                configAddresses.Primary = AddressUtil.Shuffle(configAddresses.Primary);
+                configAddresses.Secondary = AddressUtil.Shuffle(configAddresses.Secondary);
             }
 
-            addresses.AddRange(configAddresses);
+            addresses.AddRange(configAddresses.Primary);
+            addresses.AddRange(configAddresses.Secondary);
+
             if (_prevOwnerConnectionAddress != null)
             {
                 /*
