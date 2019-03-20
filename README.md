@@ -58,6 +58,7 @@
     * [7.4.8. Using Lock](#748-using-lock)
     * [7.4.9. Using Atomic Long](#749-using-atomic-long)
     * [7.4.10. Using Semaphore](#7410-using-semaphore)
+    * [7.4.11. Using PN Counter](#7411-using-pn-counter)
   * [7.5. Distributed Events](#75-distributed-events)
     * [7.5.1. Cluster Events](#751-cluster-events)
       * [7.5.1.1. Listening for Member Events](#7511-listening-for-member-events)
@@ -1552,6 +1553,24 @@ A Semaphore usage example is shown below.
     semaphore.Init(10);
     semaphore.Acquire(5);
     Console.WriteLine( "Number of available permits: " + semaphore.availablePermits());
+```
+
+### 7.4.11 Using PN Counter
+
+Hazelcast `PNCounter` (Positive-Negative Counter) is a CRDT positive-negative counter implementation. It is an eventually consistent counter given there is no member failure. For details, see the [PN Counter section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#pn-counter) in the Hazelcast IMDG Reference Manual.
+
+A PN Counter usage example is shown below.
+
+```c#
+    // Obtain PN Counter instance
+    var counter = hzc.GetPNCounter("counter");
+
+    // Do some operations on the counter
+    Console.WriteLine("Counter started with such value: " + counter.Get());
+    Console.WriteLine("Counter's value AFTER adding 5 is: " + counter.AddAndGet(5));
+    Console.WriteLine("Counter's value BEFORE adding 2 is: " + counter.GetAndAdd(2));
+    Console.WriteLine("Counter's current value is: " + counter.Get());
+    Console.WriteLine("Decremented counter's value by one is: " + counter.DecrementAndGet());
 ```
 
 ## 7.5. Distributed Events
