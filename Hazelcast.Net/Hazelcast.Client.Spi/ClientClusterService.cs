@@ -300,9 +300,10 @@ namespace Hazelcast.Client.Spi
             var addresses = GetPossibleMemberAddresses();
             foreach (var address in addresses)
             {
-                var inetSocketAddress = address.GetInetSocketAddress();
+                IPEndPoint inetSocketAddress = null;
                 try
                 {
+                    inetSocketAddress = address.GetInetSocketAddress();
                     triedAddresses.Add(inetSocketAddress);
                     if (Logger.IsFinestEnabled())
                     {
