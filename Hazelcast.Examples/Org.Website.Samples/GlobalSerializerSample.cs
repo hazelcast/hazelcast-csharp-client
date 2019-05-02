@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using Hazelcast.Client;
 using Hazelcast.Config;
 using Hazelcast.IO;
@@ -30,15 +32,19 @@ namespace Hazelcast.Examples.Org.Website.Samples
         {
         }
 
-        public void Write(IObjectDataOutput output, object obj)
-        {
-            // out.write(MyFavoriteSerializer.serialize(obj))
-        }
-
         public object Read(IObjectDataInput input)
         {
-            // return MyFavoriteSerializer.deserialize(input);
-            return null;
+            var formatter = new BinaryFormatter();
+            var stream = new MemoryStream(input.ReadByteArray());
+            return formatter.Deserialize(stream);
+        }
+            
+        public void Write(IObjectDataOutput output, object obj)
+        {
+            var formatter = new BinaryFormatter();
+            var stream = new MemoryStream();
+            formatter.Serialize(stream, obj);
+            output.WriteByteArray(stream.GetBuffer());
         }
     }
 

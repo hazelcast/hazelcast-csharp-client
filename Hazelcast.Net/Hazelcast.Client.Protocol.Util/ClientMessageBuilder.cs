@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Protocol.Util
                     if (_message.IsFlagSet(ClientMessage.EndFlag))
                     {
                         var msgLength = builder.Position();
-                        var cm = ClientMessage.CreateForDecode(builder.Buffer(), 0);
+                        var cm = ClientMessage.CreateForDecode(builder.ProtocolBuffer(), 0);
                         cm.SetFrameLength(msgLength);
                         //HANDLE-MESSAGE
                         HandleMessage(cm);

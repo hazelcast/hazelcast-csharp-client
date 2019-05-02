@@ -138,6 +138,7 @@ namespace Hazelcast.NearCache
 
         public bool TryAdd(IData keyData, object value)
         {
+            //TODO this method is not thread safe yet
             var lazyValue = new Lazy<NearCacheRecord>(() =>
             {
                 var ncValue = ConvertToRecordValue(value);

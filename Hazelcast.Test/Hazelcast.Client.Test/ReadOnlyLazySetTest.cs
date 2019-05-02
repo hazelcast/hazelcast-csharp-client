@@ -30,7 +30,14 @@ namespace Hazelcast.Client.Test
         public void Init()
         {
             _ss = new SerializationServiceBuilder().Build();
-            var dataList = new List<IData>{_ss.ToData(0), _ss.ToData(1), _ss.ToData(2), _ss.ToData(3), _ss.ToData(4)};
+            var dataList = new List<IData>
+            {
+                _ss.ToData(0),
+                _ss.ToData(1),
+                _ss.ToData(2),
+                _ss.ToData(3),
+                _ss.ToData(4)
+            };
             testSet = new ReadOnlyLazySet<int>(dataList, _ss);
         }
 
@@ -82,121 +89,81 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-		public void TestAdd()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestAdd()
         {
-            testSet.Add(4);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.Add(4); });
+        }
 
         [Test]
-		public void TestRemove()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestRemove()
         {
-            testSet.Remove(4);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.Remove(4); });
+        }
 
         [Test]
-		public void TestClear()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestClear()
         {
-            testSet.Clear();
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.Clear(); });
+        }
 
         [Test]
-		public void TestExceptWith()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestExceptWith()
         {
-            testSet.ExceptWith(null);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.ExceptWith(null); });
+        }
 
         [Test]
-		public void TestIntersectWith()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestIntersectWith()
         {
-            testSet.IntersectWith(null);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.IntersectWith(null); });
+        }
 
         [Test]
-		public void TestIsProperSubsetOf()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestIsProperSubsetOf()
         {
-            testSet.IsProperSubsetOf(null);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.IsProperSubsetOf(null); });
+        }
 
         [Test]
-		public void TestIsProperSupersetOf()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestIsProperSupersetOf()
         {
-            testSet.IsProperSupersetOf(null);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.IsProperSupersetOf(null); });
+        }
 
         [Test]
-		public void TestIsSubsetOf()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestIsSubsetOf()
         {
-            testSet.IsSubsetOf(null);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.IsSubsetOf(null); });
+        }
 
         [Test]
-		public void TestIsSupersetOf()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestIsSupersetOf()
         {
-            testSet.IsSupersetOf(null);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.IsSupersetOf(null); });
+        }
 
         [Test]
-		public void TestOverlaps()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestOverlaps()
         {
-            testSet.Overlaps(null);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.Overlaps(null); });
+        }
 
         [Test]
-		public void TestSymmetricExceptWith()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestSymmetricExceptWith()
         {
-            testSet.SymmetricExceptWith(null);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.SymmetricExceptWith(null); });
+        }
 
         [Test]
-		public void TestUnionWith()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestUnionWith()
         {
-            testSet.UnionWith(null);
-        });
-		}
+            Assert.Throws<NotSupportedException>(() => { testSet.UnionWith(null); });
+        }
 
         [Test]
-		public void TestSetEquals()
-		{
-			Assert.Throws<NotSupportedException>(() =>
+        public void TestSetEquals()
         {
-            testSet.SetEquals(null);
-        });
-		}
-
+            Assert.Throws<NotSupportedException>(() => { testSet.SetEquals(null); });
+        }
     }
 }

@@ -34,7 +34,7 @@ namespace Hazelcast.Util
 
         public IEnumerator<T> GetEnumerator()
         {
-            return new ReadOnlyLazyList<T>.Enumerator(list, serializationService);
+            return new ReadOnlyLazyList<T, IData>.Enumerator(list, serializationService);
         }
 
         IEnumerator IEnumerable.GetEnumerator()

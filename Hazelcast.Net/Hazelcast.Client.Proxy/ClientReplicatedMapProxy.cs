@@ -211,7 +211,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = ReplicatedMapValuesCodec.EncodeRequest(GetName());
             var list = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapValuesCodec.DecodeResponse(m).response);
-            return new ReadOnlyLazyList<TValue>(list, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 
         private void OnEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValue,
