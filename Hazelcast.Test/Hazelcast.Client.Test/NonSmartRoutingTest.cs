@@ -105,7 +105,10 @@ namespace Hazelcast.Client.Test
 
             var resp = map.GetAll(toInsert.Keys);
 
-            Assert.AreEqual(toInsert, resp);
+            foreach (var pair in resp)
+            {
+                Assert.AreEqual(toInsert[pair.Key] , pair.Value);
+            }
         }
 
         [Test]

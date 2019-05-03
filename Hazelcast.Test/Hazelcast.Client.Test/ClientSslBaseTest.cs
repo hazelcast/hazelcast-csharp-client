@@ -31,7 +31,7 @@ namespace Hazelcast.Client.Test
 {
     public abstract class ClientSSLBaseTest : HazelcastTestSupport
     {
-        protected const string ValidCertNameSigned = "member1.hazelcast-test.download";
+        protected const string ValidCertNameSigned = "foobar.hazelcast.com";
         protected const string Password = "password";
 
         protected IHazelcastInstance Client { get; set; }

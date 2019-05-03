@@ -120,22 +120,12 @@ namespace Hazelcast.IO
 
         public static char ReadCharB(byte[] buffer, int pos)
         {
-            unchecked
-            {
-                var byte1 = buffer[pos] & 0xFF;
-                var byte0 = buffer[pos + 1] & 0xFF;
-                return (char) ((byte1 << 8) + byte0);
-            }
+            return unchecked((char)(buffer[pos + 1] | buffer[pos] << 8));
         }
 
         public static char ReadCharL(byte[] buffer, int pos)
         {
-            unchecked
-            {
-                var byte1 = buffer[pos] & 0xFF;
-                var byte0 = buffer[pos + 1] & 0xFF;
-                return (char) ((byte0 << 8) + byte1);
-            }
+            return unchecked((char)(buffer[pos] | buffer[pos + 1] << 8));
         }
 
         public static int ReadInt(byte[] buffer, int pos, bool bigEndian)
@@ -147,11 +137,10 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                var byte3 = (buffer[pos] & 0xFF) << 24;
-                var byte2 = (buffer[pos + 1] & 0xFF) << 16;
-                var byte1 = (buffer[pos + 2] & 0xFF) << 8;
-                var byte0 = buffer[pos + 3] & 0xFF;
-                return byte3 + byte2 + byte1 + byte0;
+                return buffer[pos] << 24 | 
+                       buffer[pos + 1] << 16 | 
+                       buffer[pos + 2] << 8 | 
+                       buffer[pos + 3];
             }
         }
 
@@ -159,11 +148,10 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                var byte3 = buffer[pos] & 0xFF;
-                var byte2 = (buffer[pos + 1] & 0xFF) << 8;
-                var byte1 = (buffer[pos + 2] & 0xFF) << 16;
-                var byte0 = (buffer[pos + 3] & 0xFF) << 24;
-                return byte3 + byte2 + byte1 + byte0;
+                return buffer[pos] | 
+                       buffer[pos + 1] << 8 | 
+                       buffer[pos + 2] << 16 | 
+                       buffer[pos + 3] << 24;
             }
         }
 
@@ -176,15 +164,14 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                var byte7 = (long) buffer[pos] << 56;
-                var byte6 = (long) (buffer[pos + 1] & 0xFF) << 48;
-                var byte5 = (long) (buffer[pos + 2] & 0xFF) << 40;
-                var byte4 = (long) (buffer[pos + 3] & 0xFF) << 32;
-                var byte3 = (long) (buffer[pos + 4] & 0xFF) << 24;
-                var byte2 = (long) (buffer[pos + 5] & 0xFF) << 16;
-                var byte1 = (long) (buffer[pos + 6] & 0xFF) << 8;
-                long byte0 = buffer[pos + 7] & 0xFF;
-                return byte7 + byte6 + byte5 + byte4 + byte3 + byte2 + byte1 + byte0;
+                return (long)buffer[pos] << 56 |
+                       (long)buffer[pos + 1] << 48 |
+                       (long)buffer[pos + 2] << 40 |
+                       (long)buffer[pos + 3] << 32 |
+                       (long)buffer[pos + 4] << 24 |
+                       (long)buffer[pos + 5] << 16 |
+                       (long)buffer[pos + 6] << 8 |
+                       buffer[pos + 7];
             }
         }
 
@@ -192,15 +179,14 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                long byte7 = buffer[pos] & 0xFF;
-                var byte6 = (long) (buffer[pos + 1] & 0xFF) << 8;
-                var byte5 = (long) (buffer[pos + 2] & 0xFF) << 16;
-                var byte4 = (long) (buffer[pos + 3] & 0xFF) << 24;
-                var byte3 = (long) (buffer[pos + 4] & 0xFF) << 32;
-                var byte2 = (long) (buffer[pos + 5] & 0xFF) << 40;
-                var byte1 = (long) (buffer[pos + 6] & 0xFF) << 48;
-                var byte0 = (long) (buffer[pos + 7] & 0xFF) << 56;
-                return byte7 + byte6 + byte5 + byte4 + byte3 + byte2 + byte1 + byte0;
+                return buffer[pos] |
+                       (long)buffer[pos + 1] << 8 |
+                       (long)buffer[pos + 2] << 16 |
+                       (long)buffer[pos + 3] << 24 |
+                       (long)buffer[pos + 4] << 32 |
+                       (long)buffer[pos + 5] << 40 |
+                       (long)buffer[pos + 6] << 48 |
+                       (long)buffer[pos + 7] << 56;
             }
         }
 
@@ -211,22 +197,12 @@ namespace Hazelcast.IO
 
         public static short ReadShortB(byte[] buffer, int pos)
         {
-            unchecked
-            {
-                var byte1 = buffer[pos] & 0xFF;
-                var byte0 = buffer[pos + 1] & 0xFF;
-                return (short) ((byte1 << 8) + byte0);
-            }
+            return unchecked((short)(buffer[pos] << 8 | buffer[pos + 1]));
         }
 
         public static short ReadShortL(byte[] buffer, int pos)
         {
-            unchecked
-            {
-                var byte1 = buffer[pos] & 0xFF;
-                var byte0 = buffer[pos + 1] & 0xFF;
-                return (short) ((byte0 << 8) + byte1);
-            }
+            return unchecked((short)(buffer[pos] | buffer[pos + 1] << 8));
         }
 
         public static char ReadUtf8Char(IDataInput input, byte firstByte)
@@ -258,23 +234,23 @@ namespace Hazelcast.IO
             }
         }
 
-        /// <summary>Sets n-th bit of the byte value</summary>
-        /// <param name="value">byte value</param>
-        /// <param name="bit">n-th bit</param>
-        /// <returns>value</returns>
-        public static byte SetBit(byte value, int bit)
-        {
-            return unchecked((byte) (value | (1 << bit)));
-        }
-
-        /// <summary>Sets n-th bit of the integer value</summary>
-        /// <param name="value">integer value</param>
-        /// <param name="bit">n-th bit</param>
-        /// <returns>value</returns>
-        public static int SetBit(int value, int bit)
-        {
-            return unchecked(value | (1 << bit));
-        }
+//        /// <summary>Sets n-th bit of the byte value</summary>
+//        /// <param name="value">byte value</param>
+//        /// <param name="bit">n-th bit</param>
+//        /// <returns>value</returns>
+//        public static byte SetBit(byte value, int bit)
+//        {
+//            return unchecked((byte) (value | (1 << bit)));
+//        }
+//
+//        /// <summary>Sets n-th bit of the integer value</summary>
+//        /// <param name="value">integer value</param>
+//        /// <param name="bit">n-th bit</param>
+//        /// <returns>value</returns>
+//        public static int SetBit(int value, int bit)
+//        {
+//            return unchecked(value | (1 << bit));
+//        }
 
         public static void WriteChar(byte[] buffer, int pos, char v, bool bigEndian)
         {
@@ -292,8 +268,8 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                buffer[pos] = (byte) ((v >> 8) & 0xFF);
-                buffer[pos + 1] = (byte) ((v) & 0xFF);
+                buffer[pos] = (byte) (v >> 8);
+                buffer[pos + 1] = (byte) v;
             }
         }
 
@@ -301,8 +277,8 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                buffer[pos] = (byte) ((v) & 0xFF);
-                buffer[pos + 1] = (byte) ((v >> 8) & 0xFF);
+                buffer[pos] = (byte)v;
+                buffer[pos + 1] = (byte)(v >> 8);
             }
         }
 
@@ -322,21 +298,24 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                buffer[pos] = (byte) (((int) (((uint) v) >> 24)) & 0xFF);
-                buffer[pos + 1] = (byte) (((int) (((uint) v) >> 16)) & 0xFF);
-                buffer[pos + 2] = (byte) (((int) (((uint) v) >> 8)) & 0xFF);
-                buffer[pos + 3] = (byte) ((v) & 0xFF);
+                uint unsignedValue = (uint)v;
+                buffer[pos] = (byte)(unsignedValue >> 24);
+                buffer[pos + 1] = (byte)(unsignedValue >> 16);
+                buffer[pos + 2] = (byte)(unsignedValue >>8);
+                buffer[pos + 3] = (byte)unsignedValue;
             }
         }
 
         public static void WriteIntL(byte[] buffer, int pos, int v)
         {
+            
             unchecked
             {
-                buffer[pos] = (byte) ((v) & 0xFF);
-                buffer[pos + 1] = (byte) (((int) (((uint) v) >> 8)) & 0xFF);
-                buffer[pos + 2] = (byte) (((int) (((uint) v) >> 16)) & 0xFF);
-                buffer[pos + 3] = (byte) (((int) (((uint) v) >> 24)) & 0xFF);
+                uint unsignedValue = (uint)v;
+                buffer[pos] = (byte)unsignedValue;
+                buffer[pos + 1] = (byte)(unsignedValue >> 8);
+                buffer[pos + 2] = (byte)(unsignedValue >> 16);
+                buffer[pos + 3] = (byte)(unsignedValue >> 24);
             }
         }
 
@@ -356,14 +335,15 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                buffer[pos] = ((byte) ((long) (((ulong) v) >> 56)));
-                buffer[pos + 1] = ((byte) ((long) (((ulong) v) >> 48)));
-                buffer[pos + 2] = ((byte) ((long) (((ulong) v) >> 40)));
-                buffer[pos + 3] = ((byte) ((long) (((ulong) v) >> 32)));
-                buffer[pos + 4] = ((byte) ((long) (((ulong) v) >> 24)));
-                buffer[pos + 5] = ((byte) ((long) (((ulong) v) >> 16)));
-                buffer[pos + 6] = ((byte) ((long) (((ulong) v) >> 8)));
-                buffer[pos + 7] = ((byte) (v));
+                ulong unsignedValue = (ulong)v;
+                buffer[pos] = (byte)(unsignedValue >> 56);
+                buffer[pos + 1] = (byte)(unsignedValue >> 48);
+                buffer[pos + 2] = (byte)(unsignedValue >> 40);
+                buffer[pos + 3] = (byte)(unsignedValue >> 32);
+                buffer[pos + 4] = (byte)(unsignedValue >> 24);
+                buffer[pos + 5] = (byte)(unsignedValue >> 16);
+                buffer[pos + 6] = (byte)(unsignedValue >> 8);
+                buffer[pos + 7] = (byte)unsignedValue;
             }
         }
 
@@ -371,14 +351,15 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                buffer[pos] = ((byte) (v));
-                buffer[pos + 1] = ((byte) ((long) (((ulong) v) >> 8)));
-                buffer[pos + 2] = ((byte) ((long) (((ulong) v) >> 16)));
-                buffer[pos + 3] = ((byte) ((long) (((ulong) v) >> 24)));
-                buffer[pos + 4] = ((byte) ((long) (((ulong) v) >> 32)));
-                buffer[pos + 5] = ((byte) ((long) (((ulong) v) >> 40)));
-                buffer[pos + 6] = ((byte) ((long) (((ulong) v) >> 48)));
-                buffer[pos + 7] = ((byte) ((long) (((ulong) v) >> 56)));
+                ulong unsignedValue = (ulong)v;
+                buffer[pos] = (byte)unsignedValue;
+                buffer[pos + 1] = (byte)(unsignedValue >> 8);  
+                buffer[pos + 2] = (byte)(unsignedValue >> 16);
+                buffer[pos + 3] = (byte)(unsignedValue >> 24);
+                buffer[pos + 4] = (byte)(unsignedValue >> 32);
+                buffer[pos + 5] = (byte)(unsignedValue >> 40);
+                buffer[pos + 6] = (byte)(unsignedValue >> 48);
+                buffer[pos + 7] = (byte)(unsignedValue >> 56);
             }
         }
 
@@ -398,8 +379,8 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                buffer[pos] = (byte) (((short) (((ushort) v) >> 8)) & 0xFF);
-                buffer[pos + 1] = (byte) ((v) & 0xFF);
+                buffer[pos] = (byte)((ushort)v >> 8);
+                buffer[pos + 1] = (byte)v;
             }
         }
 
@@ -407,8 +388,8 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                buffer[pos] = (byte) ((v) & 0xFF);
-                buffer[pos + 1] = (byte) (((short) (((ushort) v) >> 8)) & 0xFF);
+                buffer[pos] = (byte)v;
+                buffer[pos + 1] = (byte)((ushort)v >> 8);
             }
         }
 

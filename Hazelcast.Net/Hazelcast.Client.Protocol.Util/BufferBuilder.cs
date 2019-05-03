@@ -68,7 +68,7 @@ namespace Hazelcast.Client.Protocol.Util
         ///     <see cref="IClientProtocolBuffer" />
         ///     that encapsulates the internal buffer.
         /// </returns>
-        public virtual IClientProtocolBuffer Buffer()
+        public virtual IClientProtocolBuffer ProtocolBuffer()
         {
             return _protocolBuffer;
         }
@@ -100,7 +100,7 @@ namespace Hazelcast.Client.Protocol.Util
             {
                 var newCapacity = QuickMath.NextPowerOfTwo(requiredCapacity);
                 var newBuffer = new byte[newCapacity];
-                Array.Copy(_protocolBuffer.ByteArray(), 0, newBuffer, 0, _capacity);
+                Buffer.BlockCopy(_protocolBuffer.ByteArray(), 0, newBuffer, 0, _capacity);
                 _capacity = newCapacity;
                 _protocolBuffer.Wrap(newBuffer);
             }
