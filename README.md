@@ -2233,16 +2233,16 @@ The .NET client provides paging for defined predicates. With its `PagingPredicat
 by page by filtering them with predicates and giving the size of the pages. Also, you can sort the entries by specifying comparators.
 
 ```c#
-var map = hazelcastInstance.GetMap<int, Student>( "students" );
-var greaterEqual = Predicates.greaterEqual( "age", 18 );
+var map = hazelcastInstance.GetMap<int, Student>("students");
+var greaterEqual = Predicates.IsGreaterThanOrEqual("age", 18);
 var pagingPredicate = new PagingPredicate(pageSize:5, predicate:greaterEqual);
 // Retrieve the first page
-var values = map.Values( pagingPredicate );
+var values = map.Values(pagingPredicate);
 //...
 // Set up next page
 pagingPredicate.NextPage();
 // Retrieve next page
-var values = map.Values( pagingPredicate );
+var values = map.Values(pagingPredicate);
 
 //...
 ```
