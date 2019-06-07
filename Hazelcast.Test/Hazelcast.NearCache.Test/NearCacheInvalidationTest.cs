@@ -22,6 +22,7 @@ using NUnit.Framework;
 namespace Hazelcast.NearCache.Test
 {
     [TestFixture]
+    [Category("3.8")]
     public class NearCacheInvalidationTest : NearcacheTestSupport
     {
         protected override void InitMembers()
