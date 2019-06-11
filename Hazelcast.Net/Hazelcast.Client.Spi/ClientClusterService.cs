@@ -48,6 +48,8 @@ namespace Hazelcast.Client.Spi
         private readonly AtomicReference<IDictionary<Address, IMember>> _membersRef =
             new AtomicReference<IDictionary<Address, IMember>>();
 
+        private readonly object _initialMembershipListenerMutex = new object();
+
         private ClientMembershipListener _clientMembershipListener;
         private ClientConnectionManager _connectionManager;
         private Address _ownerConnectionAddress;
@@ -58,6 +60,7 @@ namespace Hazelcast.Client.Spi
 
         public ClientClusterService(HazelcastClient client)
         {
+            _membersRef.Set(new Dictionary<Address, IMember>());
             _client = client;
 
             var networkConfig = GetClientConfig().GetNetworkConfig();
@@ -92,6 +95,7 @@ namespace Hazelcast.Client.Spi
                     AddMembershipListenerWithoutInit(membershipListener);
                 }
             }
+            
         }
 
         private Address OwnerConnectionAddress
@@ -161,15 +165,13 @@ namespace Hazelcast.Client.Spi
             {
                 throw new ArgumentNullException("listener");
             }
-            var id = Guid.NewGuid().ToString();
-            _listeners[id] = listener;
-            if (listener is IInitialMembershipListener)
+
+            lock (_initialMembershipListenerMutex)
             {
-                // TODO: needs sync with membership events...
-                var cluster = _client.GetCluster();
-                ((IInitialMembershipListener) listener).Init(new InitialMembershipEvent(cluster, cluster.GetMembers()));
+                var id = AddMembershipListenerWithoutInit(listener);
+                InitMembershipListener(listener);
+                return id;
             }
-            return id;
         }
 
         public bool RemoveMembershipListener(string registrationId)
@@ -215,7 +217,6 @@ namespace Hazelcast.Client.Spi
         {
             Init();
             ConnectToCluster();
-            InitMembershipListener();
         }
 
         internal int ServerVersion
@@ -232,33 +233,37 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        internal virtual void FireMemberAttributeEvent(MemberAttributeEvent @event)
+        internal void FireMemberAttributeEvent(MemberAttributeEvent @event)
         {
-            _client.GetClientExecutionService().Submit(() =>
+            foreach (var listener in _listeners.Values)
             {
-                foreach (var listener in _listeners.Values)
-                {
-                    listener.MemberAttributeChanged(@event);
-                }
-            });
+                listener.MemberAttributeChanged(@event);
+            }
         }
 
-        internal virtual void FireMembershipEvent(MembershipEvent @event)
+        private void FireMembershipEvent(MembershipEvent @event)
         {
-            _client.GetClientExecutionService().Submit((() =>
+            foreach (var listener in _listeners.Values)
             {
-                foreach (var listener in _listeners.Values)
+                if (@event.GetEventType() == MembershipEvent.MemberAdded)
                 {
-                    if (@event.GetEventType() == MembershipEvent.MemberAdded)
-                    {
-                        listener.MemberAdded(@event);
-                    }
-                    else
-                    {
-                        listener.MemberRemoved(@event);
-                    }
+                    listener.MemberAdded(@event);
                 }
-            }));
+                else
+                {
+                    listener.MemberRemoved(@event);
+                }
+            }
+        }
+
+        private void FireInitialMembershipEvent(InitialMembershipEvent @event) {
+            foreach (var listener in _listeners.Values) 
+            {
+                if (listener is IInitialMembershipListener)
+                {
+                    ((IInitialMembershipListener) listener).Init(@event);
+                }
+            }
         }
 
         internal virtual IDictionary<Address, IMember> GetMembersRef()
@@ -266,32 +271,16 @@ namespace Hazelcast.Client.Spi
             return _membersRef.Get();
         }
 
-        internal virtual string MembersString()
-        {
-            var sb = new StringBuilder("\n\nMembers [");
-            var members = GetMemberList();
-            sb.Append(members != null ? members.Count : 0);
-            sb.Append("] {");
-            if (members != null)
-            {
-                foreach (var member in members)
-                {
-                    sb.Append("\n\t").Append(member);
-                }
-            }
-            sb.Append("\n}\n");
-            return sb.ToString();
-        }
-
         internal virtual void SetMembersRef(IDictionary<Address, IMember> map)
         {
             _membersRef.Set(map);
         }
 
-        private void AddMembershipListenerWithoutInit(IMembershipListener listener)
+        private string AddMembershipListenerWithoutInit(IMembershipListener listener)
         {
             var id = Guid.NewGuid().ToString();
-            _listeners[id] = listener;
+            _listeners.TryAdd(id, listener);
+            return id;
         }
 
         /// <exception cref="System.Exception" />
@@ -426,18 +415,53 @@ namespace Hazelcast.Client.Spi
             _connectionManager.AddConnectionListener(this);
         }
 
-        private void InitMembershipListener()
-        {
-            foreach (var membershipListener in _listeners.Values)
-            {
-                if (membershipListener is IInitialMembershipListener)
+        private void InitMembershipListener(IMembershipListener listener) {
+            if (listener is IInitialMembershipListener) {
+                var cluster = _client.GetCluster();
+                var memberCollection = _membersRef.Get().Values;
+                if (memberCollection.Count == 0) 
                 {
-                    // TODO: needs sync with membership events...
-                    var cluster = _client.GetCluster();
-                    var @event = new InitialMembershipEvent(cluster, cluster.GetMembers());
-                    ((IInitialMembershipListener) membershipListener).Init(@event);
+                    //if members are empty,it means initial event did not arrive yet
+                    //it will be redirected to listeners when it arrives see #handleInitialMembershipEvent
+                    return;
                 }
+                var members = new HashSet<IMember>(memberCollection);
+                var @event = new InitialMembershipEvent(cluster, members);
+                ((IInitialMembershipListener) listener).Init(@event);
             }
         }
+       
+        internal void HandleInitialMembershipEvent(InitialMembershipEvent @event)
+        {
+            lock (_initialMembershipListenerMutex)
+            {
+                var initialMembers = @event.GetMembers();
+                var newMap = new Dictionary<Address, IMember>();
+                foreach (var initialMember in initialMembers)
+                {
+                    newMap.Add(initialMember.GetAddress(), initialMember);
+                }
+                _membersRef.Set(newMap);
+                FireInitialMembershipEvent(@event);
+            }
+        }
+
+        internal void HandleMembershipEvent(MembershipEvent @event)
+        {
+            lock (_initialMembershipListenerMutex)
+            {
+                var member = @event.GetMember();
+                var dictionary = _membersRef.Get();
+                var newMap = new Dictionary<Address, IMember>(dictionary);
+                if (@event.GetEventType() == MembershipEvent.MemberAdded) {
+                    newMap.Add(member.GetAddress(), member);
+                } else {
+                    newMap.Remove(member.GetAddress());
+                }
+                _membersRef.Set(newMap);
+                FireMembershipEvent(@event);
+            }
+        }
+
     }
 }

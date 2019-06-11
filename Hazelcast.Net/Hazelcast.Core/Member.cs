@@ -100,44 +100,24 @@ namespace Hazelcast.Core
             return _out;
         }
 
+        private bool Equals(Member other)
+        {
+            return Equals(_address, other._address) && string.Equals(_uuid, other._uuid);
+        }
+
         public override bool Equals(object obj)
         {
-            if (this == obj)
-            {
-                return true;
-            }
-            if (obj == null)
-            {
-                return false;
-            }
-            if (GetType() != obj.GetType())
-            {
-                return false;
-            }
-            var other = (Member) obj;
-            if (_address == null)
-            {
-                if (other._address != null)
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (!_address.Equals(other._address))
-                {
-                    return false;
-                }
-            }
-            return true;
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is Member && Equals((Member) obj);
         }
 
         public override int GetHashCode()
         {
-            var Prime = 31;
-            var result = 1;
-            result = Prime*result + ((_address == null) ? 0 : _address.GetHashCode());
-            return result;
+            unchecked
+            {
+                return ((_address != null ? _address.GetHashCode() : 0) * 397) ^ (_uuid != null ? _uuid.GetHashCode() : 0);
+            }
         }
 
         public override string ToString()
