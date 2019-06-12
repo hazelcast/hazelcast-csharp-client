@@ -35,8 +35,8 @@ namespace Hazelcast.NearCache.Test
         protected override void InitMembers()
         {
             //Init 2 members
-            MemberList.Add(RemoteController.startMember(HzCluster.Id));
-            MemberList.Add(RemoteController.startMember(HzCluster.Id));
+            StartNewMember();
+            StartNewMember();
         }
         
         protected override string GetServerConfig()

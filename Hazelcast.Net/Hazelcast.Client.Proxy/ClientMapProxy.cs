@@ -702,7 +702,7 @@ namespace Hazelcast.Client.Proxy
             var partitionService = GetContext().GetPartitionService();
             var partitionCount = partitionService.GetPartitionCount();
             var initialCapacity = 2 * (keys.Count / partitionCount);
-            var partitionToKeyData = new ArrayList(partitionCount);
+            var partitionToKeyData = ArrayList.Synchronized(new ArrayList(partitionCount));
             for (var i = 0; i < partitionCount; i++)
             {
                 partitionToKeyData.Add(ArrayList.Synchronized(new ArrayList(initialCapacity)));
@@ -765,9 +765,9 @@ namespace Hazelcast.Client.Proxy
             var partitions = new ArrayList(partitionCount);
             for (var i = 0; i < partitionCount; i++)
             {
-                partitions.Add(ArrayList.Synchronized(new ArrayList()));
+                partitions.Add(new ArrayList());
             }
-            Parallel.ForEach(m, kvp =>
+            foreach (var kvp in m)
             {
                 ValidationUtil.CheckNotNull(kvp.Key, ValidationUtil.NULL_KEY_IS_NOT_ALLOWED);
                 ValidationUtil.CheckNotNull(kvp.Value, ValidationUtil.NULL_VALUE_IS_NOT_ALLOWED);
@@ -777,7 +777,7 @@ namespace Hazelcast.Client.Proxy
                 var partition = (ArrayList) partitions[partitionId];
                 partition.Add(keyData);
                 partition.Add(valueData);
-            });
+            }
             PutAllInternal(m, partitions);
         }
 
