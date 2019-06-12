@@ -18,7 +18,6 @@ using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Remote;
 using NUnit.Framework;
-using Member = Hazelcast.Remote.Member;
 
 namespace Hazelcast.Client.Test
 {
@@ -45,7 +44,7 @@ namespace Hazelcast.Client.Test
         public void TearDown()
         {
             HazelcastClient.ShutdownAll();
-            StopCluster(_remoteController, _cluster);
+            ShutdownCluster(_remoteController, _cluster);
             StopRemoteController(_remoteController);
         }
 
