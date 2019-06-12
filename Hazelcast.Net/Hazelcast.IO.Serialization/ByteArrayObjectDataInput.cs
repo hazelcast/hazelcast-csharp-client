@@ -745,7 +745,7 @@ namespace Hazelcast.IO.Serialization
             {
                 len = Size - Pos;
             }
-            Array.Copy(Data, Pos, b, off, len);
+            Buffer.BlockCopy(Data, Pos, b, off, len);
             Pos += len;
             return len;
         }

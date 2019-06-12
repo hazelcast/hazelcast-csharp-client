@@ -18,6 +18,7 @@ using NUnit.Framework;
 namespace Hazelcast.NearCache.Test
 {
     [TestFixture]
+    [Category("3.8")]
     public class Post38NearCacheTest : BaseNearCacheTest
     {
         [SetUp]

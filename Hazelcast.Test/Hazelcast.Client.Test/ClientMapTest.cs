@@ -485,7 +485,7 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(map.Size(), keycount);
 
             var dictionary = map.GetAll(mm.Keys);
-            Assert.AreEqual(dictionary.Count, keycount);
+            Assert.AreEqual(keycount, dictionary.Count);
         }
 
         [Test]

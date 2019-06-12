@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Protocol.Codec
 
         internal class ResponseParameters
         {
-            public IList<IData> response;
+            public List<IData> response;
         }
 
         internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
