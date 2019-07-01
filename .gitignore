@@ -167,3 +167,4 @@ rc/
 .vs
 .DS_Store
 packages/
+Hazelcast.Benchmarks/BenchmarkDotNet.Artifacts/
