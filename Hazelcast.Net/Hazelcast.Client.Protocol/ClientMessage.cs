@@ -55,6 +55,11 @@ namespace Hazelcast.Client.Protocol
     ///     </pre>
     /// </remarks>
     internal class ClientMessage : MessageFlyweight, ISocketWritable, ISocketReadable, IClientMessage
+
+#if !NET40
+    , IDisposable
+#endif
+
     {
         /// <summary>Current protocol version</summary>
         public const short Version = 0;
@@ -222,15 +227,33 @@ namespace Hazelcast.Client.Protocol
         public static ClientMessage CreateForEncode(int initialCapacity)
         {
             initialCapacity = QuickMath.NextPowerOfTwo(initialCapacity);
-            return CreateForEncode(new SafeBuffer(new byte[initialCapacity]), 0);
-        }
 
-        public static ClientMessage CreateForEncode(IClientProtocolBuffer buffer, int offset)
-        {
+#if !NET40
+            var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(initialCapacity);
+#else
+            var buffer = new byte[initialCapacity];
+#endif
             var clientMessage = new ClientMessage();
-            clientMessage.WrapForEncode(buffer, offset);
+            clientMessage.WrapForEncode(new SafeBuffer(buffer), 0);
+
+#if !NET40
+            clientMessage._returnable = buffer;
+#endif
             return clientMessage;
         }
+
+#if !NET40
+
+        private byte[] _returnable;
+
+        public void Dispose()
+        {
+            if (_returnable != null)
+            {
+                System.Buffers.ArrayPool<byte>.Shared.Return (_returnable, true);
+            }
+        }       
+#endif
 
         /// <summary>Returns the setDataOffset field.</summary>
         /// <returns>The setDataOffset type field value.</returns>
@@ -333,14 +356,14 @@ namespace Hazelcast.Client.Protocol
             return this;
         }
 
-        protected internal virtual void WrapForDecode(IClientProtocolBuffer buffer, int offset)
+        void WrapForDecode(IClientProtocolBuffer buffer, int offset)
         {
             EnsureHeaderSize(offset, buffer.Capacity());
             Wrap(buffer, offset);
             Index(GetDataOffset());
         }
 
-        protected internal virtual void WrapForEncode(IClientProtocolBuffer buffer, int offset)
+        void WrapForEncode(IClientProtocolBuffer buffer, int offset)
         {
             EnsureHeaderSize(offset, buffer.Capacity());
             Wrap(buffer, offset);

@@ -25,6 +25,11 @@
     <!--<NuspecFile>Hazelcast.Net.nuspec</NuspecFile>-->
     <!--<NuspecProperties>version=$(Version);configuration=$(Configuration);description=$(Description)</NuspecProperties>-->
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Buffers" Version="4.5.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Remove="Resources\hazelcast-client-default.xml" />
   </ItemGroup>
