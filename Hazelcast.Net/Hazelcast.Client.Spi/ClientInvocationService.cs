@@ -198,6 +198,8 @@ using Hazelcast.Util;
                     throw new HazelcastException("Client is shut down.");
                 }
                 //Successfully sent.
+
+                invocation.TryClearMessage();
             }
             catch (Exception e)
             {
@@ -243,6 +245,10 @@ using Hazelcast.Util;
                     {
                         Logger.Finest("Invocation already completed:", e);
                     }
+                }
+                finally
+                {
+                    invocation.TryClearMessage();
                 }
             }
             catch (Exception ex)

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
@@ -25,8 +26,8 @@ using Hazelcast.Util;
         private readonly ClientConnection _boundConnection;
         private readonly SettableFuture<IClientMessage> _future;
         private readonly string _memberUuid;
-        private readonly IClientMessage _message;
         private readonly int _partitionId = -1;
+        private IClientMessage _message;
 
         // the point at which the request should be considered timed out
         private readonly long _invocationTimeMillis; 
@@ -102,6 +103,16 @@ using Hazelcast.Util;
         public DistributedEventHandler EventHandler 
         {
             get { return _eventHandler; }
+        }
+
+        public void TryClearMessage()
+        {
+            var disposable = _message as IDisposable;
+            if (disposable != null)
+            {
+                disposable.Dispose();
+                _message = null;
+            }
         }
     }
 }

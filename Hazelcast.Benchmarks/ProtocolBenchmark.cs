@@ -24,10 +24,18 @@ namespace Hazelcast.Benchmarks
         [Params(10, 1000)]
         public int Size { get; set; }
 
+        [Params(true, false)]
+        public bool UseArrayPool { get; set; }
+
         [Benchmark]
         public object ClientMessage_CreateForEncode()
         {
-            return ClientMessage.CreateForEncode(Size);
+            var message = ClientMessage.CreateForEncode(Size);
+            if (UseArrayPool)
+            {
+                message.Dispose();
+            }
+            return message;
         }
     }
 }
