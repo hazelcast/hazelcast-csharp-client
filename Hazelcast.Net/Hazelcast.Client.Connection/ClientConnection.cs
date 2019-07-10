@@ -122,27 +122,12 @@ namespace Hazelcast.Client.Connection
                                 clientNetworkConfig), null);
                     var certificateName = sslConfig.GetCertificateName() ?? "";
                     var cerPath = sslConfig.GetCertificateFilePath();
-                    if (cerPath != null)
-                    {
-                        var clientCertificates= new X509Certificate2Collection();
-                        try
-                        {
-                            clientCertificates.Import(cerPath, sslConfig.GetCertificatePassword(), X509KeyStorageFlags.DefaultKeySet);
-                        }
-                        catch (Exception)
-                        {
-                            Logger.Finest(string.Format("Cannot load client certificate:{0}.", cerPath));
-                            throw;
-                        }
-                        
-                        var enabledSslProtocols = sslConfig.GetSslProtocol();
-                        var checkCertificateRevocation = sslConfig.IsCheckCertificateRevocation();
-                        sslStream.AuthenticateAsClient(certificateName, clientCertificates, enabledSslProtocols, checkCertificateRevocation);
-                    }
-                    else
-                    {
-                        sslStream.AuthenticateAsClient(certificateName);
-                    }
+                    var enabledSslProtocols = sslConfig.GetSslProtocol();
+                    var checkCertificateRevocation = sslConfig.IsCheckCertificateRevocation();
+
+                    var clientCertificates = GetClientCertificatesOrDefault(cerPath, sslConfig);
+
+                    sslStream.AuthenticateAsClient(certificateName, clientCertificates, enabledSslProtocols, checkCertificateRevocation);
 
                     Logger.Info(string.Format(
                         "Client connection ready. Encrypted:{0}, MutualAuthenticated:{1} using ssl protocol:{2}",
@@ -166,6 +151,27 @@ namespace Hazelcast.Client.Connection
                 }
                 throw new IOException("Cannot init connection.", e);
             }
+        }
+
+        static X509Certificate2Collection GetClientCertificatesOrDefault(string cerPath, SSLConfig sslConfig)
+        {
+            if (cerPath == null)
+            {
+                return null;
+            }
+
+            var clientCertificates = new X509Certificate2Collection();
+            try
+            {
+                clientCertificates.Import(cerPath, sslConfig.GetCertificatePassword(), X509KeyStorageFlags.DefaultKeySet);
+            }
+            catch (Exception)
+            {
+                Logger.Finest(string.Format("Cannot load client certificate:{0}.", cerPath));
+                throw;
+            }
+
+            return clientCertificates;
         }
 
         public string ConnectedServerVersionStr { get; set; }
