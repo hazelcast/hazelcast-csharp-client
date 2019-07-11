@@ -54,12 +54,7 @@ namespace Hazelcast.Client.Protocol
     ///         |                                                              ...
     ///     </pre>
     /// </remarks>
-    internal class ClientMessage : MessageFlyweight, ISocketWritable, ISocketReadable, IClientMessage
-
-#if !NET40
-    , IDisposable
-#endif
-
+    internal class ClientMessage : MessageFlyweight, ISocketWritable, ISocketReadable, IClientMessage, IDisposable
     {
         /// <summary>Current protocol version</summary>
         public const short Version = 0;
@@ -90,7 +85,8 @@ namespace Hazelcast.Client.Protocol
 
         private bool _isRetryable;
         private int _writeOffset;
-
+        private PooledBuffer _pooled;
+        
         /// <param name="flag">Check this flag to see if it is set.</param>
         /// <returns>true if the given flag is set, false otherwise.</returns>
         public virtual bool IsFlagSet(short flag)
@@ -228,32 +224,19 @@ namespace Hazelcast.Client.Protocol
         {
             initialCapacity = QuickMath.NextPowerOfTwo(initialCapacity);
 
-#if !NET40
-            var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(initialCapacity);
-#else
-            var buffer = new byte[initialCapacity];
-#endif
+            byte[] buffer;
+            var pooled = PooledBuffer.Alloc(initialCapacity, out buffer);
+
             var clientMessage = new ClientMessage();
             clientMessage.WrapForEncode(new SafeBuffer(buffer), 0);
-
-#if !NET40
-            clientMessage._returnable = buffer;
-#endif
+            clientMessage._pooled = pooled;
             return clientMessage;
         }
 
-#if !NET40
-
-        private byte[] _returnable;
-
         public void Dispose()
         {
-            if (_returnable != null)
-            {
-                System.Buffers.ArrayPool<byte>.Shared.Return (_returnable, true);
-            }
+            _pooled.Return();
         }       
-#endif
 
         /// <summary>Returns the setDataOffset field.</summary>
         /// <returns>The setDataOffset type field value.</returns>
