@@ -23,7 +23,16 @@ namespace Hazelcast.IO.Serialization
     {
         private readonly bool _bigEndian;
         private readonly ISerializationService _service;
+
         private static readonly byte[] EmptyBytes = new byte[0];
+        private static readonly bool[] EmptyBools = new bool[0];
+        private static readonly char[] EmptyChars = new char[0];
+        private static readonly int[] EmptyInts = new int[0];
+        private static readonly long[] EmptyLongs = new long[0];
+        private static readonly double[] EmptyDoubles = new double[0];
+        private static readonly float[] EmptyFloats = new float[0];
+        private static readonly short[] EmptyShorts = new short[0];
+        private static readonly string[] EmptyStrings = new string[0];
 
         internal ByteArrayObjectDataInput(byte[] data, ISerializationService service, ByteOrder byteOrder)
             : this(data, 0, service, byteOrder)
@@ -423,7 +432,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 return values;
             }
-            return new bool[0];
+            return EmptyBools;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -441,7 +450,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 return values;
             }
-            return new char[0];
+            return EmptyChars;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -459,7 +468,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 return values;
             }
-            return new int[0];
+            return EmptyInts;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -477,7 +486,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 return values;
             }
-            return new long[0];
+            return EmptyLongs;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -495,7 +504,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 return values;
             }
-            return new double[0];
+            return EmptyDoubles;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -513,7 +522,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 return values;
             }
-            return new float[0];
+            return EmptyFloats;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -531,7 +540,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 return values;
             }
-            return new short[0];
+            return EmptyShorts;
         }
 
         public virtual string[] ReadUTFArray()
@@ -548,7 +557,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 return values;
             }
-            return new string[0];
+            return EmptyStrings;
         }
 
         public T ReadObject<T>()
