@@ -130,9 +130,7 @@ namespace Hazelcast.Client.Protocol.Util
 
         public  string GetStringUtf8(int offset, int length)
         {
-            var stringInBytes = new byte[length];
-            GetBytes(offset + Bits.IntSizeInBytes, stringInBytes);
-            return Encoding.UTF8.GetString(stringInBytes);
+            return Encoding.UTF8.GetString(_byteArray, offset+Bits.IntSizeInBytes,length);
         }
     }
 }
