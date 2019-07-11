@@ -64,7 +64,11 @@ namespace Hazelcast.Client.Protocol.Util
 
         public  int PutStringUtf8(int index, string value)
         {
-            return PutStringUtf8(index, value, int.MaxValue);
+            const int lengthSize = Bits.IntSizeInBytes;
+
+            var size = Encoding.UTF8.GetBytes(value, 0, value.Length, _byteArray, index + lengthSize);
+            PutInt(index, size);
+            return lengthSize + size;
         }
 
         public  int PutStringUtf8(int index, string value, int maxEncodedSize)
