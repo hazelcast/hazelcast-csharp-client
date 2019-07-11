@@ -352,7 +352,7 @@ namespace Hazelcast.Client.Test
         public virtual void TestExecuteOnKeys()
         {
             FillMap();
-            var keys = new HashSet<object> {"key1", "key5"};
+            var keys = new HashSet<object> { "key1", "key5" };
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
             var result = map.ExecuteOnKeys(keys, entryProcessor);
@@ -446,7 +446,7 @@ namespace Hazelcast.Client.Test
             map.Lock("key1");
             var latch = new CountdownEvent(1);
 
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 map.ForceUnlock("key1");
                 latch.Signal();
@@ -469,26 +469,22 @@ namespace Hazelcast.Client.Test
             }
         }
 
+        const int GetAllExtremeDataCount = 1000;
+        static readonly IDictionary<object, object> GetAllExtremeData =
+            Enumerable.Range(0, GetAllExtremeDataCount)
+                .ToDictionary(i => (object)i.ToString(), i => (object)i.ToString());
+
         [Test, Repeat(100)]
         public virtual void TestGetAllExtreme()
         {
-            IDictionary<object, object> mm = new Dictionary<object, object>();
-            const int keycount = 1000;
+            map.PutAll(GetAllExtremeData);
+            Assert.AreEqual(GetAllExtremeDataCount, map.Size());
 
-            //insert dummy keys and values 
-            foreach (var itemIndex in Enumerable.Range(0, keycount))
-            {
-                mm.Add(itemIndex.ToString(), itemIndex.ToString());
-            }
-
-            map.PutAll(mm);
-            Assert.AreEqual(map.Size(), keycount);
-
-            var dictionary = map.GetAll(mm.Keys);
-            Assert.AreEqual(keycount, dictionary.Count);
+            var dictionary = map.GetAll(GetAllExtremeData.Keys);
+            Assert.AreEqual(GetAllExtremeDataCount, dictionary.Count);
             foreach (var pair in dictionary)
             {
-                Assert.AreEqual(mm[pair.Key] , pair.Value);
+                Assert.AreEqual(GetAllExtremeData[pair.Key], pair.Value);
             }
         }
 
@@ -506,7 +502,7 @@ namespace Hazelcast.Client.Test
             {
                 Assert.AreEqual(map.Get(i_1), i_1);
             }
-            var ss = new HashSet<object> {1, 3};
+            var ss = new HashSet<object> { 1, 3 };
 
             var m2 = map.GetAll(ss);
             Assert.AreEqual(m2.Count, 2);
@@ -712,7 +708,7 @@ namespace Hazelcast.Client.Test
 
             for (var i = 0; i < TestItemCount; i++)
             {
-                map.Put("key" + i, new[] {byte.MaxValue});
+                map.Put("key" + i, new[] { byte.MaxValue });
             }
 
             Assert.AreEqual(map.Size(), TestItemCount);
@@ -809,7 +805,7 @@ namespace Hazelcast.Client.Test
             map.Lock("key1");
             var latch = new CountdownEvent(1);
 
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 map.TryPut("key1", "value2", 1, TimeUnit.Seconds);
                 latch.Signal();
@@ -829,7 +825,7 @@ namespace Hazelcast.Client.Test
             var leaseTime = 500;
             map.Lock("key1", leaseTime, TimeUnit.Milliseconds);
             var latch = new CountdownEvent(1);
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 map.TryPut("key1", "value2", 2000, TimeUnit.Milliseconds);
                 latch.Signal();
@@ -847,7 +843,7 @@ namespace Hazelcast.Client.Test
         {
             map.Lock("key1", 1, TimeUnit.Seconds);
             var latch = new CountdownEvent(2);
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 if (!map.TryLock("key1"))
                 {
@@ -1057,7 +1053,7 @@ namespace Hazelcast.Client.Test
             map.Lock("key2");
             var latch = new CountdownEvent(2);
 
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 var result = map.TryPut("key1", "value3", 1, TimeUnit.Seconds);
                 if (!result)
@@ -1066,7 +1062,7 @@ namespace Hazelcast.Client.Test
                 }
             });
 
-            var t2 = new Thread(delegate(object o)
+            var t2 = new Thread(delegate (object o)
             {
                 var result = map.TryRemove("key2", 1, TimeUnit.Seconds);
                 if (!result)
