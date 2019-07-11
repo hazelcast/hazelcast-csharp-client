@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -33,17 +34,22 @@ namespace Hazelcast.Client.Protocol.Util
 
         public static int CalculateDataSize(IData data)
         {
-            return CalculateDataSize(data.ToByteArray());
+            return CalculateDataSize(data.ToByteArraySegment());
         }
 
         public static int CalculateDataSize(KeyValuePair<IData, IData> entry)
         {
-            return CalculateDataSize(entry.Key.ToByteArray()) + CalculateDataSize(entry.Value.ToByteArray());
+            return CalculateDataSize(entry.Key.ToByteArraySegment()) + CalculateDataSize(entry.Value.ToByteArraySegment());
         }
 
         public static int CalculateDataSize(byte[] bytes)
         {
             return Bits.IntSizeInBytes + bytes.Length;
+        }
+
+        public static int CalculateDataSize(ArraySegment<byte> bytes)
+        {
+            return Bits.IntSizeInBytes + bytes.Count;
         }
 
         public static int CalculateDataSize(int data)

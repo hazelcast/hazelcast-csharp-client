@@ -83,7 +83,8 @@ namespace Hazelcast.Client.Test.Serialization
             var list = new List<string> {"foo", "bar"};
 
             var d = ss.ToData(list);
-            var input = new ByteArrayObjectDataInput(d.ToByteArray(), HeapData.DataOffset, ss, ByteOrder.BigEndian);
+            var s = d.ToByteArraySegment().Slice(HeapData.DataOffset);
+            var input = new ByteArrayObjectDataInput(s, ss, ByteOrder.BigEndian);
 
             var actual = (List<string>)globalListSerializer.Read(input);
 

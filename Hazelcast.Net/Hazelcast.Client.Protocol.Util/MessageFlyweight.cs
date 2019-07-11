@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
@@ -63,19 +64,18 @@ namespace Hazelcast.Client.Protocol.Util
             return result;
         }
 
-        public virtual byte[] GetByteArray()
+        private ArraySegment<byte> GetByteArraySegment()
         {
             var length = Buffer.GetInt(_index + _offset);
             _index += Bits.IntSizeInBytes;
-            var result = new byte[length];
-            Buffer.GetBytes(_index + _offset, result);
+            var result = Buffer.GetBytesSegment(_index + _offset, length);
             _index += length;
             return result;
         }
 
         public virtual IData GetData()
         {
-            return new HeapData(GetByteArray());
+            return new HeapData(GetByteArraySegment());
         }
 
         public virtual IList<IData> GetDataList()
@@ -174,18 +174,23 @@ namespace Hazelcast.Client.Protocol.Util
 
         public virtual MessageFlyweight Set(IData data)
         {
-            var bytes = data.ToByteArray();
+            var bytes = data.ToByteArraySegment();
             Set(bytes);
             return this;
         }
 
         public virtual MessageFlyweight Set(byte[] value)
         {
-            var length = value.Length;
-            Set(length);
-            Buffer.PutBytes(_index + _offset, value);
-            _index += length;
+            Set(new ArraySegment<byte>(value));
             return this;
+        }
+
+        void Set(ArraySegment<byte> value)
+        {
+            var length = value.Count;
+            Set(length);
+            Buffer.PutBytes(_index + _offset, value.Array, value.Offset, value.Count);
+            _index += length;
         }
 
         public virtual MessageFlyweight Set(ICollection<IData> value)

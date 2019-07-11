@@ -264,6 +264,15 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
+        void WriteArraySegment(ArraySegment<byte> bytes)
+        {
+            WriteInt(bytes.Count);
+            if (bytes.Count > 0)
+            {
+                Write(bytes.Array, bytes.Offset, bytes.Count);
+            }
+        }
+
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteBooleanArray(bool[] bools)
         {
@@ -385,8 +394,10 @@ namespace Hazelcast.IO.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteData(IData data)
         {
-            var payload = data != null ? data.ToByteArray() : null;
-            WriteByteArray(payload);
+            if (data != null)
+            {
+                WriteArraySegment(data.ToByteArraySegment());
+            }
         }
 
         /// <summary>Returns this buffer's position.</summary>

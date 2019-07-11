@@ -75,10 +75,10 @@ namespace Hazelcast.Client.Test.Serialization
             }
             var actualStr = sb.ToString();
             var strBytes = Encoding.UTF8.GetBytes(actualStr);
-            var actualDataBytes = _serializationService.ToData(actualStr).ToByteArray();
+            var actualDataBytes = _serializationService.ToData(actualStr).ToByteArraySegment();
             var expectedDataByte = ToDataByte(strBytes, actualStr.Length);
             var decodedStr = (string) _serializationService.ToObject<object>(new HeapData(expectedDataByte));
-            Assert.AreEqual(expectedDataByte, actualDataBytes, "Deserialized byte array do not match utf-8 encoding");
+            CollectionAssert.AreEqual(expectedDataByte, actualDataBytes, "Deserialized byte array do not match utf-8 encoding");
             Assert.AreEqual(decodedStr, actualStr);
         }
 
@@ -116,13 +116,13 @@ namespace Hazelcast.Client.Test.Serialization
         {
             var allstr = new string(AllChars);
             var expected = Encoding.UTF8.GetBytes(allstr);
-            var bytes = _serializationService.ToData(allstr).ToByteArray();
+            var bytes = _serializationService.ToData(allstr).ToByteArraySegment();
 
             // data offset + length
             var offset = HeapData.DataOffset + Bits.IntSizeInBytes;
-            var length = bytes.Length - offset;
+            var length = bytes.Count - offset;
             var actual = new byte[length];
-            Array.Copy(bytes, offset, actual, 0, length);
+            Array.Copy(bytes.Array, bytes.Offset + offset, actual, 0, length);
             Assert.AreEqual(expected, actual);
         }
 
@@ -152,8 +152,8 @@ namespace Hazelcast.Client.Test.Serialization
         public virtual void TestStringEncode()
         {
             var expected = ToDataByte(TestDataBytesAll, TestDataAll.Length);
-            var actual = _serializationService.ToData(TestDataAll).ToByteArray();
-            Assert.AreEqual(expected, actual);
+            var actual = _serializationService.ToData(TestDataAll).ToByteArraySegment();
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         private static byte[] ToDataByte(byte[] input, int length)

@@ -23,6 +23,7 @@ namespace Hazelcast.IO.Serialization
     {
         private readonly bool _bigEndian;
         private readonly ISerializationService _service;
+        private static readonly byte[] EmptyBytes = new byte[0];
 
         internal ByteArrayObjectDataInput(byte[] data, ISerializationService service, ByteOrder byteOrder)
             : this(data, 0, service, byteOrder)
@@ -30,14 +31,24 @@ namespace Hazelcast.IO.Serialization
         }
 
         internal ByteArrayObjectDataInput(byte[] data, int offset, ISerializationService service, ByteOrder byteOrder)
+            : this(data, offset, data != null ? data.Length : 0, service, byteOrder)
+        {
+        }
+
+        internal ByteArrayObjectDataInput(ArraySegment<byte> data, ISerializationService service, ByteOrder byteOrder)
+            : this(data.Array, data.Offset, data.Count + data.Offset, service, byteOrder)
+        {
+        }
+
+        ByteArrayObjectDataInput(byte[] data, int offset, int size, ISerializationService service, ByteOrder byteOrder)
         {
             Data = data;
-            Size = data != null ? data.Length : 0;
+            Size = size;
             _service = service;
             Pos = offset;
             _bigEndian = byteOrder == ByteOrder.BigEndian;
         }
-
+        
         internal char[] CharBuffer { get; set; }
 
         internal byte[] Data { get; set; }
@@ -395,7 +406,7 @@ namespace Hazelcast.IO.Serialization
                 ReadFully(b);
                 return b;
             }
-            return new byte[0];
+            return EmptyBytes;
         }
 
         public virtual bool[] ReadBooleanArray()
@@ -697,6 +708,13 @@ namespace Hazelcast.IO.Serialization
             Data = data;
             Size = data != null ? data.Length : 0;
             Pos = offset;
+        }
+
+        public virtual void Init(ArraySegment<byte> data)
+        {
+            Data = data.Array;
+            Size = data.Count + data.Offset;
+            Pos = data.Offset;
         }
 
         public virtual void Clear()

@@ -27,7 +27,8 @@ namespace Hazelcast.IO.Serialization
 
         public IBufferObjectDataInput CreateInput(IData data, ISerializationService service)
         {
-            return new ByteArrayObjectDataInput(data.ToByteArray(), HeapData.DataOffset, service, _byteOrder);
+            var s = data.ToByteArraySegment();
+            return new ByteArrayObjectDataInput(s.Slice(HeapData.DataOffset), service, _byteOrder);
         }
 
         public IBufferObjectDataInput CreateInput(byte[] buffer, ISerializationService service)

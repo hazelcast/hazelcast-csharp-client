@@ -281,14 +281,14 @@ namespace Hazelcast.Client.Test.Serialization
             var data = _input.ReadData();
             Assert.IsNull(nullData);
             Assert.AreEqual(0, theZeroLenghtArray.GetTypeId());
-            Assert.AreEqual(new byte[0], theZeroLenghtArray.ToByteArray());
-            Assert.AreEqual(
+            CollectionAssert.AreEqual(new byte[0], theZeroLenghtArray.ToByteArraySegment());
+            CollectionAssert.AreEqual(
                 new byte[]
                 {
                     unchecked((byte) (-1)), unchecked((byte) (-1)), unchecked((byte) (-1)), unchecked((byte) (-1)), 0, 0,
                     0,
                     0
-                }, data.ToByteArray());
+                }, data.ToByteArraySegment());
         }
 
         [Test]

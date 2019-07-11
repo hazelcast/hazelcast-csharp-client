@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.IO.Serialization
 {
     /// <summary>Data is basic unit of serialization.</summary>
@@ -67,6 +69,8 @@ namespace Hazelcast.IO.Serialization
         /// <summary>Returns byte array representation of internal binary format.</summary>
         /// <returns>binary data</returns>
         byte[] ToByteArray();
+
+        ArraySegment<byte> ToByteArraySegment();
 
         /// <summary>Returns the total size of Data in bytes</summary>
         /// <returns>total size</returns>

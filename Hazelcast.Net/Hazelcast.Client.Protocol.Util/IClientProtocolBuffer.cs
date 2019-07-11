@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Client.Protocol.Util
 {
     /// <summary>Interface for buffer to be used in client protocol.</summary>
@@ -43,6 +45,11 @@ namespace Hazelcast.Client.Protocol.Util
         /// <param name="index">in the underlying buffer to start from.</param>
         /// <param name="dst">into which the dst will be copied.</param>
         void GetBytes(int index, byte[] dst);
+
+        /// <summary>Get an array segment of the underlying buffer.</summary>
+        /// <param name="index">in the underlying buffer to start from.</param>
+        /// <param name="length">the length of the segment</param>
+        ArraySegment<byte> GetBytesSegment(int index, int length);
 
         /// <summary>Get bytes from the underlying buffer into a supplied byte array.</summary>
         /// <param name="index">in the underlying buffer to start from.</param>

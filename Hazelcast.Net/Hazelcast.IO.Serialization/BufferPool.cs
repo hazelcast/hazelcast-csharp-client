@@ -107,7 +107,8 @@ namespace Hazelcast.IO.Serialization
             {
                 input = _serializationService.CreateObjectDataInput((byte[])null);
             }
-            input.Init(data.ToByteArray(), HeapData.DataOffset);
+
+            input.Init(data.ToByteArraySegment().Slice(HeapData.DataOffset));
             return input;
         }
 

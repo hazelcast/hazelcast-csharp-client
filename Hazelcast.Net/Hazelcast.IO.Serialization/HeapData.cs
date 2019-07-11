@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Text;
 using Hazelcast.Util;
 
@@ -29,23 +30,26 @@ namespace Hazelcast.IO.Serialization
         //first 4 byte is type id + last 4 byte is partition hash code
         private const int HeapDataOverHead = DataOffset;
 
-        private readonly byte[] _data;
+        private readonly ArraySegment<byte> _data;
 
-        public HeapData()
-        {
-        }
-
-        public HeapData(byte[] data)
+        public HeapData(ArraySegment<byte> data)
         {
             // type and partition_hash are always written with BIG_ENDIAN byte-order
             // will use a byte to store partition_hash bit
             // array (12: array header, 4: length)
-            if (data != null && data.Length > 0 && data.Length < HeapDataOverHead)
+            if (data != null && data.Count > 0 && data.Count < HeapDataOverHead)
             {
                 throw new ArgumentException("Data should be either empty or should contain more than " +
                                             HeapDataOverHead);
             }
             _data = data;
+        }
+
+        static byte[] Empty = new byte[0];
+
+        public HeapData(byte[] data)
+            : this(new ArraySegment<byte>(data ?? Empty))
+        {
         }
 
         public int DataSize()
@@ -55,25 +59,33 @@ namespace Hazelcast.IO.Serialization
 
         public int TotalSize()
         {
-            return _data != null ? _data.Length : 0;
+            return _data.Count;
         }
 
         public int GetPartitionHash()
         {
             if (HasPartitionHash())
             {
-                return Bits.ReadIntB(_data, PartitionHashOffset);
+                return Bits.ReadIntB(_data.Array, _data.Offset + PartitionHashOffset);
             }
             return GetHashCode();
         }
 
         public bool HasPartitionHash()
         {
-            return _data != null && _data.Length >= HeapDataOverHead
-                   && Bits.ReadIntB(_data, PartitionHashOffset) != 0;
+            return _data.Count >= HeapDataOverHead
+                   && Bits.ReadIntB(_data.Array, _data.Offset + PartitionHashOffset) != 0;
         }
 
         public byte[] ToByteArray()
+        {
+            // deep copy here, soon to be removed
+            var bytes = new byte[_data.Count];
+            Buffer.BlockCopy(_data.Array,_data.Offset, bytes, 0, _data.Count);
+            return bytes;
+        }
+
+        public ArraySegment<byte> ToByteArraySegment()
         {
             return _data;
         }
@@ -84,14 +96,14 @@ namespace Hazelcast.IO.Serialization
             {
                 return SerializationConstants.ConstantTypeNull;
             }
-            return Bits.ReadIntB(_data, TypeOffset);
+            return Bits.ReadIntB(_data.Array, _data.Offset + TypeOffset);
         }
 
         public int GetHeapCost()
         {
             // reference (assuming compressed oops)
             var objectRef = Bits.IntSizeInBytes;
-            return objectRef + (_data != null ? ArrayHeaderSizeInBytes + _data.Length : 0);
+            return objectRef + (_data.Count > 0 ? ArrayHeaderSizeInBytes + _data.Count : 0);
         }
 
         public bool IsPortable()
@@ -109,7 +121,7 @@ namespace Hazelcast.IO.Serialization
             {
                 return false;
             }
-            var data = (IData) o;
+            var data = (IData)o;
             if (GetTypeId() != data.GetTypeId())
             {
                 return false;
@@ -119,12 +131,12 @@ namespace Hazelcast.IO.Serialization
             {
                 return false;
             }
-            return dataSize == 0 || Equals(_data, data.ToByteArray());
+            return dataSize == 0 || _data.IsEqual(data.ToByteArraySegment());
         }
 
         public override int GetHashCode()
         {
-            return HashUtil.MurmurHash3_x86_32(_data, DataOffset, DataSize());
+            return HashUtil.MurmurHash3_x86_32(_data.Array, _data.Offset + DataOffset, DataSize());
         }
 
         public override string ToString()

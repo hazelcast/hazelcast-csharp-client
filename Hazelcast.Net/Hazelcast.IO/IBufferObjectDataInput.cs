@@ -21,6 +21,7 @@ namespace Hazelcast.IO
     {
         void Clear();
         void Init(byte[] data, int offset);
+        void Init(ArraySegment<byte> data);
 
         int Position();
 
