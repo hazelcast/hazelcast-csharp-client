@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void FailureAtSecondHostAddressResolution()
+        public void SingleFailureAtAddressResolutionShouldNotBlowUpClient()
         {
             using (ThrowGetHostAddressesAt(2))
             {
