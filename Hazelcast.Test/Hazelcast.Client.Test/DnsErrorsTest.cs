@@ -16,9 +16,8 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using Hazelcast.Config;
-using Hazelcast.Core;
 using Hazelcast.Remote;
-using Hazelcast.Util;
+using Hazelcast.Test;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -77,7 +76,7 @@ namespace Hazelcast.Client.Test
                     return Dns.GetHostAddresses(s);
                 };
 
-            return DnsUtil.Overrides.GetHostAddresses(over);
+            return Overrides.Dns.GetHostAddresses(over);
         }
     }
 }

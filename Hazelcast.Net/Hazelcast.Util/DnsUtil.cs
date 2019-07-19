@@ -59,44 +59,5 @@ namespace Hazelcast.Util
         {
             return _getHostAddressesFunc(hostNameOrAddress);
         }
-
-        public static class Overrides
-        {
-            public static IDisposable GetHostName(Func<string> getHostName)
-            {
-                var f = _getHostNameFunc;
-                _getHostNameFunc = getHostName;
-                return new Disposable(() => { _getHostNameFunc = f; });
-            }
-
-            public static IDisposable GetHostEntry(Func<string, IPHostEntry> getHostEntry)
-            {
-                var f = _getHostEntryFunc;
-                _getHostEntryFunc = getHostEntry;
-                return new Disposable(() => { _getHostEntryFunc = f; });
-            }
-
-            public static IDisposable GetHostAddresses(Func<string, IPAddress[]> getHostAddresses)
-            {
-                var f = _getHostAddressesFunc;
-                _getHostAddressesFunc = getHostAddresses;
-                return new Disposable(() => { _getHostAddressesFunc = f; });
-            }
-
-            class Disposable : IDisposable
-            {
-                readonly Action _action;
-
-                public Disposable(Action action)
-                {
-                    _action = action;
-                }
-
-                public void Dispose()
-                {
-                    _action();
-                }
-            }
-        }
     }
 }
