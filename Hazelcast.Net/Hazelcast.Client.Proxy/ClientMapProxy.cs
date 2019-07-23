@@ -387,7 +387,6 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
             var request =
                 MapSetCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(), timeunit.ToMillis(ttl));
-            Invoke(request, keyData);
 
             return InvokeAsync(request, keyData, m => m);
         }
