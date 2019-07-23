@@ -289,9 +289,10 @@ namespace Hazelcast.Client.Spi
             var addresses = GetPossibleMemberAddresses();
             foreach (var address in addresses)
             {
-                var inetSocketAddress = address.GetInetSocketAddress();
+                IPEndPoint inetSocketAddress = null;
                 try
                 {
+                    inetSocketAddress = address.GetInetSocketAddress();
                     triedAddresses.Add(inetSocketAddress);
                     if (Logger.IsFinestEnabled())
                     {
@@ -310,7 +311,7 @@ namespace Hazelcast.Client.Spi
                     }
                     exceptions.Add(e);
                     var level = e is AuthenticationException ? LogLevel.Warning : LogLevel.Finest;
-                    Logger.Log(level, "Exception during initial connection to " + inetSocketAddress, e);
+                    Logger.Log(level, "Exception during initial connection to " + inetSocketAddress ?? address.ToString(), e);
                 }
             }
             return false;

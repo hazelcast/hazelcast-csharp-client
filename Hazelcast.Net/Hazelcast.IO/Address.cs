@@ -87,7 +87,7 @@ namespace Hazelcast.IO
             {
                 return IPAddress.Any;
             }
-            var addresses = Dns.GetHostAddresses(name);
+            var addresses = DnsUtil.GetHostAddresses(name);
             var ipv4 = addresses.FirstOrDefault(m => m.AddressFamily == AddressFamily.InterNetwork);
             return ipv4 ?? addresses.FirstOrDefault();
         }
