@@ -1104,6 +1104,42 @@ namespace Hazelcast.Core
         /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
         void Set(TKey key, TValue value, long ttl, TimeUnit timeunit);
 
+        /// <summary>Asynchronously puts an entry into this map with a given ttl (time to live) value.</summary>
+        /// <remarks>
+        ///     Puts an entry into this map with a given ttl (time to live) value.
+        ///     Similar to put operation except that set
+        ///     doesn't return the old value which is more efficient.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key of the entry</param>
+        /// <param name="value">value of the entry</param>
+        /// <param name="ttl"> maximum time to wait for acquiring the lock for the key </param>
+        /// <param name="timeunit"><see cref="TimeUnit" /> for the ttl</param>
+        Task SetAsync(TKey key, TValue value, long ttl, TimeUnit timeunit);
+
+        /// <summary>Asynchronously puts an entry into this map.</summary>
+        /// <remarks>
+        ///     Puts an entry into this map.
+        ///     Similar to <see cref="PutAsync(TKey,TValue)" /> operation except that <c>Set</c>
+        ///     doesn't return the old value which is more efficient.
+        ///     <p />
+        ///     <p>
+        ///         <b>Warning:</b>
+        ///     </p>
+        ///     This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        ///     the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        ///     defined in <c>key</c>'s class.
+        /// </remarks>
+        /// <param name="key">key of the entry</param>
+        /// <param name="value">value of the entry</param>
+        Task SetAsync(TKey key, TValue value);
+
         /// <summary>Returns the number of entries in this map.</summary>
         /// <remarks>Returns the number of entries in this map.</remarks>
         /// <returns>the number of entries in this map</returns>

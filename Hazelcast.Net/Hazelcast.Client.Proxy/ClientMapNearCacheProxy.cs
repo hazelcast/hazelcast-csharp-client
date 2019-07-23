@@ -234,6 +234,12 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
+        protected override Task SetAsyncInternal(IData keyData, TValue value, long ttl, TimeUnit timeunit)
+        {
+            _nearCache.Invalidate(keyData);
+            return base.SetAsyncInternal(keyData, value, ttl, timeunit);
+        }
+
         protected override Task<object> SubmitToKeyInternal(IData keyData, IEntryProcessor entryProcessor)
         {
             try

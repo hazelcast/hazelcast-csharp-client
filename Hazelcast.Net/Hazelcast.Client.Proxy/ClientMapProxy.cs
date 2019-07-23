@@ -369,6 +369,29 @@ namespace Hazelcast.Client.Proxy
             SetInternal(keyData, value, ttl, timeunit);
         }
 
+        public Task SetAsync(TKey key, TValue value)
+        {
+            return SetAsync(key, value, -1, TimeUnit.Seconds);
+        }
+
+        public Task SetAsync(TKey key, TValue value, long ttl, TimeUnit timeunit)
+        {
+            ValidationUtil.CheckNotNull(key, ValidationUtil.NULL_KEY_IS_NOT_ALLOWED);
+            ValidationUtil.CheckNotNull(value, ValidationUtil.NULL_VALUE_IS_NOT_ALLOWED);
+            var keyData = ToData(key);
+            return SetAsyncInternal(keyData, value, ttl, timeunit);
+        }
+
+        protected virtual Task SetAsyncInternal(IData keyData, TValue value, long ttl, TimeUnit timeunit)
+        {
+            var valueData = ToData(value);
+            var request =
+                MapSetCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(), timeunit.ToMillis(ttl));
+            Invoke(request, keyData);
+
+            return InvokeAsync(request, keyData, m => m);
+        }
+
         protected virtual void SetInternal(IData keyData, TValue value, long ttl, TimeUnit timeunit)
         {
             var valueData = ToData(value);
