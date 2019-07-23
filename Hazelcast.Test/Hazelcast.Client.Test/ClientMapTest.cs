@@ -177,6 +177,18 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual("value", map.Get("key3"));
         }
 
+        [Test]
+        public virtual void TestAsyncSet()
+        {
+            FillMap();
+            var f = map.SetAsync("key4", "value");
+
+            Assert.False(f.IsCompleted);
+
+            f.Wait();
+            Assert.AreEqual("value", map.Get("key4"));
+        }
+
         /// <exception cref="System.Exception"></exception>
         [Test]
         public virtual void TestAsyncPutWithTtl()
