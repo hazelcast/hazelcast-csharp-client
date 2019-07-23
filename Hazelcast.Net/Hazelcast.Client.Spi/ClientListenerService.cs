@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -129,8 +129,8 @@ namespace Hazelcast.Client.Spi
 
         private bool DeregisterListenerInternal(string userRegistrationId)
         {
-            //This method should not be called from registrationExecutor
-            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
+            //This method should only be called from registrationExecutor
+            Debug.Assert(Thread.CurrentThread.Name != null && Thread.CurrentThread.Name.Contains("eventRegistration"));
             ListenerRegistration listenerRegistration;
             if (!_registrations.TryGetValue(userRegistrationId, out listenerRegistration))
             {

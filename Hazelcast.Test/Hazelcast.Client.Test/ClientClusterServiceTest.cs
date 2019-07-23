@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,9 +27,12 @@ namespace Hazelcast.Client.Test
         private Cluster _cluster;
         private RemoteController.Client _remoteController;
 
+        private InitialMembershipListener _initialMembershipListener;
+
         [SetUp]
         public void Setup()
         {
+            _initialMembershipListener = new InitialMembershipListener();
             _remoteController = CreateRemoteController();
             _cluster = CreateCluster(_remoteController);
             StartMember(_remoteController, _cluster);
@@ -43,7 +46,13 @@ namespace Hazelcast.Client.Test
             _remoteController.shutdownCluster(_cluster.Id);
             StopRemoteController(_remoteController);
         }
-        
+
+        protected override void ConfigureClient(ClientConfig config)
+        {
+            base.ConfigureClient(config);
+            config.AddListenerConfig(new ListenerConfig(_initialMembershipListener));
+        }
+
         protected override void ConfigureGroup(ClientConfig config)
         {
             config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
@@ -116,11 +125,26 @@ namespace Hazelcast.Client.Test
             Assert.IsNotNull(member);
             Assert.IsNotNull(listener._membershipEvent.GetCluster());
             Assert.IsNotNull(listener._membershipEvent.ToString());
+            Assert.AreEqual(1, _initialMembershipListener.counter);
+        }
+        
+        [Test]
+        public void TestInitialMembershipWithConfig()
+        {
+            var members = _initialMembershipListener._membershipEvent.GetMembers();
+            Assert.AreEqual(1, members.Count);
+
+            var member = members.FirstOrDefault();
+            Assert.IsNotNull(member);
+            Assert.IsNotNull(_initialMembershipListener._membershipEvent.GetCluster());
+            Assert.IsNotNull(_initialMembershipListener._membershipEvent.ToString());
+            Assert.AreEqual(1, _initialMembershipListener.counter);
         }
 
         private class InitialMembershipListener : IInitialMembershipListener
         {
             public InitialMembershipEvent _membershipEvent;
+            public long counter = 0;
 
             public void MemberAdded(MembershipEvent membershipEvent)
             {
@@ -137,6 +161,7 @@ namespace Hazelcast.Client.Test
             public void Init(InitialMembershipEvent membershipEvent)
             {
                 _membershipEvent = membershipEvent;
+                Interlocked.Increment(ref counter);
             }
         }
     }

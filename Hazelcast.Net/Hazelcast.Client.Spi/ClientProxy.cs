@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
+using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Util;
@@ -173,6 +174,19 @@ namespace Hazelcast.Client.Spi
             }
 
             return valueSet;
+        }
+
+        protected IClientMessage InvokeOnTarget(IClientMessage request, Address target)
+        {
+            try
+            {
+                var task = GetContext().GetInvocationService().InvokeOnTarget(request, target);
+                return ThreadUtil.GetResult(task);
+            }
+            catch (Exception e)
+            {
+                throw ExceptionUtil.Rethrow(e);
+            }
         }
 
         protected virtual IClientMessage Invoke(IClientMessage request, object key)

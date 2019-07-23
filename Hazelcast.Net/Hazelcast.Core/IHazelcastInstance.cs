@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,6 +72,13 @@ namespace Hazelcast.Core
         /// <param name="name">name of the ICountDownLatch proxy</param>
         /// <returns>ICountDownLatch proxy for the given name</returns>
         ICountDownLatch GetCountDownLatch(string name);
+
+        /// <summary>
+        /// PN (Positive-Negative) CRDT counter.
+        /// </summary>
+        /// <param name="name">name of the IPNCounter proxy</param>
+        /// <returns>IPNCounter proxy for the given name</returns>
+        IPNCounter GetPNCounter(string name);
 
         /// <param name="serviceName">name of the service</param>
         /// <param name="name">name of the object</param>

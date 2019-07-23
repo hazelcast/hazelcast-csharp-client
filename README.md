@@ -7,7 +7,6 @@
     * [1.2.1. Setting Up a Hazelcast IMDG Cluster](#121-setting-up-a-hazelcast-imdg-cluster)
       * [1.2.1.1. Running Standalone JARs](#1211-running-standalone-jars)
       * [1.2.1.2. Adding User Library to CLASSPATH](#1212-adding-user-library-to-classpath)
-      * [1.2.1.3. Using hazelcast-member Tool](#1213-using-hazelcast-member-tool)
   * [1.3. Downloading and Installing](#13-downloading-and-installing)
   * [1.4. Basic Configuration](#14-basic-configuration)
     * [1.4.1. Configuring Hazelcast IMDG](#141-configuring-hazelcast-imdg)
@@ -25,7 +24,8 @@
   * [4.1. IdentifiedDataSerializable Serialization](#41-identifieddataserializable-serialization)
   * [4.2. Portable Serialization](#42-portable-serialization)
   * [4.3. Custom Serialization](#43-custom-serialization)
-  * [4.4. Global Serialization](#44-global-serialization)
+  * [4.4. JSON Serialization](#44-json-serialization)
+  * [4.5. Global Serialization](#45-global-serialization)
 * [5. Setting Up Client Network](#5-setting-up-client-network)
   * [5.1. Providing Member Addresses](#51-providing-member-addresses)
   * [5.2. Setting Smart Routing](#52-setting-smart-routing)
@@ -73,7 +73,8 @@
       * [7.7.1.1. Employee Map Query Example](#7711-employee-map-query-example)
       * [7.7.1.2. Querying by Combining Predicates with AND, OR, NOT](#7712-querying-by-combining-predicates-with-and-or-not)
       * [7.7.1.3. Querying with SQL](#7713-querying-with-sql)
-      * [7.7.1.4. Filtering with Paging Predicates](#7714-filtering-with-paging-predicates)
+	  * [7.7.1.4. Querying with JSON Strings](#7714-querying-with-json-strings)
+      * [7.7.1.5. Filtering with Paging Predicates](#7715-filtering-with-paging-predicates)
     * [7.7.2. Fast-Aggregations](#772-fast-aggregations)
   * [7.8. Monitoring and Logging](#78-monitoring-and-logging)
     * [7.8.1. Enabling Client Statistics](#781-enabling-client-statistics)
@@ -135,7 +136,7 @@ In order to use Hazelcast .NET client, we first need to setup a Hazelcast IMDG c
 There are following options to start a Hazelcast IMDG cluster easily:
 
 * You can run standalone members by downloading and running JAR files from the website.
-* You can embed members to your Java projects. The easiest way is to use [hazelcast-member tool](https://github.com/hazelcast/hazelcast-member-tool) if you have brew installed in your computer.
+* You can embed members to your Java projects.
 
 We are going to download JARs from the website and run a standalone member for this guide.
 
@@ -184,81 +185,6 @@ The following is an example configuration when you are adding an `IdentifiedData
 </hazelcast>
 ```
 If you want to add a `Portable` class, you should use `<portable-factories>` instead of `<data-serializable-factories>` in the above configuration.
-
-#### 1.2.1.3. Using hazelcast-member Tool
-
-`hazelcast-member` is a tool to download and run Hazelcast IMDG members easily. You can find the installation instructions for various platforms in the following sections.
-
-##### Installing on Mac OS X
-
-If you have brew installed, run the following commands to install this tool:
-
-```
-brew tap hazelcast/homebrew-hazelcast
-brew install hazelcast-member
-```
-
-##### Installing on Ubuntu and Debian
-
-To resolve the `.deb` artifacts from Bintray, follow the below instructions.
-
-First, you need to import the Bintray's GPG key using the following command:
-
-```
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
-```
-
-Then, run the following commands to add the `.deb` artifact to your system configuration file and update the lists of packages:
-
-```
-echo "deb https://dl.bintray.com/hazelcast/deb stable main" | sudo tee -a /etc/apt/sources.list
-sudo apt-get update
-``` 
-
-Finally, run the following command to install the `hazelcast-member` tool:
-
-```
-sudo apt-get install hazelcast-member
-```
-
-##### Installing on Red Hat and CentOS
-
-To resolve the `RPM` artifacts from Bintray, follow the below instructions.
-
-First, run the following command to get a generated `.repo` file:
-
-```
-wget https://bintray.com/hazelcast/rpm/rpm -O bintray-hazelcast-rpm.repo
-```
-
-Then, install the `.repo` file using the following command:
-
-
-```
-sudo mv bintray-hazelcast-rpm.repo /etc/yum.repos.d/
-```
-
-Finally, run the following command to install the `hazelcast-member` tool:
-
-```
-sudo yum install hazelcast-member
-```
-
----
-
-After successfully installing the `hazelcast-member` tool, you can start a member by running the following command:
-
-```
-hazelcast-member start
-```
-
-To stop a member, run the following command:
-
-```
-hazelcast-member stop
-```
-
-You can find more information about the `hazelcast-member` tool at its GitHub [repo](https://github.com/hazelcast/hazelcast-member-tool).
 
 See the [Hazelcast IMDG Reference Manual](http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#getting-started) for more information on setting up the clusters.
 
@@ -567,6 +493,7 @@ Hazelcast .NET client supports the following data structures and features:
 * IdentifiedDataSerializable Serialization
 * Portable Serialization
 * Custom Serialization
+* JSON Serialization
 * Global Serialization
 
 # 3. Configuration Overview
@@ -916,7 +843,40 @@ clientConfig.GetSerializationConfig()
 
 From now on, Hazelcast will use `CustomSerializer` to serialize `CustomSerializableType` objects.
 
-## 4.4. Global Serialization
+## 4.4. JSON Serialization
+
+You can use the JSON formatted strings as objects in Hazelcast cluster. Starting with Hazelcast IMDG 3.12, the JSON serialization is one of the formerly supported serialization methods. Creating JSON objects in the cluster does not require any server side coding and hence you can just send a JSON formatted string object to the cluster and query these objects by fields.
+
+In order to use JSON serialization, you should use the `HazelcastJsonValue` object for the key or value. Here is an example IMap usage:
+
+```c#
+    var config = new ClientConfig();
+    var client = HazelcastClient.NewHazelcastClient(config);
+    var map = client.GetMap<string, HazelcastJsonValue>("map");
+```
+
+We constructed a map in the cluster which has `string` as the key and `HazelcastJsonValue` as the value. `HazelcastJsonValue` is a simple wrapper and identifier for the JSON formatted strings. You can get the JSON string from the `HazelcastJsonValue` object by using the `ToString()` method. 
+
+You can construct a `HazelcastJsonValue` using `HazelcastJsonValue(string jsonString)` constructor. In case `json` parameter is null it will throw `NullReferenceException` exception. No JSON parsing is performed but it is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, and it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.
+
+Here is an example of how you can construct a `HazelcastJsonValue` and put to the map:
+
+```c#
+    map.Put("item1", new HazelcastJsonValue("{ \"age\": 4 }"));
+    map.Put("item2", new HazelcastJsonValue("{ \"age\": 20 }"));
+```
+
+You can query JSON objects in the cluster using the `Predicate`s of your choice. An example JSON query for querying the values whose age is less than 6 is shown below:
+
+```c#
+    // Get the objects whose age is less than 6
+    var result = map.Values(Predicates.IsLessThan("age", 6));
+
+    Console.WriteLine("Retrieved " + result.Count + " values whose age is less than 6.");
+    Console.WriteLine("Entry is: " + result.First().ToString());
+```
+
+## 4.5. Global Serialization
 
 The global serializer is identical to custom serializers from the implementation perspective.
 The global serializer is registered as a fallback serializer to handle all other objects if a serializer cannot be located for them.
@@ -1356,7 +1316,7 @@ Let's create a map and populate it with some data, as shown below.
 
 ```c#
     // Get the Distributed Map from Cluster.
-    var map = client.getMap<string, string>("my-distributed-map");
+    var map = client.GetMap<string, string>("my-distributed-map");
     //Standard Put and Get.
     map.Put("key", "value");
     map.Get("key");
@@ -2203,7 +2163,71 @@ var result = employeeMap.Values(predicate);
 //result will include only Bob
 ```
 
-#### 7.7.1.4. Filtering with Paging Predicates
+#### 7.7.1.4. Querying with JSON Strings
+
+You can query JSON strings stored inside your Hazelcast clusters. To query the JSON string,
+you first need to create a `HazelcastJsonValue` from the JSON string using the `HazelcastJsonValue(string jsonString)` constructor.
+You can use ``HazelcastJsonValue``s both as keys and values in the distributed data structures. 
+Then, it is possible to query these objects using the Hazelcast query methods explained in this section.
+
+```c#
+    var person1 = new HazelcastJsonValue("{ \"age\": 35 }");
+    var person2 = new HazelcastJsonValue("{ \"age\": 24 }");
+    var person3 = new HazelcastJsonValue("{ \"age\": 17 }");
+
+    var idPersonMap = client.GetMap<int, HazelcastJsonValue>("jsonValues");
+
+    idPersonMap.Put(1, person1);
+    idPersonMap.Put(2, person2);
+    idPersonMap.Put(3, person3);
+
+    var peopleUnder21 = idPersonMap.Values(Predicates.IsLessThan("age", 21));
+```
+
+When running the queries, Hazelcast treats values extracted from the JSON documents as Java types so they
+can be compared with the query attribute. JSON specification defines five primitive types to be used in the JSON
+documents: `number`,`string`, `true`, `false` and `null`. The `string`, `true/false` and `null` types are treated
+as `String`, `boolean` and `null`, respectively. We treat the extracted `number` values as ``long``s if they
+can be represented by a `long`. Otherwise, ``number``s are treated as ``double``s.
+
+It is possible to query nested attributes and arrays in the JSON documents. The query syntax is the same
+as querying other Hazelcast objects using the ``Predicate``s.
+
+```c#
+/**
+ * Sample JSON object
+ *
+ * {
+ *     "departmentId": 1,
+ *     "room": "alpha",
+ *     "people": [
+ *         {
+ *             "name": "Peter",
+ *             "age": 26,
+ *             "salary": 50000
+ *         },
+ *         {
+ *             "name": "Jonah",
+ *             "age": 50,
+ *             "salary": 140000
+ *         }
+ *     ]
+ * }
+ *
+ *
+ * The following query finds all the departments that have a person named "Peter" working in them.
+ */
+ 
+var departmentWithPeter = departments.Values(Predicates.IsEqual("people[any].name", "Peter"));
+
+```
+
+`HazelcastJsonValue` is a lightweight wrapper around your JSON strings. It is used merely as a way to indicate
+that the contained string should be treated as a valid JSON value. Hazelcast does not check the validity of JSON
+strings put into to the maps. Putting an invalid JSON string into a map is permissible. However, in that case
+whether such an entry is going to be returned or not from a query is not defined.
+
+#### 7.7.1.5. Filtering with Paging Predicates
 
 The .NET client provides paging for defined predicates. With its `PagingPredicate` class, you can get a list of keys, values or entries page 
 by page by filtering them with predicates and giving the size of the pages. Also, you can sort the entries by specifying comparators.
@@ -2348,6 +2372,6 @@ Please see the [Licensing section](https://docs.hazelcast.org/docs/latest-dev/ma
 
 # 12. Copyright
 
-Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 
 Visit [www.hazelcast.com](http://www.hazelcast.com) for more information.

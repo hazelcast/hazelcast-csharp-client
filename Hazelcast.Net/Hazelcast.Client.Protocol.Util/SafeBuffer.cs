@@ -25,7 +25,6 @@ namespace Hazelcast.Client.Protocol.Util
     /// </remarks>
     internal class SafeBuffer : IClientProtocolBuffer
     {
-        private const bool ShouldBoundsCheck = true;
         private byte[] _byteArray;
 
         public SafeBuffer(byte[] buffer)
@@ -33,44 +32,42 @@ namespace Hazelcast.Client.Protocol.Util
             Wrap(buffer);
         }
 
-        public virtual void PutLong(int index, long value)
+        public  void PutLong(int index, long value)
         {
             Bits.WriteLongL(_byteArray, index, value);
         }
 
-        public virtual void PutInt(int index, int value)
+        public  void PutInt(int index, int value)
         {
             Bits.WriteIntL(_byteArray, index, value);
         }
 
-        public virtual void PutShort(int index, short value)
+        public  void PutShort(int index, short value)
         {
             Bits.WriteShortL(_byteArray, index, value);
         }
 
-        public virtual void PutByte(int index, byte value)
+        public  void PutByte(int index, byte value)
         {
             _byteArray[index] = value;
         }
 
-        public virtual void PutBytes(int index, byte[] src)
+        public  void PutBytes(int index, byte[] src)
         {
             PutBytes(index, src, 0, src.Length);
         }
 
-        public virtual void PutBytes(int index, byte[] src, int offset, int length)
+        public  void PutBytes(int index, byte[] src, int offset, int length)
         {
-            BoundsCheck(index, length);
-            BoundsCheck(src, offset, length);
-            Array.Copy(src, offset, _byteArray, index, length);
+            Buffer.BlockCopy(src, offset, _byteArray, index, length);
         }
 
-        public virtual int PutStringUtf8(int index, string value)
+        public  int PutStringUtf8(int index, string value)
         {
             return PutStringUtf8(index, value, int.MaxValue);
         }
 
-        public virtual int PutStringUtf8(int index, string value, int maxEncodedSize)
+        public  int PutStringUtf8(int index, string value, int maxEncodedSize)
         {
             var bytes = Encoding.UTF8.GetBytes(value);
             if (bytes.Length > maxEncodedSize)
@@ -92,78 +89,46 @@ namespace Hazelcast.Client.Protocol.Util
             return _byteArray;
         }
 
-        public virtual int Capacity()
+        public  int Capacity()
         {
             return _byteArray.Length;
         }
 
-        public virtual long GetLong(int index)
+        public  long GetLong(int index)
         {
-            BoundsCheck(index, Bits.LongSizeInBytes);
             return Bits.ReadLongL(_byteArray, index);
         }
 
-        public virtual int GetInt(int index)
+        public  int GetInt(int index)
         {
-            BoundsCheck(index, Bits.IntSizeInBytes);
             return Bits.ReadIntL(_byteArray, index);
         }
 
-        public virtual short GetShort(int index)
+        public  short GetShort(int index)
         {
-            BoundsCheck(index, Bits.ShortSizeInBytes);
             return Bits.ReadShortL(_byteArray, index);
         }
 
-        public virtual byte GetByte(int index)
+        public  byte GetByte(int index)
         {
-            BoundsCheck(index, Bits.ByteSizeInBytes);
             return _byteArray[index];
         }
 
-        public virtual void GetBytes(int index, byte[] dst)
+        public  void GetBytes(int index, byte[] dst)
         {
             GetBytes(index, dst, 0, dst.Length);
         }
 
-        public virtual void GetBytes(int index, byte[] dst, int offset, int length)
+        public  void GetBytes(int index, byte[] dst, int offset, int length)
         {
-            BoundsCheck(index, length);
-            BoundsCheck(dst, offset, length);
-            Array.Copy(_byteArray, offset + index, dst, offset, length);
+            Buffer.BlockCopy(_byteArray, offset + index, dst, offset, length);
         }
 
-        public virtual string GetStringUtf8(int offset, int length)
+        public  string GetStringUtf8(int offset, int length)
         {
             var stringInBytes = new byte[length];
             GetBytes(offset + Bits.IntSizeInBytes, stringInBytes);
             return Encoding.UTF8.GetString(stringInBytes);
-        }
-
-        ///////////////////////////////////////////////////////////////////////////
-        public void BoundsCheck(int index, int length)
-        {
-            if (ShouldBoundsCheck)
-            {
-                if (index < 0 || length < 0 || (index + length) > Capacity())
-                {
-                    throw new IndexOutOfRangeException(string.Format("index=%d, length=%d, capacity=%d", index, length,
-                        Capacity()));
-                }
-            }
-        }
-
-        private static void BoundsCheck(byte[] buffer, int index, int length)
-        {
-            if (ShouldBoundsCheck)
-            {
-                var capacity = buffer.Length;
-                if (index < 0 || length < 0 || (index + length) > capacity)
-                {
-                    throw new IndexOutOfRangeException(string.Format("index=%d, length=%d, capacity=%d", index, length,
-                        capacity));
-                }
-            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,12 +56,19 @@ using Hazelcast.IO;
     [Serializable]
     public class TargetDisconnectedException : RetryableHazelcastException
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Constructor version with an Address instance to assign to
+        /// </summary>
+        /// <param name="address">is an Adress instance to assign to</param>
         public TargetDisconnectedException(Address address) : base("Target[" + address + "] disconnected.")
         {
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Constructor version with an Address instance and message to assign to
+        /// </summary>
+        /// <param name="address">is an Adress instance to assign to</param>
+        /// <param name="message">is a message to assign to</param>
         public TargetDisconnectedException(Address address, string message)
             : base("Target[" + address + "] disconnected, " + message)
         {

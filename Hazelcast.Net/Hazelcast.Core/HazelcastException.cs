@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,18 +22,34 @@ namespace Hazelcast.Core
     [Serializable]
     public class HazelcastException : SystemException
     {
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public HazelcastException()
         {
         }
 
+        /// <summary>
+        /// Constructor version with a message to assign to
+        /// </summary>
+        /// <param name="message"> is message to assign to</param>
         public HazelcastException(string message) : base(message)
         {
         }
 
+        /// <summary>
+        /// Constructor version with a message and Exception instance to assign to
+        /// </summary>
+        /// <param name="message">is a message to assign to</param>
+        /// <param name="cause">is an exception instance to assign to</param>
         public HazelcastException(string message, Exception cause) : base(message, cause)
         {
         }
 
+        /// <summary>
+        /// Constructor version with an exception instance to assign to
+        /// </summary>
+        /// <param name="cause">is an exception instance to assign to</param>
         public HazelcastException(Exception cause) : base(cause.Message)
         {
         }
@@ -99,6 +115,34 @@ namespace Hazelcast.Core
         }
 
         public StaleSequenceException(string message) : base(message)
+        {
+        }
+    }
+
+    /// <summary>
+    /// An exception that is thrown when the session guarantees have been lost
+    /// </summary>
+    [Serializable]
+    public class ConsistencyLostException : HazelcastException
+    {
+        public ConsistencyLostException()
+        {
+        }
+
+        public ConsistencyLostException(string message) : base(message)
+        {
+        }
+    }
+
+    /// <summary>Thrown when invoke operations on a CRDT failed because the cluster does not contain any data members.</summary>
+    /// <remarks>Thrown when invoke operations on a CRDT failed because the cluster does not contain any data members.</remarks>
+    [Serializable]
+    public class NoDataMemberInClusterException : HazelcastException
+    {
+        public NoDataMemberInClusterException()
+        {
+        }
+        public NoDataMemberInClusterException(string message) : base(message)
         {
         }
     }

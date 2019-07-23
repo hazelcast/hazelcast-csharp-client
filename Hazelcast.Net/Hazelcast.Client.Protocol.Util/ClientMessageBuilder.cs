@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Protocol.Util
                     if (_message.IsFlagSet(ClientMessage.EndFlag))
                     {
                         var msgLength = builder.Position();
-                        var cm = ClientMessage.CreateForDecode(builder.Buffer(), 0);
+                        var cm = ClientMessage.CreateForDecode(builder.ProtocolBuffer(), 0);
                         cm.SetFrameLength(msgLength);
                         //HANDLE-MESSAGE
                         HandleMessage(cm);

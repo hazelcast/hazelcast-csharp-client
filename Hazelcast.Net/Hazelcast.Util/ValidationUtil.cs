@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ namespace Hazelcast.Util
         public const string NULL_PREDICATE_IS_NOT_ALLOWED = "Predicate should not be null!";
         public const string NULL_AGGREGATOR_IS_NOT_ALLOWED = "Aggregator should not be null!";
         public const string NULL_PROJECTION_IS_NOT_ALLOWED = "Projection should not be null!";
+        public const string NULL_JSON_STRING_IS_NOT_ALLOWED = "JSON string cannot be null!";
 
         public static string HasText(string argument, string argName)
         {

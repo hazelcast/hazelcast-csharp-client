@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,22 +23,27 @@ namespace Hazelcast.IO.Serialization
         private readonly int _initialSize;
         private readonly bool _isBigEndian;
         private readonly ISerializationService _service;
+        private byte[] _buffer;
 
         internal ByteArrayObjectDataOutput(int size, ISerializationService service, ByteOrder byteOrder)
         {
             _initialSize = size;
-            Buffer = new byte[size];
+            _buffer = new byte[size];
             _service = service;
             _isBigEndian = byteOrder == ByteOrder.BigEndian;
         }
 
-        internal byte[] Buffer { get; set; }
+        internal byte[] Buffer
+        {
+            get { return _buffer; }
+            set { _buffer = value; }
+        }
 
         internal int Pos { get; set; }
 
         public virtual void Write(int position, int b)
         {
-            Buffer[position] = unchecked((byte) b);
+            _buffer[position] = unchecked((byte) b);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -80,7 +85,7 @@ namespace Hazelcast.IO.Serialization
             EnsureAvailable(len);
             for (var i = 0; i < len; i++)
             {
-                Buffer[Pos++] = unchecked((byte) s[i]);
+                _buffer[Pos++] = unchecked((byte) s[i]);
             }
         }
 
@@ -88,14 +93,14 @@ namespace Hazelcast.IO.Serialization
         public virtual void WriteChar(int v)
         {
             EnsureAvailable(Bits.CharSizeInBytes);
-            Bits.WriteChar(Buffer, Pos, (char) v, _isBigEndian);
+            Bits.WriteChar(_buffer, Pos, (char) v, _isBigEndian);
             Pos += Bits.CharSizeInBytes;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteChar(int position, int v)
         {
-            Bits.WriteChar(Buffer, position, (char) v, _isBigEndian);
+            Bits.WriteChar(_buffer, position, (char) v, _isBigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -159,78 +164,78 @@ namespace Hazelcast.IO.Serialization
         public virtual void WriteInt(int v)
         {
             EnsureAvailable(Bits.IntSizeInBytes);
-            Bits.WriteInt(Buffer, Pos, v, _isBigEndian);
+            Bits.WriteInt(_buffer, Pos, v, _isBigEndian);
             Pos += Bits.IntSizeInBytes;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteInt(int position, int v)
         {
-            Bits.WriteInt(Buffer, position, v, _isBigEndian);
+            Bits.WriteInt(_buffer, position, v, _isBigEndian);
         }
 
         public void WriteInt(int v, ByteOrder byteOrder)
         {
             EnsureAvailable(Bits.IntSizeInBytes);
-            Bits.WriteInt(Buffer, Pos, v, byteOrder == ByteOrder.BigEndian);
+            Bits.WriteInt(_buffer, Pos, v, byteOrder == ByteOrder.BigEndian);
             Pos += Bits.IntSizeInBytes;
         }
 
         public void WriteInt(int position, int v, ByteOrder byteOrder)
         {
-            Bits.WriteInt(Buffer, position, v, byteOrder == ByteOrder.BigEndian);
+            Bits.WriteInt(_buffer, position, v, byteOrder == ByteOrder.BigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteLong(long v)
         {
             EnsureAvailable(Bits.LongSizeInBytes);
-            Bits.WriteLong(Buffer, Pos, v, _isBigEndian);
+            Bits.WriteLong(_buffer, Pos, v, _isBigEndian);
             Pos += Bits.LongSizeInBytes;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteLong(int position, long v)
         {
-            Bits.WriteLong(Buffer, position, v, _isBigEndian);
+            Bits.WriteLong(_buffer, position, v, _isBigEndian);
         }
 
         public void WriteLong(long v, ByteOrder byteOrder)
         {
             EnsureAvailable(Bits.LongSizeInBytes);
-            Bits.WriteLong(Buffer, Pos, v, byteOrder == ByteOrder.BigEndian);
+            Bits.WriteLong(_buffer, Pos, v, byteOrder == ByteOrder.BigEndian);
             Pos += Bits.LongSizeInBytes;
         }
 
         public void WriteLong(int position, long v, ByteOrder byteOrder)
         {
-            Bits.WriteLong(Buffer, position, v, byteOrder == ByteOrder.BigEndian);
+            Bits.WriteLong(_buffer, position, v, byteOrder == ByteOrder.BigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteShort(int v)
         {
             EnsureAvailable(Bits.ShortSizeInBytes);
-            Bits.WriteShort(Buffer, Pos, (short) v, _isBigEndian);
+            Bits.WriteShort(_buffer, Pos, (short) v, _isBigEndian);
             Pos += Bits.ShortSizeInBytes;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual void WriteShort(int position, int v)
         {
-            Bits.WriteShort(Buffer, position, (short) v, _isBigEndian);
+            Bits.WriteShort(_buffer, position, (short) v, _isBigEndian);
         }
 
         public void WriteShort(int v, ByteOrder byteOrder)
         {
             EnsureAvailable(Bits.ShortSizeInBytes);
-            Bits.WriteShort(Buffer, Pos, (short) v, byteOrder == ByteOrder.BigEndian);
+            Bits.WriteShort(_buffer, Pos, (short) v, byteOrder == ByteOrder.BigEndian);
             Pos += Bits.ShortSizeInBytes;
         }
 
         public void WriteShort(int position, int v, ByteOrder byteOrder)
         {
-            Bits.WriteShort(Buffer, position, (short) v, byteOrder == ByteOrder.BigEndian);
+            Bits.WriteShort(_buffer, position, (short) v, byteOrder == ByteOrder.BigEndian);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -243,7 +248,7 @@ namespace Hazelcast.IO.Serialization
                 EnsureAvailable(len*3);
                 for (var i = 0; i < len; i++)
                 {
-                    Pos += Bits.WriteUtf8Char(Buffer, Pos, str[i]);
+                    Pos += Bits.WriteUtf8Char(_buffer, Pos, str[i]);
                 }
             }
         }
@@ -392,7 +397,7 @@ namespace Hazelcast.IO.Serialization
 
         public virtual void Position(int newPos)
         {
-            if ((newPos > Buffer.Length) || (newPos < 0))
+            if ((newPos > _buffer.Length) || (newPos < 0))
             {
                 throw new ArgumentException();
             }
@@ -401,21 +406,21 @@ namespace Hazelcast.IO.Serialization
 
         public virtual byte[] ToByteArray()
         {
-            if (Buffer == null || Pos == 0)
+            if (_buffer == null || Pos == 0)
             {
                 return new byte[0];
             }
             var newBuffer = new byte[Pos];
-            Array.Copy(Buffer, 0, newBuffer, 0, Pos);
+            System.Buffer.BlockCopy(_buffer, 0, newBuffer, 0, Pos);
             return newBuffer;
         }
 
         public virtual void Clear()
         {
             Pos = 0;
-            if (Buffer != null && Buffer.Length > _initialSize*8)
+            if (_buffer != null && _buffer.Length > _initialSize*8)
             {
-                Buffer = new byte[_initialSize*8];
+                _buffer = new byte[_initialSize*8];
             }
         }
 
@@ -432,7 +437,7 @@ namespace Hazelcast.IO.Serialization
         public void Write(int b)
         {
             EnsureAvailable(1);
-            Buffer[Pos++] = unchecked((byte) (b));
+            _buffer[Pos++] = unchecked((byte) (b));
         }
 
         public void Write(byte[] b)
@@ -451,7 +456,7 @@ namespace Hazelcast.IO.Serialization
                 return;
             }
             EnsureAvailable(len);
-            Array.Copy(b, off, Buffer, Pos, len);
+            System.Buffer.BlockCopy(b, off, _buffer, Pos, len);
             Pos += len;
         }
 
@@ -462,19 +467,19 @@ namespace Hazelcast.IO.Serialization
         public virtual void Close()
         {
             Pos = 0;
-            Buffer = null;
+            _buffer = null;
         }
 
         public virtual int Available()
         {
-            return Buffer != null ? Buffer.Length - Pos : 0;
+            return _buffer != null ? _buffer.Length - Pos : 0;
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder();
             sb.Append("ByteArrayObjectDataOutput");
-            sb.Append("{size=").Append(Buffer != null ? Buffer.Length : 0);
+            sb.Append("{size=").Append(_buffer != null ? _buffer.Length : 0);
             sb.Append(", pos=").Append(Pos);
             sb.Append('}');
             return sb.ToString();
@@ -484,16 +489,16 @@ namespace Hazelcast.IO.Serialization
         {
             if (Available() < len)
             {
-                if (Buffer != null)
+                if (_buffer != null)
                 {
-                    var newCap = Math.Max(Buffer.Length << 1, Buffer.Length + len);
+                    var newCap = Math.Max(_buffer.Length << 1, _buffer.Length + len);
                     var newBuffer = new byte[newCap];
-                    Array.Copy(Buffer, 0, newBuffer, 0, Pos);
-                    Buffer = newBuffer;
+                    System.Buffer.BlockCopy(_buffer, 0, newBuffer, 0, Pos);
+                    _buffer = newBuffer;
                 }
                 else
                 {
-                    Buffer = new byte[len > _initialSize/2 ? len*2 : _initialSize];
+                    _buffer = new byte[len > _initialSize/2 ? len*2 : _initialSize];
                 }
             }
         }

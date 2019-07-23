@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ using System.Numerics;
 using Hazelcast.Client.Model;
 using Hazelcast.Config;
 using Hazelcast.Core;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 using NUnit.Framework;
 
@@ -242,7 +243,7 @@ namespace Hazelcast.Client.Test
         public void test_SingleAttributeProjection()
         {
             FillMap<Header>();
-            var result = (ReadOnlyLazyList<long>) map.Project<long>(new SingleAttributeProjection("id"));
+            var result = (ReadOnlyLazyList<long, IData>) map.Project<long>(new SingleAttributeProjection("id"));
             var expected = new HashSet<long> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
             CollectionAssert.AreEquivalent(expected, result);
         }
@@ -252,7 +253,7 @@ namespace Hazelcast.Client.Test
         {
             FillMap<Header>();
             var predicate = Predicates.IsGreaterThan("id", 5);
-            var result = (ReadOnlyLazyList<long>) map.Project<long>(new SingleAttributeProjection("id"), predicate);
+            var result = (ReadOnlyLazyList<long, IData>) map.Project<long>(new SingleAttributeProjection("id"), predicate);
             var expected = new HashSet<long> {6, 7, 8, 9};
             CollectionAssert.AreEquivalent(expected, result);
         }

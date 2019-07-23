@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,13 +22,14 @@ using NUnit.Framework;
 namespace Hazelcast.NearCache.Test
 {
     [TestFixture]
+    [Category("3.8")]
     public class NearCacheInvalidationTest : NearcacheTestSupport
     {
         protected override void InitMembers()
         {
             //Init 2 members
-            MemberList.Add(RemoteController.startMember(HzCluster.Id));
-            MemberList.Add(RemoteController.startMember(HzCluster.Id));
+            StartNewMember();
+            StartNewMember();
         }
 
         protected override string GetServerConfig()

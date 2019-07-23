@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 cleanup() {
-    echo "cleanup is being performed."
     if [ "x${serverPid}" != "x" ]
     then
         echo "Killing server with pid ${serverPid}"
@@ -11,19 +10,70 @@ cleanup() {
 
 trap cleanup EXIT
 
+usage() {
+    printf "Build script for Hazelcast .Net Client. \nYou can build and run unit tests.\n\nUsage:"
+    echo "$build.sh [--run-tests] [--server-version=SERVER_VERSION] [--enterprise] [--enterprise-key=HAZELCAST_ENTERPRISE_LICENSE_KEY]"
+    echo "--run-tests:      run unit tests after a successful build."
+    echo "--server-version: server version to be used for unit tests, latest server will be used if left empty."
+    echo "--enterprise:     Enterprise server will be used in unit tests if selected. If this option is selected, you should provide a license key."
+    echo "--enterprise-key: Optional enterprise licence key for Hazelcast Enterprise server."
+    echo "                  As an alternative, you can set the license to  environment var HAZELCAST_ENTERPRISE_KEY"
+    printf "\nSample usage for running unit tests with OSS server: \n\$build.sh --run-tests --server-version=LATEST\n"
+}
+
+HZ_VERSION="LATEST"
+
 for i in "$@"
 do
 	case $i in
 		--server-version=*)
-		HZ_VERSION=`echo $i | sed 's/[-a-zA-Z0-9]*=//'`
+		    HZ_VERSION=`echo $i | sed 's/[-a-zA-Z0-9]*=//'`
+		;;
+		--run-tests)
+		    RUN_TESTS=true
+		;;
+		--enterprise)
+		    ENTERPRISE=true
+		;;
+		--enterprise-key=*)
+		    ENTERPRISE=true
+		    ENTERPRISE_KEY=`echo $i | sed 's/[-a-zA-Z0-9]*=//'`
+		;;
+		--help)
+		    usage
+			exit 1
 		;;
 		*)
 			# unknown option
 			echo "Unrecognised option $i"
-			exit
+			usage
+			exit 1
 		;;
 	esac
 done
+
+#DOTNET BUILD
+
+dotnet build Hazelcast.Test/Hazelcast.Test.csproj --configuration Release --framework netcoreapp2.0
+
+if [[ -z "${RUN_TESTS}" ]]
+then
+    exit 1
+fi
+
+if [[ "${HZ_VERSION}" == "LATEST" ]]; then
+    echo "Running with latest hazelcast server, to choose another version use the --server-version parameter"
+fi
+
+if [[ ${ENTERPRISE} ]]; then
+    if [[ -z ${ENTERPRISE_KEY} && -n ${HAZELCAST_ENTERPRISE_KEY} ]]; then
+        ENTERPRISE_KEY=${HAZELCAST_ENTERPRISE_KEY}
+    fi
+    if [[ -z ${ENTERPRISE_KEY} ]]; then
+        echo "Enterprise server selected but no licence key is provided. Either provide one with --enterprise-key or set to HAZELCAST_ENTERPRISE_KEY environment var."
+        exit 1
+    fi
+fi
 
 HAZELCAST_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_ENTERPRISE_TEST_VERSION=${HZ_VERSION}
@@ -32,12 +82,8 @@ HAZELCAST_ENTERPRISE_VERSION=${HZ_VERSION}
 HAZELCAST_RC_VERSION="0.5-SNAPSHOT"
 SNAPSHOT_REPO="https://oss.sonatype.org/content/repositories/snapshots"
 RELEASE_REPO="http://repo1.maven.apache.org/maven2"
-ENTERPRISE_RELEASE_REPO="https://repository-hazelcast-l337.forge.cloudbees.com/release/"
-ENTERPRISE_SNAPSHOT_REPO="https://repository-hazelcast-l337.forge.cloudbees.com/snapshot/"
-
-#DOTNET BUILD
-
-dotnet build Hazelcast.Test/Hazelcast.Test.csproj --configuration Release --framework netcoreapp2.0
+ENTERPRISE_RELEASE_REPO="https://repository.hazelcast.com/release/"
+ENTERPRISE_SNAPSHOT_REPO="https://repository.hazelcast.com/snapshot/"
 
 if [[ ${HZ_VERSION} == *-SNAPSHOT ]]
 then
@@ -72,7 +118,7 @@ fi
 
 CLASSPATH="hazelcast-remote-controller-${HAZELCAST_RC_VERSION}.jar:hazelcast-${HAZELCAST_TEST_VERSION}-tests.jar:test/javaclasses"
 
-if [ -n "${HAZELCAST_ENTERPRISE_KEY}" ]; then
+if [ -n "${ENTERPRISE_KEY}" ]; then
     if [ -f "hazelcast-enterprise-${HAZELCAST_ENTERPRISE_VERSION}.jar" ]; then
         echo "hazelcast-enterprise.jar already exists, not downloading from maven."
     else
@@ -111,7 +157,7 @@ else
     echo "Starting Remote Controller ... oss ..."
 fi
 
-java -Dhazelcast.enterprise.license.key=${HAZELCAST_ENTERPRISE_KEY} -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main>rc_stdout.log 2>rc_stderr.log &
+java -Dhazelcast.enterprise.license.key=${ENTERPRISE_KEY} -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main>rc_stdout.log 2>rc_stderr.log &
 serverPid=$!
 
 sleep 15

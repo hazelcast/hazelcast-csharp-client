@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
@@ -22,35 +24,30 @@ namespace Hazelcast.Client.Protocol.Codec
 {
     internal static class MapPutAllCodec
     {
-        private static int CalculateRequestDataSize(string name, IList<KeyValuePair<IData, IData>> entries)
+        private static int CalculateRequestDataSize(string name, ArrayList entries)
         {
             var dataSize = ClientMessage.HeaderSize;
             dataSize += ParameterUtil.CalculateDataSize(name);
             dataSize += Bits.IntSizeInBytes;
             foreach (var entriesItem in entries)
             {
-                var entriesItemKey = entriesItem.Key;
-                var entriesItemVal = entriesItem.Value;
-                dataSize += ParameterUtil.CalculateDataSize(entriesItemKey);
-                dataSize += ParameterUtil.CalculateDataSize(entriesItemVal);
+                dataSize += ParameterUtil.CalculateDataSize((IData)entriesItem);
             }
             return dataSize;
         }
 
-        internal static ClientMessage EncodeRequest(string name, IList<KeyValuePair<IData, IData>> entries)
+        internal static ClientMessage EncodeRequest(string name, ArrayList entries)
         {
             var requiredDataSize = CalculateRequestDataSize(name, entries);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
             clientMessage.SetMessageType((int) MapMessageType.MapPutAll);
             clientMessage.SetRetryable(false);
             clientMessage.Set(name);
-            clientMessage.Set(entries.Count);
-            foreach (var entriesItem in entries)
+            clientMessage.Set(entries.Count / 2);
+            for (int i = 0; i < entries.Count; i+=2)
             {
-                var entriesItemKey = entriesItem.Key;
-                var entriesItemVal = entriesItem.Value;
-                clientMessage.Set(entriesItemKey);
-                clientMessage.Set(entriesItemVal);
+                clientMessage.Set((IData)entries[i]);
+                clientMessage.Set((IData)entries[i+1]);
             }
             clientMessage.UpdateFrameLength();
             return clientMessage;

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
@@ -22,19 +25,19 @@ namespace Hazelcast.Client.Protocol.Codec
 {
     internal static class MapGetAllCodec
     {
-        private static int CalculateRequestDataSize(string name, IList<IData> keys)
+        private static int CalculateRequestDataSize(string name, ArrayList keys)
         {
             var dataSize = ClientMessage.HeaderSize;
             dataSize += ParameterUtil.CalculateDataSize(name);
             dataSize += Bits.IntSizeInBytes;
-            foreach (var keysItem in keys)
+            for (int i = 0; i < keys.Count; i++)
             {
-                dataSize += ParameterUtil.CalculateDataSize(keysItem);
+                dataSize += ParameterUtil.CalculateDataSize((IData)keys[i]);
             }
             return dataSize;
         }
 
-        internal static ClientMessage EncodeRequest(string name, IList<IData> keys)
+        internal static ClientMessage EncodeRequest(string name, ArrayList keys)
         {
             var requiredDataSize = CalculateRequestDataSize(name, keys);
             var clientMessage = ClientMessage.CreateForEncode(requiredDataSize);
@@ -42,33 +45,25 @@ namespace Hazelcast.Client.Protocol.Codec
             clientMessage.SetRetryable(false);
             clientMessage.Set(name);
             clientMessage.Set(keys.Count);
-            foreach (var keysItem in keys)
+            for (int i = 0; i < keys.Count; i++)
             {
-                clientMessage.Set(keysItem);
+                clientMessage.Set((IData)keys[i]);
             }
             clientMessage.UpdateFrameLength();
             return clientMessage;
         }
 
-        internal class ResponseParameters
+        internal static void DecodeResponse(IClientMessage clientMessage, ConcurrentQueue<KeyValuePair<IData, object>> result)
         {
-            public IList<KeyValuePair<IData, IData>> response;
-        }
-
-        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
-        {
-            var parameters = new ResponseParameters();
             var responseSize = clientMessage.GetInt();
-            var response = new List<KeyValuePair<IData, IData>>(responseSize);
             for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
             {
                 var responseItemKey = clientMessage.GetData();
                 var responseItemVal = clientMessage.GetData();
-                var responseItem = new KeyValuePair<IData, IData>(responseItemKey, responseItemVal);
-                response.Add(responseItem);
+                
+                var responseItem = new KeyValuePair<IData, object>(responseItemKey, responseItemVal);
+                result.Enqueue(responseItem);
             }
-            parameters.response = response;
-            return parameters;
         }
     }
 }

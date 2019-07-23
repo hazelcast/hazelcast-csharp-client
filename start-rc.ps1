@@ -1,5 +1,5 @@
 param(
-    [string]$serverVersion = "3.11.1-SNAPSHOT"
+    [string]$serverVersion = "3.12.1-SNAPSHOT"
 )
 
 $hazelcastTestVersion=$serverVersion
@@ -9,8 +9,8 @@ $hazelcastEnterpriseTestVersion=$serverVersion
 $hazelcastRCVersion="0.5-SNAPSHOT"
 $snapshotRepo="https://oss.sonatype.org/content/repositories/snapshots"
 $releaseRepo="http://repo1.maven.apache.org/maven2"
-$enterpriseReleaseRepo="https://repository-hazelcast-l337.forge.cloudbees.com/release/"
-$enterpriseSnapshotRepo="https://repository-hazelcast-l337.forge.cloudbees.com/snapshot/"
+$enterpriseReleaseRepo="https://repository.hazelcast.com/release/"
+$enterpriseSnapshotRepo="https://repository.hazelcast.com/snapshot/"
 
 if ($serverVersion.Contains("SNAPSHOT")) {
     $repo=$snapshotRepo

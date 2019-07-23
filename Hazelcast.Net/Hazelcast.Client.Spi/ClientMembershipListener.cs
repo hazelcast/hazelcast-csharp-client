@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +13,11 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol.Codec;
@@ -28,12 +31,12 @@ using Hazelcast.Util;
 {
     internal class ClientMembershipListener
     {
-        public const int InitialMembersTimeoutSeconds = 5;
+        private const int InitialMembersTimeoutSeconds = 5;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientMembershipListener));
         private readonly HazelcastClient _client;
         private readonly ClientClusterService _clusterService;
         private readonly ClientConnectionManager _connectionManager;
-        private readonly IList<IMember> _members = new List<IMember>();
+        private readonly ISet<IMember> _members = new HashSet<IMember>();
         private readonly ClientPartitionService _partitionService;
         private ManualResetEventSlim _initialListFetched;
 
@@ -49,7 +52,7 @@ using Hazelcast.Util;
         {
         }
 
-        public void HandleMember(IMember member, int eventType)
+        private void HandleMember(IMember member, int eventType)
         {
             switch (eventType)
             {
@@ -71,11 +74,10 @@ using Hazelcast.Util;
                     break;
                 }
             }
-
             _partitionService.RefreshPartitions();
         }
 
-        public void HandleMemberAttributeChange(string uuid, string key, int operationType, string value)
+        private void HandleMemberAttributeChange(string uuid, string key, int operationType, string value)
         {
             var memberMap = _clusterService.GetMembersRef();
             if (memberMap == null)
@@ -96,39 +98,42 @@ using Hazelcast.Util;
             }
         }
 
-        public void HandleMemberCollection(ICollection<IMember> initialMembers)
+        private void HandleMemberCollection(ICollection<IMember> initialMembers)
         {
-            var prevMembers = new Dictionary<string, IMember>();
+            var prevMembers = new HashSet<IMember>();
             if (_members.Any())
             {
-                prevMembers = new Dictionary<string, IMember>(_members.Count);
-                foreach (var member in _members)
-                {
-                    prevMembers[member.GetUuid()] = member;
-                }
+                prevMembers = new HashSet<IMember>(_members);
                 _members.Clear();
             }
             foreach (var initialMember in initialMembers)
             {
                 _members.Add(initialMember);
             }
-
-            var events = DetectMembershipEvents(prevMembers);
-            if (events.Count != 0)
+            
+            if (prevMembers.Count == 0)
             {
-                ApplyMemberListChanges();
+                //this means this is the first time client connected to cluster
+                Logger.Info(MembersString());
+                var immutableSetOfMembers = ImmutableSetOfMembers();
+                var cluster = _client.GetCluster();
+                var initialMembershipEvent = new InitialMembershipEvent(cluster, immutableSetOfMembers);
+                _clusterService.HandleInitialMembershipEvent(initialMembershipEvent);
+                _initialListFetched.Set();
+                return;
             }
+            var events = DetectMembershipEvents(prevMembers);
+            Logger.Info(MembersString());
             FireMembershipEvent(events);
             _initialListFetched.Set();
         }
 
-        public virtual void OnListenerRegister()
+        internal void ListenMembershipEvents(Address ownerConnectionAddress)
         {
-        }
-
-        internal virtual void ListenMembershipEvents(Address ownerConnectionAddress)
-        {
-            Logger.Finest("Starting to listen for membership events from " + ownerConnectionAddress);
+            if (Logger.IsFinestEnabled())
+            {
+                Logger.Finest("Starting to listen for membership events from " + ownerConnectionAddress);
+            }
             _initialListFetched = new ManualResetEventSlim();
             try
             {
@@ -148,7 +153,7 @@ using Hazelcast.Util;
                     var invocationService = (ClientInvocationService) _client.GetInvocationService();
                     var future = invocationService.InvokeListenerOnConnection(clientMessage, handler, connection);
                     var response = ThreadUtil.GetResult(future);
-                    //registraiton id is ignored as this listener will never be removed
+                    //registration id is ignored as this listener will never be removed
                     var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
                     WaitInitialMemberListFetched();
                 }
@@ -174,94 +179,71 @@ using Hazelcast.Util;
             }
         }
 
-        private void ApplyMemberListChanges()
-        {
-            UpdateMembersRef();
-            Logger.Info(_clusterService.MembersString());
-        }
-
-        private IList<MembershipEvent> DetectMembershipEvents(IDictionary<string, IMember> prevMembers)
-        {
-            IList<MembershipEvent> events = new List<MembershipEvent>();
-            var eventMembers = GetMembers();
+        private IList<MembershipEvent> DetectMembershipEvents(ISet<IMember> prevMembers) {
+            var events = new List<MembershipEvent>();
+            
+            var eventMembers = ImmutableSetOfMembers();
+            
+            var newMembers = new LinkedList<IMember>();
             foreach (var member in _members)
             {
-                IMember former;
-                prevMembers.TryGetValue(member.GetUuid(), out former);
-                if (former == null)
+                if (!prevMembers.Remove(member))
                 {
-                    events.Add(new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberAdded,
-                        eventMembers));
-                }
-                else
-                {
-                    prevMembers.Remove(member.GetUuid());
+                    newMembers.AddLast(member);
                 }
             }
-            foreach (var member in prevMembers.Values)
+            // removal events should be added before added events
+            foreach (var member in  prevMembers)
             {
                 events.Add(new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, eventMembers));
                 var address = member.GetAddress();
                 if (_clusterService.GetMember(address) == null)
                 {
                     var connection = _connectionManager.GetConnection(address);
-                    if (connection != null)
-                    {
+                    if (connection != null) {
                         _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(address, "member left the cluster."));
                     }
                 }
             }
+            foreach (var member in newMembers)
+            {
+                events.Add(new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberAdded, eventMembers));
+            }
             return events;
         }
-
         private void FireMembershipEvent(IList<MembershipEvent> events)
         {
             foreach (var @event in events)
             {
-                _clusterService.FireMembershipEvent(@event);
+                _clusterService.HandleMembershipEvent(@event);
             }
         }
 
-        private ICollection<IMember> GetMembers()
+        private ICollection<IMember> ImmutableSetOfMembers()
         {
-            var set = new HashSet<IMember>();
-            foreach (var member in _members)
-            {
-                set.Add(member);
-            }
-            return set;
+            return new ReadOnlyCollection<IMember>(_members.ToList());
         }
 
         private void MemberAdded(IMember member)
         {
             _members.Add(member);
-            ApplyMemberListChanges();
-            var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberAdded, GetMembers());
-            _clusterService.FireMembershipEvent(@event);
+            Logger.Info(MembersString());
+            var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberAdded, ImmutableSetOfMembers());
+            _clusterService.HandleMembershipEvent(@event);
         }
 
         private void MemberRemoved(IMember member)
         {
             _members.Remove(member);
-            ApplyMemberListChanges();
+            Logger.Info(MembersString());
             var connection = _connectionManager.GetConnection(member.GetAddress());
             if (connection != null)
             {
                 _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(member.GetAddress(),
                     "member left the cluster."));
             }
-            var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, GetMembers());
-            _clusterService.FireMembershipEvent(@event);
-        }
-
-        private void UpdateMembersRef()
-        {
-            IDictionary<Address, IMember> map = new Dictionary<Address, IMember>(_members.Count);
-            foreach (var member in _members)
-            {
-                map[member.GetAddress()] = member;
-            }
-            _clusterService.SetMembersRef(map);
+            var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, ImmutableSetOfMembers());
+            _clusterService.HandleMembershipEvent(@event);
         }
 
         /// <exception cref="System.Exception" />
@@ -274,5 +256,18 @@ using Hazelcast.Util;
                 Logger.Warning("Error while getting initial member list from cluster!");
             }
         }
+        
+        private string MembersString() {
+            var sb = new StringBuilder("\n\nMembers [");
+            sb.Append(_members.Count);
+            sb.Append("] {");
+            foreach (var member in _members)
+            {
+                sb.Append("\n\t").Append(member);
+            }
+            sb.Append("\n}\n");
+            return sb.ToString();
+        }
+
     }
 }

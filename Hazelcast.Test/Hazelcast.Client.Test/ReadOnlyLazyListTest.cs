@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,15 +23,22 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ReadOnlyLazyListTest
     {
-        private ReadOnlyLazyList<int> testList;
+        private ReadOnlyLazyList<int, object> testList;
         private ISerializationService _ss;
 
         [SetUp]
         public void Init()
         {
             _ss = new SerializationServiceBuilder().Build();
-            var dataList = new List<IData> {_ss.ToData(0), _ss.ToData(1), _ss.ToData(2), _ss.ToData(3), _ss.ToData(4)};
-            testList = new ReadOnlyLazyList<int>(dataList, _ss);
+            var dataList = new List<object>
+            {
+                0,//_ss.ToData(0),
+                _ss.ToData(1),
+                _ss.ToData(2),
+                _ss.ToData(3),
+                _ss.ToData(4)
+            };
+            testList = new ReadOnlyLazyList<int, object>(dataList, _ss);
         }
 
         [TearDown]
@@ -41,7 +48,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestListGet()
+        public void TestListGet()
         {
             for (var i = 0; i < 5; i++)
             {
@@ -50,25 +57,25 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestListCount()
+        public void TestListCount()
         {
             Assert.AreEqual(testList.Count, 5);
         }
 
         [Test]
-        public virtual void TestListIsReadOnly()
+        public void TestListIsReadOnly()
         {
             Assert.True(testList.IsReadOnly);
         }
 
         [Test]
-        public virtual void TestListContains()
+        public void TestListContains()
         {
             Assert.True(testList.Contains(1));
         }
 
         [Test]
-        public virtual void TestListCopyTo()
+        public void TestListCopyTo()
         {
             var copyArray = new int[testList.Count + 5];
             testList.CopyTo(copyArray, 1);
@@ -79,13 +86,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestListIndexOf()
+        public void TestListIndexOf()
         {
             Assert.AreEqual(testList.IndexOf(4), 4);
         }
 
         [Test]
-        public virtual void TestListEnum()
+        public void TestListEnum()
         {
             var enumerator = testList.GetEnumerator();
             var ix = 0;

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Test
 {
     public class HazelcastTestSupport
     {
-        private readonly ILogger _logger;
+        protected readonly ILogger _logger;
 
         private readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions = new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
 
@@ -183,9 +183,17 @@ namespace Hazelcast.Client.Test
             return member;
         }
 
-        protected virtual void StopCluster(RemoteController.Client remoteController, Cluster cluster)
+        protected virtual bool StopCluster(RemoteController.Client remoteController, Cluster cluster)
         {
-            remoteController.shutdownCluster(cluster.Id);
+            return remoteController.shutdownCluster(cluster.Id);
+        }
+
+        protected void ShutdownCluster(RemoteController.Client remoteController, Cluster cluster)
+        {
+            while (!StopCluster(remoteController, cluster))
+            {
+                Thread.Sleep(1000);
+            }
         }
 
         protected virtual void StopMember(RemoteController.Client remoteController, Cluster cluster, Member member)

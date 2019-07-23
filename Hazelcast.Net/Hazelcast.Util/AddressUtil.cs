@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,8 +102,8 @@ namespace Hazelcast.Util
             if ((ipAddress.IsIPv6SiteLocal || ipAddress.IsIPv6LinkLocal) && ipAddress.ScopeId <= 0)
             {
                 var possibleAddresses = new List<IPAddress>();
-                var strHostName = Dns.GetHostName();
-                var ipEntry = Dns.GetHostEntry(strHostName);
+                var strHostName = DnsUtil.GetHostName();
+                var ipEntry = DnsUtil.GetHostEntry(strHostName);
                 var addr = ipEntry.AddressList;
                 foreach (var address in addr)
                 {

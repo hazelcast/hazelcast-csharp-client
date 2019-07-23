@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,54 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-using Hazelcast.Config;
-using Hazelcast.Core;
-using Hazelcast.Remote;
-using Hazelcast.Test;
 using NUnit.Framework;
-using Member = Hazelcast.Remote.Member;
 
 namespace Hazelcast.Client.Test
 {
-    public class MultiMemberBaseTest : HazelcastTestSupport
+    public class MultiMemberBaseTest : MultiMemberBaseNoSetupTest
     {
-        protected IHazelcastInstance Client { get; private set; }
-        protected HazelcastClient ClientInternal { get; private set; }
-        protected ThreadSafeRemoteController RemoteController { get; private set; }
-        protected Cluster HzCluster { get; private set; }
-        protected readonly List<Member> MemberList = new List<Member>(); 
-
         [OneTimeSetUp]
-        public virtual void SetupCluster()
+        public void OneTimeSetUp()
         {
-            RemoteController = (ThreadSafeRemoteController) CreateRemoteController();
-            HzCluster = CreateCluster(RemoteController, GetServerConfig());
-            InitMembers();
-            Client = CreateClient();
-            ClientInternal = ((HazelcastClientProxy) Client).GetClient();
+            SetupCluster();
         }
 
         [OneTimeTearDown]
-        public virtual void ShutdownRemoteController()
+        public void OneTimeTearDown()
         {
-            HazelcastClient.ShutdownAll();
-            StopRemoteController(RemoteController);
-        }
-
-        protected virtual void InitMembers()
-        {
-            MemberList.Add(RemoteController.startMember(HzCluster.Id));
-        }
-
-        protected virtual string GetServerConfig()
-        {
-            return Resources.hazelcast;
-        }
-
-        protected override void ConfigureGroup(ClientConfig config)
-        {
-            config.GetGroupConfig().SetName(HzCluster.Id).SetPassword(HzCluster.Id);
+            ShutdownRemoteController();
         }
     }
 }

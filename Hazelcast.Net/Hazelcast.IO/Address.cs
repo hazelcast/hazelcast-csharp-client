@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ namespace Hazelcast.IO
             {
                 return IPAddress.Any;
             }
-            var addresses = Dns.GetHostAddresses(name);
+            var addresses = DnsUtil.GetHostAddresses(name);
             var ipv4 = addresses.FirstOrDefault(m => m.AddressFamily == AddressFamily.InterNetwork);
             return ipv4 ?? addresses.FirstOrDefault();
         }

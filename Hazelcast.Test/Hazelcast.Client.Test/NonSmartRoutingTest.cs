@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Remote;
 using NUnit.Framework;
-using Member = Hazelcast.Remote.Member;
 
 namespace Hazelcast.Client.Test
 {
@@ -45,7 +44,7 @@ namespace Hazelcast.Client.Test
         public void TearDown()
         {
             HazelcastClient.ShutdownAll();
-            StopCluster(_remoteController, _cluster);
+            ShutdownCluster(_remoteController, _cluster);
             StopRemoteController(_remoteController);
         }
 
@@ -105,7 +104,10 @@ namespace Hazelcast.Client.Test
 
             var resp = map.GetAll(toInsert.Keys);
 
-            Assert.AreEqual(toInsert, resp);
+            foreach (var pair in resp)
+            {
+                Assert.AreEqual(toInsert[pair.Key] , pair.Value);
+            }
         }
 
         [Test]

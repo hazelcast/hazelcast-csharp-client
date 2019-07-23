@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,7 +79,8 @@ namespace Hazelcast.Util
                 {ClientProtocolErrorCodes.TransactionTimedOut, (m, c) => new TransactionTimedOutException(m)},
                 {ClientProtocolErrorCodes.UriSyntax, (m, c) => new UriFormatException(m)},
                 {ClientProtocolErrorCodes.UtfDataFormat, (m, c) => new InvalidDataException(m)},
-                {ClientProtocolErrorCodes.UnsupportedOperation, (m, c) => new NotSupportedException(m)}
+                {ClientProtocolErrorCodes.UnsupportedOperation, (m, c) => new NotSupportedException(m)},
+                {ClientProtocolErrorCodes.ConsistencyLostException, (m, c) => new ConsistencyLostException(m)}
             };
 
         public Exception CreateException(Error error)

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,10 @@ namespace Hazelcast.IO.Serialization
 
         public const int ConstantSerializersLength = 28;
 
-        public const int DefaultTypeSerializable = -110; //C# serializable
+        public const int DefaultTypeSerializable = -110; // C# serializable
+        public const int JavascriptJSONSerializationType = -130;
+
+        public const int ConstantSerializersArraySize = 131; // To include -130 as an index
     }
 
     internal static class FactoryIds

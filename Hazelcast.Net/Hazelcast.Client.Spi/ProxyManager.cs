@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -215,6 +215,8 @@ namespace Hazelcast.Client.Spi
             Register(ServiceNames.Lock, (type, id) => ProxyFactory(typeof(ClientLockProxy), type, ServiceNames.Lock, id));
             Register(ServiceNames.CountDownLatch,
                 (type, id) => ProxyFactory(typeof(ClientCountDownLatchProxy), type, ServiceNames.CountDownLatch, id));
+            Register(ServiceNames.PNCounter,
+               (type, id) => ProxyFactory(typeof(ClientPNCounterProxy), type, ServiceNames.PNCounter, id));
             Register(ServiceNames.Semaphore,
                 (type, id) => ProxyFactory(typeof(ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
             Register(ServiceNames.Ringbuffer,

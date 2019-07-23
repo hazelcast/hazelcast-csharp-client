@@ -42,7 +42,7 @@
     <HelpTitle>Hazelcast .Net Client Class Library</HelpTitle>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
     <VisibleItems>InheritedMembers, InheritedFrameworkMembers</VisibleItems>
-    <CopyrightText>Copyright %28c%29 2008-2018, Hazelcast, Inc. All Rights Reserved.</CopyrightText>
+    <CopyrightText>Copyright %28c%29 2008-2019, Hazelcast, Inc. All Rights Reserved.</CopyrightText>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <TransformComponentArguments>
       <Argument Key="logoFile" Value="Hazelcast-IMDG-Logo-Orange_Dark_200px.jpg" />

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,6 +38,26 @@ namespace Hazelcast.IO.Serialization
             public override void Write(IObjectDataOutput output, JavaClass obj)
             {
                 output.WriteUTF(obj.Name);
+            }
+        }
+
+        internal sealed class HazelcastJsonValueSerializer : ConstantSerializers.SingletonSerializer<HazelcastJsonValue>
+        {
+            public override int GetTypeId()
+            {
+                return SerializationConstants.JavascriptJSONSerializationType;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override HazelcastJsonValue Read(IObjectDataInput input)
+            {
+                return new HazelcastJsonValue(input.ReadUTF());
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override void Write(IObjectDataOutput output, HazelcastJsonValue obj)
+            {
+                output.WriteUTF(obj.ToString());
             }
         }
 
