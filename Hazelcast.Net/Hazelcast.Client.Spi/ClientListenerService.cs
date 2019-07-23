@@ -129,8 +129,8 @@ namespace Hazelcast.Client.Spi
 
         private bool DeregisterListenerInternal(string userRegistrationId)
         {
-            //This method should not be called from registrationExecutor
-            Debug.Assert(Thread.CurrentThread.Name == null || !Thread.CurrentThread.Name.Contains("eventRegistration"));
+            //This method should only be called from registrationExecutor
+            Debug.Assert(Thread.CurrentThread.Name != null && Thread.CurrentThread.Name.Contains("eventRegistration"));
             ListenerRegistration listenerRegistration;
             if (!_registrations.TryGetValue(userRegistrationId, out listenerRegistration))
             {

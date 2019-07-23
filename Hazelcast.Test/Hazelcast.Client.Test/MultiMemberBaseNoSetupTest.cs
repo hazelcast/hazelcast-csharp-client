@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Concurrent;
 using Hazelcast.Core;
 using Hazelcast.Remote;
 using Hazelcast.Config;
 using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Logging;
+using Member = Hazelcast.Remote.Member;
 
 namespace Hazelcast.Client.Test
 {
@@ -25,26 +30,31 @@ namespace Hazelcast.Client.Test
         protected HazelcastClient ClientInternal { get; private set; }
         protected ThreadSafeRemoteController RemoteController { get; private set; }
         protected Cluster HzCluster { get; private set; }
-        protected readonly List<Remote.Member> MemberList = new List<Remote.Member>();
+        private readonly ConcurrentDictionary<string, Remote.Member> MemberList = new ConcurrentDictionary<string, Remote.Member>();
 
-        public virtual void SetupCluster()
+        public virtual void SetupCluster(Action initMembers)
         {
             RemoteController = (ThreadSafeRemoteController)CreateRemoteController();
             HzCluster = CreateCluster(RemoteController, GetServerConfig());
-            InitMembers();
+            initMembers();
             Client = CreateClient();
             ClientInternal = ((HazelcastClientProxy)Client).GetClient();
+        }
+        public virtual void SetupCluster()
+        {
+            SetupCluster(InitMembers);
         }
 
         public virtual void ShutdownRemoteController()
         {
             HazelcastClient.ShutdownAll();
             StopRemoteController(RemoteController);
+            MemberList.Clear();
         }
 
         protected virtual void InitMembers()
         {
-            MemberList.Add(RemoteController.startMember(HzCluster.Id));
+            StartNewMember();
         }
 
         protected virtual string GetServerConfig()
@@ -55,6 +65,32 @@ namespace Hazelcast.Client.Test
         protected override void ConfigureGroup(ClientConfig config)
         {
             config.GetGroupConfig().SetName(HzCluster.Id).SetPassword(HzCluster.Id);
+        }
+
+        protected string StartNewMember()
+        {
+            var newMember = RemoteController.startMember(HzCluster.Id);
+            MemberList.TryAdd(newMember.Uuid,newMember);
+            return newMember.Uuid;
+        }
+        
+        protected void ShutdownMember(string memberUuid)
+        {
+            Member member;
+            if(MemberList.TryRemove(memberUuid, out member))
+            {
+                StopMember(RemoteController, HzCluster, member);
+            }
+        }
+        protected bool ShutdownCluster()
+        {
+            _logger.Info(string.Format("Shutting cluster {0}", HzCluster.Id));
+            var result = StopCluster(RemoteController, HzCluster);
+            if (result)
+            {
+                MemberList.Clear();
+            }
+            return result;
         }
     }
 }

@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -256,31 +258,30 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        protected override void GetAllInternal(ICollection<IData> keyDatas, List<object> resultingKeyValuePairs)
+        protected override void GetAllInternal(ArrayList partitionToKeyData, ConcurrentQueue<KeyValuePair<IData, object>> resultingKeyValuePairs)
         {
-            var list = new List<IData>(keyDatas);
-            foreach (var keyData in keyDatas)
+            Parallel.For(0, partitionToKeyData.Count, partitionId =>
             {
-                object value;
-                if (_nearCache.TryGetValue(keyData, out value))
+                var keyList = (ArrayList)partitionToKeyData[partitionId];
+                for (int i = keyList.Count-1; i > -1; i--)
                 {
-                    list.Remove(keyData);
-                    resultingKeyValuePairs.Add(keyData);
-                    resultingKeyValuePairs.Add(value);
+                    var keyData = (IData)keyList[i];
+                    object value;
+                    if (_nearCache.TryGetValue(keyData, out value))
+                    {
+                        keyList.RemoveAt(i);
+                        resultingKeyValuePairs.Enqueue(new KeyValuePair<IData, object>(keyData, value));
+                    }
                 }
-            }
-            base.GetAllInternal(list, resultingKeyValuePairs);
-
-            for (var i = 0; i < resultingKeyValuePairs.Count;)
+            });
+            base.GetAllInternal(partitionToKeyData, resultingKeyValuePairs);
+            foreach (var kvp in resultingKeyValuePairs)
             {
-                var keyData = (IData) resultingKeyValuePairs[i++];
-                var value =  resultingKeyValuePairs[i++];
-                _nearCache.TryAdd(keyData, value);
+                _nearCache.TryAdd(kvp.Key, kvp.Value);
             }
         }
 
-        protected override void PutAllInternal(IDictionary<TKey, TValue> map,
-            Dictionary<int, IDictionary<IData, IData>> partitions)
+        protected override void PutAllInternal(IDictionary<TKey, TValue> map, ArrayList partitions)
         {
             try
             {
@@ -288,14 +289,23 @@ namespace Hazelcast.Client.Proxy
             }
             finally
             {
-                foreach (var partitionsValue in partitions.Values)
+                Parallel.For(0, partitions.Count, partitionId =>
                 {
-                    foreach (var keyData in partitionsValue.Keys)
+                    var entries = (ArrayList)partitions[partitionId];
+                    var entryCount = entries.Count / 2;
+                    for (var k = 0; k < entryCount; k += 2)
                     {
-                        _nearCache.Invalidate(keyData);
+                        _nearCache.Invalidate((IData)entries[k]);
                     }
-                }
+                });
             }
         }
+        
+        public override Task<TValue> GetAsync(TKey key)
+        {
+            var task = GetContext().GetExecutionService().Submit(() => Get(key));
+            return task;
+        }
+
     }
 }

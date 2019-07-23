@@ -89,7 +89,7 @@ if($enterprise){
 $remoteControllerApp = Start-Process -FilePath java -ArgumentList ( "-Dhazelcast.enterprise.license.key=$env:HAZELCAST_ENTERPRISE_KEY","-cp", "$classpath", "com.hazelcast.remotecontroller.Main" ) -RedirectStandardOutput "rc_stdout.log" -RedirectStandardError "rc_stderr.log" -PassThru
 
 $testDLL=".\Hazelcast.Test\bin\Release\${targetFramework}\Hazelcast.Test.dll"
-$nunitConsolePath=".\packages\NUnit.ConsoleRunner.3.9.0\tools\nunit3-console.exe"
+$nunitConsolePath=".\packages\NUnit.ConsoleRunner.3.10.0\tools\nunit3-console.exe"
 $nunitArgs=@("`"${testDLL}`"", "--labels=All", "--result=console-text.xml;format=nunit2")
 
 if($testCategory.Length -gt 0) {
@@ -99,7 +99,7 @@ if($testCategory.Length -gt 0) {
 if (!$netcore) {
 	$nunitArgs += "--framework=v4.0"
 	if($coverage) {
-		$dotCoverCmd=".\packages\JetBrains.dotCover.CommandLineTools.2018.2.3\tools\dotCover.exe"
+		$dotCoverCmd=".\packages\JetBrains.dotCover.CommandLineTools.2019.1.2\tools\dotCover.exe"
 		$dotCoverArgs=@("cover", "/Filters=-:Hazelcast.Test", "/TargetWorkingDir=.", "/Output=Coverage.html", "/ReportType=HTML", "/TargetExecutable=${nunitConsolePath}", "/TargetArguments=${nunitArgs}")
 		Write-Host "$dotCoverCmd" $dotCoverArgs
 		& "$dotCoverCmd" $dotCoverArgs

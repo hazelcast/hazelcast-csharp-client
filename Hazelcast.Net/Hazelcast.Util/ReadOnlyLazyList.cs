@@ -19,18 +19,19 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
-    internal class ReadOnlyLazyList<T> : IList<T>
+    internal class ReadOnlyLazyList<T, D> : IList<T> where D : class
     {
-        private readonly IList<IData> list;
+        private readonly IList<D> list;
         private readonly ISerializationService serializationService;
 
-        public ReadOnlyLazyList(IList<IData> list, ISerializationService serializationService)
+        public ReadOnlyLazyList(IList<D> list, ISerializationService serializationService)
         {
             this.list = list;
             this.serializationService = serializationService;
         }
 
         #region IList<T>
+
         public IEnumerator<T> GetEnumerator()
         {
             return new Enumerator(list, serializationService);
@@ -43,18 +44,31 @@ namespace Hazelcast.Util
 
         public void Add(T item)
         {
-            throw new NotSupportedException("Readonly list");
+            throw new NotSupportedException("Readonly lazy list");
         }
 
         public void Clear()
         {
-            throw new NotSupportedException("Readonly list");
+            throw new NotSupportedException("Readonly lazy list");
         }
 
         public bool Contains(T item)
         {
-            var data = serializationService.ToData(item);
-            return list.Contains(data);
+            var itemData = serializationService.ToData(item);
+            foreach (var dValue in list)
+            {
+                if (dValue is IData)
+                {
+                    if (itemData.Equals(dValue))
+                        return true;
+                }
+                else
+                {
+                    if (itemData.Equals(serializationService.ToData(dValue)))
+                        return true;
+                }
+            }
+            return false;
         }
 
         public void CopyTo(T[] array, int arrayIndex)
@@ -63,7 +77,7 @@ namespace Hazelcast.Util
             var enumerator = GetEnumerator();
             while (enumerator.MoveNext())
             {
-                array[ix]=enumerator.Current;
+                array[ix] = enumerator.Current;
                 ix++;
             }
         }
@@ -80,16 +94,18 @@ namespace Hazelcast.Util
 
         public bool IsReadOnly
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         public int IndexOf(T item)
         {
-            var data = serializationService.ToData(item);
-            return list.IndexOf(data);
+            var ix = list.IndexOf(item as D);
+            if (ix < 0)
+            {
+                var data = serializationService.ToData(item);
+                return list.IndexOf(data as D);
+            }
+            return ix;
         }
 
         public void Insert(int index, T item)
@@ -104,25 +120,20 @@ namespace Hazelcast.Util
 
         public T this[int index]
         {
-            get
-            {
-                return serializationService.ToObject<T>(list[index]);
-            }
-            set
-            {
-                throw new NotSupportedException("Readonly list");
-            }
+            get { return serializationService.ToObject<T>(list[index]); }
+            set { throw new NotSupportedException("Readonly list"); }
         }
+
         #endregion
 
         internal struct Enumerator : IEnumerator<T>
         {
-            private readonly IList<IData> _dataList;
+            private readonly IList<D> _dataList;
             private readonly ISerializationService _ss;
             private int _nextIndex;
-            private IData _current;
+            private D _current;
 
-            internal Enumerator(IList<IData> dataList, ISerializationService ss)
+            internal Enumerator(IList<D> dataList, ISerializationService ss)
             {
                 _dataList = dataList;
                 _ss = ss;
@@ -134,7 +145,8 @@ namespace Hazelcast.Util
             {
                 get
                 {
-                    if( _nextIndex == 0 || _nextIndex == _dataList.Count + 1) {
+                    if (_nextIndex == 0 || _nextIndex == _dataList.Count + 1)
+                    {
                         throw new InvalidOperationException();
                     }
                     return Current;
@@ -143,10 +155,7 @@ namespace Hazelcast.Util
 
             public T Current
             {
-                get
-                {
-                    return _ss.ToObject<T>(_current);
-                }
+                get { return _ss.ToObject<T>(_current); }
             }
 
             public void Dispose()
@@ -157,7 +166,7 @@ namespace Hazelcast.Util
             {
                 var localList = _dataList;
 
-                if ((uint)_nextIndex < (uint)localList.Count)
+                if ((uint) _nextIndex < (uint) localList.Count)
                 {
                     _current = localList[_nextIndex];
                     _nextIndex++;
@@ -175,6 +184,4 @@ namespace Hazelcast.Util
             }
         }
     }
-
-
 }

@@ -469,7 +469,7 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        [Test]
+        [Test, Repeat(100)]
         public virtual void TestGetAllExtreme()
         {
             IDictionary<object, object> mm = new Dictionary<object, object>();
@@ -485,7 +485,11 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(map.Size(), keycount);
 
             var dictionary = map.GetAll(mm.Keys);
-            Assert.AreEqual(dictionary.Count, keycount);
+            Assert.AreEqual(keycount, dictionary.Count);
+            foreach (var pair in dictionary)
+            {
+                Assert.AreEqual(mm[pair.Key] , pair.Value);
+            }
         }
 
         [Test]

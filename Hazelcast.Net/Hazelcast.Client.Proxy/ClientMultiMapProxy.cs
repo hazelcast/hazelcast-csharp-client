@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = MultiMapGetCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             var list = Invoke(request, keyData, m => MultiMapGetCodec.DecodeResponse(m).response);
-            return new ReadOnlyLazyList<TValue>(list, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 
         public virtual bool Remove(object key, object value)
@@ -63,7 +63,7 @@ namespace Hazelcast.Client.Proxy
 
             var request = MultiMapRemoveCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             var list = Invoke(request, keyData, m => MultiMapRemoveCodec.DecodeResponse(m).response);
-            return new ReadOnlyLazyList<TValue>(list, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 
         public virtual ISet<TKey> KeySet()
@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = MultiMapValuesCodec.EncodeRequest(GetName());
             var list = Invoke(request, m => MultiMapValuesCodec.DecodeResponse(m).response);
-            return new ReadOnlyLazyList<TValue>(list, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 
         public virtual ISet<KeyValuePair<TKey, TValue>> EntrySet()

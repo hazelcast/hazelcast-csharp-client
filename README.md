@@ -1316,7 +1316,7 @@ Let's create a map and populate it with some data, as shown below.
 
 ```c#
     // Get the Distributed Map from Cluster.
-    var map = client.getMap<string, string>("my-distributed-map");
+    var map = client.GetMap<string, string>("my-distributed-map");
     //Standard Put and Get.
     map.Put("key", "value");
     map.Get("key");

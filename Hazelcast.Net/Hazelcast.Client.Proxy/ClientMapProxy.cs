@@ -13,8 +13,11 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
@@ -59,7 +62,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapProjectCodec.EncodeRequest(GetName(), ToData(projection));
             var response = Invoke(request);
             var resultParameters = MapProjectCodec.DecodeResponse(response);
-            return new ReadOnlyLazyList<TResult>(resultParameters.response, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TResult, IData>(resultParameters.response, GetContext().GetSerializationService());
         }
 
         public ICollection<TResult> Project<TResult>(IProjection projection, IPredicate predicate)
@@ -69,7 +72,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapProjectWithPredicateCodec.EncodeRequest(GetName(), ToData(projection), ToData(predicate));
             var response = Invoke(request);
             var resultParameters = MapProjectWithPredicateCodec.DecodeResponse(response);
-            return new ReadOnlyLazyList<TResult>(resultParameters.response, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TResult, IData>(resultParameters.response, GetContext().GetSerializationService());
         }
 
         public bool ContainsKey(object key)
@@ -118,7 +121,7 @@ namespace Hazelcast.Client.Proxy
         public TValue Remove(object key)
         {
             ValidationUtil.CheckNotNull(key, ValidationUtil.NULL_KEY_IS_NOT_ALLOWED);
-            var keyData = ToData(key);            
+            var keyData = ToData(key);
             return RemoveInternal(keyData);
         }
 
@@ -164,10 +167,16 @@ namespace Hazelcast.Client.Proxy
             Invoke(request);
         }
 
-        public Task<TValue> GetAsync(TKey key)
+        public virtual Task<TValue> GetAsync(TKey key)
         {
-            var task = GetContext().GetExecutionService().Submit(() => Get(key));
-            return task;
+            ValidationUtil.CheckNotNull(key, ValidationUtil.NULL_KEY_IS_NOT_ALLOWED);
+            var keyData = ToData(key);
+            var request = MapGetCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
+            return InvokeAsync(request, keyData, m =>
+            {
+                var resp = MapGetCodec.DecodeResponse(m).response;
+                return ToObject<TValue>(resp);
+            });
         }
 
         public Task<TValue> PutAsync(TKey key, TValue value)
@@ -656,69 +665,56 @@ namespace Hazelcast.Client.Proxy
         {
             if (keys == null || keys.Count == 0) return new Dictionary<TKey, TValue>();
 
-            var keysSize = keys.Count;
-            var resultingKeyValuePairs = new List<object>(keysSize * 2);
-            
-            var keyDatas = new List<IData>();
-            foreach (var key in keys)
+            var resultingKeyValuePairs = new ConcurrentQueue<KeyValuePair<IData, object>>();
+            try
             {
-                var keyData = ToData(key);
-                keyDatas.Add(keyData);
+                var partitionToKeyData = GetPartitionKeyData(keys);
+                GetAllInternal(partitionToKeyData, resultingKeyValuePairs);
             }
-            GetAllInternal(keyDatas, resultingKeyValuePairs);
-
-            var result = new Dictionary<TKey, TValue>(keysSize);
-            for (var i = 0; i < resultingKeyValuePairs.Count;)
+            catch (Exception e)
             {
-                var key = ToObject<TKey>((IData) resultingKeyValuePairs[i++]);
-                var value = ToObject<TValue>((IData) resultingKeyValuePairs[i++]);
-                result.Add(key, value);
+                ExceptionUtil.Rethrow(e);
             }
-            return result;
+            return new ReadOnlyLazyDictionary<TKey, TValue>(resultingKeyValuePairs, GetContext().GetSerializationService());
         }
 
-        protected virtual void GetAllInternal(ICollection<IData> keyDatas, List<object> resultingKeyValuePairs)
+        protected virtual void GetAllInternal(ArrayList partitionToKeyData,
+            ConcurrentQueue<KeyValuePair<IData, object>> resultingKeyValuePairs)
         {
-            var partitionToKeyData = GetPartitionKeyData(keyDatas);
             var invocationService = GetContext().GetInvocationService();
-            var futures = new List<IFuture<IClientMessage>>(partitionToKeyData.Count);
-            foreach (var kvp in partitionToKeyData)
+            var futures = new ConcurrentQueue<IFuture<IClientMessage>>();
+            Parallel.For(0, partitionToKeyData.Count, partitionId =>
             {
-                var partitionId = kvp.Key;
-                var keyList = kvp.Value;
+                var keyList = (ArrayList) partitionToKeyData[partitionId];
                 if (keyList.Count > 0)
                 {
                     var request = MapGetAllCodec.EncodeRequest(GetName(), keyList);
-                    futures.Add(invocationService.InvokeOnPartition(request, partitionId));
+                    futures.Enqueue(invocationService.InvokeOnPartition(request, partitionId));
                 }
-            }
+            });
             var messages = ThreadUtil.GetResult(futures);
-            foreach (var clientMessage in messages)
-            {
-                var items = MapGetAllCodec.DecodeResponse(clientMessage).response;
-                foreach (var entry in items)
-                {
-                    resultingKeyValuePairs.Add(entry.Key);
-                    resultingKeyValuePairs.Add(entry.Value);
-                }
-            }
+            Parallel.ForEach(messages,
+                clientMessage => { MapGetAllCodec.DecodeResponse(clientMessage, resultingKeyValuePairs); });
         }
 
-        private Dictionary<int, IList<IData>> GetPartitionKeyData(ICollection<IData> keyDatas)
+        private ArrayList GetPartitionKeyData(ICollection<TKey> keys)
         {
             var partitionService = GetContext().GetPartitionService();
-            // split the keys based on which partition they belong
-            var partitionToKeyData = new Dictionary<int, IList<IData>>();
-            foreach (var keyData in keyDatas)
+            var partitionCount = partitionService.GetPartitionCount();
+            var initialCapacity = 2 * (keys.Count / partitionCount);
+            var partitionToKeyData = ArrayList.Synchronized(new ArrayList(partitionCount));
+            for (var i = 0; i < partitionCount; i++)
             {
-                var partitionId = partitionService.GetPartitionId(keyData);
-                IList<IData> keyList;
-                if (!partitionToKeyData.TryGetValue(partitionId, out keyList))
-                {
-                    partitionToKeyData[partitionId] = keyList = new List<IData>();
-                }
-                keyList.Add(keyData);
+                partitionToKeyData.Add(ArrayList.Synchronized(new ArrayList(initialCapacity)));
             }
+            Parallel.ForEach(keys, key =>
+            {
+                ValidationUtil.CheckNotNull(key, ValidationUtil.NULL_KEY_IS_NOT_ALLOWED);
+                var keyData = ToData(key);
+                var partitionId = partitionService.GetPartitionId(keyData);
+                var keyList = (ArrayList) partitionToKeyData[partitionId];
+                keyList.Add(keyData);
+            });
             return partitionToKeyData;
         }
 
@@ -726,21 +722,17 @@ namespace Hazelcast.Client.Proxy
         {
             var request = MapValuesCodec.EncodeRequest(GetName());
             var list = Invoke(request, m => MapValuesCodec.DecodeResponse(m).response);
-            return new ReadOnlyLazyList<TValue>(list, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 
         public ISet<KeyValuePair<TKey, TValue>> EntrySet()
         {
             var request = MapEntrySetCodec.EncodeRequest(GetName());
-            var entries = Invoke(request, m => MapEntrySetCodec.DecodeResponse(m).response);
-            ISet<KeyValuePair<TKey, TValue>> entrySet = new HashSet<KeyValuePair<TKey, TValue>>();
-            foreach (var entry in entries)
-            {
-                var key = ToObject<TKey>(entry.Key);
-                var value = ToObject<TValue>(entry.Value);
-                entrySet.Add(new KeyValuePair<TKey, TValue>(key, value));
-            }
-            return entrySet;
+            var response = Invoke(request);
+
+            var result = new ConcurrentQueue<KeyValuePair<IData, object>>();
+            MapEntrySetCodec.DecodeResponse(response, result);
+            return new ReadOnlyLazyEntrySet<TKey, TValue>(result, GetContext().GetSerializationService());
         }
 
         public void AddIndex(string attribute, bool ordered)
@@ -769,36 +761,39 @@ namespace Hazelcast.Client.Proxy
         public void PutAll(IDictionary<TKey, TValue> m)
         {
             var partitionService = GetContext().GetPartitionService();
-            var partitions = new Dictionary<int, IDictionary<IData, IData>>(partitionService.GetPartitionCount());
+            var partitionCount = partitionService.GetPartitionCount();
+            var partitions = new ArrayList(partitionCount);
+            for (var i = 0; i < partitionCount; i++)
+            {
+                partitions.Add(new ArrayList());
+            }
             foreach (var kvp in m)
             {
                 ValidationUtil.CheckNotNull(kvp.Key, ValidationUtil.NULL_KEY_IS_NOT_ALLOWED);
                 ValidationUtil.CheckNotNull(kvp.Value, ValidationUtil.NULL_VALUE_IS_NOT_ALLOWED);
-
                 var keyData = ToData(kvp.Key);
+                var valueData = ToData(kvp.Value);
                 var partitionId = partitionService.GetPartitionId(keyData);
-                IDictionary<IData, IData> partition;
-                if (!partitions.TryGetValue(partitionId, out partition))
-                {
-                    partition = new Dictionary<IData, IData>();
-                    partitions[partitionId] = partition;
-                }
-
-                partition[keyData] = ToData(kvp.Value);
+                var partition = (ArrayList) partitions[partitionId];
+                partition.Add(keyData);
+                partition.Add(valueData);
             }
             PutAllInternal(m, partitions);
         }
 
-        protected virtual void PutAllInternal(IDictionary<TKey, TValue> map,
-            Dictionary<int, IDictionary<IData, IData>> partitions)
+        protected virtual void PutAllInternal(IDictionary<TKey, TValue> map, ArrayList partitions)
         {
-            var futures = new List<IFuture<IClientMessage>>(partitions.Count);
-            foreach (var kvp in partitions)
+            var futures = new ConcurrentQueue<IFuture<IClientMessage>>();
+            Parallel.For(0, partitions.Count, i =>
             {
-                var request = MapPutAllCodec.EncodeRequest(GetName(), kvp.Value.ToList());
-                var future = GetContext().GetInvocationService().InvokeOnPartition(request, kvp.Key);
-                futures.Add(future);
-            }
+                var entries = (ArrayList) partitions[i];
+                if (entries.Count > 0)
+                {
+                    var request = MapPutAllCodec.EncodeRequest(GetName(), entries);
+                    var future = GetContext().GetInvocationService().InvokeOnPartition(request, i);
+                    futures.Enqueue(future);
+                }
+            });
             ThreadUtil.GetResult(futures);
         }
 
@@ -825,17 +820,14 @@ namespace Hazelcast.Client.Proxy
             {
                 return EntrySetWithPagingPredicate((PagingPredicate) predicate);
             }
-
             var request = MapEntriesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
-            var entries = Invoke(request, predicate, m => MapEntriesWithPredicateCodec.DecodeResponse(m).response);
-            ISet<KeyValuePair<TKey, TValue>> entrySet = new HashSet<KeyValuePair<TKey, TValue>>();
-            foreach (var dataEntry in entries)
+            var entries = Invoke(request, predicate, (response) =>
             {
-                var key = ToObject<TKey>(dataEntry.Key);
-                var value = ToObject<TValue>(dataEntry.Value);
-                entrySet.Add(new KeyValuePair<TKey, TValue>(key, value));
-            }
-            return entrySet;
+                var resultQueue = new ConcurrentQueue<KeyValuePair<IData, object>>();
+                MapEntriesWithPredicateCodec.DecodeResponse(response, resultQueue);
+                return resultQueue;
+            });
+            return new ReadOnlyLazyEntrySet<TKey, TValue>(entries, GetContext().GetSerializationService());
         }
 
         public ICollection<TValue> Values(IPredicate predicate)
@@ -847,7 +839,7 @@ namespace Hazelcast.Client.Proxy
 
             var request = MapValuesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
             var result = Invoke(request, predicate, m => MapValuesWithPredicateCodec.DecodeResponse(m).response);
-            return new ReadOnlyLazyList<TValue>(result, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TValue, IData>(result, GetContext().GetSerializationService());
         }
 
         private T Invoke<T>(IClientMessage request, IPredicate predicate, Func<IClientMessage, T> decodeResponse)

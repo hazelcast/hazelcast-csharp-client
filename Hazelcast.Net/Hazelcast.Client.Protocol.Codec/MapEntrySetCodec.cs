@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO.Serialization;
@@ -39,25 +40,16 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        internal class ResponseParameters
+        internal static void DecodeResponse(IClientMessage clientMessage, ConcurrentQueue<KeyValuePair<IData, object>> result)
         {
-            public IList<KeyValuePair<IData, IData>> response;
-        }
-
-        internal static ResponseParameters DecodeResponse(IClientMessage clientMessage)
-        {
-            var parameters = new ResponseParameters();
             var responseSize = clientMessage.GetInt();
-            var response = new List<KeyValuePair<IData, IData>>(responseSize);
             for (var responseIndex = 0; responseIndex < responseSize; responseIndex++)
             {
                 var responseItemKey = clientMessage.GetData();
                 var responseItemVal = clientMessage.GetData();
-                var responseItem = new KeyValuePair<IData, IData>(responseItemKey, responseItemVal);
-                response.Add(responseItem);
+                var responseItem = new KeyValuePair<IData, object>(responseItemKey, responseItemVal);
+                result.Enqueue(responseItem);
             }
-            parameters.response = response;
-            return parameters;
         }
     }
 }

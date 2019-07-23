@@ -111,7 +111,7 @@ namespace Hazelcast.Net.Ext
 
         public virtual void Compact()
         {
-            System.Array.Copy(_buffer, Position, _buffer, 0, Remaining());
+            Buffer.BlockCopy(_buffer, Position, _buffer, 0, Remaining());
             Position = Remaining();
             Limit = Capacity();
             _mark = -1;
