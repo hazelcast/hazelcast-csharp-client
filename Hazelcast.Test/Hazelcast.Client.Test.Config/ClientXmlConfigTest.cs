@@ -93,9 +93,9 @@ namespace Hazelcast.Client.Test.Config
             Assert.That(socketOptions.IsReuseAddress(), Is.True);
         }
 
-        
+
         [Test]
-        public void TestCloudConfig() 
+        public void TestCloudConfig()
         {
             var cloudConfig = _clientConfig.GetNetworkConfig().GetCloudConfig();
             Assert.That(cloudConfig, Is.Not.Null);
@@ -124,7 +124,7 @@ namespace Hazelcast.Client.Test.Config
             var credentialsClassName = _clientConfig.GetSecurityConfig().GetCredentialsClassName();
             var factoryClassName = _clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig().GetClassName();
             var properties = _clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig().GetProperties();
-            
+
             Assert.That(credentialsClassName, Is.EqualTo("Hazelcast.Security.UsernamePasswordCredentials"));
             Assert.That(factoryClassName, Is.EqualTo("Hazelcast.Security.DefaultCredentialsFactory"));
 
@@ -162,6 +162,12 @@ namespace Hazelcast.Client.Test.Config
             Assert.AreEqual(true, serializationConfig.IsEnableCompression());
             Assert.AreEqual(true, serializationConfig.IsEnableSharedObject());
             Assert.AreEqual(true, serializationConfig.IsUseNativeByteOrder());
+        }
+
+        [Test]
+        public void TestInstanceName()
+        {
+            Assert.AreEqual("My instance", _clientConfig.GetInstanceName());
         }
     }
 }

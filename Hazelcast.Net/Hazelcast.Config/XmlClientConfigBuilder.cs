@@ -182,6 +182,9 @@ namespace Hazelcast.Config
                     case "near-cache":
                         HandleNearCache(node);
                         break;
+                    case "instance-name":
+                        HandleInstanceName(node);
+                        break;
                 }
             }
         }
@@ -427,5 +430,9 @@ namespace Hazelcast.Config
             }
         }
 
+        void HandleInstanceName(XmlNode node)
+        {
+            _clientConfig.SetInstanceName(node.InnerText);
+        }
     }
 }

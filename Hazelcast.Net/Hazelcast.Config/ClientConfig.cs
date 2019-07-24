@@ -71,6 +71,8 @@ namespace Hazelcast.Config
 
         private SerializationConfig _serializationConfig = new SerializationConfig();
 
+        private string _instanceName;
+
         /// <summary>
         /// Helper method to add a new ListenerConfig.
         /// </summary>
@@ -332,6 +334,26 @@ namespace Hazelcast.Config
         public ClientConfig SetSecurityConfig(ClientSecurityConfig securityConfig) {
             _securityConfig = securityConfig;
             return this;
+        }
+
+        /// <summary>
+        /// Sets the instance name.
+        /// </summary>
+        /// <param name="instanceName"></param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
+        public ClientConfig SetInstanceName(string instanceName)
+        {
+            _instanceName = instanceName;
+            return this;
+        }
+
+        /// <summary>
+        /// Gets the instance name.
+        /// </summary>
+        /// <returns>The instance name.</returns>
+        public string GetInstanceName()
+        {
+            return _instanceName;
         }
 
         internal virtual ILoadBalancer GetLoadBalancer()

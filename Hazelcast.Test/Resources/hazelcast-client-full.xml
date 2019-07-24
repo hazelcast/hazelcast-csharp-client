@@ -106,5 +106,6 @@
 
   <license-key>ENTERPRISE_KEY</license-key>
 
+  <instance-name>My instance</instance-name>
 
 </hazelcast-client>

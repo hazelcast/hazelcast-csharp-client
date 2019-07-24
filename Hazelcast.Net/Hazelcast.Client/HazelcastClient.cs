@@ -74,7 +74,16 @@ namespace Hazelcast.Client
         {
             _config = config;
             var groupConfig = config.GetGroupConfig();
-            _instanceName = "hz.client_" + _id + (groupConfig != null ? "_" + groupConfig.GetName() : string.Empty);
+
+            var instanceName = config.GetInstanceName();
+            if (string.IsNullOrWhiteSpace(instanceName) == false)
+            {
+                _instanceName = instanceName;
+            }
+            else
+            {
+                _instanceName = "hz.client_" + _id + (groupConfig != null ? "_" + groupConfig.GetName() : string.Empty);
+            }
 
             _lifecycleService = new LifecycleService(this);
             try
