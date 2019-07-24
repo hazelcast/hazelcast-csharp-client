@@ -61,6 +61,4 @@
     <capacity>10</capacity>
     <time-to-live-seconds>180</time-to-live-seconds>
   </ringbuffer>
-
-  <instance-name>My instance name</instance-name>
 </hazelcast>
