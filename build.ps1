@@ -100,7 +100,7 @@ if (!$netcore) {
 	$nunitArgs += "--framework=v4.0"
 	if($coverage) {
 		$dotCoverCmd=".\packages\JetBrains.dotCover.CommandLineTools.2019.1.2\tools\dotCover.exe"
-		$dotCoverArgs=@("cover", "/Filters=-:Hazelcast.Test", "/TargetWorkingDir=.", "/Output=Coverage.html", "/ReportType=HTML", "/TargetExecutable=${nunitConsolePath}", "/TargetArguments=${nunitArgs}")
+		$dotCoverArgs=@("cover", "/Filters=-:Hazelcast.Test", "/TargetWorkingDir=.", "/Output=Coverage\index.html", "/ReportType=HTML", "/TargetExecutable=${nunitConsolePath}", "/TargetArguments=${nunitArgs}")
 		Write-Host "$dotCoverCmd" $dotCoverArgs
 		& "$dotCoverCmd" $dotCoverArgs
 	} else {
