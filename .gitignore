@@ -168,3 +168,6 @@ rc/
 .DS_Store
 packages/
 Coverage/
+coverage.xml
+console-text.xml
+cobertura/Cobertura.xml

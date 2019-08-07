@@ -101,10 +101,17 @@ if($testCategory.Length -gt 0) {
 if (!$netcore) {
 	$nunitArgs += "--framework=v4.0"
 	if($coverage) {
+		$dotCoverOutput = "coverage.xml"
+
 		$dotCoverCmd=".\packages\JetBrains.dotCover.CommandLineTools.2019.1.2\tools\dotCover.exe"
-		$dotCoverArgs=@("cover", "/Filters=-:Hazelcast.Test", "/TargetWorkingDir=.", "/Output=Coverage\index.html", "/ReportType=HTML", "/TargetExecutable=${nunitConsolePath}", "/TargetArguments=${nunitArgs}")
+		$dotCoverArgs=@("cover", "/Filters=-:Hazelcast.Test", "/TargetWorkingDir=.", "/Output=$dotCoverOutput", "/ReportType=DetailedXML", "/TargetExecutable=${nunitConsolePath}", "/TargetArguments=${nunitArgs}")
 		Write-Host "$dotCoverCmd" $dotCoverArgs
 		& "$dotCoverCmd" $dotCoverArgs
+		
+		$reportGeneratorCmd = ".\packages\ReportGenerator.4.2.12\tools\net47\ReportGenerator.exe"
+		$reportGeneratorArgs = @("-reports:$dotCoverOutput", "-targetdir:cobertura", "-reporttypes:Cobertura")
+
+		& "$reportGeneratorCmd" $reportGeneratorArgs
 	} else {
 		& $nunitConsolePath $nunitArgs
 	}
