@@ -14,9 +14,7 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 using NUnit.Framework;
 

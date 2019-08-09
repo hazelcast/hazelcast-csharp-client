@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Client.Model;
 using Hazelcast.Config;
 using Hazelcast.Core;
@@ -50,11 +51,9 @@ namespace Hazelcast.Client.Test
                 .AddDataSerializableFactory(IdentifiedFactory.FactoryId, new IdentifiedFactory());
         }
 
-        //internal const string name = "test";
-
         internal static IMap<object, object> map;
 
-        private void FillMap()
+        static void FillMap()
         {
             for (var i = 0; i < 10; i++)
             {
@@ -72,18 +71,18 @@ namespace Hazelcast.Client.Test
                 this.id = id;
             }
 
-            public virtual int GetId()
+            public int GetId()
             {
                 return id;
             }
 
-            public virtual void SetId(int id)
+            public void SetId(int id)
             {
                 this.id = id;
             }
         }
 
-        private class Interceptor : IMapInterceptor, IIdentifiedDataSerializable
+        class Interceptor : IMapInterceptor, IIdentifiedDataSerializable
         {
             public void WriteData(IObjectDataOutput output)
             {
@@ -135,7 +134,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestAddIndex()
+        public void TestAddIndex()
         {
             map.AddIndex("name", true);
         }
@@ -152,56 +151,50 @@ namespace Hazelcast.Client.Test
             });
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAsyncGet()
+        public async Task TestAsyncGet()
         {
             FillMap();
-            var f = map.GetAsync("key1");
+            var value = await map.GetAsync("key1");
 
-            var o = f.Result;
-            Assert.AreEqual("value1", o);
+            Assert.AreEqual("value1", value);
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAsyncPut()
+        public async Task TestAsyncPut()
         {
             FillMap();
-            var f = map.PutAsync("key3", "value");
+            var o = await map.PutAsync("key3", "value");
 
-            Assert.False(f.IsCompleted);
-
-            var o = f.Result;
             Assert.AreEqual("value3", o);
             Assert.AreEqual("value", map.Get("key3"));
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAsyncPutWithTtl()
+        public async Task TestAsyncPutWithTtl()
         {
-            var latch = new CountdownEvent(1);
+            var latch = new SemaphoreSlim(0);
 
             map.AddEntryListener(new EntryAdapter<object, object>(
                 delegate { },
                 delegate { },
                 delegate { },
-                delegate { latch.Signal(); }
+                delegate { latch.Release(); }
             ), true);
 
-            var f1 = map.PutAsync("key", "value1", 1, TimeUnit.Seconds);
-            Assert.IsNull(f1.Result);
-            Assert.AreEqual("value1", map.Get("key"));
+            await map.PutAsync("key", "value1", 1, TimeUnit.Seconds);
 
-            Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
+            var actual = await map.GetAsync("key");
+            Assert.AreEqual("value1", actual);
 
+            Assert.IsTrue(await latch.WaitAsync(TimeSpan.FromSeconds(10)));
+
+            // TODO: consider async Get
             TestSupport.AssertTrueEventually(() => { Assert.IsNull(map.Get("key")); });
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAsyncRemove()
+        public async Task TestAsyncRemove()
         {
             FillMap();
             var f = map.RemoveAsync("key4");
@@ -212,9 +205,8 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(9, map.Size());
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestContains()
+        public void TestContains()
         {
             FillMap();
             Assert.IsFalse(map.ContainsKey("key10"));
@@ -224,7 +216,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestEntrySet()
+        public void TestEntrySet()
         {
             map.Put("key1", "value1");
             map.Put("key2", "value2");
@@ -242,8 +234,7 @@ namespace Hazelcast.Client.Test
             Assert.True(tempDict.ContainsKey("key2"));
             Assert.True(tempDict.ContainsKey("key3"));
 
-            object value;
-            tempDict.TryGetValue("key1", out value);
+            tempDict.TryGetValue("key1", out var value);
             Assert.AreEqual("value1", value);
 
             tempDict.TryGetValue("key2", out value);
@@ -254,7 +245,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestEntrySetPredicate()
+        public void TestEntrySetPredicate()
         {
             map.Put("key1", "value1");
             map.Put("key2", "value2");
@@ -263,25 +254,23 @@ namespace Hazelcast.Client.Test
             var keyValuePairs = map.EntrySet(new SqlPredicate("this == value1"));
             Assert.AreEqual(1, keyValuePairs.Count);
 
-            var enumerator = keyValuePairs.GetEnumerator();
-            enumerator.MoveNext();
-            Assert.AreEqual("key1", enumerator.Current.Key);
-            Assert.AreEqual("value1", enumerator.Current.Value);
+            var kvp = keyValuePairs.First();
+            Assert.AreEqual("key1", kvp.Key);
+            Assert.AreEqual("value1", kvp.Value);
         }
 
         [Test]
-        public virtual void TestEntryView()
+        public void TestEntryView()
         {
             var item = ItemGenerator.GenerateItem(1);
             map.Put("key1", item);
             map.Get("key1");
             map.Get("key1");
 
+            var entryView = map.GetEntryView("key1");
+            var value = entryView.GetValue() as Item;
 
-            var entryview = map.GetEntryView("key1");
-            var value = entryview.GetValue() as Item;
-
-            Assert.AreEqual("key1", entryview.GetKey());
+            Assert.AreEqual("key1", entryView.GetKey());
             Assert.True(item.Equals(value));
             //Assert.AreEqual(2, entryview.GetHits());
             //Assert.True(entryview.GetCreationTime() > 0);
@@ -290,7 +279,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestEvict()
+        public void TestEvict()
         {
             map.Put("key1", "value1");
             Assert.AreEqual("value1", map.Get("key1"));
@@ -318,13 +307,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestFlush()
+        public void TestFlush()
         {
             map.Flush();
         }
 
         [Test]
-        public virtual void TestExecuteOnKey()
+        public void TestExecuteOnKey()
         {
             FillMap();
             const string key = "key1";
@@ -349,10 +338,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestExecuteOnKeys()
+        public void TestExecuteOnKeys()
         {
             FillMap();
-            var keys = new HashSet<object> {"key1", "key5"};
+            var keys = new HashSet<object> { "key1", "key5" };
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
             var result = map.ExecuteOnKeys(keys, entryProcessor);
@@ -369,18 +358,17 @@ namespace Hazelcast.Client.Test
             Assert.Throws<ArgumentNullException>(() =>
             {
                 FillMap();
-                ISet<object> keys = null;
                 const string value = "valueX";
                 var entryProcessor = new IdentifiedEntryProcessor(value);
-                map.ExecuteOnKeys(keys, entryProcessor);
+                map.ExecuteOnKeys(null, entryProcessor);
             });
         }
 
         [Test]
-        public virtual void TestExecuteOnKeys_keysEmpty()
+        public void TestExecuteOnKeys_keysEmpty()
         {
             FillMap();
-            ISet<object> keys = new HashSet<object>();
+            var keys = new HashSet<object>();
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
             var result = map.ExecuteOnKeys(keys, entryProcessor);
@@ -388,78 +376,84 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestExecuteOnEntries()
+        public void TestExecuteOnEntries()
         {
             FillMap();
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
             var result = map.ExecuteOnEntries(entryProcessor);
-            foreach (var resultKV in result)
+            foreach (var kvp in result)
             {
-                Assert.AreEqual(resultKV.Value, value);
-                Assert.AreEqual(value, map.Get(resultKV.Key));
+                Assert.AreEqual(value, kvp.Value);
+                Assert.AreEqual(value, map.Get(kvp.Key));
             }
         }
 
         [Test]
-        public virtual void TestExecuteOnEntriesWithPredicate()
+        public void TestExecuteOnEntriesWithPredicate()
         {
             FillMap();
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
             var result = map.ExecuteOnEntries(entryProcessor, Predicates.Sql("this == value5"));
             Assert.AreEqual(result.Count, 1);
-            foreach (var resultKV in result)
+            foreach (var kvp in result)
             {
-                Assert.AreEqual(resultKV.Value, value);
-                Assert.AreEqual(value, map.Get(resultKV.Key));
+                Assert.AreEqual(value, kvp.Value);
+                Assert.AreEqual(value, map.Get(kvp.Key));
             }
         }
 
         [Test]
-        public virtual void TestSubmitToKey()
+        public async Task TestSubmitToKey()
         {
             FillMap();
             const string key = "key1";
             const string value = "value10";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            var task = map.SubmitToKey(key, entryProcessor);
-            Assert.AreEqual(task.Result, value);
-            Assert.AreEqual(task.Result, map.Get(key));
+            var result = await map.SubmitToKey(key, entryProcessor);
+            Assert.AreEqual(value, result);
+            Assert.AreEqual(map.Get(key), result);
         }
 
         [Test]
-        public void TestSubmitToKey_nullKey()
+        public async Task TestSubmitToKey_nullKey()
         {
-            Assert.Throws<ArgumentNullException>(() =>
+            ArgumentNullException ex = null;
+
+            const string key = null;
+            const string value = "value10";
+            var entryProcessor = new IdentifiedEntryProcessor(value);
+            try
             {
-                const string key = null;
-                const string value = "value10";
-                var entryProcessor = new IdentifiedEntryProcessor(value);
-                map.SubmitToKey(key, entryProcessor);
-            });
+                await map.SubmitToKey(key, entryProcessor);
+            }
+            catch (ArgumentNullException e)
+            {
+                ex = e;
+            }
+
+            Assert.NotNull(ex, "Should have thrown an exception");
         }
 
         [Test]
-        public virtual void TestForceUnlock()
+        public async Task TestForceUnlock()
         {
             map.Lock("key1");
-            var latch = new CountdownEvent(1);
+            var sem = new SemaphoreSlim(0);
 
-            var t1 = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
                 map.ForceUnlock("key1");
-                latch.Signal();
+                sem.Release();
             });
 
-            t1.Start();
-
-            Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(100)));
+            Assert.IsTrue(await sem.WaitAsync(TimeSpan.FromSeconds(100)));
             Assert.IsFalse(map.IsLocked("key1"));
         }
 
         [Test]
-        public virtual void TestGet()
+        public void TestGet()
         {
             FillMap();
             for (var i = 0; i < 10; i++)
@@ -470,9 +464,9 @@ namespace Hazelcast.Client.Test
         }
 
         [Test, Repeat(100)]
-        public virtual void TestGetAllExtreme()
+        public void TestGetAllExtreme()
         {
-            IDictionary<object, object> mm = new Dictionary<object, object>();
+            var mm = new Dictionary<object, object>();
             const int keycount = 1000;
 
             //insert dummy keys and values 
@@ -488,39 +482,38 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(keycount, dictionary.Count);
             foreach (var pair in dictionary)
             {
-                Assert.AreEqual(mm[pair.Key] , pair.Value);
+                Assert.AreEqual(mm[pair.Key], pair.Value);
             }
         }
 
         [Test]
-        public virtual void TestGetAllPutAll()
+        public void TestGetAllPutAll()
         {
-            IDictionary<object, object> mm = new Dictionary<object, object>();
+            var mm = new Dictionary<object, object>();
             for (var i = 0; i < 100; i++)
             {
                 mm.Add(i, i);
             }
             map.PutAll(mm);
             Assert.AreEqual(map.Size(), 100);
-            for (var i_1 = 0; i_1 < 100; i_1++)
+            for (var j = 0; j < 100; j++)
             {
-                Assert.AreEqual(map.Get(i_1), i_1);
+                Assert.AreEqual(map.Get(j), j);
             }
-            var ss = new HashSet<object> {1, 3};
+            var ss = new HashSet<object> { 1, 3 };
 
             var m2 = map.GetAll(ss);
             Assert.AreEqual(m2.Count, 2);
 
-            object gv;
-            m2.TryGetValue(1, out gv);
-            Assert.AreEqual(gv, 1);
+            m2.TryGetValue(1, out var gv);
+            Assert.AreEqual(1, gv);
 
             m2.TryGetValue(3, out gv);
-            Assert.AreEqual(gv, 3);
+            Assert.AreEqual(3, gv);
         }
 
         [Test]
-        public virtual void TestGetEntryView()
+        public void TestGetEntryView()
         {
             map.Put("item0", "value0");
             map.Put("item1", "value1");
@@ -534,9 +527,8 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual("value1", entryView.GetValue());
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestIsEmpty()
+        public void TestIsEmpty()
         {
             Assert.IsTrue(map.IsEmpty());
             map.Put("key1", "value1");
@@ -544,16 +536,14 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestKeySet()
+        public void TestKeySet()
         {
             map.Put("key1", "value1");
 
             var keySet = map.KeySet();
 
-            var enumerator = keySet.GetEnumerator();
-
-            enumerator.MoveNext();
-            Assert.AreEqual("key1", enumerator.Current);
+            var value = keySet.First();
+            Assert.AreEqual("key1", value);
         }
 
         [Test]
@@ -563,11 +553,11 @@ namespace Hazelcast.Client.Test
 
             var values = map.KeySet(new SqlPredicate("this == value1"));
             Assert.AreEqual(1, values.Count);
-            var enumerator = values.GetEnumerator();
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.AreEqual("key1", enumerator.Current);
+            
+            Assert.AreEqual("key1", values.First());
         }
 
+        // TODO: review forward
         [Test]
         public void TestListener()
         {
@@ -712,7 +702,7 @@ namespace Hazelcast.Client.Test
 
             for (var i = 0; i < TestItemCount; i++)
             {
-                map.Put("key" + i, new[] {byte.MaxValue});
+                map.Put("key" + i, new[] { byte.MaxValue });
             }
 
             Assert.AreEqual(map.Size(), TestItemCount);
@@ -809,7 +799,7 @@ namespace Hazelcast.Client.Test
             map.Lock("key1");
             var latch = new CountdownEvent(1);
 
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 map.TryPut("key1", "value2", 1, TimeUnit.Seconds);
                 latch.Signal();
@@ -829,7 +819,7 @@ namespace Hazelcast.Client.Test
             var leaseTime = 500;
             map.Lock("key1", leaseTime, TimeUnit.Milliseconds);
             var latch = new CountdownEvent(1);
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 map.TryPut("key1", "value2", 2000, TimeUnit.Milliseconds);
                 latch.Signal();
@@ -847,7 +837,7 @@ namespace Hazelcast.Client.Test
         {
             map.Lock("key1", 1, TimeUnit.Seconds);
             var latch = new CountdownEvent(2);
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 if (!map.TryLock("key1"))
                 {
@@ -1057,7 +1047,7 @@ namespace Hazelcast.Client.Test
             map.Lock("key2");
             var latch = new CountdownEvent(2);
 
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 var result = map.TryPut("key1", "value3", 1, TimeUnit.Seconds);
                 if (!result)
@@ -1066,7 +1056,7 @@ namespace Hazelcast.Client.Test
                 }
             });
 
-            var t2 = new Thread(delegate(object o)
+            var t2 = new Thread(delegate (object o)
             {
                 var result = map.TryRemove("key2", 1, TimeUnit.Seconds);
                 if (!result)
