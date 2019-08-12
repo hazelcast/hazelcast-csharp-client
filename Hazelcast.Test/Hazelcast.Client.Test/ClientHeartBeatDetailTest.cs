@@ -14,7 +14,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime;
 using System.Threading;
 using Hazelcast.Config;
@@ -28,8 +27,8 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientHeartBeatDetailTest : HazelcastTestSupport
     {
-        private RemoteController.Client _remoteController;
-        private Cluster _cluster;
+        RemoteController.Client _remoteController;
+        Cluster _cluster;
 
         [SetUp]
         public void Setup()
@@ -66,10 +65,7 @@ namespace Hazelcast.Client.Test
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", null);
         }
 
-        private string GetServerConfig()
-        {
-            return Resources.hazelcast_hb;
-        }
+        static string GetServerConfig() => Resources.hazelcast_hb;
 
         [Test]
         public void TestIdle()

@@ -27,18 +27,15 @@ namespace Hazelcast.Client.Test
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
             i.Destroy();
         }
 
-        internal const string name = "ClientIdGeneratorTest";
+        IIdGenerator i;
 
-        internal static IIdGenerator i;
-
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestGenerator()
+        public void TestGenerator()
         {
             Assert.IsFalse(i.Init(-4569));
 
@@ -48,7 +45,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestGeneratorBlockSize()
+        public void TestGeneratorBlockSize()
         {
             for (var j = 0; j < 10000; j++)
             {

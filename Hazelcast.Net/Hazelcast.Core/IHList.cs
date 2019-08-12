@@ -16,6 +16,7 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Core
 {
+    // TODO: add async API
     /// <summary>
     ///     Concurrent, distributed implementation of <see cref="IList{T}"/>IList 
     /// </summary>

@@ -13,31 +13,29 @@
 // limitations under the License.
 
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Client.Spi;
 using Hazelcast.Core;
-using Hazelcast.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     public class ClientExecutorServiceTest : HazelcastTestSupport
     {
-        private ClientExecutionService _clientExecutionService;
+        ClientExecutionService _clientExecutionService;
 
-        private CancellationTokenSource cts;
+        CancellationTokenSource _cts;
 
         [SetUp]
         public void Setup()
         {
-            cts = new CancellationTokenSource();
+            _cts = new CancellationTokenSource();
             _clientExecutionService = new ClientExecutionService("name", 10);
         }
 
         [TearDown]
         public void TearDown()
         {
-            cts.Dispose();
+            _cts.Dispose();
             _clientExecutionService.Shutdown();
         }
 
@@ -49,7 +47,7 @@ namespace Hazelcast.Client.Test
             _clientExecutionService.ScheduleWithCancellation(() =>
                 {
                     executed = true;
-                }, 2, TimeUnit.Seconds, cts.Token)
+                }, 2, TimeUnit.Seconds, _cts.Token)
                 .ContinueWith(t =>
                     {
                         if (!t.IsCanceled)
@@ -58,7 +56,7 @@ namespace Hazelcast.Client.Test
                         }
                     }
             );
-            cts.Cancel();
+            _cts.Cancel();
             TestSupport.AssertTrueEventually(() =>
             {
                 Assert.False(executed);
@@ -74,7 +72,7 @@ namespace Hazelcast.Client.Test
             _clientExecutionService.ScheduleWithCancellation(() =>
                 {
                     executed = true;
-                }, 2, TimeUnit.Seconds, cts.Token)
+                }, 2, TimeUnit.Seconds, _cts.Token)
                 .ContinueWith(t =>
                     {
                         if (!t.IsCanceled)

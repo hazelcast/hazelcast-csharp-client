@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -34,39 +33,30 @@ namespace Hazelcast.Client.Test
             l.Destroy();
         }
 
-        //internal const string name = "ClientCountDownLatchTest";
-
-        internal ICountDownLatch l;
-
+        ICountDownLatch l;
 
         [Test]
-        public virtual void TestLatch()
+        public void TestLatch()
         {
-            Assert.IsTrue(l.TrySetCount(20));
-            Assert.IsFalse(l.TrySetCount(10));
-            Assert.AreEqual(20, l.GetCount());
+            const int count = 20;
 
-            var t1 = new Thread(delegate(object o)
+            Assert.IsTrue(l.TrySetCount(count));
+            Assert.IsFalse(l.TrySetCount(10));
+            Assert.AreEqual(count, l.GetCount());
+
+            var t = Task.Run(async () =>
             {
-                for (var i = 0; i < 20; i++)
+                for (var i = 0; i < count; i++)
                 {
                     l.CountDown();
-                    try
-                    {
-                        Thread.Sleep(60);
-                    }
-                    catch
-                    {
-                    }
+                    await Task.Delay(60);
                 }
             });
-            t1.Start();
-
 
             Assert.IsFalse(l.Await(1, TimeUnit.Seconds));
             Assert.IsTrue(l.Await(5, TimeUnit.Seconds));
 
-            t1.Join();
+            t.GetAwaiter().GetResult();
         }
     }
 }

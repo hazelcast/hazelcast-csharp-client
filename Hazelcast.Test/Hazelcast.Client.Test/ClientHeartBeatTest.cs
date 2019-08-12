@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
 using System.Threading;
 using Hazelcast.Config;
 using Hazelcast.Core;
@@ -25,8 +24,8 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientHeartBeatTest : HazelcastTestSupport
     {
-        private RemoteController.Client _remoteController;
-        private Cluster _cluster;
+        RemoteController.Client _remoteController;
+        Cluster _cluster;
 
         [SetUp]
         public void Setup()
@@ -42,7 +41,7 @@ namespace Hazelcast.Client.Test
             StopCluster(_remoteController, _cluster);
             StopRemoteController(_remoteController);
         }
-        
+
         protected override void ConfigureGroup(ClientConfig config)
         {
             config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
@@ -105,19 +104,23 @@ namespace Hazelcast.Client.Test
             var member2 = StartMemberAndWait(client, _remoteController, _cluster, 2);
 
             var map = client.GetMap<int, string>(TestSupport.RandomString());
-            var count = 50;
+
+            const int count = 50;
+            const int half = count / 2;
+
             // make sure we have a connection open to the second node
-            for (var i = 0; i < count/2; i++)
+            for (var i = 0; i < half; i++)
             {
                 map.Put(i, TestSupport.RandomString());
             }
-            
+
             SuspendMember(_remoteController, _cluster, member2);
 
-            for (var i = count/2; i < count; i++)
+            for (var i = half; i < count; i++)
             {
                 try
                 {
+                    // TODO: why is this async?
                     map.PutAsync(i, TestSupport.RandomString());
                 }
                 catch (Exception e)
@@ -125,6 +128,7 @@ namespace Hazelcast.Client.Test
                     Assert.Fail(e.Message);
                 }
             }
+
             Thread.Sleep(10000);
 
             ResumeMember(_remoteController, _cluster, member2);

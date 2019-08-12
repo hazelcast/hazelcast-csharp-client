@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -25,81 +27,75 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            mm = Client.GetMultiMap<object, object>(TestSupport.RandomString());
+            _mm = Client.GetMultiMap<object, object>(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            mm.Destroy();
+            _mm.Destroy();
         }
 
-        internal const string name = "ClientMultiMapTest";
-
-        internal static IMultiMap<object, object> mm;
+        static IMultiMap<object, object> _mm;
 
         [Test]
-        public virtual void TestClear()
+        public void Clear()
         {
-            mm.Put("a", "b");
-            mm.Put("a", "c");
-            mm.Clear();
-            Assert.AreEqual(0, mm.Size());
+            _mm.Put("a", "b");
+            _mm.Put("a", "c");
+            _mm.Clear();
+            Assert.AreEqual(0, _mm.Size());
         }
 
         [Test]
-        public virtual void TestContains()
+        public void Contains()
         {
-            Assert.IsTrue(mm.Put("key1", "value1"));
-            Assert.IsTrue(mm.Put("key1", "value2"));
-            Assert.IsTrue(mm.Put("key1", "value3"));
-            Assert.IsTrue(mm.Put("key2", "value4"));
-            Assert.IsTrue(mm.Put("key2", "value5"));
-            Assert.IsFalse(mm.ContainsKey("key3"));
-            Assert.IsTrue(mm.ContainsKey("key1"));
-            Assert.IsFalse(mm.ContainsValue("value6"));
-            Assert.IsTrue(mm.ContainsValue("value4"));
-            Assert.IsFalse(mm.ContainsEntry("key1", "value4"));
-            Assert.IsFalse(mm.ContainsEntry("key2", "value3"));
-            Assert.IsTrue(mm.ContainsEntry("key1", "value1"));
-            Assert.IsTrue(mm.ContainsEntry("key2", "value5"));
+            Assert.IsTrue(_mm.Put("key1", "value1"));
+            Assert.IsTrue(_mm.Put("key1", "value2"));
+            Assert.IsTrue(_mm.Put("key1", "value3"));
+            Assert.IsTrue(_mm.Put("key2", "value4"));
+            Assert.IsTrue(_mm.Put("key2", "value5"));
+            Assert.IsFalse(_mm.ContainsKey("key3"));
+            Assert.IsTrue(_mm.ContainsKey("key1"));
+            Assert.IsFalse(_mm.ContainsValue("value6"));
+            Assert.IsTrue(_mm.ContainsValue("value4"));
+            Assert.IsFalse(_mm.ContainsEntry("key1", "value4"));
+            Assert.IsFalse(_mm.ContainsEntry("key2", "value3"));
+            Assert.IsTrue(_mm.ContainsEntry("key1", "value1"));
+            Assert.IsTrue(_mm.ContainsEntry("key2", "value5"));
         }
 
-
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestForceUnlock()
+        public void ForceUnlock()
         {
-            mm.Lock("key1");
+            _mm.Lock("key1");
             var latch = new CountdownEvent(1);
 
-            var t = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
-                mm.ForceUnlock("key1");
+                _mm.ForceUnlock("key1");
                 latch.Signal();
             });
-            t.Start();
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(100)));
-            Assert.IsFalse(mm.IsLocked("key1"));
+            Assert.IsFalse(_mm.IsLocked("key1"));
         }
 
         [Test]
-        public virtual void TestKeySetEntrySetAndValues()
+        public void KeySetEntrySetAndValues()
         {
-            Assert.IsTrue(mm.Put("key1", "value1"));
-            Assert.IsTrue(mm.Put("key1", "value2"));
-            Assert.IsTrue(mm.Put("key1", "value3"));
-            Assert.IsTrue(mm.Put("key2", "value4"));
-            Assert.IsTrue(mm.Put("key2", "value5"));
-            Assert.AreEqual(2, mm.KeySet().Count);
-            Assert.AreEqual(5, mm.Values().Count);
-            Assert.AreEqual(5, mm.EntrySet().Count);
+            Assert.IsTrue(_mm.Put("key1", "value1"));
+            Assert.IsTrue(_mm.Put("key1", "value2"));
+            Assert.IsTrue(_mm.Put("key1", "value3"));
+            Assert.IsTrue(_mm.Put("key2", "value4"));
+            Assert.IsTrue(_mm.Put("key2", "value5"));
+            Assert.AreEqual(2, _mm.KeySet().Count);
+            Assert.AreEqual(5, _mm.Values().Count);
+            Assert.AreEqual(5, _mm.EntrySet().Count);
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestListener()
+        public void Listener()
         {
             var latch1Add = new CountdownEvent(8);
             var latch1Remove = new CountdownEvent(4);
@@ -117,60 +113,56 @@ namespace Hazelcast.Client.Test
                 delegate { },
                 delegate { });
 
-            mm.AddEntryListener(listener1, true);
-            mm.AddEntryListener(listener2, "key3", true);
+            _mm.AddEntryListener(listener1, true);
+            _mm.AddEntryListener(listener2, "key3", true);
 
-            mm.Put("key1", "value1");
-            mm.Put("key1", "value2");
-            mm.Put("key1", "value3");
-            mm.Put("key2", "value4");
-            mm.Put("key2", "value5");
-            mm.Remove("key1", "value2");
-            mm.Put("key3", "value6");
-            mm.Put("key3", "value7");
-            mm.Put("key3", "value8");
-            mm.Remove("key3");
+            _mm.Put("key1", "value1");
+            _mm.Put("key1", "value2");
+            _mm.Put("key1", "value3");
+            _mm.Put("key2", "value4");
+            _mm.Put("key2", "value5");
+            _mm.Remove("key1", "value2");
+            _mm.Put("key3", "value6");
+            _mm.Put("key3", "value7");
+            _mm.Put("key3", "value8");
+            _mm.Remove("key3");
             Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(20)));
             Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(20)));
             Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(20)));
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(20)));
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLock()
+        public void Lock()
         {
-            mm.Lock("key1");
+            _mm.Lock("key1");
 
             var latch = new CountdownEvent(1);
-            var t = new Thread(delegate(object o)
-            {
-                if (!mm.TryLock("key1"))
+            var t = Task.Run(() => {
+                if (!_mm.TryLock("key1"))
                 {
                     latch.Signal();
                 }
             });
-            t.Start();
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
-            mm.ForceUnlock("key1");
+            _mm.ForceUnlock("key1");
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLockTtl()
+        public void LockTtl()
         {
-            mm.Lock("key1", 1, TimeUnit.Seconds);
+            _mm.Lock("key1", 1, TimeUnit.Seconds);
             var latch = new CountdownEvent(2);
-            var t = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
-                if (!mm.TryLock("key1"))
+                if (!_mm.TryLock("key1"))
                 {
                     latch.Signal();
                 }
                 try
                 {
-                    if (mm.TryLock("key1", 2, TimeUnit.Seconds))
+                    if (_mm.TryLock("key1", 2, TimeUnit.Seconds))
                     {
                         latch.Signal();
                     }
@@ -179,43 +171,41 @@ namespace Hazelcast.Client.Test
                 {
                 }
             });
-            t.Start();
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
-            mm.ForceUnlock("key1");
+            _mm.ForceUnlock("key1");
         }
 
-
         [Test]
-        public virtual void TestPutGetRemove()
+        public void PutGetRemove()
         {
-            Assert.IsTrue(mm.Put("key1", "value1"));
-            Assert.IsTrue(mm.Put("key1", "value2"));
-            Assert.IsTrue(mm.Put("key1", "value3"));
-            Assert.IsTrue(mm.Put("key2", "value4"));
-            Assert.IsTrue(mm.Put("key2", "value5"));
-            Assert.AreEqual(3, mm.ValueCount("key1"));
-            Assert.AreEqual(2, mm.ValueCount("key2"));
-            Assert.AreEqual(5, mm.Size());
-            var coll = mm.Get("key1");
+            Assert.IsTrue(_mm.Put("key1", "value1"));
+            Assert.IsTrue(_mm.Put("key1", "value2"));
+            Assert.IsTrue(_mm.Put("key1", "value3"));
+            Assert.IsTrue(_mm.Put("key2", "value4"));
+            Assert.IsTrue(_mm.Put("key2", "value5"));
+            Assert.AreEqual(3, _mm.ValueCount("key1"));
+            Assert.AreEqual(2, _mm.ValueCount("key2"));
+            Assert.AreEqual(5, _mm.Size());
+            var coll = _mm.Get("key1");
             Assert.AreEqual(3, coll.Count);
-            coll = mm.Remove("key2");
+            coll = _mm.Remove("key2");
             Assert.AreEqual(2, coll.Count);
-            Assert.AreEqual(0, mm.ValueCount("key2"));
-            Assert.AreEqual(0, mm.Get("key2").Count);
-            Assert.IsFalse(mm.Remove("key1", "value4"));
-            Assert.AreEqual(3, mm.Size());
-            Assert.IsTrue(mm.Remove("key1", "value2"));
-            Assert.AreEqual(2, mm.Size());
-            Assert.IsTrue(mm.Remove("key1", "value1"));
-            Assert.AreEqual(1, mm.Size());
-            var enumerator = mm.Get("key1").GetEnumerator();
-            enumerator.MoveNext();
-            Assert.AreEqual("value3", enumerator.Current);
+            Assert.AreEqual(0, _mm.ValueCount("key2"));
+            Assert.AreEqual(0, _mm.Get("key2").Count);
+            Assert.IsFalse(_mm.Remove("key1", "value4"));
+            Assert.AreEqual(3, _mm.Size());
+            Assert.IsTrue(_mm.Remove("key1", "value2"));
+            Assert.AreEqual(2, _mm.Size());
+            Assert.IsTrue(_mm.Remove("key1", "value1"));
+            Assert.AreEqual(1, _mm.Size());
+
+            var first = _mm.Get("key1").First();
+            Assert.AreEqual("value3", first);
         }
 
         [Test]
-        public virtual void TestRemoveListener()
+        public void TestRemoveListener()
         {
             var latch1Add = new CountdownEvent(1);
             var latch1Remove = new CountdownEvent(1);
@@ -225,27 +215,26 @@ namespace Hazelcast.Client.Test
                 delegate { },
                 delegate { });
 
-            var listenerId = mm.AddEntryListener(listener1, true);
+            var listenerId = _mm.AddEntryListener(listener1, true);
 
-            mm.Put("key1", "value1");
+            _mm.Put("key1", "value1");
             Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(10)));
 
-            Assert.IsTrue(mm.RemoveEntryListener(listenerId));
-            mm.Remove("key1");
+            Assert.IsTrue(_mm.RemoveEntryListener(listenerId));
+            _mm.Remove("key1");
             Assert.IsFalse(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestTryLock()
+        public void TryLock()
         {
-            Assert.IsTrue(mm.TryLock("key1", 200, TimeUnit.Milliseconds));
+            Assert.IsTrue(_mm.TryLock("key1", 200, TimeUnit.Milliseconds));
             var latch = new CountdownEvent(1);
-            var t = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
                 try
                 {
-                    if (!mm.TryLock("key1", 200, TimeUnit.Milliseconds))
+                    if (!_mm.TryLock("key1", 200, TimeUnit.Milliseconds))
                     {
                         latch.Signal();
                     }
@@ -254,19 +243,16 @@ namespace Hazelcast.Client.Test
                 {
                 }
             });
-            t.Start();
-
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
-            Assert.IsTrue(mm.IsLocked("key1"));
-
+            Assert.IsTrue(_mm.IsLocked("key1"));
 
             var latch2 = new CountdownEvent(1);
-            var t2 = new Thread(delegate(object o)
+            var t2 = Task.Run(() =>
             {
                 try
                 {
-                    if (mm.TryLock("key1", 20, TimeUnit.Seconds))
+                    if (_mm.TryLock("key1", 20, TimeUnit.Seconds))
                     {
                         latch2.Signal();
                     }
@@ -275,15 +261,13 @@ namespace Hazelcast.Client.Test
                 {
                 }
             });
-            t2.Start();
 
             Thread.Sleep(100);
-            mm.Unlock("key1");
-
+            _mm.Unlock("key1");
 
             Assert.IsTrue(latch2.Wait(TimeSpan.FromSeconds(10)));
-            Assert.IsTrue(mm.IsLocked("key1"));
-            mm.ForceUnlock("key1");
+            Assert.IsTrue(_mm.IsLocked("key1"));
+            _mm.ForceUnlock("key1");
         }
     }
 }

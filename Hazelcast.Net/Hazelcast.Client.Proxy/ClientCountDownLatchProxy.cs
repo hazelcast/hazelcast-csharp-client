@@ -20,9 +20,9 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Client.Proxy
 {
-    internal class ClientCountDownLatchProxy : ClientProxy, ICountDownLatch
+    class ClientCountDownLatchProxy : ClientProxy, ICountDownLatch
     {
-        private volatile IData _key;
+        volatile IData _key;
 
         public ClientCountDownLatchProxy(string serviceName, string objectId) : base(serviceName, objectId)
         {
@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Proxy
             return Invoke(request, GetKey());
         }
 
-        private IData GetKey()
+        IData GetKey()
         {
             if (_key == null)
             {
@@ -70,7 +70,7 @@ namespace Hazelcast.Client.Proxy
             return _key;
         }
 
-        private long GetTimeInMillis(long time, TimeUnit timeunit)
+        static long GetTimeInMillis(long time, TimeUnit timeunit)
         {
             return timeunit.ToMillis(time);
         }

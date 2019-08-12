@@ -14,16 +14,13 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
-    internal class ClientDistributedObjectTest : SingleMemberBaseTest
+    public class ClientDistributedObjectTest : SingleMemberBaseTest
     {
         [TearDown]
         public void TearDown()
@@ -41,7 +38,7 @@ namespace Hazelcast.Client.Test
             var destroyedLatch = new CountdownEvent(1);
             var regId = Client.AddDistributedObjectListener(
                 new DistributedObjectListener(createdLatch, destroyedLatch));
-            Assert.IsNotNull(regId, "regisrationId");
+            Assert.IsNotNull(regId, "registrationId");
 
             var name = TestSupport.RandomString();
             var topic = Client.GetTopic<object>(name);
@@ -58,7 +55,7 @@ namespace Hazelcast.Client.Test
         {
             var listener = new DistributedObjectListenerWithAssert();
             var regId = Client.AddDistributedObjectListener(listener);
-            Assert.IsNotNull(regId, "regisrationId");
+            Assert.IsNotNull(regId, "registrationId");
             var client2 = CreateClient();
             client2.GetMap<string, int>(TestSupport.RandomString());
 
@@ -68,7 +65,7 @@ namespace Hazelcast.Client.Test
             Assert.True(distributedObjectEvent.GetDistributedObject() is IMap<object, object>);
 
             var distributedObject = distributedObjectEvent.GetDistributedObject<IMap<string, int>>();
-            Assert.True(distributedObject is IMap<string, int>);
+            Assert.NotNull(distributedObject);
             Assert.NotNull(distributedObjectEvent.GetObjectName());
             Assert.AreEqual(ServiceNames.Map, distributedObjectEvent.GetServiceName());
         }
@@ -92,7 +89,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestGetDistributedObjectsFromAnotherClient()
         {
-            String mapName = TestSupport.RandomString();
+            var mapName = TestSupport.RandomString();
             var map = Client.GetMap<int, int>(mapName);
             Client.GetTopic<int>(TestSupport.RandomString());
             Client.GetSemaphore(TestSupport.RandomString());
@@ -106,14 +103,13 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(1, map2.Get(1));
         }
 
-
         [Test]
         public void TestProxyManager_getOrCreate_Assignable()
         {
             var distributedObject = Client.GetDistributedObject<IDistributedObject>(ServiceNames.Map, "testNameId");
             var map = Client.GetDistributedObject<IMap<string, long>>(ServiceNames.Map, "testNameId");
             Assert.NotNull(distributedObject);
-            Assert.True(map is IMap<string, long>);
+            Assert.NotNull(map);
         }
 
         [Test]
@@ -131,10 +127,10 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        private class DistributedObjectListener : IDistributedObjectListener
+        class DistributedObjectListener : IDistributedObjectListener
         {
-            private readonly CountdownEvent _createdLatch;
-            private readonly CountdownEvent _destroyedLatch;
+            readonly CountdownEvent _createdLatch;
+            readonly CountdownEvent _destroyedLatch;
 
             public DistributedObjectListener(CountdownEvent createdLatch, CountdownEvent destroyedLatch)
             {
@@ -153,22 +149,17 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        private class DistributedObjectListenerWithAssert : IDistributedObjectListener
+        class DistributedObjectListenerWithAssert : IDistributedObjectListener
         {
-            private readonly BlockingCollection<DistributedObjectEvent> events = new BlockingCollection<DistributedObjectEvent>();
+            public BlockingCollection<DistributedObjectEvent> Events { get; } = new BlockingCollection<DistributedObjectEvent>();
 
             public void DistributedObjectCreated(DistributedObjectEvent distributedObjectEvent)
             {
-                events.Add(distributedObjectEvent);
+                Events.Add(distributedObjectEvent);
             }
 
             public void DistributedObjectDestroyed(DistributedObjectEvent @event)
             {
-            }
-
-            public BlockingCollection<DistributedObjectEvent> Events
-            {
-                get { return events; }
             }
         }
     }

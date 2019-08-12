@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
     [Category("3.10")]
     public class ClientPNCounterNoDataMemberTest : MultiMemberBaseTest
     {
-        private ClientPNCounterProxy _pnCounter;
+        ClientPNCounterProxy _pnCounter;
 
         [SetUp]
         public void Setup()
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Test
             Assert.Throws<NoDataMemberInClusterException>(Mutate);
         }
 
-        private void Mutate()
+        void Mutate()
         {
             _pnCounter.AddAndGet(5);
         }

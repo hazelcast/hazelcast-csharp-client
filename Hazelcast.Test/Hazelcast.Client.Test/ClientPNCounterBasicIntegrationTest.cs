@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void SimpleReplicationTest()
         {
-            var counterName = "counter";
+            const string counterName = "counter";
             var counter1 = Client.GetPNCounter(counterName);
             var counter2 = Client.GetPNCounter(counterName);
 
@@ -34,7 +34,7 @@ namespace Hazelcast.Client.Test
             AssertCounterValueEventually(5L, counter2);
         }
 
-        private void AssertCounterValueEventually(long expectedValue, IPNCounter counter)
+        void AssertCounterValueEventually(long expectedValue, IPNCounter counter)
         {
             TestSupport.AssertTrueEventually(() => { Assert.AreEqual(expectedValue, counter.Get()); });
         }

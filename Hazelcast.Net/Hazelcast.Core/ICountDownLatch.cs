@@ -14,6 +14,7 @@
 
 namespace Hazelcast.Core
 {
+    // TODO: missing async API
     /// <summary>
     ///     ICountDownLatch is a backed-up distributed alternative to the
     ///     .

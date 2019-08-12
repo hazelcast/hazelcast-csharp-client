@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Linq;
 using System.Threading;
 using Hazelcast.Client.Proxy;
@@ -27,8 +28,8 @@ namespace Hazelcast.Client.Test
     [Category("3.10")]
     public class ClientPNCounterConsistencyLossTest : MultiMemberBaseNoSetupTest
     {
-        private readonly string _type;
-        private ClientPNCounterProxy _pnCounter;
+        readonly string _type;
+        ClientPNCounterProxy _pnCounter;
 
         public ClientPNCounterConsistencyLossTest(string type)
         {
@@ -97,7 +98,7 @@ namespace Hazelcast.Client.Test
             Assert.Throws<ConsistencyLostException>(Mutation);
         }
 
-        private void Mutation()
+        void Mutation()
         {
             switch (_type)
             {
@@ -108,10 +109,12 @@ namespace Hazelcast.Client.Test
                 case "Get":
                     _pnCounter.Get();
                     break;
+                default:
+                    throw new NotImplementedException($"The case '{_type}' has not been implemented.");
             }
         }
 
-        private void TerminateTargetReplicaMember()
+        void TerminateTargetReplicaMember()
         {
             // Shutdown "primary" member
             var allMembers = Client.GetCluster().GetMembers();

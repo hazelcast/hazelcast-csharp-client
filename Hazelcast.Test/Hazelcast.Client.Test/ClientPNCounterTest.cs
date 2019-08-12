@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Test
     [Category("3.10")]
     public class ClientPNCounterTest : SingleMemberBaseTest
     {
-        private ClientPNCounterProxy _pnCounter;
+        ClientPNCounterProxy _pnCounter;
 
         [SetUp]
         public void Setup()

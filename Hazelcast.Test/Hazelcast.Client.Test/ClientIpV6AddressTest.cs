@@ -23,7 +23,7 @@ namespace Hazelcast.Client.Test
 {
     [TestFixture]
     [Ignore("IPv6 not configured")]
-    internal class ClientIpV6AddressTest : HazelcastTestSupport
+    public class ClientIpV6AddressTest : HazelcastTestSupport
     {
         [SetUp]
         public void Setup()
@@ -44,10 +44,10 @@ namespace Hazelcast.Client.Test
             StopRemoteController(_remoteController);
         }
 
-        private RemoteController.Client _remoteController;
-        private Cluster _cluster;
+        RemoteController.Client _remoteController;
+        Cluster _cluster;
 
-        private static void AssertClientWithAddress(string address)
+        static void AssertClientWithAddress(string address)
         {
             var client =
                 new HazelcastClientFactory().CreateClient(config => { config.GetNetworkConfig().AddAddress(address); });
@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Test
             map.Destroy();
         }
 
-        private static string GetLocalIpV6Address()
+        static string GetLocalIpV6Address()
         {
             var strHostName = Dns.GetHostName();
             var ipEntry = Dns.GetHostEntry(strHostName);

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Test;
@@ -25,10 +24,7 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientHeartBeatTestForListener : MultiMemberBaseTest
     {
-        protected override string GetServerConfig()
-        {
-            return Resources.hazelcast_hb;
-        }
+        protected override string GetServerConfig() => Resources.hazelcast_hb;
 
         [OneTimeTearDown]
         public void RestoreEnvironmentVariables()

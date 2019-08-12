@@ -25,9 +25,9 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientPartitionTest : HazelcastTestSupport
     {
-        private RemoteController.Client _remoteController;
-        private Cluster _cluster;
-        private IHazelcastInstance _client;
+        RemoteController.Client _remoteController;
+        Cluster _cluster;
+        IHazelcastInstance _client;
 
         [SetUp]
         public void Setup()
@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Test
             config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
         }
 
-        private static HashSet<Address> GetPartitionOwners(int partitionCount, IClientPartitionService partitionService)
+        static HashSet<Address> GetPartitionOwners(int partitionCount, IClientPartitionService partitionService)
         {
             var partitionOwners = new HashSet<Address>();
             for (var i = 0; i < partitionCount; i++)

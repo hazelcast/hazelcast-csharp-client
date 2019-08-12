@@ -34,13 +34,13 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            map = Client.GetMap<object, object>(TestSupport.RandomString());
+            _map = Client.GetMap<object, object>(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            map.Clear();
+            _map.Clear();
         }
 
         protected override void ConfigureClient(ClientConfig config)
@@ -51,13 +51,13 @@ namespace Hazelcast.Client.Test
                 .AddDataSerializableFactory(IdentifiedFactory.FactoryId, new IdentifiedFactory());
         }
 
-        internal static IMap<object, object> map;
+        IMap<object, object> _map;
 
-        static void FillMap()
+        void FillMap()
         {
             for (var i = 0; i < 10; i++)
             {
-                map.Put("key" + i, "value" + i);
+                _map.Put("key" + i, "value" + i);
             }
         }
 
@@ -88,15 +88,8 @@ namespace Hazelcast.Client.Test
             {
             }
 
-            public int GetFactoryId()
-            {
-                return 1;
-            }
-
-            public int GetId()
-            {
-                return 0;
-            }
+            public int GetFactoryId() => 1;
+            public int GetId() => 0;
 
             public void ReadData(IObjectDataInput input)
             {
@@ -134,95 +127,93 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestAddIndex()
+        public void AddIndex()
         {
-            map.AddIndex("name", true);
+            _map.AddIndex("name", true);
         }
 
         [Ignore("not currently possible to test this")]
         [Test]
-        public void TestAddInterceptor()
+        public void AddInterceptor()
         {
             Assert.Throws<HazelcastException>(() =>
             {
                 //TODO: not currently possible to test this
 
-                var id = map.AddInterceptor(new Interceptor());
+                var id = _map.AddInterceptor(new Interceptor());
             });
         }
 
         [Test]
-        public async Task TestAsyncGet()
+        public async Task AsyncGet()
         {
             FillMap();
-            var value = await map.GetAsync("key1");
+            var value = await _map.GetAsync("key1");
 
             Assert.AreEqual("value1", value);
         }
 
         [Test]
-        public async Task TestAsyncPut()
+        public async Task AsyncPut()
         {
             FillMap();
-            var o = await map.PutAsync("key3", "value");
+            var o = await _map.PutAsync("key3", "value");
 
             Assert.AreEqual("value3", o);
-            Assert.AreEqual("value", map.Get("key3"));
+            Assert.AreEqual("value", _map.Get("key3"));
         }
 
         [Test]
-        public async Task TestAsyncPutWithTtl()
+        public async Task AsyncPutWithTtl()
         {
             var latch = new SemaphoreSlim(0);
 
-            map.AddEntryListener(new EntryAdapter<object, object>(
+            _map.AddEntryListener(new EntryAdapter<object, object>(
                 delegate { },
                 delegate { },
                 delegate { },
                 delegate { latch.Release(); }
             ), true);
 
-            await map.PutAsync("key", "value1", 1, TimeUnit.Seconds);
+            await _map.PutAsync("key", "value1", 1, TimeUnit.Seconds);
 
-            var actual = await map.GetAsync("key");
+            var actual = await _map.GetAsync("key");
             Assert.AreEqual("value1", actual);
 
             Assert.IsTrue(await latch.WaitAsync(TimeSpan.FromSeconds(10)));
 
             // TODO: consider async Get
-            TestSupport.AssertTrueEventually(() => { Assert.IsNull(map.Get("key")); });
+            TestSupport.AssertTrueEventually(() => { Assert.IsNull(_map.Get("key")); });
         }
 
         [Test]
-        public async Task TestAsyncRemove()
+        public async Task AsyncRemove()
         {
             FillMap();
-            var f = map.RemoveAsync("key4");
-            Assert.False(f.IsCompleted);
+            var o = await _map.RemoveAsync("key4");
 
-            var o = f.Result;
             Assert.AreEqual("value4", o);
-            Assert.AreEqual(9, map.Size());
+            Assert.AreEqual(9, _map.Size());
         }
 
         [Test]
-        public void TestContains()
+        public void Contains()
         {
             FillMap();
-            Assert.IsFalse(map.ContainsKey("key10"));
-            Assert.IsTrue(map.ContainsKey("key1"));
-            Assert.IsFalse(map.ContainsValue("value10"));
-            Assert.IsTrue(map.ContainsValue("value1"));
+            Assert.IsFalse(_map.ContainsKey("key10"));
+            Assert.IsTrue(_map.ContainsKey("key1"));
+            Assert.IsFalse(_map.ContainsValue("value10"));
+            Assert.IsTrue(_map.ContainsValue("value1"));
         }
 
         [Test]
-        public void TestEntrySet()
+        public void EntrySet()
         {
-            map.Put("key1", "value1");
-            map.Put("key2", "value2");
-            map.Put("key3", "value3");
+            _map.Put("key1", "value1");
+            _map.Put("key2", "value2");
+            _map.Put("key3", "value3");
 
-            var keyValuePairs = map.EntrySet();
+            var keyValuePairs = _map.EntrySet();
 
             IDictionary<object, object> tempDict = new Dictionary<object, object>();
             foreach (var keyValuePair in keyValuePairs)
@@ -245,13 +236,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestEntrySetPredicate()
+        public void EntrySetPredicate()
         {
-            map.Put("key1", "value1");
-            map.Put("key2", "value2");
-            map.Put("key3", "value3");
+            _map.Put("key1", "value1");
+            _map.Put("key2", "value2");
+            _map.Put("key3", "value3");
 
-            var keyValuePairs = map.EntrySet(new SqlPredicate("this == value1"));
+            var keyValuePairs = _map.EntrySet(new SqlPredicate("this == value1"));
             Assert.AreEqual(1, keyValuePairs.Count);
 
             var kvp = keyValuePairs.First();
@@ -260,14 +251,14 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestEntryView()
+        public void EntryView()
         {
             var item = ItemGenerator.GenerateItem(1);
-            map.Put("key1", item);
-            map.Get("key1");
-            map.Get("key1");
+            _map.Put("key1", item);
+            _map.Get("key1");
+            _map.Get("key1");
 
-            var entryView = map.GetEntryView("key1");
+            var entryView = _map.GetEntryView("key1");
             var value = entryView.GetValue() as Item;
 
             Assert.AreEqual("key1", entryView.GetKey());
@@ -281,47 +272,47 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestEvict()
         {
-            map.Put("key1", "value1");
-            Assert.AreEqual("value1", map.Get("key1"));
+            _map.Put("key1", "value1");
+            Assert.AreEqual("value1", _map.Get("key1"));
 
-            map.Evict("key1");
+            _map.Evict("key1");
 
-            Assert.AreEqual(0, map.Size());
-            Assert.AreNotEqual("value1", map.Get("key1"));
+            Assert.AreEqual(0, _map.Size());
+            Assert.AreNotEqual("value1", _map.Get("key1"));
         }
 
         [Test]
-        public void TestEvictAll()
+        public void EvictAll()
         {
-            map.Put("key1", "value1");
-            map.Put("key2", "value2");
-            map.Put("key3", "value3");
+            _map.Put("key1", "value1");
+            _map.Put("key2", "value2");
+            _map.Put("key3", "value3");
 
-            Assert.AreEqual(3, map.Size());
+            Assert.AreEqual(3, _map.Size());
 
-            map.Lock("key3");
-            map.EvictAll();
+            _map.Lock("key3");
+            _map.EvictAll();
 
-            Assert.AreEqual(1, map.Size());
-            Assert.AreEqual("value3", map.Get("key3"));
+            Assert.AreEqual(1, _map.Size());
+            Assert.AreEqual("value3", _map.Get("key3"));
         }
 
         [Test]
-        public void TestFlush()
+        public void Flush()
         {
-            map.Flush();
+            _map.Flush();
         }
 
         [Test]
-        public void TestExecuteOnKey()
+        public void ExecuteOnKey()
         {
             FillMap();
             const string key = "key1";
             const string value = "value10";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            var result = map.ExecuteOnKey(key, entryProcessor);
+            var result = _map.ExecuteOnKey(key, entryProcessor);
             Assert.AreEqual(result, value);
-            Assert.AreEqual(result, map.Get(key));
+            Assert.AreEqual(result, _map.Get(key));
         }
 
         [Test]
@@ -333,153 +324,143 @@ namespace Hazelcast.Client.Test
                 const string key = null;
                 const string value = "value10";
                 var entryProcessor = new IdentifiedEntryProcessor(value);
-                map.ExecuteOnKey(key, entryProcessor);
+                _map.ExecuteOnKey(key, entryProcessor);
             });
         }
 
         [Test]
-        public void TestExecuteOnKeys()
+        public void ExecuteOnKeys()
         {
             FillMap();
             var keys = new HashSet<object> { "key1", "key5" };
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            var result = map.ExecuteOnKeys(keys, entryProcessor);
-            foreach (var resultKV in result)
+            var result = _map.ExecuteOnKeys(keys, entryProcessor);
+            foreach (var kvp in result)
             {
-                Assert.AreEqual(resultKV.Value, value);
-                Assert.AreEqual(value, map.Get(resultKV.Key));
+                Assert.AreEqual(kvp.Value, value);
+                Assert.AreEqual(value, _map.Get(kvp.Key));
             }
         }
 
         [Test]
-        public void TestExecuteOnKeys_keysNotNull()
+        public void ExecuteOnKeys_keysNotNull()
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
                 FillMap();
                 const string value = "valueX";
                 var entryProcessor = new IdentifiedEntryProcessor(value);
-                map.ExecuteOnKeys(null, entryProcessor);
+                _map.ExecuteOnKeys(null, entryProcessor);
             });
         }
 
         [Test]
-        public void TestExecuteOnKeys_keysEmpty()
+        public void ExecuteOnKeys_keysEmpty()
         {
             FillMap();
             var keys = new HashSet<object>();
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            var result = map.ExecuteOnKeys(keys, entryProcessor);
+            var result = _map.ExecuteOnKeys(keys, entryProcessor);
             Assert.AreEqual(result.Count, 0);
         }
 
         [Test]
-        public void TestExecuteOnEntries()
+        public void ExecuteOnEntries()
         {
             FillMap();
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            var result = map.ExecuteOnEntries(entryProcessor);
+            var result = _map.ExecuteOnEntries(entryProcessor);
             foreach (var kvp in result)
             {
                 Assert.AreEqual(value, kvp.Value);
-                Assert.AreEqual(value, map.Get(kvp.Key));
+                Assert.AreEqual(value, _map.Get(kvp.Key));
             }
         }
 
         [Test]
-        public void TestExecuteOnEntriesWithPredicate()
+        public void ExecuteOnEntriesWithPredicate()
         {
             FillMap();
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            var result = map.ExecuteOnEntries(entryProcessor, Predicates.Sql("this == value5"));
+            var result = _map.ExecuteOnEntries(entryProcessor, Predicates.Sql("this == value5"));
             Assert.AreEqual(result.Count, 1);
             foreach (var kvp in result)
             {
                 Assert.AreEqual(value, kvp.Value);
-                Assert.AreEqual(value, map.Get(kvp.Key));
+                Assert.AreEqual(value, _map.Get(kvp.Key));
             }
         }
 
         [Test]
-        public async Task TestSubmitToKey()
+        public async Task SubmitToKey()
         {
             FillMap();
             const string key = "key1";
             const string value = "value10";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            var result = await map.SubmitToKey(key, entryProcessor);
+            var result = await _map.SubmitToKey(key, entryProcessor);
             Assert.AreEqual(value, result);
-            Assert.AreEqual(map.Get(key), result);
+            Assert.AreEqual(_map.Get(key), result);
         }
 
         [Test]
-        public async Task TestSubmitToKey_nullKey()
+        public async Task SubmitToKey_NullKey()
         {
-            ArgumentNullException ex = null;
-
             const string key = null;
             const string value = "value10";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            try
-            {
-                await map.SubmitToKey(key, entryProcessor);
-            }
-            catch (ArgumentNullException e)
-            {
-                ex = e;
-            }
-
-            Assert.NotNull(ex, "Should have thrown an exception");
+            
+            Assert.IsTrue(await ThrowsAsync<ArgumentNullException>(_map.SubmitToKey(key, entryProcessor)), "Should have thrown an exception");
         }
 
         [Test]
-        public async Task TestForceUnlock()
+        public async Task ForceUnlock()
         {
-            map.Lock("key1");
+            _map.Lock("key1");
             var sem = new SemaphoreSlim(0);
 
             var t = Task.Run(() =>
             {
-                map.ForceUnlock("key1");
+                _map.ForceUnlock("key1");
                 sem.Release();
             });
 
             Assert.IsTrue(await sem.WaitAsync(TimeSpan.FromSeconds(100)));
-            Assert.IsFalse(map.IsLocked("key1"));
+            Assert.IsFalse(_map.IsLocked("key1"));
         }
 
         [Test]
-        public void TestGet()
+        public void Get()
         {
             FillMap();
             for (var i = 0; i < 10; i++)
             {
-                var o = map.Get("key" + i);
+                var o = _map.Get("key" + i);
                 Assert.AreEqual("value" + i, o);
             }
         }
 
         [Test, Repeat(100)]
-        public void TestGetAllExtreme()
+        public void GetAllExtreme()
         {
             var mm = new Dictionary<object, object>();
-            const int keycount = 1000;
+            const int count = 1000;
 
             //insert dummy keys and values 
-            foreach (var itemIndex in Enumerable.Range(0, keycount))
+            foreach (var itemIndex in Enumerable.Range(0, count))
             {
                 mm.Add(itemIndex.ToString(), itemIndex.ToString());
             }
 
-            map.PutAll(mm);
-            Assert.AreEqual(map.Size(), keycount);
+            _map.PutAll(mm);
+            Assert.AreEqual(_map.Size(), count);
 
-            var dictionary = map.GetAll(mm.Keys);
-            Assert.AreEqual(keycount, dictionary.Count);
+            var dictionary = _map.GetAll(mm.Keys);
+            Assert.AreEqual(count, dictionary.Count);
             foreach (var pair in dictionary)
             {
                 Assert.AreEqual(mm[pair.Key], pair.Value);
@@ -487,22 +468,22 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestGetAllPutAll()
+        public void GetAllPutAll()
         {
             var mm = new Dictionary<object, object>();
             for (var i = 0; i < 100; i++)
             {
                 mm.Add(i, i);
             }
-            map.PutAll(mm);
-            Assert.AreEqual(map.Size(), 100);
+            _map.PutAll(mm);
+            Assert.AreEqual(_map.Size(), 100);
             for (var j = 0; j < 100; j++)
             {
-                Assert.AreEqual(map.Get(j), j);
+                Assert.AreEqual(_map.Get(j), j);
             }
             var ss = new HashSet<object> { 1, 3 };
 
-            var m2 = map.GetAll(ss);
+            var m2 = _map.GetAll(ss);
             Assert.AreEqual(m2.Count, 2);
 
             m2.TryGetValue(1, out var gv);
@@ -513,13 +494,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestGetEntryView()
+        public void GetEntryView()
         {
-            map.Put("item0", "value0");
-            map.Put("item1", "value1");
-            map.Put("item2", "value2");
+            _map.Put("item0", "value0");
+            _map.Put("item1", "value1");
+            _map.Put("item2", "value2");
 
-            var entryView = map.GetEntryView("item1");
+            var entryView = _map.GetEntryView("item1");
 
             Assert.AreEqual(0, entryView.GetHits());
 
@@ -528,38 +509,37 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestIsEmpty()
+        public void IsEmpty()
         {
-            Assert.IsTrue(map.IsEmpty());
-            map.Put("key1", "value1");
-            Assert.IsFalse(map.IsEmpty());
+            Assert.IsTrue(_map.IsEmpty());
+            _map.Put("key1", "value1");
+            Assert.IsFalse(_map.IsEmpty());
         }
 
         [Test]
-        public void TestKeySet()
+        public void KeySet()
         {
-            map.Put("key1", "value1");
+            _map.Put("key1", "value1");
 
-            var keySet = map.KeySet();
+            var keySet = _map.KeySet();
 
             var value = keySet.First();
             Assert.AreEqual("key1", value);
         }
 
         [Test]
-        public void TestKeySetPredicate()
+        public void KeySetPredicate()
         {
             FillMap();
 
-            var values = map.KeySet(new SqlPredicate("this == value1"));
+            var values = _map.KeySet(new SqlPredicate("this == value1"));
             Assert.AreEqual(1, values.Count);
-            
+
             Assert.AreEqual("key1", values.First());
         }
 
-        // TODO: review forward
         [Test]
-        public void TestListener()
+        public void Listener()
         {
             var latch1Add = new CountdownEvent(5);
             var latch1Remove = new CountdownEvent(2);
@@ -577,62 +557,62 @@ namespace Hazelcast.Client.Test
                 delegate { },
                 delegate { });
 
-            var reg1 = map.AddEntryListener(listener1, false);
-            var reg2 = map.AddEntryListener(listener2, "key3", true);
+            var reg1 = _map.AddEntryListener(listener1, false);
+            var reg2 = _map.AddEntryListener(listener2, "key3", true);
 
 
-            map.Put("key1", "value1");
-            map.Put("key2", "value2");
-            map.Put("key3", "value3");
-            map.Put("key4", "value4");
-            map.Put("key5", "value5");
-            map.Remove("key1");
-            map.Remove("key3");
+            _map.Put("key1", "value1");
+            _map.Put("key2", "value2");
+            _map.Put("key3", "value3");
+            _map.Put("key4", "value4");
+            _map.Put("key5", "value5");
+            _map.Remove("key1");
+            _map.Remove("key3");
 
             Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch2Add.Wait(TimeSpan.FromSeconds(5)));
             Assert.IsTrue(latch2Remove.Wait(TimeSpan.FromSeconds(5)));
 
-            Assert.IsTrue(map.RemoveEntryListener(reg1));
-            Assert.IsTrue(map.RemoveEntryListener(reg2));
+            Assert.IsTrue(_map.RemoveEntryListener(reg1));
+            Assert.IsTrue(_map.RemoveEntryListener(reg2));
         }
 
         [Test]
-        public void TestListener_SingleEventListeners()
+        public void Listener_SingleEventListeners()
         {
             var listener = new ListenerImpl<object, object>();
-            var reg1 = map.AddEntryListener(listener, false);
+            var reg1 = _map.AddEntryListener(listener, false);
 
-            map.Put("key1", "value1");
+            _map.Put("key1", "value1");
             Assert.IsTrue(listener.GetLatch(EntryEventType.Added).WaitOne(TimeSpan.FromSeconds(10)));
 
-            map.Put("key1", "value2");
+            _map.Put("key1", "value2");
             Assert.IsTrue(listener.GetLatch(EntryEventType.Updated).WaitOne(TimeSpan.FromSeconds(10)));
 
-            map.Remove("key1");
+            _map.Remove("key1");
             Assert.IsTrue(listener.GetLatch(EntryEventType.Removed).WaitOne(TimeSpan.FromSeconds(10)));
 
-            map.Put("key1", "value2");
-            map.Clear();
+            _map.Put("key1", "value2");
+            _map.Clear();
             Assert.IsTrue(listener.GetLatch(EntryEventType.ClearAll).WaitOne(TimeSpan.FromSeconds(10)));
 
-            map.Put("key1", "value2");
-            map.EvictAll();
+            _map.Put("key1", "value2");
+            _map.EvictAll();
             Assert.IsTrue(listener.GetLatch(EntryEventType.EvictAll).WaitOne(TimeSpan.FromSeconds(10)));
 
-            map.Put("key2", "value2");
-            map.Evict("key2");
+            _map.Put("key2", "value2");
+            _map.Evict("key2");
             Assert.IsTrue(listener.GetLatch(EntryEventType.Evicted).WaitOne(TimeSpan.FromSeconds(10)));
 
-            map.Put("key3", "value2", 1L, TimeUnit.Seconds);
+            _map.Put("key3", "value2", 1L, TimeUnit.Seconds);
             Assert.IsTrue(listener.GetLatch(EntryEventType.Expired).WaitOne(TimeSpan.FromSeconds(10)));
 
-            Assert.IsTrue(map.RemoveEntryListener(reg1));
+            Assert.IsTrue(_map.RemoveEntryListener(reg1));
         }
 
         [Test]
-        public void TestListenerClearAll()
+        public void ListenerClearAll()
         {
             var latchClearAll = new CountdownEvent(1);
 
@@ -644,17 +624,17 @@ namespace Hazelcast.Client.Test
                 delegate { },
                 delegate { latchClearAll.Signal(); });
 
-            var reg1 = map.AddEntryListener(listener1, false);
+            var reg1 = _map.AddEntryListener(listener1, false);
 
-            map.Put("key1", "value1");
+            _map.Put("key1", "value1");
 
-            map.Clear();
+            _map.Clear();
 
             Assert.IsTrue(latchClearAll.Wait(TimeSpan.FromSeconds(15)));
         }
 
         [Test]
-        public void TestListenerEventOrder()
+        public void ListenerEventOrder()
         {
             const int maxSize = 10000;
             var map2 = Client.GetMap<int, int>(TestSupport.RandomString());
@@ -690,7 +670,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerExtreme()
+        public void ListenerExtreme()
         {
             const int TestItemCount = 1 * 1000;
             var latch = new CountdownEvent(TestItemCount);
@@ -702,19 +682,19 @@ namespace Hazelcast.Client.Test
 
             for (var i = 0; i < TestItemCount; i++)
             {
-                map.Put("key" + i, new[] { byte.MaxValue });
+                _map.Put("key" + i, new[] { byte.MaxValue });
             }
 
-            Assert.AreEqual(map.Size(), TestItemCount);
+            Assert.AreEqual(_map.Size(), TestItemCount);
 
             for (var i = 0; i < TestItemCount; i++)
             {
-                map.AddEntryListener(listener, "key" + i, false);
+                _map.AddEntryListener(listener, "key" + i, false);
             }
 
             for (var i = 0; i < TestItemCount; i++)
             {
-                var o = map.RemoveAsync("key" + i).Result;
+                var o = _map.RemoveAsync("key" + i).Result;
             }
 
             latch.Wait(TimeSpan.FromSeconds(10));
@@ -735,7 +715,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerPredicate()
+        public void ListenerPredicate()
         {
             var latch1Add = new CountdownEvent(1);
             var latch1Remove = new CountdownEvent(1);
@@ -753,17 +733,17 @@ namespace Hazelcast.Client.Test
                 delegate { },
                 delegate { });
 
-            map.AddEntryListener(listener1, new SqlPredicate("this == value1"), false);
-            map.AddEntryListener(listener2, new SqlPredicate("this == value3"), "key3", true);
+            _map.AddEntryListener(listener1, new SqlPredicate("this == value1"), false);
+            _map.AddEntryListener(listener2, new SqlPredicate("this == value3"), "key3", true);
 
-            map.Put("key1", "value1");
-            map.Put("key2", "value2");
-            map.Put("key3", "value3");
-            map.Put("key4", "value4");
-            map.Put("key5", "value5");
+            _map.Put("key1", "value1");
+            _map.Put("key2", "value2");
+            _map.Put("key3", "value3");
+            _map.Put("key4", "value4");
+            _map.Put("key5", "value5");
 
-            map.Remove("key1");
-            map.Remove("key3");
+            _map.Remove("key1");
+            _map.Remove("key3");
 
             Assert.IsTrue(latch1Add.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsTrue(latch1Remove.Wait(TimeSpan.FromSeconds(10)));
@@ -772,7 +752,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerRemove()
+        public void ListenerRemove()
         {
             var latch1Add = new CountdownEvent(1);
             var listener1 = new EntryAdapter<object, object>(
@@ -781,71 +761,70 @@ namespace Hazelcast.Client.Test
                 delegate { },
                 delegate { });
 
-            var reg1 = map.AddEntryListener(listener1, false);
+            var reg1 = _map.AddEntryListener(listener1, false);
 
-            Assert.IsTrue(map.RemoveEntryListener(reg1));
+            Assert.IsTrue(_map.RemoveEntryListener(reg1));
 
-            map.Put("key1", "value1");
+            _map.Put("key1", "value1");
 
             Assert.IsFalse(latch1Add.Wait(TimeSpan.FromSeconds(1)));
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLock()
+        public void Lock()
         {
-            map.Put("key1", "value1");
-            Assert.AreEqual("value1", map.Get("key1"));
-            map.Lock("key1");
+            _map.Put("key1", "value1");
+            Assert.AreEqual("value1", _map.Get("key1"));
+            _map.Lock("key1");
             var latch = new CountdownEvent(1);
 
-            var t1 = new Thread(delegate (object o)
+            var t = Task.Run(() =>
             {
-                map.TryPut("key1", "value2", 1, TimeUnit.Seconds);
+                _map.TryPut("key1", "value2", 1, TimeUnit.Seconds);
                 latch.Signal();
             });
-            t1.Start();
+            
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
-            Assert.AreEqual("value1", map.Get("key1"));
-            map.ForceUnlock("key1");
+            Assert.AreEqual("value1", _map.Get("key1"));
+            _map.ForceUnlock("key1");
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLockTtl()
+        public void TestLockTtl()
         {
-            map.Put("key1", "value1");
-            Assert.AreEqual("value1", map.Get("key1"));
-            var leaseTime = 500;
-            map.Lock("key1", leaseTime, TimeUnit.Milliseconds);
+            _map.Put("key1", "value1");
+            Assert.AreEqual("value1", _map.Get("key1"));
+            const int leaseTime = 500;
+
+            _map.Lock("key1", leaseTime, TimeUnit.Milliseconds);
             var latch = new CountdownEvent(1);
-            var t1 = new Thread(delegate (object o)
+            var t = Task.Run(() =>
             {
-                map.TryPut("key1", "value2", 2000, TimeUnit.Milliseconds);
+                _map.TryPut("key1", "value2", 2000, TimeUnit.Milliseconds);
                 latch.Signal();
             });
-            t1.Start();
+            
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
-            Assert.IsFalse(map.IsLocked("key1"));
-            Assert.AreEqual("value2", map.Get("key1"));
-            map.ForceUnlock("key1");
+            Assert.IsFalse(_map.IsLocked("key1"));
+            Assert.AreEqual("value2", _map.Get("key1"));
+            _map.ForceUnlock("key1");
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLockTtl2()
+        public void LockTtl2()
         {
-            map.Lock("key1", 1, TimeUnit.Seconds);
+            _map.Lock("key1", 1, TimeUnit.Seconds);
             var latch = new CountdownEvent(2);
-            var t1 = new Thread(delegate (object o)
+
+            var t = Task.Run(() =>
             {
-                if (!map.TryLock("key1"))
+                if (!_map.TryLock("key1"))
                 {
                     latch.Signal();
                 }
                 try
                 {
-                    if (map.TryLock("key1", 2, TimeUnit.Seconds))
+                    if (_map.TryLock("key1", 2, TimeUnit.Seconds))
                     {
                         latch.Signal();
                     }
@@ -855,322 +834,307 @@ namespace Hazelcast.Client.Test
                 }
             });
 
-            t1.Start();
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
-            map.ForceUnlock("key1");
+            _map.ForceUnlock("key1");
         }
 
         [Test]
-        public virtual void TestPutBigData()
+        public void PutBigData()
         {
             const int dataSize = 128000;
             var largeString = string.Join(",", Enumerable.Range(0, dataSize));
 
-            map.Put("large_value", largeString);
-            Assert.AreEqual(map.Size(), 1);
+            _map.Put("large_value", largeString);
+            Assert.AreEqual(_map.Size(), 1);
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestPutIfAbsent()
+        public void PutIfAbsent()
         {
-            Assert.IsNull(map.PutIfAbsent("key1", "value1"));
-            Assert.AreEqual("value1", map.PutIfAbsent("key1", "value3"));
+            Assert.IsNull(_map.PutIfAbsent("key1", "value1"));
+            Assert.AreEqual("value1", _map.PutIfAbsent("key1", "value3"));
         }
 
         [Test]
-        public void TestPutIfAbsentNewValueTTL_whenKeyPresent()
+        public void PutIfAbsentNewValueTTL_whenKeyPresent()
         {
             object key = "Key";
             object value = "Value";
             object newValue = "newValue";
 
-            map.Put(key, value);
-            var result = map.PutIfAbsent(key, newValue, 5, TimeUnit.Minutes);
+            _map.Put(key, value);
+            var result = _map.PutIfAbsent(key, newValue, 5, TimeUnit.Minutes);
 
             Assert.AreEqual(value, result);
-            Assert.AreEqual(value, map.Get(key));
+            Assert.AreEqual(value, _map.Get(key));
         }
 
         [Test]
-        public void TestPutIfAbsentTtl()
+        public void PutIfAbsentTtl()
         {
             object key = "Key";
             object value = "Value";
 
-            var result = map.PutIfAbsent(key, value, 5, TimeUnit.Minutes);
+            var result = _map.PutIfAbsent(key, value, 5, TimeUnit.Minutes);
 
             Assert.AreEqual(null, result);
-            Assert.AreEqual(value, map.Get(key));
+            Assert.AreEqual(value, _map.Get(key));
         }
 
         [Test]
-        public void TestPutIfAbsentTTL_whenExpire()
+        public void PutIfAbsentTTL_whenExpire()
         {
             object key = "Key";
             object value = "Value";
 
-            var ttl = 100;
-            var result = map.PutIfAbsent(key, value, ttl, TimeUnit.Milliseconds);
+            const int ttl = 100;
+            var result = _map.PutIfAbsent(key, value, ttl, TimeUnit.Milliseconds);
 
             TestSupport.AssertTrueEventually(() =>
             {
                 Assert.AreEqual(null, result);
-                Assert.AreEqual(null, map.Get(key));
+                Assert.AreEqual(null, _map.Get(key));
             });
         }
 
         [Test]
-        public void TestPutIfAbsentTTL_whenKeyPresent()
+        public void PutIfAbsentTTL_whenKeyPresent()
         {
             object key = "Key";
             object value = "Value";
 
-            map.Put(key, value);
-            var result = map.PutIfAbsent(key, value, 5, TimeUnit.Minutes);
+            _map.Put(key, value);
+            var result = _map.PutIfAbsent(key, value, 5, TimeUnit.Minutes);
 
             Assert.AreEqual(value, result);
-            Assert.AreEqual(value, map.Get(key));
+            Assert.AreEqual(value, _map.Get(key));
         }
 
         [Test]
-        public void TestPutIfAbsentTTL_whenKeyPresentAfterExpire()
+        public void PutIfAbsentTTL_whenKeyPresentAfterExpire()
         {
             object key = "Key";
             object value = "Value";
 
-            map.Put(key, value);
-            var result = map.PutIfAbsent(key, value, 1, TimeUnit.Seconds);
+            _map.Put(key, value);
+            var result = _map.PutIfAbsent(key, value, 1, TimeUnit.Seconds);
 
             Assert.AreEqual(value, result);
-            Assert.AreEqual(value, map.Get(key));
+            Assert.AreEqual(value, _map.Get(key));
         }
 
         [Test]
-        public virtual void TestPutTransient()
+        public void PutTransient()
         {
-            Assert.AreEqual(0, map.Size());
-            map.PutTransient("key1", "value1", 100, TimeUnit.Milliseconds);
-            Assert.AreEqual("value1", map.Get("key1"));
+            Assert.AreEqual(0, _map.Size());
+            _map.PutTransient("key1", "value1", 100, TimeUnit.Milliseconds);
+            Assert.AreEqual("value1", _map.Get("key1"));
 
-            TestSupport.AssertTrueEventually(() => { Assert.AreNotEqual("value1", map.Get("key1")); });
+            TestSupport.AssertTrueEventually(() => { Assert.AreNotEqual("value1", _map.Get("key1")); });
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestPutTtl()
+        public void TestPutTtl()
         {
-            var ttl = 100;
-            map.Put("key1", "value1", ttl, TimeUnit.Milliseconds);
-            Assert.IsNotNull(map.Get("key1"));
+            const int ttl = 100;
+            _map.Put("key1", "value1", ttl, TimeUnit.Milliseconds);
+            Assert.IsNotNull(_map.Get("key1"));
 
-            TestSupport.AssertTrueEventually(() => { Assert.IsNull(map.Get("key1")); });
+            TestSupport.AssertTrueEventually(() => { Assert.IsNull(_map.Get("key1")); });
         }
 
         [Test]
-        public virtual void TestRemoveAndDelete()
+        public void RemoveAndDelete()
         {
             FillMap();
-            Assert.IsNull(map.Remove("key10"));
-            map.Delete("key9");
-            Assert.AreEqual(9, map.Size());
+            Assert.IsNull(_map.Remove("key10"));
+            _map.Delete("key9");
+            Assert.AreEqual(9, _map.Size());
             for (var i = 0; i < 9; i++)
             {
-                var o = map.Remove("key" + i);
+                var o = _map.Remove("key" + i);
                 Assert.AreEqual("value" + i, o);
             }
-            Assert.AreEqual(0, map.Size());
+            Assert.AreEqual(0, _map.Size());
         }
 
         [Test]
-        public virtual void TestRemoveIfSame()
+        public void RemoveIfSame()
         {
             FillMap();
-            Assert.IsFalse(map.Remove("key2", "value"));
-            Assert.AreEqual(10, map.Size());
-            Assert.IsTrue(map.Remove("key2", "value2"));
-            Assert.AreEqual(9, map.Size());
+            Assert.IsFalse(_map.Remove("key2", "value"));
+            Assert.AreEqual(10, _map.Size());
+            Assert.IsTrue(_map.Remove("key2", "value2"));
+            Assert.AreEqual(9, _map.Size());
         }
 
         [Test]
-        public void TestRemoveInterceptor()
+        public void RemoveInterceptor()
         {
-            map.RemoveInterceptor("interceptor");
+            _map.RemoveInterceptor("interceptor");
         }
 
         [Test]
         [Category("3.8")]
-        public void TestRemoveAllWithPredicate()
+        public void RemoveAllWithPredicate()
         {
             FillMap();
 
-            map.RemoveAll(new SqlPredicate("this != value1"));
-            Assert.AreEqual(1, map.Values().Count);
-            Assert.AreEqual("value1", map.Get("key1"));
+            _map.RemoveAll(new SqlPredicate("this != value1"));
+            Assert.AreEqual(1, _map.Values().Count);
+            Assert.AreEqual("value1", _map.Get("key1"));
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestReplace()
+        public void Replace()
         {
-            Assert.IsNull(map.Replace("key1", "value1"));
-            map.Put("key1", "value1");
-            Assert.AreEqual("value1", map.Replace("key1", "value2"));
-            Assert.AreEqual("value2", map.Get("key1"));
-            Assert.IsFalse(map.Replace("key1", "value1", "value3"));
-            Assert.AreEqual("value2", map.Get("key1"));
-            Assert.IsTrue(map.Replace("key1", "value2", "value3"));
-            Assert.AreEqual("value3", map.Get("key1"));
+            Assert.IsNull(_map.Replace("key1", "value1"));
+            _map.Put("key1", "value1");
+            Assert.AreEqual("value1", _map.Replace("key1", "value2"));
+            Assert.AreEqual("value2", _map.Get("key1"));
+            Assert.IsFalse(_map.Replace("key1", "value1", "value3"));
+            Assert.AreEqual("value2", _map.Get("key1"));
+            Assert.IsTrue(_map.Replace("key1", "value2", "value3"));
+            Assert.AreEqual("value3", _map.Get("key1"));
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestSet()
+        public void Set()
         {
-            map.Set("key1", "value1");
-            Assert.AreEqual("value1", map.Get("key1"));
-            map.Set("key1", "value2");
-            Assert.AreEqual("value2", map.Get("key1"));
-            map.Set("key1", "value3", 100, TimeUnit.Milliseconds);
-            Assert.AreEqual("value3", map.Get("key1"));
+            _map.Set("key1", "value1");
+            Assert.AreEqual("value1", _map.Get("key1"));
+            _map.Set("key1", "value2");
+            Assert.AreEqual("value2", _map.Get("key1"));
+            _map.Set("key1", "value3", 100, TimeUnit.Milliseconds);
+            Assert.AreEqual("value3", _map.Get("key1"));
 
-            TestSupport.AssertTrueEventually(() => Assert.IsNull(map.Get("key1")));
+            TestSupport.AssertTrueEventually(() => Assert.IsNull(_map.Get("key1")));
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestTryPutRemove()
+        public void TryPutRemove()
         {
-            Assert.IsTrue(map.TryPut("key1", "value1", 1, TimeUnit.Seconds));
-            Assert.IsTrue(map.TryPut("key2", "value2", 1, TimeUnit.Seconds));
-            map.Lock("key1");
-            map.Lock("key2");
+            Assert.IsTrue(_map.TryPut("key1", "value1", 1, TimeUnit.Seconds));
+            Assert.IsTrue(_map.TryPut("key2", "value2", 1, TimeUnit.Seconds));
+            _map.Lock("key1");
+            _map.Lock("key2");
             var latch = new CountdownEvent(2);
 
-            var t1 = new Thread(delegate (object o)
+            var t1 = Task.Run(() =>
             {
-                var result = map.TryPut("key1", "value3", 1, TimeUnit.Seconds);
+                var result = _map.TryPut("key1", "value3", 1, TimeUnit.Seconds);
                 if (!result)
                 {
                     latch.Signal();
                 }
             });
 
-            var t2 = new Thread(delegate (object o)
+            var t2 = Task.Run(() =>
             {
-                var result = map.TryRemove("key2", 1, TimeUnit.Seconds);
+                var result = _map.TryRemove("key2", 1, TimeUnit.Seconds);
                 if (!result)
                 {
                     latch.Signal();
                 }
             });
-
-            t1.Start();
-            t2.Start();
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(20)));
-            Assert.AreEqual("value1", map.Get("key1"));
-            Assert.AreEqual("value2", map.Get("key2"));
+            Assert.AreEqual("value1", _map.Get("key1"));
+            Assert.AreEqual("value2", _map.Get("key2"));
 
-            map.ForceUnlock("key1");
-            map.ForceUnlock("key2");
+            _map.ForceUnlock("key1");
+            _map.ForceUnlock("key2");
         }
 
         [Test]
-        public virtual void TestUnlock()
+        public void Unlock()
         {
-            map.ForceUnlock("key1");
-            map.Put("key1", "value1");
-            Assert.AreEqual("value1", map.Get("key1"));
-            map.Lock("key1");
-            Assert.IsTrue(map.IsLocked("key1"));
-            map.Unlock("key1");
-            Assert.IsFalse(map.IsLocked("key1"));
-            map.ForceUnlock("key1");
+            _map.ForceUnlock("key1");
+            _map.Put("key1", "value1");
+            Assert.AreEqual("value1", _map.Get("key1"));
+            _map.Lock("key1");
+            Assert.IsTrue(_map.IsLocked("key1"));
+            _map.Unlock("key1");
+            Assert.IsFalse(_map.IsLocked("key1"));
+            _map.ForceUnlock("key1");
         }
 
         [Test]
-        public virtual void TestValues()
+        public void Values()
         {
-            map.Put("key1", "value1");
-            var values = map.Values();
-            var enumerator = values.GetEnumerator();
-            enumerator.MoveNext();
-            Assert.AreEqual("value1", enumerator.Current);
+            _map.Put("key1", "value1");
+            var first = _map.Values().First();
+            Assert.AreEqual("value1", first);
         }
 
         [Test]
-        public void TestValuesPredicate()
+        public void ValuesPredicate()
         {
             FillMap();
 
-            var values = map.Values(new SqlPredicate("this == value1"));
+            var values = _map.Values(new SqlPredicate("this == value1"));
             Assert.AreEqual(1, values.Count);
-            var enumerator = values.GetEnumerator();
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.AreEqual("value1", enumerator.Current);
+            var first = values.First();
+            Assert.AreEqual("value1", first);
         }
 
-        private class ListenerImpl<TKey, TValue> : EntryAddedListener<TKey, TValue>,
+        class ListenerImpl<TKey, TValue> : EntryAddedListener<TKey, TValue>,
             EntryUpdatedListener<TKey, TValue>, EntryRemovedListener<TKey, TValue>, EntryEvictedListener<TKey, TValue>,
             MapClearedListener, MapEvictedListener,
             EntryMergedListener<TKey, TValue>, EntryExpiredListener<TKey, TValue>
         {
-            private readonly ConcurrentDictionary<EntryEventType, AutoResetEvent> latches;
+            readonly ConcurrentDictionary<EntryEventType, AutoResetEvent> _latches;
 
             public ListenerImpl()
             {
-                latches = new ConcurrentDictionary<EntryEventType, AutoResetEvent>();
+                _latches = new ConcurrentDictionary<EntryEventType, AutoResetEvent>();
                 foreach (EntryEventType et in Enum.GetValues(typeof(EntryEventType)))
                 {
-                    latches.TryAdd(et, new AutoResetEvent(false));
+                    _latches.TryAdd(et, new AutoResetEvent(false));
                 }
             }
 
             public void EntryAdded(EntryEvent<TKey, TValue> @event)
             {
-                latches[EntryEventType.Added].Set();
+                _latches[EntryEventType.Added].Set();
             }
 
             public void EntryUpdated(EntryEvent<TKey, TValue> @event)
             {
-                latches[EntryEventType.Updated].Set();
+                _latches[EntryEventType.Updated].Set();
             }
 
             public void EntryRemoved(EntryEvent<TKey, TValue> @event)
             {
-                latches[EntryEventType.Removed].Set();
+                _latches[EntryEventType.Removed].Set();
             }
 
             public void EntryEvicted(EntryEvent<TKey, TValue> @event)
             {
-                latches[EntryEventType.Evicted].Set();
+                _latches[EntryEventType.Evicted].Set();
             }
 
             public void MapCleared(MapEvent @event)
             {
-                latches[EntryEventType.ClearAll].Set();
+                _latches[EntryEventType.ClearAll].Set();
             }
 
             public void MapEvicted(MapEvent @event)
             {
-                latches[EntryEventType.EvictAll].Set();
+                _latches[EntryEventType.EvictAll].Set();
             }
 
             public void EntryMerged(EntryEvent<TKey, TValue> @event)
             {
-                latches[EntryEventType.Merged].Set();
+                _latches[EntryEventType.Merged].Set();
             }
 
             public void EntryExpired(EntryEvent<TKey, TValue> @event)
             {
-                latches[EntryEventType.Expired].Set();
+                _latches[EntryEventType.Expired].Set();
             }
 
-            public AutoResetEvent GetLatch(EntryEventType key)
-            {
-                return latches[key];
-            }
+            public AutoResetEvent GetLatch(EntryEventType key) => _latches[key];
         }
     }
 }

@@ -32,118 +32,117 @@ namespace Hazelcast.Client.Test
             //QueueConfig queueConfig = config.getQueueConfig(queueName);
             //queueConfig.setMaxSize(6);
             //
-            q = Client.GetQueue<object>(queueName + TestSupport.RandomString());
+            _q = Client.GetQueue<object>(QueueName + TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            q.Clear();
-            q.Destroy();
+            _q.Clear();
+            _q.Destroy();
         }
 
-        internal const string queueName = "ClientQueueTest";
+        const string QueueName = "ClientQueueTest";
 
-        internal static IQueue<object> q;
+        static readonly IEnumerable<object> FiveItems = new []{"item1", "item2", "item3", "item4", "item5"};
+
+        IQueue<object> _q;
 
         [Test]
-        public virtual void TestAdd()
+        public void TestAdd()
         {
-            Assert.IsTrue(q.Add("item1"));
-            Assert.IsTrue(q.Add("item2"));
-            Assert.IsTrue(q.Add("item3"));
-            Assert.IsTrue(q.Add("item4"));
-            Assert.IsTrue(q.Add("item5"));
-            Assert.AreEqual(5, q.Count);
+            foreach (var item in FiveItems)
+            {
+                Assert.IsTrue(_q.Add(item));
+            }
+            
+            Assert.AreEqual(5, _q.Count);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
         [Test]
-        public virtual void TestAddAll()
+        public void TestAddAll()
         {
-            var coll = new List<object>();
-            coll.Add("item1");
-            coll.Add("item2");
-            coll.Add("item3");
-            coll.Add("item4");
-            Assert.IsTrue(q.AddAll(coll));
-            var size = q.Count;
+            var coll = new List<object> { "item1", "item2", "item3", "item4" };
+
+            Assert.IsTrue(_q.AddAll(coll));
+            var size = _q.Count;
             Assert.AreEqual(size, coll.Count);
         }
 
         [Test]
-        public virtual void TestClear()
+        public void TestClear()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.IsTrue(q.Offer("item2"));
-            Assert.IsTrue(q.Offer("item3"));
-            Assert.IsTrue(q.Offer("item4"));
-            Assert.IsTrue(q.Offer("item5"));
-            q.Clear();
-            Assert.AreEqual(0, q.Count);
-            Assert.IsNull(q.Poll());
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.IsTrue(_q.Offer("item2"));
+            Assert.IsTrue(_q.Offer("item3"));
+            Assert.IsTrue(_q.Offer("item4"));
+            Assert.IsTrue(_q.Offer("item5"));
+
+            _q.Clear();
+            Assert.AreEqual(0, _q.Count);
+            Assert.IsNull(_q.Poll());
         }
 
         [Test]
-        public virtual void TestContain()
+        public void TestContain()
         {
-            Assert.IsTrue(q.Add("item1"));
-            Assert.IsTrue(q.Add("item2"));
-            Assert.IsTrue(q.Add("item3"));
-            Assert.IsTrue(q.Add("item4"));
-            Assert.IsTrue(q.Add("item5"));
+            Assert.IsTrue(_q.Add("item1"));
+            Assert.IsTrue(_q.Add("item2"));
+            Assert.IsTrue(_q.Add("item3"));
+            Assert.IsTrue(_q.Add("item4"));
+            Assert.IsTrue(_q.Add("item5"));
 
-            Assert.IsTrue(q.Contains("item3"));
+            Assert.IsTrue(_q.Contains("item3"));
         }
 
         [Test]
-        public virtual void TestContains()
+        public void TestContains()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.IsTrue(q.Offer("item2"));
-            Assert.IsTrue(q.Offer("item3"));
-            Assert.IsTrue(q.Offer("item4"));
-            Assert.IsTrue(q.Offer("item5"));
-            Assert.IsTrue(q.Contains("item3"));
-            Assert.IsFalse(q.Contains("item"));
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.IsTrue(_q.Offer("item2"));
+            Assert.IsTrue(_q.Offer("item3"));
+            Assert.IsTrue(_q.Offer("item4"));
+            Assert.IsTrue(_q.Offer("item5"));
+            Assert.IsTrue(_q.Contains("item3"));
+            Assert.IsFalse(_q.Contains("item"));
             var list = new List<string>(2);
             list.Add("item4");
             list.Add("item2");
-            Assert.IsTrue(q.ContainsAll(list));
+            Assert.IsTrue(_q.ContainsAll(list));
             list.Add("item");
-            Assert.IsFalse(q.ContainsAll(list));
+            Assert.IsFalse(_q.ContainsAll(list));
         }
 
         [Test]
         public virtual void TestCopyto()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.IsTrue(q.Offer("item2"));
-            Assert.IsTrue(q.Offer("item3"));
-            Assert.IsTrue(q.Offer("item4"));
-            Assert.IsTrue(q.Offer("item5"));
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.IsTrue(_q.Offer("item2"));
+            Assert.IsTrue(_q.Offer("item3"));
+            Assert.IsTrue(_q.Offer("item4"));
+            Assert.IsTrue(_q.Offer("item5"));
 
-            var objects = new string[q.Count];
-            q.CopyTo(objects, 0);
+            var objects = new string[_q.Count];
+            _q.CopyTo(objects, 0);
 
-            Assert.AreEqual(objects.Length, q.Count);
+            Assert.AreEqual(objects.Length, _q.Count);
         }
 
         [Test]
         public virtual void TestDrain()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.IsTrue(q.Offer("item2"));
-            Assert.IsTrue(q.Offer("item3"));
-            Assert.IsTrue(q.Offer("item4"));
-            Assert.IsTrue(q.Offer("item5"));
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.IsTrue(_q.Offer("item2"));
+            Assert.IsTrue(_q.Offer("item3"));
+            Assert.IsTrue(_q.Offer("item4"));
+            Assert.IsTrue(_q.Offer("item5"));
             var list = new List<string>();
-            var result = q.DrainTo(list, 2);
+            var result = _q.DrainTo(list, 2);
             Assert.AreEqual(2, result);
             Assert.AreEqual("item1", list[0]);
             Assert.AreEqual("item2", list[1]);
             list = new List<string>();
-            result = q.DrainTo(list);
+            result = _q.DrainTo(list);
             Assert.AreEqual(3, result);
             Assert.AreEqual("item3", list[0]);
             Assert.AreEqual("item4", list[1]);
@@ -153,15 +152,15 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestElement()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.AreEqual("item1", q.Element());
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.AreEqual("item1", _q.Element());
         }
 
         [Test]
         public virtual void TestEnumaration()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            var enumerator = q.GetEnumerator();
+            Assert.IsTrue(_q.Offer("item1"));
+            var enumerator = _q.GetEnumerator();
             enumerator.MoveNext();
 
             Assert.AreEqual("item1", enumerator.Current);
@@ -170,25 +169,25 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestIsEmpty()
         {
-            Assert.IsTrue(q.IsEmpty());
+            Assert.IsTrue(_q.IsEmpty());
         }
 
         [Test]
         public virtual void TestIsReadOnly()
         {
-            Assert.IsFalse(q.IsReadOnly);
+            Assert.IsFalse(_q.IsReadOnly);
         }
 
         [Test]
         public virtual void TestIterator()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.IsTrue(q.Offer("item2"));
-            Assert.IsTrue(q.Offer("item3"));
-            Assert.IsTrue(q.Offer("item4"));
-            Assert.IsTrue(q.Offer("item5"));
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.IsTrue(_q.Offer("item2"));
+            Assert.IsTrue(_q.Offer("item3"));
+            Assert.IsTrue(_q.Offer("item4"));
+            Assert.IsTrue(_q.Offer("item5"));
             var i = 0;
-            foreach (var o in q)
+            foreach (var o in _q)
             {
                 i++;
                 Assert.AreEqual("item" + i, o);
@@ -208,16 +207,16 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestListener()
         {
-            Assert.AreEqual(0, q.Count);
+            Assert.AreEqual(0, _q.Count);
             var latch = new CountdownEvent(5);
             var listener = new ClientListTest.Listener<object>(latch);
-            var id = q.AddItemListener(listener, true);
+            var id = _q.AddItemListener(listener, true);
 
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 for (var i = 0; i < 5; i++)
                 {
-                    if (!q.Offer("event_item" + i))
+                    if (!_q.Offer("event_item" + i))
                     {
                         throw new SystemException();
                     }
@@ -226,7 +225,7 @@ namespace Hazelcast.Client.Test
             t1.Start();
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
-            q.RemoveItemListener(id);
+            _q.RemoveItemListener(id);
         }
 
         [Test]
@@ -234,7 +233,7 @@ namespace Hazelcast.Client.Test
         {
             var qX = Client.GetQueue<object>(TestSupport.RandomString());
 
-            const int TestItemCount = 1*100;
+            const int TestItemCount = 1 * 100;
 
             Assert.AreEqual(0, qX.Count);
 
@@ -245,7 +244,7 @@ namespace Hazelcast.Client.Test
 
             Assert.AreEqual(TestItemCount, qX.Count);
 
-            var latch = new CountdownEvent(TestItemCount*TestItemCount);
+            var latch = new CountdownEvent(TestItemCount * TestItemCount);
             for (var j = 0; j < TestItemCount; j++)
             {
                 var listener = new ItemListener<object>(null, latch);
@@ -266,7 +265,7 @@ namespace Hazelcast.Client.Test
         {
             for (var i = 0; i < 10; i++)
             {
-                var result = q.Offer("item");
+                var result = _q.Offer("item");
                 if (i < 6)
                 {
                     Assert.IsTrue(result);
@@ -276,9 +275,9 @@ namespace Hazelcast.Client.Test
                     Assert.IsFalse(result);
                 }
             }
-            Assert.AreEqual(6, q.Count);
+            Assert.AreEqual(6, _q.Count);
 
-            var t1 = new Thread(delegate(object o)
+            var t1 = new Thread(delegate (object o)
             {
                 try
                 {
@@ -287,15 +286,15 @@ namespace Hazelcast.Client.Test
                 catch
                 {
                 }
-                q.Poll();
+                _q.Poll();
             });
             t1.Start();
 
-            var result_1 = q.Offer("item", 200, TimeUnit.Milliseconds);
+            var result_1 = _q.Offer("item", 200, TimeUnit.Milliseconds);
             Assert.IsTrue(result_1);
             for (var i_1 = 0; i_1 < 10; i_1++)
             {
-                var o = q.Poll();
+                var o = _q.Poll();
                 if (i_1 < 6)
                 {
                     Assert.IsNotNull(o);
@@ -305,10 +304,10 @@ namespace Hazelcast.Client.Test
                     Assert.IsNull(o);
                 }
             }
-            Assert.AreEqual(0, q.Count);
+            Assert.AreEqual(0, _q.Count);
 
 
-            var t2 = new Thread(delegate(object o)
+            var t2 = new Thread(delegate (object o)
             {
                 try
                 {
@@ -317,11 +316,11 @@ namespace Hazelcast.Client.Test
                 catch
                 {
                 }
-                q.Offer("item1");
+                _q.Offer("item1");
             });
             t2.Start();
 
-            var o_1 = q.Poll(300, TimeUnit.Milliseconds);
+            var o_1 = _q.Poll(300, TimeUnit.Milliseconds);
             Assert.AreEqual("item1", o_1);
             t1.Join(10000);
             t2.Join(10000);
@@ -330,16 +329,16 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestPeek()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.AreEqual("item1", q.Peek());
-            Assert.AreEqual(1, q.Count);
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.AreEqual("item1", _q.Peek());
+            Assert.AreEqual(1, _q.Count);
         }
 
         [Test]
         public virtual void TestPut()
         {
-            q.Put("item1");
-            Assert.AreEqual(1, q.Count);
+            _q.Put("item1");
+            Assert.AreEqual(1, _q.Count);
         }
 
 
@@ -347,85 +346,85 @@ namespace Hazelcast.Client.Test
         [Test]
         public virtual void TestRemainingCapacity()
         {
-            Assert.AreEqual(6, q.RemainingCapacity());
-            q.Offer("item");
-            Assert.AreEqual(5, q.RemainingCapacity());
+            Assert.AreEqual(6, _q.RemainingCapacity());
+            _q.Offer("item");
+            Assert.AreEqual(5, _q.RemainingCapacity());
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         [Test]
         public virtual void TestRemove()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.IsTrue(q.Offer("item2"));
-            Assert.IsTrue(q.Offer("item3"));
-            Assert.IsFalse(q.Remove("item4"));
-            Assert.AreEqual(3, q.Count);
-            Assert.IsTrue(q.Remove("item2"));
-            Assert.AreEqual(2, q.Count);
-            Assert.AreEqual("item1", q.Poll());
-            Assert.AreEqual("item3", q.Poll());
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.IsTrue(_q.Offer("item2"));
+            Assert.IsTrue(_q.Offer("item3"));
+            Assert.IsFalse(_q.Remove("item4"));
+            Assert.AreEqual(3, _q.Count);
+            Assert.IsTrue(_q.Remove("item2"));
+            Assert.AreEqual(2, _q.Count);
+            Assert.AreEqual("item1", _q.Poll());
+            Assert.AreEqual("item3", _q.Poll());
 
-            Assert.IsFalse(q.Remove("itemX"));
-            Assert.IsTrue(q.Offer("itemX"));
-            Assert.IsTrue(((ICollection<object>) q).Remove("itemX"));
+            Assert.IsFalse(_q.Remove("itemX"));
+            Assert.IsTrue(_q.Offer("itemX"));
+            Assert.IsTrue(((ICollection<object>)_q).Remove("itemX"));
 
-            Assert.IsTrue(q.Offer("itemY"));
-            Assert.AreEqual("itemY", q.Remove());
+            Assert.IsTrue(_q.Offer("itemY"));
+            Assert.AreEqual("itemY", _q.Remove());
         }
 
         [Test]
         public virtual void TestRemoveRetain()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.IsTrue(q.Offer("item2"));
-            Assert.IsTrue(q.Offer("item3"));
-            Assert.IsTrue(q.Offer("item4"));
-            Assert.IsTrue(q.Offer("item5"));
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.IsTrue(_q.Offer("item2"));
+            Assert.IsTrue(_q.Offer("item3"));
+            Assert.IsTrue(_q.Offer("item4"));
+            Assert.IsTrue(_q.Offer("item5"));
             var list = new List<string>();
             list.Add("item8");
             list.Add("item9");
-            Assert.IsFalse(q.RemoveAll(list));
-            Assert.AreEqual(5, q.Count);
+            Assert.IsFalse(_q.RemoveAll(list));
+            Assert.AreEqual(5, _q.Count);
             list.Add("item3");
             list.Add("item4");
             list.Add("item1");
-            Assert.IsTrue(q.RemoveAll(list));
-            Assert.AreEqual(2, q.Count);
+            Assert.IsTrue(_q.RemoveAll(list));
+            Assert.AreEqual(2, _q.Count);
             list.Clear();
             list.Add("item2");
             list.Add("item5");
-            Assert.IsFalse(q.RetainAll(list));
-            Assert.AreEqual(2, q.Count);
+            Assert.IsFalse(_q.RetainAll(list));
+            Assert.AreEqual(2, _q.Count);
             list.Clear();
-            Assert.IsTrue(q.RetainAll(list));
-            Assert.AreEqual(0, q.Count);
+            Assert.IsTrue(_q.RetainAll(list));
+            Assert.AreEqual(0, _q.Count);
         }
 
 
         [Test]
         public virtual void TestTake()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.AreEqual("item1", q.Take());
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.AreEqual("item1", _q.Take());
         }
 
         [Test]
         public virtual void TestToArray()
         {
-            Assert.IsTrue(q.Offer("item1"));
-            Assert.IsTrue(q.Offer("item2"));
-            Assert.IsTrue(q.Offer("item3"));
-            Assert.IsTrue(q.Offer("item4"));
-            Assert.IsTrue(q.Offer("item5"));
-            var array = q.ToArray();
+            Assert.IsTrue(_q.Offer("item1"));
+            Assert.IsTrue(_q.Offer("item2"));
+            Assert.IsTrue(_q.Offer("item3"));
+            Assert.IsTrue(_q.Offer("item4"));
+            Assert.IsTrue(_q.Offer("item5"));
+            var array = _q.ToArray();
             var i = 0;
             foreach (var o in array)
             {
                 i++;
                 Assert.AreEqual("item" + i, o);
             }
-            var objects = q.ToArray(new object[2]);
+            var objects = _q.ToArray(new object[2]);
             i = 0;
             foreach (var o_1 in objects)
             {
@@ -437,7 +436,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestWrapperMethods()
         {
-            var qc = (ICollection<object>) q;
+            var qc = (ICollection<object>)_q;
 
             qc.Add("asd");
             Assert.IsTrue(qc.Contains("asd"));
@@ -447,7 +446,7 @@ namespace Hazelcast.Client.Test
             enumerator.MoveNext();
             Assert.AreEqual("asd", enumerator.Current);
 
-            var enuma = ((IEnumerable) qc).GetEnumerator();
+            var enuma = ((IEnumerable)qc).GetEnumerator();
             enuma.MoveNext();
             Assert.AreEqual("asd", enuma.Current);
         }
