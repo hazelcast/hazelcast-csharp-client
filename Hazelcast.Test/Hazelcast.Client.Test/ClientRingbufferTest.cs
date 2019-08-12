@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Hazelcast.Client.Proxy;
 using Hazelcast.Core;
 using NUnit.Framework;
@@ -35,13 +37,13 @@ namespace Hazelcast.Client.Test
             _ringBuffer.Destroy();
         }
 
-        private const int Capacity = 10; //should be set to same as in the server.xml file
-        private IRingbuffer<string> _ringBuffer;
+        const int Capacity = 10; //should be set to same as in the server.xml file
+        IRingbuffer<string> _ringBuffer;
 
         [Test]
-        public void TestAddAll()
+        public void AddAll()
         {
-            var task = _ringBuffer.AddAllAsync(new List<string> {"foo", "bar"}, OverflowPolicy.Overwrite);
+            var task = _ringBuffer.AddAllAsync(new List<string> { "foo", "bar" }, OverflowPolicy.Overwrite);
 
             Assert.IsTrue(task.ContinueWith(t =>
             {
@@ -55,7 +57,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestAddAndReadOne()
+        public void AddAndReadOne()
         {
             var sequence = _ringBuffer.Add("foo");
 
@@ -63,42 +65,42 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestAddAsync()
+        public void AddAsync()
         {
-            var sequenceFuture = _ringBuffer.AddAsync("foo", OverflowPolicy.Overwrite);
+            var sequenceFuture = _ringBuffer.AddAsync("foo");
 
             Assert.IsTrue(
                 sequenceFuture.ContinueWith(f => { Assert.AreEqual("foo", _ringBuffer.ReadOne(f.Result)); }).Wait(5000));
         }
 
         [Test]
-        public void TestCapacity()
+        public void Capacity_IsEqual()
         {
             Assert.AreEqual(Capacity, _ringBuffer.Capacity());
         }
 
         [Test]
-		public void TestExcessiveMaxCount()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void ExcessiveMaxCount()
         {
-            _ringBuffer.ReadManyAsync(0, 0, ClientRingbufferProxy<string>.MaxBatchSize + 1);
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _ringBuffer.ReadManyAsync(0, 0, ClientRingbufferProxy<string>.MaxBatchSize + 1);
+            });
+        }
 
         [Test]
-		public void TestExcessiveMinCount()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void ExcessiveMinCount()
         {
-            _ringBuffer.ReadManyAsync(0, Capacity + 1, Capacity + 1);
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _ringBuffer.ReadManyAsync(0, Capacity + 1, Capacity + 1);
+            });
+        }
 
         [Test]
-        public void TestHeadSequence()
+        public void HeadSequence()
         {
-            for (var k = 0; k < 2*Capacity; k++)
+            for (var k = 0; k < 2 * Capacity; k++)
             {
                 _ringBuffer.Add("foo");
             }
@@ -107,62 +109,56 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-		public void TestInvalidReadCount()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void InvalidReadCount()
         {
-            _ringBuffer.ReadManyAsync(0, 2, 1);
-        });
-		}
-
-        [Test]
-		public void TestInvalidSequence()
-		{
-			Assert.Throws<ArgumentException>(() =>
-        {
-            _ringBuffer.ReadOne(-1);
-        });
-		}
-
-        [Test]
-        public void TestReadManyAsync()
-        {
-            _ringBuffer.Add("1");
-            _ringBuffer.Add("2");
-            _ringBuffer.Add("3");
-
-
-            var task = _ringBuffer.ReadManyAsync(0, 3, 3);
-
-            Assert.IsTrue(task.ContinueWith(t =>
+            Assert.Throws<ArgumentException>(() =>
             {
-                var list = t.Result;
-                Assert.That(list, Is.EquivalentTo(new[] {"1", "2", "3"}));
-            }).Wait(5000));
+                _ringBuffer.ReadManyAsync(0, 2, 1);
+            });
         }
 
         [Test]
-        public void TestReadManyAsyncWithMaxCount()
+        public void InvalidSequence()
         {
-            _ringBuffer.Add("1");
-            _ringBuffer.Add("2");
-            _ringBuffer.Add("3");
-            _ringBuffer.Add("4");
-            _ringBuffer.Add("5");
-            _ringBuffer.Add("6");
+            Assert.Throws<ArgumentException>(() =>
+            {
+                _ringBuffer.ReadOne(-1);
+            });
+        }
 
-            var task = _ringBuffer.ReadManyAsync(0, 3, 3);
+        [Test]
+        public async Task ReadManyAsync()
+        {
+            var values = new[] { "1", "2", "3" };
+
+            foreach (var value in values)
+            {
+                await _ringBuffer.AddAsync(value);
+            }
+
+            var read = await _ringBuffer.ReadManyAsync(0, 3, 3);
+            
+            CollectionAssert.AreEqual(values, read);
+        }
+
+        [Test]
+        public async Task ReadManyAsyncWithMaxCount()
+        {
+            var values = new[] { "1", "2", "3", "4", "5", "6" };
+
+            foreach (var value in values)
+            {
+                await _ringBuffer.AddAsync(value);
+            }
+
+            var read = await _ringBuffer.ReadManyAsync(0, 3, 3);
 
             //surplus results should not be read
-            Assert.IsTrue(task.ContinueWith(t =>
-            {
-                var list = t.Result;
-                Assert.That(list, Is.EquivalentTo(new[] {"1", "2", "3"}));
-            }).Wait(5000));
+            CollectionAssert.AreEqual(values.Take(3), read);
         }
 
         [Test]
-        public void TestRemainingCapacity()
+        public void RemainingCapacity()
         {
             _ringBuffer = Client.GetRingbuffer<string>("ClientRingbufferTestWithTTL" + TestSupport.RandomString());
 
@@ -172,7 +168,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSize()
+        public void Size()
         {
             _ringBuffer.Add("foo");
 
@@ -180,27 +176,28 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-		public void TestStaleSequence()
-		{
-			Assert.Throws<StaleSequenceException>(() =>
+        public void StaleSequence()
         {
-            for (var k = 0; k < Capacity*2; k++)
+            Assert.Throws<StaleSequenceException>(() =>
             {
-                _ringBuffer.Add("foo");
-            }
-            _ringBuffer.ReadOne(_ringBuffer.HeadSequence() - 1);
-        });
-		}
+                for (var k = 0; k < Capacity * 2; k++)
+                {
+                    _ringBuffer.Add("foo");
+                }
+
+                _ringBuffer.ReadOne(_ringBuffer.HeadSequence() - 1);
+            });
+        }
 
         [Test]
-        public void TestTailSequence()
+        public void TailSequence()
         {
-            for (var k = 0; k < 2*Capacity; k++)
+            for (var k = 0; k < 2 * Capacity; k++)
             {
                 _ringBuffer.Add("foo");
             }
 
-            Assert.AreEqual(Capacity*2 - 1, _ringBuffer.TailSequence());
+            Assert.AreEqual(Capacity * 2 - 1, _ringBuffer.TailSequence());
         }
     }
 }

@@ -26,18 +26,18 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            ReplicatedMap = Client.GetReplicatedMap<int?, string>(TestSupport.RandomString());
+            _replicatedMap = Client.GetReplicatedMap<int?, string>(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            ReplicatedMap.Destroy();
+            _replicatedMap.Destroy();
         }
 
-        private static IReplicatedMap<int?, string> ReplicatedMap;
+        IReplicatedMap<int?, string> _replicatedMap;
 
-        private sealed class ReplicatedMapListener : IEntryListener<int?, string>
+        sealed class ReplicatedMapListener : IEntryListener<int?, string>
         {
             public CountdownEvent Add { get; set; }
             public CountdownEvent Update { get; set; }
@@ -76,7 +76,7 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        private ReplicatedMapListener  CreateEventListener(int eventCount)
+        static ReplicatedMapListener CreateEventListener(int eventCount)
         {
             return new ReplicatedMapListener
             {
@@ -89,209 +89,210 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestAddEntryListener()
+        public void AddEntryListener()
         {
             var listener = CreateEventListener(1);
-            ReplicatedMap.AddEntryListener(listener);
-            ReplicatedMap.Put(1, "value1");
+            _replicatedMap.AddEntryListener(listener);
+            _replicatedMap.Put(1, "value1");
             Assert.IsTrue(listener.Add.Wait(TimeSpan.FromSeconds(5)));
-            ReplicatedMap.Put(1, "value1");
+            _replicatedMap.Put(1, "value1");
             Assert.IsTrue(listener.Update.Wait(TimeSpan.FromSeconds(5)));
-            ReplicatedMap.Remove(1);
+            _replicatedMap.Remove(1);
             Assert.IsTrue(listener.Remove.Wait(TimeSpan.FromSeconds(5)));
-            ReplicatedMap.Clear();
+            _replicatedMap.Clear();
             Assert.IsTrue(listener.ClearAll.Wait(TimeSpan.FromSeconds(5)));
         }
 
         [Test]
-        public void TestAddEntryListener_key()
+        public void AddEntryListener_key()
         {
             var listener = CreateEventListener(1);
-            ReplicatedMap.AddEntryListener(listener, 1);
-            ReplicatedMap.Put(1, "value1");
+            _replicatedMap.AddEntryListener(listener, 1);
+            _replicatedMap.Put(1, "value1");
             Assert.IsTrue(listener.Add.Wait(TimeSpan.FromSeconds(5)));
         }
 
         [Test]
-        public void TestAddEntryListener_key_other()
+        public void AddEntryListener_key_other()
         {
             var listener = CreateEventListener(1);
-            ReplicatedMap.AddEntryListener(listener, 1);
-            ReplicatedMap.Put(2, "value2");
+            _replicatedMap.AddEntryListener(listener, 1);
+            _replicatedMap.Put(2, "value2");
             Assert.IsFalse(listener.Add.Wait(TimeSpan.FromSeconds(5)));
         }
 
         [Test]
-        public void TestAddEntryListener_predicate()
+        public void AddEntryListener_predicate()
         {
             var listener = CreateEventListener(5);
-            ReplicatedMap.AddEntryListener(listener, Predicates.Key().LessThan(5));
+            _replicatedMap.AddEntryListener(listener, Predicates.Key().LessThan(5));
             FillValues();
             Assert.IsTrue(listener.Add.Wait(TimeSpan.FromSeconds(10)));
         }
 
         [Test]
-        public void TestAddEntryListener_predicate_key()
+        public void AddEntryListener_predicate_key()
         {
             var listener = CreateEventListener(1);
             var listener2 = CreateEventListener(1);
-            ReplicatedMap.AddEntryListener(listener, Predicates.Key().LessThan(5), 2);
-            ReplicatedMap.AddEntryListener(listener2, Predicates.Key().LessThan(5), 6);
+            _replicatedMap.AddEntryListener(listener, Predicates.Key().LessThan(5), 2);
+            _replicatedMap.AddEntryListener(listener2, Predicates.Key().LessThan(5), 6);
             FillValues();
             Assert.IsTrue(listener.Add.Wait(TimeSpan.FromSeconds(5)));
             Assert.IsFalse(listener2.Add.Wait(TimeSpan.FromSeconds(5)));
         }
 
         [Test]
-        public void TestClear()
+        public void Clear()
         {
-            ReplicatedMap.Put(1, "value1");
-            ReplicatedMap.Put(2, "value2");
-            ReplicatedMap.Clear();
-            Assert.AreEqual(0, ReplicatedMap.Size());
+            _replicatedMap.Put(1, "value1");
+            _replicatedMap.Put(2, "value2");
+            _replicatedMap.Clear();
+            Assert.AreEqual(0, _replicatedMap.Size());
         }
 
         [Test]
-        public void TestContainsKey()
+        public void ContainsKey()
         {
-            ReplicatedMap.Put(1, "value1");
-            ReplicatedMap.Put(2, "value2");
-            Assert.True(ReplicatedMap.ContainsKey(1));
-            Assert.True(ReplicatedMap.ContainsKey(2));
-            Assert.False(ReplicatedMap.ContainsKey(3));
+            _replicatedMap.Put(1, "value1");
+            _replicatedMap.Put(2, "value2");
+            Assert.True(_replicatedMap.ContainsKey(1));
+            Assert.True(_replicatedMap.ContainsKey(2));
+            Assert.False(_replicatedMap.ContainsKey(3));
         }
 
         [Test]
-        public void TestContainsValue()
+        public void ContainsValue()
         {
-            ReplicatedMap.Put(1, "value1");
-            ReplicatedMap.Put(2, "value2");
-            Assert.True(ReplicatedMap.ContainsValue("value1"));
-            Assert.True(ReplicatedMap.ContainsValue("value2"));
-            Assert.False(ReplicatedMap.ContainsValue("value3"));
+            _replicatedMap.Put(1, "value1");
+            _replicatedMap.Put(2, "value2");
+            Assert.True(_replicatedMap.ContainsValue("value1"));
+            Assert.True(_replicatedMap.ContainsValue("value2"));
+            Assert.False(_replicatedMap.ContainsValue("value3"));
         }
 
         [Test]
-        public void TestGet()
+        public void Get()
         {
-            ReplicatedMap.Put(1, "value1");
-            var value = ReplicatedMap.Get(1);
+            _replicatedMap.Put(1, "value1");
+            var value = _replicatedMap.Get(1);
             Assert.AreEqual(value, "value1");
         }
 
         [Test]
-        public void TestIsEmpty()
+        public void IsEmpty()
         {
-            Assert.True(ReplicatedMap.IsEmpty());
+            Assert.True(_replicatedMap.IsEmpty());
         }
 
         [Test]
-        public void TestEntrySet()
+        public void EntrySet()
         {
             FillValues();
-            var keyValuePairs = ReplicatedMap.EntrySet();
-            for (int i = 0; i < 10; i++)
+            var keyValuePairs = _replicatedMap.EntrySet();
+            for (var i = 0; i < 10; i++)
             {
                 Assert.True(keyValuePairs.Contains(new KeyValuePair<int?, string>(i, "value" + i)));
             }
         }
 
         [Test]
-        public void TestKeySet()
+        public void KeySet()
         {
             FillValues();
-            var keyset = ReplicatedMap.KeySet();
-            for (int i = 0; i < 10; i++)
+            var set = _replicatedMap.KeySet();
+            for (var i = 0; i < 10; i++)
             {
-                Assert.True(keyset.Contains(i));
+                Assert.True(set.Contains(i));
             }
         }
 
         [Test]
-        public void TestPut()
+        public void Put()
         {
-            ReplicatedMap.Put(1, "value1");
-            var value = ReplicatedMap.Get(1);
+            _replicatedMap.Put(1, "value1");
+            var value = _replicatedMap.Get(1);
             Assert.AreEqual(value, "value1");
         }
 
         [Test]
-		public void TestPut_null()
-		{
-			Assert.Throws<NullReferenceException>(() =>
+        public void Put_null()
         {
-            ReplicatedMap.Put(1, null);
-        });
-		}
-
-        [Test]
-        public void TestPut_ttl()
-        {
-            ReplicatedMap.Put(1, "value1", 5, TimeUnit.Seconds);
-            var value = ReplicatedMap.Get(1);
-            Assert.AreEqual(value, "value1");
-            TestSupport.AssertTrueEventually(() => { Assert.Null(ReplicatedMap.Get(1)); });
+            Assert.Throws<NullReferenceException>(() =>
+            {
+                _replicatedMap.Put(1, null);
+            });
         }
 
         [Test]
-        public void TestPutAll()
+        public void Put_ttl()
+        {
+            _replicatedMap.Put(1, "value1", 5, TimeUnit.Seconds);
+            var value = _replicatedMap.Get(1);
+            Assert.AreEqual(value, "value1");
+            TestSupport.AssertTrueEventually(() => { Assert.Null(_replicatedMap.Get(1)); });
+        }
+
+        [Test]
+        public void PutAll()
         {
             var entries = new Dictionary<int?, string>();
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
                 entries.Add(i, "value" + i);
             }
-            ReplicatedMap.PutAll(entries);
-            for (int i = 0; i < 10; i++)
+            _replicatedMap.PutAll(entries);
+
+            for (var i = 0; i < 10; i++)
             {
-                Assert.AreEqual("value"+i, ReplicatedMap.Get(i));
+                Assert.AreEqual("value" + i, _replicatedMap.Get(i));
             }
-            Assert.AreEqual(10, ReplicatedMap.Size());
+            Assert.AreEqual(10, _replicatedMap.Size());
         }
 
         [Test]
-        public void TestRemove()
+        public void Remove()
         {
-            ReplicatedMap.Put(1, "value1");
-            var value =ReplicatedMap.Remove(1);
+            _replicatedMap.Put(1, "value1");
+            var value = _replicatedMap.Remove(1);
             Assert.AreEqual(value, "value1");
-            Assert.AreEqual(0, ReplicatedMap.Size());
+            Assert.AreEqual(0, _replicatedMap.Size());
 
         }
 
         [Test]
-        public void TestRemoveEntryListener()
+        public void RemoveEntryListener()
         {
             var listener = CreateEventListener(1);
-            var regId = ReplicatedMap.AddEntryListener(listener, 1);
-            Assert.IsTrue(ReplicatedMap.RemoveEntryListener(regId));
-            Assert.IsFalse(ReplicatedMap.RemoveEntryListener("Invalid Registration Id"));
+            var regId = _replicatedMap.AddEntryListener(listener, 1);
+            Assert.IsTrue(_replicatedMap.RemoveEntryListener(regId));
+            Assert.IsFalse(_replicatedMap.RemoveEntryListener("Invalid Registration Id"));
         }
 
         [Test]
-        public void TestSize()
+        public void Size()
         {
             FillValues();
-            Assert.AreEqual(10, ReplicatedMap.Size());
+            Assert.AreEqual(10, _replicatedMap.Size());
         }
 
         [Test]
-        public void TestValues()
+        public void Values()
         {
             FillValues();
-            var values = ReplicatedMap.Values();
-            for (int i = 0; i < 10; i++)
+            var values = _replicatedMap.Values();
+            for (var i = 0; i < 10; i++)
             {
                 Assert.IsTrue(values.Contains("value" + i));
             }
             Assert.AreEqual(10, values.Count);
         }
 
-        private void FillValues()
+        void FillValues()
         {
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
-                ReplicatedMap.Put(i, "value" + i);
+                _replicatedMap.Put(i, "value" + i);
             }
         }
     }

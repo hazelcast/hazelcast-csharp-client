@@ -26,6 +26,16 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientQueueTest : SingleMemberBaseTest
     {
+        static readonly IEnumerable<object> FiveItems = new[] { "item1", "item2", "item3", "item4", "item5" };
+
+        void AddFiveItems()
+        {
+            foreach (var item in FiveItems)
+            {
+                Assert.IsTrue(_q.Add(item));
+            }
+        }
+
         [SetUp]
         public void Init()
         {
@@ -46,8 +56,6 @@ namespace Hazelcast.Client.Test
 
         const string QueueName = "ClientQueueTest";
 
-        static readonly IEnumerable<object> FiveItems = new[] { "item1", "item2", "item3", "item4", "item5" };
-
         IQueue<object> _q;
 
         [Test]
@@ -58,28 +66,141 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(5, _q.Count);
         }
 
-        void AddFiveItems()
-        {
-            foreach (var item in FiveItems)
-            {
-                Assert.IsTrue(_q.Add(item));
-            }
-        }
-
-        void OfferFiveItems()
-        {
-            foreach (var item in FiveItems)
-            {
-                Assert.IsTrue(_q.Add(item));
-            }
-        }
-
         [Test]
         public void AddAll()
         {
             Assert.IsTrue(_q.AddAll(FiveItems));
             var size = _q.Count;
             Assert.AreEqual(FiveItems.Count(), size);
+        }
+
+        [Test]
+        public void Contains()
+        {
+            AddFiveItems();
+
+            Assert.IsTrue(_q.Contains("item3"));
+        }
+
+        [Test]
+        public void ContainsAll()
+        {
+            AddFiveItems();
+
+            Assert.IsTrue(_q.Contains("item3"));
+            Assert.IsFalse(_q.Contains("item"));
+            var list = new List<string>() { "item4", "item2" };
+            Assert.IsTrue(_q.ContainsAll(list));
+
+            list.Add("item");
+            Assert.IsFalse(_q.ContainsAll(list));
+        }
+
+        [Test]
+        public void CopyTo()
+        {
+            AddFiveItems();
+
+            var objects = new string[_q.Count];
+            _q.CopyTo(objects, 0);
+
+            Assert.AreEqual(objects.Length, _q.Count);
+        }
+
+        [Test]
+        public void IsEmpty()
+        {
+            Assert.IsTrue(_q.IsEmpty());
+        }
+
+        [Test]
+        public void IsReadOnly()
+        {
+            Assert.IsFalse(_q.IsReadOnly);
+        }
+
+        [Test]
+        public void Enumeration()
+        {
+            AddFiveItems();
+
+            var actual = Enumerable.ToArray(_q);
+            CollectionAssert.AreEqual(FiveItems, actual);
+        }
+
+        [Test]
+        public void Listener()
+        {
+            Assert.AreEqual(0, _q.Count);
+            var latch = new CountdownEvent(5);
+            var listener = new ClientListTest.Listener<object>(latch);
+            var id = _q.AddItemListener(listener, true);
+
+            var t = Task.Run(() =>
+            {
+                for (var i = 0; i < 5; i++)
+                {
+                    if (!_q.Add("event_item" + i))
+                    {
+                        throw new SystemException();
+                    }
+                }
+            });
+
+            Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
+            _q.RemoveItemListener(id);
+        }
+
+        [Test]
+        public void RemoveRetain()
+        {
+            AddFiveItems();
+
+            var list = new List<string> { "item8", "item9" };
+
+            Assert.IsFalse(_q.RemoveAll(list));
+            Assert.AreEqual(5, _q.Count);
+            list.Add("item3");
+            list.Add("item4");
+            list.Add("item1");
+            Assert.IsTrue(_q.RemoveAll(list));
+            Assert.AreEqual(2, _q.Count);
+            list.Clear();
+            list.Add("item2");
+            list.Add("item5");
+            Assert.IsFalse(_q.RetainAll(list));
+            Assert.AreEqual(2, _q.Count);
+            list.Clear();
+            Assert.IsTrue(_q.RetainAll(list));
+            Assert.AreEqual(0, _q.Count);
+        }
+
+        [Test]
+        public void ToArray()
+        {
+            AddFiveItems();
+
+            var array = _q.ToArray();
+            CollectionAssert.AreEqual(FiveItems, array);
+
+            var objects = _q.ToArray(new object[2]);
+            CollectionAssert.AreEqual(FiveItems, objects);
+        }
+
+        [Test]
+        public void WrapperMethods()
+        {
+            var qc = (ICollection<object>)_q;
+
+            qc.Add("asd");
+            Assert.IsTrue(qc.Contains("asd"));
+
+            var value = qc.First();
+            Assert.AreEqual("asd", value);
+
+            var enuma = ((IEnumerable)qc).GetEnumerator();
+            enuma.MoveNext();
+            Assert.AreEqual("asd", enuma.Current);
         }
 
         [Test]
@@ -96,42 +217,9 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Contains()
-        {
-            AddFiveItems();
-
-            Assert.IsTrue(_q.Contains("item3"));
-        }
-
-        [Test]
-        public void ContainsAll()
-        {
-            OfferFiveItems();
-
-            Assert.IsTrue(_q.Contains("item3"));
-            Assert.IsFalse(_q.Contains("item"));
-            var list = new List<string>() { "item4", "item2" };
-            Assert.IsTrue(_q.ContainsAll(list));
-
-            list.Add("item");
-            Assert.IsFalse(_q.ContainsAll(list));
-        }
-
-        [Test]
-        public void CopyTo()
-        {
-            OfferFiveItems();
-
-            var objects = new string[_q.Count];
-            _q.CopyTo(objects, 0);
-
-            Assert.AreEqual(objects.Length, _q.Count);
-        }
-
-        [Test]
         public void Drain()
         {
-            OfferFiveItems();
+            AddFiveItems();
 
             var list = new List<string>();
             var result = _q.DrainTo(list, 2);
@@ -152,50 +240,6 @@ namespace Hazelcast.Client.Test
         {
             Assert.IsTrue(_q.Offer("item1"));
             Assert.AreEqual("item1", _q.Element());
-        }
-
-        [Test]
-        public void IsEmpty()
-        {
-            Assert.IsTrue(_q.IsEmpty());
-        }
-
-        [Test]
-        public void IsReadOnly()
-        {
-            Assert.IsFalse(_q.IsReadOnly);
-        }
-
-        [Test]
-        public void Enumeration()
-        {
-            OfferFiveItems();
-
-            var actual = Enumerable.ToArray(_q);
-            CollectionAssert.AreEqual(FiveItems, actual);
-        }
-
-        [Test]
-        public void Listener()
-        {
-            Assert.AreEqual(0, _q.Count);
-            var latch = new CountdownEvent(5);
-            var listener = new ClientListTest.Listener<object>(latch);
-            var id = _q.AddItemListener(listener, true);
-
-            var t = Task.Run(() =>
-            {
-                for (var i = 0; i < 5; i++)
-                {
-                    if (!_q.Offer("event_item" + i))
-                    {
-                        throw new SystemException();
-                    }
-                }
-            });
-
-            Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
-            _q.RemoveItemListener(id);
         }
 
         [Test]
@@ -271,7 +315,6 @@ namespace Hazelcast.Client.Test
             }
             Assert.AreEqual(0, _q.Count);
 
-
             var t2 = Task.Run(async () =>
             {
                 await Task.Delay(200);
@@ -330,62 +373,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void RemoveRetain()
-        {
-            OfferFiveItems();
-
-            var list = new List<string> { "item8", "item9" };
-
-            Assert.IsFalse(_q.RemoveAll(list));
-            Assert.AreEqual(5, _q.Count);
-            list.Add("item3");
-            list.Add("item4");
-            list.Add("item1");
-            Assert.IsTrue(_q.RemoveAll(list));
-            Assert.AreEqual(2, _q.Count);
-            list.Clear();
-            list.Add("item2");
-            list.Add("item5");
-            Assert.IsFalse(_q.RetainAll(list));
-            Assert.AreEqual(2, _q.Count);
-            list.Clear();
-            Assert.IsTrue(_q.RetainAll(list));
-            Assert.AreEqual(0, _q.Count);
-        }
-
-        [Test]
         public void Take()
         {
             Assert.IsTrue(_q.Offer("item1"));
             Assert.AreEqual("item1", _q.Take());
-        }
-
-        [Test]
-        public void ToArray()
-        {
-            OfferFiveItems();
-
-            var array = _q.ToArray();
-            CollectionAssert.AreEqual(FiveItems, array);
-
-            var objects = _q.ToArray(new object[2]);
-            CollectionAssert.AreEqual(FiveItems, objects);
-        }
-
-        [Test]
-        public void WrapperMethods()
-        {
-            var qc = (ICollection<object>)_q;
-
-            qc.Add("asd");
-            Assert.IsTrue(qc.Contains("asd"));
-
-            var value = qc.First();
-            Assert.AreEqual("asd", value);
-
-            var enuma = ((IEnumerable)qc).GetEnumerator();
-            enuma.MoveNext();
-            Assert.AreEqual("asd", enuma.Current);
         }
 
         class ItemListener<T> : IItemListener<T>

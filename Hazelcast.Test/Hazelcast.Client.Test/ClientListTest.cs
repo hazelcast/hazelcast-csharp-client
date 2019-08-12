@@ -82,8 +82,8 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(0, _list.Count);
         }
 
-        [Test]
-        public void AddAll()
+
+            public void AddAll()
         {
             var l = new List<object> { "item1", "item2" };
             Assert.IsTrue(_list.AddAll(l));
