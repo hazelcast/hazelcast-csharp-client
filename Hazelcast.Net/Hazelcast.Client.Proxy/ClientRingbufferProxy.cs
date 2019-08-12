@@ -78,7 +78,7 @@ namespace Hazelcast.Client.Proxy
             return Invoke(request, m => RingbufferAddCodec.DecodeResponse(m).response);
         }
 
-        public Task<long> AddAsync(T item, OverflowPolicy overflowPolicy)
+        public Task<long> AddAsync(T item)
         {
             ValidationUtil.ThrowExceptionIfNull(item, "Item cannot be null");
 

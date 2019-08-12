@@ -132,10 +132,9 @@ namespace Hazelcast.Core
         /// </code>
         /// </summary>
         /// <param name="item">the item to add</param>
-        /// <param name="overflowPolicy">the OverflowPolicy to use.</param>
         /// <returns>the sequenceId of the added item, or -1 if the add failed.</returns>
         /// <exception cref="System.ArgumentNullException">if item or overflowPolicy is null.</exception>
-        Task<long> AddAsync(T item, OverflowPolicy overflowPolicy);
+        Task<long> AddAsync(T item);
 
         /// <summary>Returns the capacity of this Ringbuffer.</summary>
         /// <returns>the capacity.</returns>
