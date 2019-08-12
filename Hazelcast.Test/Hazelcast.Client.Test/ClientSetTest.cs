@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Test
         }
 
         IHSet<object> _set;
-        static readonly string[] FourItems = {"item1", "item2", "item3", "item4"};
+        static readonly string[] FourItems = { "item1", "item2", "item3", "item4" };
 
         void AddFourItems()
         {
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Test
         {
             AddFourItems();
 
-            var l = new [] { FourItems[3], FourItems[2] };
+            var l = new[] { FourItems[3], FourItems[2] };
 
             Assert.IsTrue(_set.RemoveAll(l));
             Assert.AreEqual(2, _set.Count);
@@ -64,7 +64,7 @@ namespace Hazelcast.Client.Test
             l = new[] { FourItems[1], FourItems[0] };
             Assert.IsFalse(_set.RetainAll(l));
             Assert.AreEqual(2, _set.Count);
-            
+
             Assert.IsTrue(_set.RetainAll(Enumerable.Empty<object>()));
             Assert.AreEqual(0, _set.Count);
         }
@@ -122,8 +122,14 @@ namespace Hazelcast.Client.Test
         {
             AddFourItems();
 
-            var actual = Enumerable.ToArray(_set);
-            CollectionAssert.AreEquivalent(FourItems, actual);
+            var count = 0;
+            foreach (var item in _set)
+            {
+                Assert.That((string)item, Does.StartWith("item"));
+                count++;
+            }
+
+            Assert.AreEqual(4, count);
         }
 
         [Test]

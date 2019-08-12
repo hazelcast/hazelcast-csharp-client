@@ -408,13 +408,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public async Task SubmitToKey_NullKey()
+        public void SubmitToKey_NullKey()
         {
             const string key = null;
             const string value = "value10";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            
-            Assert.IsTrue(await ThrowsAsync<ArgumentNullException>(_map.SubmitToKey(key, entryProcessor)), "Should have thrown an exception");
+
+            Assert.Throws<ArgumentNullException>(() => _map.SubmitToKey(key, entryProcessor), "Should have thrown an exception");
         }
 
         [Test]
@@ -783,7 +783,7 @@ namespace Hazelcast.Client.Test
                 _map.TryPut("key1", "value2", 1, TimeUnit.Seconds);
                 latch.Signal();
             });
-            
+
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
             Assert.AreEqual("value1", _map.Get("key1"));
             _map.ForceUnlock("key1");
@@ -803,7 +803,7 @@ namespace Hazelcast.Client.Test
                 _map.TryPut("key1", "value2", 2000, TimeUnit.Milliseconds);
                 latch.Signal();
             });
-            
+
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
             Assert.IsFalse(_map.IsLocked("key1"));
             Assert.AreEqual("value2", _map.Get("key1"));

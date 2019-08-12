@@ -230,19 +230,5 @@ namespace Hazelcast.Client.Test
                 }
             }
         }
-
-        protected async Task<bool> ThrowsAsync<TException>(Task action)
-            where TException : Exception
-        {
-            try
-            {
-                await action;
-            }
-            catch (TException)
-            {
-                return true;
-            }
-            return false;
-        }
     }
 }

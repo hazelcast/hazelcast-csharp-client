@@ -39,6 +39,16 @@ namespace Hazelcast.Client.Test
 
         IHList<object> _list;
 
+        static readonly string[] FourItems = { "item1", "item2", "item1", "item4", };
+
+        void AddFourItems()
+        {
+            foreach (var item in FourItems)
+            {
+                Assert.IsTrue(_list.Add(item));
+            }
+        }
+
         internal sealed class Listener<T> : IItemListener<T>
         {
             readonly CountdownEvent _latch;
@@ -61,10 +71,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void RemoveRetainAll()
         {
-            Assert.IsTrue(_list.Add("item1"));
-            Assert.IsTrue(_list.Add("item2"));
-            Assert.IsTrue(_list.Add("item1"));
-            Assert.IsTrue(_list.Add("item4"));
+            AddFourItems();
 
             var l = new List<object> { "item4", "item3" };
 
@@ -83,7 +90,7 @@ namespace Hazelcast.Client.Test
         }
 
 
-            public void AddAll()
+        public void AddAll()
         {
             var l = new List<object> { "item1", "item2" };
             Assert.IsTrue(_list.AddAll(l));
@@ -177,14 +184,13 @@ namespace Hazelcast.Client.Test
         [Test]
         public void Enumerator()
         {
-            Assert.IsTrue(_list.Add("item1"));
-            Assert.IsTrue(_list.Add("item2"));
-            Assert.IsTrue(_list.Add("item1"));
-            Assert.IsTrue(_list.Add("item4"));
+            AddFourItems();
 
-            var items = Enumerable.ToArray(_list);
-
-            CollectionAssert.AreEqual(new[] { "item1", "item2", "item1", "item4", }, items);
+            var i = 0;
+            foreach (var item in _list)
+            {
+                Assert.AreEqual(FourItems[i++], item);
+            }
 
             var l = _list.SubList(1, 3);
             Assert.AreEqual(2, l.Count);
