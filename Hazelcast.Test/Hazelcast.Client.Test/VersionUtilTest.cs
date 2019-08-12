@@ -21,27 +21,22 @@ namespace Hazelcast.Client.Test
     public class VersionUtilTest
     {
         [Test]
-        public void TestDLLVersion()
+        public void TestDllVersion()
         {
-            var version = typeof(VersionUtil).Assembly.GetName().Version.ToString();
-            Assert.True(version.StartsWith(VersionUtil.GetDllVersion()));
-            Assert.False(VersionUtil.GetDllVersion().EndsWith(".0"));
+            var assemblyVersion = typeof(VersionUtil).Assembly.GetName().Version.ToString();
+            var extracted = VersionUtil.GetDllVersion();
+
+            Assert.That(assemblyVersion, Does.StartWith(extracted));
         }
 
         [Test]
         public void TestServerVersionParse()
         {
-            var v1 = VersionUtil.ParseServerVersion("3");
-            var v2 = VersionUtil.ParseServerVersion("3.9");
-            var v3 = VersionUtil.ParseServerVersion("3.9.1");
-            var v4 = VersionUtil.ParseServerVersion("3.9-SNAPSHOT");
-            var v5 = VersionUtil.ParseServerVersion("3.9.1-SNAPSHOT");
-            Assert.AreEqual(VersionUtil.UnknownVersion, v1);
-            Assert.AreEqual(30900, v2);
-            Assert.AreEqual(30901, v3);
-            Assert.AreEqual(30900, v4);
-            Assert.AreEqual(30901, v5);
+            Assert.AreEqual(VersionUtil.UnknownVersion, VersionUtil.ParseServerVersion("3"));
+            Assert.AreEqual(30900, VersionUtil.ParseServerVersion("3.9"));
+            Assert.AreEqual(30901, VersionUtil.ParseServerVersion("3.9.1"));
+            Assert.AreEqual(30900, VersionUtil.ParseServerVersion("3.9-SNAPSHOT"));
+            Assert.AreEqual(30901, VersionUtil.ParseServerVersion("3.9.1-SNAPSHOT"));
         }
-
     }
 }
