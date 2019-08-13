@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
     [Category("3.10")]
     public class VectorClockTest
     {
-        private VectorClock _inst;
+        VectorClock _inst;
 
         [SetUp]
         public void Init()
@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Test
         }
 
         [TearDown]
-        public  void Destroy()
+        public void Destroy()
         {
             _inst = null;
         }

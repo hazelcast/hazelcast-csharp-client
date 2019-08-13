@@ -23,7 +23,7 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ReadOnlyLazyDictionaryTest : AbstractLazyDictionaryTest
     {
-        private ReadOnlyLazyDictionary<int, string> _testCollection;
+        ReadOnlyLazyDictionary<int, string> _testCollection;
 
         [SetUp]
         public void Init()
@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Test_Keys()
+        public void Keys()
         {
             var ix = 0;
             foreach (var key in _testCollection.Keys)
@@ -49,7 +49,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Test_Values()
+        public void Values()
         {
             var ix = 0;
             foreach (var value in _testCollection.Values)
@@ -59,9 +59,6 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        internal override AbstractLazyDictionary<int, string> TestCollection
-        {
-            get { return _testCollection; }
-        }
+        internal override AbstractLazyDictionary<int, string> TestCollection => _testCollection;
     }
 }

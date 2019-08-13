@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -23,10 +22,11 @@ using NUnit.Framework.Internal;
 
 namespace Hazelcast.Client.Test
 {
-    internal static class TestSupport
+    // TODO: review again, especially the eventually methods
+    static class TestSupport
     {
-        private const int TimeoutSeconds = 30;
-        private static readonly Random Random = new Random();
+        const int TimeoutSeconds = 30;
+        static readonly Random Random = new Random();
 
         public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds, string taskName = "")
         {
