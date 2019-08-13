@@ -19,24 +19,8 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientTxnSetTest : SingleMemberBaseTest
     {
-        //internal const string name = "test";
-
-        [SetUp]
-        public void Init()
-        {
-            //map = client.GetMap<object, object>(name);
-        }
-
-        [TearDown]
-        public static void Destroy()
-        {
-            //map.Clear();
-            //client.GetLifecycleService().Shutdown();
-        }
-
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAddRemove()
+        public void AddRemove()
         {
             var name = TestSupport.RandomString();
             var s = Client.GetSet<object>(name);

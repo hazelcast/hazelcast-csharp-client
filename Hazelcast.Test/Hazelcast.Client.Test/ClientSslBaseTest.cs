@@ -13,17 +13,10 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Resources;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Remote;
-using Hazelcast.Test;
 using NUnit.Framework;
 
 
@@ -47,7 +40,7 @@ namespace Hazelcast.Client.Test
                 {
                     fileInfo.Delete();
                 }
-                catch (Exception) {}
+                catch (Exception) { }
             }
         }
 
@@ -73,7 +66,7 @@ namespace Hazelcast.Client.Test
             Client = HazelcastClient.NewHazelcastClient(clientConfig);
         }
 
-        private static SSLConfig CreateSslConfig(bool isSslEnabled, bool? validateCertificateChain, bool? validateCertificateName,
+        static SSLConfig CreateSslConfig(bool isSslEnabled, bool? validateCertificateChain, bool? validateCertificateName,
             bool? checkCertificateRevocation, string certSubjectName, byte[] clientCertificate, string certPassword)
         {
             var sslConfig = new SSLConfig();
@@ -96,14 +89,16 @@ namespace Hazelcast.Client.Test
             return sslConfig;
         }
 
-        private static string CreateTmpFile(byte[] cert)
+        static string CreateTmpFile(byte[] cert)
         {
             var tmpFileName = Path.GetTempFileName();
-            var fs = File.Open(tmpFileName, FileMode.Append);
-            var bw = new BinaryWriter(fs);
-            bw.Write(cert);
-            bw.Close();
-            fs.Close();
+
+            using (var fs = File.Open(tmpFileName, FileMode.Append))
+            {
+                fs.Write(cert, 0, cert.Length);
+                fs.Flush(true);
+            }
+
             return tmpFileName;
         }
     }

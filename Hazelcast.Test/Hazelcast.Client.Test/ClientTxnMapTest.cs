@@ -35,15 +35,15 @@ namespace Hazelcast.Client.Test
             _map.Destroy();
         }
 
-        private string _name;
-        private IMap<object, object> _map;
+        string _name;
+        IMap<object, object> _map;
 
         [Test]
-        public virtual void TestGetForUpdate()
+        public void GetForUpdate()
         {
-            var key = "key";
-            var initialValue = 111;
-            var newValue = 123;
+            const string key = "key";
+            const int initialValue = 111;
+            const int newValue = 123;
             _map.Put(key, initialValue);
 
             var context = Client.NewTransactionContext();
@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestKeySetPredicate()
+        public void KeySetPredicate()
         {
             _map.Put("key1", "value1");
             _map.Put("key2", "value2");
@@ -84,11 +84,9 @@ namespace Hazelcast.Client.Test
             context.CommitTransaction();
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestKeySetValues()
+        public void KeySetValues()
         {
-            //var map = client.GetMap<object, object>(name);
             _map.Put("key1", "value1");
             _map.Put("key2", "value2");
             var context = Client.NewTransactionContext();
@@ -105,10 +103,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPutAndRoleBack()
+        public void PutAndRoleBack()
         {
-            var key = "key";
-            var value = "value";
+            const string key = "key";
+            const string value = "value";
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var mapTxn = context.GetMap<object, object>(_name);
@@ -117,9 +115,8 @@ namespace Hazelcast.Client.Test
             Assert.IsNull(_map.Get(key));
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestPutGet()
+        public void PutGet()
         {
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
@@ -132,12 +129,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPutWithTTL()
+        public void PutWithTTL()
         {
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnMap = context.GetMap<object, object>(_name);
-            var ttlMillis = 100;
+            const int ttlMillis = 100;
+
             Assert.IsNull(txnMap.Put("key1", "value1", ttlMillis, TimeUnit.Milliseconds));
             Assert.AreEqual("value1", txnMap.Get("key1"));
 
@@ -148,7 +146,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestTnxMapContainsKey()
+        public void TnxMapContainsKey()
         {
             _map.Put("key1", "value1");
             var context = Client.NewTransactionContext();
@@ -161,12 +159,11 @@ namespace Hazelcast.Client.Test
             context.CommitTransaction();
         }
 
-        /// <exception cref="System.Exception" />
         [Test]
-        public virtual void TestTnxMapDelete()
+        public void TestTnxMapDelete()
         {
-            var key = "key1";
-            var value = "old1";
+            const string key = "key1";
+            const string value = "old1";
             _map.Put(key, value);
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
@@ -176,9 +173,8 @@ namespace Hazelcast.Client.Test
             Assert.IsNull(_map.Get(key));
         }
 
-        /// <exception cref="System.Exception" />
         [Test]
-        public virtual void TestTnxMapIsEmpty()
+        public void TnxMapIsEmpty()
         {
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
@@ -188,10 +184,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestTnxMapPutIfAbsent()
+        public void TnxMapPutIfAbsent()
         {
-            var keyValue1 = "keyValue1";
-            var keyValue2 = "keyValue2";
+            const string keyValue1 = "keyValue1";
+            const string keyValue2 = "keyValue2";
             _map.Put(keyValue1, keyValue1);
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
@@ -203,12 +199,11 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(keyValue2, _map.Get(keyValue2));
         }
 
-        /// <exception cref="System.Exception" />
         [Test]
-        public virtual void TestTnxMapRemove()
+        public void TnxMapRemove()
         {
-            var key = "key1";
-            var value = "old1";
+            const string key = "key1";
+            const string value = "old1";
             _map.Put(key, value);
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
@@ -218,14 +213,13 @@ namespace Hazelcast.Client.Test
             Assert.IsNull(_map.Get(key));
         }
 
-        /// <exception cref="System.Exception" />
         [Test]
-        public virtual void TestTnxMapRemoveKeyValue()
+        public void TnxMapRemoveKeyValue()
         {
-            var key1 = "key1";
-            var oldValue1 = "old1";
-            var key2 = "key2";
-            var oldValue2 = "old2";
+            const string key1 = "key1";
+            const string oldValue1 = "old1";
+            const string key2 = "key2";
+            const string oldValue2 = "old2";
             _map.Put(key1, oldValue1);
             _map.Put(key2, oldValue2);
             var context = Client.NewTransactionContext();
@@ -238,13 +232,12 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(oldValue2, _map.Get(key2));
         }
 
-        /// <exception cref="System.Exception" />
         [Test]
-        public virtual void TestTnxMapReplace()
+        public void TnxMapReplace()
         {
-            var key1 = "key1";
-            var key2 = "key2";
-            var replaceValue = "replaceValue";
+            const string key1 = "key1";
+            const string key2 = "key2";
+            const string replaceValue = "replaceValue";
             _map.Put(key1, "OLD_VALUE");
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
@@ -257,13 +250,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestTnxMapReplaceKeyValue()
+        public void TnxMapReplaceKeyValue()
         {
-            var key1 = "key1";
-            var oldValue1 = "old1";
-            var newValue1 = "new1";
-            var key2 = "key2";
-            var oldValue2 = "old2";
+            const string key1 = "key1";
+            const string oldValue1 = "old1";
+            const string newValue1 = "new1";
+            const string key2 = "key2";
+            const string oldValue2 = "old2";
             _map.Put(key1, oldValue1);
             _map.Put(key2, oldValue2);
             var context = Client.NewTransactionContext();
@@ -277,10 +270,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestTxnMapGet_BeforeCommit()
+        public void TxnMapGet_BeforeCommit()
         {
-            var key = "key";
-            var value = "Value";
+            const string key = "key";
+            const string value = "Value";
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnMap = context.GetMap<object, object>(_name);
@@ -291,10 +284,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestTxnMapPut()
+        public void TxnMapPut()
         {
-            var key = "key";
-            var value = "Value";
+            const string key = "key";
+            const string value = "Value";
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnMap = context.GetMap<object, object>(_name);
@@ -303,12 +296,11 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(value, _map.Get(key));
         }
 
-        /// <exception cref="System.Exception" />
         [Test]
-        public virtual void TestTxnMapPut_BeforeCommit()
+        public void TxnMapPut_BeforeCommit()
         {
-            var key = "key";
-            var value = "Value";
+            const string key = "key";
+            const string value = "Value";
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnMap = context.GetMap<object, object>(_name);
@@ -317,10 +309,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestTxnMapSet()
+        public void TxnMapSet()
         {
-            var key = "key";
-            var value = "Value";
+            const string key = "key";
+            const string value = "Value";
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnMap = context.GetMap<object, object>(_name);
@@ -330,9 +322,9 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestUnlockAfterRollback()
+        public void UnlockAfterRollback()
         {
-            var key = "key";
+            const string key = "key";
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnMap = context.GetMap<object, object>(_name);

@@ -16,8 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
@@ -29,25 +27,25 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class HazelcastCloudDiscoveryTest
     {
-        private const string JsonErrorResponse =
+        const string JsonErrorResponse =
             "{\"application\":\"orchestrator-service\",\"message\":\"Cluster with token: DiscoveryToken not found.\"}";
 
-        private const string JsonResponse = "[{\"private-address\":\"10.47.0.8\",\"public-address\":\"54.213.63.142:32298\"}," +
+        const string JsonResponse = "[{\"private-address\":\"10.47.0.8\",\"public-address\":\"54.213.63.142:32298\"}," +
                                             "{\"private-address\":\"10.47.0.9\",\"public-address\":\"54.245.77.185:32298\"}," +
                                             "{\"private-address\":\"10.47.0.10\",\"public-address\":\"54.186.232.37:32298\"}]";
 
-        private static readonly Dictionary<Address, Address> Addresses = new Dictionary<Address, Address>
+        static readonly Dictionary<Address, Address> Addresses = new Dictionary<Address, Address>
         {
             {new Address("10.47.0.8", 32298), new Address("54.213.63.142", 32298)},
             {new Address("10.47.0.9", 32298), new Address("54.245.77.185", 32298)},
             {new Address("10.47.0.10", 32298), new Address("54.186.232.37", 32298)}
         };
 
-        private const string DiscoveryToken = "DiscoveryToken";
-        private const string DiscoveryTokenInvalid = "DiscoveryTokenInvalid";
-        private const string LocalTestBaseUrl = "http://localhost:8001";
+        const string DiscoveryToken = "DiscoveryToken";
+        const string DiscoveryTokenInvalid = "DiscoveryTokenInvalid";
+        const string LocalTestBaseUrl = "http://localhost:8001";
 
-        private HttpListener _httpListener;
+        HttpListener _httpListener;
 
         [OneTimeSetUp]
         public void OneTimeSetup()
@@ -103,7 +101,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestHzCloudDiscovery()
+        public void HzCloudDiscovery()
         {
             var hzCloudDiscovery = new HazelcastCloudDiscovery(DiscoveryToken, int.MaxValue, LocalTestBaseUrl);
             var result = hzCloudDiscovery.DiscoverNodes();
@@ -115,7 +113,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestHzCloudDiscovery_invalidToken()
+        public void HzCloudDiscovery_invalidToken()
         {
             var hzCloudDiscovery = new HazelcastCloudDiscovery(DiscoveryTokenInvalid, int.MaxValue, LocalTestBaseUrl);
             var result = hzCloudDiscovery.DiscoverNodes();
@@ -123,7 +121,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestHzCloudAddressProvider()
+        public void HzCloudAddressProvider()
         {
             Environment.SetEnvironmentVariable(HazelcastCloudDiscovery.CloudUrlBaseProperty, LocalTestBaseUrl);
             var cfg = new ClientConfig();

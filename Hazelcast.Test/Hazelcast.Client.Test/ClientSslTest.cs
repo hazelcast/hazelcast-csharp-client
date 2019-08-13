@@ -13,14 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Authentication;
-using System.Text;
-using Hazelcast.Config;
-using Hazelcast.Core;
-using Hazelcast.Remote;
 using Hazelcast.Test;
 using NUnit.Framework;
 
@@ -30,9 +22,8 @@ namespace Hazelcast.Client.Test
     [Category("enterprise")]
     public class ClientSSLTest : ClientSSLBaseTest
     {
-
         [Test]
-        public void TestSSLEnabled_validateName_validName()
+        public void SSLEnabled_validateName_validName()
         {
             Setup(serverXml:Resources.hazelcast_ssl_signed,
                 isSslEnabled:true,
@@ -46,7 +37,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_validateName_invalidName()
+        public void SSLEnabled_validateName_invalidName()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {            
@@ -62,7 +53,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_validateChain_DoNotValidateName_invalidName()
+        public void SSLEnabled_validateChain_DoNotValidateName_invalidName()
         {
             Setup(serverXml:Resources.hazelcast_ssl_signed, 
                 isSslEnabled:true, 
@@ -76,7 +67,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_DoNotValidateChain_DoNotValidateName_invalidName()
+        public void SSLEnabled_DoNotValidateChain_DoNotValidateName_invalidName()
         {
             Setup(serverXml:Resources.hazelcast_ssl_signed, 
                 isSslEnabled:true, 
@@ -90,7 +81,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLDisabled()
+        public void SSLDisabled()
         {
             Setup(serverXml:Resources.hazelcast, 
                 isSslEnabled:false, 
@@ -104,7 +95,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_self_signed_remote_cert()
+        public void SSLEnabled_self_signed_remote_cert()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -120,7 +111,7 @@ namespace Hazelcast.Client.Test
         }
         
         [Test]
-        public void TestSSLEnabled_signed_remote_cert()
+        public void SSLEnabled_signed_remote_cert()
         {
             Setup(serverXml:Resources.hazelcast_ssl_signed, 
                 isSslEnabled:true, 
@@ -134,7 +125,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_validateChain_validateName_validName()
+        public void SSLEnabled_validateChain_validateName_validName()
         {
             Setup(serverXml:Resources.hazelcast_ssl_signed, 
                 isSslEnabled:true, 

@@ -27,8 +27,8 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientShutdownTest : HazelcastTestSupport
     {
-        private RemoteController.Client _remoteController;
-        private Cluster _cluster;
+        RemoteController.Client _remoteController;
+        Cluster _cluster;
 
         [SetUp]
         public void Setup()

@@ -15,14 +15,11 @@
 using System;
 using Hazelcast.Config;
 using Hazelcast.Core;
-using Hazelcast.Logging;
 
 namespace Hazelcast.Client.Test
 {
-    internal class HazelcastClientFactory
+    class HazelcastClientFactory
     {
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (HazelcastClientFactory));
-
         public IHazelcastInstance CreateClient(Action<ClientConfig> configure)
         {
             var config = new ClientConfig();

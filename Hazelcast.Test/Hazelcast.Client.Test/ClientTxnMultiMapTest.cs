@@ -26,16 +26,10 @@ namespace Hazelcast.Client.Test
             _name = TestSupport.RandomString();
         }
 
-        [TearDown]
-        public static void Destroy()
-        {
-        }
+        string _name;
 
-        private string _name;
-
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestPutGetRemove()
+        public void PutGetRemove()
         {
             var mm = Client.GetMultiMap<object, object>(_name);
 
@@ -55,12 +49,11 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestPutGetRemove2()
+        public void PutGetRemove2()
         {
             var mm = Client.GetMultiMap<object, object>(_name);
-            var key = "key";
+            const string key = "key";
             Client.GetMultiMap<object, object>(_name).Put(key, "value");
             var context = Client.NewTransactionContext();
 
@@ -79,7 +72,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestRemove()
+        public void Remove()
         {
             const string key = "key";
             const string value = "value";
@@ -97,17 +90,17 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestRemoveAll()
+        public void RemoveAll()
         {
             const string key = "key";
             const string value = "value";
             var name = TestSupport.RandomString();
             var multiMap = Client.GetMultiMap<string, string>(name);
+
             for (var i = 0; i < 10; i++)
             {
                 multiMap.Put(key, value + i);
             }
-
 
             var tx = Client.NewTransactionContext();
 
@@ -119,10 +112,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSize()
+        public void Size()
         {
-            var key = "key";
-            var value = "value";
+            const string key = "key";
+            const string value = "value";
 
             var mm = Client.GetMultiMap<object, object>(_name);
             mm.Put(key, value);
@@ -140,10 +133,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestValueCount()
+        public void ValueCount()
         {
-            var key = "key";
-            var value = "value";
+            const string key = "key";
+            const string value = "value";
 
             var mm = Client.GetMultiMap<object, object>(_name);
             mm.Put(key, value);

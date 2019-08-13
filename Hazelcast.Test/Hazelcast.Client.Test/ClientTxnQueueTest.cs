@@ -29,17 +29,12 @@ namespace Hazelcast.Client.Test
             _name = TestSupport.RandomString();
         }
 
-        [TearDown]
-        public static void Destroy()
-        {
-        }
-
-        private string _name;
+        string _name;
 
         [Test]
-        public void TestQueueSizeAfterTxnOfferPoll()
+        public void QueueSizeAfterTxnOfferPoll()
         {
-            var item = "offered";
+            const string item = "offered";
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnQueue = context.GetQueue<object>(_name);
@@ -49,9 +44,8 @@ namespace Hazelcast.Client.Test
             context.CommitTransaction();
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestTransactionalOfferPoll1()
+        public void TransactionalOfferPoll1()
         {
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
@@ -63,9 +57,8 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(0, Client.GetQueue<string>(_name).Count);
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestTransactionalOfferPoll2()
+        public void TransactionalOfferPoll2()
         {
             ITransactionContext context = null;
             try
@@ -87,6 +80,7 @@ namespace Hazelcast.Client.Test
                 });
                 t.Start();
 
+                // TODO: better transaction API needed
                 context = Client.NewTransactionContext();
                 context.BeginTransaction();
                 var q0 = context.GetQueue<string>(_name);
@@ -116,9 +110,9 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestTransactionalOfferTake()
+        public void TransactionalOfferTake()
         {
-            var item = "offered";
+            const string item = "offered";
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var txnQueue = context.GetQueue<object>(_name);
@@ -128,9 +122,8 @@ namespace Hazelcast.Client.Test
             context.CommitTransaction();
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestTransactionalPeek()
+        public void TransactionalPeek()
         {
             var context = Client.NewTransactionContext();
             context.BeginTransaction();

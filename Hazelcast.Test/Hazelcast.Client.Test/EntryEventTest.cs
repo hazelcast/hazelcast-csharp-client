@@ -22,42 +22,41 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class EntryEventTest
     {
-        private ISerializationService serializationService;
-        private DataAwareEntryEvent<string, int?> dataAwareEntryEvent;
-        private IData dataString;
-        private IData dataInt;
-        private string testString;
-        private int testInt;
+        ISerializationService _serializationService;
+        DataAwareEntryEvent<string, int?> _dataAwareEntryEvent;
+        IData _dataString;
+        IData _dataInt;
+        string _testString;
+        int _testInt;
 
         [SetUp]
         public void Init()
         {
-            serializationService = new SerializationServiceBuilder().Build();
-            testString = "Test String";
-            dataString = serializationService.ToData(testString);
-            testInt = 666;
-            dataInt = serializationService.ToData(testInt);
+            _serializationService = new SerializationServiceBuilder().Build();
+            _testString = "Test String";
+            _dataString = _serializationService.ToData(_testString);
+            _testInt = 666;
+            _dataInt = _serializationService.ToData(_testInt);
 
             var member = new Member(new Address("localhost", 5701), "");
 
-            dataAwareEntryEvent = new DataAwareEntryEvent<string, int?>("source", member, EntryEventType.Added,
-                dataString, dataInt, dataInt, null, serializationService);
+            _dataAwareEntryEvent = new DataAwareEntryEvent<string, int?>("source", member, EntryEventType.Added,
+                _dataString, _dataInt, _dataInt, null, _serializationService);
         }
 
         [TearDown]
         public void Destroy()
         {
-            serializationService.Destroy();
+            _serializationService.Destroy();
         }
 
-
         [Test]
-        public virtual void TestGetLazy()
+        public void GetLazy()
         {
-            Assert.AreEqual(dataAwareEntryEvent.GetKey(), testString);
-            Assert.AreEqual(dataAwareEntryEvent.GetValue(), testInt);
-            Assert.AreEqual(dataAwareEntryEvent.GetOldValue(), testInt);
-            Assert.Null(dataAwareEntryEvent.GetMergingValue());
+            Assert.AreEqual(_dataAwareEntryEvent.GetKey(), _testString);
+            Assert.AreEqual(_dataAwareEntryEvent.GetValue(), _testInt);
+            Assert.AreEqual(_dataAwareEntryEvent.GetOldValue(), _testInt);
+            Assert.Null(_dataAwareEntryEvent.GetMergingValue());
         }
     }
 }
