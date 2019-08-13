@@ -22,10 +22,10 @@ using Hazelcast.Util;
 #pragma warning disable CS1591
  namespace Hazelcast.Client.Spi
 {
-    internal sealed class ClientExecutionService : IClientExecutionService
+    sealed class ClientExecutionService : IClientExecutionService
     {
-        private readonly TaskFactory _taskFactory = Task.Factory;
-        private readonly AtomicBoolean _live = new AtomicBoolean(true);
+        readonly TaskFactory _taskFactory = Task.Factory;
+        readonly AtomicBoolean _live = new AtomicBoolean(true);
 
         public ClientExecutionService(string name, int poolSize)
         {
@@ -41,71 +41,34 @@ using Hazelcast.Util;
             return _taskFactory.StartNew(function);
         }
 
-        public void ScheduleWithFixedDelay(Action command, long initialDelay, long period, TimeUnit unit, CancellationToken token)
+        public void ScheduleWithFixedDelay(Action command, TimeSpan initialDelay, TimeSpan period, CancellationToken ct)
         {
             if (!_live.Get())
             {
                 throw new HazelcastException("Client is shut down.");
             }
-            ScheduleWithCancellation(command, initialDelay, unit, token).ContinueWith(task =>
-            {
-                if (!task.IsCanceled)
-                {
-                    ScheduleWithFixedDelay(command, period, period, unit, token);
-                }
-            }, token).IgnoreExceptions();
-        }
 
-        public Task ScheduleWithCancellation(Action command, long delay, TimeUnit unit, CancellationToken token)
-        {
-            if (!_live.Get())
+            Task.Run(async () =>
             {
-                throw new HazelcastException("Client is shut down.");
-            }
-            var tcs = new TaskCompletionSource<object>();
-            var timer = new Timer(o =>
-            {
-                var _tcs = (TaskCompletionSource<object>) o;
-                if (token.IsCancellationRequested)
-                {
-                    _tcs.SetCanceled();
-                }
-                else
-                {
-                    _tcs.SetResult(null);
-                }
-            }, tcs, unit.ToMillis(delay), Timeout.Infinite);
-
-            var continueTask = tcs.Task.ContinueWith(t =>
-            {
-                timer.Dispose();
-                if (!t.IsCanceled)
+                await Task.Delay(initialDelay, ct);
+                while (ct.IsCancellationRequested == false)
                 {
                     command();
+                    await Task.Delay(period, ct);
                 }
-            }, token);
-            return continueTask;
+            }, ct).IgnoreExceptions();
+
         }
 
-        public Task Schedule(Action command, long delay, TimeUnit unit)
+        public async Task Schedule(Action command, TimeSpan delay, CancellationToken token)
         {
             if (!_live.Get())
             {
                 throw new HazelcastException("Client is shut down.");
             }
-            var tcs = new TaskCompletionSource<object>();
-            var timer = new Timer(o =>
-            {
-                var _tcs = (TaskCompletionSource<object>) o;
-                _tcs.SetResult(null);
-            }, tcs, unit.ToMillis(delay), Timeout.Infinite);
 
-            var continueTask = tcs.Task.ContinueWith(t =>
-            {
-                timer.Dispose();
-                command();
-            });
-            return continueTask;
+            await Task.Delay(delay, token);
+            command();
         }
 
         public void Shutdown()

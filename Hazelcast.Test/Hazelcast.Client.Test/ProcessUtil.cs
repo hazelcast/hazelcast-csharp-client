@@ -78,7 +78,7 @@ namespace Hazelcast.Client.Test
                 pt => { suspend(pt); });
         }
 
-        private static ProcessThread[] GetThreads(Process process)
+        static ProcessThread[] GetThreads(Process process)
         {
             var threads = new ProcessThread[process.Threads.Count];
             for (var i = 0; i < process.Threads.Count; i++)
@@ -88,7 +88,7 @@ namespace Hazelcast.Client.Test
             return threads;
         }
 
-        private static class NativeMethods
+        static class NativeMethods
         {
             [DllImport("kernel32.dll")]
             [return: MarshalAs(UnmanagedType.Bool)]

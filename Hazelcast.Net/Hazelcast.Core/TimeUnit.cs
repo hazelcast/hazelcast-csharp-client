@@ -21,19 +21,14 @@ namespace Hazelcast.Core
     {
         Milliseconds = 1,
         Seconds = 1000,
-        Minutes = 60*1000
+        Minutes = 60 * 1000
     }
 
-    internal static class TimeUnitExtensions
+    static class TimeUnitExtensions
     {
-        public static long Convert(this TimeUnit thisUnit, long duration, TimeUnit targetUnit)
-        {
-            return ((duration*(long) targetUnit)/(long) thisUnit);
-        }
-
         public static long ToMillis(this TimeUnit thisUnit, long duration)
         {
-            return (duration*(long) thisUnit);
+            return (duration * (long)thisUnit);
         }
     }
 }

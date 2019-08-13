@@ -19,7 +19,7 @@ using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
-    public class CustomPredicate<K, V> : IPredicate<K, V>
+    class CustomPredicate<K, V> : IPredicate<K, V>
     {
         public void ReadData(IObjectDataInput input)
         {
@@ -46,35 +46,35 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            map = Client.GetMap<object, object>(TestSupport.RandomString());
+            _map = Client.GetMap<object, object>(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            map.Clear();
+            _map.Clear();
         }
 
-        internal static IMap<object, object> map;
+        IMap<object, object> _map;
 
-        private void FillMap()
+        void FillMap()
         {
             for (var i = 0; i < 10; i++)
             {
-                map.Put("key-" + i, "value-" + i);
+                _map.Put("key-" + i, "value-" + i);
             }
         }
 
-        private void FillMapNumericValues()
+        void FillMapNumericValues()
         {
             for (var i = 0; i < 10; i++)
             {
-                map.Put(i, i);
+                _map.Put(i, i);
             }
         }
 
         [Test]
-        public virtual void TesCustomPredicate()
+        public void CustomPredicate()
         {
             var mapOther = Client.GetMap<int, string>(TestSupport.RandomString());
             var ep  = new EqualPredicate();
@@ -90,405 +90,404 @@ namespace Hazelcast.Client.Test
             }
         }
 
-
         [Test]
-        public virtual void TestAnd()
+        public void And()
         {
             FillMap();
             var predicate = CreateAndPredicate();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-1"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestBetween()
+        public void Between()
         {
             FillMapNumericValues();
             var predicate = CreateBetween();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {4, 5, 6}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestEqual()
+        public void Equal()
         {
             FillMap();
             var predicate = CreateEqual();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-0"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestFalse()
+        public void False()
         {
             FillMap();
             var predicate = CreateFalse();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.AreEqual(0, keySet.Count);
         }
 
         [Test]
-        public virtual void TestGreaterThan()
+        public void GreaterThan()
         {
             FillMap();
             var predicate = CreateGreaterThan();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-9"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestGreaterThanOrEqual()
+        public void GreaterThanOrEqual()
         {
             FillMap();
             var predicate = CreateGreaterThanOrEqual();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-8", "key-9"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestILike()
+        public void ILike()
         {
-            map.Put("key-1", "a_value");
-            map.Put("key-2", "b_value");
-            map.Put("key-3", "aa_value");
-            map.Put("key-4", "AA_value");
+            _map.Put("key-1", "a_value");
+            _map.Put("key-2", "b_value");
+            _map.Put("key-3", "aa_value");
+            _map.Put("key-4", "AA_value");
             var predicate = CreateILike();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-1", "key-3", "key-4"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestIn()
+        public void In()
         {
             FillMapNumericValues();
             var predicate = CreateIn();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {1, 5, 7}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestLessThan()
+        public void LessThan()
         {
             FillMap();
             var predicate = CreateLessThan();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-0"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestLessThanOrEqual()
+        public void LessThanOrEqual()
         {
             FillMap();
             var predicate = CreateLessThanOrEqual();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-0", "key-1"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestLike()
+        public void Like()
         {
-            map.Put("key-1", "a_value");
-            map.Put("key-2", "b_value");
-            map.Put("key-3", "aa_value");
-            map.Put("key-4", "AA_value");
+            _map.Put("key-1", "a_value");
+            _map.Put("key-2", "b_value");
+            _map.Put("key-3", "aa_value");
+            _map.Put("key-4", "AA_value");
             var predicate = CreateLike();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-1", "key-3"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestNot()
+        public void Not()
         {
             FillMap();
             var predicate = CreateNot();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-0"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestNotEqual()
+        public void NotEqual()
         {
             FillMap();
             var predicate = CreateNotEqual();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-1", "key-2", "key-3", "key-4", "key-5", "key-6", "key-7", "key-8", "key-9"},
                 Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestOr()
+        public void Or()
         {
             FillMap();
             var predicate = CreateOr();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-1", "key-2"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestRegex()
+        public void Regex()
         {
-            map.Put("key-1", "car");
-            map.Put("key-2", "cry");
-            map.Put("key-3", "giraffe");
+            _map.Put("key-1", "car");
+            _map.Put("key-2", "cry");
+            _map.Put("key-3", "giraffe");
             var predicate = CreateRegex();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-1", "key-2"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestSql()
+        public void Sql()
         {
             FillMap();
             var predicate = CreateSql();
-            var keySet = map.KeySet(predicate);
+            var keySet = _map.KeySet(predicate);
             Assert.That(new[] {"key-1"}, Is.EquivalentTo(keySet.ToArray()));
         }
 
         [Test]
-        public virtual void TestTrue()
+        public void True()
         {
             FillMap();
             var predicate = CreateTrue();
-            var keySet = map.KeySet(predicate);
-            Assert.That(map.KeySet(), Is.EquivalentTo(keySet.ToArray()));
+            var keySet = _map.KeySet(predicate);
+            Assert.That(_map.KeySet(), Is.EquivalentTo(keySet.ToArray()));
         }        
         
         [Test]
-        public virtual void TestAndSerialize()
+        public void AndSerialize()
         {
             var predicate = CreateAndPredicate();
-            map.Put("key", predicate);
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestBetweenSerialize()
+        public void BetweenSerialize()
         {
             var predicate = CreateBetween();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestEqualSerialize()
+        public void EqualSerialize()
         {
             var predicate = CreateEqual();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestFalseSerialize()
+        public void FalseSerialize()
         {
             var predicate = CreateFalse();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestGreaterThanSerialize()
+        public void GreaterThanSerialize()
         {
             var predicate = CreateGreaterThan();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestGreaterThanOrEqualSerialize()
+        public void GreaterThanOrEqualSerialize()
         {
             var predicate = CreateGreaterThanOrEqual();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestILikeSerialize()
+        public void ILikeSerialize()
         {
             var predicate = CreateILike();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestInSerialize()
+        public void InSerialize()
         {
             var predicate = CreateIn();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestLessThanSerialize()
+        public void LessThanSerialize()
         {
             var predicate = CreateLessThan();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestLessThanOrEqualSerialize()
+        public void LessThanOrEqualSerialize()
         {
             var predicate = CreateLessThanOrEqual();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestLikeSerialize()
+        public void LikeSerialize()
         {
             var predicate = CreateLike();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestNotSerialize()
+        public void NotSerialize()
         {
             var predicate = CreateNot();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestNotEqualSerialize()
+        public void NotEqualSerialize()
         {
             var predicate = CreateNotEqual();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestOrSerialize()
+        public void OrSerialize()
         {
             var predicate = CreateOr();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestRegexSerialize()
+        public void RegexSerialize()
         {
             var predicate = CreateRegex();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestSqlSerialize()
+        public void SqlSerialize()
         {
             var predicate = CreateSql();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
         [Test]
-        public virtual void TestTrueSerialize()
+        public void TrueSerialize()
         {
             var predicate = CreateTrue();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }        
         
         [Test]
-        public virtual void TestInstanceOfSerialize()
+        public void InstanceOfSerialize()
         {
             var predicate = CreateInstanceOf();
-            map.Put("key", predicate);
-            Assert.AreEqual(predicate, map.Get("key"));
+            _map.Put("key", predicate);
+            Assert.AreEqual(predicate, _map.Get("key"));
         }
 
-        private IPredicate CreateAndPredicate()
+        static IPredicate CreateAndPredicate()
         {
             var predicate0 = Predicates.IsLessThan("this", "value-2");
             var predicate1 = Predicates.IsGreaterThan("this", "value-0");
             return new AndPredicate(predicate0, predicate1);
         }
 
-        private IPredicate CreateBetween()
+        static IPredicate CreateBetween()
         {
             return Predicates.IsBetween("this", 4, 6);
         }
 
-        private IPredicate CreateEqual()
+        static IPredicate CreateEqual()
         {
             return Predicates.IsEqual("this", "value-0");
         }
 
-        private IPredicate CreateFalse()
+        static IPredicate CreateFalse()
         {
             return Predicates.False();
         }
 
-        private IPredicate CreateGreaterThan()
+        static IPredicate CreateGreaterThan()
         {
             return Predicates.IsGreaterThan("this", "value-8");
         }
 
-        private IPredicate CreateGreaterThanOrEqual()
+        static IPredicate CreateGreaterThanOrEqual()
         {
             return Predicates.IsGreaterThanOrEqual("this", "value-8");
         }
 
-        private IPredicate CreateILike()
+        static IPredicate CreateILike()
         {
             return Predicates.IsILike("this", "a%");
         }
 
-        private IPredicate CreateIn()
+        static IPredicate CreateIn()
         {
             return Predicates.IsIn("this", 1, 5, 7);
         }
 
-        private IPredicate CreateLessThan()
+        static IPredicate CreateLessThan()
         {
             return Predicates.IsLessThan("this", "value-1");
         }
 
-        private IPredicate CreateLessThanOrEqual()
+        static IPredicate CreateLessThanOrEqual()
         {
             return Predicates.IsLessThanOrEqual("this", "value-1");
         }
 
-        private IPredicate CreateLike()
+        static IPredicate CreateLike()
         {
             return Predicates.IsLike("this", "a%");
         }
 
-        private IPredicate CreateNot()
+        static IPredicate CreateNot()
         {
             var predicate0 = Predicates.IsNotEqual("this", "value-0");
             return Predicates.Not(predicate0);
         }
 
-        private IPredicate CreateNotEqual()
+        static IPredicate CreateNotEqual()
         {
             return Predicates.IsNotEqual("this", "value-0");
         }
 
-        private IPredicate CreateOr()
+        IPredicate CreateOr()
         {
             var predicate0 = Predicates.IsEqual("this", "value-1");
             var predicate1 = Predicates.IsEqual("this", "value-2");
             return Predicates.Or(predicate0, predicate1);
         }
 
-        private IPredicate CreateRegex()
+        static IPredicate CreateRegex()
         {
             return Predicates.MatchesRegex("this", "c[ar].*");
         }
 
-        private IPredicate CreateSql()
+        static IPredicate CreateSql()
         {
             return Predicates.Sql("this == 'value-1'");
         }
 
-        private IPredicate CreateTrue()
+        static IPredicate CreateTrue()
         {
             return Predicates.True();
         }
 
-        private IPredicate CreateInstanceOf()
+        static IPredicate CreateInstanceOf()
         {
             return Predicates.InstanceOf("java.lang.Integer");
         }

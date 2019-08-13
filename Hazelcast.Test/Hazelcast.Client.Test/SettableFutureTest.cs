@@ -137,10 +137,9 @@ namespace Hazelcast.Client.Test
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                var future = new SettableFuture<string>
-                {
-                    Result = "done", Exception = new Exception()
-                };
+                var future = new SettableFuture<string>();
+                future.Result = "done";
+                future.Exception = new Exception();
             });
         }
 
@@ -149,10 +148,9 @@ namespace Hazelcast.Client.Test
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                var future = new SettableFuture<string>
-                {
-                    Exception = new Exception(), Result = "done"
-                };
+                var future = new SettableFuture<string>();
+                future.Exception = new Exception();
+                future.Result = "done";
             });
         }
 
@@ -170,7 +168,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void IsComplete()
         {
-            var future = new SettableFuture<String>();
+            var future = new SettableFuture<string>();
             Assert.IsFalse(future.IsComplete);
 
             future.Result = "done";
@@ -194,7 +192,7 @@ namespace Hazelcast.Client.Test
         {
             Assert.Throws<Exception>(() =>
             {
-                var future = new SettableFuture<String>();
+                var future = new SettableFuture<string>();
                 var task = future.ToTask();
 
                 Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));

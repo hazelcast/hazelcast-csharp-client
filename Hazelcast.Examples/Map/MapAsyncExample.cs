@@ -22,7 +22,7 @@ namespace Hazelcast.Examples.Map
 {
     internal class MapAsyncExample
     {
-        private static void Run(string[] args)
+        private static async Task Run(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
@@ -37,11 +37,14 @@ namespace Hazelcast.Examples.Map
             for (var i = 0; i < 100; i++)
             {
                 var key = "key " + i;
-                var task = map.PutAsync(key, " value " + i).ContinueWith(t => { Console.WriteLine("Added " + key); });
+                var task = map.PutAsync(key, " value " + i).ContinueWith(t =>
+                {
+                    Console.WriteLine("Added " + key);
+                });
                 tasks.Add(task);
             }
 
-            Task.WaitAll(tasks.ToArray());
+            await Task.WhenAll(tasks.ToArray());
 
             map.Destroy();
             client.Shutdown();
