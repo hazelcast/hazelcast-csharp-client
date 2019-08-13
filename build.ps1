@@ -44,7 +44,7 @@ if ($netcore) {
 }
 else
 {
-    $targetFramework="net46"
+    $targetFramework="net462"
 }
 
 msbuild Hazelcast.Test\Hazelcast.Test.csproj /p:Configuration=Release /p:TargetFramework=$targetFramework /target:"Restore;Build"
