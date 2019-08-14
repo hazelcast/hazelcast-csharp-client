@@ -136,20 +136,20 @@ namespace Hazelcast.Config
             var sslProtocol = GetProperty(SslProtocol);
             if (sslProtocol == null)
             {
-#if NET40
+#if !NETSTANDARD
                 return SslProtocols.Tls;
 #else
                 return SslProtocols.None;
 #endif
             }
-            SslProtocols result;
-            if (Enum.TryParse(sslProtocol, true, out result))
+
+            if (Enum.TryParse(sslProtocol, true, out SslProtocols result))
             {
                 return result;
             }
-            throw new ArgumentException(
-                "Invalid ssl configuration: SslProtocol. You should use one of SslProtocol enum values: " +
-                string.Join(", ", Enum.GetNames(typeof(SslProtocols))));
+
+            var allNames = string.Join(", ", Enum.GetNames(typeof(SslProtocols)));
+            throw new ArgumentException($"Invalid value of the SslProtocol: '{sslProtocol}'. You should use one of SslProtocol enum values: {allNames}");
         }
 
         internal bool IsCheckCertificateRevocation()
