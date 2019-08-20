@@ -88,7 +88,7 @@ using Hazelcast.Util;
             {
                 if (target.GetUuid().Equals(uuid))
                 {
-                    var type = (MemberAttributeOperationType) operationType;
+                    var type = (Core.MemberAttributeOperationType) operationType;
                     ((Member) target).UpdateAttribute(type, key, value);
                     var memberAttributeEvent = new MemberAttributeEvent(_client.GetCluster(), target, type, key,
                         value);
