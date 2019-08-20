@@ -16,10 +16,9 @@ using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.IO;
 
-#pragma warning disable CS1591
  namespace Hazelcast.Client.Spi
 {
-    public interface IClientClusterService
+    interface IClientClusterService
     {
         /// <param name="listener">The listener to be registered.</param>
         /// <returns>The registration id.</returns>
