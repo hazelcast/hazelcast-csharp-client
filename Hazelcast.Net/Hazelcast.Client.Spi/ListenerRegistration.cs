@@ -17,10 +17,9 @@ using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Util;
 
-#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
-    internal class ListenerRegistration
+    class ListenerRegistration
     {
         public string UserRegistrationId { get; private set; }
         public IClientMessage RegistrationRequest { get; private set; }

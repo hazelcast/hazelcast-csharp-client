@@ -16,13 +16,12 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Core;
 using Hazelcast.IO;
 
-#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     /// <summary>
-    ///     invocation service
+    /// The invocation service.
     /// </summary>
-    public interface IClientInvocationService
+    interface IClientInvocationService
     {
         IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
         IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
