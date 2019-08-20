@@ -294,15 +294,6 @@ namespace Hazelcast.Client
         }
 
         /// <summary>
-        /// Not supported yet.
-        /// </summary>
-        /// <exception cref="NotSupportedException"></exception>
-        public IClientPartitionService GetPartitionService()
-        {
-            throw new NotSupportedException("not supported yet");
-        }
-
-        /// <summary>
         ///     Creates a new hazelcast client using default configuration.
         /// </summary>
         /// <remarks>
