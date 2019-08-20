@@ -34,7 +34,6 @@ namespace Hazelcast.Client
         public Hazelcast.Core.IMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name) { }
         public string GetName() { }
         public Hazelcast.Core.IPNCounter GetPNCounter(string name) { }
-        public Hazelcast.Client.Spi.IClientPartitionService GetPartitionService() { }
         public Hazelcast.Core.IQueue<T> GetQueue<T>(string name) { }
         public Hazelcast.Core.IReplicatedMap<TKey, TValue> GetReplicatedMap<TKey, TValue>(string name) { }
         public Hazelcast.Core.IRingbuffer<T> GetRingbuffer<T>(string name) { }
@@ -81,83 +80,6 @@ namespace Hazelcast.Client.Protocol
         bool IsRetryable();
         Hazelcast.Client.Protocol.IClientMessage SetCorrelationId(long correlationId);
         Hazelcast.Client.Protocol.IClientMessage SetPartitionId(int partitionId);
-    }
-}
-namespace Hazelcast.Client.Spi
-{
-    public interface IClientClusterService
-    {
-        string AddMembershipListener(Hazelcast.Core.IMembershipListener listener);
-        long GetClusterTime();
-        Hazelcast.Core.IClient GetLocalClient();
-        Hazelcast.IO.Address GetMasterAddress();
-        Hazelcast.Core.IMember GetMember(Hazelcast.IO.Address address);
-        Hazelcast.Core.IMember GetMember(string uuid);
-        System.Collections.Generic.ICollection<Hazelcast.Core.IMember> GetMemberList();
-        Hazelcast.IO.Address GetOwnerConnectionAddress();
-        int GetSize();
-        bool RemoveMembershipListener(string registrationId);
-    }
-    public interface IClientExecutionService
-    {
-        System.Threading.Tasks.Task Schedule(System.Action command, System.TimeSpan delay, System.Threading.CancellationToken token);
-        void ScheduleWithFixedDelay(System.Action command, System.TimeSpan initialDelay, System.TimeSpan period, System.Threading.CancellationToken ct);
-        void Shutdown();
-        System.Threading.Tasks.Task Submit(System.Action action);
-        System.Threading.Tasks.Task<T> Submit<T>(System.Func<T> function);
-    }
-    public interface IClientInvocationService
-    {
-        Hazelcast.Client.Spi.IFuture<Hazelcast.Client.Protocol.IClientMessage> InvokeOnKeyOwner(Hazelcast.Client.Protocol.IClientMessage request, object key);
-        Hazelcast.Client.Spi.IFuture<Hazelcast.Client.Protocol.IClientMessage> InvokeOnMember(Hazelcast.Client.Protocol.IClientMessage request, Hazelcast.Core.IMember member);
-        Hazelcast.Client.Spi.IFuture<Hazelcast.Client.Protocol.IClientMessage> InvokeOnPartition(Hazelcast.Client.Protocol.IClientMessage request, int partitionId);
-        Hazelcast.Client.Spi.IFuture<Hazelcast.Client.Protocol.IClientMessage> InvokeOnRandomTarget(Hazelcast.Client.Protocol.IClientMessage request);
-        Hazelcast.Client.Spi.IFuture<Hazelcast.Client.Protocol.IClientMessage> InvokeOnTarget(Hazelcast.Client.Protocol.IClientMessage request, Hazelcast.IO.Address target);
-        void Shutdown();
-    }
-    public interface IClientListenerService
-    {
-        bool AddEventHandler(long correlationId, Hazelcast.Util.DistributedEventHandler eventHandler);
-        bool DeregisterListener(string userRegistrationId);
-        void HandleResponseMessage(Hazelcast.Client.Protocol.IClientMessage message);
-        string RegisterListener(Hazelcast.Client.Protocol.IClientMessage registrationMessage, Hazelcast.Util.DecodeRegisterResponse responseDecoder, Hazelcast.Util.EncodeDeregisterRequest encodeDeregisterRequest, Hazelcast.Util.DistributedEventHandler eventHandler);
-        bool RemoveEventHandler(long correlationId);
-    }
-    public interface IClientPartitionService
-    {
-        int GetPartitionCount();
-        int GetPartitionId(object key);
-        Hazelcast.IO.Address GetPartitionOwner(int partitionId);
-    }
-    public interface IFuture<T>
-    {
-        System.Exception Exception { get; }
-        bool IsComplete { get; }
-        T Result { get; }
-        T GetResult(int miliseconds);
-        System.Threading.Tasks.Task<T> ToTask();
-        bool Wait(int miliseconds);
-        bool Wait();
-    }
-    public enum MemberAttributeOperationType
-    {
-        Put = 1,
-        Remove = 2,
-    }
-    public class RetryableHazelcastException : Hazelcast.Core.HazelcastException
-    {
-        public RetryableHazelcastException() { }
-        public RetryableHazelcastException(string message) { }
-    }
-    public class TargetDisconnectedException : Hazelcast.Client.Spi.RetryableHazelcastException
-    {
-        public TargetDisconnectedException(Hazelcast.IO.Address address) { }
-        public TargetDisconnectedException(Hazelcast.IO.Address address, string message) { }
-        public TargetDisconnectedException(string msg) { }
-    }
-    public class TargetNotMemberException : Hazelcast.Client.Spi.RetryableHazelcastException
-    {
-        public TargetNotMemberException(string message) { }
     }
 }
 namespace Hazelcast.Config
@@ -1439,11 +1361,16 @@ namespace Hazelcast.Core
     public class MemberAttributeEvent : Hazelcast.Core.MembershipEvent
     {
         public MemberAttributeEvent() { }
-        public MemberAttributeEvent(Hazelcast.Core.ICluster cluster, Hazelcast.Core.IMember member, Hazelcast.Client.Spi.MemberAttributeOperationType operationType, string key, object value) { }
+        public MemberAttributeEvent(Hazelcast.Core.ICluster cluster, Hazelcast.Core.IMember member, Hazelcast.Core.MemberAttributeOperationType operationType, string key, object value) { }
         public string GetKey() { }
         public override Hazelcast.Core.IMember GetMember() { }
-        public Hazelcast.Client.Spi.MemberAttributeOperationType GetOperationType() { }
+        public Hazelcast.Core.MemberAttributeOperationType GetOperationType() { }
         public object GetValue() { }
+    }
+    public enum MemberAttributeOperationType
+    {
+        Put = 1,
+        Remove = 2,
     }
     public class MembershipEvent : Hazelcast.Core.EventObject
     {
