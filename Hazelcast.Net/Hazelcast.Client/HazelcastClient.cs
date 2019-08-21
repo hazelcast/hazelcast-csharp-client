@@ -259,8 +259,7 @@ namespace Hazelcast.Client
         /// <inheritdoc />
         public T GetDistributedObject<T>(string serviceName, string name) where T : IDistributedObject
         {
-            var clientProxy = _proxyManager.GetOrCreateProxy<T>(serviceName, name);
-            return (T) ((IDistributedObject) clientProxy);
+            return _proxyManager.GetOrCreateProxy<T>(serviceName, name);
         }
 
         /// <inheritdoc />

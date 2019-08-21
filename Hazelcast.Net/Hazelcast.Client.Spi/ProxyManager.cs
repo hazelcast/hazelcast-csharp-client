@@ -134,30 +134,33 @@ namespace Hazelcast.Client.Spi
             return proxy;
         }
 
-        public ClientProxy GetOrCreateProxy<T>(string service, string id) where T : IDistributedObject
+        public T GetOrCreateProxy<T>(string service, string id) 
+            where T : IDistributedObject
         {
             var objectInfo = new DistributedObjectInfo(service, id);
             var requestedInterface = typeof(T);
-            var clientProxy = _proxies.GetOrAdd(objectInfo, distributedObjectInfo =>
+
+            if (_proxies.TryGetValue(objectInfo, out var clientProxy) == false)
             {
-                // create a new proxy, which needs initialization on server.
-                var proxy = InitProxyLocal(service, id, requestedInterface);
-                InitializeWithRetry(proxy);
-                return proxy;
-            });
+                clientProxy = InitProxyLocal(service, id, requestedInterface);
+                InitializeWithRetry(clientProxy);
+                _proxies.TryAdd(objectInfo, clientProxy);
+
+                return (T)(IDistributedObject)clientProxy;
+            }
 
             // only return the existing proxy, if the requested type args match
+            if (clientProxy is T distributedObject)
+            {
+                return distributedObject;
+            }
+
             var proxyInterface = clientProxy.GetType().GetInterface(requestedInterface.Name);
             var proxyArgs = proxyInterface.GetGenericArguments();
             var requestedArgs = requestedInterface.GetGenericArguments();
-            if (proxyArgs.SequenceEqual(requestedArgs))
-            {
-                // the proxy we found matches what we were looking for
-                return clientProxy;
-            }
 
             var isAssignable = true;
-            for (int i = 0; i < proxyArgs.Length; i++)
+            for (var i = 0; i < proxyArgs.Length; i++)
             {
                 if (!proxyArgs[i].IsAssignableFrom(requestedArgs[i]))
                 {
@@ -168,25 +171,22 @@ namespace Hazelcast.Client.Spi
 
             if (isAssignable)
             {
-                _proxies.TryRemove(objectInfo, out clientProxy);
+                _proxies.TryRemove(objectInfo, out _);
                 return GetOrCreateProxy<T>(service, id);
             }
 
-            throw new InvalidCastException(string.Format("Distributed object is already created with incompatible types [{0}]",
-                string.Join(", ", (object[]) proxyArgs)));
+            throw new InvalidCastException($"Distributed object is already created with incompatible types [{string.Join(", ", (object[]) proxyArgs)}]");
         }
 
-        private ClientProxy MakeProxy(string service, string id, Type requestedInterface)
+        ClientProxy MakeProxy(string service, string id, Type requestedInterface)
         {
-            ClientProxyFactory factory;
-            _proxyFactories.TryGetValue(service, out factory);
+            _proxyFactories.TryGetValue(service, out var factory);
             if (factory == null)
             {
                 throw new ArgumentException("No factory registered for service: " + service);
             }
 
-            var clientProxy = factory(requestedInterface, id);
-            return clientProxy;
+            return factory(requestedInterface, id);
         }
 
         public void Init(ClientConfig config)
@@ -271,8 +271,7 @@ namespace Hazelcast.Client.Spi
         public ClientProxy RemoveProxy(string service, string id)
         {
             var ns = new DistributedObjectInfo(service, id);
-            ClientProxy removed;
-            _proxies.TryRemove(ns, out removed);
+            _proxies.TryRemove(ns, out var removed);
             return removed;
         }
 

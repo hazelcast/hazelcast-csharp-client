@@ -151,7 +151,8 @@ namespace Hazelcast.Client
             return hz != null ? hz.GetLifecycleService() : new TerminatedLifecycleService();
         }
 
-        public T GetDistributedObject<T>(string serviceName, string name) where T : IDistributedObject
+        public T GetDistributedObject<T>(string serviceName, string name) 
+            where T : IDistributedObject
         {
             return GetClient().GetDistributedObject<T>(serviceName, name);
         }
