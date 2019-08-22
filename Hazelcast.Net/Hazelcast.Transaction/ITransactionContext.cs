@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Core;
 
 namespace Hazelcast.Transaction
@@ -28,5 +29,14 @@ namespace Hazelcast.Transaction
         /// <remarks>Begins a transaction.</remarks>
         /// <exception cref="System.InvalidOperationException">if a transaction already is active.</exception>
         ITransaction BeginTransaction();
+
+        [Obsolete("Use ITransaction.Commit instead.", true)]
+        void CommitTransaction();
+
+        [Obsolete("Use ITransaction.Id instead.", true)]
+        string GetTxnId();
+
+        [Obsolete("Dispose an uncommitted ITransaction object or call ITransaction.Rollback explicitly.", true)]
+        void RollbackTransaction();
     }
 }

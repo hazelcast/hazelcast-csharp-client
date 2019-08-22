@@ -54,6 +54,10 @@ namespace Hazelcast.Client.Proxy
             return new Transaction(_transaction);
         }
 
+        public void CommitTransaction() => throw new NotImplementedException("Obsoleted");
+        public string GetTxnId() => throw new NotImplementedException("Obsoleted");
+        public void RollbackTransaction() => throw new NotImplementedException("Obsoleted");
+
         public ITransactionalMap<TKey, TValue> GetMap<TKey, TValue>(string name)
         {
             return GetTransactionalObject<ITransactionalMap<TKey, TValue>>(ServiceNames.Map, name);
