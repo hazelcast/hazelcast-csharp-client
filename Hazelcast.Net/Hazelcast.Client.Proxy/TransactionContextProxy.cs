@@ -22,8 +22,8 @@ namespace Hazelcast.Client.Proxy
 {
     class TransactionContextProxy : ITransactionContext
     {
-        readonly Dictionary<ValueTuple<string,string>, ITransactionalObject> _txnObjectMap =
-            new Dictionary<ValueTuple<string, string>, ITransactionalObject>(2);
+        readonly Dictionary<TransactionalObjectKey, ITransactionalObject> _txnObjectMap =
+            new Dictionary<TransactionalObjectKey, ITransactionalObject>(2);
 
         readonly HazelcastClient _client;
         readonly TransactionProxy _transaction;
@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Proxy
                                                         "transactional object -> " + serviceName + "[" + name + "]!");
             }
 
-            var key = ValueTuple.Create(serviceName, name);
+            var key = new TransactionalObjectKey(serviceName, name);
 
             _txnObjectMap.TryGetValue(key, out var obj);
 
@@ -171,6 +171,40 @@ namespace Hazelcast.Client.Proxy
             }
 
             public string Id => _transaction.Id;
+        }
+
+        class TransactionalObjectKey
+        {
+            readonly string _name;
+            readonly string _serviceName;
+
+            internal TransactionalObjectKey(string serviceName, string name)
+            {
+                _serviceName = serviceName;
+                _name = name;
+            }
+
+            bool Equals(TransactionalObjectKey other)
+            {
+                return string.Equals(_name, other._name) && 
+                       string.Equals(_serviceName, other._serviceName);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((TransactionalObjectKey) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((_name != null ? _name.GetHashCode() : 0) * 397) ^ (_serviceName != null ? _serviceName.GetHashCode() : 0);
+                }
+            }
         }
     }
 }
