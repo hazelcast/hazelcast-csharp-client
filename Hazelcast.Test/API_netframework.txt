@@ -2159,11 +2159,21 @@ namespace Hazelcast.Security
 }
 namespace Hazelcast.Transaction
 {
+    public interface ITransaction : System.IDisposable
+    {
+        string Id { get; }
+        void Commit();
+        void Rollback();
+    }
     public interface ITransactionContext : Hazelcast.Transaction.ITransactionalTaskContext
     {
-        void BeginTransaction();
+        Hazelcast.Transaction.ITransaction BeginTransaction();
+        [System.ObsoleteAttribute("Use ITransaction.Commit instead.", true)]
         void CommitTransaction();
+        [System.ObsoleteAttribute("Use ITransaction.Id instead.", true)]
         string GetTxnId();
+        [System.ObsoleteAttribute("Dispose an uncommitted ITransaction object or call ITransaction.Rollback explicit" +
+            "ly.", true)]
         void RollbackTransaction();
     }
     public interface ITransactionalObject : Hazelcast.Core.IDistributedObject { }
