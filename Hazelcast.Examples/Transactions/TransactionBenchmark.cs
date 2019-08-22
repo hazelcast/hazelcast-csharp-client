@@ -38,22 +38,23 @@ namespace Hazelcast.Examples.Transactions
             map2.Clear();
 
             long totalDuration = 0;
-            int count = 100;
-            for (int i = 0; i < count; i++)
+            const int count = 100;
+            for (var i = 0; i < count; i++)
             {
-                TransactionOptions options = new TransactionOptions()
+                var options = new TransactionOptions()
                     .SetTransactionType(TransactionOptions.TransactionType.TwoPhase);
-                ITransactionContext context = client.NewTransactionContext(options);
+                var context = client.NewTransactionContext(options);
 
                 var watch = System.Diagnostics.Stopwatch.StartNew();
 
-                context.BeginTransaction();
-                var tmap = context.GetMap<int, string>("test");
-                var tmap2 = context.GetMap<int, string>("test2");
-
-                tmap.Set(i, "value");
-                tmap2.Set(i, "value");
-                context.CommitTransaction();
+                using (var tx = context.BeginTransaction())
+                {
+                    var tmap = context.GetMap<int, string>("test");
+                    var tmap2 = context.GetMap<int, string>("test2");
+                    tmap.Set(i, "value");
+                    tmap2.Set(i, "value");
+                    tx.Commit();
+                }
 
                 watch.Stop();
                 totalDuration += watch.ElapsedMilliseconds;

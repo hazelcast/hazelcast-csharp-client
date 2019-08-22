@@ -80,7 +80,7 @@ namespace Hazelcast.Client.Proxy
 
         protected virtual string GetTransactionId()
         {
-            return Proxy.GetTxnId();
+            return Proxy.Id;
         }
 
         protected virtual IClientMessage Invoke(IClientMessage request)

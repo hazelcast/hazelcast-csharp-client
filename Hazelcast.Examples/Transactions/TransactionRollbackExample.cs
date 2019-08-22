@@ -33,16 +33,18 @@ namespace Hazelcast.Examples.Transactions
             var options = new TransactionOptions();
             options.SetTransactionType(TransactionOptions.TransactionType.OnePhase);
             var ctx = client.NewTransactionContext(options);
-            ctx.BeginTransaction();
             try
             {
-                var txMap = ctx.GetMap<string, string>("txn-map");
-                txMap.Put("foo", "bar");
-                throw new Exception("Something went wrong!");
+                using (var tx = ctx.BeginTransaction())
+                {
+                    var txMap = ctx.GetMap<string, string>("txn-map");
+                    txMap.Put("foo", "bar");
+                    throw new Exception("Something went wrong!");
+                }
             }
-            catch
+            catch 
             {
-                ctx.RollbackTransaction();
+                // do nothing
             }
 
             var map = client.GetMap<string, string>("txn-map");

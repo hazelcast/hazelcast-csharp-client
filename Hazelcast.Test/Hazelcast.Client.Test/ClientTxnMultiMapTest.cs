@@ -38,13 +38,16 @@ namespace Hazelcast.Client.Test
                 var key = i + "key";
                 Client.GetMultiMap<object, object>(_name).Put(key, "value");
                 var context = Client.NewTransactionContext();
-                context.BeginTransaction();
-                var multiMap = context.GetMultiMap<object, object>(_name);
-                Assert.IsFalse(multiMap.Put(key, "value"));
-                Assert.IsTrue(multiMap.Put(key, "value1"));
-                Assert.IsTrue(multiMap.Put(key, "value2"));
-                Assert.AreEqual(3, multiMap.Get(key).Count);
-                context.CommitTransaction();
+                using (var tx = context.BeginTransaction())
+                {
+                    var multiMap = context.GetMultiMap<object, object>(_name);
+                    Assert.IsFalse(multiMap.Put(key, "value"));
+                    Assert.IsTrue(multiMap.Put(key, "value1"));
+                    Assert.IsTrue(multiMap.Put(key, "value2"));
+                    Assert.AreEqual(3, multiMap.Get(key).Count);
+                    tx.Commit();
+                }
+
                 Assert.AreEqual(3, mm.Get(key).Count);
             }
         }
@@ -57,16 +60,17 @@ namespace Hazelcast.Client.Test
             Client.GetMultiMap<object, object>(_name).Put(key, "value");
             var context = Client.NewTransactionContext();
 
-            context.BeginTransaction();
+            using (var tx = context.BeginTransaction())
+            {
+                var multiMap = context.GetMultiMap<object, object>(_name);
 
-            var multiMap = context.GetMultiMap<object, object>(_name);
+                Assert.IsFalse(multiMap.Put(key, "value"));
+                Assert.IsTrue(multiMap.Put(key, "value1"));
+                Assert.IsTrue(multiMap.Put(key, "value2"));
+                Assert.AreEqual(3, multiMap.Get(key).Count);
 
-            Assert.IsFalse(multiMap.Put(key, "value"));
-            Assert.IsTrue(multiMap.Put(key, "value1"));
-            Assert.IsTrue(multiMap.Put(key, "value2"));
-            Assert.AreEqual(3, multiMap.Get(key).Count);
-
-            context.CommitTransaction();
+                tx.Commit();
+            }
 
             Assert.AreEqual(3, mm.Get(key).Count);
         }
@@ -80,11 +84,13 @@ namespace Hazelcast.Client.Test
             var multiMap = Client.GetMultiMap<string, string>(_name);
 
             multiMap.Put(key, value);
-            var tx = Client.NewTransactionContext();
+            var context = Client.NewTransactionContext();
 
-            tx.BeginTransaction();
-            tx.GetMultiMap<string, string>(_name).Remove(key, value);
-            tx.CommitTransaction();
+            using (var tx = context.BeginTransaction())
+            {
+                context.GetMultiMap<string, string>(_name).Remove(key, value);
+                tx.Commit();
+            }
 
             Assert.AreEqual(new List<string>(), multiMap.Get(key));
         }
@@ -102,11 +108,13 @@ namespace Hazelcast.Client.Test
                 multiMap.Put(key, value + i);
             }
 
-            var tx = Client.NewTransactionContext();
+            var context = Client.NewTransactionContext();
 
-            tx.BeginTransaction();
-            tx.GetMultiMap<string, string>(name).Remove(key);
-            tx.CommitTransaction();
+            using (var tx = context.BeginTransaction())
+            {
+                context.GetMultiMap<string, string>(name).Remove(key);
+                tx.Commit();
+            }
 
             Assert.AreEqual(new List<string>(), multiMap.Get(key));
         }
@@ -120,16 +128,18 @@ namespace Hazelcast.Client.Test
             var mm = Client.GetMultiMap<object, object>(_name);
             mm.Put(key, value);
 
-            var tx = Client.NewTransactionContext();
-            tx.BeginTransaction();
-            var txMultiMap = tx.GetMultiMap<object, object>(_name);
+            var context = Client.NewTransactionContext();
+            using (var tx = context.BeginTransaction())
+            {
+                var txMultiMap = context.GetMultiMap<object, object>(_name);
 
-            txMultiMap.Put(key, "newValue");
-            txMultiMap.Put("newKey", value);
+                txMultiMap.Put(key, "newValue");
+                txMultiMap.Put("newKey", value);
 
-            Assert.AreEqual(3, txMultiMap.Size());
+                Assert.AreEqual(3, txMultiMap.Size());
 
-            tx.CommitTransaction();
+                tx.Commit();
+            }
         }
 
         [Test]
@@ -141,15 +151,17 @@ namespace Hazelcast.Client.Test
             var mm = Client.GetMultiMap<object, object>(_name);
             mm.Put(key, value);
 
-            var tx = Client.NewTransactionContext();
-            tx.BeginTransaction();
-            var txMultiMap = tx.GetMultiMap<object, object>(_name);
+            var context = Client.NewTransactionContext();
+            using (var tx = context.BeginTransaction())
+            {
+                var txMultiMap = context.GetMultiMap<object, object>(_name);
 
-            txMultiMap.Put(key, "newValue");
+                txMultiMap.Put(key, "newValue");
 
-            Assert.AreEqual(2, txMultiMap.ValueCount(key));
+                Assert.AreEqual(2, txMultiMap.ValueCount(key));
 
-            tx.CommitTransaction();
+                tx.Commit();
+            }
         }
     }
 }

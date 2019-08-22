@@ -26,14 +26,18 @@ namespace Hazelcast.Client.Test
             var s = Client.GetSet<object>(name);
             s.Add("item1");
             var context = Client.NewTransactionContext();
-            context.BeginTransaction();
-            var set = context.GetSet<object>(name);
-            Assert.IsTrue(set.Add("item2"));
-            Assert.AreEqual(2, set.Size());
-            Assert.AreEqual(1, s.Count);
-            Assert.IsFalse(set.Remove("item3"));
-            Assert.IsTrue(set.Remove("item1"));
-            context.CommitTransaction();
+
+            using (var tx = context.BeginTransaction())
+            {
+                var set = context.GetSet<object>(name);
+                Assert.IsTrue(set.Add("item2"));
+                Assert.AreEqual(2, set.Size());
+                Assert.AreEqual(1, s.Count);
+                Assert.IsFalse(set.Remove("item3"));
+                Assert.IsTrue(set.Remove("item1"));
+                tx.Commit();
+            }
+
             Assert.AreEqual(1, s.Count);
         }
     }

@@ -66,13 +66,16 @@ namespace Hazelcast.Client.Test
                 var options = new TransactionOptions().SetTransactionType(TransactionOptions.TransactionType.TwoPhase);
                 var context = _client.NewTransactionContext(options);
 
-                context.BeginTransaction();
-                var tmap = context.GetMap<int, string>("test");
-                var tmap2 = context.GetMap<int, string>("test2");
+                using (var tx = context.BeginTransaction())
+                {
+                    var tmap = context.GetMap<int, string>("test");
+                    var tmap2 = context.GetMap<int, string>("test2");
 
-                tmap.Set(i, "value");
-                tmap2.Set(i, "value");
-                context.CommitTransaction();
+                    tmap.Set(i, "value");
+                    tmap2.Set(i, "value");
+                    tx.Commit();
+                }
+
                 Assert.AreEqual(1, cm.ActiveConnections.Count);
             }
         }

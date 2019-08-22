@@ -22,20 +22,19 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
-    internal sealed class TransactionProxy
+    sealed class TransactionProxy
     {
-        [ThreadStatic] private static bool? _threadFlag;
+        [ThreadStatic] static bool? _threadFlag;
 
-        private readonly HazelcastClient _client;
+        readonly HazelcastClient _client;
 
-        private readonly TransactionOptions _options;
-        private readonly long _threadId = ThreadUtil.GetThreadId();
+        readonly TransactionOptions _options;
+        readonly long _threadId = ThreadUtil.GetThreadId();
 
-        private readonly IMember _txOwner;
+        readonly IMember _txOwner;
 
-        private long _startTime;
-        private TransactionState _state = TransactionState.NoTxn;
-        private string _txnId;
+        long _startTime;
+        TransactionState _state = TransactionState.NoTxn;
 
         internal TransactionProxy(HazelcastClient client, TransactionOptions options, IMember txOwner)
         {
@@ -54,12 +53,9 @@ namespace Hazelcast.Client.Proxy
             return _options.GetTimeoutMillis();
         }
 
-        public string GetTxnId()
-        {
-            return _txnId;
-        }
+        public string Id { get; private set; }
 
-        internal void Begin()
+        public void Begin()
         {
             try
             {
@@ -77,7 +73,7 @@ namespace Hazelcast.Client.Proxy
                 var request = TransactionCreateCodec.EncodeRequest(GetTimeoutMillis(), _options.GetDurability(),
                     (int) _options.GetTransactionType(), _threadId);
                 var response = Invoke(request);
-                _txnId = TransactionCreateCodec.DecodeResponse(response).response;
+                Id = TransactionCreateCodec.DecodeResponse(response).response;
                 _state = TransactionState.Active;
             }
             catch (Exception e)
@@ -87,7 +83,7 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        internal void Commit(bool prepareAndCommit)
+        public void Commit(bool prepareAndCommit)
         {
             try
             {
@@ -97,7 +93,7 @@ namespace Hazelcast.Client.Proxy
                 }
                 CheckThread();
                 CheckTimeout();
-                var request = TransactionCommitCodec.EncodeRequest(_txnId, _threadId);
+                var request = TransactionCommitCodec.EncodeRequest(Id, _threadId);
                 Invoke(request);
                 _state = TransactionState.Committed;
             }
@@ -112,7 +108,7 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        internal void Rollback()
+        public void Rollback()
         {
             try
             {
@@ -128,7 +124,7 @@ namespace Hazelcast.Client.Proxy
                 CheckThread();
                 try
                 {
-                    var request = TransactionRollbackCodec.EncodeRequest(_txnId, _threadId);
+                    var request = TransactionRollbackCodec.EncodeRequest(Id, _threadId);
                     Invoke(request);
                 }
                 catch
@@ -143,7 +139,7 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        private void CheckThread()
+        void CheckThread()
         {
             if (_threadId != Thread.CurrentThread.ManagedThreadId)
             {
@@ -151,7 +147,7 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        private void CheckTimeout()
+        void CheckTimeout()
         {
             if (_startTime + _options.GetTimeoutMillis() < Clock.CurrentTimeMillis())
             {
@@ -159,7 +155,7 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        private IClientMessage Invoke(IClientMessage request)
+        IClientMessage Invoke(IClientMessage request)
         {
             var rpc = _client.GetInvocationService();
             try

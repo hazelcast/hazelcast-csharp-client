@@ -44,17 +44,6 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-		public void TxnNotActive()
-        {
-            Assert.Throws<TransactionNotActiveException>(() =>
-            {
-                var context = Client.NewTransactionContext();
-                context.CommitTransaction();
-                context.CommitTransaction();
-            });
-        }
-
-        [Test]
 		public void TxnTimeOut()
         {
             Assert.Throws<TransactionNotActiveException>(() =>
@@ -62,8 +51,11 @@ namespace Hazelcast.Client.Test
                 var options = new TransactionOptions();
                 options.SetTimeout(100, TimeUnit.Milliseconds);
                 var context = Client.NewTransactionContext(options);
-                Thread.Sleep(500);
-                context.CommitTransaction();
+                using (var tx = context.BeginTransaction())
+                {
+                    Thread.Sleep(500);
+                    tx.Commit();
+                }
             });
         }
     }

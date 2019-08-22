@@ -65,27 +65,22 @@ namespace Hazelcast.Client.Test
                 var client = CreateClient();
 
                 var context = client.NewTransactionContext();
-                context.BeginTransaction();
-
-                var map = context.GetMap<int, string>(TestSupport.RandomString());
-
-                Task.Factory.StartNew(() =>
+                using (var tx = context.BeginTransaction())
                 {
-                    _remoteController.shutdownMember(_cluster.Id, member.Uuid);
-                    _remoteController.startMember(_cluster.Id);
-                });
-                try
-                {
+                    var map = context.GetMap<int, string>(TestSupport.RandomString());
+
+                    Task.Factory.StartNew(() =>
+                    {
+                        _remoteController.shutdownMember(_cluster.Id, member.Uuid);
+                        _remoteController.startMember(_cluster.Id);
+                    });
+
                     for (var i = 0; i < Count; i++)
                     {
                         // put should eventually fail as the node which the transaction is running against 
                         // will be shut down
                         map.Put(i, TestSupport.RandomString());
                     }
-                }
-                finally
-                {
-                    context.RollbackTransaction();
                 }
             });
         }

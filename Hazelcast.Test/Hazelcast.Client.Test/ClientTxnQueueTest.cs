@@ -36,53 +36,56 @@ namespace Hazelcast.Client.Test
         {
             const string item = "offered";
             var context = Client.NewTransactionContext();
-            context.BeginTransaction();
-            var txnQueue = context.GetQueue<object>(_name);
-            Assert.IsTrue(txnQueue.Offer(item));
-            Assert.AreEqual(1, txnQueue.Size());
-            Assert.AreEqual(item, txnQueue.Take());
-            context.CommitTransaction();
+            using (var tx = context.BeginTransaction())
+            {
+                var txnQueue = context.GetQueue<object>(_name);
+                Assert.IsTrue(txnQueue.Offer(item));
+                Assert.AreEqual(1, txnQueue.Size());
+                Assert.AreEqual(item, txnQueue.Take());
+                tx.Commit();
+            }
         }
 
         [Test]
         public void TransactionalOfferPoll1()
         {
             var context = Client.NewTransactionContext();
-            context.BeginTransaction();
-            var q = context.GetQueue<string>(_name);
-            Assert.IsTrue(q.Offer("ali"));
-            var s = q.Poll();
-            Assert.AreEqual("ali", s);
-            context.CommitTransaction();
+            using (var tx = context.BeginTransaction())
+            {
+                var q = context.GetQueue<string>(_name);
+                Assert.IsTrue(q.Offer("ali"));
+                var s = q.Poll();
+                Assert.AreEqual("ali", s);
+                tx.Commit();
+            }
+
             Assert.AreEqual(0, Client.GetQueue<string>(_name).Count);
         }
 
         [Test]
         public void TransactionalOfferPoll2()
         {
-            ITransactionContext context = null;
-            try
-            {
-                var latch = new ManualResetEvent(false);
-                var queue = Client.GetQueue<string>(_name);
-                var t = new Thread(delegate()
-                {
-                    try
-                    {
-                        latch.WaitOne();
-                        //Thread.Sleep(3000);
-                        queue.Offer("item0");
-                    }
-                    catch
-                    {
-                        Assert.Fail();
-                    }
-                });
-                t.Start();
+            var latch = new ManualResetEventSlim(false);
+            var queue = Client.GetQueue<string>(_name);
 
-                // TODO: better transaction API needed
-                context = Client.NewTransactionContext();
-                context.BeginTransaction();
+            var t = new Thread(delegate()
+            {
+                try
+                {
+                    latch.Wait();
+                    //Thread.Sleep(3000);
+                    queue.Offer("item0");
+                }
+                catch
+                {
+                    Assert.Fail();
+                }
+            });
+            t.Start();
+
+            var context = Client.NewTransactionContext();
+            using (var tx = context.BeginTransaction())
+            {
                 var q0 = context.GetQueue<string>(_name);
                 string s = null;
                 latch.Set();
@@ -95,18 +98,12 @@ namespace Hazelcast.Client.Test
                 {
                     Assert.Fail(e.Message);
                 }
+
                 Assert.AreEqual("item0", s);
-                context.CommitTransaction();
-                context = null;
-                Assert.AreEqual(0, queue.Count);
+                tx.Commit();
             }
-            finally
-            {
-                if (context != null)
-                {
-                    context.RollbackTransaction();
-                }
-            }
+
+            Assert.AreEqual(0, queue.Count);
         }
 
         [Test]
@@ -114,26 +111,31 @@ namespace Hazelcast.Client.Test
         {
             const string item = "offered";
             var context = Client.NewTransactionContext();
-            context.BeginTransaction();
-            var txnQueue = context.GetQueue<object>(_name);
-            Assert.IsTrue(txnQueue.Offer(item));
-            Assert.AreEqual(1, txnQueue.Size());
-            Assert.AreEqual(item, txnQueue.Take());
-            context.CommitTransaction();
+            using (var tx = context.BeginTransaction())
+            {
+                var txnQueue = context.GetQueue<object>(_name);
+                Assert.IsTrue(txnQueue.Offer(item));
+                Assert.AreEqual(1, txnQueue.Size());
+                Assert.AreEqual(item, txnQueue.Take());
+                tx.Commit();
+            }
         }
 
         [Test]
         public void TransactionalPeek()
         {
             var context = Client.NewTransactionContext();
-            context.BeginTransaction();
-            var q = context.GetQueue<string>(_name);
-            Assert.IsTrue(q.Offer("ali"));
-            var s = q.Peek();
-            Assert.AreEqual("ali", s);
-            s = q.Peek();
-            Assert.AreEqual("ali", s);
-            context.CommitTransaction();
+            using (var tx = context.BeginTransaction())
+            {
+                var q = context.GetQueue<string>(_name);
+                Assert.IsTrue(q.Offer("ali"));
+                var s = q.Peek();
+                Assert.AreEqual("ali", s);
+                s = q.Peek();
+                Assert.AreEqual("ali", s);
+                tx.Commit();
+            }
+
             Assert.AreEqual(1, Client.GetQueue<string>(_name).Count);
         }
     }
