@@ -150,9 +150,8 @@ using Hazelcast.Util;
                             "Can not load initial members list because owner connection is null. Address "
                             + ownerConnectionAddress);
                     }
-                    var invocationService = (ClientInvocationService) _client.GetInvocationService();
-                    var future = invocationService.InvokeListenerOnConnection(clientMessage, handler, connection);
-                    var response = ThreadUtil.GetResult(future);
+                    var invocationService = _client.GetInvocationService();
+                    var response = invocationService.InvokeListenerOnConnection(clientMessage, handler, connection);
                     //registration id is ignored as this listener will never be removed
                     var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
                     WaitInitialMemberListFetched();

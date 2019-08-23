@@ -101,8 +101,7 @@ namespace Hazelcast.Client.Spi
             try
             {
                 var request = ClientGetDistributedObjectsCodec.EncodeRequest();
-                var task = _client.GetInvocationService().InvokeOnRandomTarget(request);
-                var response = ThreadUtil.GetResult(task);
+                var response = _client.GetInvocationService().InvokeOnRandomTarget(request);
                 var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).response;
                 foreach (var distributedObjectInfo in result)
                 {
@@ -350,7 +349,7 @@ namespace Hazelcast.Client.Spi
                 ClientCreateProxyCodec.EncodeRequest(clientProxy.GetName(), clientProxy.GetServiceName(), initializationTarget);
             try
             {
-                ThreadUtil.GetResult(_client.GetInvocationService().InvokeOnTarget(request, invocationTarget));
+                _client.GetInvocationService().InvokeOnTarget(request, invocationTarget);
             }
             catch (Exception e)
             {

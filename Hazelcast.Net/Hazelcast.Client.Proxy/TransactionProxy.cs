@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.Transaction;
 using Hazelcast.Util;
@@ -160,8 +161,7 @@ namespace Hazelcast.Client.Proxy
             var rpc = _client.GetInvocationService();
             try
             {
-                var task = rpc.InvokeOnMember(request, _txOwner);
-                return ThreadUtil.GetResult(task);
+                return rpc.InvokeOnMember(request, _txOwner);
             }
             catch (Exception e)
             {

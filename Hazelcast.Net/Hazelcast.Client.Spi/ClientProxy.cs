@@ -24,7 +24,6 @@ using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Util;
 
-#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientProxy : IDistributedObject
@@ -32,7 +31,6 @@ namespace Hazelcast.Client.Spi
         private readonly string _objectName;
         private readonly string _serviceName;
         private volatile ClientContext _context;
-
 
         protected ClientProxy(string serviceName, string objectName)
         {
@@ -55,20 +53,10 @@ namespace Hazelcast.Client.Spi
             return _serviceName;
         }
 
-        protected virtual Task<T> InvokeAsync<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
+        protected async Task<T> InvokeAsync<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
         {
-            var future = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
-            var continueTask = future.ToTask().ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    // ReSharper disable once PossibleNullReferenceException
-                    throw t.Exception.Flatten().InnerExceptions.First();
-                }
-                var clientMessage = ThreadUtil.GetResult(t);
-                return decodeResponse(clientMessage);
-            });
-            return continueTask;
+            var result = await GetContext().GetInvocationService().InvokeOnKeyOwnerAsync(request, key);
+            return decodeResponse(result);
         }
 
         protected virtual IData ToData(object Object)
@@ -156,7 +144,7 @@ namespace Hazelcast.Client.Spi
             var result = new Dictionary<TKey, object>();
             foreach (var entry in entries)
             {
-                var key = (TKey) ToObject<object>(entry.Key);
+                var key = (TKey)ToObject<object>(entry.Key);
                 result.Add(key, ToObject<object>(entry.Value));
             }
 
@@ -180,8 +168,7 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                var task = GetContext().GetInvocationService().InvokeOnTarget(request, target);
-                return ThreadUtil.GetResult(task);
+                return GetContext().GetInvocationService().InvokeOnTarget(request, target);
             }
             catch (Exception e)
             {
@@ -193,8 +180,7 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
-                return ThreadUtil.GetResult(task);
+                return GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
             }
             catch (Exception e)
             {
@@ -218,8 +204,7 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                var task = GetContext().GetInvocationService().InvokeOnPartition(request, partitionId);
-                return ThreadUtil.GetResult(task);
+                return GetContext().GetInvocationService().InvokeOnPartition(request, partitionId);
             }
             catch (Exception e)
             {
@@ -231,8 +216,7 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                var task = GetContext().GetInvocationService().InvokeOnRandomTarget(request);
-                return ThreadUtil.GetResult(task);
+                return GetContext().GetInvocationService().InvokeOnRandomTarget(request);
             }
             catch (Exception e)
             {

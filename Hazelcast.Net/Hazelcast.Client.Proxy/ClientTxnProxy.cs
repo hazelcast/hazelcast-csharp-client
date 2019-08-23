@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
+using Hazelcast.Client.Spi;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Transaction;
@@ -88,8 +89,7 @@ namespace Hazelcast.Client.Proxy
             var rpc = Proxy.GetClient().GetInvocationService();
             try
             {
-                var task = rpc.InvokeOnMember(request, Proxy.TxnOwnerNode);
-                return ThreadUtil.GetResult(task);
+                return rpc.InvokeOnMember(request, Proxy.TxnOwnerNode);
             }
             catch (Exception e)
             {

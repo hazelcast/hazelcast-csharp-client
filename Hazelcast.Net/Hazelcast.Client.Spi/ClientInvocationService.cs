@@ -28,7 +28,6 @@ using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
-#pragma warning disable CS1591
  namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener
@@ -114,25 +113,22 @@ using Hazelcast.Util;
             }
         }
 
-        public IFuture<IClientMessage> InvokeListenerOnConnection(IClientMessage request, 
+        public void InvokeListenerOnConnection(IClientMessage request, IFuture<IClientMessage> future,
             DistributedEventHandler eventHandler, ClientConnection connection)
         {
-            var clientInvocation = new ClientInvocation(request, connection, eventHandler);
+            var clientInvocation = new ClientInvocation(request, future, connection, eventHandler);
             InvokeInternal(clientInvocation, null, connection);
-            return clientInvocation.Future;
         }
 
-        public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
+        public void InvokeOnConnection(IClientMessage request, IFuture<IClientMessage> future, ClientConnection connection)
         {
-            var clientInvocation = new ClientInvocation(request, connection);
+            var clientInvocation = new ClientInvocation(request, future, connection);
             InvokeInternal(clientInvocation, null, connection);
-            return clientInvocation.Future;
         }
 
-        protected IFuture<IClientMessage> Invoke(ClientInvocation invocation, Address address = null)
+        protected void Invoke(ClientInvocation invocation, Address address = null)
         {
             InvokeInternal(invocation, address);
-            return invocation.Future;
         }
 
         [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
@@ -225,7 +221,7 @@ using Hazelcast.Util;
                 //Fail with exception
                 try
                 {
-                    invocation.Future.Exception = exception;
+                    invocation.Future.SetException(exception);
                 }
                 catch (InvalidOperationException e)
                 {
@@ -357,8 +353,7 @@ using Hazelcast.Util;
             }
             foreach (var key in keys)
             {
-                ClientInvocation invocation;
-                if (_invocations.TryRemove(key, out invocation))
+                if (_invocations.TryRemove(key, out var invocation))
                 {
                     var ex = _client.GetConnectionManager().Live
                         ? new TargetDisconnectedException(connection.GetAddress(), "connection was closed.")
@@ -405,8 +400,7 @@ using Hazelcast.Util;
         private void HandleResponseMessage(IClientMessage response)
         {
             var correlationId = response.GetCorrelationId();
-            ClientInvocation invocation;
-            if (_invocations.TryRemove(correlationId, out invocation))
+            if (_invocations.TryRemove(correlationId, out var invocation))
             {
                 if (response.GetMessageType() == Error.Type)
                 {
@@ -424,7 +418,7 @@ using Hazelcast.Util;
                 {
                     try
                     {
-                        invocation.Future.Result = response;
+                        invocation.Future.SetResult(response);
                     }
                     catch (InvalidOperationException e)
                     {
@@ -461,14 +455,13 @@ using Hazelcast.Util;
 
         private void UnregisterInvocation(long correlationId)
         {
-            ClientInvocation ignored;
-            _invocations.TryRemove(correlationId, out ignored);
+            _invocations.TryRemove(correlationId, out _);
         }
         
-        public abstract IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
-        public abstract IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
-        public abstract IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
-        public abstract IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
-        public abstract IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId);
+        public abstract void InvokeOnKeyOwner(IClientMessage request, IFuture<IClientMessage> future, object key);
+        public abstract void InvokeOnMember(IClientMessage request, IFuture<IClientMessage> future, IMember member);
+        public abstract void InvokeOnRandomTarget(IClientMessage request, IFuture<IClientMessage> future);
+        public abstract void InvokeOnTarget(IClientMessage request, IFuture<IClientMessage> future, Address target);
+        public abstract void InvokeOnPartition(IClientMessage request, IFuture<IClientMessage> future, int partitionId);
     }
 }

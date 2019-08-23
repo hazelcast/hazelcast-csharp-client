@@ -308,8 +308,8 @@ namespace Hazelcast.Client.Connection
             IClientMessage response;
             try
             {
-                var invocationService = (ClientInvocationService) _client.GetInvocationService();
-                response = ThreadUtil.GetResult(invocationService.InvokeOnConnection(request, connection), _heartbeatTimeout);
+                var invocationService = _client.GetInvocationService();
+                response = invocationService.InvokeOnConnection(request, connection, (int)_heartbeatTimeout.TotalMilliseconds);
             }
             catch (Exception e)
             {

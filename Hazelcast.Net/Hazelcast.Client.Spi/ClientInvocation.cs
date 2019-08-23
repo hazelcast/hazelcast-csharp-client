@@ -17,91 +17,59 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
 using Hazelcast.Util;
 
-#pragma warning disable CS1591
  namespace Hazelcast.Client.Spi
 {
-    internal class ClientInvocation
+    class ClientInvocation
     {
-        private readonly ClientConnection _boundConnection;
-        private readonly SettableFuture<IClientMessage> _future;
-        private readonly string _memberUuid;
-        private readonly IClientMessage _message;
-        private readonly int _partitionId = -1;
-
-        // the point at which the request should be considered timed out
-        private readonly long _invocationTimeMillis; 
-        
-        private readonly DistributedEventHandler _eventHandler;
-
-        public ClientInvocation(IClientMessage message)
+        public ClientInvocation(IClientMessage message, IFuture<IClientMessage> future)
         {
-            _message = message;
-            _future = new SettableFuture<IClientMessage>();
-            _invocationTimeMillis = Clock.CurrentTimeMillis();
+            Message = message;
+            Future = future;
+            InvocationTimeMillis = Clock.CurrentTimeMillis();
         }
 
-        public ClientInvocation(IClientMessage message, int partitionId) : this(message)
+        public ClientInvocation(IClientMessage message, IFuture<IClientMessage> future, int partitionId) : this(message, future)
         {
-            _partitionId = partitionId;
+            PartitionId = partitionId;
         }
 
-        public ClientInvocation(IClientMessage message, string memberUuid) : this(message)
+        public ClientInvocation(IClientMessage message, IFuture<IClientMessage> future, string memberUuid) : this(message, future)
         {
-            _memberUuid = memberUuid;
+            MemberUuid = memberUuid;
         }
 
-        public ClientInvocation(IClientMessage message, Address address) : this(message)
+        public ClientInvocation(IClientMessage message, IFuture<IClientMessage> future, Address address) : this(message, future)
         {
             Address = address;
         }
 
-        public ClientInvocation(IClientMessage message, ClientConnection boundConnection, DistributedEventHandler eventHandler = null)
-            : this(message)
+        public ClientInvocation(IClientMessage message, IFuture<IClientMessage> future, ClientConnection boundConnection, DistributedEventHandler eventHandler = null)
+            : this(message, future)
         {
-            _boundConnection = boundConnection;
-            _eventHandler = eventHandler;
+            BoundConnection = boundConnection;
+            EventHandler = eventHandler;
         }
 
-        public string MemberUuid
-        {
-            get { return _memberUuid; }
-        }
+        public string MemberUuid { get; }
 
-        public int PartitionId
-        {
-            get { return _partitionId; }
-        }
+        public int PartitionId { get; } = -1;
 
-        public IClientMessage Message
-        {
-            get { return _message; }
-        }
+        public IClientMessage Message { get; }
 
-        public SettableFuture<IClientMessage> Future
-        {
-            get { return _future; }
-        }
+        public IFuture<IClientMessage> Future { get; }
 
         /// <summary>
         /// Connection that was used to execute this invocation
         /// </summary>
         public ClientConnection SentConnection { get; set; }
 
-        public ClientConnection BoundConnection
-        {
-            get { return _boundConnection; }
-        }
+        public ClientConnection BoundConnection { get; }
 
         public Address Address { get; private set; }
 
-        public long InvocationTimeMillis
-        {
-            get { return _invocationTimeMillis; }
-        }
+        // the point at which the request should be considered timed out
+        public long InvocationTimeMillis { get; }
 
-        public DistributedEventHandler EventHandler 
-        {
-            get { return _eventHandler; }
-        }
+        public DistributedEventHandler EventHandler { get; }
     }
 }

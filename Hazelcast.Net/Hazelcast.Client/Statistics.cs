@@ -19,6 +19,7 @@ using System.Text;
 using System.Threading;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol.Codec;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;

@@ -147,8 +147,7 @@ namespace Hazelcast.NearCache
                 var request = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, address);
                 try
                 {
-                    var future = _client.GetInvocationService().InvokeOnTarget(request, address);
-                    var task = future.ToTask();
+                    var task = _client.GetInvocationService().InvokeOnTargetAsync(request, address);
 
                     task.ContinueWith(t =>
                     {

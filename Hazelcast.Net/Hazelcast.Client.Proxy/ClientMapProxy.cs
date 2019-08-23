@@ -26,6 +26,7 @@ using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Map;
 using Hazelcast.Util;
+using IClientMessage = Hazelcast.Client.Protocol.IClientMessage;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -682,19 +683,18 @@ namespace Hazelcast.Client.Proxy
             ConcurrentQueue<KeyValuePair<IData, object>> resultingKeyValuePairs)
         {
             var invocationService = GetContext().GetInvocationService();
-            var futures = new ConcurrentQueue<IFuture<IClientMessage>>();
+            var futures = new ConcurrentQueue<Task<IClientMessage>>();
             Parallel.For(0, partitionToKeyData.Count, partitionId =>
             {
                 var keyList = (ArrayList) partitionToKeyData[partitionId];
                 if (keyList.Count > 0)
                 {
                     var request = MapGetAllCodec.EncodeRequest(GetName(), keyList);
-                    futures.Enqueue(invocationService.InvokeOnPartition(request, partitionId));
+                    futures.Enqueue(invocationService.InvokeOnPartitionAsync(request, partitionId));
                 }
             });
             var messages = ThreadUtil.GetResult(futures);
-            Parallel.ForEach(messages,
-                clientMessage => { MapGetAllCodec.DecodeResponse(clientMessage, resultingKeyValuePairs); });
+            Parallel.ForEach(messages, clientMessage => { MapGetAllCodec.DecodeResponse(clientMessage, resultingKeyValuePairs); });
         }
 
         private ArrayList GetPartitionKeyData(ICollection<TKey> keys)
@@ -783,15 +783,15 @@ namespace Hazelcast.Client.Proxy
 
         protected virtual void PutAllInternal(IDictionary<TKey, TValue> map, ArrayList partitions)
         {
-            var futures = new ConcurrentQueue<IFuture<IClientMessage>>();
+            var futures = new ConcurrentQueue<Task<IClientMessage>>();
             Parallel.For(0, partitions.Count, i =>
             {
                 var entries = (ArrayList) partitions[i];
                 if (entries.Count > 0)
                 {
                     var request = MapPutAllCodec.EncodeRequest(GetName(), entries);
-                    var future = GetContext().GetInvocationService().InvokeOnPartition(request, i);
-                    futures.Enqueue(future);
+                    var task = GetContext().GetInvocationService().InvokeOnPartitionAsync(request, i);
+                    futures.Enqueue(task);
                 }
             });
             ThreadUtil.GetResult(futures);

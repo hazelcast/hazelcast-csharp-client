@@ -16,43 +16,42 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Core;
 using Hazelcast.IO;
 
-#pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Spi
 {
-    internal class ClientSmartInvocationService : ClientInvocationService
+    class ClientSmartInvocationService : ClientInvocationService
     {
         public ClientSmartInvocationService(HazelcastClient client) : base(client)
         {
         }
 
-        public override IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key)
+        public override void InvokeOnKeyOwner(IClientMessage request, IFuture<IClientMessage> future, object key)
         {
             var partitionService = (ClientPartitionService) Client.GetClientPartitionService();
             var partitionId = partitionService.GetPartitionId(key);
             var owner = partitionService.GetPartitionOwner(partitionId);
-            return Invoke(new ClientInvocation(request, partitionId), owner);
+            Invoke(new ClientInvocation(request, future, partitionId), owner);
         }
 
-        public override IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember target)
+        public override void InvokeOnMember(IClientMessage request, IFuture<IClientMessage> future, IMember target)
         {
-            return Invoke(new ClientInvocation(request, target.GetUuid()), target.GetAddress());
+            Invoke(new ClientInvocation(request, future, target.GetUuid()), target.GetAddress());
         }
 
-        public override IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId)
+        public override void InvokeOnPartition(IClientMessage request, IFuture<IClientMessage> future, int partitionId)
         {
             var partitionService = (ClientPartitionService) Client.GetClientPartitionService();
             var owner = partitionService.GetPartitionOwner(partitionId);
-            return Invoke(new ClientInvocation(request, partitionId), owner);
+            Invoke(new ClientInvocation(request, future, partitionId), owner);
         }
 
-        public override IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request)
+        public override void InvokeOnRandomTarget(IClientMessage request, IFuture<IClientMessage> future)
         {
-            return Invoke(new ClientInvocation(request));
+            Invoke(new ClientInvocation(request, future));
         }
 
-        public override IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target)
+        public override void InvokeOnTarget(IClientMessage request, IFuture<IClientMessage> future, Address target)
         {
-            return Invoke(new ClientInvocation(request, target), target);
+            Invoke(new ClientInvocation(request, future, target), target);
         }
     }
 }

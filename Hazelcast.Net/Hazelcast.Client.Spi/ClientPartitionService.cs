@@ -197,8 +197,7 @@ using Hazelcast.Util;
         private ClientGetPartitionsCodec.ResponseParameters GetPartitionsFrom(ClientConnection connection)
         {
             var request = ClientGetPartitionsCodec.EncodeRequest();
-            var task = ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request, connection);
-            var result = ThreadUtil.GetResult(task, PartitionTimeout);
+            var result = _client.GetInvocationService().InvokeOnConnection(request, connection, PartitionTimeout);
             return ClientGetPartitionsCodec.DecodeResponse(result);
         }
 

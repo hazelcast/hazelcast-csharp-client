@@ -146,13 +146,10 @@ namespace Hazelcast.Client.Spi
                     var serverRegistrationId = connectionRegistration.ServerRegistrationId;
                     var request = listenerRegistration.EncodeDeregisterRequest(serverRegistrationId);
 
-                    var future =
-                        ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request, connection);
-                    ThreadUtil.GetResult(future);
-                    DistributedEventHandler removed;
-                    _eventHandlers.TryRemove(connectionRegistration.CorrelationId, out removed);
-                    EventRegistration reg;
-                    listenerRegistration.ConnectionRegistrations.TryRemove(connection, out reg);
+                     _client.GetInvocationService().InvokeOnConnection(request, connection);
+
+                     _eventHandlers.TryRemove(connectionRegistration.CorrelationId, out _);
+                     listenerRegistration.ConnectionRegistrations.TryRemove(connection, out _);
                 }
                 catch (Exception e)
                 {
@@ -181,13 +178,11 @@ namespace Hazelcast.Client.Spi
             {
                 return;
             }
-            var future = ((ClientInvocationService) _client.GetInvocationService()).InvokeListenerOnConnection(
-                listenerRegistration.RegistrationRequest, listenerRegistration.EventHandler, connection);
-
+         
             IClientMessage clientMessage;
             try
             {
-                clientMessage = ThreadUtil.GetResult(future);
+                clientMessage = _client.GetInvocationService().InvokeListenerOnConnection(listenerRegistration.RegistrationRequest, listenerRegistration.EventHandler, connection);
             }
             catch (Exception e)
             {

@@ -17,40 +17,40 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 
 #pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Spi
 {
-    internal class ClientNonSmartInvocationService : ClientInvocationService
+    class ClientNonSmartInvocationService : ClientInvocationService
     {
         public ClientNonSmartInvocationService(HazelcastClient client) : base(client)
         {
         }
 
-        public override IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key)
+        public override void InvokeOnKeyOwner(IClientMessage request, IFuture<IClientMessage> future, object key)
         {
-            var partitionService = (ClientPartitionService) Client.GetClientPartitionService();
+            var partitionService = (ClientPartitionService)Client.GetClientPartitionService();
             var partitionId = partitionService.GetPartitionId(key);
 
-            return SendToOwner(new ClientInvocation(request, partitionId));
+            SendToOwner(new ClientInvocation(request, future, partitionId));
         }
 
-        public override IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member)
+        public override void InvokeOnMember(IClientMessage request, IFuture<IClientMessage> future, IMember member)
         {
-            return SendToOwner(new ClientInvocation(request, member.GetUuid()));
+            SendToOwner(new ClientInvocation(request, future, member.GetUuid()));
         }
 
-        public override IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId)
+        public override void InvokeOnPartition(IClientMessage request, IFuture<IClientMessage> future, int partitionId)
         {
-            return SendToOwner(new ClientInvocation(request, partitionId));
+            SendToOwner(new ClientInvocation(request, future, partitionId));
         }
 
-        public override IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request)
+        public override void InvokeOnRandomTarget(IClientMessage request, IFuture<IClientMessage> future)
         {
-            return SendToOwner(new ClientInvocation(request));
+            SendToOwner(new ClientInvocation(request, future));
         }
 
-        public override IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target)
+        public override void InvokeOnTarget(IClientMessage request, IFuture<IClientMessage> future, Address target)
         {
-            return SendToOwner(new ClientInvocation(request));
+            SendToOwner(new ClientInvocation(request, future));
         }
 
         protected override Address GetRandomAddress()
@@ -58,11 +58,11 @@ using Hazelcast.IO;
             return Client.GetClientClusterService().GetOwnerConnectionAddress();
         }
 
-        private IFuture<IClientMessage> SendToOwner(ClientInvocation invocation)
+        void SendToOwner(ClientInvocation invocation)
         {
             var clusterService = Client.GetClientClusterService();
             var address = clusterService.GetOwnerConnectionAddress();
-            return Invoke(invocation, address);
+            Invoke(invocation, address);
         }
     }
 }
