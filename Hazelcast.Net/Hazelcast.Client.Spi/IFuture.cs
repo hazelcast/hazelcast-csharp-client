@@ -21,6 +21,9 @@ namespace Hazelcast.Client.Spi
     class Future
     {
         public const int NoLimit = -1;
+
+        protected static readonly Exception DefaultException = new Exception("An error occured");
+        protected static readonly object NullObject = new object();
     }
 
     interface IFuture<T>
@@ -29,41 +32,29 @@ namespace Hazelcast.Client.Spi
         void SetResult(T value);
     }
 
-    class SyncFuture<T> : IFuture<T>
+    class SyncFuture<T> : Future, IFuture<T>
         where T : class
     {
-        /// <summary>
-        /// Discriminates the state
-        /// </summary>
-        enum State : byte
-        {
-            NotCompleted = 0,
-            Value = 1,
-            Exception = 2
-        }
+        object _state;
 
-        object _payload;
-        State _state;
+        void IFuture<T>.SetException(Exception ex) => Set(ex ?? DefaultException);
 
-        void IFuture<T>.SetException(Exception ex) => Set(ex, State.Exception);
+        void IFuture<T>.SetResult(T value) => Set(value ?? NullObject);
 
-        void IFuture<T>.SetResult(T value) => Set(value, State.Value);
-
-        void Set(object payload, State state)
+        void Set(object payload)
         {
             lock (this)
             {
-                _payload = payload;
-                _state = state;
+                _state = payload;
                 Monitor.PulseAll(this);
             }
         }
 
-        public T WaitAndGet(int timeoutMilliseconds = Future.NoLimit)
+        public T WaitAndGet(int timeoutMilliseconds = NoLimit)
         {
             lock (this)
             {
-                if (_state == State.NotCompleted)
+                if (_state == null)
                 {
                     if (Monitor.Wait(this, timeoutMilliseconds) == false)
                     {
@@ -72,10 +63,18 @@ namespace Hazelcast.Client.Spi
                 }
             }
 
-            if (_state == State.Exception)
-                throw (Exception)_payload;
+            var state = _state;
 
-            return (T)_payload;
+            if (state is Exception ex)
+                throw ex;
+
+            if (ReferenceEquals(state, NullObject))
+            {
+                return null;
+            }
+
+            // potentially, return Unsafe.As<T>(state);
+            return (T)state;
         }
     }
 
