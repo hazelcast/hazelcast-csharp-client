@@ -16,7 +16,6 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Spi;
-using Hazelcast.Util;
 
 namespace Hazelcast.Benchmarks
 {
@@ -29,19 +28,17 @@ namespace Hazelcast.Benchmarks
         [Benchmark]
         public object SyncFuture()
         {
-            var future = new SettableFuture<IClientMessage>();
-            future.Result = Result;
-            return ThreadUtil.GetResult(future);
+            var future = new SyncFuture<object>();
+            ((IFuture<object>)future).SetResult(Result);
+            return future.WaitAndGet();
         }
 
         [Benchmark]
         public async Task<object> AsyncFuture()
         {
-            var future = new SettableFuture<IClientMessage>();
-            future.Result = Result;
-            var task = future.ToTask();
-            await task;
-            return ThreadUtil.GetResult(task);
+            var future = AsyncFuture<object>.Create(out var tcs);
+            future.SetResult(Result);
+            return await tcs.Task;
         }
     }
 }
