@@ -168,3 +168,4 @@ rc/
 .DS_Store
 packages/
 Coverage/
+Hazelcast.Benchmarks/BenchmarkDotNet.Artifacts/
