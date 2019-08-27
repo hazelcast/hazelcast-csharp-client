@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Spi
             TrySetResult(value);
         }
 
-        public static IFuture<T> Create(out TaskCompletionSource<T> source, object asyncState)
+        public static IFuture<T> Create(out TaskCompletionSource<T> source, object asyncState = null)
         {
             var future = new AsyncFuture<T>(asyncState, TaskCreationOptions.RunContinuationsAsynchronously);
             source = future;
