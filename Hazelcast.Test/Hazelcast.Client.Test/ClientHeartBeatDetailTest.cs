@@ -102,7 +102,9 @@ namespace Hazelcast.Client.Test
             }
             Assert.False(clientDisconnected.Wait(1000), "Client should not be disconnected");
         }
-        
+
+        // TODO: bring it back for regular framework
+#if NETCOREAPP2
         [Test]
         public void TestContinuousGC()
         {
@@ -124,6 +126,6 @@ namespace Hazelcast.Client.Test
             }
             Assert.False(clientDisconnected.Wait(10000), "Client should not be disconnected");
         }
-
+#endif
     }
 }
