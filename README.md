@@ -112,7 +112,7 @@ and configuration of the client, setting up a cluster, and provides a simple app
 ## 1.1. Requirements
 
 - Windows, Linux or MacOS
-- .NET Framework 4.0 or newer, .NET core 2.0 or newer
+- .NET Framework 4.5 or newer, .NET core 2.0 or newer
 - Java 6 or newer
 - Hazelcast IMDG 3.6 or newer
 - Latest Hazelcast .NET client
