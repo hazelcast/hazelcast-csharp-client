@@ -136,14 +136,15 @@ namespace Hazelcast.Config
             var sslProtocol = GetProperty(SslProtocol);
             if (sslProtocol == null)
             {
-#if NET40
+#if !NETSTANDARD
+
                 return SslProtocols.Tls;
 #else
                 return SslProtocols.None;
 #endif
             }
-            SslProtocols result;
-            if (Enum.TryParse(sslProtocol, true, out result))
+
+            if (Enum.TryParse(sslProtocol, true, out SslProtocols result))
             {
                 return result;
             }
