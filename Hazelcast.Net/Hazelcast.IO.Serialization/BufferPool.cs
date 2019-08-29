@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using Hazelcast.Core;
 
@@ -22,39 +21,31 @@ namespace Hazelcast.IO.Serialization
 {
     internal class BufferPoolThreadLocal : IDisposable
     {
-        private readonly ISerializationService _serializationService;
-        private readonly ThreadLocal<WeakReference> _threadLocal = new ThreadLocal<WeakReference>();
-        private ConditionalWeakTable<Thread, BufferPool> _strongReferences;
+        /// <summary>
+        /// Thread local has a finalizer and is properly disposable. Once the thread local is disposed, it removes itself from the buckets of the ThreadStatic field.
+        /// </summary>
+        readonly ThreadLocal<BufferPool> _threadLocal;
 
         public BufferPoolThreadLocal(ISerializationService serializationService)
         {
-            _serializationService = serializationService;
-            _strongReferences = new ConditionalWeakTable<Thread, BufferPool>();
+            _threadLocal = new ThreadLocal<BufferPool>(() => new BufferPool(serializationService), false);
         }
 
         public BufferPool Get()
         {
-            if (!_threadLocal.IsValueCreated)
+            try
             {
-                var bufferPool = new BufferPool(_serializationService);
-                _strongReferences.Add(Thread.CurrentThread, bufferPool);
-                _threadLocal.Value = new WeakReference(bufferPool);
-                return bufferPool;
+                return _threadLocal.Value;
             }
-            else
+            catch (ObjectDisposedException)
             {
-                var bufferPool = _threadLocal.Value.Target as BufferPool;
-                if (bufferPool == null)
-                {
-                    throw new HazelcastInstanceNotActiveException();
-                }
-                return bufferPool;
+                throw new HazelcastInstanceNotActiveException();
             }
         }
 
         public void Dispose()
         {
-            _strongReferences = null;
+            _threadLocal.Dispose();
         }
     }
 
@@ -80,9 +71,9 @@ namespace Hazelcast.IO.Serialization
             {
                 return outputQueue.Dequeue();
             }
-            catch (InvalidOperationException )
+            catch (InvalidOperationException)
             {
-               return _serializationService.CreateObjectDataOutput();
+                return _serializationService.CreateObjectDataOutput();
             }
         }
 
@@ -103,7 +94,7 @@ namespace Hazelcast.IO.Serialization
             {
                 input = inputQueue.Dequeue();
             }
-            catch (InvalidOperationException )
+            catch (InvalidOperationException)
             {
                 input = _serializationService.CreateObjectDataInput((byte[])null);
             }

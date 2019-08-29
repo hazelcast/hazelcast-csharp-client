@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Test
 {
     internal static class TestSupport
     {
-        private const int TimeoutSeconds = 30;
+        public const int TimeoutSeconds = 30;
         private static readonly Random Random = new Random();
 
         public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds, string taskName = "")

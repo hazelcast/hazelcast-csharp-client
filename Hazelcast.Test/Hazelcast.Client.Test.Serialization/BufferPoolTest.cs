@@ -62,21 +62,9 @@ namespace Hazelcast.Client.Test.Serialization
             // forces the creation of a bufferpool.
             _bufferPoolThreadLocal.Get();
 
-            // we kill all strong references.
             _bufferPoolThreadLocal.Dispose();
 
-            TestSupport.AssertTrueEventually(() =>
-            {
-                GC.Collect();
-                try
-                {
-                    _bufferPoolThreadLocal.Get();
-                    Assert.Fail();
-                }
-                catch (HazelcastInstanceNotActiveException)
-                {
-                }
-            });
+            Assert.Throws<HazelcastInstanceNotActiveException>(() => _bufferPoolThreadLocal.Get());
         }
 
         [Test]
@@ -90,19 +78,37 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
+        [Timeout(TestSupport.TimeoutSeconds * 1000)]
         public void ThreadLocal_Dispose()
         {
             // store the pool in a weak reference since we don't want to force a strong reference ourselves.
             var poolRef = new WeakReference(_bufferPoolThreadLocal.Get());
 
-            // call clear; kills the strong references.
+            // act: dispose
             _bufferPoolThreadLocal.Dispose();
 
-            TestSupport.AssertTrueEventually(() =>
+            while (poolRef.IsAlive)
             {
                 GC.Collect();
-                Assert.Null(poolRef.Target);
-            });
+            }
+
+            Assert.False(poolRef.IsAlive, "The reference should be already collected");
+        }
+
+        [Test]
+        [Timeout(TestSupport.TimeoutSeconds * 1000)]
+        public void ThreadLocal_Finalizer()
+        {
+            // create a new pool and leave it to be collected, keep the pool in a week reference, to let it be collected as well
+            var poolRef = new WeakReference(new BufferPoolThreadLocal(_serializationService).Get());
+
+            while (poolRef.IsAlive)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+
+            Assert.False(poolRef.IsAlive, "The reference should be already collected");
         }
     }
 }
