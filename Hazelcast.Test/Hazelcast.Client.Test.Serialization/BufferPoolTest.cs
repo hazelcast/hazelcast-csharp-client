@@ -89,7 +89,7 @@ namespace Hazelcast.Client.Test.Serialization
 
             while (poolRef.IsAlive)
             {
-                GC.Collect();
+                GC.Collect(2, GCCollectionMode.Forced, true);
             }
 
             Assert.False(poolRef.IsAlive, "The reference should be already collected");
@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Test.Serialization
 
             while (poolRef.IsAlive)
             {
-                GC.Collect();
+                GC.Collect(2, GCCollectionMode.Forced, true);
                 GC.WaitForPendingFinalizers();
             }
 
