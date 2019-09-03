@@ -24,7 +24,7 @@ namespace Hazelcast.IO.Serialization
         /// <summary>
         /// Thread local has a finalizer and is properly disposable. Once the thread local is disposed, it removes itself from the buckets of the ThreadStatic field.
         /// </summary>
-        readonly ThreadLocal<BufferPool> _threadLocal;
+        private readonly ThreadLocal<BufferPool> _threadLocal;
 
         public BufferPoolThreadLocal(ISerializationService serializationService)
         {
