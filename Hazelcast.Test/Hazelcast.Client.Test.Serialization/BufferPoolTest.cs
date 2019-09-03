@@ -78,37 +78,63 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        [Timeout(TestSupport.TimeoutSeconds * 1000)]
         public void ThreadLocal_Dispose()
         {
-            // store the pool in a weak reference since we don't want to force a strong reference ourselves.
-            var poolRef = new WeakReference(_bufferPoolThreadLocal.Get());
-
-            // act: dispose
-            _bufferPoolThreadLocal.Dispose();
-
-            while (poolRef.IsAlive)
+            for (var i = 0; i < 100_000; i++)
             {
-                GC.Collect(2, GCCollectionMode.Forced, true);
+                CreateGetAndDispose();
+                AssertMemoryLimit(i);
             }
-
-            Assert.False(poolRef.IsAlive, "The reference should be already collected");
         }
 
         [Test]
-        [Timeout(TestSupport.TimeoutSeconds * 1000)]
         public void ThreadLocal_Finalizer()
         {
-            // create a new pool and leave it to be collected, keep the pool in a week reference, to let it be collected as well
-            var poolRef = new WeakReference(new BufferPoolThreadLocal(_serializationService).Get());
-
-            while (poolRef.IsAlive)
+            for (var i = 0; i < 100_000; i++)
             {
-                GC.Collect(2, GCCollectionMode.Forced, true);
-                GC.WaitForPendingFinalizers();
-            }
+                CreateGetAndLeaveForFinalizer();
 
-            Assert.False(poolRef.IsAlive, "The reference should be already collected");
+                if (i % 1000 == 0)
+                {
+                    GC.WaitForPendingFinalizers();
+                }
+
+                AssertMemoryLimit(i);
+            }
+        }
+
+        const long MemoryLimit = 256 * 1024 * 1024;
+
+        static readonly byte[] ALotOfBytes = new byte[64 * 1024];
+
+        void CreateGetAndDispose()
+        {
+            using (var local = new BufferPoolThreadLocal(_serializationService))
+            {
+                WriteALotOfBytes(local);
+            }
+        }
+
+        static void AssertMemoryLimit(int iteration)
+        {
+            // assert every 1000 iterations
+            if (iteration % 1000 == 0)
+            {
+                Assert.Greater(MemoryLimit, GC.GetTotalMemory(true), "Memory limit breached. It looks like there's a memory leak in pool management.");
+            }
+        }
+
+        void CreateGetAndLeaveForFinalizer()
+        {
+            WriteALotOfBytes(new BufferPoolThreadLocal(_serializationService));
+        }
+
+        static void WriteALotOfBytes(BufferPoolThreadLocal local)
+        {
+            var pool = local.Get();
+            var buffer = pool.TakeOutputBuffer();
+            buffer.Write(ALotOfBytes);
+            pool.ReturnOutputBuffer(buffer);
         }
     }
 }

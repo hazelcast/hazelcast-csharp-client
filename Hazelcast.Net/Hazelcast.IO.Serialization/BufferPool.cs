@@ -29,6 +29,7 @@ namespace Hazelcast.IO.Serialization
         public BufferPoolThreadLocal(ISerializationService serializationService)
         {
             _threadLocal = new ThreadLocal<BufferPool>(() => new BufferPool(serializationService), false);
+            GC.SuppressFinalize(_threadLocal);
         }
 
         public BufferPool Get()
@@ -45,7 +46,7 @@ namespace Hazelcast.IO.Serialization
 
         public void Dispose()
         {
-            _threadLocal.Dispose();
+            // _threadLocal.Dispose();
         }
     }
 
