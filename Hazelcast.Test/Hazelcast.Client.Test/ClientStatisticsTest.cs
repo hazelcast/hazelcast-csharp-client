@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using Hazelcast.Client.Model;
 using Hazelcast.Config;
 using Hazelcast.Remote;
@@ -57,7 +56,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestStatisticsContent()
+        public void StatisticsContent()
         {
             TestSupport.AssertTrueEventually(() =>
             {
@@ -76,7 +75,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestNearCacheStatisticsContent()
+        public void NearCacheStatisticsContent()
         {
             var map = Client.GetMap<string, string>("nearCachedMap1");
             map.Put("key", "value");
@@ -93,7 +92,7 @@ namespace Hazelcast.Client.Test
                 Assert.True(stat.Contains("nc.nearCachedMap1.ownedEntryCount=1"));
             });
         }
-        
+
         private string GetClientStatsFromServer()
         {
             const string script = @"client0=instance_0.getClientService().getConnectedClients().toArray()[0]

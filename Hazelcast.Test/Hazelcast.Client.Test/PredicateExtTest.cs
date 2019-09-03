@@ -22,18 +22,18 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class PredicateExtTest : SingleMemberBaseTest
     {
-        private IMap<NamedPortable, NamedPortable> map;
+        private IMap<NamedPortable, NamedPortable> _map;
 
         [SetUp]
         public void Init()
         {
-            map = Client.GetMap<NamedPortable, NamedPortable>(TestSupport.RandomString());
+            _map = Client.GetMap<NamedPortable, NamedPortable>(TestSupport.RandomString());
         }
 
         [TearDown]
         public void Destroy()
         {
-            map.Clear();
+            _map.Clear();
         }
 
         protected override void ConfigureClient(ClientConfig config)
@@ -42,73 +42,72 @@ namespace Hazelcast.Client.Test
             config.GetSerializationConfig().AddPortableFactory(1, new PortableSerializationTest.TestPortableFactory());
         }
 
-
         private void FillMap()
         {
             for (var i = 0; i < 100; i++)
             {
-                map.Put(new NamedPortable("key-" + i, i), new NamedPortable("value-" + i, i));
+                _map.Put(new NamedPortable("key-" + i, i), new NamedPortable("value-" + i, i));
             }
         }
 
 
         [Test]
-        public virtual void TestPredicate_key_property()
+        public void Predicate_key_property()
         {
             FillMap();
             var predicate = Predicates.Key("myint").GreaterThanOrEqual(50);
-            var values = map.Values(predicate);
+            var values = _map.Values(predicate);
             Assert.AreEqual(50, values.Count);
         }
 
         [Test]
-        public virtual void TestPredicate_value_property()
+        public void Predicate_value_property()
         {
             FillMap();
             var predicate = Predicates.Property("name").Like("value-%");
-            var values = map.Values(predicate);
+            var values = _map.Values(predicate);
             Assert.AreEqual(100, values.Count);
         }
 
         [Test]
-        public virtual void TestPredicate_value_property_keyset()
+        public void Predicate_value_property_keyset()
         {
             FillMap();
             var predicate = Predicates.Property("name").Like("value-%");
-            var values = map.KeySet(predicate);
+            var values = _map.KeySet(predicate);
             Assert.AreEqual(100, values.Count);
         }
 
         [Test]
-        public virtual void TestPredicateExt_key_property()
+        public void PredicateExt_key_property()
         {
             var predicateProperty = Predicates.Key("id");
             Assert.AreEqual(predicateProperty.Property, "__key#id");
         }
 
         [Test]
-        public virtual void TestPredicateExt_value_property()
+        public void PredicateExt_value_property()
         {
             var predicateProperty = Predicates.Property("name");
             Assert.AreEqual(predicateProperty.Property, "name");
         }
 
         [Test]
-        public virtual void TestPredicateExt_key_equal()
+        public void PredicateExt_key_equal()
         {
             var predicate = Predicates.Key("name").Equal("value-1");
             Assert.AreEqual(predicate, new EqualPredicate("__key#name", "value-1"));
         }
 
         [Test]
-        public virtual void TestPredicateExt_value_equal()
+        public void PredicateExt_value_equal()
         {
             var predicate = Predicates.Property("name").Equal("value-1");
             Assert.AreEqual(predicate, new EqualPredicate("name", "value-1"));
         }
 
         [Test]
-        public virtual void TestPredicateExt_complex_chained()
+        public void PredicateExt_complex_chained()
         {
             var predicate = Predicates.Key("id").Equal("id-1").And(Predicates.Property("name").ILike("a%"));
 
@@ -119,7 +118,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_And()
+        public void PredicateExt_And()
         {
             var predicate1 = Predicates.Property("name").Equal("val")
                 .And(Predicates.Property("id").GreaterThan(10));
@@ -128,7 +127,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_Between()
+        public void PredicateExt_Between()
         {
             var predicate1 = Predicates.Property("name").Between(10, 20);
             var predicate2 = Predicates.IsBetween("name", 10, 20);
@@ -136,7 +135,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_Equal()
+        public void PredicateExt_Equal()
         {
             var predicate1 = Predicates.Property("name").Equal("val");
             var predicate2 = Predicates.IsEqual("name", "val");
@@ -144,7 +143,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_NotEqual()
+        public void PredicateExt_NotEqual()
         {
             var predicate1 = Predicates.Property("name").NotEqual("val");
             var predicate2 = Predicates.IsNotEqual("name", "val");
@@ -152,7 +151,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_GreaterThan()
+        public void PredicateExt_GreaterThan()
         {
             var predicate1 = Predicates.Property("name").GreaterThan(10);
             var predicate2 = Predicates.IsGreaterThan("name", 10);
@@ -160,7 +159,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_GreaterThanOrEqual()
+        public void PredicateExt_GreaterThanOrEqual()
         {
             var predicate1 = Predicates.Property("name").GreaterThanOrEqual(10);
             var predicate2 = Predicates.IsGreaterThanOrEqual("name", 10);
@@ -168,7 +167,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_In()
+        public void PredicateExt_In()
         {
             var predicate1 = Predicates.Property("name").In(10, 20, 30);
             var predicate2 = Predicates.IsIn("name", 10, 20, 30);
@@ -176,7 +175,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_ILike()
+        public void PredicateExt_ILike()
         {
             var predicate1 = Predicates.Property("name").ILike("val");
             var predicate2 = Predicates.IsILike("name", "val");
@@ -184,7 +183,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_Like()
+        public void PredicateExt_Like()
         {
             var predicate1 = Predicates.Property("name").Like("val");
             var predicate2 = Predicates.IsLike("name", "val");
@@ -192,7 +191,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_MatchesRegex()
+        public void PredicateExt_MatchesRegex()
         {
             var predicate1 = Predicates.Property("name").MatchesRegex("[a-z]");
             var predicate2 = Predicates.MatchesRegex("name", "[a-z]");
@@ -200,7 +199,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_LessThan()
+        public void PredicateExt_LessThan()
         {
             var predicate1 = Predicates.Property("name").LessThan(10);
             var predicate2 = Predicates.IsLessThan("name", 10);
@@ -208,7 +207,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_LessThanOrEqual()
+        public void PredicateExt_LessThanOrEqual()
         {
             var predicate1 = Predicates.Property("name").LessThanOrEqual(10);
             var predicate2 = Predicates.IsLessThanOrEqual("name", 10);
@@ -216,7 +215,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_Or()
+        public void PredicateExt_Or()
         {
             var predicate1 = Predicates.Property("name").Equal("val")
                 .Or(Predicates.Property("id").GreaterThan(10));
@@ -225,12 +224,11 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPredicateExt_Not()
+        public void PredicateExt_Not()
         {
             var predicate1 = Predicates.Property("name").Equal("val").Not();
             var predicate2 = Predicates.Not(Predicates.IsEqual("name", "val"));
             Assert.AreEqual(predicate1, predicate2);
         }
-
     }
 }

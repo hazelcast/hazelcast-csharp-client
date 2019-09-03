@@ -23,7 +23,7 @@ namespace Hazelcast.Client.Test
 {
     [TestFixture]
     [Ignore("IPv6 not configured")]
-    internal class ClientIpV6AddressTest : HazelcastTestSupport
+    public class ClientIpV6AddressTest : HazelcastTestSupport
     {
         [SetUp]
         public void Setup()

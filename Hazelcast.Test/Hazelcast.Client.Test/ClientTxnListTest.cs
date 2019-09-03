@@ -20,39 +20,31 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientTxnListTest : SingleMemberBaseTest
     {
-        [SetUp]
-        public void Init()
-        {
-        }
-
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            list.Clear();
-            list.Destroy();
+            _list.Clear();
+            _list.Destroy();
         }
 
-        //internal const string name2 = "ClientTxnListTest";
+        private IHList<object> _list;
 
-        internal static IHList<object> list;
-
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAddRemove()
+        public void AddRemove()
         {
             var name = TestSupport.RandomString();
-            list = Client.GetList<object>(name);
-            list.Add("item1");
+            _list = Client.GetList<object>(name);
+            _list.Add("item1");
             var context = Client.NewTransactionContext();
             context.BeginTransaction();
             var listTx = context.GetList<object>(name);
             Assert.IsTrue(listTx.Add("item2"));
             Assert.AreEqual(2, listTx.Size());
-            Assert.AreEqual(1, list.Count);
+            Assert.AreEqual(1, _list.Count);
             Assert.IsFalse(listTx.Remove("item3"));
             Assert.IsTrue(listTx.Remove("item1"));
             context.CommitTransaction();
-            Assert.AreEqual(1, list.Count);
+            Assert.AreEqual(1, _list.Count);
             listTx.Destroy();
         }
     }

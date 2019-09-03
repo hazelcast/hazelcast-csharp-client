@@ -103,11 +103,11 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        const long MemoryLimit = 256 * 1024 * 1024;
+        private const long MemoryLimit = 256 * 1024 * 1024;
 
-        static readonly byte[] ALotOfBytes = new byte[64 * 1024];
+        private static readonly byte[] ALotOfBytes = new byte[64 * 1024];
 
-        void CreateGetAndDispose()
+        private void CreateGetAndDispose()
         {
             using (var local = new BufferPoolThreadLocal(_serializationService))
             {
@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        static void AssertMemoryLimit(int iteration)
+        private static void AssertMemoryLimit(int iteration)
         {
             // assert every 1000 iterations
             if (iteration % 1000 == 0)
@@ -124,12 +124,12 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        void CreateGetAndLeaveForFinalizer()
+        private void CreateGetAndLeaveForFinalizer()
         {
             WriteALotOfBytes(new BufferPoolThreadLocal(_serializationService));
         }
 
-        static void WriteALotOfBytes(BufferPoolThreadLocal local)
+        private static void WriteALotOfBytes(BufferPoolThreadLocal local)
         {
             var pool = local.Get();
             var buffer = pool.TakeOutputBuffer();

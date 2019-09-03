@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Config;
@@ -45,7 +43,7 @@ namespace Hazelcast.Client.Test
 
         private RemoteController.Client _remoteController;
         private Cluster _cluster;
-        private readonly int Count = 1000;
+        private const int Count = 1000;
 
         protected override void ConfigureClient(ClientConfig config)
         {
@@ -59,7 +57,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestClientTransactionRetry()
+        public void ClientTransactionRetry()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -93,7 +91,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test, Ignore("https://github.com/hazelcast/hazelcast-csharp-client/issues/28")]
-        public void TestRetryAsyncRequest()
+        public void RetryAsyncRequest()
         {
             var member = _remoteController.startMember(_cluster.Id);
             var client = CreateClient();
@@ -120,7 +118,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestRetryRequestsWhenInstanceIsShutdown()
+        public void RetryRequestsWhenInstanceIsShutdown()
         {
             var member = _remoteController.startMember(_cluster.Id);
             var client = CreateClient();
@@ -148,7 +146,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestRetryTimeout()
+        public void RetryTimeout()
         {
             var member = _remoteController.startMember(_cluster.Id);
             Environment.SetEnvironmentVariable("hazelcast.client.invocation.timeout.seconds", "2");

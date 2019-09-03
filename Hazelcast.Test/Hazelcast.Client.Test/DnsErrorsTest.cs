@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Test
             config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
         }
 
-        static IDisposable ThrowGetHostAddressesAt(int failAt)
+        private static IDisposable ThrowGetHostAddressesAt(int failAt)
         {
             var count = 0;
             Func<string, IPAddress[]> over =

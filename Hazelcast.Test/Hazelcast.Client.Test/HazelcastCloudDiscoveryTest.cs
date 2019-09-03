@@ -16,8 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
@@ -103,7 +101,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestHzCloudDiscovery()
+        public void HzCloudDiscovery()
         {
             var hzCloudDiscovery = new HazelcastCloudDiscovery(DiscoveryToken, int.MaxValue, LocalTestBaseUrl);
             var result = hzCloudDiscovery.DiscoverNodes();
@@ -115,7 +113,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestHzCloudDiscovery_invalidToken()
+        public void HzCloudDiscovery_invalidToken()
         {
             var hzCloudDiscovery = new HazelcastCloudDiscovery(DiscoveryTokenInvalid, int.MaxValue, LocalTestBaseUrl);
             var result = hzCloudDiscovery.DiscoverNodes();
@@ -123,7 +121,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestHzCloudAddressProvider()
+        public void HzCloudAddressProvider()
         {
             Environment.SetEnvironmentVariable(HazelcastCloudDiscovery.CloudUrlBaseProperty, LocalTestBaseUrl);
             var cfg = new ClientConfig();

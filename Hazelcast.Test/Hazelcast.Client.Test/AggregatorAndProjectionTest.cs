@@ -28,18 +28,18 @@ namespace Hazelcast.Client.Test
     [Category("3.8")]
     public class AggregatorAndProjectionTest : SingleMemberBaseTest
     {
-        internal static IMap<object, object> map;
+        internal IMap<object, object> Map;
 
         [SetUp]
         public void Init()
         {
-            map = Client.GetMap<object, object>(TestSupport.RandomString());
+            Map = Client.GetMap<object, object>(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            map.Clear();
+            Map.Clear();
         }
 
         protected override void ConfigureClient(ClientConfig config)
@@ -57,232 +57,232 @@ namespace Hazelcast.Client.Test
                 var key = TestSupport.RandomString();
                 if (typeof(T) == typeof(int))
                 {
-                    map.Put(key, i);
+                    Map.Put(key, i);
                 }
                 else if (typeof(T) == typeof(BigInteger))
                 {
-                    map.Put(key, new BigInteger(i));
+                    Map.Put(key, new BigInteger(i));
                 }
                 else if (typeof(T) == typeof(double))
                 {
-                    map.Put(key, (double) i);
+                    Map.Put(key, (double)i);
                 }
                 else if (typeof(T) == typeof(float))
                 {
-                    map.Put(key, (float) i);
+                    Map.Put(key, (float)i);
                 }
                 else if (typeof(T) == typeof(long))
                 {
-                    map.Put(key, (long) i);
+                    Map.Put(key, (long)i);
                 }
                 else if (typeof(T) == typeof(int))
                 {
-                    map.Put(key, (int) i);
+                    Map.Put(key, (int)i);
                 }
                 else if (typeof(T) == typeof(Header))
                 {
-                    map.Put(key, new Header(i, new Handle(false)));
+                    Map.Put(key, new Header(i, new Handle(false)));
                 }
                 else if (typeof(T) == typeof(Item))
                 {
                     var enabled = new int[1];
                     var disabled = new int[1];
-                    map.Put(key, new Item(new Header(i, new Handle(false)), enabled, disabled));
+                    Map.Put(key, new Item(new Header(i, new Handle(false)), enabled, disabled));
                 }
             }
         }
 
         [Test]
-        public void test_Count()
+        public void Count()
         {
             FillMap<int>();
-            Assert.AreEqual(10, map.Aggregate(Aggregators.Count()));
-            Assert.AreEqual(10, map.Aggregate(Aggregators.Count("this")));
+            Assert.AreEqual(10, Map.Aggregate(Aggregators.Count()));
+            Assert.AreEqual(10, Map.Aggregate(Aggregators.Count("this")));
         }
 
         [Test]
-        public void test_DoubleAvg()
+        public void DoubleAvg()
         {
             FillMap<double>();
-            Assert.AreEqual(4.5d, map.Aggregate(Aggregators.DoubleAvg()));
-            Assert.AreEqual(4.5d, map.Aggregate(Aggregators.DoubleAvg("this")));
+            Assert.AreEqual(4.5d, Map.Aggregate(Aggregators.DoubleAvg()));
+            Assert.AreEqual(4.5d, Map.Aggregate(Aggregators.DoubleAvg("this")));
         }
 
         [Test]
-        public void test_IntegerAvg()
+        public void IntegerAvg()
         {
             FillMap<int>();
-            Assert.AreEqual(4.5d, map.Aggregate(Aggregators.IntegerAvg()));
-            Assert.AreEqual(4.5d, map.Aggregate(Aggregators.IntegerAvg("this")));
+            Assert.AreEqual(4.5d, Map.Aggregate(Aggregators.IntegerAvg()));
+            Assert.AreEqual(4.5d, Map.Aggregate(Aggregators.IntegerAvg("this")));
         }
 
         [Test]
-        public void test_LongAvg()
+        public void LongAvg()
         {
             FillMap<long>();
-            Assert.AreEqual(4.5d, map.Aggregate(Aggregators.LongAvg()));
-            Assert.AreEqual(4.5d, map.Aggregate(Aggregators.LongAvg("this")));
+            Assert.AreEqual(4.5d, Map.Aggregate(Aggregators.LongAvg()));
+            Assert.AreEqual(4.5d, Map.Aggregate(Aggregators.LongAvg("this")));
         }
 
         [Test]
-        public void test_NumberAvg()
+        public void NumberAvg()
         {
             FillMap<float>();
             FillMap<double>();
-            Assert.AreEqual(4.5d, map.Aggregate(Aggregators.NumberAvg()));
-            Assert.AreEqual(4.5d, map.Aggregate(Aggregators.NumberAvg("this")));
+            Assert.AreEqual(4.5d, Map.Aggregate(Aggregators.NumberAvg()));
+            Assert.AreEqual(4.5d, Map.Aggregate(Aggregators.NumberAvg("this")));
         }
 
         [Test]
-        public void test_Max()
+        public void Max()
         {
             FillMap<int>();
-            Assert.AreEqual(9, map.Aggregate(Aggregators.Max<int>()));
-            Assert.AreEqual(9, map.Aggregate(Aggregators.Max<int>("this")));
+            Assert.AreEqual(9, Map.Aggregate(Aggregators.Max<int>()));
+            Assert.AreEqual(9, Map.Aggregate(Aggregators.Max<int>("this")));
         }
 
         [Test]
-        public void test_Min()
+        public void Min()
         {
             FillMap<int>();
-            Assert.AreEqual(0, map.Aggregate(Aggregators.Min<int>()));
-            Assert.AreEqual(0, map.Aggregate(Aggregators.Min<int>("this")));
+            Assert.AreEqual(0, Map.Aggregate(Aggregators.Min<int>()));
+            Assert.AreEqual(0, Map.Aggregate(Aggregators.Min<int>("this")));
         }
 
         [Test]
-        public void test_BigIntegerSum()
+        public void BigIntegerSum()
         {
             FillMap<BigInteger>();
-            Assert.AreEqual(new BigInteger(45), map.Aggregate(Aggregators.BigIntegerSum()));
-            Assert.AreEqual(new BigInteger(45), map.Aggregate(Aggregators.BigIntegerSum("this")));
+            Assert.AreEqual(new BigInteger(45), Map.Aggregate(Aggregators.BigIntegerSum()));
+            Assert.AreEqual(new BigInteger(45), Map.Aggregate(Aggregators.BigIntegerSum("this")));
         }
 
         [Test]
-        public void test_DoubleSum()
+        public void DoubleSum()
         {
             FillMap<double>();
-            Assert.AreEqual(45d, map.Aggregate(Aggregators.DoubleSum()));
-            Assert.AreEqual(45d, map.Aggregate(Aggregators.DoubleSum("this")));
+            Assert.AreEqual(45d, Map.Aggregate(Aggregators.DoubleSum()));
+            Assert.AreEqual(45d, Map.Aggregate(Aggregators.DoubleSum("this")));
         }
 
         [Test]
-        public void test_IntegerSum()
+        public void IntegerSum()
         {
             FillMap<int>();
-            Assert.AreEqual(45, map.Aggregate(Aggregators.IntegerSum()));
-            Assert.AreEqual(45, map.Aggregate(Aggregators.IntegerSum("this")));
+            Assert.AreEqual(45, Map.Aggregate(Aggregators.IntegerSum()));
+            Assert.AreEqual(45, Map.Aggregate(Aggregators.IntegerSum("this")));
         }
 
         [Test]
-        public void test_LongSum()
+        public void LongSum()
         {
             FillMap<long>();
-            Assert.AreEqual(45, map.Aggregate(Aggregators.LongSum()));
-            Assert.AreEqual(45, map.Aggregate(Aggregators.LongSum("this")));
+            Assert.AreEqual(45, Map.Aggregate(Aggregators.LongSum()));
+            Assert.AreEqual(45, Map.Aggregate(Aggregators.LongSum("this")));
         }
 
         [Test]
-        public void test_FixedPointSum()
+        public void FixedPointSum()
         {
             FillMap<float>();
             FillMap<double>();
-            Assert.AreEqual(90, map.Aggregate(Aggregators.FixedPointSum()));
-            Assert.AreEqual(90, map.Aggregate(Aggregators.FixedPointSum("this")));
+            Assert.AreEqual(90, Map.Aggregate(Aggregators.FixedPointSum()));
+            Assert.AreEqual(90, Map.Aggregate(Aggregators.FixedPointSum("this")));
         }
 
         [Test]
-        public void test_FloatingPointSum()
+        public void FloatingPointSum()
         {
             FillMap<float>();
-            Assert.AreEqual(45d, map.Aggregate(Aggregators.FloatingPointSum()));
-            Assert.AreEqual(45d, map.Aggregate(Aggregators.FloatingPointSum("this")));
+            Assert.AreEqual(45d, Map.Aggregate(Aggregators.FloatingPointSum()));
+            Assert.AreEqual(45d, Map.Aggregate(Aggregators.FloatingPointSum("this")));
         }
 
         [Test]
-        public void test_Count_with_Predicate()
+        public void Count_with_Predicate()
         {
             FillMap<int>();
             var predicate = Predicates.IsGreaterThan("this", 5);
-            Assert.AreEqual(4, map.Aggregate(Aggregators.Count(), predicate));
-            Assert.AreEqual(4, map.Aggregate(Aggregators.Count("this"), predicate));
+            Assert.AreEqual(4, Map.Aggregate(Aggregators.Count(), predicate));
+            Assert.AreEqual(4, Map.Aggregate(Aggregators.Count("this"), predicate));
         }
 
         [Test]
-        public void test_LongSum_field()
+        public void LongSum_field()
         {
             FillMap<Header>();
-            Assert.AreEqual(45, map.Aggregate(Aggregators.LongSum("id")));
+            Assert.AreEqual(45, Map.Aggregate(Aggregators.LongSum("id")));
         }
 
         [Test]
-        public void test_LongSum_withPredicate_field()
+        public void LongSum_withPredicate_field()
         {
             FillMap<Header>();
             var predicate = Predicates.IsGreaterThan("id", 5);
-            Assert.AreEqual(30, map.Aggregate(Aggregators.LongSum("id"), predicate));
+            Assert.AreEqual(30, Map.Aggregate(Aggregators.LongSum("id"), predicate));
         }
 
         [Test]
-        public void test_AggregateAny()
+        public void AggregateAny()
         {
             FillMap<Item>();
-            Assert.AreEqual(10, map.Aggregate(Aggregators.Count("enabled[any]")));
+            Assert.AreEqual(10, Map.Aggregate(Aggregators.Count("enabled[any]")));
         }
 
         [Test]
-		public void testAggregate_NullPredicate()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void Aggregate_NullPredicate()
         {
-            map.Aggregate(Aggregators.LongSum("id"), null);
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Map.Aggregate(Aggregators.LongSum("id"), null);
+            });
+        }
 
         //Projection tests
         [Test]
-        public void test_SingleAttributeProjection()
+        public void SingleAttributeProjection()
         {
             FillMap<Header>();
-            var result = (ReadOnlyLazyList<long, IData>) map.Project<long>(new SingleAttributeProjection("id"));
-            var expected = new HashSet<long> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+            var result = (ReadOnlyLazyList<long, IData>)Map.Project<long>(new SingleAttributeProjection("id"));
+            var expected = new HashSet<long> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             CollectionAssert.AreEquivalent(expected, result);
         }
 
         [Test]
-        public void test_SingleAttributeProjection_withPredicate()
+        public void SingleAttributeProjection_withPredicate()
         {
             FillMap<Header>();
             var predicate = Predicates.IsGreaterThan("id", 5);
-            var result = (ReadOnlyLazyList<long, IData>) map.Project<long>(new SingleAttributeProjection("id"), predicate);
-            var expected = new HashSet<long> {6, 7, 8, 9};
+            var result = (ReadOnlyLazyList<long, IData>)Map.Project<long>(new SingleAttributeProjection("id"), predicate);
+            var expected = new HashSet<long> { 6, 7, 8, 9 };
             CollectionAssert.AreEquivalent(expected, result);
         }
 
         [Test]
-		public void test_NullProjection()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void NullProjection()
         {
-            map.Project<long>(null);
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Map.Project<long>(null);
+            });
+        }
 
         [Test]
-		public void testProjection_NullPredicate()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void Projection_NullPredicate()
         {
-            map.Project<long>(new SingleAttributeProjection("id"), null);
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Map.Project<long>(new SingleAttributeProjection("id"), null);
+            });
+        }
 
         [Test]
-		public void test_NullPredicateAndProjection()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void NullPredicateAndProjection()
         {
-            map.Project<long>(null, null);
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Map.Project<long>(null, null);
+            });
+        }
     }
 }

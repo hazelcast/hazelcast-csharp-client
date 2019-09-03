@@ -19,13 +19,13 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Test
 {
-    class Overrides
+    internal class Overrides
     {
         public static class Dns
         {
-            static readonly StaticField GetHostNameFunc = new StaticField(typeof(DnsUtil), "_getHostNameFunc");
-            static readonly StaticField GetHostEntryFunc = new StaticField(typeof(DnsUtil), "_getHostEntryFunc");
-            static readonly StaticField GetHostAddressesFund = new StaticField(typeof(DnsUtil), "_getHostAddressesFunc");
+            private static readonly StaticField GetHostNameFunc = new StaticField(typeof(DnsUtil), "_getHostNameFunc");
+            private static readonly StaticField GetHostEntryFunc = new StaticField(typeof(DnsUtil), "_getHostEntryFunc");
+            private static readonly StaticField GetHostAddressesFund = new StaticField(typeof(DnsUtil), "_getHostAddressesFunc");
 
             public static IDisposable GetHostName(Func<string> getHostName)
             {
@@ -49,9 +49,9 @@ namespace Hazelcast.Test
             }
         }
 
-        class StaticField
+        private class StaticField
         {
-            readonly FieldInfo _field;
+            private readonly FieldInfo _field;
 
             public StaticField(Type type, string name)
             {
@@ -65,9 +65,9 @@ namespace Hazelcast.Test
             }
         }
 
-        class Disposable : IDisposable
+        private class Disposable : IDisposable
         {
-            readonly Action _action;
+            private readonly Action _action;
 
             public Disposable(Action action)
             {

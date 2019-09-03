@@ -37,13 +37,10 @@ namespace Hazelcast.Client.Test
             _testCollection = new ReadOnlyLazyEntrySet<int, string>(dataList, _ss);
         }
 
-        internal override AbstractLazyDictionary<int, string> TestCollection
-        {
-            get { return _testCollection; }
-        }
+        internal override AbstractLazyDictionary<int, string> TestCollection => _testCollection;
 
         [Test]
-        public void Test_SetEquals()
+        public void SetEquals()
         {
             ISet<KeyValuePair<int, string>> otherSet = new HashSet<KeyValuePair<int, string>>
             {

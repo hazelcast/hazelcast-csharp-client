@@ -22,7 +22,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    internal class ClientCredentialsTest : HazelcastTestSupport
+    public class ClientCredentialsTest : HazelcastTestSupport
     {
         private RemoteController.Client _remoteController;
         private Cluster _cluster;
@@ -206,29 +206,23 @@ namespace Hazelcast.Client.Test
                     .SetProperty("username", _cluster.Id)
                     .SetProperty("password", _cluster.Id);
             });
-            Assert.NotNull(factory.groupConfig);
-            Assert.NotNull(factory.properties);
+            Assert.NotNull(factory.GroupConfig);
+            Assert.NotNull(factory.Properties);
             Assert.True(client.GetLifecycleService().IsRunning());
             
             client.Shutdown();
             
-            Assert.Null(factory.groupConfig);
-            Assert.Null(factory.properties);
+            Assert.Null(factory.GroupConfig);
+            Assert.Null(factory.Properties);
         }
     }
 
     [Serializable]
     internal class DummyCredentials : ICredentials
     {
-        public string GetEndpoint()
-        {
-            return null;
-        }
+        public string GetEndpoint() => null;
 
-        public string GetPrincipal()
-        {
-            return null;
-        }
+        public string GetPrincipal() => null;
 
         public void SetEndpoint(string endpoint)
         {
@@ -237,33 +231,32 @@ namespace Hazelcast.Client.Test
 
     internal class DummyCredentialFactory : ICredentialsFactory
     {
-        internal GroupConfig groupConfig;
-        internal IDictionary<string, string> properties;
+        internal GroupConfig GroupConfig;
+        internal IDictionary<string, string> Properties;
 
         public void Configure(GroupConfig groupConfig, IDictionary<string, string> properties)
         {
-            this.groupConfig = groupConfig;
-            this.properties = properties;
+            GroupConfig = groupConfig;
+            Properties = properties;
         }
 
         public ICredentials NewCredentials()
         {
-            string username, password;
-            if (!properties.TryGetValue("username", out username))
+            if (!Properties.TryGetValue("username", out var username))
             {
-                username = groupConfig.GetName();
+                username = GroupConfig.GetName();
             }
-            if (!properties.TryGetValue("password", out password))
+            if (!Properties.TryGetValue("password", out var password))
             {
-                password = groupConfig.GetPassword();
+                password = GroupConfig.GetPassword();
             }
             return new UsernamePasswordCredentials(username, password);
         }
 
         public void Destroy()
         {
-            groupConfig = null;
-            properties = null;
+            GroupConfig = null;
+            Properties = null;
         }
     }
 }

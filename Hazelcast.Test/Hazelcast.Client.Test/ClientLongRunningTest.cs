@@ -24,19 +24,19 @@ namespace Hazelcast.Client.Test
     [Ignore("")]
     public class ClientLongRunningTest : SingleMemberBaseTest
     {
-        private static IMap<object, object> map;
+        private IMap<object, object> _map;
         
         [SetUp]
         public void Init()
         {
-            map = Client.GetMap<object, object>(TestSupport.RandomString());
+            _map = Client.GetMap<object, object>(TestSupport.RandomString());
             FillMap();
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            map.Clear();
+            _map.Clear();
         }
 
         protected override string GetServerConfig()
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Test
         {
             for (var i = 0; i < 10; i++)
             {
-                map.Put("key" + i, "value" + i);
+                _map.Put("key" + i, "value" + i);
             }
         }
 
@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Test
         public void TestLongRunning()
         {
             var starTicks = DateTime.Now.Ticks;
-            var collection = map.Values(Predicates.Sql("this == 'value5'"));
+            var collection = _map.Values(Predicates.Sql("this == 'value5'"));
             
             var timeSpan = new TimeSpan(DateTime.Now.Ticks - starTicks);
             Assert.IsNotEmpty(collection);

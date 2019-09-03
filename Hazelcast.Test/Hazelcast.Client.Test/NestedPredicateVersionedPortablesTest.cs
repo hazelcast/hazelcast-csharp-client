@@ -14,12 +14,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Hazelcast.Client.Model;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -28,18 +25,18 @@ namespace Hazelcast.Client.Test
     [Category("3.8")]
     public class NestedPredicateVersionedPortablesTest : SingleMemberBaseTest
     {
-        private static IMap<int, Body> map;
+        private IMap<int, Body> _map;
 
         [SetUp]
         public void Init()
         {
-            map = Client.GetMap<int, Body>("map");
+            _map = Client.GetMap<int, Body>("map");
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            map.Clear();
+            _map.Clear();
         }
 
         protected override void ConfigureClient(ClientConfig config)
@@ -66,60 +63,58 @@ namespace Hazelcast.Client.Test
 
 
         [Test]
-        public void addingIndexes()
+        public void AddingIndexes()
         {
             // single-attribute index
-            map.AddIndex("name", true);
+            _map.AddIndex("name", true);
             // nested-attribute index
-            map.AddIndex("limb.name", true);
+            _map.AddIndex("limb.name", true);
         }
         
-        
         [Test]
-        public void singleAttributeQuery_versionedProtables_predicates()
+        public void SingleAttributeQuery_VersionedPortables_predicates()
         {
             // GIVEN
-            map.Put(1, new Body("body1", new Limb("hand")));
-            map.Put(2, new Body("body2", new Limb("leg")));
+            _map.Put(1, new Body("body1", new Limb("hand")));
+            _map.Put(2, new Body("body2", new Limb("leg")));
 
             // WHEN
-            IPredicate predicate = Predicates.Property("limb.name").Equal("hand");
-            ICollection<Body> values = map.Values(predicate);
+            var predicate = Predicates.Property("limb.name").Equal("hand");
+            var values = _map.Values(predicate);
 
             //THEN
             Assert.AreEqual(1, values.Count);
-            Body[] bt = new Body[1];
+            var bt = new Body[1];
             values.CopyTo(bt, 0);
-            Assert.AreEqual("body1", bt[0].getName());
+            Assert.AreEqual("body1", bt[0].Name);
         }
 
         [Test]
-        public void nestedAttributeQuery_distributedSql()
+        public void NestedAttributeQuery_DistributedSql()
         {
             // GIVEN
-            map.Put(1, new Body("body1", new Limb("hand")));
-            map.Put(2, new Body("body2", new Limb("leg")));
+            _map.Put(1, new Body("body1", new Limb("hand")));
+            _map.Put(2, new Body("body2", new Limb("leg")));
 
             // WHEN
-            ICollection<Body> values = map.Values(new SqlPredicate("limb.name == 'leg'"));
+            var values = _map.Values(new SqlPredicate("limb.name == 'leg'"));
 
             // THEN
             Assert.AreEqual(1, values.Count);
-            Body[] bt = new Body[1];
+            var bt = new Body[1];
             values.CopyTo(bt, 0); 
-            Assert.AreEqual("body2", bt[0].getName());
+            Assert.AreEqual("body2", bt[0].Name);
         }
 
         private class Body : IVersionedPortable
         {
+            private string _name;
+            private Limb _limb;
 
-            private String name;
-            private Limb limb;
-
-            public Body(String name, Limb limb)
+            public Body(string name, Limb limb)
             {
-                this.name = name;
-                this.limb = limb;
+                _name = name;
+                _limb = limb;
             }
 
             public Body()
@@ -127,15 +122,8 @@ namespace Hazelcast.Client.Test
 
             }
 
-            public String getName()
-            {
-                return name;
-            }
-
-            public Limb getLimb()
-            {
-                return limb;
-            }
+            public string Name => _name;
+            public Limb Limb => _limb;
 
             public override bool Equals(object obj)
             {
@@ -147,22 +135,22 @@ namespace Hazelcast.Client.Test
                 {
                     return false;
                 }
-                Body body = (Body)obj;
-                return !(limb != null ? !limb.Equals(body.limb) : body.limb != null);
+                var body = (Body)obj;
+                return !(_limb != null ? !_limb.Equals(body._limb) : body._limb != null);
             }
 
             public override int GetHashCode()
             {
-                int result = name != null ? name.GetHashCode() : 0;
-                result = 31 * result + (limb != null ? limb.GetHashCode() : 0);
+                var result = _name != null ? _name.GetHashCode() : 0;
+                result = 31 * result + (_limb != null ? _limb.GetHashCode() : 0);
                 return result;
             }
 
             public override string ToString()
             {
                 return "Body{"
-                    + "name='" + name + '\''
-                    + ", limb=" + limb
+                    + "name='" + _name + '\''
+                    + ", limb=" + _limb
                     + '}';
             }
 
@@ -183,24 +171,24 @@ namespace Hazelcast.Client.Test
 
             public void ReadPortable(IPortableReader reader)
             {
-                name = reader.ReadUTF("name");
-                limb = reader.ReadPortable<Limb>("limb");
+                _name = reader.ReadUTF("name");
+                _limb = reader.ReadPortable<Limb>("limb");
             }
 
             public void WritePortable(IPortableWriter writer)
             {
-                writer.WriteUTF("name", name);
-                writer.WritePortable("limb", limb);
+                writer.WriteUTF("name", _name);
+                writer.WritePortable("limb", _limb);
             }
         }
 
         private class Limb : IVersionedPortable
         {
-            private String name;
+            private string _name;
 
-            public Limb(String name)
+            public Limb(string name)
             {
-                this.name = name;
+                _name = name;
             }
 
             public Limb()
@@ -217,19 +205,19 @@ namespace Hazelcast.Client.Test
                 {
                     return false;
                 }
-                Limb limb = (Limb) obj;
-                return !(name != null ? !name.Equals(limb.name) : limb.name != null);
+                var limb = (Limb) obj;
+                return !(_name != null ? !_name.Equals(limb._name) : limb._name != null);
             }
 
             public override int GetHashCode()
             {
-                return name != null  ? name.GetHashCode() : 0;
+                return _name != null  ? _name.GetHashCode() : 0;
             }
 
             public override string ToString()
             {
                 return "Limb{"
-                    + "name='" + name + '\''
+                    + "name='" + _name + '\''
                     + '}';
             }
 
@@ -250,14 +238,13 @@ namespace Hazelcast.Client.Test
 
             public void ReadPortable(IPortableReader reader)
             {
-                name = reader.ReadUTF("name");
+                _name = reader.ReadUTF("name");
             }
 
             public void WritePortable(IPortableWriter writer)
             {
-                writer.WriteUTF("name", name);
+                writer.WriteUTF("name", _name);
             }
         }
-
     }
 }

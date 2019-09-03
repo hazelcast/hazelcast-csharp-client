@@ -17,9 +17,6 @@ using System.Collections.Concurrent;
 using Hazelcast.Core;
 using Hazelcast.Remote;
 using Hazelcast.Config;
-using System.Collections.Generic;
-using System.Linq;
-using Hazelcast.Logging;
 using Member = Hazelcast.Remote.Member;
 
 namespace Hazelcast.Client.Test
@@ -76,15 +73,14 @@ namespace Hazelcast.Client.Test
         
         protected void ShutdownMember(string memberUuid)
         {
-            Member member;
-            if(MemberList.TryRemove(memberUuid, out member))
+            if(MemberList.TryRemove(memberUuid, out var member))
             {
                 StopMember(RemoteController, HzCluster, member);
             }
         }
         protected bool ShutdownCluster()
         {
-            _logger.Info(string.Format("Shutting cluster {0}", HzCluster.Id));
+            _logger.Info($"Shutting cluster {HzCluster.Id}");
             var result = StopCluster(RemoteController, HzCluster);
             if (result)
             {

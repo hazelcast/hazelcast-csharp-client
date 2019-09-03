@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Linq;
 using System.Threading;
 using Hazelcast.Client.Proxy;
@@ -108,6 +109,8 @@ namespace Hazelcast.Client.Test
                 case "Get":
                     _pnCounter.Get();
                     break;
+                default:
+                    throw new NotImplementedException($"The case '{_type}' has not been implemented.");
             }
         }
 

@@ -21,7 +21,7 @@ namespace Hazelcast.Client.Test
     public class VersionUtilTest
     {
         [Test]
-        public void TestDllVersion()
+        public void DllVersion()
         {
             var assemblyVersion = typeof(VersionUtil).Assembly.GetName().Version.ToString();
             var extracted = VersionUtil.GetDllVersion();
@@ -30,7 +30,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestServerVersionParse()
+        public void ServerVersionParse()
         {
             Assert.AreEqual(VersionUtil.UnknownVersion, VersionUtil.ParseServerVersion("3"));
             Assert.AreEqual(30900, VersionUtil.ParseServerVersion("3.9"));

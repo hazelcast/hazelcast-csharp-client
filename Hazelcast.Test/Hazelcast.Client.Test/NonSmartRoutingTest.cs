@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerWithNonSmartRouting()
+        public void ListenerWithNonSmartRouting()
         {
             var map = _client.GetMap<string, string>(TestSupport.RandomString());
 
@@ -91,10 +91,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPutAllWithNonSmartRouting()
+        public void PutAllWithNonSmartRouting()
         {
             var map = _client.GetMap<string, string>(TestSupport.RandomString());
-            var n = 1000;
+            const int n = 1000;
             var toInsert = new Dictionary<string, string>();
             for (var i = 0; i < n; i++)
             {
@@ -111,11 +111,11 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPutWithNonSmartRouting()
+        public void PutWithNonSmartRouting()
         {
             var cm  = ((HazelcastClientProxy) _client).GetClient().GetConnectionManager();
             var map = _client.GetMap<int, int>(TestSupport.RandomString());
-            var n = 1000;
+            const int n = 1000;
             for (var i = 0; i < n; i++)
             {
                 map.Put(i, i);

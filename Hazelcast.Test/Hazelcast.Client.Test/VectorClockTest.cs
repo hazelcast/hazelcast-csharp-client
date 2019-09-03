@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Test
         }
 
         [TearDown]
-        public  void Destroy()
+        public void Destroy()
         {
             _inst = null;
         }

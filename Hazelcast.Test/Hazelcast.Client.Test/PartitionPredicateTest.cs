@@ -12,14 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Hazelcast.Client.Model;
-using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -29,85 +23,83 @@ namespace Hazelcast.Client.Test
     public class PartitionPredicateTest : SingleMemberBaseTest
     {
         private const int ItemsPerPartition = 10;
-        private object partitionKey;
-        private int partitionId;
-        private IPredicate predicate;
-        
-        internal static IMap<object, object> map;
+        private object _partitionKey;
+        private int _partitionId;
+        private IPredicate _predicate;
+
+        private IMap<object, object> _map;
         
         [SetUp]
         public void Init()
         {
             var partitionService = ((HazelcastClientProxy) Client).GetClient().GetClientPartitionService();
-            map = Client.GetMap<object, object>(TestSupport.RandomString());
+            _map = Client.GetMap<object, object>(TestSupport.RandomString());
             
-            map.Clear();
+            _map.Clear();
             var partitionCount = partitionService.GetPartitionCount();
             for (var p = 0; p < partitionCount; p++)
             {
                 for (var k = 0; k < ItemsPerPartition; k++)
                 {
-                    map.Put(GenerateKeyForPartition(Client, p), p);
+                    _map.Put(GenerateKeyForPartition(Client, p), p);
                 }
             }
             
-            partitionKey = TestSupport.RandomString();
-            partitionId = partitionService.GetPartitionId(partitionKey);
-            predicate = new PartitionPredicate(partitionKey, Predicates.True());
+            _partitionKey = TestSupport.RandomString();
+            _partitionId = partitionService.GetPartitionId(_partitionKey);
+            _predicate = new PartitionPredicate(_partitionKey, Predicates.True());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            map.Clear();
+            _map.Clear();
         }
 
         [Test]
-        public void TestValues()
+        public void Values()
         {
-            var values = map.Values(predicate);
+            var values = _map.Values(_predicate);
             Assert.AreEqual(ItemsPerPartition, values.Count);
             foreach (var value in values)
             {
-                Assert.AreEqual(partitionId, value);
+                Assert.AreEqual(_partitionId, value);
             }
         }
-
         
         [Test]
-        public void TestKeySet() 
+        public void KeySet() 
         {
             var partitionService = ((HazelcastClientProxy) Client).GetClient().GetClientPartitionService();
-            var keys = map.KeySet(predicate);
+            var keys = _map.KeySet(_predicate);
             Assert.AreEqual(ItemsPerPartition, keys.Count);
             foreach (var key in keys)
             {
-                Assert.AreEqual(partitionId, partitionService.GetPartitionId(key));
+                Assert.AreEqual(_partitionId, partitionService.GetPartitionId(key));
             }
         }
 
         [Test]
-        public void TestEntries() 
+        public void Entries() 
         {
             var partitionService = ((HazelcastClientProxy) Client).GetClient().GetClientPartitionService();
-            var entries = map.EntrySet(predicate);
+            var entries = _map.EntrySet(_predicate);
             Assert.AreEqual(ItemsPerPartition, entries.Count);
             foreach (var entry in entries)
             {
-                Assert.AreEqual(partitionId, partitionService.GetPartitionId(entry.Key));
-                Assert.AreEqual(partitionId, entry.Value);
+                Assert.AreEqual(_partitionId, partitionService.GetPartitionId(entry.Key));
+                Assert.AreEqual(_partitionId, entry.Value);
             }
         }
 
         [Test]
-        public void TestSerialization()
+        public void Serialization()
         {
             var ss = new SerializationServiceBuilder().Build();
-            var data = ss.ToData(predicate);
+            var data = ss.ToData(_predicate);
             var partitionPredicate = ss.ToObject<PartitionPredicate>(data);
-            Assert.AreEqual(partitionKey, partitionPredicate.GetPartitionKey());
+            Assert.AreEqual(_partitionKey, partitionPredicate.GetPartitionKey());
             Assert.AreEqual(Predicates.True(), partitionPredicate.GetTarget());
         }
-
     }
 }

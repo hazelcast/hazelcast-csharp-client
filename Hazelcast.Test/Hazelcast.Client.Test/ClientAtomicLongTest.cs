@@ -20,7 +20,6 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientAtomicLongTest : SingleMemberBaseTest
     {
-        //
         [SetUp]
         public void Init()
         {
@@ -29,18 +28,15 @@ namespace Hazelcast.Client.Test
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
             l.Destroy();
         }
 
-        internal const string name = "ClientAtomicLongTest";
+        private IAtomicLong l;
 
-        internal static IAtomicLong l;
-
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void Test()
+        public void Test()
         {
             Assert.AreEqual(0, l.GetAndAdd(2));
             Assert.AreEqual(2, l.Get());

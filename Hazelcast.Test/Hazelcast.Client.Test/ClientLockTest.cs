@@ -26,137 +26,128 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Setup()
         {
-            l = Client.GetLock(TestSupport.RandomString());
+            _l = Client.GetLock(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            l.Destroy();
+            _l.Destroy();
         }
 
-        internal static ILock l;
+        private ILock _l;
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestForceUnlock()
+        public void ForceUnlock()
         {
-            l.Lock();
+            _l.Lock();
 
             var latch = new CountdownEvent(1);
 
-            var t2 = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
-                try
-                {
-                    l.ForceUnlock();
-                    latch.Signal();
-                }
-                catch
-                {
-                }
+                _l.ForceUnlock();
+                latch.Signal();
             });
-            t2.Start();
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(100)));
-            Assert.IsFalse(l.IsLocked());
+            Assert.IsFalse(_l.IsLocked());
         }
 
         [Test]
-        public virtual void TestIsLock()
+        public void IsLock()
         {
-            Assert.IsTrue(l.TryLock(20, TimeUnit.Seconds));
+            Assert.IsTrue(_l.TryLock(20, TimeUnit.Seconds));
 
-            var isLocked = l.IsLocked();
+            var isLocked = _l.IsLocked();
             Assert.IsTrue(isLocked);
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLock()
+        public void Lock()
         {
-            l.Lock();
+            _l.Lock();
             var latch = new CountdownEvent(1);
 
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
-                if (!l.TryLock())
+                if (!_l.TryLock())
                 {
                     latch.Signal();
                 }
             });
+
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(5)));
-            l.ForceUnlock();
+            _l.ForceUnlock();
         }
 
-
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLockTtl()
+        public void LockTtl()
         {
-            l.Lock(3, TimeUnit.Seconds);
+            _l.Lock(3, TimeUnit.Seconds);
 
             var latch = new CountdownEvent(2);
 
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
-                if (!l.TryLock())
+                if (!_l.TryLock())
                 {
                     latch.Signal();
                 }
                 try
                 {
-                    if (l.TryLock(5, TimeUnit.Seconds))
+                    if (_l.TryLock(5, TimeUnit.Seconds))
                     {
                         latch.Signal();
                     }
                 }
                 catch
                 {
+                    // TODO: what and why can throw here
                 }
             });
 
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
-            l.ForceUnlock();
+            _l.ForceUnlock();
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestStats()
+        public void Stats()
         {
-            l.Lock();
-            Assert.IsTrue(l.IsLocked());
-            Assert.IsTrue(l.IsLockedByCurrentThread());
-            Assert.AreEqual(1, l.GetLockCount());
-            l.Unlock();
-            Assert.IsFalse(l.IsLocked());
-            Assert.AreEqual(0, l.GetLockCount());
-            Assert.AreEqual(-1L, l.GetRemainingLeaseTime());
-            l.Lock(1, TimeUnit.Minutes);
-            Assert.IsTrue(l.IsLocked());
-            Assert.IsTrue(l.IsLockedByCurrentThread());
-            Assert.AreEqual(1, l.GetLockCount());
-            Assert.IsTrue(l.GetRemainingLeaseTime() > 1000 * 30);
+            _l.Lock();
+            Assert.IsTrue(_l.IsLocked());
+            Assert.IsTrue(_l.IsLockedByCurrentThread());
+            Assert.AreEqual(1, _l.GetLockCount());
+
+            _l.Unlock();
+            Assert.IsFalse(_l.IsLocked());
+            Assert.AreEqual(0, _l.GetLockCount());
+            Assert.AreEqual(-1L, _l.GetRemainingLeaseTime());
+
+            _l.Lock(1, TimeUnit.Minutes);
+            Assert.IsTrue(_l.IsLocked());
+            Assert.IsTrue(_l.IsLockedByCurrentThread());
+            Assert.AreEqual(1, _l.GetLockCount());
+            Assert.IsTrue(_l.GetRemainingLeaseTime() > 1000 * 30);
 
             var latch2 = new CountdownEvent(1);
 
-            var t2 = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
-                Assert.IsTrue(l.IsLocked());
-                Assert.IsFalse(l.IsLockedByCurrentThread());
-                Assert.AreEqual(1, l.GetLockCount());
-                Assert.IsTrue(l.GetRemainingLeaseTime() > 1000 * 30);
+                Assert.IsTrue(_l.IsLocked());
+                Assert.IsFalse(_l.IsLockedByCurrentThread());
+                Assert.AreEqual(1, _l.GetLockCount());
+                Assert.IsTrue(_l.GetRemainingLeaseTime() > 1000 * 30);
                 latch2.Signal();
             });
-            t2.Start();
 
             Assert.IsTrue(latch2.Wait(TimeSpan.FromMinutes(1)));
         }
 
         [Test]
-        public virtual void TestTryLock()
+        public void TryLock()
         {
-            Assert.IsTrue(l.TryLock(2, TimeUnit.Seconds));
+            Assert.IsTrue(_l.TryLock(2, TimeUnit.Seconds));
 
             var manualReset = new ManualResetEvent(false);
             //CountdownEvent latch = new CountdownEvent(1);
@@ -164,7 +155,7 @@ namespace Hazelcast.Client.Test
             {
                 try
                 {
-                    var tryLock = l.TryLock(2, TimeUnit.Seconds);
+                    var tryLock = _l.TryLock(2, TimeUnit.Seconds);
                     if (!tryLock)
                     {
                         manualReset.Set();
@@ -182,14 +173,13 @@ namespace Hazelcast.Client.Test
             //var isLocked = l.IsLocked();
             //Assert.IsTrue(isLocked);
 
-
             var manualReset2 = new ManualResetEvent(false);
 
             var t2 = new Thread(delegate(object o)
             {
                 try
                 {
-                    if (l.TryLock(20, TimeUnit.Seconds))
+                    if (_l.TryLock(20, TimeUnit.Seconds))
                     {
                         manualReset2.Set();
                         //latch2.Signal();
@@ -204,18 +194,18 @@ namespace Hazelcast.Client.Test
 
             Thread.Sleep(1000);
 
-            l.Unlock();
+            _l.Unlock();
 
             Assert.IsTrue(manualReset2.WaitOne(TimeSpan.FromSeconds(10)));
 
             //Assert.IsTrue(l.IsLocked());
-            l.ForceUnlock();
+            _l.ForceUnlock();
         }
 
         [Test]
-        public void TestUnlockBeforeLock_ShouldThrowException()
+        public void UnlockBeforeLock_ShouldThrowException()
         {
-            Assert.Throws<SynchronizationLockException>(() => { l.Unlock(); });
+            Assert.Throws<SynchronizationLockException>(() => { _l.Unlock(); });
         }
     }
 }

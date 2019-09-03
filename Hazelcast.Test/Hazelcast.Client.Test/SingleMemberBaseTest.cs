@@ -53,6 +53,5 @@ namespace Hazelcast.Client.Test
         {
             config.GetGroupConfig().SetName(HzCluster.Id).SetPassword(HzCluster.Id);
         }
-
     }
 }

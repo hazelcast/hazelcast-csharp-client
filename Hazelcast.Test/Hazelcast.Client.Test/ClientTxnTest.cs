@@ -24,47 +24,47 @@ namespace Hazelcast.Client.Test
     public class ClientTxnTest : SingleMemberBaseTest
     {
         [Test]
-		public void TestNegativeDurability()
-		{
-			Assert.Throws<ArgumentException>(() =>
+		public void NegativeDurability()
         {
-            var options = new TransactionOptions();
-            options.SetDurability(-1);
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var options = new TransactionOptions();
+                options.SetDurability(-1);
+            });
+        }
 
         [Test]
-		public void TestNegativeTimeout()
-		{
-			Assert.Throws<ArgumentException>(() =>
+		public void NegativeTimeout()
         {
-            var options = new TransactionOptions();
-            options.SetTimeout(-1, TimeUnit.Milliseconds);
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var options = new TransactionOptions();
+                options.SetTimeout(-1, TimeUnit.Milliseconds);
+            });
+        }
 
         [Test]
-		public void TestTxnNotActi()
-		{
-			Assert.Throws<TransactionNotActiveException>(() =>
+		public void TxnNotActive()
         {
-            var context = Client.NewTransactionContext();
-            context.CommitTransaction();
-            context.CommitTransaction();
-        });
-		}
+            Assert.Throws<TransactionNotActiveException>(() =>
+            {
+                var context = Client.NewTransactionContext();
+                context.CommitTransaction();
+                context.CommitTransaction();
+            });
+        }
 
         [Test]
-		public void TestTxnTimeOut()
-		{
-			Assert.Throws<TransactionNotActiveException>(() =>
+		public void TxnTimeOut()
         {
-            var options = new TransactionOptions();
-            options.SetTimeout(100, TimeUnit.Milliseconds);
-            var context = Client.NewTransactionContext(options);
-            Thread.Sleep(500);
-            context.CommitTransaction();
-        });
-		}
+            Assert.Throws<TransactionNotActiveException>(() =>
+            {
+                var options = new TransactionOptions();
+                options.SetTimeout(100, TimeUnit.Milliseconds);
+                var context = Client.NewTransactionContext(options);
+                Thread.Sleep(500);
+                context.CommitTransaction();
+            });
+        }
     }
 }

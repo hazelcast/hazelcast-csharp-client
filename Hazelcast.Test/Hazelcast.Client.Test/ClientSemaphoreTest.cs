@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -22,77 +23,71 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientSemaphoreTest : SingleMemberBaseTest
     {
-        private ISemaphore semaphore;
-        
+        private ISemaphore _semaphore;
+
         [SetUp]
         public void Init()
         {
-            semaphore = Client.GetSemaphore(TestSupport.RandomString());
+            _semaphore = Client.GetSemaphore(TestSupport.RandomString());
         }
 
         [TearDown]
         public void Destroy()
         {
-            semaphore.Destroy();
+            _semaphore.Destroy();
         }
 
         [Test]
-        public void TestAcquire()
+        public void Acquire()
         {
             var s = Client.GetSemaphore(TestSupport.RandomString());
             var latch = new CountdownEvent(1);
-            var t = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
-                try
-                {
-                    s.Acquire();
-                    latch.Signal();
-                }
-                catch
-                {
-                }
+                s.Acquire();
+                latch.Signal();
             });
-            t.Start();
 
             Thread.Sleep(100);
             s.Release(2);
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
             Assert.AreEqual(1, s.AvailablePermits());
         }
-        
-        [Test]
-        public void testdrainPermits() 
-        {
-            semaphore.Init(10);
-            Assert.AreEqual(10, semaphore.DrainPermits());
-        }
-
 
         [Test]
-        public void TestInit()
+        public void DrainPermits()
         {
-            semaphore.Init(2);
-            Assert.AreEqual(2, semaphore.AvailablePermits());
+            const int value = 10;
+
+            _semaphore.Init(value);
+            Assert.AreEqual(value, _semaphore.DrainPermits());
         }
 
         [Test]
-        public void TestInitNeg()
+        public void AvailablePermits()
+        {
+            _semaphore.Init(2);
+            Assert.AreEqual(2, _semaphore.AvailablePermits());
+        }
+
+        [Test]
+        public void InitNeg()
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                semaphore.Init(-2);
+                _semaphore.Init(-2);
             });
         }
 
         [Test]
-        public void TestTryAcquire()
+        public void TryAcquire()
         {
             var latch = new CountdownEvent(1);
-            var t = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
                 try
                 {
-                    if (semaphore.TryAcquire(2, 5, TimeUnit.Seconds))
+                    if (_semaphore.TryAcquire(2, 5, TimeUnit.Seconds))
                     {
                         latch.Signal();
                     }
@@ -101,29 +96,27 @@ namespace Hazelcast.Client.Test
                 {
                 }
             });
-            t.Start();
 
-            semaphore.Release(2);
+            _semaphore.Release(2);
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(10)));
-            Assert.AreEqual(0, semaphore.AvailablePermits());
+            Assert.AreEqual(0, _semaphore.AvailablePermits());
         }
-        
+
         [Test]
         [Category("3.10")]
-        public void TestNegativePermitsJucCompatibility()
+        public void NegativePermitsJucCompatibility()
         {
-            semaphore.Init(0);
-            semaphore.ReducePermits(100);
-            semaphore.Release(10);
-    
-            Assert.AreEqual(-90, semaphore.AvailablePermits());
-            Assert.AreEqual(-90, semaphore.DrainPermits());
-    
-            semaphore.Release(10);
-    
-            Assert.AreEqual(10, semaphore.AvailablePermits());
-            Assert.AreEqual(10, semaphore.DrainPermits());
-        }
+            _semaphore.Init(0);
+            _semaphore.ReducePermits(100);
+            _semaphore.Release(10);
 
+            Assert.AreEqual(-90, _semaphore.AvailablePermits());
+            Assert.AreEqual(-90, _semaphore.DrainPermits());
+
+            _semaphore.Release(10);
+
+            Assert.AreEqual(10, _semaphore.AvailablePermits());
+            Assert.AreEqual(10, _semaphore.DrainPermits());
+        }
     }
 }

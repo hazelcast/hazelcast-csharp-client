@@ -23,7 +23,7 @@ using NUnit.Framework;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    internal class ClientReconnectionTest : HazelcastTestSupport
+    public class ClientReconnectionTest : HazelcastTestSupport
     {
         private RemoteController.Client _remoteController;
         private Cluster _cluster;
@@ -49,11 +49,11 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestStartClientBeforeMember()
+        public void StartClientBeforeMember()
         {
-            Task.Factory.StartNew(() =>
+            var t = Task.Run(async () =>
             {
-                Thread.Sleep(5000);
+                await Task.Delay(5000);
                 StartMember(_remoteController, _cluster);
             });
 
@@ -67,7 +67,7 @@ namespace Hazelcast.Client.Test
 
         [Test]
         //TODO Fix required for listener (re)registration 
-        public void TestListenerReconnect()
+        public void ListenerReconnect()
         {
             var member = StartMember(_remoteController, _cluster);
             var client = CreateClient();
@@ -105,7 +105,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPromoteToOwner()
+        public void PromoteToOwner()
         {
             var member1 = _remoteController.startMember(_cluster.Id);
             var client = CreateClient();
@@ -132,7 +132,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestReconnect()
+        public void Reconnect()
         {
             var member = _remoteController.startMember(_cluster.Id);
             var client = CreateClient();

@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
 using Hazelcast.Test;
 using NUnit.Framework;
 
@@ -25,9 +23,8 @@ namespace Hazelcast.Client.Test
     [Category("3.8")]
     public class ClientSslMutualAuthenticationTest : ClientSSLBaseTest
     {
-
         [Test]
-        public void TestSSLEnabled_mutualAuthRequired_Server1KnowsClient1()
+        public void SSLEnabled_mutualAuthRequired_Server1KnowsClient1()
         {
             Setup(serverXml:Resources.hazelcast_ma_required,
                 isSslEnabled:true,
@@ -41,7 +38,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_mutualAuthRequired_Server1KnowsClient1_clientDoesNotProvideCerts()
+        public void SSLEnabled_mutualAuthRequired_Server1KnowsClient1_clientDoesNotProvideCerts()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -58,7 +55,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_mutualAuthRequired_Server1NotKnowsClient2()
+        public void SSLEnabled_mutualAuthRequired_Server1NotKnowsClient2()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -75,7 +72,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1()
+        public void SSLEnabled_mutualAuthOptional_Server1KnowsClient1()
         {
             Setup(serverXml:Resources.hazelcast_ma_optional,
                 isSslEnabled:true,
@@ -89,7 +86,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1_clientDoesNotProvideCerts()
+        public void SSLEnabled_mutualAuthOptional_Server1KnowsClient1_clientDoesNotProvideCerts()
         {
             Setup(serverXml:Resources.hazelcast_ma_optional,
                 isSslEnabled:true,
@@ -103,7 +100,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_mutualAuthOptional_Server1NotKnowsClient2()
+        public void SSLEnabled_mutualAuthOptional_Server1NotKnowsClient2()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -120,7 +117,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSSLEnabled_mutualAuthDisabled_Client1()
+        public void SSLEnabled_mutualAuthDisabled_Client1()
         {
             Setup(serverXml:Resources.hazelcast_ssl_signed,
                 isSslEnabled:true,
@@ -132,6 +129,5 @@ namespace Hazelcast.Client.Test
                 certPassword:Password);
             Assert.True(Client.GetLifecycleService().IsRunning());
         }
-
     }
 }

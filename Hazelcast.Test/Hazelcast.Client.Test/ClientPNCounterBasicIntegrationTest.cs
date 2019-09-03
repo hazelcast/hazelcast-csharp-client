@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void SimpleReplicationTest()
         {
-            var counterName = "counter";
+            const string counterName = "counter";
             var counter1 = Client.GetPNCounter(counterName);
             var counter2 = Client.GetPNCounter(counterName);
 

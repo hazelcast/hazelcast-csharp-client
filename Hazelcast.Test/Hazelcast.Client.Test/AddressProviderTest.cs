@@ -23,11 +23,6 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class AddressProviderTest
     {
-        [SetUp]
-        public void SetUp()
-        {
-        }
-
         [Test]
         public void TestConfigAddressProvider()
         {
@@ -36,9 +31,9 @@ namespace Hazelcast.Client.Test
 
             var addressProvider = new AddressProvider(cfg);
             var addresses = addressProvider.GetAddresses().ToList();
-            Assert.AreEqual(addresses[0], new Address("10.0.0.1", 5701));
-            Assert.AreEqual(addresses[1], new Address("10.0.0.2", 5702));
-            Assert.AreEqual(addresses[2], new Address("10.0.0.3", 5703));
+            Assert.AreEqual(new Address("10.0.0.1", 5701), addresses[0]);
+            Assert.AreEqual(new Address("10.0.0.2", 5702), addresses[1]);
+            Assert.AreEqual(new Address("10.0.0.3", 5703), addresses[2]);
         }
 
         [Test]
@@ -48,9 +43,9 @@ namespace Hazelcast.Client.Test
 
             var addressProvider = new AddressProvider(cfg);
             var addresses = addressProvider.GetAddresses().ToList();
-            Assert.AreEqual(addresses[0], new Address("localhost", 5701));
-            Assert.AreEqual(addresses[1], new Address("localhost", 5702));
-            Assert.AreEqual(addresses[2], new Address("localhost", 5703));
+            Assert.AreEqual(new Address("localhost", 5701), addresses[0]);
+            Assert.AreEqual(new Address("localhost", 5702), addresses[1]);
+            Assert.AreEqual(new Address("localhost", 5703), addresses[2]);
         }
 
         [Test]

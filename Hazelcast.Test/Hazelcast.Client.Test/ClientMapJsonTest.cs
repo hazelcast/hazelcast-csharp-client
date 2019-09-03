@@ -14,7 +14,6 @@
 
 using Hazelcast.Config;
 using Hazelcast.Core;
-using Hazelcast.IO.Serialization;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -23,7 +22,7 @@ namespace Hazelcast.Client.Test
     [Category("3.12")]
     public class ClientMapJsonTest : SingleMemberBaseTest
     {
-        internal static IMap<string, HazelcastJsonValue> _map;
+        internal IMap<string, HazelcastJsonValue> _map;
 
         [SetUp]
         public void Init()
@@ -32,14 +31,9 @@ namespace Hazelcast.Client.Test
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
             _map.Clear();
-        }
-
-        protected override void ConfigureClient(ClientConfig config)
-        {
-            base.ConfigureClient(config);
         }
 
         private void FillMap()
@@ -52,14 +46,14 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void PutJsonValue_Succeeded()
+        public void PutJsonValue_Succeeded()
         {
             var value = new HazelcastJsonValue("{ \"age\": 20 }");
             _map.Put("key-1", value);
         }
 
         [Test]
-        public virtual void GetJsonValue_Succeeded()
+        public void GetJsonValue_Succeeded()
         {
             var value = new HazelcastJsonValue("{ \"age\": 20 }");
 

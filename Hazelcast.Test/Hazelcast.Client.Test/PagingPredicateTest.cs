@@ -29,14 +29,16 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            map = Client.GetMap<object, object>(TestSupport.RandomString());
+            _map = Client.GetMap<object, object>(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            map.Clear();
+            _map.Clear();
         }
+
+        private IMap<object, object> _map;
 
         protected override void ConfigureClient(ClientConfig config)
         {
@@ -45,14 +47,12 @@ namespace Hazelcast.Client.Test
                 .AddDataSerializableFactory(IdentifiedFactory.FactoryId, new IdentifiedFactory());
         }
 
-        internal static IMap<object, object> map;
-
         private void FillMap()
         {
             for (var i = 0; i < 10; i++)
             {
-                map.Put("key-" + i, "value-" + i);
-                map.Put("keyx-" + i, "valuex-" + i);
+                _map.Put("key-" + i, "value-" + i);
+                _map.Put("keyx-" + i, "valuex-" + i);
             }
         }
 
@@ -60,11 +60,11 @@ namespace Hazelcast.Client.Test
         {
             for (var i = 65; i < 75; i++)
             {
-                map.Put("key-" + i,  new string(Convert.ToChar(i), i - 64));
+                _map.Put("key-" + i,  new string(Convert.ToChar(i), i - 64));
             }
         }
 
-        private ISet<KeyValuePair<object, object>> GenerateKeyValuePair(int start, int end)
+        private static ISet<KeyValuePair<object, object>> GenerateKeyValuePair(int start, int end)
         {
             var kvSet = new HashSet<KeyValuePair<object, object>>();
             for (var i = start; i < end; i++)
@@ -75,88 +75,87 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestKeySetPaging_without_comparator()
+        public void KeySetPaging_without_comparator()
         {
             FillMap();
             var predicate = new PagingPredicate(6, Predicates.Key().ILike("key-%"));
-            var keySetPage1 = map.KeySet(predicate);
+            var keySetPage1 = _map.KeySet(predicate);
             predicate.NextPage();
-            var keySetPage2 = map.KeySet(predicate);
+            var keySetPage2 = _map.KeySet(predicate);
             predicate.NextPage();
-            var keySetPage3 = map.KeySet(predicate);
+            var keySetPage3 = _map.KeySet(predicate);
             Assert.That(new[] {"key-0", "key-1", "key-2", "key-3", "key-4", "key-5"}, Is.EquivalentTo(keySetPage1.ToArray()));
             Assert.That(new[] {"key-6", "key-7", "key-8", "key-9"}, Is.EquivalentTo(keySetPage2.ToArray()));
             Assert.That(new string[] {}, Is.EquivalentTo(keySetPage3.ToArray()));
         }
 
         [Test]
-        public virtual void TestValuesPaging_without_comparator()
+        public void ValuesPaging_without_comparator()
         {
             FillMap();
             var predicate = new PagingPredicate(6, Predicates.IsILike("this", "value-%"));
-            var valuesPage1 = map.Values(predicate);
+            var valuesPage1 = _map.Values(predicate);
             predicate.NextPage();
-            var valuesPage2 = map.Values(predicate);
+            var valuesPage2 = _map.Values(predicate);
             predicate.NextPage();
-            var valuesPage3 = map.Values(predicate);
+            var valuesPage3 = _map.Values(predicate);
             Assert.That(new[] {"value-0", "value-1", "value-2", "value-3", "value-4", "value-5"}, Is.EquivalentTo(valuesPage1.ToArray()));
             Assert.That(new[] {"value-6", "value-7", "value-8", "value-9"}, Is.EquivalentTo(valuesPage2.ToArray()));
             Assert.That(new string[] {}, Is.EquivalentTo(valuesPage3.ToArray()));
         }
 
         [Test]
-        public virtual void TestEntrySetPaging_without_comparator()
+        public void EntrySetPaging_without_comparator()
         {
             FillMap();
             var predicate = new PagingPredicate(6, Predicates.IsILike("this", "value-%"));
-            var page1 = map.EntrySet(predicate);
+            var page1 = _map.EntrySet(predicate);
             predicate.NextPage();
-            var page2 = map.EntrySet(predicate);
+            var page2 = _map.EntrySet(predicate);
             predicate.NextPage();
-            var page3 = map.EntrySet(predicate);
+            var page3 = _map.EntrySet(predicate);
             Assert.That(GenerateKeyValuePair(0, 6), Is.EquivalentTo(page1));
             Assert.That(GenerateKeyValuePair(6, 10), Is.EquivalentTo(page2));
             Assert.That(GenerateKeyValuePair(0, 0), Is.EquivalentTo(page3));
         }
 
         [Test]
-        public virtual void TestValuesPaging_without_comparator_predicate()
+        public void ValuesPaging_without_comparator_predicate()
         {
             FillMap();
             var predicate = new PagingPredicate(4);
-            var valuesPage1 = map.Values(predicate);
+            var valuesPage1 = _map.Values(predicate);
             Assert.That(new[] {"value-0", "value-1", "value-2", "value-3"}, Is.EquivalentTo(valuesPage1.ToArray()));
         }
 
         [Test]
-        public virtual void TestKeySetPaging_with_comparator()
+        public void KeySetPaging_with_comparator()
         {
             FillMap();
             var predicate = new PagingPredicate(6, Predicates.Key().ILike("key-%"), new CustomComparator(1));
 
-            var keySetPage1 = map.KeySet(predicate);
+            var keySetPage1 = _map.KeySet(predicate);
             predicate.NextPage();
-            var keySetPage2 = map.KeySet(predicate);
+            var keySetPage2 = _map.KeySet(predicate);
             predicate.NextPage();
-            var keySetPage3 = map.KeySet(predicate);
+            var keySetPage3 = _map.KeySet(predicate);
 
             Assert.That(new[] {"key-9", "key-8", "key-7", "key-6", "key-5", "key-4"}, Is.EquivalentTo(keySetPage1.ToArray()));
             Assert.That(new[] {"key-3", "key-2", "key-1", "key-0"}, Is.EquivalentTo(keySetPage2.ToArray()));
             Assert.That(new string[] {}, Is.EquivalentTo(keySetPage3.ToArray()));
-
         }
 
         [Test]
-        public virtual void TestValuePaging_with_comparator()
+        public void ValuePaging_with_comparator()
         {
             FillMap2();
             var predicate = new PagingPredicate(6, null, new CustomComparator(2, IterationType.Value));
 
-            var page1 = map.Values(predicate);
+            var page1 = _map.Values(predicate);
             predicate.NextPage();
-            var page2 = map.Values(predicate);
+            var page2 = _map.Values(predicate);
             predicate.NextPage();
-            var page3 = map.Values(predicate);
+            var page3 = _map.Values(predicate);
             Assert.That(new[] {"A", "BB", "CCC", "DDDD", "EEEEE", "FFFFFF"}, Is.EquivalentTo(page1.ToArray()));
             Assert.That(new[] {"GGGGGGG", "HHHHHHHH", "IIIIIIIII", "JJJJJJJJJJ"}, Is.EquivalentTo(page2.ToArray()));
             Assert.That(new string[] {}, Is.EquivalentTo(page3.ToArray()));
@@ -164,18 +163,18 @@ namespace Hazelcast.Client.Test
 
 
         [Test]
-        public virtual void TestEntrySetPaging_with_comparator()
+        public void EntrySetPaging_with_comparator()
         {
             FillMap2();
             var predicate = new PagingPredicate(2, null, new CustomComparator(2, IterationType.Entry));
 
-            var page1 = map.EntrySet(predicate);
+            var page1 = _map.EntrySet(predicate);
             Assert.That(new[] {new KeyValuePair<object, object>("key-65","A"),
                 new KeyValuePair<object, object>("key-66","BB")}, Is.EquivalentTo(page1.ToArray()));
         }
 
         [Test]
-        public virtual void TestEntrySetCount()
+        public void EntrySetCount()
         {
             var map = Client.GetMap<int, int>("testMap");
             for (var i = 0; i < 10; i++)

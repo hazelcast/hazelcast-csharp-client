@@ -14,9 +14,7 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Hazelcast.IO.Serialization;
 using Hazelcast.Util;
 using NUnit.Framework;
 
@@ -28,29 +26,28 @@ namespace Hazelcast.Client.Test
         internal abstract AbstractLazyDictionary<int, string> TestCollection { get; }
 
         [Test]
-        public void Test_GetEnumerator()
+        public void GetEnumerator()
         {
-            var enumerator = TestCollection.GetEnumerator();
             var ix = 0;
-            while (enumerator.MoveNext())
+            foreach (var kvp in TestCollection)
             {
-                var pair = enumerator.Current;
-                Assert.AreEqual(pair.Key, ix);
-                Assert.AreEqual(pair.Value, ix.ToString());
+                Assert.AreEqual(ix, kvp.Key);
+                Assert.AreEqual(ix.ToString(), kvp.Value);
                 ix++;
             }
         }
 
         [Test]
-        public void Test_IEnumerable_GetEnumerator()
+        public void IEnumerable_GetEnumerator()
         {
-            var enumerator = ((IEnumerable) TestCollection).GetEnumerator();
+            var enumerable = (IEnumerable)TestCollection;
             var ix = 0;
-            while (enumerator.MoveNext())
+
+            foreach (var o in enumerable)
             {
-                var pair = (KeyValuePair<int, string>) enumerator.Current;
-                Assert.AreEqual(pair.Key, ix);
-                Assert.AreEqual(pair.Value, ix.ToString());
+                var kvp = (KeyValuePair<int, string>)o;
+                Assert.AreEqual(kvp.Key, ix);
+                Assert.AreEqual(kvp.Value, ix.ToString());
                 ix++;
             }
         }
@@ -83,8 +80,8 @@ namespace Hazelcast.Client.Test
             TestCollection.CopyTo(copyArray, 1);
             for (var i = 0; i < 4; i++)
             {
-                Assert.AreEqual(copyArray[i+1].Key, i);
-                Assert.AreEqual(copyArray[i+1].Value, i.ToString());
+                Assert.AreEqual(copyArray[i + 1].Key, i);
+                Assert.AreEqual(copyArray[i + 1].Value, i.ToString());
             }
         }
 
@@ -130,10 +127,9 @@ namespace Hazelcast.Client.Test
         [Test]
         public void Test_TryGetValue()
         {
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
-                string val;
-                if (TestCollection.TryGetValue(i, out val))
+                if (TestCollection.TryGetValue(i, out var val))
                 {
                     Assert.AreEqual(val, i.ToString());
                 }
@@ -143,11 +139,12 @@ namespace Hazelcast.Client.Test
         [Test]
         public void Test_Index_operator()
         {
-            for (int i = 0; i < 4; i++)
+            for (var i = 0; i < 4; i++)
             {
-                string val = TestCollection[i];
-                Assert.AreEqual(val, i.ToString());
+                var val = TestCollection[i];
+                Assert.AreEqual(i.ToString(), val);
             }
+
             Assert.Throws<KeyNotFoundException>(() =>
             {
                 var x = TestCollection[99];
@@ -157,7 +154,5 @@ namespace Hazelcast.Client.Test
                 TestCollection[99] = "99";
             });
         }
-
-
     }
 }

@@ -25,57 +25,56 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            t = Client.GetTopic<object>(TestSupport.RandomString());
+            _t = Client.GetTopic<object>(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            t.Destroy();
+            _t.Destroy();
         }
 
-        internal const string name = "test1";
 
-        internal static ITopic<object> t;
+        private ITopic<object> _t;
 
-        private sealed class _MessageListener : IMessageListener<object>
+        private sealed class MessageListener : IMessageListener<object>
         {
-            private readonly CountdownEvent latch;
+            private readonly CountdownEvent _latch;
 
-            public _MessageListener(CountdownEvent latch)
+            public MessageListener(CountdownEvent latch)
             {
-                this.latch = latch;
+                _latch = latch;
             }
 
             public void OnMessage(Message<object> message)
             {
-                latch.Signal();
+                _latch.Signal();
             }
         }
 
 
         [Test]
-        public virtual void TestListener()
+        public void Listener()
         {
             var latch = new CountdownEvent(10);
-            var listener = new _MessageListener(latch);
-            var id = t.AddMessageListener(listener);
+            var listener = new MessageListener(latch);
+            var id = _t.AddMessageListener(listener);
             for (var i = 0; i < 10; i++)
             {
-                t.Publish("naber" + i);
+                _t.Publish("naber" + i);
             }
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(20)));
         }
 
         [Test]
-        public virtual void TestListenerRemove()
+        public void ListenerRemove()
         {
             var latch = new CountdownEvent(1);
-            var listener = new _MessageListener(latch);
-            var id = t.AddMessageListener(listener);
-            Assert.IsTrue(t.RemoveMessageListener(id));
+            var listener = new MessageListener(latch);
+            var id = _t.AddMessageListener(listener);
+            Assert.IsTrue(_t.RemoveMessageListener(id));
 
-            t.Publish("naber");
+            _t.Publish("naber");
             Assert.IsFalse(latch.Wait(TimeSpan.FromSeconds(5)));
         }
     }

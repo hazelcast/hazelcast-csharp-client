@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
     public class SettableFutureTest
     {
         [Test]
-        public void TestSetResult()
+        public void SetResult()
         {
             var future = new SettableFuture<string>();
 
@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestGetResult()
+        public void GetResult()
         {
             var future = new SettableFuture<string>();
 
@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestGetResult_WhenException()
+        public void GetResult_WhenException()
         {
             Assert.Throws<Exception>(() =>
             {
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestGetResult_WhenResultNotSet()
+        public void GetResult_WhenResultNotSet()
         {
             Assert.Throws<TimeoutException>(() =>
             {
@@ -66,7 +66,7 @@ namespace Hazelcast.Client.Test
 
 
         [Test]
-        public void TestSetException()
+        public void SetException()
         {
             var future = new SettableFuture<string>();
             var exception = new Exception();
@@ -76,7 +76,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestResult_WhenException()
+        public void Result_WhenException()
         {
             Assert.Throws<Exception>(() =>
             {
@@ -88,7 +88,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestResult_WhenException_withContinue()
+        public void Result_WhenException_withContinue()
         {
             var future = new SettableFuture<string>();
             future.ToTask().ContinueWith(t => { Assert.NotNull(t.Exception); });
@@ -105,7 +105,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestWait()
+        public void Wait()
         {
             var future = new SettableFuture<string>();
 
@@ -114,7 +114,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestWait_WhenResultNotSet()
+        public void Wait_WhenResultNotSet()
         {
             var future = new SettableFuture<string>();
 
@@ -122,7 +122,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSetResult_WhenResultSet()
+        public void SetResult_WhenResultSet()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -133,7 +133,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSetException_WhenResultSet()
+        public void SetException_WhenResultSet()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -144,7 +144,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSetResult_WhenExceptionSet()
+        public void SetResult_WhenExceptionSet()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -155,7 +155,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSetException_WhenExceptionSet()
+        public void SetException_WhenExceptionSet()
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
@@ -166,9 +166,9 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestIsComplete()
+        public void IsComplete()
         {
-            var future = new SettableFuture<String>();
+            var future = new SettableFuture<string>();
             Assert.IsFalse(future.IsComplete);
 
             future.Result = "done";
@@ -177,9 +177,9 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestToTask_WhenResultIsSet()
+        public void ToTask_WhenResultIsSet()
         {
-            var future = new SettableFuture<String>();
+            var future = new SettableFuture<string>();
             var task = future.ToTask();
 
             Task.Factory.StartNew(() => future.Result = "done");
@@ -188,11 +188,11 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestToTask_WhenExceptionIsSet()
+        public void ToTask_WhenExceptionIsSet()
         {
             Assert.Throws<Exception>(() =>
             {
-                var future = new SettableFuture<String>();
+                var future = new SettableFuture<string>();
                 var task = future.ToTask();
 
                 Task.Factory.StartNew(() => future.Exception = new Exception("Failed"));
@@ -209,7 +209,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Test_StressTestFuture_WhenGetResult()
+        public void StressTestFuture_WhenGetResult()
         {
             var futures = Enumerable.Range(0, 100 * 1000).Select(i => new SettableFuture<string>()).ToList();
 
@@ -225,7 +225,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Test_StressTestFuture_WhenResult()
+        public void StressTestFuture_WhenResult()
         {
             var futures = Enumerable.Range(0, 100 * 1000).Select(i => new SettableFuture<string>()).ToList();
 
@@ -241,7 +241,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCompleted_checkResult()
+        public void Completed_checkResult()
         {
             var future = new SettableFuture<string>();
 
@@ -260,7 +260,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCompleted_checkExceptiont()
+        public void Completed_checkException()
         {
             var future = new SettableFuture<string>();
 

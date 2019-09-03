@@ -58,10 +58,10 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerWithNonSmartRouting()
+        public void ListenerWithNonSmartRouting()
         {
             var cm  = ((HazelcastClientProxy) _client).GetClient().GetConnectionManager();
-            for (int i = 0; i < 100; i++)
+            for (var i = 0; i < 100; i++)
             {
                 var options = new TransactionOptions().SetTransactionType(TransactionOptions.TransactionType.TwoPhase);
                 var context = _client.NewTransactionContext(options);
@@ -76,6 +76,5 @@ namespace Hazelcast.Client.Test
                 Assert.AreEqual(1, cm.ActiveConnections.Count);
             }
         }
-
     }
 }

@@ -26,35 +26,44 @@ namespace Hazelcast.Client.Test
     public class ClientLoggingTest
     {
         [Test]
-		public void TestConsoleLoggingInvalidLevel()
-		{
-			Assert.Throws<ConfigurationException>(() =>
+		public void ConsoleLoggingInvalidLevel()
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "asdf");
-            var logger = new ConsoleLogFactory().GetLogger("logger");
+            Assert.Throws<ConfigurationException>(() =>
+            {
+                Environment.SetEnvironmentVariable("hazelcast.logging.level", "asdf");
+                var logger = new ConsoleLogFactory().GetLogger("logger");
 
-            Assert.IsFalse(logger.IsFinestEnabled());
-        });
-		}
+                Assert.IsFalse(logger.IsFinestEnabled());
+            });
+        }
 
         [Test]
-        public void TestConsoleLoggingLevel()
+        public void ConsoleLoggingLevel()
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             var logger = new ConsoleLogFactory().GetLogger("logger");
             var original = Console.Out;
             try
             {
-                var memoryStream = new MemoryStream();
-                var streamWriter = new StreamWriter(memoryStream);
-                Console.SetOut(streamWriter);
-                var message1 = TestSupport.RandomString();
-                var message2 = TestSupport.RandomString();
-                logger.Info(message1);
-                logger.Finest(message2);
-                streamWriter.Flush();
-                memoryStream.Seek(0, SeekOrigin.Begin);
-                var log = new StreamReader(memoryStream).ReadToEnd();
+                string message1;
+                string message2;
+                string log;
+                using (var memoryStream = new MemoryStream())
+                {
+                    var streamWriter = new StreamWriter(memoryStream);
+                    Console.SetOut(streamWriter);
+                    message1 = TestSupport.RandomString();
+                    message2 = TestSupport.RandomString();
+                    logger.Info(message1);
+                    logger.Finest(message2);
+                    streamWriter.Flush();
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+
+                    using (var reader = new StreamReader(memoryStream))
+                    {
+                        log = reader.ReadToEnd();
+                    }
+                }
 
                 Assert.IsFalse(logger.IsFinestEnabled());
                 Assert.That(logger.GetLevel(), Is.EqualTo(LogLevel.Info));
@@ -69,7 +78,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCustomLogger()
+        public void CustomLogger()
         {
             var oldLogger = Logger.GetLoggerFactory();
             try
@@ -97,59 +106,58 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestTraceLogger()
+        public void TraceLogger()
         {
-            var stream = new MemoryStream();
-            var listener = new TextWriterTraceListener(stream);
-            Trace.Listeners.Add(listener);
-            var logger = new TraceLogFactory().GetLogger("logger");
-            var logMsg = TestSupport.RandomString();
-            logger.Finest(logMsg);
-            logger.Info(logMsg);
-            logger.Warning(logMsg);
-            logger.Severe(logMsg);
+            string logMsg;
+            string log;
 
-            listener.Flush();
+            using (var stream = new MemoryStream())
+            {
+                var listener = new TextWriterTraceListener(stream);
+                Trace.Listeners.Add(listener);
+                var logger = new TraceLogFactory().GetLogger("logger");
+                logMsg = TestSupport.RandomString();
+                logger.Finest(logMsg);
+                logger.Info(logMsg);
+                logger.Warning(logMsg);
+                logger.Severe(logMsg);
 
-            stream.Seek(0, SeekOrigin.Begin);
-            var log = new StreamReader(stream).ReadToEnd();
+                listener.Flush();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                using (var reader = new StreamReader(stream))
+                {
+                    log = reader.ReadToEnd();
+                }
+            }
+
             Assert.That(log, Does.Contain("Information: 0 : " + logMsg));
             Assert.That(log, Does.Contain("Warning: 0 : " + logMsg));
             Assert.That(log, Does.Contain("Error: 0 : " + logMsg));
         }
-    }
 
-    public class CustomLogFactory : ILoggerFactory
-    {
-        public ILogger GetLogger(string name)
+        private class CustomLogFactory : ILoggerFactory
         {
-            return new CustomLogger {Name = name};
-        }
+            public ILogger GetLogger(string name) => new CustomLogger { Name = name };
 
-        internal class CustomLogger : AbstractLogger
-        {
-            public List<Tuple<LogLevel, string, Exception>> Logs = new List<Tuple<LogLevel, string, Exception>>();
-            public string Name { get; set; }
-
-            public override LogLevel GetLevel()
+            public class CustomLogger : AbstractLogger
             {
-                return LogLevel.Info;
-            }
+                public List<Tuple<LogLevel, string, Exception>> Logs = new List<Tuple<LogLevel, string, Exception>>();
+                public string Name { get; set; }
 
+                public override LogLevel GetLevel() => LogLevel.Info;
 
-            public override bool IsLoggable(LogLevel arg1)
-            {
-                return true;
-            }
+                public override bool IsLoggable(LogLevel arg1) => true;
 
-            public override void Log(LogLevel arg1, string arg2)
-            {
-                Logs.Add(new Tuple<LogLevel, string, Exception>(arg1, arg2, null));
-            }
+                public override void Log(LogLevel arg1, string arg2)
+                {
+                    Logs.Add(new Tuple<LogLevel, string, Exception>(arg1, arg2, null));
+                }
 
-            public override void Log(LogLevel arg1, string arg2, Exception arg3)
-            {
-                Logs.Add(new Tuple<LogLevel, string, Exception>(arg1, arg2, arg3));
+                public override void Log(LogLevel arg1, string arg2, Exception arg3)
+                {
+                    Logs.Add(new Tuple<LogLevel, string, Exception>(arg1, arg2, arg3));
+                }
             }
         }
     }

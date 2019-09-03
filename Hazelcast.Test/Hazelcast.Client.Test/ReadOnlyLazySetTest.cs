@@ -23,7 +23,7 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ReadOnlyLazySetTest
     {
-        private ReadOnlyLazySet<int> testSet;
+        private ReadOnlyLazySet<int> _testSet;
         private ISerializationService _ss;
 
         [SetUp]
@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Test
                 _ss.ToData(3),
                 _ss.ToData(4)
             };
-            testSet = new ReadOnlyLazySet<int>(dataList, _ss);
+            _testSet = new ReadOnlyLazySet<int>(dataList, _ss);
         }
 
         [TearDown]
@@ -48,122 +48,121 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCount()
+        public void Count()
         {
-            Assert.AreEqual(testSet.Count, 5);
+            Assert.AreEqual(_testSet.Count, 5);
         }
 
         [Test]
-        public void TestIsReadOnly()
+        public void IsReadOnly()
         {
-            Assert.True(testSet.IsReadOnly);
+            Assert.True(_testSet.IsReadOnly);
         }
 
         [Test]
-        public void TestContains()
+        public void Contains()
         {
-            Assert.True(testSet.Contains(1));
+            Assert.True(_testSet.Contains(1));
         }
 
         [Test]
-        public void TestCopyTo()
+        public void CopyTo()
         {
-            var copyArray = new int[testSet.Count + 5];
-            testSet.CopyTo(copyArray, 1);
+            var copyArray = new int[_testSet.Count + 5];
+            _testSet.CopyTo(copyArray, 1);
             for (var i = 0; i < 5; i++)
             {
-                Assert.True(testSet.Contains(copyArray[i + 1]));
+                Assert.True(_testSet.Contains(copyArray[i + 1]));
             }
         }
 
         [Test]
-        public void TestEnumerator()
+        public void Enumeration()
         {
-            var enumerator = testSet.GetEnumerator();
             var ix = 0;
-            while (enumerator.MoveNext())
+            foreach (var value in _testSet)
             {
-                Assert.AreEqual(enumerator.Current, ix);
+                Assert.AreEqual(ix, value);
                 ix++;
             }
         }
 
         [Test]
-        public void TestAdd()
+        public void Add()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.Add(4); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.Add(4); });
         }
 
         [Test]
-        public void TestRemove()
+        public void Remove()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.Remove(4); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.Remove(4); });
         }
 
         [Test]
-        public void TestClear()
+        public void Clear()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.Clear(); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.Clear(); });
         }
 
         [Test]
-        public void TestExceptWith()
+        public void ExceptWith()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.ExceptWith(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.ExceptWith(null); });
         }
 
         [Test]
-        public void TestIntersectWith()
+        public void IntersectWith()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.IntersectWith(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.IntersectWith(null); });
         }
 
         [Test]
-        public void TestIsProperSubsetOf()
+        public void IsProperSubsetOf()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.IsProperSubsetOf(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.IsProperSubsetOf(null); });
         }
 
         [Test]
-        public void TestIsProperSupersetOf()
+        public void IsProperSupersetOf()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.IsProperSupersetOf(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.IsProperSupersetOf(null); });
         }
 
         [Test]
-        public void TestIsSubsetOf()
+        public void IsSubsetOf()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.IsSubsetOf(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.IsSubsetOf(null); });
         }
 
         [Test]
-        public void TestIsSupersetOf()
+        public void IsSupersetOf()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.IsSupersetOf(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.IsSupersetOf(null); });
         }
 
         [Test]
-        public void TestOverlaps()
+        public void Overlaps()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.Overlaps(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.Overlaps(null); });
         }
 
         [Test]
-        public void TestSymmetricExceptWith()
+        public void SymmetricExceptWith()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.SymmetricExceptWith(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.SymmetricExceptWith(null); });
         }
 
         [Test]
-        public void TestUnionWith()
+        public void UnionWith()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.UnionWith(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.UnionWith(null); });
         }
 
         [Test]
-        public void TestSetEquals()
+        public void SetEquals()
         {
-            Assert.Throws<NotSupportedException>(() => { testSet.SetEquals(null); });
+            Assert.Throws<NotSupportedException>(() => { _testSet.SetEquals(null); });
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ReadOnlyLazyListTest
     {
-        private ReadOnlyLazyList<int, object> testList;
+        private ReadOnlyLazyList<int, object> _testList;
         private ISerializationService _ss;
 
         [SetUp]
@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Test
                 _ss.ToData(3),
                 _ss.ToData(4)
             };
-            testList = new ReadOnlyLazyList<int, object>(dataList, _ss);
+            _testList = new ReadOnlyLazyList<int, object>(dataList, _ss);
         }
 
         [TearDown]
@@ -48,53 +48,53 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListGet()
+        public void Indexer()
         {
             for (var i = 0; i < 5; i++)
             {
-                Assert.AreEqual(testList[i], i);
+                Assert.AreEqual(_testList[i], i);
             }
         }
 
         [Test]
-        public void TestListCount()
+        public void Count()
         {
-            Assert.AreEqual(testList.Count, 5);
+            Assert.AreEqual(_testList.Count, 5);
         }
 
         [Test]
-        public void TestListIsReadOnly()
+        public void IsReadOnly()
         {
-            Assert.True(testList.IsReadOnly);
+            Assert.True(_testList.IsReadOnly);
         }
 
         [Test]
-        public void TestListContains()
+        public void Contains()
         {
-            Assert.True(testList.Contains(1));
+            Assert.True(_testList.Contains(1));
         }
 
         [Test]
-        public void TestListCopyTo()
+        public void CopyTo()
         {
-            var copyArray = new int[testList.Count + 5];
-            testList.CopyTo(copyArray, 1);
+            var copyArray = new int[_testList.Count + 5];
+            _testList.CopyTo(copyArray, 1);
             for (var i = 0; i < 5; i++)
             {
-                Assert.AreEqual(copyArray[i + 1], testList[i]);
+                Assert.AreEqual(copyArray[i + 1], _testList[i]);
             }
         }
 
         [Test]
-        public void TestListIndexOf()
+        public void IndexOf()
         {
-            Assert.AreEqual(testList.IndexOf(4), 4);
+            Assert.AreEqual(_testList.IndexOf(4), 4);
         }
 
         [Test]
-        public void TestListEnum()
+        public void Enum()
         {
-            var enumerator = testList.GetEnumerator();
+            var enumerator = _testList.GetEnumerator();
             var ix = 0;
             while (enumerator.MoveNext())
             {
@@ -104,33 +104,33 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListAdd()
+        public void Add()
         {
-            Assert.Throws<NotSupportedException>(() => { testList.Add(4); });
+            Assert.Throws<NotSupportedException>(() => { _testList.Add(4); });
         }
 
         [Test]
-        public void TestListRemove()
+        public void Remove()
         {
-            Assert.Throws<NotSupportedException>(() => { testList.Remove(4); });
+            Assert.Throws<NotSupportedException>(() => { _testList.Remove(4); });
         }
 
         [Test]
-        public void TestListRemoveAt()
+        public void RemoveAt()
         {
-            Assert.Throws<NotSupportedException>(() => { testList.RemoveAt(4); });
+            Assert.Throws<NotSupportedException>(() => { _testList.RemoveAt(4); });
         }
 
         [Test]
-        public void TestListClear()
+        public void Clear()
         {
-            Assert.Throws<NotSupportedException>(() => { testList.Clear(); });
+            Assert.Throws<NotSupportedException>(() => { _testList.Clear(); });
         }
 
         [Test]
-        public void TestListInsert()
+        public void Insert()
         {
-            Assert.Throws<NotSupportedException>(() => { testList.Insert(1, 1); });
+            Assert.Throws<NotSupportedException>(() => { _testList.Insert(1, 1); });
         }
     }
 }
