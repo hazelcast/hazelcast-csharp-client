@@ -35,6 +35,9 @@ Write-Host "Exclude param: $testCategory"
 Write-Host "Net core: $netcore"
 Write-Host "Starting build..."
 
+# remove all the bins and objs recursively
+Get-ChildItem .\ -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
+
 nuget restore
 
 if ($netcore) {
@@ -42,7 +45,7 @@ if ($netcore) {
 }
 else
 {
-    $targetFramework="net46"
+    $targetFramework="net45"
 }
 
 msbuild Hazelcast.Test\Hazelcast.Test.csproj /p:Configuration=Release /p:TargetFramework=$targetFramework /target:"Restore;Build"

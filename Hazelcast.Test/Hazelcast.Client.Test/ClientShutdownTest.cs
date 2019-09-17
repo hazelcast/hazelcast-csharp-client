@@ -44,7 +44,7 @@ namespace Hazelcast.Client.Test
             StopCluster(_remoteController, _cluster);
             StopRemoteController(_remoteController);
         }
-        
+
         protected override void ConfigureGroup(ClientConfig config)
         {
             config.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
@@ -89,7 +89,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestOperationAfterShutdown()
         {
-            Assert.Throws<HazelcastException>(() =>
+            Assert.Throws<HazelcastInstanceNotActiveException>(() =>
             {
                 var member = _remoteController.startMember(_cluster.Id);
                 var client = CreateClient();

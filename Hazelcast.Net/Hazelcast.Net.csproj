@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\shared.project.props" />
   <PropertyGroup Label="build">
-    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <TargetFramework />
     <AssemblyName>Hazelcast.Net</AssemblyName>
     <title>Hazelcast .Net Client</title>
     <Description>Open source .NET client for Hazelcast, the open source in memory distributed computing platform.</Description>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <LangVersion>4</LangVersion>
+    <LangVersion>latest</LangVersion>
     <RootNamespace>
     </RootNamespace>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Hazelcast.Net.xml</DocumentationFile>
