@@ -34,12 +34,14 @@ using Hazelcast.Util;
     internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener
     {
         private const int DefaultInvocationTimeout = 120;
-        private const int RetryWaitTime = 1000;
+        private const int RetryWaitTimeMillis = 1000;
+        static readonly TimeSpan RetryWaitTime = TimeSpan.FromMilliseconds(RetryWaitTimeMillis);
 
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientInvocationService));
         private readonly HazelcastClient _client;
         private ClientConnectionManager _clientConnectionManager;
         private IClientListenerService _clientListenerService;
+
 
         private readonly ConcurrentDictionary<long, ClientInvocation> _invocations =
             new ConcurrentDictionary<long, ClientInvocation>();
@@ -58,25 +60,13 @@ using Hazelcast.Util;
              DefaultInvocationTimeout) * 1000;
         }
 
-        protected HazelcastClient Client
-        {
-            get { return _client; }
-        }
+        protected HazelcastClient Client => _client;
 
-        internal int InvocationRetryCount
-        {
-            get { return _invocationTimeoutMillis / RetryWaitTime; }
-        }
+        internal int InvocationRetryCount => _invocationTimeoutMillis / RetryWaitTimeMillis;
 
-        internal int InvocationRetryWaitTime
-        {
-            get { return RetryWaitTime; }
-        }
-        
-        public int InvocationTimeoutMillis
-        {
-            get { return _invocationTimeoutMillis; }
-        }
+        internal int InvocationRetryWaitTime => RetryWaitTimeMillis;
+
+        public int InvocationTimeoutMillis => _invocationTimeoutMillis;
 
         public void Start()
         {
@@ -161,7 +151,7 @@ using Hazelcast.Util;
                     {
                         if (address != null && _client.GetClientClusterService().GetMember(address) == null)
                         {
-                            throw new TargetNotMemberException(string.Format("Target {0} is not a member.", address));
+                            throw new TargetNotMemberException($"Target {address} is not a member.");
                         }
 
                         //Create an async connection and send the invocation afterward.
@@ -219,7 +209,7 @@ using Hazelcast.Util;
                             {
                                 var address = GetNewInvocationAddress(invocation);
                                 InvokeInternal(invocation, address);
-                            }, RetryWaitTime, TimeUnit.Milliseconds)
+                            }, RetryWaitTime, CancellationToken.None)
                             .ContinueWith(t =>
                                 {
                                     HandleInvocationException(invocation, t.Exception.Flatten().InnerExceptions.First());

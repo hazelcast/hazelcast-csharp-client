@@ -101,9 +101,8 @@ namespace Hazelcast.Client.Connection
             //start Heartbeat
             _heartbeatToken = new CancellationTokenSource();
             _client.GetClientExecutionService().ScheduleWithFixedDelay(Heartbeat,
-                (long) _heartbeatInterval.TotalMilliseconds,
-                (long) _heartbeatInterval.TotalMilliseconds,
-                TimeUnit.Milliseconds,
+                _heartbeatInterval, 
+                _heartbeatInterval,
                 _heartbeatToken.Token);
         }
 

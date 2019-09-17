@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,22 +13,26 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
+using NUnit.Framework;
 
-#pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Test
 {
-    /// <summary>
-    /// Executor service for Hazelcast clients.
-    /// </summary>
-    public interface IClientExecutionService
+    static class TaskExtensions
     {
-        Task Schedule(Action command, TimeSpan delay, CancellationToken token);
-        void ScheduleWithFixedDelay(Action command, TimeSpan initialDelay, TimeSpan period, CancellationToken ct);
-        void Shutdown();
-        Task Submit(Action action);
-        Task<T> Submit<T>(Func<T> function);
+        public static async Task ShouldThrow<T>(this Task task)
+            where T : Exception
+        {
+            try
+            {
+                await task;
+            }
+            catch (T )
+            {
+                return;
+            }
+
+            Assert.Fail($"The exception of type '{typeof(T)}' should have been thrown but wasn't.");
+        }
     }
 }
