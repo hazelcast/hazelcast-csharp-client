@@ -89,7 +89,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestOperationAfterShutdown()
         {
-            Assert.Throws(Is.AssignableTo<Exception>(), () =>
+            Assert.Throws<HazelcastInstanceNotActiveException>(() =>
             {
                 var member = _remoteController.startMember(_cluster.Id);
                 var client = CreateClient();
