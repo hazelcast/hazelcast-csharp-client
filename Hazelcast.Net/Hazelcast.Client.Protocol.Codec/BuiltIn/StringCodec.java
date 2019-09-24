@@ -30,7 +30,7 @@ public final class StringCodec {
         clientMessage.add(new ClientMessage.Frame(value.getBytes(Bits.UTF_8)));
     }
 
-    public static String Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static String Decode(ref ClientMessage.FrameIterator iterator) {
         return Decode(iterator.next());
     }
 

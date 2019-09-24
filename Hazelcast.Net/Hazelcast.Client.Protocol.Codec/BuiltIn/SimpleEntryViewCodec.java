@@ -67,7 +67,7 @@ public final class SimpleEntryViewCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static SimpleEntryView<Data, Data> Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static SimpleEntryView<Data, Data> Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
         ClientMessage.Frame initialFrame = iterator.next();

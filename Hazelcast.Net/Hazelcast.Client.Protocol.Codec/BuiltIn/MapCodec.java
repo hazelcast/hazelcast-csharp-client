@@ -66,7 +66,7 @@ public final class MapCodec {
         Encode(clientMessage, map.entrySet(), EncodeKeyFunc, EncodeValueFunc);
     }
 
-    public static <K, V> List<Map.Entry<K, V>> Decode(ListIterator<ClientMessage.Frame> iterator,
+    public static <K, V> List<Map.Entry<K, V>> Decode(ref ClientMessage.FrameIterator iterator,
                                                       Function<ListIterator<ClientMessage.Frame>, K> DecodeKeyFunc,
                                                       Function<ListIterator<ClientMessage.Frame>, V> DecodeValueFunc) {
         List<Map.Entry<K, V>> result = new ArrayList<>();
@@ -82,13 +82,13 @@ public final class MapCodec {
         return result;
     }
 
-    public static <K, V> List<Map.Entry<K, V>> DecodeNullable(ListIterator<ClientMessage.Frame> iterator,
+    public static <K, V> List<Map.Entry<K, V>> DecodeNullable(ref ClientMessage.FrameIterator iterator,
                                                               Function<ListIterator<ClientMessage.Frame>, K> DecodeKeyFunc,
                                                               Function<ListIterator<ClientMessage.Frame>, V> DecodeValueFunc) {
         return nextFrameIsNullEndFrame(iterator) ? null : Decode(iterator, DecodeKeyFunc, DecodeValueFunc);
     }
 
-    public static <K, V> Map<K, V> DecodeToMap(ListIterator<ClientMessage.Frame> iterator,
+    public static <K, V> Map<K, V> DecodeToMap(ref ClientMessage.FrameIterator iterator,
                                                Function<ListIterator<ClientMessage.Frame>, K> DecodeKeyFunc,
                                                Function<ListIterator<ClientMessage.Frame>, V> DecodeValueFunc) {
         Map<K, V> result = new HashMap<>();
@@ -104,7 +104,7 @@ public final class MapCodec {
         return result;
     }
 
-    public static <K, V> Map<K, V> DecodeToNullableMap(ListIterator<ClientMessage.Frame> iterator,
+    public static <K, V> Map<K, V> DecodeToNullableMap(ref ClientMessage.FrameIterator iterator,
                                                        Function<ListIterator<ClientMessage.Frame>, K> DecodeKeyFunc,
                                                        Function<ListIterator<ClientMessage.Frame>, V> DecodeValueFunc) {
         return nextFrameIsNullEndFrame(iterator) ? null : DecodeToMap(iterator, DecodeKeyFunc, DecodeValueFunc);

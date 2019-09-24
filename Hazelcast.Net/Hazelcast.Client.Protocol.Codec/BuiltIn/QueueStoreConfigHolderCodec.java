@@ -55,7 +55,7 @@ public final class QueueStoreConfigHolderCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static QueueStoreConfigHolder Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static QueueStoreConfigHolder Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

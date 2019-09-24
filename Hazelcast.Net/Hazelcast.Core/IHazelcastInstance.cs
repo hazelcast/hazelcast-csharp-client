@@ -57,7 +57,7 @@ namespace Hazelcast.Core
         /// <summary>Returns the ICluster that this Hazelcast instance is part of.</summary>
         /// <remarks>
         ///     Returns the ICluster that this Hazelcast instance is part of.
-        ///     ICluster interface allows you to add listener for membership
+        ///     ICluster interface allows you to Add listener for membership
         ///     events and learn more about the cluster that this Hazelcast
         ///     instance is part of.
         /// </remarks>
@@ -236,9 +236,9 @@ namespace Hazelcast.Core
         /// <returns>distributed topic instance with the specified name</returns>
         ITopic<T> GetTopic<T>(string name);
 
-        /// <summary>Returns a ConcurrentMap that can be used to add user-context to the IHazelcastInstance.</summary>
+        /// <summary>Returns a ConcurrentMap that can be used to Add user-context to the IHazelcastInstance.</summary>
         /// <remarks>
-        ///     Returns a ConcurrentMap that can be used to add user-context to the IHazelcastInstance. This can be used
+        ///     Returns a ConcurrentMap that can be used to Add user-context to the IHazelcastInstance. This can be used
         ///     to store dependencies that otherwise are hard to obtain. IHazelcastInstance can be
         ///     obtained by implementing IHazelcastInstanceAware interface when submitting a Runnable/Callable to
         ///     Hazelcast ExecutorService. By storing the dependencies in the user-context, they can be retrieved as soon

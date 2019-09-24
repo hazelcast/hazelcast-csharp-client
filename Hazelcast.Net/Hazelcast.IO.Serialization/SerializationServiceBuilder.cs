@@ -178,7 +178,7 @@ namespace Hazelcast.IO.Serialization
                 AddConfigPortableFactories(_portableFactories, _config);
                 _classDefinitions = _classDefinitions.Union(_config.GetClassDefinitions()).ToList();
             }
-            //TODO: add support for multiple versions
+            //TODO: Add support for multiple versions
             var ss = new SerializationService(
                 CreateInputOutputFactory(),
                 _portableVersion,

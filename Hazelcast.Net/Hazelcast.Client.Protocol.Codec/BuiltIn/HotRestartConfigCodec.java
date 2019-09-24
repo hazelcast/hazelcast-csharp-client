@@ -47,7 +47,7 @@ public final class HotRestartConfigCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static HotRestartConfig Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static HotRestartConfig Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

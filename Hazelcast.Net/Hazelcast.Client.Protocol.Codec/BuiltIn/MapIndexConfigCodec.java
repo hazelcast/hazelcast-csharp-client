@@ -47,7 +47,7 @@ public final class MapIndexConfigCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static MapIndexConfig Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static MapIndexConfig Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

@@ -53,7 +53,7 @@ public final class ErrorCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static ErrorHolder Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static ErrorHolder Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

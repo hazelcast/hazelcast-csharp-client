@@ -45,7 +45,7 @@ public final class MapStringLongCodec {
         ListLongCodec.Encode(clientMessage, valueList);
     }
 
-    public static List<Map.Entry<String, Long>> Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static List<Map.Entry<String, Long>> Decode(ref ClientMessage.FrameIterator iterator) {
         List<String> listK = ListMultiFrameCodec.Decode(iterator, StringCodec::Decode);
         List<Long> listV = ListLongCodec.Decode(iterator);
 

@@ -69,7 +69,7 @@ public final class QueryCacheConfigHolderCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static QueryCacheConfigHolder Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static QueryCacheConfigHolder Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

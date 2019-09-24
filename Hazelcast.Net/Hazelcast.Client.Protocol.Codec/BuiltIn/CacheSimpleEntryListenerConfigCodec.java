@@ -52,7 +52,7 @@ public final class CacheSimpleEntryListenerConfigCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static CacheSimpleEntryListenerConfig Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static CacheSimpleEntryListenerConfig Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

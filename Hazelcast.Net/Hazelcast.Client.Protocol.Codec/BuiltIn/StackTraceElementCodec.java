@@ -47,7 +47,7 @@ public final class StackTraceElementCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static StackTraceElement Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static StackTraceElement Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

@@ -17,24 +17,28 @@
 //package com.hazelcast.client.impl.protocol.codec.builtin;
 
 //import com.hazelcast.client.impl.protocol.ClientMessage;
+//import com.hazelcast.internal.serialization.impl.HeapData;
+//import com.hazelcast.nio.serialization.Data;
 
 //import java.util.ListIterator;
 
+using Hazelcast.IO.Serialization;
+
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
-    internal static class ByteArrayCodec
+    internal static class DataCodec
     {
-        public static void Encode(ClientMessage clientMessage, byte[] bytes)
+        public static void Encode(ClientMessage clientMessage, IData data)
         {
-            clientMessage.Add(new ClientMessage.Frame(bytes));
+            clientMessage.add(new ClientMessage.Frame(data.ToByteArray()));
         }
 
-        public static byte[] Decode(ref ClientMessage.Frame frame)
+        public static IData Decode(ClientMessage.Frame frame)
         {
-            return frame.content;
+            return new HeapData(frame.Content);
         }
 
-        public static byte[] Decode(ref ClientMessage.FrameIterator iterator)
+        public static Data Decode(ref ClientMessage.FrameIterator iterator)
         {
             return Decode(iterator.Next());
         }

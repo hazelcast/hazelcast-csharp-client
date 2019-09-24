@@ -60,7 +60,7 @@ public final class MapStoreConfigHolderCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static MapStoreConfigHolder Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static MapStoreConfigHolder Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

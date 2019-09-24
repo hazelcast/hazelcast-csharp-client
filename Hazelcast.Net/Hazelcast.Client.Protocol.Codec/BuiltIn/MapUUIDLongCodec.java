@@ -53,7 +53,7 @@ public final class MapUUIDLongCodec {
         clientMessage.add(frame);
     }
 
-    public static List<Map.Entry<UUID, Long>> Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static List<Map.Entry<UUID, Long>> Decode(ref ClientMessage.FrameIterator iterator) {
         ClientMessage.Frame frame = iterator.next();
         int itemCount = frame.content.length / ENTRY_SIZE_IN_BYTES;
         List<Map.Entry<UUID, Long>> result = new LinkedList<>();

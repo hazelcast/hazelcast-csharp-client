@@ -39,7 +39,7 @@ public final class DistributedObjectInfoCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static DistributedObjectInfo Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static DistributedObjectInfo Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

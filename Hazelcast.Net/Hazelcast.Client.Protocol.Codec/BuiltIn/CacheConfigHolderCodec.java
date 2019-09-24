@@ -91,7 +91,7 @@ public final class CacheConfigHolderCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static CacheConfigHolder Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static CacheConfigHolder Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

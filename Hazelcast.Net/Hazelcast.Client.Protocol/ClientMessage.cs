@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
@@ -23,7 +24,7 @@ using Hazelcast.Util;
 
 namespace Hazelcast.Client.Protocol
 {
-    internal class ClientMessage : LinkedList<ClientMessage.Frame> //, IOutboundFrame
+    internal class ClientMessage //, IOutboundFrame
     {
         // All offsets here are offset of frame.content byte[]
         // Note that frames have frame length and flags before this byte[] content
@@ -57,6 +58,10 @@ namespace Hazelcast.Client.Protocol
         public string OperationName;
         public Connection Connection;
 
+        private Frame _head;
+        private Frame[] _tail;
+        private int _written;
+
         private ClientMessage()
         {
         }
@@ -65,11 +70,63 @@ namespace Hazelcast.Client.Protocol
         {
         }
 
+        private ClientMessage(ClientMessage message)
+        {
+            _head = message._head;
+            _tail = message._tail;
+            _written = message._written;
+        }
+
         public static ClientMessage CreateForEncode() => new ClientMessage();
 
-        public static ClientMessage CreateForDecode(LinkedList<Frame> frames) => new ClientMessage(frames);
+        public static ClientMessage CreateForDecode(IEnumerable<Frame> frames)
+        {
+            var message = new ClientMessage();
 
-        private Frame Head => First.Value;
+            foreach (var frame in frames)
+            {
+                message.Add(frame);
+            }
+
+            return message;
+        }
+
+        private ref Frame Head => ref Get(0);
+
+        public void Add(Frame frame)
+        {
+            switch (_written)
+            {
+                case 0:
+                    _head = frame;
+                    break;
+                case 1:
+                    _tail = new Frame[1];
+                    _tail[0] = frame;
+                    break;
+                default:
+                    var index = _written - 1;
+                    if (_tail.Length < index)
+                    {
+                        Array.Resize(ref _tail, _tail.Length * 2);
+                    }
+
+                    _tail[index] = frame;
+                    break;
+            }
+
+            _written += 1;
+        }
+
+        public ref Frame Get(int index)
+        {
+            if (index == 0 && _written > 0)
+            {
+                return ref _head;
+            }
+
+            return ref _tail[index - 1];
+        }
 
         public int HeaderFlags => Head.Flags;
 
@@ -103,9 +160,9 @@ namespace Hazelcast.Client.Protocol
             {
                 var frameLength = 0;
 
-                foreach (var node in this)
+                for (var i = 0; i < _written; i++)
                 {
-                    frameLength += node.Content.Length;
+                    frameLength += Get(i).Content.Length;
                 }
 
                 return frameLength;
@@ -118,7 +175,7 @@ namespace Hazelcast.Client.Protocol
         {
             var sb = new StringBuilder("ClientMessage{");
             sb.Append("connection=").Append(Connection);
-            if (Count > 0)
+            if (_written > 0)
             {
                 sb.Append(", length=").Append(FrameLength);
                 sb.Append(", correlationId=").Append(CorrelationId);
@@ -143,11 +200,9 @@ namespace Hazelcast.Client.Protocol
         {
             var newMessage = new ClientMessage(this);
 
+            // replace the first frame, deep copy
             var initialFrameCopy = newMessage.Head.Copy();
-
-            // replace the first frame
-            newMessage.RemoveFirst();
-            newMessage.AddFirst(initialFrameCopy);
+            newMessage._head = initialFrameCopy;
 
             newMessage.CorrelationId = correlationId;
 
@@ -201,7 +256,7 @@ namespace Hazelcast.Client.Protocol
         //        return result;
         //    }
 
-        public sealed class Frame
+        public struct Frame
         {
             public readonly byte[] Content;
             //begin-fragment end-fragment final begin-data-structure end-data-structure is-null is-event 9reserverd
@@ -260,6 +315,32 @@ namespace Hazelcast.Client.Protocol
             //        result = 31 * result + Flags;
             //        return result;
             //    }
+        }
+
+        public FrameIterator GetIterator() => new FrameIterator(this);
+
+        public ref struct FrameIterator
+        {
+            private readonly ClientMessage _message;
+            private int _index;
+
+            internal FrameIterator(ClientMessage message)
+            {
+                _message = message;
+                _index = -1;
+            }
+
+            public ref Frame Next()
+            {
+                _index += 1;
+                return ref _message.Get(_index);
+            }
+
+            public ref Frame Previous()
+            {
+                _index -= 1;
+                return ref _message.Get(_index);
+            }
         }
     }
 }

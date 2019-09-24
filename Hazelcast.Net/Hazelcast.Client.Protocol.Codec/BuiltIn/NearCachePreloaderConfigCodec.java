@@ -53,7 +53,7 @@ public final class NearCachePreloaderConfigCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static NearCachePreloaderConfig Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static NearCachePreloaderConfig Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

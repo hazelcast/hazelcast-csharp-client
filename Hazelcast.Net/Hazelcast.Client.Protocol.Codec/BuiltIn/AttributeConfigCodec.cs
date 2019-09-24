@@ -39,15 +39,16 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.add(EndFrame);
         }
 
-        public static AttributeConfig Decode(ListIterator<ClientMessage.Frame> iterator)
+        public static AttributeConfig Decode(ref ClientMessage.FrameIterator iterator)
         {
             // begin frame
-            iterator.next();
+            iterator.Next();
 
-            String name = StringCodec.Decode(iterator);
-            String extractorClassName = StringCodec.Decode(iterator);
+            String name = StringCodec.Decode(ref iterator);
+            String extractorClassName = StringCodec.Decode(ref iterator);
 
-            fastForwardToEndFrame(iterator);
+            iterator.FastForwardToEndFramesdfsdfds();
+            fastForwardToEndFrame(ref iterator);
 
             return new AttributeConfig(name, extractorClassName);
         }

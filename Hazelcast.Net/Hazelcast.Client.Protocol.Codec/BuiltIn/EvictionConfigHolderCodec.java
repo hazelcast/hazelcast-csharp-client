@@ -53,7 +53,7 @@ public final class EvictionConfigHolderCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static EvictionConfigHolder Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static EvictionConfigHolder Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

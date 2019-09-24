@@ -43,7 +43,7 @@ public final class ErrorsCodec {
     }
 
     public static List<ErrorHolder> Decode(ClientMessage clientMessage) {
-        ListIterator<ClientMessage.Frame> iterator = clientMessage.listIterator();
+        ref ClientMessage.FrameIterator iterator = clientMessage.listIterator();
         //initial frame
         iterator.next();
         return ListMultiFrameCodec.Decode(iterator, ErrorCodec::Decode);

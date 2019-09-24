@@ -49,7 +49,7 @@ public final class RaftGroupIdCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static RaftGroupId Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static RaftGroupId Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

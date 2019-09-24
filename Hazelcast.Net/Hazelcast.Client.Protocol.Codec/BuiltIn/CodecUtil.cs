@@ -28,65 +28,56 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
     internal static class CodecUtil
     {
-
-        public static void fastForwardToEndFrame(ListIterator<ClientMessage.Frame> iterator)
+        public static void FastForwardToEndFrame(this ref ClientMessage.FrameIterator iterator)
         {
             // We are starting from 1 because of the BeginFrame we read
             // in the beginning of the Decode method
             int numberOfExpectedEndFrames = 1;
-            ClientMessage.Frame frame;
+
             while (numberOfExpectedEndFrames != 0)
             {
-                frame = iterator.next();
-                if (frame.isEndFrame())
+                var frame = iterator.Next();
+                if (frame.IsEndFrame)
                 {
                     numberOfExpectedEndFrames--;
                 }
-                else if (frame.isBeginFrame())
+                else if (frame.IsBeginFrame)
                 {
                     numberOfExpectedEndFrames++;
                 }
             }
         }
 
-        public static <T> void EncodeNullable(ClientMessage clientMessage, T value, BiConsumer<ClientMessage, T> Encode)
+        //public static void EncodeNullable(ClientMessage clientMessage, T value, BiConsumer<ClientMessage, T> Encode)
+        //{
+        //    if (value == null)
+        //    {
+        //        clientMessage.add(NULL_FRAME);
+        //    }
+        //    else
+        //    {
+        //        Encode.accept(clientMessage, value);
+        //    }
+        //}
+
+        //public static <T> T DecodeNullable(ref ClientMessage.FrameIterator iterator,
+        //    Function<ListIterator<ClientMessage.Frame>, T> Decode)
+        //{
+        //    return nextFrameIsNullEndFrame(iterator) ? null : Decode.apply(iterator);
+        //}
+
+        public static bool IsNextFrameIsDataStructureEndFrame(this ref ClientMessage.FrameIterator iterator)
         {
-            if (value == null)
-            {
-                clientMessage.add(NULL_FRAME);
-            }
-            else
-            {
-                Encode.accept(clientMessage, value);
-            }
+            return iterator.Current.Next.IsEndFrame;
         }
 
-        public static <T> T DecodeNullable(ListIterator<ClientMessage.Frame> iterator,
-            Function<ListIterator<ClientMessage.Frame>, T> Decode)
+        public static bool IsNextFrameIsNullEndFrame(this ref ClientMessage.FrameIterator iterator)
         {
-            return nextFrameIsNullEndFrame(iterator) ? null : Decode.apply(iterator);
-        }
-
-        public static boolean nextFrameIsDataStructureEndFrame(ListIterator<ClientMessage.Frame> iterator)
-        {
-            try
-            {
-                return iterator.next().isEndFrame();
-            }
-            finally
-            {
-                iterator.previous();
-            }
-        }
-
-        public static boolean nextFrameIsNullEndFrame(ListIterator<ClientMessage.Frame> iterator)
-        {
-            boolean isNull = iterator.next().isNullFrame();
+            var isNull = iterator.Next().IsNullFrame;
             if (!isNull)
             {
-                iterator.previous();
+                iterator.Previous();
             }
-
             return isNull;
         }
     }

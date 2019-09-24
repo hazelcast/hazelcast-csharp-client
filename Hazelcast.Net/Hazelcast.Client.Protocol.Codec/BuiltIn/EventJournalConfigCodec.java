@@ -53,7 +53,7 @@ public final class EventJournalConfigCodec {
 
     }
 
-    public static EventJournalConfig Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static EventJournalConfig Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

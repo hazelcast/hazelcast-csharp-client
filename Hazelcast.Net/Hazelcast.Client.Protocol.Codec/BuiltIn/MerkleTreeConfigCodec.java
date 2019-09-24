@@ -51,7 +51,7 @@ public final class MerkleTreeConfigCodec {
 
     }
 
-    public static MerkleTreeConfig Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static MerkleTreeConfig Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

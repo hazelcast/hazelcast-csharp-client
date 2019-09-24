@@ -53,7 +53,7 @@ public final class MemberCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static Member Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static Member Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

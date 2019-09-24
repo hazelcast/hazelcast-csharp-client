@@ -24,7 +24,7 @@ namespace Hazelcast.Core
         /// <returns>name of this instance</returns>
         /// <summary>Atomically adds the given value to the current value.</summary>
         /// <remarks>Atomically adds the given value to the current value.</remarks>
-        /// <param name="delta">the value to add</param>
+        /// <param name="delta">the value to Add</param>
         /// <returns>the updated value</returns>
         long AddAndGet(long delta);
 
@@ -54,8 +54,8 @@ namespace Hazelcast.Core
 
         /// <summary>Atomically adds the given value to the current value.</summary>
         /// <remarks>Atomically adds the given value to the current value.</remarks>
-        /// <param name="delta">the value to add</param>
-        /// <returns>the old value before the add</returns>
+        /// <param name="delta">the value to Add</param>
+        /// <returns>the old value before the Add</returns>
         long GetAndAdd(long delta);
 
         /// <summary>Atomically increments the current value by one.</summary>

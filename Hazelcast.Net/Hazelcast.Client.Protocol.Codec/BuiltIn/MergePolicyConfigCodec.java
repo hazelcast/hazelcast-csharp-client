@@ -44,7 +44,7 @@ public final class MergePolicyConfigCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static MergePolicyConfig Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static MergePolicyConfig Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
         ClientMessage.Frame initialFrame = iterator.next();

@@ -30,6 +30,8 @@
 //import static com.hazelcast.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.DecodeInt;
 //import static com.hazelcast.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.EncodeInt;
 
+using static Hazelcast.Client.Protocol.ClientMessage;
+
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
     internal static class AddressCodec
@@ -39,20 +41,20 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 
         public static void Encode(ClientMessage clientMessage, Address address)
         {
-            clientMessage.add(BeginFrame);
+            clientMessage.Add(BeginFrame);
             ClientMessage.Frame initialFrame = new ClientMessage.Frame(new byte[InitialFrameSize]);
             EncodeInt(initialFrame.content, PortOffset, address.getPort());
-            clientMessage.add(initialFrame);
+            clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, address.getHost());
-            clientMessage.add(EndFrame);
+            clientMessage.Add(EndFrame);
         }
 
-        public static Address Decode(ListIterator<ClientMessage.Frame> iterator)
+        public static Address Decode(ref ClientMessage.FrameIterator iterator)
         {
             // begin frame
-            iterator.next();
-            ClientMessage.Frame initialFrame = iterator.next();
-            int port = DecodeInt(initialFrame.content, PortOffset);
+            iterator.Next();
+            ref var initialFrame = iterator.Next();
+            int port = DecodeInt(initialFrame.Content, PortOffset);
             String host = StringCodec.Decode(iterator);
             fastForwardToEndFrame(iterator);
             try

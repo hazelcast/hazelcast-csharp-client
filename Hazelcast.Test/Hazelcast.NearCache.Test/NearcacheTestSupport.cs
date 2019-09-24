@@ -73,7 +73,7 @@ from java.util import ArrayList
 map=instance_0.getMap('{0}')
 list= ArrayList()
 for i in xrange(0, {1}):
-    list.add(map.get(i))
+    list.Add(map.get(i))
 result=instance_0.getSerializationService().toBytes(list)
 ", mapName, mapSize);
             var response = RemoteController.executeOnController(HzCluster.Id, script, Lang.PYTHON);

@@ -173,7 +173,7 @@ namespace Hazelcast.Client.Proxy
         /// If there are no viable replicas, this method will throw the lastException if not null
         /// or a NoDataMemberInClusterException if the lastException is null.
         /// </summary>
-        /// <param name="delta">the delta to add to the counter value, can be negative</param>
+        /// <param name="delta">the delta to Add to the counter value, can be negative</param>
         /// <param name="getBeforeUpdate">true if the operation should return the counter value before the addition,
         /// false if it should return the value after the addition</param>
         /// <param name="excludedAddresses">the addresses to exclude when choosing a replica address, must not be null</param>

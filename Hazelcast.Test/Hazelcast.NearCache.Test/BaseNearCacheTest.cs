@@ -219,7 +219,7 @@ namespace Hazelcast.NearCache.Test
             var subList = keys.Take(MaxSize / 2).ToList();
             lfuMap.GetAll(subList);
 
-            // add another item, triggering eviction
+            // Add another item, triggering eviction
             lfuMap.Put(MaxSize, MaxSize);
             lfuMap.Get(MaxSize);
 
@@ -271,7 +271,7 @@ namespace Hazelcast.NearCache.Test
             var subList = keys.Take(MaxSize / 2).ToList();
             lruMap.GetAll(subList);
 
-            // add another item, triggering eviction
+            // Add another item, triggering eviction
             lruMap.Put(MaxSize, MaxSize);
             lruMap.Get(MaxSize);
 

@@ -44,7 +44,7 @@ public final class ListUUIDCodec {
         clientMessage.add(frame);
     }
 
-    public static List<UUID> Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static List<UUID> Decode(ref ClientMessage.FrameIterator iterator) {
         return Decode(iterator.next());
     }
 

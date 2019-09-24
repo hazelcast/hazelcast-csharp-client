@@ -59,7 +59,7 @@ public final class QueryCacheEventDataCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static QueryCacheEventData Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static QueryCacheEventData Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

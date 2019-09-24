@@ -65,7 +65,7 @@ public final class NearCacheConfigHolderCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static NearCacheConfigHolder Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static NearCacheConfigHolder Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

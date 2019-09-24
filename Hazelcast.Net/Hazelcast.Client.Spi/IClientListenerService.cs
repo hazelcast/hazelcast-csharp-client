@@ -18,7 +18,7 @@ using Hazelcast.Util;
 namespace Hazelcast.Client.Spi
 {
     /// <summary>
-    /// Client service to add/remove remote listeners.
+    /// Client service to Add/remove remote listeners.
     /// </summary>
     /// <remarks>
     /// For smart client, it registers local  listeners to all nodes in the cluster.

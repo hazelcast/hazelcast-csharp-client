@@ -30,8 +30,51 @@
     <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\AttributeConfigCodec.cs" />
     <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ByteArrayCodec.cs" />
     <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\CodecUtil.cs" />
+    <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\DataCodec.cs" />
+    <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\FixedSizeTypesCodec.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\CacheConfigHolderCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\CacheEventDataCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\CacheSimpleEntryListenerConfigCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\DistributedObjectInfoCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ErrorCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ErrorsCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\EventJournalConfigCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\EvictionConfigHolderCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\HotRestartConfigCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ListenerConfigHolderCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ListIntegerCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ListLongCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ListMultiFrameCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ListScheduledTaskHandlerCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ListUUIDCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\LongArrayCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MapCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MapIndexConfigCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MapIntegerLongCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MapIntegerUUIDCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MapStoreConfigHolderCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MapStringLongCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MapUUIDLongCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MemberCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MergePolicyConfigCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\MerkleTreeConfigCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\NearCacheConfigHolderCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\NearCachePreloaderConfigCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\PredicateConfigHolderCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\QueryCacheConfigHolderCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\QueryCacheEventDataCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\QueueStoreConfigHolderCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\RaftGroupIdCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\RingbufferStoreConfigHolderCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ScheduledTaskHandlerCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\SimpleEntryViewCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\StackTraceElementCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\StringCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\TimedExpiryPolicyFactoryConfigCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\WanReplicationRefCodec.java" />
+    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\XidCodec.java" />
     <None Remove="Resources\hazelcast-client-default.xml" />
   </ItemGroup>
   <ItemGroup>
@@ -53,5 +96,7 @@
     <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\AttributeConfigCodec.cs" />
     <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\ByteArrayCodec.cs" />
     <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\CodecUtil.cs" />
+    <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\DataCodec.cs" />
+    <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\FixedSizeTypesCodec.cs" />
   </ItemGroup>
 </Project>

@@ -67,7 +67,7 @@ public final class ListMultiFrameCodec {
         }
     }
 
-    public static <T> List<T> Decode(ListIterator<ClientMessage.Frame> iterator,
+    public static <T> List<T> Decode(ref ClientMessage.FrameIterator iterator,
                                      Function<ListIterator<ClientMessage.Frame>, T> DecodeFunction) {
         List<T> result = new LinkedList<>();
         //begin frame, list
@@ -80,7 +80,7 @@ public final class ListMultiFrameCodec {
         return result;
     }
 
-    public static <T> List<T> DecodeContainsNullable(ListIterator<ClientMessage.Frame> iterator,
+    public static <T> List<T> DecodeContainsNullable(ref ClientMessage.FrameIterator iterator,
                                      Function<ListIterator<ClientMessage.Frame>, T> DecodeFunction) {
         List<T> result = new LinkedList<>();
         //begin frame, list
@@ -94,7 +94,7 @@ public final class ListMultiFrameCodec {
     }
 
 
-    public static <T> List<T> DecodeNullable(ListIterator<ClientMessage.Frame> iterator,
+    public static <T> List<T> DecodeNullable(ref ClientMessage.FrameIterator iterator,
                                              Function<ListIterator<ClientMessage.Frame>, T> DecodeFunction) {
         return nextFrameIsNullEndFrame(iterator) ? null : Decode(iterator, DecodeFunction);
     }

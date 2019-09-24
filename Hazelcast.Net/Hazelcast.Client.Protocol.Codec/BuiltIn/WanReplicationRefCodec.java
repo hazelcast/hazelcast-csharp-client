@@ -50,7 +50,7 @@ public final class WanReplicationRefCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static WanReplicationRef Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static WanReplicationRef Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

@@ -59,7 +59,7 @@ public final class CacheEventDataCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static CacheEventData Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static CacheEventData Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

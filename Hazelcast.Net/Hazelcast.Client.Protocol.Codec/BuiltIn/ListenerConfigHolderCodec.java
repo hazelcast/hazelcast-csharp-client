@@ -57,7 +57,7 @@ public final class ListenerConfigHolderCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static ListenerConfigHolder Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static ListenerConfigHolder Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 

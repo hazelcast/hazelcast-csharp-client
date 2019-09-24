@@ -45,9 +45,9 @@ namespace Hazelcast.Config
         /// </summary>
         private GroupConfig _groupConfig = new GroupConfig();
 
-        /// <summary>List of listeners that Hazelcast will automatically add as a part of initialization process.</summary>
+        /// <summary>List of listeners that Hazelcast will automatically Add as a part of initialization process.</summary>
         /// <remarks>
-        /// List of listeners that Hazelcast will automatically add as a part of initialization process.
+        /// List of listeners that Hazelcast will automatically Add as a part of initialization process.
         /// Currently only supports
         /// <see cref="Hazelcast.Core.LifecycleListener">Hazelcast.Core.LifecycleListener</see>
         /// .
@@ -72,7 +72,7 @@ namespace Hazelcast.Config
         private SerializationConfig _serializationConfig = new SerializationConfig();
 
         /// <summary>
-        /// Helper method to add a new ListenerConfig.
+        /// Helper method to Add a new ListenerConfig.
         /// </summary>
         /// <param name="listenerConfig">ListnerConfig</param>
         /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>
@@ -83,7 +83,7 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Helper method to add a new NearCacheConfig.
+        /// Helper method to Add a new NearCacheConfig.
         /// </summary>
         /// <param name="nearCacheConfig">NearCacheConfig</param>
         /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>
@@ -94,7 +94,7 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Helper method to add a new NearCacheConfig.
+        /// Helper method to Add a new NearCacheConfig.
         /// </summary>
         /// <param name="mapName">name of the IMap / ICache that Near Cache config will be applied to</param>
         /// <param name="nearCacheConfig">NearCacheConfig</param>
@@ -106,7 +106,7 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Helper method to add a new <see cref="ProxyFactoryConfig"/>.
+        /// Helper method to Add a new <see cref="ProxyFactoryConfig"/>.
         /// </summary>
         /// <param name="proxyFactoryConfig">ProxyFactoryConfig</param>
         /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>

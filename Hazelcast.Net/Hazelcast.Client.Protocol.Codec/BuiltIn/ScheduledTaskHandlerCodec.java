@@ -53,7 +53,7 @@ public final class ScheduledTaskHandlerCodec {
         clientMessage.add(EndFrame);
     }
 
-    public static ScheduledTaskHandler Decode(ListIterator<ClientMessage.Frame> iterator) {
+    public static ScheduledTaskHandler Decode(ref ClientMessage.FrameIterator iterator) {
         // begin frame
         iterator.next();
 
