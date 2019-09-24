@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Protocol
         {
         }
 
-        private ClientMessage(LinkedList<Frame> frames) :base (frames)
+        private ClientMessage(LinkedList<Frame> frames) : base(frames)
         {
         }
 
@@ -139,11 +139,14 @@ namespace Hazelcast.Client.Protocol
          * @param correlationId new id
          * @return the copy message
          */
-        public ClientMessage copyWithNewCorrelationId(long correlationId)
+        public ClientMessage CopyWithNewCorrelationId(long correlationId)
         {
-            ClientMessage newMessage = new ClientMessage(this);
+            var newMessage = new ClientMessage(this);
 
-            Frame initialFrameCopy = newMessage.get(0).copy();
+            var initialFrameCopy = newMessage.Head.Copy();
+
+            // replace the first frame
+            newMessage.RemoveFirst();
             newMessage.AddFirst(initialFrameCopy);
 
             newMessage.CorrelationId = correlationId;
@@ -214,12 +217,12 @@ namespace Hazelcast.Client.Protocol
                 Flags = flags;
             }
 
-            //public Frame copy()
-            //{
-
-            //    byte[] newContent = Arrays.copyOf(content, content.length);
-            //    return new Frame(newContent, flags);
-            //}
+            public Frame Copy()
+            {
+                var bytes = new byte[Content.Length];
+                Buffer.BlockCopy(Content, 0, bytes, 0, Content.Length);
+                return new Frame(bytes, Flags);
+            }
 
             public bool IsEndFrame => IsFlagSet(Flags, EndDataStructureFlag);
 
