@@ -26,6 +26,12 @@
     <!--<NuspecProperties>version=$(Version);configuration=$(Configuration);description=$(Description)</NuspecProperties>-->
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\AddressCodec.cs" />
+    <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\AttributeConfigCodec.cs" />
+    <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ByteArrayCodec.cs" />
+    <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\CodecUtil.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="Resources\hazelcast-client-default.xml" />
   </ItemGroup>
   <ItemGroup>
@@ -41,5 +47,11 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Hazelcast.Client.Properties</CustomToolNamespace>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\AddressCodec.cs" />
+    <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\AttributeConfigCodec.cs" />
+    <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\ByteArrayCodec.cs" />
+    <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\CodecUtil.cs" />
   </ItemGroup>
 </Project>
