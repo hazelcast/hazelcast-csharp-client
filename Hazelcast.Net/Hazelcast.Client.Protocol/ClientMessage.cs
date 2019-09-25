@@ -66,10 +66,6 @@ namespace Hazelcast.Client.Protocol
         {
         }
 
-        private ClientMessage(LinkedList<Frame> frames) : base(frames)
-        {
-        }
-
         private ClientMessage(ClientMessage message)
         {
             _head = message._head;

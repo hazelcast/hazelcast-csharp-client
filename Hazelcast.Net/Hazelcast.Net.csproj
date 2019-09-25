@@ -32,6 +32,7 @@
     <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\CodecUtil.cs" />
     <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\DataCodec.cs" />
     <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\FixedSizeTypesCodec.cs" />
+    <Compile Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\StringCodec.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\CacheConfigHolderCodec.java" />
@@ -71,7 +72,6 @@
     <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\ScheduledTaskHandlerCodec.java" />
     <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\SimpleEntryViewCodec.java" />
     <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\StackTraceElementCodec.java" />
-    <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\StringCodec.java" />
     <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\TimedExpiryPolicyFactoryConfigCodec.java" />
     <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\WanReplicationRefCodec.java" />
     <None Remove="Hazelcast.Client.Protocol.Codec\BuiltIn\XidCodec.java" />
@@ -98,5 +98,6 @@
     <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\CodecUtil.cs" />
     <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\DataCodec.cs" />
     <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\FixedSizeTypesCodec.cs" />
+    <None Include="Hazelcast.Client.Protocol.Codec\BuiltIn\StringCodec.cs" />
   </ItemGroup>
 </Project>

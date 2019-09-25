@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
+using Hazelcast.IO;
+
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
     internal static class FixedSizeTypesCodec
     {
-        public const int BYTE_SIZE_IN_BYTES = Bits.BYTE_SIZE_IN_BYTES;
-        public const int LONG_SIZE_IN_BYTES = Bits.LONG_SIZE_IN_BYTES;
+        public const int ByteSizeInBytes = Bits.ByteSizeInBytes;
+        public const int LongSizeInBytes = Bits.LongSizeInBytes;
         public const int IntSizeInBytes = Bits.IntSizeInBytes;
-        public const int BOOLEAN_SIZE_IN_BYTES = Bits.BOOLEAN_SIZE_IN_BYTES;
-        public const int UUID_SIZE_IN_BYTES = Bits.LONG_SIZE_IN_BYTES * 2;
-
-        private FixedSizeTypesCodec()
-        {
-        }
+        public const int BoolSizeInBytes = Bits.BooleanSizeInBytes;
+        public const int GuidSizeInBytes = Bits.LongSizeInBytes * 2;
 
         public static void EncodeInt(byte[] buffer, int pos, int value)
         {
@@ -34,16 +32,6 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
         }
 
         public static int DecodeInt(byte[] buffer, int pos)
-        {
-            return Bits.readIntL(buffer, pos);
-        }
-
-        public static void EncodeInteger(byte[] buffer, int pos, Integer value)
-        {
-            Bits.writeIntL(buffer, pos, value);
-        }
-
-        public static Integer DecodeInteger(byte[] buffer, int pos)
         {
             return Bits.readIntL(buffer, pos);
         }
@@ -58,12 +46,12 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             return Bits.readLongL(buffer, pos);
         }
 
-        public static void EncodeBoolean(byte[] buffer, int pos, boolean value)
+        public static void EncodeBool(byte[] buffer, int pos, boolean value)
         {
             buffer[pos] = (byte)(value ? 1 : 0);
         }
 
-        public static boolean DecodeBoolean(byte[] buffer, int pos)
+        public static bool DecodeBool(byte[] buffer, int pos)
         {
             return buffer[pos] == (byte)1;
         }
@@ -78,7 +66,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             return buffer[pos];
         }
 
-        public static void EncodeUUID(byte[] buffer, int pos, UUID value)
+        public static void EncodeGuid(byte[] buffer, int pos, Guid value)
         {
             long mostSigBits = value.getMostSignificantBits();
             long leastSigBits = value.getLeastSignificantBits();
@@ -86,7 +74,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             EncodeLong(buffer, pos + LONG_SIZE_IN_BYTES, leastSigBits);
         }
 
-        public static UUID DecodeUUID(byte[] buffer, int pos)
+        public static Guid DecodeGuid(byte[] buffer, int pos)
         {
             long mostSigBits = DecodeLong(buffer, pos);
             long leastSigBits = DecodeLong(buffer, pos + LONG_SIZE_IN_BYTES);
