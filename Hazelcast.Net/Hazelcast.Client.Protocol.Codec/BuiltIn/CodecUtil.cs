@@ -24,15 +24,19 @@
 
 //import static com.hazelcast.client.impl.protocol.ClientMessage.NULL_FRAME;
 
+using System;
+
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
+    delegate T DecodeDelegate<T>(ref ClientMessage.FrameIterator iterator);
+
     internal static class CodecUtil
     {
         public static void FastForwardToEndFrame(this ref ClientMessage.FrameIterator iterator)
         {
             // We are starting from 1 because of the BeginFrame we read
             // in the beginning of the Decode method
-            int numberOfExpectedEndFrames = 1;
+            var numberOfExpectedEndFrames = 1;
 
             while (numberOfExpectedEndFrames != 0)
             {
@@ -48,27 +52,33 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             }
         }
 
-        //public static void EncodeNullable(ClientMessage clientMessage, T value, BiConsumer<ClientMessage, T> Encode)
-        //{
-        //    if (value == null)
-        //    {
-        //        clientMessage.add(NULL_FRAME);
-        //    }
-        //    else
-        //    {
-        //        Encode.accept(clientMessage, value);
-        //    }
-        //}
+        public static void EncodeNullable<T>(ClientMessage clientMessage, T value, Action<ClientMessage, T> encode)
+        {
+            if (value == null)
+            {
+                clientMessage.Add(ClientMessage.NullFrame);
+            }
+            else
+            {
+                encode(clientMessage, value);
+            }
+        }
 
-        //public static <T> T DecodeNullable(ref ClientMessage.FrameIterator iterator,
-        //    Function<ListIterator<ClientMessage.Frame>, T> Decode)
-        //{
-        //    return nextFrameIsNullEndFrame(iterator) ? null : Decode.apply(iterator);
-        //}
+        public static T DecodeNullable<T>(ref ClientMessage.FrameIterator iterator, DecodeDelegate<T> decode)
+        {
+            return IsNextFrameIsNullEndFrame(ref iterator) ? default : decode(ref iterator);
+        }
 
         public static bool IsNextFrameIsDataStructureEndFrame(this ref ClientMessage.FrameIterator iterator)
         {
-            return iterator.Current.Next.IsEndFrame;
+            try
+            {
+                return iterator.Next().IsEndFrame;
+            }
+            finally
+            {
+                iterator.Previous();
+            }
         }
 
         public static bool IsNextFrameIsNullEndFrame(this ref ClientMessage.FrameIterator iterator)

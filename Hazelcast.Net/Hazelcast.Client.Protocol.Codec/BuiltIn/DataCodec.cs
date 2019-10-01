@@ -30,17 +30,17 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
     {
         public static void Encode(ClientMessage clientMessage, IData data)
         {
-            clientMessage.add(new ClientMessage.Frame(data.ToByteArray()));
+            clientMessage.Add(new ClientMessage.Frame(data.ToByteArray()));
         }
 
-        public static IData Decode(ClientMessage.Frame frame)
+        public static IData Decode(ref ClientMessage.Frame frame)
         {
             return new HeapData(frame.Content);
         }
 
-        public static Data Decode(ref ClientMessage.FrameIterator iterator)
+        public static IData Decode(ref ClientMessage.FrameIterator iterator)
         {
-            return Decode(iterator.Next());
+            return Decode(ref iterator.Next());
         }
     }
 }

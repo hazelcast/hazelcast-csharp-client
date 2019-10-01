@@ -31,12 +31,12 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 
         public static byte[] Decode(ref ClientMessage.Frame frame)
         {
-            return frame.content;
+            return frame.Content;
         }
 
         public static byte[] Decode(ref ClientMessage.FrameIterator iterator)
         {
-            return Decode(iterator.Next());
+            return Decode(ref iterator.Next());
         }
     }
 }

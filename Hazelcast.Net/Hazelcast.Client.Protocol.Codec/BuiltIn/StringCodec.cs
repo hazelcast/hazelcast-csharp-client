@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Text;
 using static Hazelcast.Client.Protocol.ClientMessage;
 using static Hazelcast.IO.Bits;
@@ -26,15 +27,15 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 
         public static void Encode(ClientMessage clientMessage, string value)
         {
-            clientMessage.Add(new ClientMessage.Frame(Utf8.GetBytes(value)));
+            clientMessage.Add(new Frame(Utf8.GetBytes(value)));
         }
 
-        public static String Decode(ref ClientMessage.FrameIterator iterator)
+        public static string Decode(ref FrameIterator iterator)
         {
-            return Decode(iterator.Next());
+            return Decode(ref iterator.Next());
         }
 
-        public static String Decode(ClientMessage.Frame frame)
+        public static string Decode(ref Frame frame)
         {
             return Utf8.GetString(frame.Content);
         }

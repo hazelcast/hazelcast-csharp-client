@@ -56,7 +56,6 @@ namespace Hazelcast.Client.Protocol
         public bool IsRetryable;
         public bool AcquiresResource;
         public string OperationName;
-        public Connection Connection;
 
         private Frame _head;
         private Frame[] _tail;

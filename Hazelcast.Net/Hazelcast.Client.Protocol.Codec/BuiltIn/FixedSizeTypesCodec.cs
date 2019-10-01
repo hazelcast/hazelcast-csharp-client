@@ -14,39 +14,37 @@
  * limitations under the License.
  */
 
+using System;
 using Hazelcast.IO;
+using static Hazelcast.IO.Bits;
 
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
     internal static class FixedSizeTypesCodec
     {
-        public const int ByteSizeInBytes = Bits.ByteSizeInBytes;
-        public const int LongSizeInBytes = Bits.LongSizeInBytes;
-        public const int IntSizeInBytes = Bits.IntSizeInBytes;
-        public const int BoolSizeInBytes = Bits.BooleanSizeInBytes;
-        public const int GuidSizeInBytes = Bits.LongSizeInBytes * 2;
+        public const int GuidSizeInBytes = LongSizeInBytes * 2;
 
         public static void EncodeInt(byte[] buffer, int pos, int value)
         {
-            Bits.writeIntL(buffer, pos, value);
+            Bits.WriteIntL(buffer, pos, value);
         }
 
         public static int DecodeInt(byte[] buffer, int pos)
         {
-            return Bits.readIntL(buffer, pos);
+            return Bits.ReadIntL(buffer, pos);
         }
 
         public static void EncodeLong(byte[] buffer, int pos, long value)
         {
-            Bits.writeLongL(buffer, pos, value);
+            Bits.WriteLongL(buffer, pos, value);
         }
 
         public static long DecodeLong(byte[] buffer, int pos)
         {
-            return Bits.readLongL(buffer, pos);
+            return Bits.ReadLongL(buffer, pos);
         }
 
-        public static void EncodeBool(byte[] buffer, int pos, boolean value)
+        public static void EncodeBool(byte[] buffer, int pos, bool value)
         {
             buffer[pos] = (byte)(value ? 1 : 0);
         }
@@ -68,17 +66,21 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 
         public static void EncodeGuid(byte[] buffer, int pos, Guid value)
         {
-            long mostSigBits = value.getMostSignificantBits();
-            long leastSigBits = value.getLeastSignificantBits();
-            EncodeLong(buffer, pos, mostSigBits);
-            EncodeLong(buffer, pos + LONG_SIZE_IN_BYTES, leastSigBits);
+            throw new NotImplementedException("Guid is not implemented yet");
+
+            //long mostSigBits = value.getMostSignificantBits();
+            //long leastSigBits = value.getLeastSignificantBits();
+            //EncodeLong(buffer, pos, mostSigBits);
+            //EncodeLong(buffer, pos + LongSizeInBytes, leastSigBits);
         }
 
         public static Guid DecodeGuid(byte[] buffer, int pos)
         {
-            long mostSigBits = DecodeLong(buffer, pos);
-            long leastSigBits = DecodeLong(buffer, pos + LONG_SIZE_IN_BYTES);
-            return new UUID(mostSigBits, leastSigBits);
+            throw new NotImplementedException("Guid is not implemented yet");
+
+            //long mostSigBits = DecodeLong(buffer, pos);
+            //long leastSigBits = DecodeLong(buffer, pos + LongSizeInBytes);
+            //return new UUID(mostSigBits, leastSigBits);
         }
     }
 }
