@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using static Hazelcast.Client.Protocol.ClientMessage;
+using static Hazelcast.Client.Protocol.Codec.BuiltIn.CodecUtil;
 
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
@@ -58,7 +59,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             
             //begin frame, map
             iterator.Next();
-            while (!CodecUtil.IsNextFrameIsDataStructureEndFrame(ref iterator))
+            while (!IsNextFrameIsDataStructureEndFrame(ref iterator))
             {
                 var key = decodeKeyFunc(ref iterator);
                 var value = decodeValueFunc(ref iterator);
@@ -69,11 +70,10 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             return result;
         }
 
-        public static <K, V> List<Map.Entry<K, V>> decodeNullable(ListIterator<ClientMessage.Frame> iterator,
-                                                                  Function<ListIterator<ClientMessage.Frame>, K> decodeKeyFunc,
-                                                                  Function<ListIterator<ClientMessage.Frame>, V> decodeValueFunc)
+        public static IEnumerable<KeyValuePair<TKey,TValue>> DecodeNullable<TKey,TValue>(ref FrameIterator iterator, 
+            DecodeDelegate<TKey> decodeKeyFunc, DecodeDelegate<TValue> decodeValueFunc)
         {
-            return nextFrameIsNullEndFrame(iterator) ? null : decode(iterator, decodeKeyFunc, decodeValueFunc);
+            return IsNextFrameIsNullEndFrame(ref iterator) ? null : Decode(ref iterator, decodeKeyFunc, decodeValueFunc);
         }
     }
 }

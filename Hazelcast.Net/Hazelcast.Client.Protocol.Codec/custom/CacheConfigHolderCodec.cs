@@ -73,9 +73,9 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             CodecUtil.EncodeNullable(clientMessage, cacheConfigHolder.HotRestartConfig, HotRestartConfigCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, cacheConfigHolder.EventJournalConfig, EventJournalConfigCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, cacheConfigHolder.SplitBrainProtectionName, StringCodec.Encode);
-            ListMultiFrameCodec.EncodeNullable(clientMessage, cacheConfigHolder.ListenerConfigurations(), DataCodec.Encode);
+            ListMultiFrameCodec.EncodeNullable(clientMessage, cacheConfigHolder.ListenerConfigurations, DataCodec.Encode);
             MergePolicyConfigCodec.Encode(clientMessage, cacheConfigHolder.MergePolicyConfig);
-            ListMultiFrameCodec.EncodeNullable(clientMessage, cacheConfigHolder.CachePartitionLostListenerConfigs(), ListenerConfigHolderCodec.Encode);
+            ListMultiFrameCodec.EncodeNullable(clientMessage, cacheConfigHolder.CachePartitionLostListenerConfigs, ListenerConfigHolderCodec.Encode);
 
             clientMessage.Add(EndFrame);
         }

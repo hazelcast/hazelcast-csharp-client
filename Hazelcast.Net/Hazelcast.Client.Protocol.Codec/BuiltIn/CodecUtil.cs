@@ -32,7 +32,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 
     internal static class CodecUtil
     {
-        public static void FastForwardToEndFrame(this ref ClientMessage.FrameIterator iterator)
+        public static void FastForwardToEndFrame(ref ClientMessage.FrameIterator iterator)
         {
             // We are starting from 1 because of the BeginFrame we read
             // in the beginning of the Decode method
@@ -69,7 +69,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             return IsNextFrameIsNullEndFrame(ref iterator) ? default : decode(ref iterator);
         }
 
-        public static bool IsNextFrameIsDataStructureEndFrame(this ref ClientMessage.FrameIterator iterator)
+        public static bool IsNextFrameIsDataStructureEndFrame(ref ClientMessage.FrameIterator iterator)
         {
             try
             {
@@ -81,7 +81,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             }
         }
 
-        public static bool IsNextFrameIsNullEndFrame(this ref ClientMessage.FrameIterator iterator)
+        public static bool IsNextFrameIsNullEndFrame(ref ClientMessage.FrameIterator iterator)
         {
             var isNull = iterator.Next().IsNullFrame;
             if (!isNull)

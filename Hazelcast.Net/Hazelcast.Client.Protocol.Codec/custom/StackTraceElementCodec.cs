@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-using System.Collections;
-using System.Collections.Generic;
-using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec.BuiltIn;
-using Hazelcast.Client.Protocol.Util;
-using Hazelcast.IO;
 using static Hazelcast.Client.Protocol.Codec.BuiltIn.FixedSizeTypesCodec;
 using static Hazelcast.Client.Protocol.ClientMessage;
 using static Hazelcast.IO.Bits;
@@ -37,7 +32,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
         private const int LineNumberFieldOffset = 0;
         private const int InitialFrameSize = LineNumberFieldOffset + IntSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, java.lang.StackTraceElement stackTraceElement) 
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Util.StackTraceElement stackTraceElement) 
         {
             clientMessage.Add(BeginFrame);
 
@@ -52,7 +47,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static java.lang.StackTraceElement Decode(ref FrameIterator iterator) 
+        public static Hazelcast.Util.StackTraceElement Decode(ref FrameIterator iterator) 
         {
             // begin frame
             iterator.Next();
@@ -66,7 +61,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
 
             CodecUtil.FastForwardToEndFrame(ref iterator);
 
-            return new java.lang.StackTraceElement(className, methodName, fileName, lineNumber);
+            return new Hazelcast.Util.StackTraceElement(className, methodName, fileName, lineNumber);
         }
     }
 }

@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
 
             StringCodec.Encode(clientMessage, wanReplicationRef.Name);
             StringCodec.Encode(clientMessage, wanReplicationRef.MergePolicy);
-            ListMultiFrameCodec.EncodeNullable(clientMessage, wanReplicationRef.Filters(), StringCodec.Encode);
+            ListMultiFrameCodec.EncodeNullable(clientMessage, wanReplicationRef.Filters, StringCodec.Encode);
 
             clientMessage.Add(EndFrame);
         }

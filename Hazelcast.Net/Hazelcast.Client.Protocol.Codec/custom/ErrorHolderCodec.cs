@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
         private const int ErrorCodeFieldOffset = 0;
         private const int InitialFrameSize = ErrorCodeFieldOffset + IntSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, com.hazelcast.client.impl.protocol.exception.ErrorHolder errorHolder) 
+        public static void Encode(ClientMessage clientMessage, ErrorHolder errorHolder) 
         {
             clientMessage.Add(BeginFrame);
 
@@ -47,12 +47,12 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
 
             StringCodec.Encode(clientMessage, errorHolder.ClassName);
             CodecUtil.EncodeNullable(clientMessage, errorHolder.Message, StringCodec.Encode);
-            ListMultiFrameCodec.Encode(clientMessage, errorHolder.StackTraceElements(), StackTraceElementCodec.Encode);
+            ListMultiFrameCodec.Encode(clientMessage, errorHolder.StackTraceElements, StackTraceElementCodec.Encode);
 
             clientMessage.Add(EndFrame);
         }
 
-        public static com.hazelcast.client.impl.protocol.exception.ErrorHolder Decode(ref FrameIterator iterator) 
+        public static ErrorHolder Decode(ref FrameIterator iterator) 
         {
             // begin frame
             iterator.Next();
@@ -66,7 +66,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
 
             CodecUtil.FastForwardToEndFrame(ref iterator);
 
-            return new com.hazelcast.client.impl.protocol.exception.ErrorHolder(errorCode, className, message, stackTraceElements);
+            return new ErrorHolder(errorCode, className, message, stackTraceElements);
         }
     }
 }

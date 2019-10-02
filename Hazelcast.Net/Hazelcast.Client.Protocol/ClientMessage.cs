@@ -14,13 +14,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text;
-using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
-using Hazelcast.Net.Ext;
-using Hazelcast.Util;
+using static Hazelcast.IO.Bits;
 
 namespace Hazelcast.Client.Protocol
 {
@@ -29,7 +25,8 @@ namespace Hazelcast.Client.Protocol
         // All offsets here are offset of frame.content byte[]
         // Note that frames have frame length and flags before this byte[] content
         public const int TypeFieldOffset = 0;
-        public const int CorrelationIdFieldOffset = TypeFieldOffset + Bits.IntSizeInBytes;
+        public const int CorrelationIdFieldOffset = TypeFieldOffset + IntSizeInBytes;
+        public const int ResponseBackupAcksFieldOffset = CorrelationIdFieldOffset + LongSizeInBytes;
         //offset valid for fragmentation frames only
         public const int FragmentationIdOffset = 0;
         //optional fixed partition id field offset
@@ -46,7 +43,7 @@ namespace Hazelcast.Client.Protocol
         public const int IsEventFlag = 1 << 9;
 
         //frame length + flags
-        public const int SizeOfFrameLengthAndFlags = Bits.IntSizeInBytes + Bits.ShortSizeInBytes;
+        public const int SizeOfFrameLengthAndFlags = IntSizeInBytes + ShortSizeInBytes;
         public static readonly Frame NullFrame = new Frame(new byte[0], IsNullFlag);
         public static readonly Frame BeginFrame = new Frame(new byte[0], BeginDataStructureFlag);
         public static readonly Frame EndFrame = new Frame(new byte[0], EndDataStructureFlag);

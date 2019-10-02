@@ -59,8 +59,8 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             StringCodec.Encode(clientMessage, queryCacheConfigHolder.Name);
             PredicateConfigHolderCodec.Encode(clientMessage, queryCacheConfigHolder.PredicateConfigHolder);
             EvictionConfigHolderCodec.Encode(clientMessage, queryCacheConfigHolder.EvictionConfigHolder);
-            ListMultiFrameCodec.EncodeNullable(clientMessage, queryCacheConfigHolder.ListenerConfigs(), ListenerConfigHolderCodec.Encode);
-            ListMultiFrameCodec.EncodeNullable(clientMessage, queryCacheConfigHolder.IndexConfigs(), MapIndexConfigCodec.Encode);
+            ListMultiFrameCodec.EncodeNullable(clientMessage, queryCacheConfigHolder.ListenerConfigs, ListenerConfigHolderCodec.Encode);
+            ListMultiFrameCodec.EncodeNullable(clientMessage, queryCacheConfigHolder.IndexConfigs, MapIndexConfigCodec.Encode);
 
             clientMessage.Add(EndFrame);
         }
