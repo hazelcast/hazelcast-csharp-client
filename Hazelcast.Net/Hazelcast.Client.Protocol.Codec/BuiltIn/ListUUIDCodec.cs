@@ -20,7 +20,7 @@ using static Hazelcast.Client.Protocol.ClientMessage;
 
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
-    internal static class ListGuidCodec
+    internal static class ListUUIDCodec
     {
         public static void Encode(ClientMessage clientMessage, IEnumerable<Guid> collection)
         {

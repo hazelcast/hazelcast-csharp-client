@@ -30,7 +30,7 @@ namespace Hazelcast.Client.Protocol
         //offset valid for fragmentation frames only
         public const int FragmentationIdOffset = 0;
         //optional fixed partition id field offset
-        public const int PartitionIdFieldOffset = CorrelationIdFieldOffset + Bits.LongSizeInBytes;
+        public const int PartitionIdFieldOffset = CorrelationIdFieldOffset + LongSizeInBytes;
 
         public const int DefaultFlags = 0;
         public const int BeginFragmentFlag = 1 << 15;

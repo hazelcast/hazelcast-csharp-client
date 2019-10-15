@@ -23,7 +23,7 @@ namespace Hazelcast.IO
         public const int ByteSizeInBytes = 1;
 
         /// <summary>Boolean size in bytes</summary>
-        public const int BooleanSizeInBytes = 1;
+        public const int BoolSizeInBytes = 1;
 
         /// <summary>Short size in bytes</summary>
         public const int ShortSizeInBytes = 2;
@@ -33,6 +33,9 @@ namespace Hazelcast.IO
 
         /// <summary>Integer size in bytes</summary>
         public const int IntSizeInBytes = 4;
+
+        /// <summary>Integer size in bytes</summary>
+        public const int EnumSizeInBytes = 4;
 
         /// <summary>Float size in bytes</summary>
         public const int FloatSizeInBytes = 4;

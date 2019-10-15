@@ -116,16 +116,16 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             return entryView;
         }
 
-        public static DefaultQueryCacheEventData CreateQueryCacheEventData(IData dataKey, IData dataNewValue, long sequence,
-                                                                    int eventType, int partitionId)
+        public static QueryCacheEventData CreateQueryCacheEventData(IData dataKey, IData dataNewValue, long sequence, int eventType, int partitionId)
         {
-            DefaultQueryCacheEventData eventData = new DefaultQueryCacheEventData();
-            eventData.setDataKey(dataKey);
-            eventData.setDataNewValue(dataNewValue);
-            eventData.setSequence(sequence);
-            eventData.setEventType(eventType);
-            eventData.setPartitionId(partitionId);
-            return eventData;
+            return new QueryCacheEventData
+            {
+                DataKey = dataKey,
+                DataNewValue = dataNewValue,
+                Sequence = sequence,
+                EventType = eventType,
+                PartitionId = partitionId
+            };
         }
 
         public static DurationConfig createDurationConfig(long durationAmount, string timeUnit)
