@@ -44,7 +44,7 @@ namespace Hazelcast.Client.Test
 
             var latch = new CountdownEvent(1);
 
-            var t = Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 _l.ForceUnlock();
                 latch.Signal();
@@ -69,7 +69,7 @@ namespace Hazelcast.Client.Test
             _l.Lock();
             var latch = new CountdownEvent(1);
 
-            Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 if (!_l.TryLock())
                 {
@@ -88,7 +88,7 @@ namespace Hazelcast.Client.Test
 
             var latch = new CountdownEvent(2);
 
-            Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 if (!_l.TryLock())
                 {
@@ -132,7 +132,7 @@ namespace Hazelcast.Client.Test
 
             var latch2 = new CountdownEvent(1);
 
-            var t = Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 Assert.IsTrue(_l.IsLocked());
                 Assert.IsFalse(_l.IsLockedByCurrentThread());

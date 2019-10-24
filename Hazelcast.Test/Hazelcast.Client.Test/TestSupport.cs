@@ -28,6 +28,12 @@ namespace Hazelcast.Client.Test
         private const int TimeoutSeconds = 30;
         private static readonly Random Random = new Random();
 
+        public static void Run(Action a)
+        {
+            var thread = new Thread(delegate (object _) { a(); });
+            thread.Start();
+        }
+
         public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds, string taskName = "")
         {
             Assert.IsTrue(task.Wait(timeoutSeconds * 1000),
@@ -58,12 +64,12 @@ namespace Hazelcast.Client.Test
             {
                 var startTimeMillis = Clock.CurrentTimeMillis();
                 var timeoutMillis = timeoutSeconds * 1000;
-    
+
                 while (Clock.CurrentTimeMillis() - startTimeMillis < timeoutMillis)
                 {
                     if (assertFunc()) return;
                     Thread.Sleep(250);
-                }                
+                }
             }
             Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds");
         }
@@ -109,7 +115,7 @@ namespace Hazelcast.Client.Test
 
         public static byte RandomByte()
         {
-            return (byte) Random.Next();
+            return (byte)Random.Next();
         }
 
         public static byte[] RandomBytes()
@@ -131,7 +137,7 @@ namespace Hazelcast.Client.Test
 
         public static float RandomFloat()
         {
-            return (float) Random.NextDouble();
+            return (float)Random.NextDouble();
         }
 
         public static int RandomInt()
@@ -148,7 +154,7 @@ namespace Hazelcast.Client.Test
 
         public static short RandomShort()
         {
-            return (short) Random.Next();
+            return (short)Random.Next();
         }
 
         public static string RandomString()

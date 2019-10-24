@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Test
         {
             var s = Client.GetSemaphore(TestSupport.RandomString());
             var latch = new CountdownEvent(1);
-            var t = Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 s.Acquire();
                 latch.Signal();
@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Test
         public void TryAcquire()
         {
             var latch = new CountdownEvent(1);
-            var t = Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 try
                 {

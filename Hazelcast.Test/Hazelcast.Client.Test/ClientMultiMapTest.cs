@@ -71,7 +71,7 @@ namespace Hazelcast.Client.Test
             _mm.Lock("key1");
             var latch = new CountdownEvent(1);
 
-            var t = Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 _mm.ForceUnlock("key1");
                 latch.Signal();
@@ -138,7 +138,7 @@ namespace Hazelcast.Client.Test
             _mm.Lock("key1");
 
             var latch = new CountdownEvent(1);
-            var t = Task.Run(() => {
+            TestSupport.Run(() => {
                 if (!_mm.TryLock("key1"))
                 {
                     latch.Signal();
@@ -154,7 +154,7 @@ namespace Hazelcast.Client.Test
         {
             _mm.Lock("key1", 1, TimeUnit.Seconds);
             var latch = new CountdownEvent(2);
-            var t = Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 if (!_mm.TryLock("key1"))
                 {
@@ -230,7 +230,7 @@ namespace Hazelcast.Client.Test
         {
             Assert.IsTrue(_mm.TryLock("key1", 200, TimeUnit.Milliseconds));
             var latch = new CountdownEvent(1);
-            var t = Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 try
                 {
@@ -248,7 +248,7 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(_mm.IsLocked("key1"));
 
             var latch2 = new CountdownEvent(1);
-            var t2 = Task.Run(() =>
+            TestSupport.Run(() =>
             {
                 try
                 {
