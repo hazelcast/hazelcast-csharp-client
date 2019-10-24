@@ -166,7 +166,7 @@ namespace Hazelcast.Client.Test.Serialization
 
         //https://github.com/hazelcast/hazelcast/issues/1096
         [Test]
-        public void Issue_1096_ByteArrayContentSame()
+        public void PortableBytesArrayContent()
         {
             var ss = new SerializationServiceBuilder()
                 .AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID, new TestPortableFactory()).Build();
@@ -183,7 +183,7 @@ namespace Hazelcast.Client.Test.Serialization
 
         //https://github.com/hazelcast/hazelcast/issues/2172
         [Test]
-        public void Issue_2172_WritePortableArray()
+        public void WritePortableArray()
         {
             var ss = new SerializationServiceBuilder().SetInitialOutputBufferSize(16).Build();
             var testObject2s = new TestObject2[100];
