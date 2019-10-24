@@ -64,7 +64,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestHeartBeatStoppedOnOwnerNode()
+        public void HeartBeatStoppedOnOwnerNode()
         {
             var member = _remoteController.startMember(_cluster.Id);
             var client = CreateClient();
@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestHeartStoppedOnNonOwnerNode()
+        public void HeartStoppedOnNonOwnerNode()
         {
             var member1 = _remoteController.startMember(_cluster.Id);
             var client = CreateClient();

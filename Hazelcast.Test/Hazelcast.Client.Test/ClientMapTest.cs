@@ -142,7 +142,7 @@ namespace Hazelcast.Client.Test
 
         [Ignore("not currently possible to test this")]
         [Test]
-        public void TestAddInterceptor()
+        public void AddInterceptor()
         {
             Assert.Throws<HazelcastException>(() =>
             {
@@ -302,7 +302,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestEvictAll()
+        public void EvictAll()
         {
             map.Put("key1", "value1");
             map.Put("key2", "value2");
@@ -336,7 +336,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestExecuteOnKey_nullKey()
+        public void ExecuteOnKey_nullKey()
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -364,7 +364,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestExecuteOnKeys_keysNotNull()
+        public void ExecuteOnKeys_keysNotNull()
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -429,7 +429,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSubmitToKey_nullKey()
+        public void SubmitToKey_nullKey()
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -557,7 +557,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestKeySetPredicate()
+        public void KeySetPredicate()
         {
             FillMap();
 
@@ -569,7 +569,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListener()
+        public void Listener()
         {
             var latch1Add = new CountdownEvent(5);
             var latch1Remove = new CountdownEvent(2);
@@ -609,7 +609,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListener_SingleEventListeners()
+        public void Listener_SingleEventListeners()
         {
             var listener = new ListenerImpl<object, object>();
             var reg1 = map.AddEntryListener(listener, false);
@@ -642,7 +642,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerClearAll()
+        public void ListenerClearAll()
         {
             var latchClearAll = new CountdownEvent(1);
 
@@ -664,7 +664,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerEventOrder()
+        public void ListenerEventOrder()
         {
             const int maxSize = 10000;
             var map2 = Client.GetMap<int, int>(TestSupport.RandomString());
@@ -700,7 +700,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerExtreme()
+        public void ListenerExtreme()
         {
             const int TestItemCount = 1 * 1000;
             var latch = new CountdownEvent(TestItemCount);
@@ -745,7 +745,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerPredicate()
+        public void ListenerPredicate()
         {
             var latch1Add = new CountdownEvent(1);
             var latch1Remove = new CountdownEvent(1);
@@ -782,7 +782,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestListenerRemove()
+        public void ListenerRemove()
         {
             var latch1Add = new CountdownEvent(1);
             var listener1 = new EntryAdapter<object, object>(
@@ -889,7 +889,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPutIfAbsentNewValueTTL_whenKeyPresent()
+        public void PutIfAbsentNewValueTTL_whenKeyPresent()
         {
             object key = "Key";
             object value = "Value";
@@ -903,7 +903,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPutIfAbsentTtl()
+        public void PutIfAbsentTtl()
         {
             object key = "Key";
             object value = "Value";
@@ -915,7 +915,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPutIfAbsentTTL_whenExpire()
+        public void PutIfAbsentTTL_whenExpire()
         {
             object key = "Key";
             object value = "Value";
@@ -931,7 +931,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPutIfAbsentTTL_whenKeyPresent()
+        public void PutIfAbsentTTL_whenKeyPresent()
         {
             object key = "Key";
             object value = "Value";
@@ -944,7 +944,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPutIfAbsentTTL_whenKeyPresentAfterExpire()
+        public void PutIfAbsentTTL_whenKeyPresentAfterExpire()
         {
             object key = "Key";
             object value = "Value";
@@ -1003,14 +1003,14 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestRemoveInterceptor()
+        public void RemoveInterceptor()
         {
             map.RemoveInterceptor("interceptor");
         }
 
         [Test]
         [Category("3.8")]
-        public void TestRemoveAllWithPredicate()
+        public void RemoveAllWithPredicate()
         {
             FillMap();
 
@@ -1110,7 +1110,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestValuesPredicate()
+        public void ValuesPredicate()
         {
             FillMap();
 

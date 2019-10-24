@@ -50,121 +50,121 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestBoolean(ByteOrder order)
+        public void Boolean(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomBool(), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestBooleanArray(ByteOrder order)
+        public void BooleanArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomBool), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestByte(ByteOrder order)
+        public void Byte(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomByte(), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestByteArray(ByteOrder order)
+        public void ByteArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomByte), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestChar(ByteOrder order)
+        public void Char(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomChar(), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestCharArray(ByteOrder order)
+        public void CharArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomChar), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestDouble(ByteOrder order)
+        public void Double(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomDouble(), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestDoubleArray(ByteOrder order)
+        public void DoubleArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomDouble), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestFloat(ByteOrder order)
+        public void Float(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomFloat(), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestFloatArray(ByteOrder order)
+        public void FloatArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomFloat), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestInteger(ByteOrder order)
+        public void Integer(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomInt(), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestIntegerArray(ByteOrder order)
+        public void IntegerArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomInt), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestLong(ByteOrder order)
+        public void Long(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomLong(), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestLongArray(ByteOrder order)
+        public void LongArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomLong), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestShort(ByteOrder order)
+        public void Short(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomShort(), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestShortArray(ByteOrder order)
+        public void ShortArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomShort), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestString(ByteOrder order)
+        public void String(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomString(), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestStringArray(ByteOrder order)
+        public void StringArray(ByteOrder order)
         {
             AssertSerialization(TestSupport.RandomArray(TestSupport.RandomString), order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestNull(ByteOrder order)
+        public void Null(ByteOrder order)
         {
             AssertSerialization<object>(null, order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestDate(ByteOrder order)
+        public void Date(ByteOrder order)
         {
             var now = DateTime.UtcNow;
 
@@ -174,7 +174,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestList(ByteOrder order)
+        public void List(ByteOrder order)
         {
             var list = new List<object> {"1", 2, 2.0};
 
@@ -183,7 +183,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestLinkedList(ByteOrder order)
+        public void LinkedList(ByteOrder order)
         {
             var list = new LinkedList<object>();
 
@@ -196,7 +196,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestSerializable(ByteOrder order)
+        public void Serializable(ByteOrder order)
         {
             var p = new SerializableClass {Age = TestSupport.RandomInt(), Name = TestSupport.RandomString()};
 
@@ -204,7 +204,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestGenericListUsingSerializable(ByteOrder order)
+        public void GenericListUsingSerializable(ByteOrder order)
         {
             var p = new List<string> { "a", "b", "c"};
 
@@ -212,21 +212,21 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestBigInteger(ByteOrder order)
+        public void BigIntegerTest(ByteOrder order)
         {
             var bigInt = BigInteger.Parse("123456789012345678901234567890123456789012345678901234567890");
             AssertSerialization(bigInt, order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestJavaEnum(ByteOrder order)
+        public void JavaEnum(ByteOrder order)
         {
             var javaEnum = new JavaEnum(TestSupport.RandomString(), TestSupport.RandomString());
             AssertSerialization(javaEnum, order);
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestJavaClass(ByteOrder order)
+        public void JavaClass(ByteOrder order)
         {
             var javaEnum = new JavaClass(TestSupport.RandomString());
             AssertSerialization(javaEnum, order);

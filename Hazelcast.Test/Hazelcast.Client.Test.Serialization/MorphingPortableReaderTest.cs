@@ -55,7 +55,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadBoolean_IncompatibleClass()
+        public void ReadBoolean_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadBoolean("string"); });
         }
@@ -69,7 +69,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadByte_IncompatibleClass()
+        public void ReadByte_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadByte("string"); });
         }
@@ -81,7 +81,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadByteArray_IncompatibleClass()
+        public void ReadByteArray_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadByteArray("byte"); });
         }
@@ -95,7 +95,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadChar_IncompatibleClass()
+        public void ReadChar_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadChar("string"); });
         }
@@ -107,7 +107,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadCharArray_IncompatibleClass()
+        public void ReadCharArray_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadCharArray("byte"); });
         }
@@ -133,7 +133,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadDouble_IncompatibleClass()
+        public void ReadDouble_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadDouble("string"); });
         }
@@ -145,7 +145,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadDoubleArray_IncompatibleClass()
+        public void ReadDoubleArray_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadByteArray("byte"); });
         }
@@ -167,7 +167,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadFloat_IncompatibleClass()
+        public void ReadFloat_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadFloat("string"); });
         }
@@ -179,7 +179,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadFloatArray_IncompatibleClass()
+        public void ReadFloatArray_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadByteArray("byte"); });
         }
@@ -199,7 +199,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadInt_IncompatibleClass()
+        public void ReadInt_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadInt("string"); });
         }
@@ -211,7 +211,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadIntArray_IncompatibleClass()
+        public void ReadIntArray_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadIntArray("byte"); });
         }
@@ -233,7 +233,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadLong_IncompatibleClass()
+        public void ReadLong_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadLong("string"); });
         }
@@ -245,7 +245,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadLongArray_IncompatibleClass()
+        public void ReadLongArray_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadByteArray("byte"); });
         }
@@ -257,7 +257,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadPortable_IncompatibleClass()
+        public void ReadPortable_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadByteArray("byte"); });
         }
@@ -269,7 +269,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadPortableArray_IncompatibleClass()
+        public void ReadPortableArray_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadByteArray("byte"); });
         }
@@ -285,7 +285,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadShort_IncompatibleClass()
+        public void ReadShort_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadShort("string"); });
         }
@@ -297,7 +297,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadShortArray_IncompatibleClass()
+        public void ReadShortArray_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadByteArray("byte"); });
         }
@@ -311,7 +311,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestReadUTF_IncompatibleClass()
+        public void ReadUTF_IncompatibleClass()
         {
             Assert.Throws<IncompatibleClassChangeError>(() => { reader.ReadUTF("byte"); });
         }

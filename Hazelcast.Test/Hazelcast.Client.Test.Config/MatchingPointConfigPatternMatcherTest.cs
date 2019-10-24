@@ -32,7 +32,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestDuplicateConfig()
+        public void DuplicateConfig()
         {
             Assert.Throws<ConfigurationException>(() =>
             {

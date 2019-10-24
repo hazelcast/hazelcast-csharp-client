@@ -113,7 +113,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestInitialMembershipService()
+        public void InitialMembershipService()
         {
             var listener = new InitialMembershipListener();
             _client.GetCluster().AddMembershipListener(listener);
@@ -129,7 +129,7 @@ namespace Hazelcast.Client.Test
         }
         
         [Test]
-        public void TestInitialMembershipWithConfig()
+        public void InitialMembershipWithConfig()
         {
             var members = _initialMembershipListener._membershipEvent.GetMembers();
             Assert.AreEqual(1, members.Count);

@@ -165,7 +165,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestIsEmpty()
+        public void IsEmpty()
         {
             Assert.IsTrue(list.IsEmpty());
             list.Add("item1");

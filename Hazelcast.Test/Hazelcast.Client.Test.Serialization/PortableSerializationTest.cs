@@ -197,7 +197,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestBasics(ByteOrder byteOrder)
+        public void Basics(ByteOrder byteOrder)
         {
             var ss = CreateSerializationService(1, byteOrder);
             var ss2 = CreateSerializationService(2, byteOrder);
@@ -222,7 +222,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestClassDefinitionConfig()
+        public void ClassDefinitionConfig()
         {
             int portableVersion = 1;
             var serializationConfig = new SerializationConfig();
@@ -256,7 +256,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestClassDefinitionConfigWithErrors()
+        public void ClassDefinitionConfigWithErrors()
         {
             int portableVersion = 1;
             var serializationConfig = new SerializationConfig();
@@ -289,7 +289,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestRawData()
+        public void RawData()
         {
             int portableVersion = 1;
             var serializationService = CreateSerializationService(1, ByteOrder.BigEndian);
@@ -306,7 +306,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestRawDataInvalidWrite()
+        public void RawDataInvalidWrite()
         {
             int portableVersion = 1;
             Assert.Throws<HazelcastSerializationException>(() =>
@@ -326,7 +326,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestRawDataInvaliRead()
+        public void RawDataInvaliRead()
         {
             int portableVersion = 1;
             Assert.Throws<HazelcastSerializationException>(() =>
@@ -346,7 +346,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestRawDataWithoutRegistering()
+        public void RawDataWithoutRegistering()
         {
             var serializationService = CreateSerializationService(1, ByteOrder.BigEndian);
             var p = new RawDataPortable(DateTime.Now.ToFileTime(), "test chars".ToCharArray(),
@@ -358,7 +358,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestSerializationService_CreatePortableReader()
+        public void SerializationService_CreatePortableReader()
         {
             var serializationService = new SerializationServiceBuilder().Build();
 
@@ -378,7 +378,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestWriteDataWithPortable()
+        public void WriteDataWithPortable()
         {
             var ss = new SerializationServiceBuilder()
                 .AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID,
@@ -408,7 +408,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestWriteObjectWithCustomSerializable()
+        public void WriteObjectWithCustomSerializable()
         {
             var config = new SerializationConfig();
             var sc = new SerializerConfig()
@@ -429,7 +429,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestWriteObjectWithIdentifiedDataSerializable()
+        public void WriteObjectWithIdentifiedDataSerializable()
         {
             var serializationService = CreateSerializationService(1, ByteOrder.NativeOrder());
 
@@ -441,7 +441,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestWriteObjectWithPortable()
+        public void WriteObjectWithPortable()
         {
             var ss = new SerializationServiceBuilder()
                 .AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID,
@@ -467,7 +467,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestWriteReadWithNullPortableArray()
+        public void WriteReadWithNullPortableArray()
         {
             int portableVersion = 1;
             var builder0 = new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID, 1, portableVersion);

@@ -30,7 +30,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSingleMember()
+        public void SingleMember()
         {
             string oldMemberUUID = null;
             SetupCluster(() =>
@@ -73,7 +73,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestMultiMember()
+        public void MultiMember()
         {
             string oldMemberUUID0 = null;
             string oldMemberUUID1 = null;

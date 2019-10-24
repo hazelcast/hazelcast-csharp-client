@@ -64,7 +64,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestPartitionsUpdatedAfterNewNode()
+        public void PartitionsUpdatedAfterNewNode()
         {
             var proxy = (HazelcastClientProxy) _client;
             var partitionService = proxy.GetClient().GetClientPartitionService();

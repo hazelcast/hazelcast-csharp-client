@@ -72,7 +72,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestIdle()
+        public void Idle()
         {
             _remoteController.startMember(_cluster.Id);
             _remoteController.startMember(_cluster.Id);
@@ -84,7 +84,7 @@ namespace Hazelcast.Client.Test
         }
         
         [Test]
-        public void TestContinuousGet()
+        public void ContinuousGet()
         {
             _remoteController.startMember(_cluster.Id);
             _remoteController.startMember(_cluster.Id);
@@ -106,7 +106,7 @@ namespace Hazelcast.Client.Test
         // TODO: bring it back for regular framework
 #if NETCOREAPP2
         [Test]
-        public void TestContinuousGC()
+        public void ContinuousGC()
         {
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             _remoteController.startMember(_cluster.Id);

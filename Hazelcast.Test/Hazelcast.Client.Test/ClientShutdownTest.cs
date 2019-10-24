@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Test
         //TODO: This test fails intermittently
         [Ignore("This test fails intermittently")]
         [Test]
-        public void TestAsyncOperationDuringClientShutdown()
+        public void AsyncOperationDuringClientShutdown()
         {
             Assert.Throws<HazelcastException>(() =>
             {
@@ -87,7 +87,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestOperationAfterShutdown()
+        public void OperationAfterShutdown()
         {
             Assert.Throws<HazelcastInstanceNotActiveException>(() =>
             {
@@ -105,7 +105,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test, Repeat(10)]
-        public void TestOperationDuringClientShutdown()
+        public void OperationDuringClientShutdown()
         {
             Assert.Throws<HazelcastException>(() =>
             {

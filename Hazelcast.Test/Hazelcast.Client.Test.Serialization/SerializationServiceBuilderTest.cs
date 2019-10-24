@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Test.Serialization
     public class SerializationServiceBuilderTest
     {
         [Test]
-        public void TestAddDataSerializableFactory()
+        public void AddDataSerializableFactory()
         {
             var service1 = new SerializationServiceBuilder().Build();
             var data = service1.ToData(new DataSerializableBasicType());
@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestAddDataSerializableFactoryClass()
+        public void AddDataSerializableFactoryClass()
         {
             var service1 = new SerializationServiceBuilder().Build();
             var data = service1.ToData(new DataSerializableBasicType());
@@ -52,7 +52,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestAddDataSerializableFactoryClassWithBadId()
+        public void AddDataSerializableFactoryClassWithBadId()
         {
             Assert.Throws<ArgumentException>(() =>
             {
@@ -63,7 +63,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-		public void TestAddDataSerializableFactoryClassWithDuplicateId()
+		public void AddDataSerializableFactoryClassWithDuplicateId()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Test.Serialization
 		}
 
         [Test]
-		public void TestAddDataSerializableFactoryClassWithNoEmptyConstructor()
+		public void AddDataSerializableFactoryClassWithNoEmptyConstructor()
 		{
 			Assert.Throws<HazelcastSerializationException>(() =>
         {
@@ -86,7 +86,7 @@ namespace Hazelcast.Client.Test.Serialization
 		}
 
         [Test]
-		public void TestAddDataSerializableFactoryWitDuplicateId()
+		public void AddDataSerializableFactoryWitDuplicateId()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -98,7 +98,7 @@ namespace Hazelcast.Client.Test.Serialization
 		}
 
         [Test]
-		public void TestAddDataSerializableFactoryWithBadId()
+		public void AddDataSerializableFactoryWithBadId()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -109,7 +109,7 @@ namespace Hazelcast.Client.Test.Serialization
 		}
 
         [Test]
-        public void TestAddPortableFactory()
+        public void AddPortableFactory()
         {
             var service1 = new SerializationServiceBuilder().Build();
             var data = service1.ToData(new KitchenSinkPortable());
@@ -124,7 +124,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestAddPortableFactoryClass()
+        public void AddPortableFactoryClass()
         {
             var service1 = new SerializationServiceBuilder().Build();
             var data = service1.ToData(new KitchenSinkPortable());
@@ -139,7 +139,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-		public void TestAddPortableFactoryClassWhichDoesNotImplementPortableFactory()
+		public void AddPortableFactoryClassWhichDoesNotImplementPortableFactory()
 		{
 			Assert.Throws<HazelcastSerializationException>(() =>
         {
@@ -151,7 +151,7 @@ namespace Hazelcast.Client.Test.Serialization
 		}
 
         [Test]
-		public void TestAddPortableFactoryClassWithBadId()
+		public void AddPortableFactoryClassWithBadId()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -163,7 +163,7 @@ namespace Hazelcast.Client.Test.Serialization
 		}
 
         [Test]
-		public void TestAddPortableFactoryClassWithDuplicateId()
+		public void AddPortableFactoryClassWithDuplicateId()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -176,7 +176,7 @@ namespace Hazelcast.Client.Test.Serialization
 		}
 
         [Test]
-		public void TestAddPortableFactoryClassWithNoEmptyConstructor()
+		public void AddPortableFactoryClassWithNoEmptyConstructor()
 		{
 			Assert.Throws<MissingMethodException>(() =>
         {
@@ -188,7 +188,7 @@ namespace Hazelcast.Client.Test.Serialization
 		}
 
         [Test]
-		public void TestAddPortableFactoryWithBadId()
+		public void AddPortableFactoryWithBadId()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -200,7 +200,7 @@ namespace Hazelcast.Client.Test.Serialization
 		}
 
         [Test]
-		public void TestAddPortableFactoryWithDuplicateId()
+		public void AddPortableFactoryWithDuplicateId()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -212,7 +212,7 @@ namespace Hazelcast.Client.Test.Serialization
         });
 		}
 
-        public void TestHazelcastInstanceAware()
+        public void HazelcastInstanceAware()
         {
         }
 

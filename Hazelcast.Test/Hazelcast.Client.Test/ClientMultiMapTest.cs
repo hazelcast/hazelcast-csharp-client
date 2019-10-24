@@ -205,7 +205,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestRemoveListener()
+        public void RemoveListener()
         {
             var latch1Add = new CountdownEvent(1);
             var latch1Remove = new CountdownEvent(1);

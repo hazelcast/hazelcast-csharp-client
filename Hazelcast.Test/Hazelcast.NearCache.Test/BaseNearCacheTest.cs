@@ -40,7 +40,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCache()
+        public void NearCache()
         {
             for (var i = 0; i < MaxSize; i++)
             {
@@ -62,7 +62,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheContains()
+        public void NearCacheContains()
         {
             _map.Put("key", "value");
 
@@ -73,7 +73,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheGet()
+        public void NearCacheGet()
         {
             //TODO FIXME
             _map.Put("key", "value");
@@ -87,7 +87,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheGetAll()
+        public void NearCacheGetAll()
         {
             var keys = new List<object>();
             for (var i = 0; i < 100; i++)
@@ -104,7 +104,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheGetAsync()
+        public void NearCacheGetAsync()
         {
             _map.Put("key", "value");
 
@@ -126,7 +126,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheIdleEviction()
+        public void NearCacheIdleEviction()
         {
             var map = Client.GetMap<int, int>("nearCacheIdle-" + TestSupport.RandomString());
             var keys = Enumerable.Range(0, 10).ToList();
@@ -155,32 +155,32 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheInvalidationOnClear()
+        public void NearCacheInvalidationOnClear()
         {
             TestInvalidate((m, k) => m.Clear());
         }
 
         [Test]
-        public void TestNearCacheInvalidationOnEvict()
+        public void NearCacheInvalidationOnEvict()
         {
             TestInvalidate((m, k) => m.EvictAll());
         }
 
         [Test]
-        public void TestNearCacheInvalidationOnPut()
+        public void NearCacheInvalidationOnPut()
         {
             TestInvalidate((m, k) => m.Remove(k));
         }
 
         [Test]
-        public void TestNearCacheInvalidationOnRemove()
+        public void NearCacheInvalidationOnRemove()
         {
             TestInvalidate((m, k) => m.Remove(k));
         }
 
         [Test]
         [Category("3.8")]
-        public void TestNearCacheInvalidationOnRemoveAllPredicate()
+        public void NearCacheInvalidationOnRemoveAllPredicate()
         {
             var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
             for (var i = 0; i < 100; i++)
@@ -202,7 +202,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheLfuEviction()
+        public void NearCacheLfuEviction()
         {
             var lfuMap = Client.GetMap<object, object>("nearCacheMapLfu-" + TestSupport.RandomString());
             var keys = new List<object>();
@@ -237,7 +237,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheLocalInvalidations()
+        public void NearCacheLocalInvalidations()
         {
             var map = Client.GetMap<string, string>("nearCacheMapInvalidate-" + TestSupport.RandomString());
             map.Put("key", "value");
@@ -254,7 +254,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheLruEviction()
+        public void NearCacheLruEviction()
         {
             var lruMap = Client.GetMap<object, object>("nearCacheMapLru-" + TestSupport.RandomString());
             var keys = new List<object>();
@@ -289,7 +289,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheNoEviction()
+        public void NearCacheNoEviction()
         {
             var keys = new List<object>();
             for (var i = 0; i < MaxSize * 2; i++)
@@ -303,7 +303,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCacheTtlEviction()
+        public void NearCacheTtlEviction()
         {
             var map = Client.GetMap<int, int>("nearCacheTtl-" + TestSupport.RandomString());
             var keys = Enumerable.Range(0, 10).ToList();

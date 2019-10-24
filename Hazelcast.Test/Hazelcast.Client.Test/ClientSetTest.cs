@@ -107,7 +107,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestIsEmpty()
+        public void IsEmpty()
         {
             Assert.IsTrue(set.IsEmpty());
             set.Add("item1");

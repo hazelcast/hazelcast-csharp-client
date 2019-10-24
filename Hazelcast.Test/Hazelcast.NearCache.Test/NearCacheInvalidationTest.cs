@@ -73,7 +73,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestSequenceFixIfKeyRemoveAtServer()
+        public void SequenceFixIfKeyRemoveAtServer()
         {
             const string theKey = "key";
             _map.Put(theKey, "value1");
@@ -100,7 +100,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestSequenceUpdateIfKeyRemoveAtServer()
+        public void SequenceUpdateIfKeyRemoveAtServer()
         {
             const string theKey = "key";
             _map.Put(theKey, "value");

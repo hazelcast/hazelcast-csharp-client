@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestSerializeDeserializeJsonValue()
+        public void SerializeDeserializeJsonValue()
         {
             var jsonValue = new HazelcastJsonValue("{ \"key\": \"value\" }");
             var jsonData = _serializationService.ToData(jsonValue);

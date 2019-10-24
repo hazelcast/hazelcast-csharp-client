@@ -65,7 +65,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNearCache_notContainsStaleValue_whenUpdatedByMultipleThreads()
+        public void NearCache_notContainsStaleValue_whenUpdatedByMultipleThreads()
         {
             var threads = new List<Thread>();
 

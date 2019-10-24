@@ -98,7 +98,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestNullValue_When_ReferenceType()
+        public void NullValue_When_ReferenceType()
         {
             var ss = new SerializationServiceBuilder()
                .Build();
@@ -111,7 +111,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-		public void TestNullValue_When_ValueType()
+		public void NullValue_When_ValueType()
 		{
 			Assert.Throws<HazelcastSerializationException>(() =>
         {
@@ -127,7 +127,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestNullValue_When_NullableType()
+        public void NullValue_When_NullableType()
         {
             var ss = new SerializationServiceBuilder()
                .Build();

@@ -49,7 +49,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestGlobalSerializer()
+        public void GlobalSerializer()
         {
             var config = new SerializationConfig();
             var globalConfig = new GlobalSerializerConfig();
@@ -68,7 +68,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public void TestGlobalSerializerOverride()
+        public void GlobalSerializerOverride()
         {
             var config = new SerializationConfig();
             var globalConfig = new GlobalSerializerConfig();

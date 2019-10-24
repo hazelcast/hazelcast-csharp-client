@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestIpV6Address()
+        public void IpV6Address()
         {
             var address = GetLocalIpV6Address();
             if (address == null)
@@ -86,7 +86,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestIpV6AddressWithMissingPort()
+        public void IpV6AddressWithMissingPort()
         {
             var address = GetLocalIpV6Address();
             if (address == null)
@@ -98,7 +98,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestIpV6AddressWithMissingScope()
+        public void IpV6AddressWithMissingScope()
         {
             var address = GetLocalIpV6Address();
             if (address == null)

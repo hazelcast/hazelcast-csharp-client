@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Test.Config
     public class ClientNearCacheConfigTest
     {
         [Test]
-        public void TestReadOnlyNearCacheConfig()
+        public void ReadOnlyNearCacheConfig()
         {
             var config = new NearCacheConfig();
             var readOnly = config.GetAsReadOnly();

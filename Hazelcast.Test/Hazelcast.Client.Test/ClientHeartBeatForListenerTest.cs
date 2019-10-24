@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestClientShouldPingServerWhenClientOnlyListening()
+        public void ClientShouldPingServerWhenClientOnlyListening()
         {
             var clientDisconnected = TestSupport.WaitForClientState(Client, LifecycleEvent.LifecycleState.ClientDisconnected);
             const int clientHeartbeatSeconds = 8;

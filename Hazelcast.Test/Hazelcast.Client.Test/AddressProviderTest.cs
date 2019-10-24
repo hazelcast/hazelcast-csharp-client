@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
     public class AddressProviderTest
     {
         [Test]
-        public void TestConfigAddressProvider()
+        public void ConfigAddressProvider()
         {
             var cfg = new ClientConfig();
             cfg.GetNetworkConfig().AddAddress("10.0.0.1:5701", "10.0.0.2:5702", "10.0.0.3:5703");
@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestConfigAddressProvider_emptyAddress()
+        public void ConfigAddressProvider_emptyAddress()
         {
             var cfg = new ClientConfig();
 
@@ -49,7 +49,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestMultipleAddressProvider()
+        public void MultipleAddressProvider()
         {
             var cfg = new ClientConfig();
             cfg.GetNetworkConfig().AddAddress("10.0.0.1:5701", "10.0.0.2:5702", "10.0.0.3:5703");

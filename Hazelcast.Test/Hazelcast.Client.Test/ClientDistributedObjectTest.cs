@@ -32,12 +32,12 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestDistributedObjectListener()
+        public void DistributedObjectListener()
         {
             var createdLatch = new CountdownEvent(1);
             var destroyedLatch = new CountdownEvent(1);
             var regId = Client.AddDistributedObjectListener(
-                new DistributedObjectListener(createdLatch, destroyedLatch));
+                new DistributedObjectListenerImpl(createdLatch, destroyedLatch));
             Assert.IsNotNull(regId, "registrationId");
 
             var name = TestSupport.RandomString();
@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestDistributedObjectListener_validateEventContent()
+        public void DistributedObjectListener_validateEventContent()
         {
             var listener = new DistributedObjectListenerWithAssert();
             var regId = Client.AddDistributedObjectListener(listener);
@@ -71,7 +71,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestGetDistributedObjects()
+        public void GetDistributedObjects()
         {
             var map = Client.GetMap<int, int>(TestSupport.RandomString());
             var topic = Client.GetTopic<int>(TestSupport.RandomString());
@@ -87,7 +87,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestGetDistributedObjectsFromAnotherClient()
+        public void GetDistributedObjectsFromAnotherClient()
         {
             var mapName = TestSupport.RandomString();
             var map = Client.GetMap<int, int>(mapName);
@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestProxyManager_getOrCreate_Assignable()
+        public void ProxyManager_getOrCreate_Assignable()
         {
             var distributedObject = Client.GetDistributedObject<IDistributedObject>(ServiceNames.Map, "testNameId");
             var map = Client.GetDistributedObject<IMap<string, long>>(ServiceNames.Map, "testNameId");
@@ -113,7 +113,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestProxyManager_getOrCreate_NotAssignable()
+        public void ProxyManager_getOrCreate_NotAssignable()
         {
             var distributedObject = Client.GetDistributedObject<IMap<string, string>>(ServiceNames.Map, "testNameId");
             Assert.NotNull(distributedObject);
@@ -127,12 +127,12 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        private class DistributedObjectListener : IDistributedObjectListener
+        private class DistributedObjectListenerImpl : IDistributedObjectListener
         {
             private readonly CountdownEvent _createdLatch;
             private readonly CountdownEvent _destroyedLatch;
 
-            public DistributedObjectListener(CountdownEvent createdLatch, CountdownEvent destroyedLatch)
+            public DistributedObjectListenerImpl(CountdownEvent createdLatch, CountdownEvent destroyedLatch)
             {
                 _createdLatch = createdLatch;
                 _destroyedLatch = destroyedLatch;

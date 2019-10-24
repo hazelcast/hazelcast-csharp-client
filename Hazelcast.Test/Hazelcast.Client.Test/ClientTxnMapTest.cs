@@ -160,7 +160,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestTnxMapDelete()
+        public void TnxMapDelete()
         {
             const string key = "key1";
             const string value = "old1";

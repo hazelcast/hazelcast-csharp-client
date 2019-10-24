@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestScheduleWithCancellation_cancelled()
+        public void ScheduleWithCancellation_cancelled()
         {
             var executed = false;
             var continued = false;
@@ -67,7 +67,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestScheduleWithCancellation_completed()
+        public void ScheduleWithCancellation_completed()
         {
             var executed = false;
             var continued = false;
@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestSchedule_completed()
+        public void Schedule_completed()
         {
             var executed = false;
             var continued = false;

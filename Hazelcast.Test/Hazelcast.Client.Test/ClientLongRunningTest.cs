@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestLongRunning()
+        public void LongRunning()
         {
             var starTicks = DateTime.Now.Ticks;
             var collection = _map.Values(Predicates.Sql("this == 'value5'"));

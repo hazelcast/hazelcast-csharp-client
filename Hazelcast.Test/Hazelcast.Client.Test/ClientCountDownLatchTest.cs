@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Test
         private ICountDownLatch l;
 
         [Test]
-        public void TestLatch()
+        public void Latch()
         {
             const int count = 20;
 

@@ -44,7 +44,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_Credentials_Factory()
+        public void CredentialConfig_Credentials_Factory()
         {
             Assert.Catch<ConfigurationException>(() =>
             {
@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_CredentialsClass_Factory()
+        public void CredentialConfig_CredentialsClass_Factory()
         {
             Assert.Catch<ConfigurationException>(() =>
             {
@@ -72,7 +72,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_CredentialsClass_FactoryClass()
+        public void CredentialConfig_CredentialsClass_FactoryClass()
         {
             Assert.Catch<ConfigurationException>(() =>
             {
@@ -86,7 +86,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_Credentials_FactoryClass()
+        public void CredentialConfig_Credentials_FactoryClass()
         {
             Assert.Catch<ConfigurationException>(() =>
             {
@@ -100,7 +100,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_Credentials()
+        public void CredentialConfig_Credentials()
         {
             StartMember(_remoteController, _cluster);
 
@@ -113,7 +113,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_CredentialsClass()
+        public void CredentialConfig_CredentialsClass()
         {
             StartMember(_remoteController, _cluster);
            
@@ -130,7 +130,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_CredentialsClass_empty()
+        public void CredentialConfig_CredentialsClass_empty()
         {
             StartMember(_remoteController, _cluster);
            
@@ -147,7 +147,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_CredentialsFactory()
+        public void CredentialConfig_CredentialsFactory()
         {
             StartMember(_remoteController, _cluster);
 
@@ -163,7 +163,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_CredentialsFactory_with_defaults()
+        public void CredentialConfig_CredentialsFactory_with_defaults()
         {
             StartMember(_remoteController, _cluster);
 
@@ -178,7 +178,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_CredentialsFactoryClass()
+        public void CredentialConfig_CredentialsFactoryClass()
         {
             StartMember(_remoteController, _cluster);
 
@@ -194,7 +194,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCredentialConfig_CustomCredentialsFactory()
+        public void CredentialConfig_CustomCredentialsFactory()
         {
             StartMember(_remoteController, _cluster);
 

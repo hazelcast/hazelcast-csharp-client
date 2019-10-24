@@ -35,11 +35,11 @@ namespace Hazelcast.Client.Test
             _ringBuffer.Destroy();
         }
 
-        private const int Capacity = 10; //should be set to same as in the server.xml file
+        private const int ExpectedCapacity = 10; //should be set to same as in the server.xml file
         private IRingbuffer<string> _ringBuffer;
 
         [Test]
-        public void TestAddAll()
+        public void AddAll()
         {
             var task = _ringBuffer.AddAllAsync(new List<string> {"foo", "bar"}, OverflowPolicy.Overwrite);
 
@@ -55,7 +55,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestAddAndReadOne()
+        public void AddAndReadOne()
         {
             var sequence = _ringBuffer.Add("foo");
 
@@ -63,7 +63,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestAddAsync()
+        public void AddAsync()
         {
             var sequenceFuture = _ringBuffer.AddAsync("foo", OverflowPolicy.Overwrite);
 
@@ -72,13 +72,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestCapacity()
+        public void Capacity()
         {
-            Assert.AreEqual(Capacity, _ringBuffer.Capacity());
+            Assert.AreEqual(ExpectedCapacity, _ringBuffer.Capacity());
         }
 
         [Test]
-		public void TestExcessiveMaxCount()
+		public void ExcessiveMaxCount()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -87,27 +87,27 @@ namespace Hazelcast.Client.Test
 		}
 
         [Test]
-		public void TestExcessiveMinCount()
+		public void ExcessiveMinCount()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
-            _ringBuffer.ReadManyAsync(0, Capacity + 1, Capacity + 1);
+            _ringBuffer.ReadManyAsync(0, ExpectedCapacity + 1, ExpectedCapacity + 1);
         });
 		}
 
         [Test]
-        public void TestHeadSequence()
+        public void HeadSequence()
         {
-            for (var k = 0; k < 2*Capacity; k++)
+            for (var k = 0; k < 2*ExpectedCapacity; k++)
             {
                 _ringBuffer.Add("foo");
             }
 
-            Assert.AreEqual(Capacity, _ringBuffer.HeadSequence());
+            Assert.AreEqual(ExpectedCapacity, _ringBuffer.HeadSequence());
         }
 
         [Test]
-		public void TestInvalidReadCount()
+		public void InvalidReadCount()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -116,7 +116,7 @@ namespace Hazelcast.Client.Test
 		}
 
         [Test]
-		public void TestInvalidSequence()
+		public void InvalidSequence()
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
@@ -125,7 +125,7 @@ namespace Hazelcast.Client.Test
 		}
 
         [Test]
-        public void TestReadManyAsync()
+        public void ReadManyAsync()
         {
             _ringBuffer.Add("1");
             _ringBuffer.Add("2");
@@ -142,7 +142,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestReadManyAsyncWithMaxCount()
+        public void ReadManyAsyncWithMaxCount()
         {
             _ringBuffer.Add("1");
             _ringBuffer.Add("2");
@@ -162,17 +162,17 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestRemainingCapacity()
+        public void RemainingCapacity()
         {
             _ringBuffer = Client.GetRingbuffer<string>("ClientRingbufferTestWithTTL" + TestSupport.RandomString());
 
             _ringBuffer.Add("foo");
 
-            Assert.AreEqual(Capacity - 1, _ringBuffer.RemainingCapacity());
+            Assert.AreEqual(ExpectedCapacity - 1, _ringBuffer.RemainingCapacity());
         }
 
         [Test]
-        public void TestSize()
+        public void Size()
         {
             _ringBuffer.Add("foo");
 
@@ -180,11 +180,11 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-		public void TestStaleSequence()
+		public void StaleSequence()
 		{
 			Assert.Throws<StaleSequenceException>(() =>
         {
-            for (var k = 0; k < Capacity*2; k++)
+            for (var k = 0; k < ExpectedCapacity*2; k++)
             {
                 _ringBuffer.Add("foo");
             }
@@ -193,14 +193,14 @@ namespace Hazelcast.Client.Test
 		}
 
         [Test]
-        public void TestTailSequence()
+        public void TailSequence()
         {
-            for (var k = 0; k < 2*Capacity; k++)
+            for (var k = 0; k < 2*ExpectedCapacity; k++)
             {
                 _ringBuffer.Add("foo");
             }
 
-            Assert.AreEqual(Capacity*2 - 1, _ringBuffer.TailSequence());
+            Assert.AreEqual(ExpectedCapacity*2 - 1, _ringBuffer.TailSequence());
         }
     }
 }

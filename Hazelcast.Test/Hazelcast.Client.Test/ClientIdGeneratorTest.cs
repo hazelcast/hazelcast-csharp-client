@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Test
         private IIdGenerator i;
 
         [Test]
-        public void TestGenerator()
+        public void Generator()
         {
             Assert.IsFalse(i.Init(-4569));
 
@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestGeneratorBlockSize()
+        public void GeneratorBlockSize()
         {
             for (var j = 0; j < 10000; j++)
             {

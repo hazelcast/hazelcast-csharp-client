@@ -63,7 +63,7 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestInvalidationDistortionSequenceAndGuid()
+        public void InvalidationDistortionSequenceAndGuid()
         {
             var mapName = "nearCachedMapDistortion";
             var mapSize = 100000;

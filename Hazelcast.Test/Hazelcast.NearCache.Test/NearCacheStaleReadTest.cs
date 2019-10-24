@@ -88,13 +88,13 @@ namespace Hazelcast.NearCache.Test
         }
 
         [Test]
-        public void TestNoLostInvalidationsEventually()
+        public void NoLostInvalidationsEventually()
         {
             TestNoLostInvalidationsStrict(false);
         }
 
         [Test]
-        public void TestNoLostInvalidationsStrict()
+        public void NoLostInvalidationsStrict()
         {
             TestNoLostInvalidationsStrict(true);
         }

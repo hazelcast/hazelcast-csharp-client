@@ -34,13 +34,13 @@ namespace Hazelcast.Client.Test.Config
         private ClientConfig _clientConfig;
 
         [Test]
-        public void TestGroupConfig()
+        public void GroupConfig()
         {
             Assert.That(_clientConfig.GetGroupConfig(), Is.EqualTo(new GroupConfig("dev", "dev-pass")));
         }
 
         [Test]
-        public void TestListenerConfig()
+        public void ListenerConfig()
         {
             var listenerConfigs = _clientConfig.GetListenerConfigs();
 
@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestNearCacheConfig()
+        public void NearCacheConfig()
         {
             var nearCacheConfig = _clientConfig.GetNearCacheConfig("asd");
             Assert.That(nearCacheConfig, Is.Not.Null);
@@ -66,7 +66,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestNetworkConfig()
+        public void NetworkConfig()
         {
             Assert.That(_clientConfig.GetNetworkConfig().GetAddresses(), Contains.Item("127.0.0.1"));
             Assert.That(_clientConfig.GetNetworkConfig().GetAddresses(), Contains.Item("127.0.0.2"));
@@ -95,7 +95,7 @@ namespace Hazelcast.Client.Test.Config
 
         
         [Test]
-        public void TestCloudConfig() 
+        public void CloudConfig() 
         {
             var cloudConfig = _clientConfig.GetNetworkConfig().GetCloudConfig();
             Assert.That(cloudConfig, Is.Not.Null);
@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestProxyFactoryConfig()
+        public void ProxyFactoryConfig()
         {
             var proxyFactoryConfigs = _clientConfig.GetProxyFactoryConfigs();
             Assert.That(proxyFactoryConfigs, Has.Count.EqualTo(3));
@@ -119,7 +119,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestSecurity()
+        public void Security()
         {
             var credentialsClassName = _clientConfig.GetSecurityConfig().GetCredentialsClassName();
             var factoryClassName = _clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig().GetClassName();
@@ -134,7 +134,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestSerializationConfig()
+        public void SerializationConfig()
         {
             var serializationConfig = _clientConfig.GetSerializationConfig();
             Assert.That(serializationConfig.GetPortableVersion(), Is.EqualTo(3));

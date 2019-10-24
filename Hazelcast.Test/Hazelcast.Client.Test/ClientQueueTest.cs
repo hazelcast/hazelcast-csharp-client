@@ -435,7 +435,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void TestWrapperMethods()
+        public void WrapperMethods()
         {
             var qc = (ICollection<object>) q;
 

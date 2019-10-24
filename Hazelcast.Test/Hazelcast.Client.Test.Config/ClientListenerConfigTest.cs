@@ -44,7 +44,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestConfigureLifecycleListener_className()
+        public void ConfigureLifecycleListener_className()
         {
             StartMember(_remoteController, _cluster);
 
@@ -59,7 +59,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public void TestConfigureMembershipListener_className()
+        public void ConfigureMembershipListener_className()
         {
             StartMember(_remoteController, _cluster);
             var client = _clientFactory.CreateClient(clientConfig =>
