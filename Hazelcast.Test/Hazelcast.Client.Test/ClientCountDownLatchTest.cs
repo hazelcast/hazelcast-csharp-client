@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using NUnit.Framework;
@@ -44,19 +45,23 @@ namespace Hazelcast.Client.Test
             Assert.IsFalse(l.TrySetCount(10));
             Assert.AreEqual(count, l.GetCount());
 
-            var t = Task.Run(async () =>
+            TestSupport.Run(() =>
             {
                 for (var i = 0; i < count; i++)
                 {
                     l.CountDown();
-                    await Task.Delay(60);
+                    try
+                    {
+                        Thread.Sleep(60);
+                    }
+                    catch
+                    {
+                    }
                 }
             });
 
             Assert.IsFalse(l.Await(1, TimeUnit.Seconds));
             Assert.IsTrue(l.Await(5, TimeUnit.Seconds));
-
-            t.GetAwaiter().GetResult();
         }
     }
 }

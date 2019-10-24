@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Remote;
+using Hazelcast.Util;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -51,11 +52,11 @@ namespace Hazelcast.Client.Test
         [Test]
         public void StartClientBeforeMember()
         {
-            var t = Task.Run(async () =>
+            Task.Run(async () =>
             {
                 await Task.Delay(5000);
                 StartMember(_remoteController, _cluster);
-            });
+            }).IgnoreExceptions();
 
             var client = CreateClient();
 
