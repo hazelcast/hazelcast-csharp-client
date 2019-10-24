@@ -25,16 +25,16 @@ namespace Hazelcast.Client.Test.Serialization
         private static readonly byte[] InitData = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         private ByteArrayObjectDataInput _input;
 
-        [TearDown]
-        public void TearDown()
-        {
-            _input.Close();
-        }
-
         [SetUp]
         public void SetUp()
         {
             _input = new ByteArrayObjectDataInput(InitData, null, ByteOrder.BigEndian);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _input.Close();
         }
 
         [Test]
