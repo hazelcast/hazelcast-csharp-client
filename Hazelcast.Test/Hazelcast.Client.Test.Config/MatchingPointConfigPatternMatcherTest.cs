@@ -20,7 +20,7 @@ namespace Hazelcast.Client.Test.Config
     [TestFixture]
     public class MatchingPointConfigPatternMatcherTest
     {
-        public virtual void TestMapConfigWildcardMultipleAmbiguousConfigs()
+        public void MapConfigWildcardMultipleAmbiguousConfigs()
         {
             var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast*");
             var nearCacheConfig2 = new NearCacheConfig().SetName("*com.hazelcast");
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcard1()
+        public void NearCacheConfigWildcard1()
         {
             var nearCacheConfig = new NearCacheConfig().SetName("*hazelcast.test.myNearCache");
             var config = new ClientConfig();
@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcard2()
+        public void NearCacheConfigWildcard2()
         {
             var nearCacheConfig = new NearCacheConfig().SetName("com.hazelcast.*.myNearCache");
             var config = new ClientConfig();
@@ -68,7 +68,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcard3()
+        public void NearCacheConfigWildcard3()
         {
             var nearCacheConfig = new NearCacheConfig().SetName("com.hazelcast.test.*");
             var config = new ClientConfig();
@@ -78,7 +78,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcardMatchingPointEndsWith()
+        public void NearCacheConfigWildcardMatchingPointEndsWith()
         {
             var nearCacheConfig1 = new NearCacheConfig().SetName("*.sub");
             var nearCacheConfig2 = new NearCacheConfig().SetName("*.test.sub");
@@ -95,7 +95,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcardMatchingPointStartsWith()
+        public void NearCacheConfigWildcardMatchingPointStartsWith()
         {
             var nearCacheConfig1 = new NearCacheConfig().SetName("hazelcast.*");
             var nearCacheConfig2 = new NearCacheConfig().SetName("hazelcast.test.*");
@@ -112,7 +112,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcardMultipleConfigs()
+        public void NearCacheConfigWildcardMultipleConfigs()
         {
             var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast.*");
             var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast.test.*");
@@ -129,7 +129,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcardOnly()
+        public void NearCacheConfigWildcardOnly()
         {
             var nearCacheConfig = new NearCacheConfig().SetName("*");
             var config = new ClientConfig();
@@ -139,7 +139,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcardOnlyMultipleConfigs()
+        public void NearCacheConfigWildcardOnlyMultipleConfigs()
         {
             var nearCacheConfig1 = new NearCacheConfig().SetName("*");
             var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast.*");
@@ -152,7 +152,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWithoutWildcard()
+        public void NearCacheConfigWithoutWildcard()
         {
             var nearCacheConfig = new NearCacheConfig().SetName("someNearCache");
             var config = new ClientConfig();

@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Test
         internal static IQueue<object> q;
 
         [Test]
-        public virtual void TestAdd()
+        public void Add()
         {
             Assert.IsTrue(q.Add("item1"));
             Assert.IsTrue(q.Add("item2"));
@@ -59,7 +59,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.IO.IOException"></exception>
         [Test]
-        public virtual void TestAddAll()
+        public void AddAll()
         {
             var coll = new List<object>();
             coll.Add("item1");
@@ -72,7 +72,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestClear()
+        public void Clear()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.IsTrue(q.Offer("item2"));
@@ -85,7 +85,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestContain()
+        public void Contain()
         {
             Assert.IsTrue(q.Add("item1"));
             Assert.IsTrue(q.Add("item2"));
@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestContains()
+        public void Contains()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.IsTrue(q.Offer("item2"));
@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestCopyto()
+        public void Copyto()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.IsTrue(q.Offer("item2"));
@@ -130,7 +130,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestDrain()
+        public void Drain()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.IsTrue(q.Offer("item2"));
@@ -151,14 +151,14 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestElement()
+        public void Element()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.AreEqual("item1", q.Element());
         }
 
         [Test]
-        public virtual void TestEnumaration()
+        public void Enumaration()
         {
             Assert.IsTrue(q.Offer("item1"));
             var enumerator = q.GetEnumerator();
@@ -168,19 +168,19 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestIsEmpty()
+        public void IsEmpty()
         {
             Assert.IsTrue(q.IsEmpty());
         }
 
         [Test]
-        public virtual void TestIsReadOnly()
+        public void IsReadOnly()
         {
             Assert.IsFalse(q.IsReadOnly);
         }
 
         [Test]
-        public virtual void TestIterator()
+        public void Iterator()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.IsTrue(q.Offer("item2"));
@@ -206,11 +206,11 @@ namespace Hazelcast.Client.Test
         //    }
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestListener()
+        public void Listener()
         {
             Assert.AreEqual(0, q.Count);
             var latch = new CountdownEvent(5);
-            var listener = new ClientListTest.Listener<object>(latch);
+            var listener = new ClientListTest.ListenerImpl<object>(latch);
             var id = q.AddItemListener(listener, true);
 
             var t1 = new Thread(delegate(object o)
@@ -230,7 +230,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestListenerExtreme()
+        public void ListenerExtreme()
         {
             var qX = Client.GetQueue<object>(TestSupport.RandomString());
 
@@ -262,7 +262,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestOfferPoll()
+        public void OfferPoll()
         {
             for (var i = 0; i < 10; i++)
             {
@@ -328,7 +328,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPeek()
+        public void Peek()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.AreEqual("item1", q.Peek());
@@ -336,7 +336,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPut()
+        public void Put()
         {
             q.Put("item1");
             Assert.AreEqual(1, q.Count);
@@ -345,7 +345,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.IO.IOException"></exception>
         [Test]
-        public virtual void TestRemainingCapacity()
+        public void RemainingCapacity()
         {
             Assert.AreEqual(6, q.RemainingCapacity());
             q.Offer("item");
@@ -354,7 +354,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.IO.IOException"></exception>
         [Test]
-        public virtual void TestRemove()
+        public void Remove()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.IsTrue(q.Offer("item2"));
@@ -375,7 +375,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestRemoveRetain()
+        public void RemoveRetain()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.IsTrue(q.Offer("item2"));
@@ -404,14 +404,14 @@ namespace Hazelcast.Client.Test
 
 
         [Test]
-        public virtual void TestTake()
+        public void Take()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.AreEqual("item1", q.Take());
         }
 
         [Test]
-        public virtual void TestToArray()
+        public void ToArray()
         {
             Assert.IsTrue(q.Offer("item1"));
             Assert.IsTrue(q.Offer("item2"));

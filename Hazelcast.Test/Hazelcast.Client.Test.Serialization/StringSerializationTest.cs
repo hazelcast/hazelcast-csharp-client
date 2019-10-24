@@ -59,7 +59,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestLargeStringEncodeDecode()
+        public void LargeStringEncodeDecode()
         {
             var sb = new StringBuilder();
             var i = 0;
@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestNullStringEncodeDecode()
+        public void NullStringEncodeDecode()
         {
             var nullData = _serializationService.ToData(null);
             var decodedStr = (string) _serializationService.ToObject<object>(nullData);
@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestNullStringEncodeDecode2()
+        public void NullStringEncodeDecode2()
         {
             var objectDataOutput = _serializationService.CreateObjectDataOutput(256);
             objectDataOutput.WriteUTF(null);
@@ -102,7 +102,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestStringAllCharLetterDecode()
+        public void StringAllCharLetterDecode()
         {
             var allstr = new string(AllChars);
             var expected = Encoding.UTF8.GetBytes(allstr);
@@ -112,7 +112,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestStringAllCharLetterEncode()
+        public void StringAllCharLetterEncode()
         {
             var allstr = new string(AllChars);
             var expected = Encoding.UTF8.GetBytes(allstr);
@@ -127,7 +127,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestStringArrayEncodeDecode()
+        public void StringArrayEncodeDecode()
         {
             var stringArray = new string[TestStrSize];
             for (var i = 0; i < stringArray.Length; i++)
@@ -141,7 +141,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestStringDecode()
+        public void StringDecode()
         {
             IData data = new HeapData(ToDataByte(TestDataBytesAll, TestDataAll.Length));
             var actualStr = (string) _serializationService.ToObject<object>(data);
@@ -149,7 +149,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestStringEncode()
+        public void StringEncode()
         {
             var expected = ToDataByte(TestDataBytesAll, TestDataAll.Length);
             var actual = _serializationService.ToData(TestDataAll).ToByteArray();

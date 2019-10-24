@@ -23,7 +23,7 @@ namespace Hazelcast.Client.Test.Config
     public class ClientXmlTest
     {
         //[Test]
-        public virtual void TestConfig()
+        public void Config()
         {
             var config = new ClientConfig();
             var networkConfig = new ClientNetworkConfig();
@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestXmlParserDefault()
+        public void XmlParserDefault()
         {
             var clientConfig = XmlClientConfigBuilder.Build();
 
@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestXmlParserWithConfigFile()
+        public void XmlParserWithConfigFile()
         {
             var clientConfig =
                 XmlClientConfigBuilder.Build(@"..\..\..\Hazelcast.Net\Resources\hazelcast-client-full.xml");
@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestXmlParserWithReader()
+        public void XmlParserWithReader()
         {
             var clientConfig = XmlClientConfigBuilder.Build(new StringReader(Resources.hazelcast_config_full));
             Assert.NotNull(clientConfig);

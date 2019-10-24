@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestClassDef_equal_hashCode()
+        public void ClassDef_equal_hashCode()
         {
             var cdEmpty1 = (ClassDefinition) new ClassDefinitionBuilder(1, 2, 3).Build();
             var cdEmpty2 = (ClassDefinition) new ClassDefinitionBuilder(1, 2, 3).Build();
@@ -55,18 +55,18 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreNotEqual(0, cd1.GetHashCode());
         }
 
-        public virtual void TestClassDef_getField_HigherThenSizeIndex()
+        public void ClassDef_getField_HigherThenSizeIndex()
         {
             classDefinition.GetField(classDefinition.GetFieldCount());
         }
 
-        public virtual void TestClassDef_getField_negativeIndex()
+        public void ClassDef_getField_negativeIndex()
         {
             classDefinition.GetField(-1);
         }
 
         [Test]
-        public virtual void TestClassDef_getField_properIndex()
+        public void ClassDef_getField_properIndex()
         {
             for (var i = 0; i < classDefinition.GetFieldCount(); i++)
             {
@@ -76,7 +76,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestClassDef_getFieldClassId()
+        public void ClassDef_getFieldClassId()
         {
             foreach (var fieldName in fieldNames)
             {
@@ -85,13 +85,13 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public virtual void TestClassDef_getFieldClassId_invalidField()
+        public void ClassDef_getFieldClassId_invalidField()
         {
             classDefinition.GetFieldClassId("The Invalid Field");
         }
 
         [Test]
-        public virtual void TestClassDef_getFieldType()
+        public void ClassDef_getFieldType()
         {
             foreach (var fieldName in fieldNames)
             {
@@ -100,13 +100,13 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public virtual void TestClassDef_getFieldType_invalidField()
+        public void ClassDef_getFieldType_invalidField()
         {
             classDefinition.GetFieldType("The Invalid Field");
         }
 
         [Test]
-        public virtual void TestClassDef_getter_setter()
+        public void ClassDef_getter_setter()
         {
             var cd = (ClassDefinition) new ClassDefinitionBuilder(1, 2, portableVersion).Build();
             cd.SetVersionIfNotSet(3);
@@ -118,7 +118,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestClassDef_hasField()
+        public void ClassDef_hasField()
         {
             for (var i = 0; i < classDefinition.GetFieldCount(); i++)
             {
@@ -129,13 +129,13 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestClassDef_toString()
+        public void ClassDef_toString()
         {
             Assert.IsNotNull(classDefinition.ToString());
         }
 
         [Test]
-        public virtual void TestFieldDef_equal_hashCode()
+        public void FieldDef_equal_hashCode()
         {
             var fd0 = new FieldDefinition(0, "name", FieldType.Boolean, portableVersion);
             var fd0_1 = new FieldDefinition(0, "name", FieldType.Int, portableVersion);
@@ -150,7 +150,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestFieldDef_getter_setter()
+        public void FieldDef_getter_setter()
         {
             var field0 = classDefinition.GetField(0);
             var field = classDefinition.GetField("f1");
@@ -184,7 +184,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestFieldDef_toString()
+        public void FieldDef_toString()
         {
             Assert.IsNotNull(new FieldDefinition(0, "name", FieldType.Boolean, portableVersion).ToString());
         }

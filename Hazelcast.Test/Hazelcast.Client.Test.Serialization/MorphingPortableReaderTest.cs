@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadBoolean()
+        public void ReadBoolean()
         {
             var aBoolean = reader.ReadBoolean("boolean");
             Assert.IsTrue(aBoolean);
@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadByte()
+        public void ReadByte()
         {
             var aByte = reader.ReadByte("byte");
             Assert.AreEqual(1, aByte);
@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadByteArray()
+        public void ReadByteArray()
         {
             Assert.IsNull(reader.ReadByteArray("NO SUCH FIELD"));
         }
@@ -87,7 +87,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadChar()
+        public void ReadChar()
         {
             var aChar = reader.ReadChar("char");
             Assert.AreEqual(2, aChar);
@@ -101,7 +101,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadCharArray()
+        public void ReadCharArray()
         {
             Assert.IsNull(reader.ReadCharArray("NO SUCH FIELD"));
         }
@@ -113,7 +113,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadDouble()
+        public void ReadDouble()
         {
             var aByte = reader.ReadDouble("byte");
             var aShort = reader.ReadDouble("short");
@@ -139,7 +139,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadDoubleArray()
+        public void ReadDoubleArray()
         {
             Assert.IsNull(reader.ReadDoubleArray("NO SUCH FIELD"));
         }
@@ -151,7 +151,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadFloat()
+        public void ReadFloat()
         {
             var aByte = reader.ReadFloat("byte");
             var aShort = reader.ReadFloat("short");
@@ -173,7 +173,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadFloatArray()
+        public void ReadFloatArray()
         {
             Assert.IsNull(reader.ReadFloatArray("NO SUCH FIELD"));
         }
@@ -185,7 +185,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadInt()
+        public void ReadInt()
         {
             var aByte = reader.ReadInt("byte");
             var aShort = reader.ReadInt("short");
@@ -205,7 +205,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadIntArray()
+        public void ReadIntArray()
         {
             Assert.IsNull(reader.ReadIntArray("NO SUCH FIELD"));
         }
@@ -217,7 +217,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadLong()
+        public void ReadLong()
         {
             var aByte = reader.ReadLong("byte");
             var aShort = reader.ReadLong("short");
@@ -239,7 +239,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadLongArray()
+        public void ReadLongArray()
         {
             Assert.IsNull(reader.ReadLongArray("NO SUCH FIELD"));
         }
@@ -251,7 +251,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadPortable()
+        public void ReadPortable()
         {
             Assert.IsNull(reader.ReadPortable<MorphingPortable>("NO SUCH FIELD"));
         }
@@ -263,7 +263,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadPortableArray()
+        public void ReadPortableArray()
         {
             Assert.IsNull(reader.ReadPortableArray("NO SUCH FIELD"));
         }
@@ -275,7 +275,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadShort()
+        public void ReadShort()
         {
             int aByte = reader.ReadShort("byte");
             int aShort = reader.ReadShort("short");
@@ -291,7 +291,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadShortArray()
+        public void ReadShortArray()
         {
             Assert.IsNull(reader.ReadShortArray("NO SUCH FIELD"));
         }
@@ -303,7 +303,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadUTF()
+        public void ReadUTF()
         {
             var aString = reader.ReadUTF("string");
             Assert.AreEqual("test", aString);

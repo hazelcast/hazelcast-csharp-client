@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestSpecificNearCacheConfig_whenAsteriskAtTheBeginning()
+        public void SpecificNearCacheConfig_whenAsteriskAtTheBeginning()
         {
             var clientConfig = new ClientConfig();
             var genericNearCacheConfig = new NearCacheConfig();
@@ -69,7 +69,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestSpecificNearCacheConfig_whenAsteriskAtTheEnd()
+        public void SpecificNearCacheConfig_whenAsteriskAtTheEnd()
         {
             var clientConfig = new ClientConfig();
             var genericNearCacheConfig = new NearCacheConfig();
@@ -85,7 +85,7 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestSpecificNearCacheConfig_whenAsteriskInTheMiddle()
+        public void SpecificNearCacheConfig_whenAsteriskInTheMiddle()
         {
             var clientConfig = new ClientConfig();
             var genericNearCacheConfig = new NearCacheConfig();

@@ -30,7 +30,7 @@ namespace Hazelcast.Client.Test.Serialization
         };
 
         [TestCaseSource("ByteOrders")]
-        public virtual void TestDataInputOutputWithPortable(ByteOrder byteOrder)
+        public void DataInputOutputWithPortable(ByteOrder byteOrder)
         {
             var portable = KitchenSinkPortable.Generate();
 
@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [TestCaseSource("ByteOrders")]
-        public virtual void TestInputOutputWithPortableReader(ByteOrder byteOrder)
+        public void InputOutputWithPortableReader(ByteOrder byteOrder)
         {
             var portable = KitchenSinkPortable.Generate();
 
@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [TestCaseSource("ByteOrders")]
-        public virtual void TestReadWrite(ByteOrder byteOrder)
+        public void ReadWrite(ByteOrder byteOrder)
         {
             var obj = KitchenSinkDataSerializable.Generate();
             obj.Serializable = KitchenSinkDataSerializable.Generate();

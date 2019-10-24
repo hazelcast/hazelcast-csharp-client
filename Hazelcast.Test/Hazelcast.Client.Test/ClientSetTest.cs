@@ -41,7 +41,7 @@ namespace Hazelcast.Client.Test
         internal static IHSet<object> set;
 
         [Test]
-        public virtual void RemoveRetainAll()
+        public void RemoveRetainAll()
         {
             Assert.IsTrue(set.Add("item1"));
             Assert.IsTrue(set.Add("item2"));
@@ -65,7 +65,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestAddAll()
+        public void AddAll()
         {
             var l = new List<object>();
             l.Add("item1");
@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestAddRemove()
+        public void AddRemove()
         {
             Assert.IsTrue(set.Add("item1"));
             Assert.IsTrue(set.Add("item2"));
@@ -90,7 +90,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestContains()
+        public void Contains()
         {
             Assert.IsTrue(set.Add("item1"));
             Assert.IsTrue(set.Add("item2"));
@@ -117,7 +117,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestIterator()
+        public void Iterator()
         {
             Assert.IsTrue(set.Add("item1"));
             Assert.IsTrue(set.Add("item2"));
@@ -138,7 +138,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestListener()
+        public void Listener()
         {
             ////        final ISet tempSet = server.getSet(name);
             //ISet tempSet = set;
@@ -152,7 +152,7 @@ namespace Hazelcast.Client.Test
 
             var latch = new CountdownEvent(6);
 
-            var listener = new ClientListTest.Listener<object>(latch);
+            var listener = new ClientListTest.ListenerImpl<object>(latch);
             var registrationId = tempSet.AddItemListener(listener, true);
 
             var t = new Thread(delegate(object o)
@@ -168,12 +168,12 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestRemoveListener()
+        public void RemoveListener()
         {
             var tempSet = set;
             var latch = new CountdownEvent(1);
 
-            var listener = new ClientListTest.Listener<object>(latch);
+            var listener = new ClientListTest.ListenerImpl<object>(latch);
             var registrationId = tempSet.AddItemListener(listener, true);
 
             Assert.IsTrue(tempSet.RemoveItemListener(registrationId));

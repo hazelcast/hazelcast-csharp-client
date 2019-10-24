@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test.Serialization
         internal const int FactoryId = TestSerializationConstants.PORTABLE_FACTORY_ID;
 
         [Test]
-        public virtual void TestDifferentClassAndServiceVersions()
+        public void DifferentClassAndServiceVersions()
         {
             var serializationService =
                 new SerializationServiceBuilder().SetPortableVersion(1)
@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Test.Serialization
 
         /// <exception cref="System.IO.IOException" />
         [Test]
-        public virtual void TestDifferentClassAndServiceVersionsUsingDataWriteAndRead()
+        public void DifferentClassAndServiceVersionsUsingDataWriteAndRead()
         {
             var serializationService =
                 new SerializationServiceBuilder().SetPortableVersion(1)
@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestDifferentClassVersions()
+        public void DifferentClassVersions()
         {
             var serializationService =
                 new SerializationServiceBuilder().AddPortableFactory(FactoryId,
@@ -68,7 +68,7 @@ namespace Hazelcast.Client.Test.Serialization
 
         /// <exception cref="System.IO.IOException" />
         [Test]
-        public virtual void TestDifferentClassVersionsUsingDataWriteAndRead()
+        public void DifferentClassVersionsUsingDataWriteAndRead()
         {
             var serializationService =
                 new SerializationServiceBuilder().AddPortableFactory(FactoryId,
@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestPreDefinedDifferentVersionsWithInnerPortable()
+        public void PreDefinedDifferentVersionsWithInnerPortable()
         {
             var serializationService = PortableSerializationTest.CreateSerializationService(1);
             serializationService.GetPortableContext().RegisterClassDefinition(CreateInnerPortableClassDefinition(1));
@@ -102,7 +102,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestPreDefinedDifferentVersionsWithNullInnerPortable()
+        public void PreDefinedDifferentVersionsWithNullInnerPortable()
         {
             var serializationService = PortableSerializationTest.CreateSerializationService(1);
             serializationService.GetPortableContext().RegisterClassDefinition(CreateInnerPortableClassDefinition(1));

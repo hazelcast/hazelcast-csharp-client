@@ -135,7 +135,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestAddIndex()
+        public void AddIndex()
         {
             map.AddIndex("name", true);
         }
@@ -154,7 +154,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAsyncGet()
+        public void AsyncGet()
         {
             FillMap();
             var f = map.GetAsync("key1");
@@ -165,7 +165,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAsyncPut()
+        public void AsyncPut()
         {
             FillMap();
             var f = map.PutAsync("key3", "value");
@@ -179,7 +179,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAsyncPutWithTtl()
+        public void AsyncPutWithTtl()
         {
             var latch = new CountdownEvent(1);
 
@@ -201,7 +201,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestAsyncRemove()
+        public void AsyncRemove()
         {
             FillMap();
             var f = map.RemoveAsync("key4");
@@ -214,7 +214,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestContains()
+        public void Contains()
         {
             FillMap();
             Assert.IsFalse(map.ContainsKey("key10"));
@@ -224,7 +224,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestEntrySet()
+        public void EntrySet()
         {
             map.Put("key1", "value1");
             map.Put("key2", "value2");
@@ -254,7 +254,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestEntrySetPredicate()
+        public void EntrySetPredicate()
         {
             map.Put("key1", "value1");
             map.Put("key2", "value2");
@@ -270,7 +270,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestEntryView()
+        public void EntryView()
         {
             var item = ItemGenerator.GenerateItem(1);
             map.Put("key1", item);
@@ -290,7 +290,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestEvict()
+        public void Evict()
         {
             map.Put("key1", "value1");
             Assert.AreEqual("value1", map.Get("key1"));
@@ -318,13 +318,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestFlush()
+        public void Flush()
         {
             map.Flush();
         }
 
         [Test]
-        public virtual void TestExecuteOnKey()
+        public void ExecuteOnKey()
         {
             FillMap();
             const string key = "key1";
@@ -349,7 +349,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestExecuteOnKeys()
+        public void ExecuteOnKeys()
         {
             FillMap();
             var keys = new HashSet<object> {"key1", "key5"};
@@ -377,7 +377,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestExecuteOnKeys_keysEmpty()
+        public void ExecuteOnKeys_keysEmpty()
         {
             FillMap();
             ISet<object> keys = new HashSet<object>();
@@ -388,7 +388,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestExecuteOnEntries()
+        public void ExecuteOnEntries()
         {
             FillMap();
             const string value = "valueX";
@@ -402,7 +402,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestExecuteOnEntriesWithPredicate()
+        public void ExecuteOnEntriesWithPredicate()
         {
             FillMap();
             const string value = "valueX";
@@ -417,7 +417,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestSubmitToKey()
+        public void SubmitToKey()
         {
             FillMap();
             const string key = "key1";
@@ -441,7 +441,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestForceUnlock()
+        public void ForceUnlock()
         {
             map.Lock("key1");
             var latch = new CountdownEvent(1);
@@ -459,7 +459,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestGet()
+        public void Get()
         {
             FillMap();
             for (var i = 0; i < 10; i++)
@@ -470,7 +470,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test, Repeat(100)]
-        public virtual void TestGetAllExtreme()
+        public void GetAllExtreme()
         {
             IDictionary<object, object> mm = new Dictionary<object, object>();
             const int keycount = 1000;
@@ -493,7 +493,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestGetAllPutAll()
+        public void GetAllPutAll()
         {
             IDictionary<object, object> mm = new Dictionary<object, object>();
             for (var i = 0; i < 100; i++)
@@ -520,7 +520,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestGetEntryView()
+        public void GetEntryView()
         {
             map.Put("item0", "value0");
             map.Put("item1", "value1");
@@ -536,7 +536,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestIsEmpty()
+        public void IsEmpty()
         {
             Assert.IsTrue(map.IsEmpty());
             map.Put("key1", "value1");
@@ -544,7 +544,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestKeySet()
+        public void KeySet()
         {
             map.Put("key1", "value1");
 
@@ -802,7 +802,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLock()
+        public void Lock()
         {
             map.Put("key1", "value1");
             Assert.AreEqual("value1", map.Get("key1"));
@@ -822,7 +822,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLockTtl()
+        public void LockTtl()
         {
             map.Put("key1", "value1");
             Assert.AreEqual("value1", map.Get("key1"));
@@ -843,7 +843,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestLockTtl2()
+        public void LockTtl2()
         {
             map.Lock("key1", 1, TimeUnit.Seconds);
             var latch = new CountdownEvent(2);
@@ -871,7 +871,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPutBigData()
+        public void PutBigData()
         {
             const int dataSize = 128000;
             var largeString = string.Join(",", Enumerable.Range(0, dataSize));
@@ -882,7 +882,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestPutIfAbsent()
+        public void PutIfAbsent()
         {
             Assert.IsNull(map.PutIfAbsent("key1", "value1"));
             Assert.AreEqual("value1", map.PutIfAbsent("key1", "value3"));
@@ -957,7 +957,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestPutTransient()
+        public void PutTransient()
         {
             Assert.AreEqual(0, map.Size());
             map.PutTransient("key1", "value1", 100, TimeUnit.Milliseconds);
@@ -968,7 +968,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestPutTtl()
+        public void PutTtl()
         {
             var ttl = 100;
             map.Put("key1", "value1", ttl, TimeUnit.Milliseconds);
@@ -978,7 +978,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestRemoveAndDelete()
+        public void RemoveAndDelete()
         {
             FillMap();
             Assert.IsNull(map.Remove("key10"));
@@ -993,7 +993,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestRemoveIfSame()
+        public void RemoveIfSame()
         {
             FillMap();
             Assert.IsFalse(map.Remove("key2", "value"));
@@ -1021,7 +1021,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestReplace()
+        public void Replace()
         {
             Assert.IsNull(map.Replace("key1", "value1"));
             map.Put("key1", "value1");
@@ -1035,7 +1035,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestSet()
+        public void Set()
         {
             map.Set("key1", "value1");
             Assert.AreEqual("value1", map.Get("key1"));
@@ -1049,7 +1049,7 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestTryPutRemove()
+        public void TryPutRemove()
         {
             Assert.IsTrue(map.TryPut("key1", "value1", 1, TimeUnit.Seconds));
             Assert.IsTrue(map.TryPut("key2", "value2", 1, TimeUnit.Seconds));
@@ -1087,7 +1087,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestUnlock()
+        public void Unlock()
         {
             map.ForceUnlock("key1");
             map.Put("key1", "value1");
@@ -1100,7 +1100,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestValues()
+        public void Values()
         {
             map.Put("key1", "value1");
             var values = map.Values();

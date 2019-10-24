@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Test.Serialization
     {
 
         [Test]
-        public virtual void TestNestedPortableVersionedSerializer()
+        public void NestedPortableVersionedSerializer()
         {
             SerializationServiceBuilder builder1 = new SerializationServiceBuilder();
             builder1.SetPortableVersion(6);

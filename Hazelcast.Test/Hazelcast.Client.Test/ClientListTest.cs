@@ -37,11 +37,11 @@ namespace Hazelcast.Client.Test
 
         internal static IHList<object> list;
 
-        internal sealed class Listener<T> : IItemListener<T>
+        internal sealed class ListenerImpl<T> : IItemListener<T>
         {
             private readonly CountdownEvent latch;
 
-            public Listener(CountdownEvent latch)
+            public ListenerImpl(CountdownEvent latch)
             {
                 this.latch = latch;
             }
@@ -57,7 +57,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void RemoveRetainAll()
+        public void RemoveRetainAll()
         {
             Assert.IsTrue(list.Add("item1"));
             Assert.IsTrue(list.Add("item2"));
@@ -81,7 +81,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestAddAll()
+        public void AddAll()
         {
             IList<object> l = new List<object>();
             l.Add("item1");
@@ -98,7 +98,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestAddSetRemove()
+        public void AddSetRemove()
         {
             Assert.IsTrue(list.Add("item1"));
             Assert.IsTrue(list.Add("item2"));
@@ -122,7 +122,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestContains()
+        public void Contains()
         {
             Assert.IsTrue(list.Add("item1"));
             Assert.IsTrue(list.Add("item2"));
@@ -139,7 +139,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestIndexOf()
+        public void IndexOf()
         {
             Assert.IsTrue(list.Add("item1"));
             Assert.IsTrue(list.Add("item2"));
@@ -152,7 +152,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestInsert()
+        public void Insert()
         {
             list.Add("item0");
             list.Add("item1");
@@ -175,7 +175,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestIterator()
+        public void Iterator()
         {
             Assert.IsTrue(list.Add("item1"));
             Assert.IsTrue(list.Add("item2"));
@@ -200,14 +200,14 @@ namespace Hazelcast.Client.Test
 
         /// <exception cref="System.Exception"></exception>
         [Test]
-        public virtual void TestListener()
+        public void Listener()
         {
             //        final ISet tempSet = server.getSet(name);
             var tempList = list;
 
             var latch = new CountdownEvent(6);
 
-            var listener = new Listener<object>(latch);
+            var listener = new ListenerImpl<object>(latch);
             var registrationId = tempList.AddItemListener(listener, true);
 
             var t = new Thread(delegate(object o)
@@ -223,11 +223,11 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public virtual void TestRemoveListener()
+        public void RemoveListener()
         {
             var latch = new CountdownEvent(1);
 
-            var listener = new Listener<object>(latch);
+            var listener = new ListenerImpl<object>(latch);
             var registrationId = list.AddItemListener(listener, true);
 
             Assert.IsTrue(list.RemoveItemListener(registrationId));
