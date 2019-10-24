@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -26,29 +27,39 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            list = Client.GetList<object>(TestSupport.RandomString());
+            _list = Client.GetList<object>(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            list.Destroy();
+            _list.Destroy();
         }
 
-        internal static IHList<object> list;
+        private IHList<object> _list;
 
-        internal sealed class ListenerImpl<T> : IItemListener<T>
+        private static readonly string[] FourItems = { "item1", "item2", "item1", "item4", };
+
+        private void AddFourItems()
         {
-            private readonly CountdownEvent latch;
-
-            public ListenerImpl(CountdownEvent latch)
+            foreach (var item in FourItems)
             {
-                this.latch = latch;
+                Assert.IsTrue(_list.Add(item));
+            }
+        }
+
+        internal sealed class Listener<T> : IItemListener<T>
+        {
+            readonly CountdownEvent _latch;
+
+            public Listener(CountdownEvent latch)
+            {
+                _latch = latch;
             }
 
             public void ItemAdded(ItemEvent<T> item)
             {
-                latch.Signal();
+                _latch.Signal();
             }
 
             public void ItemRemoved(ItemEvent<T> item)
@@ -59,166 +70,153 @@ namespace Hazelcast.Client.Test
         [Test]
         public void RemoveRetainAll()
         {
-            Assert.IsTrue(list.Add("item1"));
-            Assert.IsTrue(list.Add("item2"));
-            Assert.IsTrue(list.Add("item1"));
-            Assert.IsTrue(list.Add("item4"));
-            var l = new List<object>();
-            l.Add("item4");
-            l.Add("item3");
-            Assert.IsTrue(list.RemoveAll(l));
-            Assert.AreEqual(3, list.Count);
-            Assert.IsFalse(list.RemoveAll(l));
-            Assert.AreEqual(3, list.Count);
+            AddFourItems();
+
+            var l = new List<object> { "item4", "item3" };
+
+            Assert.IsTrue(_list.RemoveAll(l));
+            Assert.AreEqual(3, _list.Count);
+            Assert.IsFalse(_list.RemoveAll(l));
+            Assert.AreEqual(3, _list.Count);
             l.Clear();
             l.Add("item1");
             l.Add("item2");
-            Assert.IsFalse(list.RetainAll(l));
-            Assert.AreEqual(3, list.Count);
+            Assert.IsFalse(_list.RetainAll(l));
+            Assert.AreEqual(3, _list.Count);
             l.Clear();
-            Assert.IsTrue(list.RetainAll(l));
-            Assert.AreEqual(0, list.Count);
+            Assert.IsTrue(_list.RetainAll(l));
+            Assert.AreEqual(0, _list.Count);
         }
 
         [Test]
         public void AddAll()
         {
-            IList<object> l = new List<object>();
-            l.Add("item1");
-            l.Add("item2");
-            Assert.IsTrue(list.AddAll(l));
+            var l = new List<object> { "item1", "item2" };
+            Assert.IsTrue(_list.AddAll(l));
 
-            Assert.AreEqual(2, list.Count);
-            Assert.IsTrue(list.AddAll(1, l));
-            Assert.AreEqual(4, list.Count);
-            Assert.AreEqual("item1", list[0]);
-            Assert.AreEqual("item1", list[1]);
-            Assert.AreEqual("item2", list[2]);
-            Assert.AreEqual("item2", list[3]);
+            Assert.AreEqual(2, _list.Count);
+            Assert.IsTrue(_list.AddAll(1, l));
+            Assert.AreEqual(4, _list.Count);
+            Assert.AreEqual("item1", _list[0]);
+            Assert.AreEqual("item1", _list[1]);
+            Assert.AreEqual("item2", _list[2]);
+            Assert.AreEqual("item2", _list[3]);
         }
 
         [Test]
         public void AddSetRemove()
         {
-            Assert.IsTrue(list.Add("item1"));
-            Assert.IsTrue(list.Add("item2"));
-            list.Add(0, "item3");
-            Assert.AreEqual(3, list.Count);
-            var o = list.Set(2, "item4");
+            Assert.IsTrue(_list.Add("item1"));
+            Assert.IsTrue(_list.Add("item2"));
+            _list.Add(0, "item3");
+            Assert.AreEqual(3, _list.Count);
+            var o = _list.Set(2, "item4");
             Assert.AreEqual("item2", o);
-            Assert.AreEqual(3, list.Count);
-            Assert.AreEqual("item3", list[0]);
-            Assert.AreEqual("item1", list[1]);
-            Assert.AreEqual("item4", list[2]);
-            Assert.IsFalse(list.Remove("item2"));
-            Assert.IsTrue(list.Remove("item3"));
-            o = list.Remove(1);
+            Assert.AreEqual(3, _list.Count);
+            Assert.AreEqual("item3", _list[0]);
+            Assert.AreEqual("item1", _list[1]);
+            Assert.AreEqual("item4", _list[2]);
+            Assert.IsFalse(_list.Remove("item2"));
+            Assert.IsTrue(_list.Remove("item3"));
+            o = _list.Remove(1);
             Assert.AreEqual("item4", o);
-            Assert.AreEqual(1, list.Count);
-            Assert.AreEqual("item1", list[0]);
+            Assert.AreEqual(1, _list.Count);
+            Assert.AreEqual("item1", _list[0]);
 
-            list[0] = "itemMod";
-            Assert.AreEqual("itemMod", list.Get(0));
+            _list[0] = "itemMod";
+            Assert.AreEqual("itemMod", _list.Get(0));
         }
 
         [Test]
         public void Contains()
         {
-            Assert.IsTrue(list.Add("item1"));
-            Assert.IsTrue(list.Add("item2"));
-            Assert.IsTrue(list.Add("item1"));
-            Assert.IsTrue(list.Add("item4"));
-            Assert.IsFalse(list.Contains("item3"));
-            Assert.IsTrue(list.Contains("item2"));
-            var l = new List<object>();
-            l.Add("item4");
-            l.Add("item3");
-            Assert.IsFalse(list.ContainsAll(l));
-            Assert.IsTrue(list.Add("item3"));
-            Assert.IsTrue(list.ContainsAll(l));
+            Assert.IsTrue(_list.Add("item1"));
+            Assert.IsTrue(_list.Add("item2"));
+            Assert.IsTrue(_list.Add("item1"));
+            Assert.IsTrue(_list.Add("item4"));
+            Assert.IsFalse(_list.Contains("item3"));
+            Assert.IsTrue(_list.Contains("item2"));
+
+            var l = new List<object> { "item4", "item3" };
+
+            Assert.IsFalse(_list.ContainsAll(l));
+            Assert.IsTrue(_list.Add("item3"));
+            Assert.IsTrue(_list.ContainsAll(l));
         }
 
         [Test]
         public void IndexOf()
         {
-            Assert.IsTrue(list.Add("item1"));
-            Assert.IsTrue(list.Add("item2"));
-            Assert.IsTrue(list.Add("item1"));
-            Assert.IsTrue(list.Add("item4"));
-            Assert.AreEqual(-1, list.IndexOf("item5"));
-            Assert.AreEqual(0, list.IndexOf("item1"));
-            Assert.AreEqual(-1, list.LastIndexOf("item6"));
-            Assert.AreEqual(2, list.LastIndexOf("item1"));
+            Assert.IsTrue(_list.Add("item1"));
+            Assert.IsTrue(_list.Add("item2"));
+            Assert.IsTrue(_list.Add("item1"));
+            Assert.IsTrue(_list.Add("item4"));
+            Assert.AreEqual(-1, _list.IndexOf("item5"));
+            Assert.AreEqual(0, _list.IndexOf("item1"));
+            Assert.AreEqual(-1, _list.LastIndexOf("item6"));
+            Assert.AreEqual(2, _list.LastIndexOf("item1"));
         }
 
         [Test]
         public void Insert()
         {
-            list.Add("item0");
-            list.Add("item1");
-            list.Add("item2");
-            list.Insert(1, "item1Mod");
-            Assert.AreEqual("item1Mod", list[1]);
-            list.RemoveAt(0);
-            Assert.AreEqual("item1Mod", list[0]);
-            Assert.AreEqual("item1", list[1]);
+            _list.Add("item0");
+            _list.Add("item1");
+            _list.Add("item2");
+            _list.Insert(1, "item1Mod");
+            Assert.AreEqual("item1Mod", _list[1]);
+            _list.RemoveAt(0);
+            Assert.AreEqual("item1Mod", _list[0]);
+            Assert.AreEqual("item1", _list[1]);
         }
 
         [Test]
         public void IsEmpty()
         {
-            Assert.IsTrue(list.IsEmpty());
-            list.Add("item1");
-            Assert.IsFalse(list.IsEmpty());
-            list.Clear();
-            Assert.IsTrue(list.IsEmpty());
+            Assert.IsTrue(_list.IsEmpty());
+            _list.Add("item1");
+            Assert.IsFalse(_list.IsEmpty());
+            _list.Clear();
+            Assert.IsTrue(_list.IsEmpty());
         }
 
         [Test]
-        public void Iterator()
+        public void Enumerator()
         {
-            Assert.IsTrue(list.Add("item1"));
-            Assert.IsTrue(list.Add("item2"));
-            Assert.IsTrue(list.Add("item1"));
-            Assert.IsTrue(list.Add("item4"));
-            var iter = list.GetEnumerator();
-            Assert.IsTrue(iter.MoveNext());
-            Assert.AreEqual("item1", iter.Current);
-            Assert.IsTrue(iter.MoveNext());
-            Assert.AreEqual("item2", iter.Current);
-            Assert.IsTrue(iter.MoveNext());
-            Assert.AreEqual("item1", iter.Current);
-            Assert.IsTrue(iter.MoveNext());
-            Assert.AreEqual("item4", iter.Current);
-            Assert.IsFalse(iter.MoveNext());
+            AddFourItems();
 
-            var l = list.SubList(1, 3);
+            var i = 0;
+            foreach (var item in _list)
+            {
+                Assert.AreEqual(FourItems[i++], item);
+            }
+
+            var l = _list.SubList(1, 3);
             Assert.AreEqual(2, l.Count);
             Assert.AreEqual("item2", l[0]);
             Assert.AreEqual("item1", l[1]);
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
-        public void Listener()
+        public void AddListener()
         {
-            //        final ISet tempSet = server.getSet(name);
-            var tempList = list;
+            var tempList = _list;
 
             var latch = new CountdownEvent(6);
 
-            var listener = new ListenerImpl<object>(latch);
+            var listener = new Listener<object>(latch);
             var registrationId = tempList.AddItemListener(listener, true);
 
-            var t = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
                 for (var i = 0; i < 5; i++)
                 {
                     tempList.Add("item" + i);
                 }
+
                 tempList.Add("done");
             });
-            t.Start();
+
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(20)));
         }
 
@@ -227,12 +225,12 @@ namespace Hazelcast.Client.Test
         {
             var latch = new CountdownEvent(1);
 
-            var listener = new ListenerImpl<object>(latch);
-            var registrationId = list.AddItemListener(listener, true);
+            var listener = new Listener<object>(latch);
+            var registrationId = _list.AddItemListener(listener, true);
 
-            Assert.IsTrue(list.RemoveItemListener(registrationId));
+            Assert.IsTrue(_list.RemoveItemListener(registrationId));
 
-            var t = new Thread(o => list.Add("item"));
+            var t = new Thread(o => _list.Add("item"));
             t.Start();
 
             Assert.IsFalse(latch.Wait(TimeSpan.FromSeconds(10)));

@@ -33,7 +33,7 @@ namespace Hazelcast.Core
         /// <typeparam name="TE">type of elements</typeparam>
         /// <param name="c">element collection</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        bool AddAll<TE>(ICollection<TE> c);
+        bool AddAll<TE>(IEnumerable<TE> c);
 
         /// <summary>Adds an item listener for this collection.</summary>
         /// <remarks>
@@ -54,7 +54,7 @@ namespace Hazelcast.Core
         /// <typeparam name="TE">type of elements</typeparam>
         /// <param name="c">The collection</param>
         /// <returns><c>true</c> if this collection contains all of the elements in the specified collection; otherwise, <c>false</c>.</returns>
-        bool ContainsAll<TE>(ICollection<TE> c);
+        bool ContainsAll<TE>(IEnumerable<TE> c);
 
         /// <summary>
         /// Determines whether this instance is empty.
@@ -68,7 +68,7 @@ namespace Hazelcast.Core
         /// <typeparam name="TE">type of elements</typeparam>
         /// <param name="c">element collection to be removed</param>
         /// <returns><c>true</c> if all removed, <c>false</c> otherwise.</returns>
-        bool RemoveAll<TE>(ICollection<TE> c);
+        bool RemoveAll<TE>(IEnumerable<TE> c);
 
         /// <summary>Removes the specified item listener.</summary>
         /// <remarks>
@@ -89,7 +89,7 @@ namespace Hazelcast.Core
         /// <typeparam name="TE">type of elements</typeparam>
         /// <param name="c">The c.</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        bool RetainAll<TE>(ICollection<TE> c);
+        bool RetainAll<TE>(IEnumerable<TE> c);
 
         /// <summary>
         /// Gets the number of elements contained in the collection.

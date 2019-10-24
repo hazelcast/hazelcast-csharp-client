@@ -34,10 +34,10 @@ namespace Hazelcast.Client.Proxy
         public abstract bool RemoveItemListener(string registrationId);
         public abstract int Size();
         public abstract bool IsEmpty();
-        public abstract bool ContainsAll<TE>(ICollection<TE> c);
-        public abstract bool RemoveAll<TE>(ICollection<TE> c);
-        public abstract bool RetainAll<TE>(ICollection<TE> c);
-        public abstract bool AddAll<TE>(ICollection<TE> c);
+        public abstract bool ContainsAll<TE>(IEnumerable<TE> c);
+        public abstract bool RemoveAll<TE>(IEnumerable<TE> c);
+        public abstract bool RetainAll<TE>(IEnumerable<TE> c);
+        public abstract bool AddAll<TE>(IEnumerable<TE> c);
         public abstract bool Add(T item);
         public abstract void Clear();
         public abstract bool Contains(T item);

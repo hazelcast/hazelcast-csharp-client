@@ -133,10 +133,10 @@ namespace Hazelcast.Client.Spi
             return set;
         }
 
-        protected IList<IData> ToDataList<T>(ICollection<T> c)
+        protected IList<IData> ToDataList<T>(IEnumerable<T> c)
         {
             ValidationUtil.ThrowExceptionIfNull(c, "Collection cannot be null.");
-            var values = new List<IData>(c.Count);
+            var values = new List<IData>();
             foreach (var o in c)
             {
                 ValidationUtil.ThrowExceptionIfNull(o, "Collection cannot contain null items.");

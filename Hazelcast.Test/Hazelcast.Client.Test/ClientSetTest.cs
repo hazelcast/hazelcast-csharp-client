@@ -13,9 +13,10 @@
 // limitations under the License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -27,135 +28,120 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            set = Client.GetSet<object>(TestSupport.RandomString());
+            _set = Client.GetSet<object>(TestSupport.RandomString());
         }
 
         [TearDown]
-        public static void Destroy()
+        public void Destroy()
         {
-            set.Clear();
+            _set.Clear();
         }
 
-        //internal const string name = "test";
+        private IHSet<object> _set;
+        private static readonly string[] FourItems = { "item1", "item2", "item3", "item4" };
 
-        internal static IHSet<object> set;
+        private void AddFourItems()
+        {
+            foreach (var item in FourItems)
+            {
+                Assert.IsTrue(_set.Add(item));
+            }
+        }
 
         [Test]
         public void RemoveRetainAll()
         {
-            Assert.IsTrue(set.Add("item1"));
-            Assert.IsTrue(set.Add("item2"));
-            Assert.IsTrue(set.Add("item3"));
-            Assert.IsTrue(set.Add("item4"));
-            var l = new List<object>();
-            l.Add("item4");
-            l.Add("item3");
-            Assert.IsTrue(set.RemoveAll(l));
-            Assert.AreEqual(2, set.Count);
-            Assert.IsFalse(set.RemoveAll(l));
-            Assert.AreEqual(2, set.Count);
-            l.Clear();
-            l.Add("item1");
-            l.Add("item2");
-            Assert.IsFalse(set.RetainAll(l));
-            Assert.AreEqual(2, set.Count);
-            l.Clear();
-            Assert.IsTrue(set.RetainAll(l));
-            Assert.AreEqual(0, set.Count);
+            AddFourItems();
+
+            var l = new[] { FourItems[3], FourItems[2] };
+
+            Assert.IsTrue(_set.RemoveAll(l));
+            Assert.AreEqual(2, _set.Count);
+            Assert.IsFalse(_set.RemoveAll(l));
+            Assert.AreEqual(2, _set.Count);
+
+            l = new[] { FourItems[1], FourItems[0] };
+            Assert.IsFalse(_set.RetainAll(l));
+            Assert.AreEqual(2, _set.Count);
+
+            Assert.IsTrue(_set.RetainAll(Enumerable.Empty<object>()));
+            Assert.AreEqual(0, _set.Count);
         }
 
         [Test]
         public void AddAll()
         {
-            var l = new List<object>();
-            l.Add("item1");
-            l.Add("item2");
-            Assert.IsTrue(set.AddAll(l));
-            Assert.AreEqual(2, set.Count);
-            Assert.IsFalse(set.AddAll(l));
-            Assert.AreEqual(2, set.Count);
+            var l = new List<object> { "item1", "item2" };
+
+            Assert.IsTrue(_set.AddAll(l));
+            Assert.AreEqual(2, _set.Count);
+            Assert.IsFalse(_set.AddAll(l));
+            Assert.AreEqual(2, _set.Count);
         }
 
         [Test]
         public void AddRemove()
         {
-            Assert.IsTrue(set.Add("item1"));
-            Assert.IsTrue(set.Add("item2"));
-            Assert.IsTrue(set.Add("item3"));
-            Assert.AreEqual(3, set.Count);
-            Assert.IsFalse(set.Add("item3"));
-            Assert.AreEqual(3, set.Count);
-            Assert.IsFalse(set.Remove("item4"));
-            Assert.IsTrue(set.Remove("item3"));
+            Assert.IsTrue(_set.Add("item1"));
+            Assert.IsTrue(_set.Add("item2"));
+            Assert.IsTrue(_set.Add("item3"));
+            Assert.AreEqual(3, _set.Count);
+            Assert.IsFalse(_set.Add("item3"));
+            Assert.AreEqual(3, _set.Count);
+            Assert.IsFalse(_set.Remove("item4"));
+            Assert.IsTrue(_set.Remove("item3"));
         }
 
         [Test]
         public void Contains()
         {
-            Assert.IsTrue(set.Add("item1"));
-            Assert.IsTrue(set.Add("item2"));
-            Assert.IsTrue(set.Add("item3"));
-            Assert.IsTrue(set.Add("item4"));
-            Assert.IsFalse(set.Contains("item5"));
-            Assert.IsTrue(set.Contains("item2"));
-            var l = new List<object>();
-            l.Add("item6");
-            l.Add("item3");
-            Assert.IsFalse(set.ContainsAll(l));
-            Assert.IsTrue(set.Add("item6"));
-            Assert.IsTrue(set.ContainsAll(l));
+            AddFourItems();
+
+            Assert.IsFalse(_set.Contains("item5"));
+            Assert.IsTrue(_set.Contains("item2"));
+
+            var l = new List<object> { "item6", "item3" };
+            Assert.IsFalse(_set.ContainsAll(l));
+            Assert.IsTrue(_set.Add("item6"));
+            Assert.IsTrue(_set.ContainsAll(l));
         }
 
         [Test]
         public void IsEmpty()
         {
-            Assert.IsTrue(set.IsEmpty());
-            set.Add("item1");
-            Assert.IsFalse(set.IsEmpty());
-            set.Clear();
-            Assert.IsTrue(set.IsEmpty());
+            Assert.IsTrue(_set.IsEmpty());
+            _set.Add("item1");
+            Assert.IsFalse(_set.IsEmpty());
+            _set.Clear();
+            Assert.IsTrue(_set.IsEmpty());
         }
 
         [Test]
-        public void Iterator()
+        public void Enumeration()
         {
-            Assert.IsTrue(set.Add("item1"));
-            Assert.IsTrue(set.Add("item2"));
-            Assert.IsTrue(set.Add("item3"));
-            Assert.IsTrue(set.Add("item4"));
-            IEnumerator iter = set.GetEnumerator();
+            AddFourItems();
 
-            iter.MoveNext();
-            Assert.IsTrue(((string) iter.Current).StartsWith("item"));
-            iter.MoveNext();
-            Assert.IsTrue(((string) iter.Current).StartsWith("item"));
-            iter.MoveNext();
-            Assert.IsTrue(((string) iter.Current).StartsWith("item"));
-            iter.MoveNext();
-            Assert.IsTrue(((string) iter.Current).StartsWith("item"));
-            Assert.IsFalse(iter.MoveNext());
+            var count = 0;
+            foreach (var item in _set)
+            {
+                Assert.That((string)item, Does.StartWith("item"));
+                count++;
+            }
+
+            Assert.AreEqual(4, count);
         }
 
-        /// <exception cref="System.Exception"></exception>
         [Test]
         public void Listener()
         {
-            ////        final ISet tempSet = server.getSet(name);
-            //ISet tempSet = set;
-            //CountDownLatch latch = new CountDownLatch(6);
-            //ItemListener listener = new _ItemListener_149(latch);
-            //string registrationId = tempSet.AddListener(listener, true);
-            //new _Thread_160(tempSet).Start();
-            //Assert.IsTrue(latch.Await(20, TimeUnit.Seconds));
-
-            var tempSet = set;
+            var tempSet = _set;
 
             var latch = new CountdownEvent(6);
 
-            var listener = new ClientListTest.ListenerImpl<object>(latch);
+            var listener = new ClientListTest.Listener<object>(latch);
             var registrationId = tempSet.AddItemListener(listener, true);
 
-            var t = new Thread(delegate(object o)
+            var t = Task.Run(() =>
             {
                 for (var i = 0; i < 5; i++)
                 {
@@ -163,17 +149,16 @@ namespace Hazelcast.Client.Test
                 }
                 tempSet.Add("done");
             });
-            t.Start();
             Assert.IsTrue(latch.Wait(TimeSpan.FromSeconds(20)));
         }
 
         [Test]
         public void RemoveListener()
         {
-            var tempSet = set;
+            var tempSet = _set;
             var latch = new CountdownEvent(1);
 
-            var listener = new ClientListTest.ListenerImpl<object>(latch);
+            var listener = new ClientListTest.Listener<object>(latch);
             var registrationId = tempSet.AddItemListener(listener, true);
 
             Assert.IsTrue(tempSet.RemoveItemListener(registrationId));

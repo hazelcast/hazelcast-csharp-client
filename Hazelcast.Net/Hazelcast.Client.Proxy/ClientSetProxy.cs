@@ -82,28 +82,28 @@ namespace Hazelcast.Client.Proxy
             return Invoke(request, m => SetIsEmptyCodec.DecodeResponse(m).response);
         }
 
-        public override bool ContainsAll<TE>(ICollection<TE> c)
+        public override bool ContainsAll<TE>(IEnumerable<TE> c)
         {
             var values = ToDataList(c);
             var request = SetContainsAllCodec.EncodeRequest(GetName(), values);
             return Invoke(request, m => SetContainsAllCodec.DecodeResponse(m).response);
         }
 
-        public override bool RemoveAll<TE>(ICollection<TE> c)
+        public override bool RemoveAll<TE>(IEnumerable<TE> c)
         {
             var values = ToDataList(c);
             var request = SetCompareAndRemoveAllCodec.EncodeRequest(GetName(), values);
             return Invoke(request, m => SetCompareAndRemoveAllCodec.DecodeResponse(m).response);
         }
 
-        public override bool RetainAll<TE>(ICollection<TE> c)
+        public override bool RetainAll<TE>(IEnumerable<TE> c)
         {
             var values = ToDataList(c);
             var request = SetCompareAndRetainAllCodec.EncodeRequest(GetName(), values);
             return Invoke(request, m => SetCompareAndRetainAllCodec.DecodeResponse(m).response);
         }
 
-        public override bool AddAll<TE>(ICollection<TE> c)
+        public override bool AddAll<TE>(IEnumerable<TE> c)
         {
             var values = ToDataList(c);
             var request = SetAddAllCodec.EncodeRequest(GetName(), values);
