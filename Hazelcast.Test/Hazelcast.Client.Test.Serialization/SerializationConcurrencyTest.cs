@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Test.Serialization
         /// <exception cref="System.IO.IOException" />
         /// <exception cref="System.Exception" />
         [Test]
-        public void Test()
+        public void ConcurrentTest()
         {
             var portableFactory = new PortableFactoryFunc(i =>
             {

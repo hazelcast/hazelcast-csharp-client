@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Test
         private IAtomicLong l;
 
         [Test]
-        public void Test()
+        public void AllOperations()
         {
             Assert.AreEqual(0, l.GetAndAdd(2));
             Assert.AreEqual(2, l.Get());
