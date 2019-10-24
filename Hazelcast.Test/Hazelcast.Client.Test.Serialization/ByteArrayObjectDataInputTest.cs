@@ -26,35 +26,35 @@ namespace Hazelcast.Client.Test.Serialization
         private ByteArrayObjectDataInput _input;
 
         [TearDown]
-        public virtual void After()
+        public void TearDown()
         {
             _input.Close();
         }
 
         [SetUp]
-        public virtual void Before()
+        public void SetUp()
         {
             _input = new ByteArrayObjectDataInput(InitData, null, ByteOrder.BigEndian);
         }
 
         [Test]
-        public virtual void TestAvailable()
+        public void Available()
         {
             Assert.AreEqual(_input.Size - _input.Pos, _input.Available());
         }
 
-        public virtual void TestCheckAvailable()
+        public void CheckAvailable()
         {
             _input.CheckAvailable(-1, InitData.Length);
         }
 
-        public virtual void TestCheckAvailable_EOF()
+        public void CheckAvailable_EOF()
         {
             _input.CheckAvailable(0, InitData.Length + 1);
         }
 
         [Test]
-        public virtual void TestClose()
+        public void Close()
         {
             _input.Close();
             Assert.IsNull(_input.Data);
@@ -62,7 +62,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestGetByteOrder()
+        public void GetByteOrder()
         {
             var input = new ByteArrayObjectDataInput(InitData, null, ByteOrder.LittleEndian);
             Assert.AreEqual(ByteOrder.BigEndian, _input.GetByteOrder());
@@ -70,7 +70,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestInit()
+        public void Init()
         {
             _input.Init(InitData, 2);
             Assert.AreEqual(InitData, _input.Data);
@@ -79,7 +79,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestMark()
+        public void Mark()
         {
             _input.Position(1);
             _input.Mark(1);
@@ -87,31 +87,31 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestMarkSupported()
+        public void MarkSupported()
         {
             Assert.IsTrue(_input.MarkSupported());
         }
 
         [Test]
-        public virtual void TestPosition()
+        public void Position()
         {
             Assert.AreEqual(0, _input.Position());
         }
 
         [Test]
-        public virtual void TestPositionNewPos()
+        public void PositionNewPos()
         {
             _input.Position(InitData.Length - 1);
             Assert.AreEqual(InitData.Length - 1, _input.Position());
         }
 
-        public virtual void TestPositionNewPos_HighNewPos()
+        public void PositionNewPos_HighNewPos()
         {
             _input.Position(InitData.Length + 10);
         }
 
         [Test]
-        public virtual void TestPositionNewPos_mark()
+        public void PositionNewPos_mark()
         {
             _input.Position(InitData.Length - 1);
             _input.Mark(0);
@@ -122,20 +122,20 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.AreEqual(-1, _input.MarkPos);
         }
 
-        public virtual void TestPositionNewPos_negativeNewPos()
+        public void PositionNewPos_negativeNewPos()
         {
             _input.Position(-1);
         }
 
         [Test]
-        public virtual void TestRead()
+        public void Read()
         {
             var read = _input.Read();
             Assert.AreEqual(0, read);
         }
 
         [Test]
-        public virtual void TestReadBoolean()
+        public void ReadBoolean()
         {
             var read1 = _input.ReadBoolean();
             var read2 = _input.ReadBoolean();
@@ -143,14 +143,14 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsTrue(read2);
         }
 
-        public virtual void TestReadBoolean_EOF()
+        public void ReadBoolean_EOF()
         {
             _input.Pos = InitData.Length + 1;
             _input.ReadBoolean();
         }
 
         [Test]
-        public virtual void TestReadBooleanArray()
+        public void ReadBooleanArray()
         {
             byte[] bytes1 =
             {
@@ -170,7 +170,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadBooleanPosition()
+        public void ReadBooleanPosition()
         {
             var read1 = _input.ReadBoolean(0);
             var read2 = _input.ReadBoolean(1);
@@ -178,26 +178,26 @@ namespace Hazelcast.Client.Test.Serialization
             Assert.IsTrue(read2);
         }
 
-        public virtual void TestReadBooleanPosition_EOF()
+        public void ReadBooleanPosition_EOF()
         {
             _input.ReadBoolean(InitData.Length + 1);
         }
 
         [Test]
-        public virtual void TestReadByte()
+        public void ReadByte()
         {
             int read = _input.ReadByte();
             Assert.AreEqual(0, read);
         }
 
-        public virtual void TestReadByte_EOF()
+        public void ReadByte_EOF()
         {
             _input.Pos = InitData.Length + 1;
             _input.ReadByte();
         }
 
         [Test]
-        public virtual void TestReadByteArray()
+        public void ReadByteArray()
         {
             byte[] bytes1 =
             {
@@ -217,26 +217,26 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadBytePosition()
+        public void ReadBytePosition()
         {
             int read = _input.ReadByte(1);
             Assert.AreEqual(1, read);
         }
 
-        public virtual void TestReadBytePosition_EOF()
+        public void ReadBytePosition_EOF()
         {
             _input.ReadByte(InitData.Length + 1);
         }
 
         [Test]
-        public virtual void TestReadChar()
+        public void ReadChar()
         {
             var c = _input.ReadChar();
             Assert.AreEqual(1, c);
         }
 
         [Test]
-        public virtual void TestReadCharArray()
+        public void ReadCharArray()
         {
             byte[] bytes1 =
             {
@@ -256,14 +256,14 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadCharPosition()
+        public void ReadCharPosition()
         {
             var c = _input.ReadChar(0);
             Assert.AreEqual(1, c);
         }
 
         [Test]
-        public virtual void TestReadData()
+        public void ReadData()
         {
             byte[] bytes1 =
             {
@@ -292,7 +292,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadDouble()
+        public void ReadDouble()
         {
             var readDouble = _input.ReadDouble();
             var longB = Bits.ReadLongB(InitData, 0);
@@ -301,7 +301,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadDoubleArray()
+        public void ReadDoubleArray()
         {
             byte[] bytes1 =
             {
@@ -314,7 +314,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadDoubleByteOrder()
+        public void ReadDoubleByteOrder()
         {
             var readDouble = _input.ReadDouble(ByteOrder.LittleEndian);
             var longB = Bits.ReadLong(InitData, 0, false);
@@ -323,7 +323,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadDoubleForPositionByteOrder()
+        public void ReadDoubleForPositionByteOrder()
         {
             var readDouble = _input.ReadDouble(2, ByteOrder.LittleEndian);
             var longB = Bits.ReadLong(InitData, 2, false);
@@ -332,7 +332,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadDoublePosition()
+        public void ReadDoublePosition()
         {
             var readDouble = _input.ReadDouble(2);
             var longB = Bits.ReadLongB(InitData, 2);
@@ -341,7 +341,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadFloat()
+        public void ReadFloat()
         {
             double readFloat = _input.ReadFloat();
             var intB = Bits.ReadIntB(InitData, 0);
@@ -350,7 +350,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadFloatArray()
+        public void ReadFloatArray()
         {
             byte[] bytes1 =
             {
@@ -363,7 +363,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadFloatByteOrder()
+        public void ReadFloatByteOrder()
         {
             double readFloat = _input.ReadFloat(ByteOrder.LittleEndian);
             var intB = Bits.ReadIntL(InitData, 0);
@@ -372,7 +372,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadFloatForPositionByteOrder()
+        public void ReadFloatForPositionByteOrder()
         {
             double readFloat = _input.ReadFloat(2, ByteOrder.LittleEndian);
             var intB = Bits.ReadIntL(InitData, 2);
@@ -381,7 +381,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadFloatPosition()
+        public void ReadFloatPosition()
         {
             double readFloat = _input.ReadFloat(2);
             var intB = Bits.ReadIntB(InitData, 2);
@@ -390,29 +390,29 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadForBOffLen()
+        public void ReadForBOffLen()
         {
             var read = _input.Read(InitData, 0, 5);
             Assert.AreEqual(5, read);
         }
 
-        public virtual void TestReadForBOffLen_negativeLen()
+        public void ReadForBOffLen_negativeLen()
         {
             _input.Read(InitData, 0, -11);
         }
 
-        public virtual void TestReadForBOffLen_negativeOffset()
+        public void ReadForBOffLen_negativeOffset()
         {
             _input.Read(InitData, -10, 1);
         }
 
-        public virtual void TestReadForBOffLen_null_array()
+        public void ReadForBOffLen_null_array()
         {
             _input.Read(null, 0, 1);
         }
 
         [Test]
-        public virtual void TestReadForBOffLen_pos_gt_size()
+        public void ReadForBOffLen_pos_gt_size()
         {
             _input.Pos = 100;
             var read = _input.Read(InitData, 0, 1);
@@ -420,14 +420,14 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadFullyB()
+        public void ReadFullyB()
         {
             var readFull = new byte[InitData.Length];
             _input.ReadFully(readFull);
             Assert.AreEqual(readFull, _input.Data);
         }
 
-        public virtual void TestReadFullyB_EOF()
+        public void ReadFullyB_EOF()
         {
             _input.Position(InitData.Length);
             var readFull = new byte[InitData.Length];
@@ -435,7 +435,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadFullyForBOffLen()
+        public void ReadFullyForBOffLen()
         {
             var readFull = new byte[10];
             _input.ReadFully(readFull, 0, 5);
@@ -445,7 +445,7 @@ namespace Hazelcast.Client.Test.Serialization
             }
         }
 
-        public virtual void TestReadFullyForBOffLen_EOF()
+        public void ReadFullyForBOffLen_EOF()
         {
             _input.Position(InitData.Length);
             var readFull = new byte[InitData.Length];
@@ -453,7 +453,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadInt()
+        public void ReadInt()
         {
             var readInt = _input.ReadInt();
             var theInt = Bits.ReadIntB(InitData, 0);
@@ -461,7 +461,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadIntArray()
+        public void ReadIntArray()
         {
             byte[] bytes1 =
             {
@@ -481,7 +481,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadIntByteOrder()
+        public void ReadIntByteOrder()
         {
             var readInt = _input.ReadInt(ByteOrder.LittleEndian);
             var theInt = Bits.ReadIntL(InitData, 0);
@@ -489,7 +489,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadIntForPositionByteOrder()
+        public void ReadIntForPositionByteOrder()
         {
             var readInt = _input.ReadInt(3, ByteOrder.LittleEndian);
             var theInt = Bits.ReadIntL(InitData, 3);
@@ -497,7 +497,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadIntPosition()
+        public void ReadIntPosition()
         {
             var readInt = _input.ReadInt(2);
             var theInt = Bits.ReadIntB(InitData, 2);
@@ -505,7 +505,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadLong()
+        public void ReadLong()
         {
             var readLong = _input.ReadLong();
             var longB = Bits.ReadLongB(InitData, 0);
@@ -513,7 +513,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadLongArray()
+        public void ReadLongArray()
         {
             byte[] bytes1 =
             {
@@ -533,7 +533,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadLongByteOrder()
+        public void ReadLongByteOrder()
         {
             var readLong = _input.ReadLong(ByteOrder.LittleEndian);
             var longB = Bits.ReadLongL(InitData, 0);
@@ -541,7 +541,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadLongForPositionByteOrder()
+        public void ReadLongForPositionByteOrder()
         {
             var readLong = _input.ReadLong(2, ByteOrder.LittleEndian);
             var longB = Bits.ReadLongL(InitData, 2);
@@ -549,7 +549,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadLongPosition()
+        public void ReadLongPosition()
         {
             var readLong = _input.ReadLong(2);
             var longB = Bits.ReadLongB(InitData, 2);
@@ -557,14 +557,14 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadPosition()
+        public void ReadPosition()
         {
             var read = _input.Read(1);
             Assert.AreEqual(1, read);
         }
 
         [Test]
-        public virtual void TestReadShort()
+        public void ReadShort()
         {
             var read = _input.ReadShort();
             var val = Bits.ReadShortB(InitData, 0);
@@ -572,7 +572,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadShortArray()
+        public void ReadShortArray()
         {
             byte[] bytes1 =
             {
@@ -592,7 +592,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadShortByteOrder()
+        public void ReadShortByteOrder()
         {
             var read = _input.ReadShort(ByteOrder.LittleEndian);
             var val = Bits.ReadShortL(InitData, 0);
@@ -600,7 +600,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadShortForPositionByteOrder()
+        public void ReadShortForPositionByteOrder()
         {
             var read = _input.ReadShort(1, ByteOrder.LittleEndian);
             var val = Bits.ReadShortL(InitData, 1);
@@ -608,7 +608,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadShortPosition()
+        public void ReadShortPosition()
         {
             var read = _input.ReadShort(1);
             var val = Bits.ReadShortB(InitData, 1);
@@ -616,7 +616,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadUnsignedByte()
+        public void ReadUnsignedByte()
         {
             byte[] bytes1 =
             {
@@ -629,7 +629,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadUnsignedShort()
+        public void ReadUnsignedShort()
         {
             byte[] bytes1 =
             {
@@ -642,12 +642,12 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReadUTF()
+        public void ReadUTF()
         {
         }
 
         [Test]
-        public virtual void TestReadUTFArray()
+        public void ReadUTFArray()
         {
             byte[] bytes1 =
             {
@@ -660,7 +660,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestReset()
+        public void Reset()
         {
             _input.Position(1);
             _input.Mark(1);
@@ -669,7 +669,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestSkip()
+        public void Skip()
         {
             var s1 = _input.Skip(-1);
             var s2 = _input.Skip(int.MaxValue);
@@ -680,7 +680,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestSkipBytes()
+        public void SkipBytes()
         {
             long s1 = _input.SkipBytes(-1);
             long s3 = _input.SkipBytes(1);
@@ -689,7 +689,7 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-        public virtual void TestToString()
+        public void ToString()
         {
             Assert.IsNotNull(_input.ToString());
         }

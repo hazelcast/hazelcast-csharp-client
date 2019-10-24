@@ -53,19 +53,19 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Test_Add_Pair()
+        public void Add_Pair()
         {
             Assert.Throws<NotSupportedException>(() => { TestCollection.Add(new KeyValuePair<int, string>(1, "")); });
         }
 
         [Test]
-        public void Test_Clear()
+        public void Clear()
         {
             Assert.Throws<NotSupportedException>(() => TestCollection.Clear());
         }
 
         [Test]
-        public void Test_Contains()
+        public void Contains()
         {
             for (var i = 0; i < 4; i++)
             {
@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Test_CopyTo()
+        public void CopyTo()
         {
             var copyArray = new KeyValuePair<int, string>[TestCollection.Count + 5];
             TestCollection.CopyTo(copyArray, 1);
@@ -86,31 +86,31 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Test_Remove_pair()
+        public void Remove_pair()
         {
             Assert.Throws<NotSupportedException>(() => TestCollection.Remove(2));
         }
 
         [Test]
-        public void Test_Count()
+        public void Count()
         {
             Assert.AreEqual(4, TestCollection.Count);
         }
 
         [Test]
-        public void Test_IsReadOnly()
+        public void IsReadOnly()
         {
             Assert.True(TestCollection.IsReadOnly);
         }
 
         [Test]
-        public void Test_Add_key_value()
+        public void Add_key_value()
         {
             Assert.Throws<NotSupportedException>(() => { TestCollection.Add(1, ""); });
         }
 
         [Test]
-        public void Test_ContainsKey()
+        public void ContainsKey()
         {
             for (var i = 0; i < 4; i++)
             {
@@ -119,13 +119,13 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Test_Remove_key()
+        public void Remove_key()
         {
             Assert.Throws<NotSupportedException>(() => { TestCollection.Remove(1); });
         }
 
         [Test]
-        public void Test_TryGetValue()
+        public void TryGetValue()
         {
             for (var i = 0; i < 5; i++)
             {
@@ -137,7 +137,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
-        public void Test_Index_operator()
+        public void Index_operator()
         {
             for (var i = 0; i < 4; i++)
             {
