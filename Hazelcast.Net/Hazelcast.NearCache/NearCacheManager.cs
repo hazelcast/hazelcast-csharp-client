@@ -143,7 +143,7 @@ namespace Hazelcast.NearCache
             var dataMembers = _client.GetClientClusterService().GetMemberList().Where(member => !member.IsLiteMember);
             foreach (var member in dataMembers)
             {
-                var address = member.GetAddress();
+                var address = member.Address;
                 var request = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, address);
                 try
                 {

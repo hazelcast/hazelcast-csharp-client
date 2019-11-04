@@ -169,7 +169,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public com.hazelcast.nio.Address Address;
+            public IO.Address Address;
 
             /// <summary>
             /// Unique string identifying the connected client uniquely.
@@ -199,7 +199,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public Guid ClusterId;
         }
 
-        public static ClientMessage EncodeResponse(byte status, com.hazelcast.nio.Address address, Guid uuid, byte serializationVersion, string serverHazelcastVersion, int partitionCount, Guid clusterId) 
+        public static ClientMessage EncodeResponse(byte status, IO.Address address, Guid uuid, byte serializationVersion, string serverHazelcastVersion, int partitionCount, Guid clusterId) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

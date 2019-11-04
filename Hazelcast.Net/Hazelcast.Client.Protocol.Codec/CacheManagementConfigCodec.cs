@@ -67,10 +67,10 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// the address of the host to enable.
             ///</summary>
-            public com.hazelcast.nio.Address Address;
+            public IO.Address Address;
         }
 
-        public static ClientMessage EncodeRequest(string name, bool isStat, bool enabled, com.hazelcast.nio.Address address) 
+        public static ClientMessage EncodeRequest(string name, bool isStat, bool enabled, IO.Address address) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;

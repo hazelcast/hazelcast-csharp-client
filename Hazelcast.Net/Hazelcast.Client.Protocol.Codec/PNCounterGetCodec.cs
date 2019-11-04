@@ -69,10 +69,10 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// the target replica
             ///</summary>
-            public com.hazelcast.nio.Address TargetReplica;
+            public IO.Address TargetReplica;
         }
 
-        public static ClientMessage EncodeRequest(string name, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, com.hazelcast.nio.Address targetReplica) 
+        public static ClientMessage EncodeRequest(string name, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, IO.Address targetReplica) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;

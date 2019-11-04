@@ -99,7 +99,7 @@ namespace Hazelcast.Client.Connection
                 var connectionTimeout = clientNetworkConfig.GetConnectionTimeout() > -1
                     ? clientNetworkConfig.GetConnectionTimeout()
                     : ConnectionTimeout;
-                var socketResult = _clientSocket.BeginConnect(address.GetInetAddress(), address.GetPort(), null, null);
+                var socketResult = _clientSocket.BeginConnect(address.GetInetAddress(), address.Port, null, null);
 
                 if (!socketResult.AsyncWaitHandle.WaitOne(connectionTimeout, true) || !_clientSocket.Connected)
                 {
@@ -244,7 +244,7 @@ namespace Hazelcast.Client.Connection
 
         public Address GetAddress()
         {
-            return _member != null ? _member.GetAddress() : null;
+            return _member != null ? _member.Address : null;
         }
 
         public IPEndPoint GetLocalSocketAddress()

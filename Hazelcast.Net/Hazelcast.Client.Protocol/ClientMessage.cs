@@ -20,7 +20,7 @@ using static Hazelcast.IO.Bits;
 
 namespace Hazelcast.Client.Protocol
 {
-    internal class ClientMessage //, IOutboundFrame
+    public class ClientMessage //, IOutboundFrame
     {
         // All offsets here are offset of frame.content byte[]
         // Note that frames have frame length and flags before this byte[] content
@@ -166,10 +166,9 @@ namespace Hazelcast.Client.Protocol
         public override string ToString()
         {
             var sb = new StringBuilder("ClientMessage{");
-            sb.Append("connection=").Append(Connection);
             if (_written > 0)
             {
-                sb.Append(", length=").Append(FrameLength);
+                sb.Append("length=").Append(FrameLength);
                 sb.Append(", correlationId=").Append(CorrelationId);
                 sb.Append(", operation=").Append(OperationName);
                 sb.Append(", messageType=").Append(MessageType.ToString("X"));

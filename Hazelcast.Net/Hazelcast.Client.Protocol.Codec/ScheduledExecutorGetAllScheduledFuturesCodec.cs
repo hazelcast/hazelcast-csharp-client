@@ -82,10 +82,10 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// A list of scheduled task handlers used to construct the future proxies.
             ///</summary>
-            public IList<KeyValuePair<com.hazelcast.cluster.Member, IList<com.hazelcast.scheduledexecutor.ScheduledTaskHandler>>> Handlers;
+            public IList<KeyValuePair<Core.Member, IList<com.hazelcast.scheduledexecutor.ScheduledTaskHandler>>> Handlers;
         }
 
-        public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<com.hazelcast.cluster.Member, IEnumerable<com.hazelcast.scheduledexecutor.ScheduledTaskHandler>>> handlers) 
+        public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<Core.Member, IEnumerable<com.hazelcast.scheduledexecutor.ScheduledTaskHandler>>> handlers) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

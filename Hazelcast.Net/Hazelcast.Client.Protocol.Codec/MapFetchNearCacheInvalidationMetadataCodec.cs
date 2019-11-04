@@ -55,10 +55,10 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public com.hazelcast.nio.Address Address;
+            public IO.Address Address;
         }
 
-        public static ClientMessage EncodeRequest(IEnumerable<string> names, com.hazelcast.nio.Address address) 
+        public static ClientMessage EncodeRequest(IEnumerable<string> names, IO.Address address) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;

@@ -33,7 +33,7 @@ namespace Hazelcast.Core
         /// </returns>
         bool IsLiteMember { get; }
 
-        Address GetAddress();
+        Address Address { get; }
 
         string GetAttribute(string key);
 
@@ -41,8 +41,8 @@ namespace Hazelcast.Core
         /// Returns configured attributes for this member.<br/>
         /// <b>This method might not be available on all native clients.</b>
         /// </summary>
-        /// <returns>Attributes for this member.</returns>
+        /// <value>Attributes for this member.</value>
         /// <since>3.2</since>
-        IDictionary<string, string> GetAttributes();
+        IDictionary<string, string> Attributes { get; }
     }
 }

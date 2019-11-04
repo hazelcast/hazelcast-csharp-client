@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The address of the member where the task will get scheduled.
             ///</summary>
-            public com.hazelcast.nio.Address Address;
+            public IO.Address Address;
 
             /// <summary>
             /// type of schedule logic, values 0 for SINGLE_RUN, 1 for AT_FIXED_RATE
@@ -86,7 +86,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public long PeriodInMillis;
         }
 
-        public static ClientMessage EncodeRequest(string schedulerName, com.hazelcast.nio.Address address, byte type, string taskName, IData task, long initialDelayInMillis, long periodInMillis) 
+        public static ClientMessage EncodeRequest(string schedulerName, IO.Address address, byte type, string taskName, IData task, long initialDelayInMillis, long periodInMillis) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;

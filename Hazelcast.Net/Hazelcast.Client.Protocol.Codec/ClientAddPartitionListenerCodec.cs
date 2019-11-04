@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return response;
         }
     
-        public static ClientMessage EncodePartitionsEvent(IEnumerable<KeyValuePair<com.hazelcast.nio.Address, IEnumerable<int>>> partitions, int partitionStateVersion) 
+        public static ClientMessage EncodePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IEnumerable<int>>> partitions, int partitionStateVersion) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventPartitionsInitialFrameSize], UnfragmentedMessage);
@@ -118,14 +118,14 @@ namespace Hazelcast.Client.Protocol.Codec
                 if (messageType == EventPartitionsMessageType) {
                     var initialFrame = iterator.Next();
                     int partitionStateVersion =  DecodeInt(initialFrame.Content, EventPartitionsPartitionStateVersionFieldOffset);
-                    IList<KeyValuePair<com.hazelcast.nio.Address, IList<int>>> partitions = EntryListAddressListIntegerCodec.Decode(ref iterator);
+                    IList<KeyValuePair<IO.Address, IList<int>>> partitions = EntryListAddressListIntegerCodec.Decode(ref iterator);
                     HandlePartitionsEvent(partitions, partitionStateVersion);
                     return;
                 }
                 Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
             }
 
-            public abstract void HandlePartitionsEvent(IEnumerable<KeyValuePair<com.hazelcast.nio.Address, IEnumerable<int>>> partitions, int partitionStateVersion);
+            public abstract void HandlePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IEnumerable<int>>> partitions, int partitionStateVersion);
         }
     }
 }

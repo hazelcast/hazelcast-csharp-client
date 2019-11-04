@@ -48,12 +48,12 @@ namespace Hazelcast.Client.Test
             {
                 OnMemberAdded = membershipEvent =>
                 {
-                    Interlocked.Exchange(ref addedMemberReferenceUUID, membershipEvent.GetMember().GetUuid());
+                    Interlocked.Exchange(ref addedMemberReferenceUUID, membershipEvent.GetMember().Uuid());
                     memberAdded.Signal();
                 },
                 OnMemberRemoved = membershipEvent =>
                 {
-                    Interlocked.Exchange(ref removedMemberReferenceUUID, membershipEvent.GetMember().GetUuid());
+                    Interlocked.Exchange(ref removedMemberReferenceUUID, membershipEvent.GetMember().Uuid());
                     memberRemoved.Signal();
                 }
             });
@@ -68,7 +68,7 @@ namespace Hazelcast.Client.Test
             Assert.AreEqual(newMemberUUID, addedMemberReferenceUUID);
 
             var members = Client.GetCluster().GetMembers();
-            Assert.True(members.Any(member => member.GetUuid() == newMemberUUID));
+            Assert.True(members.Any(member => member.Uuid() == newMemberUUID));
             Assert.AreEqual(1, members.Count);
         }
 
@@ -93,12 +93,12 @@ namespace Hazelcast.Client.Test
             {
                 OnMemberAdded = membershipEvent =>
                 {
-                    addedMemberUUIDs.Add(membershipEvent.GetMember().GetUuid());
+                    addedMemberUUIDs.Add(membershipEvent.GetMember().Uuid());
                     memberAdded.Signal();
                 },
                 OnMemberRemoved = membershipEvent =>
                 {
-                    removedMemberUUIDs.Add(membershipEvent.GetMember().GetUuid());
+                    removedMemberUUIDs.Add(membershipEvent.GetMember().Uuid());
                     memberRemoved.Signal();
                 }
             });
@@ -121,8 +121,8 @@ namespace Hazelcast.Client.Test
 
             var members = Client.GetCluster().GetMembers();
             Assert.AreEqual(2, members.Count);
-            Assert.True(members.Any(member => member.GetUuid() == newMemberUUID0));
-            Assert.True(members.Any(member => member.GetUuid() == newMemberUUID1));
+            Assert.True(members.Any(member => member.Uuid() == newMemberUUID0));
+            Assert.True(members.Any(member => member.Uuid() == newMemberUUID1));
         }
     }
 }

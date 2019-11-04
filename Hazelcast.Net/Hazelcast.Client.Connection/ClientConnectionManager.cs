@@ -319,28 +319,27 @@ namespace Hazelcast.Client.Connection
             }
             var result = ClientAuthenticationCodec.DecodeResponse(response);
 
-            if (result.address == null)
+            if (result.Address == null)
             {
                 throw new HazelcastException("Could not resolve address for member.");
             }
-            switch (result.status)
+            switch ((AuthenticationStatus)result.Status)
             {
                 case AuthenticationStatus.Authenticated:
                     if (isOwnerConnection)
                     {
-                        var member = new Member(result.address, result.ownerUuid);
-                        ClientPrincipal = new ClientPrincipal(result.uuid, result.ownerUuid);
+                        var member = new Member(result.Address, result.ownerUuid);
+                        ClientPrincipal = new ClientPrincipal(result.Uuid, result.ownerUuid);
                         connection.Member = member;
                         connection.SetOwner();
-                        connection.ConnectedServerVersionStr = result.serverHazelcastVersion;
+                        connection.ConnectedServerVersionStr = result.ServerHazelcastVersion;
                     }
                     else
                     {
-                        var member = _client.GetClientClusterService().GetMember(result.address);
+                        var member = _client.GetClientClusterService().GetMember(result.Address);
                         if (member == null)
                         {
-                            throw new HazelcastException(string.Format("Node with address '{0}' was not found in the member list",
-                                result.address));
+                            throw new HazelcastException($"Node with address '{result.Address}' was not found in the member list");
                         }
                         connection.Member = member;
                     }
@@ -350,7 +349,7 @@ namespace Hazelcast.Client.Connection
                 case AuthenticationStatus.SerializationVersionMismatch:
                     throw new InvalidOperationException("Server serialization version does not match to client");
                 default:
-                    throw new AuthenticationException("Authentication status code not supported. status: " + result.status);
+                    throw new AuthenticationException("Authentication status code not supported. status: " + result.Status);
             }           
         }
 

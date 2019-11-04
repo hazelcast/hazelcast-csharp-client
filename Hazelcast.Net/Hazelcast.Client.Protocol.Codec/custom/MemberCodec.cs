@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
         private const int LiteMemberFieldOffset = UuidFieldOffset + GuidSizeInBytes;
         private const int InitialFrameSize = LiteMemberFieldOffset + BoolSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, com.hazelcast.cluster.Member member) 
+        public static void Encode(ClientMessage clientMessage, Core.Member member) 
         {
             clientMessage.Add(BeginFrame);
 
@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static com.hazelcast.client.impl.MemberImpl Decode(ref FrameIterator iterator) 
+        public static Core.Member Decode(ref FrameIterator iterator) 
         {
             // begin frame
             iterator.Next();
@@ -65,7 +65,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
 
             CodecUtil.FastForwardToEndFrame(ref iterator);
 
-            return new com.hazelcast.client.impl.MemberImpl(address, uuid, attributes, liteMember);
+            return new Core.Member(address, uuid, attributes, liteMember);
         }
     }
 }

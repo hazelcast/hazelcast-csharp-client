@@ -76,7 +76,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public IList<KeyValuePair<com.hazelcast.nio.Address, IList<int>>> Partitions;
+            public IList<KeyValuePair<IO.Address, IList<int>>> Partitions;
 
             /// <summary>
             /// TODO DOC
@@ -84,7 +84,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public int PartitionStateVersion;
         }
 
-        public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<com.hazelcast.nio.Address, IEnumerable<int>>> partitions, int partitionStateVersion) 
+        public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<IO.Address, IEnumerable<int>>> partitions, int partitionStateVersion) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

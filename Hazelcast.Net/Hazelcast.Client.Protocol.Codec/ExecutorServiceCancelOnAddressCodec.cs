@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// Address of the host to execute the request on.
             ///</summary>
-            public com.hazelcast.nio.Address Address;
+            public IO.Address Address;
 
             /// <summary>
             /// If true, then the thread interrupt call can be used to cancel the thread, otherwise interrupt can not be used.
@@ -66,7 +66,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public bool Interrupt;
         }
 
-        public static ClientMessage EncodeRequest(Guid uuid, com.hazelcast.nio.Address address, bool interrupt) 
+        public static ClientMessage EncodeRequest(Guid uuid, IO.Address address, bool interrupt) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;

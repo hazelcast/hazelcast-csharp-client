@@ -116,9 +116,9 @@ namespace Hazelcast.Client.Test
             // Shutdown "primary" member
             var allMembers = Client.GetCluster().GetMembers();
             var currentTarget = _pnCounter._currentTargetReplicaAddress;
-            var primaryMember = allMembers.First(x => x.GetAddress().Equals(currentTarget));
+            var primaryMember = allMembers.First(x => x.Address.Equals(currentTarget));
 
-            RemoteController.terminateMember(HzCluster.Id, primaryMember.GetUuid());
+            RemoteController.terminateMember(HzCluster.Id, primaryMember.Uuid());
         }
     }
 }

@@ -62,7 +62,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The address of the member where the task will get scheduled.
             ///</summary>
-            public com.hazelcast.nio.Address Address;
+            public IO.Address Address;
 
             /// <summary>
             /// A boolean flag to indicate whether the task should be interrupted.
@@ -70,7 +70,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public bool MayInterruptIfRunning;
         }
 
-        public static ClientMessage EncodeRequest(string schedulerName, string taskName, com.hazelcast.nio.Address address, bool mayInterruptIfRunning) 
+        public static ClientMessage EncodeRequest(string schedulerName, string taskName, IO.Address address, bool mayInterruptIfRunning) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;

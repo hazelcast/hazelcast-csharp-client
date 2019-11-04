@@ -12,62 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Text;
 
 namespace Hazelcast.Client
 {
-    internal sealed class ClientPrincipal
+    internal sealed class ClientPrincipal : IEquatable<ClientPrincipal>
     {
-        private readonly string _ownerUuid;
-        private readonly string _uuid;
+        private readonly Guid _ownerUuid;
+        private readonly Guid _uuid;
 
         public ClientPrincipal()
         {
         }
 
-        public ClientPrincipal(string uuid, string ownerUuid)
+        public ClientPrincipal(Guid uuid, Guid ownerUuid)
         {
             _uuid = uuid;
             _ownerUuid = ownerUuid;
         }
 
-        public override bool Equals(object o)
+        public bool Equals(ClientPrincipal other)
         {
-            if (this == o)
-            {
-                return true;
-            }
-            if (o == null || GetType() != o.GetType())
-            {
-                return false;
-            }
-            var that = (ClientPrincipal) o;
-            if (_ownerUuid != null ? !_ownerUuid.Equals(that._ownerUuid) : that._ownerUuid != null)
-            {
-                return false;
-            }
-            if (_uuid != null ? !_uuid.Equals(that._uuid) : that._uuid != null)
-            {
-                return false;
-            }
-            return true;
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return _ownerUuid.Equals(other._ownerUuid) && _uuid.Equals(other._uuid);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return ReferenceEquals(this, obj) || obj is ClientPrincipal other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            var result = _uuid != null ? _uuid.GetHashCode() : 0;
-            result = 31*result + (_ownerUuid != null ? _ownerUuid.GetHashCode() : 0);
-            return result;
-        }
-
-        public string GetOwnerUuid()
-        {
-            return _ownerUuid;
-        }
-
-        public string GetUuid()
-        {
-            return _uuid;
+            unchecked
+            {
+                return (_ownerUuid.GetHashCode() * 397) ^ _uuid.GetHashCode();
+            }
         }
 
         public override string ToString()

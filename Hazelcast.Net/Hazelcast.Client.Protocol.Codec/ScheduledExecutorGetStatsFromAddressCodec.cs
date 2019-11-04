@@ -65,10 +65,10 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The address of the member where the task will get scheduled.
             ///</summary>
-            public com.hazelcast.nio.Address Address;
+            public IO.Address Address;
         }
 
-        public static ClientMessage EncodeRequest(string schedulerName, string taskName, com.hazelcast.nio.Address address) 
+        public static ClientMessage EncodeRequest(string schedulerName, string taskName, IO.Address address) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;

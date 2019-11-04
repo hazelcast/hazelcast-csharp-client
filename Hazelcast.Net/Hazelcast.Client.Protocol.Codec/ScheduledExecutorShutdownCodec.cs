@@ -56,10 +56,10 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The cluster member where the shutdown for this scheduler will be sent.
             ///</summary>
-            public com.hazelcast.nio.Address Address;
+            public IO.Address Address;
         }
 
-        public static ClientMessage EncodeRequest(string schedulerName, com.hazelcast.nio.Address address) 
+        public static ClientMessage EncodeRequest(string schedulerName, IO.Address address) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;

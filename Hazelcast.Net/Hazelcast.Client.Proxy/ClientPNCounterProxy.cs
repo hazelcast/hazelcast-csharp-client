@@ -320,7 +320,7 @@ namespace Hazelcast.Client.Proxy
             var maxConfiguredReplicaCount = GetMaxConfiguredReplicaCount();
             int currentReplicaCount = Math.Min(maxConfiguredReplicaCount, dataMembers.Count);
             var replicaAddresses = dataMembers
-                .Select(x => x.GetAddress())
+                .Select(x => x.Address)
                 .Where(x => excludedAddresses.Contains(x) == false)
                 .Take(currentReplicaCount)
                 .ToList();

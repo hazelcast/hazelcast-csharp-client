@@ -66,10 +66,10 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The member host on which the callable shall be executed on.
             ///</summary>
-            public com.hazelcast.nio.Address Address;
+            public IO.Address Address;
         }
 
-        public static ClientMessage EncodeRequest(string name, Guid uuid, IData callable, com.hazelcast.nio.Address address) 
+        public static ClientMessage EncodeRequest(string name, Guid uuid, IData callable, IO.Address address) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;

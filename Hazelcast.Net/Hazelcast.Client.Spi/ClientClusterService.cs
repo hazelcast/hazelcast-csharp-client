@@ -130,7 +130,7 @@ namespace Hazelcast.Client.Spi
         public Address GetMasterAddress()
         {
             var master = GetMemberList().FirstOrDefault();
-            return master == null ? null : master.GetAddress();
+            return master == null ? null : master.Address;
         }
 
         public int GetSize()
@@ -382,7 +382,7 @@ namespace Hazelcast.Client.Spi
         private IEnumerable<Address> GetPossibleMemberAddresses()
         {
             var memberList = _client.GetClientClusterService().GetMemberList();
-            var addresses = memberList.Select(member => member.GetAddress()).ToList();
+            var addresses = memberList.Select(member => member.Address).ToList();
 
             if (_shuffleMemberList)
             {
@@ -440,7 +440,7 @@ namespace Hazelcast.Client.Spi
                 var newMap = new Dictionary<Address, IMember>();
                 foreach (var initialMember in initialMembers)
                 {
-                    newMap.Add(initialMember.GetAddress(), initialMember);
+                    newMap.Add(initialMember.Address, initialMember);
                 }
                 _membersRef.Set(newMap);
                 FireInitialMembershipEvent(@event);
@@ -455,9 +455,9 @@ namespace Hazelcast.Client.Spi
                 var dictionary = _membersRef.Get();
                 var newMap = new Dictionary<Address, IMember>(dictionary);
                 if (@event.GetEventType() == MembershipEvent.MemberAdded) {
-                    newMap.Add(member.GetAddress(), member);
+                    newMap.Add(member.Address, member);
                 } else {
-                    newMap.Remove(member.GetAddress());
+                    newMap.Remove(member.Address);
                 }
                 _membersRef.Set(newMap);
                 FireMembershipEvent(@event);

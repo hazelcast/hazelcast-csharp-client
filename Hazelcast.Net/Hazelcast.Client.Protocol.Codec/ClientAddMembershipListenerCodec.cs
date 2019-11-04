@@ -119,7 +119,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return response;
         }
     
-        public static ClientMessage EncodeMemberEvent(com.hazelcast.cluster.Member member, int eventType) 
+        public static ClientMessage EncodeMemberEvent(Core.Member member, int eventType) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventMemberInitialFrameSize], UnfragmentedMessage);
@@ -131,7 +131,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
     
-        public static ClientMessage EncodeMemberListEvent(IEnumerable<com.hazelcast.cluster.Member> members) 
+        public static ClientMessage EncodeMemberListEvent(IEnumerable<Core.Member> members) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventMemberListInitialFrameSize], UnfragmentedMessage);
@@ -142,7 +142,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
     
-        public static ClientMessage EncodeMemberAttributeChangeEvent(com.hazelcast.cluster.Member member, IEnumerable<com.hazelcast.cluster.Member> members, string key, int operationType, string value) 
+        public static ClientMessage EncodeMemberAttributeChangeEvent(Core.Member member, IEnumerable<Core.Member> members, string key, int operationType, string value) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventMemberAttributeChangeInitialFrameSize], UnfragmentedMessage);
@@ -166,22 +166,22 @@ namespace Hazelcast.Client.Protocol.Codec
                 if (messageType == EventMemberMessageType) {
                     var initialFrame = iterator.Next();
                     int eventType =  DecodeInt(initialFrame.Content, EventMemberEventTypeFieldOffset);
-                    com.hazelcast.client.impl.MemberImpl member = MemberCodec.Decode(ref iterator);
+                    Core.Member member = MemberCodec.Decode(ref iterator);
                     HandleMemberEvent(member, eventType);
                     return;
                 }
                 if (messageType == EventMemberListMessageType) {
                     //empty initial frame
                     iterator.Next();
-                    IList<com.hazelcast.cluster.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
+                    IList<Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
                     HandleMemberListEvent(members);
                     return;
                 }
                 if (messageType == EventMemberAttributeChangeMessageType) {
                     var initialFrame = iterator.Next();
                     int operationType =  DecodeInt(initialFrame.Content, EventMemberAttributeChangeOperationTypeFieldOffset);
-                    com.hazelcast.client.impl.MemberImpl member = MemberCodec.Decode(ref iterator);
-                    IList<com.hazelcast.cluster.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
+                    Core.Member member = MemberCodec.Decode(ref iterator);
+                    IList<Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
                     string key = StringCodec.Decode(ref iterator);
                     string value = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
                     HandleMemberAttributeChangeEvent(member, members, key, operationType, value);
@@ -190,11 +190,11 @@ namespace Hazelcast.Client.Protocol.Codec
                 Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
             }
 
-            public abstract void HandleMemberEvent(com.hazelcast.cluster.Member member, int eventType);
+            public abstract void HandleMemberEvent(Core.Member member, int eventType);
 
-            public abstract void HandleMemberListEvent(IEnumerable<com.hazelcast.cluster.Member> members);
+            public abstract void HandleMemberListEvent(IEnumerable<Core.Member> members);
 
-            public abstract void HandleMemberAttributeChangeEvent(com.hazelcast.cluster.Member member, IEnumerable<com.hazelcast.cluster.Member> members, string key, int operationType, string value);
+            public abstract void HandleMemberAttributeChangeEvent(Core.Member member, IEnumerable<Core.Member> members, string key, int operationType, string value);
         }
     }
 }

@@ -228,7 +228,7 @@ namespace Hazelcast.Client.Spi
                     {
                         try
                         {
-                            _connectionManager.GetOrConnectAsync(member.GetAddress()).Wait(token);
+                            _connectionManager.GetOrConnectAsync(member.Address).Wait(token);
                         }
                         catch (Exception)
                         {
@@ -364,7 +364,7 @@ namespace Hazelcast.Client.Spi
             {
                 try
                 {
-                    _connectionManager.GetOrConnectAsync(member.GetAddress()).IgnoreExceptions();
+                    _connectionManager.GetOrConnectAsync(member.Address).IgnoreExceptions();
                 }
                 catch (Exception)
                 {

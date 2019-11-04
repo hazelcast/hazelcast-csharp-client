@@ -303,7 +303,7 @@ namespace Hazelcast.Client.Spi
                 var member = loadBalancer.Next();
                 if (member != null && !member.IsLiteMember)
                 {
-                    return member.GetAddress();
+                    return member.Address;
                 }
 
                 if (liteMember == null)
@@ -312,7 +312,7 @@ namespace Hazelcast.Client.Spi
                 }
             }
 
-            return liteMember != null ? liteMember.GetAddress() : null;
+            return liteMember != null ? liteMember.Address : null;
         }
 
         private static Type GetTypeWithParameters(Type proxyType, Type interfaceType)

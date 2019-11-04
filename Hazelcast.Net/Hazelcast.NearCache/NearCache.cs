@@ -41,7 +41,7 @@ namespace Hazelcast.NearCache
         {
             if (InvalidateOnChange)
             {
-                var localUuid = Client.GetClientClusterService().GetLocalClient().GetUuid();
+                var localUuid = Client.GetClientClusterService().GetLocalClient().Uuid;
                 _repairingHandler = new RepairingHandler(localUuid, this, Client.GetClientPartitionService());
                 RegisterInvalidateListener();
             }

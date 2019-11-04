@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
         private const int PortFieldOffset = 0;
         private const int InitialFrameSize = PortFieldOffset + IntSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, com.hazelcast.nio.Address address) 
+        public static void Encode(ClientMessage clientMessage, IO.Address address) 
         {
             clientMessage.Add(BeginFrame);
 
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static com.hazelcast.nio.Address Decode(ref FrameIterator iterator) 
+        public static IO.Address Decode(ref FrameIterator iterator) 
         {
             // begin frame
             iterator.Next();

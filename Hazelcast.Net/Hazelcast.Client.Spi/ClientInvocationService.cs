@@ -289,7 +289,7 @@ using Hazelcast.Util;
                     Logger.Finest("Could not find a member with UUID " + invocation.MemberUuid);
                     throw new InvalidOperationException("Could not find a member with UUID " + invocation.MemberUuid);
                 }
-                newAddress = member.GetAddress();
+                newAddress = member.Address;
             }
             else if (invocation.PartitionId != -1)
             {
@@ -397,7 +397,7 @@ using Hazelcast.Util;
             var member = _client.GetLoadBalancer().Next();
             if (member != null)
             {
-                return member.GetAddress();
+                return member.Address;
             }
             throw new IOException("Could not find any available address");
         }

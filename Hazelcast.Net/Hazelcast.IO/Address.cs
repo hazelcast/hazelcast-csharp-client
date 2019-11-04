@@ -31,9 +31,7 @@ namespace Hazelcast.IO
         // ReSharper disable once InconsistentNaming
         private const byte IPv6 = 6;
 
-        private readonly string _host;
         private readonly bool _hostSet;
-        private readonly int _port = -1;
         private readonly byte _type;
         private string _scopeId;
 
@@ -65,13 +63,13 @@ namespace Hazelcast.IO
             }
             _type = (ipAddress.AddressFamily == AddressFamily.InterNetwork) ? IPv4 : IPv6;
             var addressArgs = ipAddress.ToString().Split('%');
-            _host = hostname ?? addressArgs[0];
+            Host = hostname ?? addressArgs[0];
             if (addressArgs.Length == 2)
             {
                 _scopeId = addressArgs[1];
             }
-            _port = port;
-            _hostSet = !AddressUtil.IsIpAddress(_host);
+            Port = port;
+            _hostSet = !AddressUtil.IsIpAddress(Host);
         }
 
         public override bool Equals(object obj)
@@ -96,17 +94,16 @@ namespace Hazelcast.IO
         {
             unchecked
             {
-                var hashCode = _port;
-                hashCode = (hashCode*397) ^ (_host != null ? _host.GetHashCode() : 0);
+                var hashCode = Port;
+                hashCode = (hashCode*397) ^ (Host != null ? Host.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ _type.GetHashCode();
                 return hashCode;
             }
         }
 
-        public string GetHost()
-        {
-            return _host;
-        }
+        public string Host { get; }
+
+        public int Port { get; } = -1;
 
         public IPAddress GetInetAddress()
         {
@@ -115,17 +112,12 @@ namespace Hazelcast.IO
 
         public IPEndPoint GetInetSocketAddress()
         {
-            return new IPEndPoint(GetInetAddress(), _port);
-        }
-
-        public int GetPort()
-        {
-            return _port;
+            return new IPEndPoint(GetInetAddress(), Port);
         }
 
         public string GetScopedHost()
         {
-            return (IsIPv4() || _hostSet || _scopeId == null) ? GetHost() : GetHost() + "%" + _scopeId;
+            return (IsIPv4() || _hostSet || _scopeId == null) ? Host : Host + "%" + _scopeId;
         }
 
         public string GetScopeId()
@@ -153,12 +145,12 @@ namespace Hazelcast.IO
 
         public override string ToString()
         {
-            return "Address[" + GetHost() + "]:" + _port;
+            return "Address[" + Host + "]:" + Port;
         }
 
         private bool Equals(Address other)
         {
-            return _port == other._port && string.Equals(_host, other._host) && _type == other._type;
+            return Port == other.Port && string.Equals(Host, other.Host) && _type == other._type;
         }
 
         private static IPAddress Resolve(IPEndPoint inetSocketAddress)

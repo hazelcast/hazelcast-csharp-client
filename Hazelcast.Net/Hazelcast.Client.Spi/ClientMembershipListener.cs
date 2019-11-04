@@ -196,7 +196,7 @@ using Hazelcast.Util;
             foreach (var member in  prevMembers)
             {
                 events.Add(new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, eventMembers));
-                var address = member.GetAddress();
+                var address = member.Address;
                 if (_clusterService.GetMember(address) == null)
                 {
                     var connection = _connectionManager.GetConnection(address);
@@ -236,10 +236,10 @@ using Hazelcast.Util;
         {
             _members.Remove(member);
             Logger.Info(MembersString());
-            var connection = _connectionManager.GetConnection(member.GetAddress());
+            var connection = _connectionManager.GetConnection(member.Address);
             if (connection != null)
             {
-                _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(member.GetAddress(),
+                _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(member.Address,
                     "member left the cluster."));
             }
             var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, ImmutableSetOfMembers());
