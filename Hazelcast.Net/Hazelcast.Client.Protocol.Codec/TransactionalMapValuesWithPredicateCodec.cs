@@ -40,10 +40,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class TransactionalMapValuesWithPredicateCodec 
     {
-        //hex: 0x101100
-        public const int RequestMessageType = 1052928;
-        //hex: 0x101101
-        public const int ResponseMessageType = 1052929;
+        //hex: 0x0E1100
+        public const int RequestMessageType = 921856;
+        //hex: 0x0E1101
+        public const int ResponseMessageType = 921857;
         private const int RequestTxnIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + GuidSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
@@ -107,7 +107,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// Result value collection of the query.
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

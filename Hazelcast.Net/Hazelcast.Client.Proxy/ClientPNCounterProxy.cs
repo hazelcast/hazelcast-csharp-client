@@ -181,7 +181,7 @@ namespace Hazelcast.Client.Proxy
         /// <param name="targetAddress">the target address</param>
         /// <returns>the result of the request invocation on a replica</returns>
         /// <exception cref="NoDataMemberInClusterException">if there are no replicas and the lastException is null</exception>
-        internal IClientMessage InvokeAddInternal(long delta, bool getBeforeUpdate, HashSet<Address> excludedAddresses, Exception lastException, Address targetAddress)
+        internal ClientMessage InvokeAddInternal(long delta, bool getBeforeUpdate, HashSet<Address> excludedAddresses, Exception lastException, Address targetAddress)
         {
             if (targetAddress == null)
             {
@@ -230,7 +230,7 @@ namespace Hazelcast.Client.Proxy
         /// <param name="targetAddress">the target address</param>
         /// <returns>the result of the request invocation on a replica</returns>
         /// <exception cref="NoDataMemberInClusterException">if there are no replicas and the lastException is null</exception>
-        internal IClientMessage InvokeGetInternal(HashSet<Address> excludedAddresses, Exception lastException, Address targetAddress)
+        internal ClientMessage InvokeGetInternal(HashSet<Address> excludedAddresses, Exception lastException, Address targetAddress)
         {
             if (targetAddress == null)
             {
@@ -342,7 +342,7 @@ namespace Hazelcast.Client.Proxy
             var response = Invoke(request);
             var decodedResult = PNCounterGetConfiguredReplicaCountCodec.DecodeResponse(response);
 
-            _maxConfiguredReplicaCount = decodedResult.response;
+            _maxConfiguredReplicaCount = decodedResult.Response;
             return _maxConfiguredReplicaCount;
         }
 

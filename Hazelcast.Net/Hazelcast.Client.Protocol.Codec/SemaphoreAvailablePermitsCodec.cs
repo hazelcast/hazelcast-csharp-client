@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class SemaphoreAvailablePermitsCodec 
     {
-        //hex: 0x0D0600
-        public const int RequestMessageType = 853504;
-        //hex: 0x0D0601
-        public const int ResponseMessageType = 853505;
+        //hex: 0x0C0600
+        public const int RequestMessageType = 787968;
+        //hex: 0x0C0601
+        public const int ResponseMessageType = 787969;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + IntSizeInBytes;

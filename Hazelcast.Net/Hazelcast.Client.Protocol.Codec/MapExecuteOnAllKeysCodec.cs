@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapExecuteOnAllKeysCodec 
     {
-        //hex: 0x013400
-        public const int RequestMessageType = 78848;
-        //hex: 0x013401
-        public const int ResponseMessageType = 78849;
+        //hex: 0x013100
+        public const int RequestMessageType = 78080;
+        //hex: 0x013101
+        public const int ResponseMessageType = 78081;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -89,7 +89,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// results of entry process on the entries
             ///</summary>
-            public IEnumerable<KeyValuePair<IData, IData>> Response;
+            public IList<KeyValuePair<IData, IData>> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<IData, IData>> response) 

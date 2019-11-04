@@ -40,10 +40,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapValuesCodec 
     {
-        //hex: 0x012800
-        public const int RequestMessageType = 75776;
-        //hex: 0x012801
-        public const int ResponseMessageType = 75777;
+        //hex: 0x012500
+        public const int RequestMessageType = 75008;
+        //hex: 0x012501
+        public const int ResponseMessageType = 75009;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -85,7 +85,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// All values in the map
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

@@ -25,7 +25,7 @@ using Hazelcast.IO;
         {
         }
 
-        public override IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key)
+        public override IFuture<ClientMessage> InvokeOnKeyOwner(ClientMessage request, object key)
         {
             var partitionService = (ClientPartitionService) Client.GetClientPartitionService();
             var partitionId = partitionService.GetPartitionId(key);
@@ -33,24 +33,24 @@ using Hazelcast.IO;
             return Invoke(new ClientInvocation(request, partitionId), owner);
         }
 
-        public override IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember target)
+        public override IFuture<ClientMessage> InvokeOnMember(ClientMessage request, IMember target)
         {
             return Invoke(new ClientInvocation(request, target.GetUuid()), target.GetAddress());
         }
 
-        public override IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId)
+        public override IFuture<ClientMessage> InvokeOnPartition(ClientMessage request, int partitionId)
         {
             var partitionService = (ClientPartitionService) Client.GetClientPartitionService();
             var owner = partitionService.GetPartitionOwner(partitionId);
             return Invoke(new ClientInvocation(request, partitionId), owner);
         }
 
-        public override IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request)
+        public override IFuture<ClientMessage> InvokeOnRandomTarget(ClientMessage request)
         {
             return Invoke(new ClientInvocation(request));
         }
 
-        public override IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target)
+        public override IFuture<ClientMessage> InvokeOnTarget(ClientMessage request, Address target)
         {
             return Invoke(new ClientInvocation(request, target), target);
         }

@@ -45,10 +45,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class PNCounterAddCodec 
     {
-        //hex: 0x200200
-        public const int RequestMessageType = 2097664;
-        //hex: 0x200201
-        public const int ResponseMessageType = 2097665;
+        //hex: 0x1D0200
+        public const int RequestMessageType = 1901056;
+        //hex: 0x1D0201
+        public const int ResponseMessageType = 1901057;
         private const int RequestDeltaFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestGetBeforeUpdateFieldOffset = RequestDeltaFieldOffset + LongSizeInBytes;
         private const int RequestInitialFrameSize = RequestGetBeforeUpdateFieldOffset + BoolSizeInBytes;
@@ -79,7 +79,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// last observed replica timestamps (vector clock)
             ///</summary>
-            public IEnumerable<KeyValuePair<Guid, long>> ReplicaTimestamps;
+            public IList<KeyValuePair<Guid, long>> ReplicaTimestamps;
 
             /// <summary>
             /// the target replica
@@ -128,7 +128,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// last observed replica timestamps (vector clock)
             ///</summary>
-            public IEnumerable<KeyValuePair<Guid, long>> ReplicaTimestamps;
+            public IList<KeyValuePair<Guid, long>> ReplicaTimestamps;
 
             /// <summary>
             /// TODO DOC

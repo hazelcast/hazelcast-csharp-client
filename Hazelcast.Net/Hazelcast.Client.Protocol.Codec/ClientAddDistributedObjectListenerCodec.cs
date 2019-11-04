@@ -38,17 +38,17 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientAddDistributedObjectListenerCodec 
     {
-        //hex: 0x000D00
-        public const int RequestMessageType = 3328;
-        //hex: 0x000D01
-        public const int ResponseMessageType = 3329;
+        //hex: 0x000B00
+        public const int RequestMessageType = 2816;
+        //hex: 0x000B01
+        public const int ResponseMessageType = 2817;
         private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
         private const int EventDistributedObjectInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        // hex: 0x000D02
-        private const int EventDistributedObjectMessageType = 3330;
+        // hex: 0x000B02
+        private const int EventDistributedObjectMessageType = 2818;
 
         public class RequestParameters 
         {

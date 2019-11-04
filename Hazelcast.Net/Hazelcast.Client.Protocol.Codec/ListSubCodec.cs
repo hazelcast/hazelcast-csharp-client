@@ -107,7 +107,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// A view of the specified range within this list
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

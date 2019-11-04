@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientGetDistributedObjectsCodec 
     {
-        //hex: 0x000C00
-        public const int RequestMessageType = 3072;
-        //hex: 0x000C01
-        public const int ResponseMessageType = 3073;
+        //hex: 0x000A00
+        public const int RequestMessageType = 2560;
+        //hex: 0x000A01
+        public const int ResponseMessageType = 2561;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// An array of distributed object info in the cluster.
             ///</summary>
-            public IEnumerable<Hazelcast.Client.DistributedObjectInfo> Response;
+            public IList<Hazelcast.Client.DistributedObjectInfo> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<Hazelcast.Client.DistributedObjectInfo> response) 

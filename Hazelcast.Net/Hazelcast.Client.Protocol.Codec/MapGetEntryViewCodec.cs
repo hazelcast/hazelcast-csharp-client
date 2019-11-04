@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapGetEntryViewCodec 
     {
-        //hex: 0x012100
-        public const int RequestMessageType = 73984;
-        //hex: 0x012101
-        public const int ResponseMessageType = 73985;
+        //hex: 0x011E00
+        public const int RequestMessageType = 73216;
+        //hex: 0x011E01
+        public const int ResponseMessageType = 73217;
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int ResponseMaxIdleFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

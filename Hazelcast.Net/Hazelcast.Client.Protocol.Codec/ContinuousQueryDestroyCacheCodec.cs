@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ContinuousQueryDestroyCacheCodec 
     {
-        //hex: 0x180600
-        public const int RequestMessageType = 1574400;
-        //hex: 0x180601
-        public const int ResponseMessageType = 1574401;
+        //hex: 0x160600
+        public const int RequestMessageType = 1443328;
+        //hex: 0x160601
+        public const int ResponseMessageType = 1443329;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;

@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapSubmitToKeyCodec 
     {
-        //hex: 0x013300
-        public const int RequestMessageType = 78592;
-        //hex: 0x013301
-        public const int ResponseMessageType = 78593;
+        //hex: 0x013000
+        public const int RequestMessageType = 77824;
+        //hex: 0x013001
+        public const int ResponseMessageType = 77825;
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;

@@ -55,7 +55,7 @@ namespace Hazelcast.Client.Spi
             return _serviceName;
         }
 
-        protected virtual Task<T> InvokeAsync<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
+        protected virtual Task<T> InvokeAsync<T>(ClientMessage request, object key, Func<ClientMessage, T> decodeResponse)
         {
             var future = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
             var continueTask = future.ToTask().ContinueWith(t =>
@@ -176,7 +176,7 @@ namespace Hazelcast.Client.Spi
             return valueSet;
         }
 
-        protected IClientMessage InvokeOnTarget(IClientMessage request, Address target)
+        protected ClientMessage InvokeOnTarget(ClientMessage request, Address target)
         {
             try
             {
@@ -189,7 +189,7 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        protected virtual IClientMessage Invoke(IClientMessage request, object key)
+        protected virtual ClientMessage Invoke(ClientMessage request, object key)
         {
             try
             {
@@ -202,19 +202,19 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        protected T Invoke<T>(IClientMessage request, object key, Func<IClientMessage, T> decodeResponse)
+        protected T Invoke<T>(ClientMessage request, object key, Func<ClientMessage, T> decodeResponse)
         {
             var response = Invoke(request, key);
             return decodeResponse(response);
         }
 
-        protected T InvokeOnPartition<T>(IClientMessage request, int partitionId, Func<IClientMessage, T> decodeResponse)
+        protected T InvokeOnPartition<T>(ClientMessage request, int partitionId, Func<ClientMessage, T> decodeResponse)
         {
             var response = InvokeOnPartition(request, partitionId);
             return decodeResponse(response);
         }
 
-        protected IClientMessage InvokeOnPartition(IClientMessage request, int partitionId)
+        protected ClientMessage InvokeOnPartition(ClientMessage request, int partitionId)
         {
             try
             {
@@ -227,7 +227,7 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        protected virtual IClientMessage Invoke(IClientMessage request)
+        protected virtual ClientMessage Invoke(ClientMessage request)
         {
             try
             {
@@ -240,13 +240,13 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        protected virtual T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
+        protected virtual T Invoke<T>(ClientMessage request, Func<ClientMessage, T> decodeResponse)
         {
             var response = Invoke(request);
             return decodeResponse(response);
         }
 
-        protected virtual string RegisterListener(IClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
+        protected virtual string RegisterListener(ClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
             EncodeDeregisterRequest encodeDeregisterRequest, DistributedEventHandler eventHandler)
         {
             return _context.GetListenerService()

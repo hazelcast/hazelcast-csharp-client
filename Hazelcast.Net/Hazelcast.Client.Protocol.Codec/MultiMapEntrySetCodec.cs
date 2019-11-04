@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The set of key-value pairs in the multimap. The returned set might be modifiable but it has no effect on the multimap.
             ///</summary>
-            public IEnumerable<KeyValuePair<IData, IData>> Response;
+            public IList<KeyValuePair<IData, IData>> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<IData, IData>> response) 

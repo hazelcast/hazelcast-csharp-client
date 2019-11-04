@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheSetExpiryPolicyCodec 
     {
-        //hex: 0x152300
-        public const int RequestMessageType = 1385216;
-        //hex: 0x152301
-        public const int ResponseMessageType = 1385217;
+        //hex: 0x132300
+        public const int RequestMessageType = 1254144;
+        //hex: 0x132301
+        public const int ResponseMessageType = 1254145;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The keys that are associated with the specified expiry policy.
             ///</summary>
-            public IEnumerable<IData> Keys;
+            public IList<IData> Keys;
 
             /// <summary>
             /// custom expiry policy for this operation

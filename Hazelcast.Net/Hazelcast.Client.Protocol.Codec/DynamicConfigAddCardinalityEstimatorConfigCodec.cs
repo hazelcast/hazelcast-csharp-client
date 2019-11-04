@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddCardinalityEstimatorConfigCodec 
     {
-        //hex: 0x1E0300
-        public const int RequestMessageType = 1966848;
-        //hex: 0x1E0301
-        public const int ResponseMessageType = 1966849;
+        //hex: 0x1B0300
+        public const int RequestMessageType = 1770240;
+        //hex: 0x1B0301
+        public const int ResponseMessageType = 1770241;
         private const int RequestBackupCountFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestAsyncBackupCountFieldOffset = RequestBackupCountFieldOffset + IntSizeInBytes;
         private const int RequestMergeBatchSizeFieldOffset = RequestAsyncBackupCountFieldOffset + IntSizeInBytes;

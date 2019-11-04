@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// list of all data in queue
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

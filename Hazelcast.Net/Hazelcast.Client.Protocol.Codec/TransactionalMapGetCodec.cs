@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class TransactionalMapGetCodec 
     {
-        //hex: 0x100200
-        public const int RequestMessageType = 1049088;
-        //hex: 0x100201
-        public const int ResponseMessageType = 1049089;
+        //hex: 0x0E0200
+        public const int RequestMessageType = 918016;
+        //hex: 0x0E0201
+        public const int ResponseMessageType = 918017;
         private const int RequestTxnIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + GuidSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;

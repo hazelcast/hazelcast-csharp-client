@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapPutIfAbsentWithMaxIdleCodec 
     {
-        //hex: 0x014C00
-        public const int RequestMessageType = 84992;
-        //hex: 0x014C01
-        public const int ResponseMessageType = 84993;
+        //hex: 0x014900
+        public const int RequestMessageType = 84224;
+        //hex: 0x014901
+        public const int ResponseMessageType = 84225;
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int RequestMaxIdleFieldOffset = RequestTtlFieldOffset + LongSizeInBytes;

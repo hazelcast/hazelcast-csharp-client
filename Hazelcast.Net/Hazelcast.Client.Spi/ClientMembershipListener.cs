@@ -154,7 +154,7 @@ using Hazelcast.Util;
                     var future = invocationService.InvokeListenerOnConnection(clientMessage, handler, connection);
                     var response = ThreadUtil.GetResult(future);
                     //registration id is ignored as this listener will never be removed
-                    var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
+                    var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).Response;
                     WaitInitialMemberListFetched();
                 }
                 catch (Exception e)

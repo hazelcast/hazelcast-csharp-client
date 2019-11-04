@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddFlakeIdGeneratorConfigCodec 
     {
-        //hex: 0x1E1200
-        public const int RequestMessageType = 1970688;
-        //hex: 0x1E1201
-        public const int ResponseMessageType = 1970689;
+        //hex: 0x1B0F00
+        public const int RequestMessageType = 1773312;
+        //hex: 0x1B0F01
+        public const int ResponseMessageType = 1773313;
         private const int RequestPrefetchCountFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestPrefetchValidityFieldOffset = RequestPrefetchCountFieldOffset + IntSizeInBytes;
         private const int RequestIdOffsetFieldOffset = RequestPrefetchValidityFieldOffset + LongSizeInBytes;

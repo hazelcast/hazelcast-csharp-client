@@ -66,7 +66,7 @@ namespace Hazelcast.Client.Spi
             IsSmart = client.GetClientConfig().GetNetworkConfig().IsSmartRouting();
         }
 
-        public string RegisterListener(IClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
+        public string RegisterListener(ClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
             EncodeDeregisterRequest encodeDeregisterRequest, DistributedEventHandler eventHandler)
         {
             //This method should not be called from registrationExecutor
@@ -184,7 +184,7 @@ namespace Hazelcast.Client.Spi
             var future = ((ClientInvocationService) _client.GetInvocationService()).InvokeListenerOnConnection(
                 listenerRegistration.RegistrationRequest, listenerRegistration.EventHandler, connection);
 
-            IClientMessage clientMessage;
+            ClientMessage clientMessage;
             try
             {
                 clientMessage = ThreadUtil.GetResult(future);
@@ -281,7 +281,7 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        public void HandleResponseMessage(IClientMessage message)
+        public void HandleResponseMessage(ClientMessage message)
         {
             var partitionId = message.GetPartitionId();
             Task.Factory.StartNew(o =>

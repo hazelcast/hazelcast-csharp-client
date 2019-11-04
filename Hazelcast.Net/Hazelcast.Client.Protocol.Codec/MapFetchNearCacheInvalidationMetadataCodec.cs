@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapFetchNearCacheInvalidationMetadataCodec 
     {
-        //hex: 0x014200
-        public const int RequestMessageType = 82432;
-        //hex: 0x014201
-        public const int ResponseMessageType = 82433;
+        //hex: 0x013F00
+        public const int RequestMessageType = 81664;
+        //hex: 0x013F01
+        public const int ResponseMessageType = 81665;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// names of the maps
             ///</summary>
-            public IEnumerable<string> Names;
+            public IList<string> Names;
 
             /// <summary>
             /// TODO DOC
@@ -89,12 +89,12 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public IEnumerable<KeyValuePair<string, IEnumerable<KeyValuePair<int, long>>>> NamePartitionSequenceList;
+            public IList<KeyValuePair<string, IList<KeyValuePair<int, long>>>> NamePartitionSequenceList;
 
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public IEnumerable<KeyValuePair<int, Guid>> PartitionUuidList;
+            public IList<KeyValuePair<int, Guid>> PartitionUuidList;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<string, IEnumerable<KeyValuePair<int, long>>>> namePartitionSequenceList, IEnumerable<KeyValuePair<int, Guid>> partitionUuidList) 

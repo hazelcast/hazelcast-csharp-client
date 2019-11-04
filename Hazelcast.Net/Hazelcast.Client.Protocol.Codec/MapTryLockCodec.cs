@@ -40,10 +40,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapTryLockCodec 
     {
-        //hex: 0x011400
-        public const int RequestMessageType = 70656;
-        //hex: 0x011401
-        public const int ResponseMessageType = 70657;
+        //hex: 0x011100
+        public const int RequestMessageType = 69888;
+        //hex: 0x011101
+        public const int ResponseMessageType = 69889;
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestLeaseFieldOffset = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int RequestTimeoutFieldOffset = RequestLeaseFieldOffset + LongSizeInBytes;

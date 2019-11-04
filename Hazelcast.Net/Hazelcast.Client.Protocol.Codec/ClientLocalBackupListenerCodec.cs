@@ -38,17 +38,17 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientLocalBackupListenerCodec 
     {
-        //hex: 0x001500
-        public const int RequestMessageType = 5376;
-        //hex: 0x001501
-        public const int ResponseMessageType = 5377;
+        //hex: 0x001300
+        public const int RequestMessageType = 4864;
+        //hex: 0x001301
+        public const int ResponseMessageType = 4865;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventbackupsourceInvocationCorrelationIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventbackupInitialFrameSize = EventbackupsourceInvocationCorrelationIdFieldOffset + LongSizeInBytes;
-        // hex: 0x001502
-        private const int EventbackupMessageType = 5378;
+        private const int EventBackupSourceInvocationCorrelationIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventBackupInitialFrameSize = EventBackupSourceInvocationCorrelationIdFieldOffset + LongSizeInBytes;
+        // hex: 0x001302
+        private const int EventBackupMessageType = 4866;
 
         public class RequestParameters 
         {
@@ -107,10 +107,10 @@ namespace Hazelcast.Client.Protocol.Codec
         public static ClientMessage EncodeBackupEvent(long sourceInvocationCorrelationId) 
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[EventbackupInitialFrameSize], UnfragmentedMessage);
+            var initialFrame = new Frame(new byte[EventBackupInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
-            EncodeInt(initialFrame.Content, TypeFieldOffset, EventbackupMessageType);
-            EncodeLong(initialFrame.Content, EventbackupsourceInvocationCorrelationIdFieldOffset, sourceInvocationCorrelationId);
+            EncodeInt(initialFrame.Content, TypeFieldOffset, EventBackupMessageType);
+            EncodeLong(initialFrame.Content, EventBackupSourceInvocationCorrelationIdFieldOffset, sourceInvocationCorrelationId);
             clientMessage.Add(initialFrame);
             return clientMessage;
         }
@@ -121,9 +121,9 @@ namespace Hazelcast.Client.Protocol.Codec
             {
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
-                if (messageType == EventbackupMessageType) {
+                if (messageType == EventBackupMessageType) {
                     var initialFrame = iterator.Next();
-                    long sourceInvocationCorrelationId =  DecodeLong(initialFrame.Content, EventbackupsourceInvocationCorrelationIdFieldOffset);
+                    long sourceInvocationCorrelationId =  DecodeLong(initialFrame.Content, EventBackupSourceInvocationCorrelationIdFieldOffset);
                     HandleBackupEvent(sourceInvocationCorrelationId);
                     return;
                 }

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class FlakeIdGeneratorNewIdBatchCodec 
     {
-        //hex: 0x1F0100
-        public const int RequestMessageType = 2031872;
-        //hex: 0x1F0101
-        public const int ResponseMessageType = 2031873;
+        //hex: 0x1C0100
+        public const int RequestMessageType = 1835264;
+        //hex: 0x1C0101
+        public const int ResponseMessageType = 1835265;
         private const int RequestBatchSizeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestBatchSizeFieldOffset + IntSizeInBytes;
         private const int ResponseBaseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

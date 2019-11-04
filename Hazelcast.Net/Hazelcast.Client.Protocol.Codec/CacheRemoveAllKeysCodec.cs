@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheRemoveAllKeysCodec 
     {
-        //hex: 0x150400
-        public const int RequestMessageType = 1377280;
-        //hex: 0x150401
-        public const int ResponseMessageType = 1377281;
+        //hex: 0x130400
+        public const int RequestMessageType = 1246208;
+        //hex: 0x130401
+        public const int ResponseMessageType = 1246209;
         private const int RequestCompletionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestCompletionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The keys to remove.
             ///</summary>
-            public IEnumerable<IData> Keys;
+            public IList<IData> Keys;
 
             /// <summary>
             /// User generated id which shall be received as a field of the cache event upon completion of

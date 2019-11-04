@@ -32,7 +32,7 @@ namespace Hazelcast.Client.Proxy
             var request = TransactionalMultiMapPutCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData, valueData);
 
-            return Invoke(request, m => TransactionalMultiMapPutCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalMultiMapPutCodec.DecodeResponse(m).Response);
         }
 
         public virtual ICollection<TValue> Get(TKey key)
@@ -40,7 +40,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = TransactionalMultiMapGetCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData);
-            var list = Invoke(request, m => TransactionalMultiMapGetCodec.DecodeResponse(m).response);
+            var list = Invoke(request, m => TransactionalMultiMapGetCodec.DecodeResponse(m).Response);
             return ToList<TValue>(list);
         }
 
@@ -52,7 +52,7 @@ namespace Hazelcast.Client.Proxy
                 GetThreadId(),
                 keyData, valueData);
 
-            return Invoke(request, m => TransactionalMultiMapRemoveEntryCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalMultiMapRemoveEntryCodec.DecodeResponse(m).Response);
         }
 
         public virtual ICollection<TValue> Remove(object key)
@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Proxy
             var request = TransactionalMultiMapRemoveCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData);
 
-            var result = Invoke(request, m => TransactionalMultiMapRemoveCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalMultiMapRemoveCodec.DecodeResponse(m).Response);
             return ToList<TValue>(result);
         }
 
@@ -72,13 +72,13 @@ namespace Hazelcast.Client.Proxy
                 GetThreadId(),
                 keyData);
 
-            return Invoke(request, m => TransactionalMultiMapValueCountCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalMultiMapValueCountCodec.DecodeResponse(m).Response);
         }
 
         public virtual int Size()
         {
             var request = TransactionalMultiMapSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            return Invoke(request, m => TransactionalMultiMapSizeCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalMultiMapSizeCodec.DecodeResponse(m).Response);
         }
 
         public override string GetServiceName()

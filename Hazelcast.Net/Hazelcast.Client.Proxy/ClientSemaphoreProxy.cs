@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Proxy
         {
             CheckNegative(permits);
             var request = SemaphoreInitCodec.EncodeRequest(GetName(), permits);
-            return Invoke(request, m => SemaphoreInitCodec.DecodeResponse(m).response);
+            return Invoke(request, m => SemaphoreInitCodec.DecodeResponse(m).Response);
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -53,13 +53,13 @@ namespace Hazelcast.Client.Proxy
         public virtual int AvailablePermits()
         {
             var request = SemaphoreAvailablePermitsCodec.EncodeRequest(GetName());
-            return Invoke(request, m => SemaphoreAvailablePermitsCodec.DecodeResponse(m).response);
+            return Invoke(request, m => SemaphoreAvailablePermitsCodec.DecodeResponse(m).Response);
         }
 
         public virtual int DrainPermits()
         {
             var request = SemaphoreDrainPermitsCodec.EncodeRequest(GetName());
-            return Invoke(request, m => SemaphoreDrainPermitsCodec.DecodeResponse(m).response);
+            return Invoke(request, m => SemaphoreDrainPermitsCodec.DecodeResponse(m).Response);
         }
 
         public virtual void ReducePermits(int reduction)
@@ -110,7 +110,7 @@ namespace Hazelcast.Client.Proxy
         {
             CheckNegative(permits);
             var request = SemaphoreTryAcquireCodec.EncodeRequest(GetName(), permits, unit.ToMillis(timeout));
-            return Invoke(request, m => SemaphoreTryAcquireCodec.DecodeResponse(m).response);
+            return Invoke(request, m => SemaphoreTryAcquireCodec.DecodeResponse(m).Response);
         }
 
         public IData GetKey()
@@ -122,7 +122,7 @@ namespace Hazelcast.Client.Proxy
             return _key;
         }
 
-        protected override IClientMessage Invoke(IClientMessage request)
+        protected override ClientMessage Invoke(ClientMessage request)
         {
             return base.Invoke(request, GetKey());
         }

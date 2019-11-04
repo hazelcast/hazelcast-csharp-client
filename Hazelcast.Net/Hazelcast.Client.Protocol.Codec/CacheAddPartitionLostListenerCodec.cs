@@ -41,19 +41,19 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheAddPartitionLostListenerCodec 
     {
-        //hex: 0x151A00
-        public const int RequestMessageType = 1382912;
-        //hex: 0x151A01
-        public const int ResponseMessageType = 1382913;
+        //hex: 0x131A00
+        public const int RequestMessageType = 1251840;
+        //hex: 0x131A01
+        public const int ResponseMessageType = 1251841;
         private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventCachePartitionLostpartitionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventCachePartitionLostuuidFieldOffset = EventCachePartitionLostPartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventCachePartitionLostInitialFrameSize = EventCachePartitionLostuuidFieldOffset + GuidSizeInBytes;
-        // hex: 0x151A02
-        private const int EventCachePartitionLostMessageType = 1382914;
+        private const int EventCachePartitionLostPartitionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventCachePartitionLostUuidFieldOffset = EventCachePartitionLostPartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventCachePartitionLostInitialFrameSize = EventCachePartitionLostUuidFieldOffset + GuidSizeInBytes;
+        // hex: 0x131A02
+        private const int EventCachePartitionLostMessageType = 1251842;
 
         public class RequestParameters 
         {
@@ -129,8 +129,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventCachePartitionLostInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventCachePartitionLostMessageType);
-            EncodeInt(initialFrame.Content, EventCachePartitionLostpartitionIdFieldOffset, partitionId);
-            EncodeGuid(initialFrame.Content, EventCachePartitionLostuuidFieldOffset, uuid);
+            EncodeInt(initialFrame.Content, EventCachePartitionLostPartitionIdFieldOffset, partitionId);
+            EncodeGuid(initialFrame.Content, EventCachePartitionLostUuidFieldOffset, uuid);
             clientMessage.Add(initialFrame);
             return clientMessage;
         }
@@ -143,8 +143,8 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventCachePartitionLostMessageType) {
                     var initialFrame = iterator.Next();
-                    int partitionId =  DecodeInt(initialFrame.Content, EventCachePartitionLostpartitionIdFieldOffset);
-                    Guid uuid =  DecodeGuid(initialFrame.Content, EventCachePartitionLostuuidFieldOffset);
+                    int partitionId =  DecodeInt(initialFrame.Content, EventCachePartitionLostPartitionIdFieldOffset);
+                    Guid uuid =  DecodeGuid(initialFrame.Content, EventCachePartitionLostUuidFieldOffset);
                     HandleCachePartitionLostEvent(partitionId, uuid);
                     return;
                 }

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheListenerRegistrationCodec 
     {
-        //hex: 0x151000
-        public const int RequestMessageType = 1380352;
-        //hex: 0x151001
-        public const int ResponseMessageType = 1380353;
+        //hex: 0x131000
+        public const int RequestMessageType = 1249280;
+        //hex: 0x131001
+        public const int ResponseMessageType = 1249281;
         private const int RequestShouldRegisterFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestShouldRegisterFieldOffset + BoolSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class TransactionalQueuePeekCodec 
     {
-        //hex: 0x140400
-        public const int RequestMessageType = 1311744;
-        //hex: 0x140401
-        public const int ResponseMessageType = 1311745;
+        //hex: 0x120400
+        public const int RequestMessageType = 1180672;
+        //hex: 0x120401
+        public const int ResponseMessageType = 1180673;
         private const int RequestTxnIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + GuidSizeInBytes;
         private const int RequestTimeoutFieldOffset = RequestThreadIdFieldOffset + LongSizeInBytes;

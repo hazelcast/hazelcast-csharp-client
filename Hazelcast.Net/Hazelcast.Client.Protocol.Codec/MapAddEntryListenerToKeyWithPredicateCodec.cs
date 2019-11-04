@@ -39,22 +39,22 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapAddEntryListenerToKeyWithPredicateCodec 
     {
-        //hex: 0x011900
-        public const int RequestMessageType = 71936;
-        //hex: 0x011901
-        public const int ResponseMessageType = 71937;
+        //hex: 0x011600
+        public const int RequestMessageType = 71168;
+        //hex: 0x011601
+        public const int ResponseMessageType = 71169;
         private const int RequestIncludeValueFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestListenerFlagsFieldOffset = RequestIncludeValueFieldOffset + BoolSizeInBytes;
         private const int RequestLocalOnlyFieldOffset = RequestListenerFlagsFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventEntryeventTypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventEntryuuidFieldOffset = EventEntryEventTypeFieldOffset + IntSizeInBytes;
-        private const int EventEntrynumberOfAffectedEntriesFieldOffset = EventEntryUuidFieldOffset + GuidSizeInBytes;
-        private const int EventEntryInitialFrameSize = EventEntrynumberOfAffectedEntriesFieldOffset + IntSizeInBytes;
-        // hex: 0x011902
-        private const int EventEntryMessageType = 71938;
+        private const int EventEntryEventTypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventEntryUuidFieldOffset = EventEntryEventTypeFieldOffset + IntSizeInBytes;
+        private const int EventEntryNumberOfAffectedEntriesFieldOffset = EventEntryUuidFieldOffset + GuidSizeInBytes;
+        private const int EventEntryInitialFrameSize = EventEntryNumberOfAffectedEntriesFieldOffset + IntSizeInBytes;
+        // hex: 0x011602
+        private const int EventEntryMessageType = 71170;
 
         public class RequestParameters 
         {
@@ -158,9 +158,9 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventEntryInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventEntryMessageType);
-            EncodeInt(initialFrame.Content, EventEntryeventTypeFieldOffset, eventType);
-            EncodeGuid(initialFrame.Content, EventEntryuuidFieldOffset, uuid);
-            EncodeInt(initialFrame.Content, EventEntrynumberOfAffectedEntriesFieldOffset, numberOfAffectedEntries);
+            EncodeInt(initialFrame.Content, EventEntryEventTypeFieldOffset, eventType);
+            EncodeGuid(initialFrame.Content, EventEntryUuidFieldOffset, uuid);
+            EncodeInt(initialFrame.Content, EventEntryNumberOfAffectedEntriesFieldOffset, numberOfAffectedEntries);
             clientMessage.Add(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, value, DataCodec.Encode);
@@ -177,9 +177,9 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventEntryMessageType) {
                     var initialFrame = iterator.Next();
-                    int eventType =  DecodeInt(initialFrame.Content, EventEntryeventTypeFieldOffset);
-                    Guid uuid =  DecodeGuid(initialFrame.Content, EventEntryuuidFieldOffset);
-                    int numberOfAffectedEntries =  DecodeInt(initialFrame.Content, EventEntrynumberOfAffectedEntriesFieldOffset);
+                    int eventType =  DecodeInt(initialFrame.Content, EventEntryEventTypeFieldOffset);
+                    Guid uuid =  DecodeGuid(initialFrame.Content, EventEntryUuidFieldOffset);
+                    int numberOfAffectedEntries =  DecodeInt(initialFrame.Content, EventEntryNumberOfAffectedEntriesFieldOffset);
                     IData key = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
                     IData value = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
                     IData oldValue = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);

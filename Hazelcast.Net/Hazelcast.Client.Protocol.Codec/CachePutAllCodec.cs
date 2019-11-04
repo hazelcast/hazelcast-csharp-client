@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CachePutAllCodec 
     {
-        //hex: 0x151C00
-        public const int RequestMessageType = 1383424;
-        //hex: 0x151C01
-        public const int ResponseMessageType = 1383425;
+        //hex: 0x131C00
+        public const int RequestMessageType = 1252352;
+        //hex: 0x131C01
+        public const int ResponseMessageType = 1252353;
         private const int RequestCompletionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestCompletionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// entries to be put as batch
             ///</summary>
-            public IEnumerable<KeyValuePair<IData, IData>> Entries;
+            public IList<KeyValuePair<IData, IData>> Entries;
 
             /// <summary>
             /// expiry policy for the entry. Byte-array which is serialized from an object implementing

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientGetPartitionsCodec 
     {
-        //hex: 0x000800
-        public const int RequestMessageType = 2048;
-        //hex: 0x000801
-        public const int ResponseMessageType = 2049;
+        //hex: 0x000600
+        public const int RequestMessageType = 1536;
+        //hex: 0x000601
+        public const int ResponseMessageType = 1537;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponsePartitionStateVersionFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponsePartitionStateVersionFieldOffset + IntSizeInBytes;
@@ -76,7 +76,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public IEnumerable<KeyValuePair<com.hazelcast.nio.Address, IEnumerable<int>>> Partitions;
+            public IList<KeyValuePair<com.hazelcast.nio.Address, IList<int>>> Partitions;
 
             /// <summary>
             /// TODO DOC

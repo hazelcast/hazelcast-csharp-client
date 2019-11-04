@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapFlushCodec 
     {
-        //hex: 0x010D00
-        public const int RequestMessageType = 68864;
-        //hex: 0x010D01
-        public const int ResponseMessageType = 68865;
+        //hex: 0x010A00
+        public const int RequestMessageType = 68096;
+        //hex: 0x010A01
+        public const int ResponseMessageType = 68097;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

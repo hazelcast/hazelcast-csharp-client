@@ -59,7 +59,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The list of values to test for matching the item to retain.
             ///</summary>
-            public IEnumerable<IData> Values;
+            public IList<IData> Values;
         }
 
         public static ClientMessage EncodeRequest(string name, IEnumerable<IData> values) 

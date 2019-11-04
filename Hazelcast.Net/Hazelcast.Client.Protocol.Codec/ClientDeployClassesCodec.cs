@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientDeployClassesCodec 
     {
-        //hex: 0x001100
-        public const int RequestMessageType = 4352;
-        //hex: 0x001101
-        public const int ResponseMessageType = 4353;
+        //hex: 0x000F00
+        public const int RequestMessageType = 3840;
+        //hex: 0x000F01
+        public const int ResponseMessageType = 3841;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -52,7 +52,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// list of class definitions
             ///</summary>
-            public IEnumerable<KeyValuePair<string, byte[]>> ClassDefinitions;
+            public IList<KeyValuePair<string, byte[]>> ClassDefinitions;
         }
 
         public static ClientMessage EncodeRequest(IEnumerable<KeyValuePair<string, byte[]>> classDefinitions) 

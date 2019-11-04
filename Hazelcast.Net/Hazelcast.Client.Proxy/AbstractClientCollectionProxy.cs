@@ -130,12 +130,12 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        protected override TE Invoke<TE>(IClientMessage request, Func<IClientMessage, TE> decodeResponse)
+        protected override TE Invoke<TE>(ClientMessage request, Func<ClientMessage, TE> decodeResponse)
         {
             return base.Invoke(request, GetPartitionKey(), decodeResponse);
         }
 
-        protected override IClientMessage Invoke(IClientMessage request)
+        protected override ClientMessage Invoke(ClientMessage request)
         {
             return base.Invoke(request, GetPartitionKey());
         }

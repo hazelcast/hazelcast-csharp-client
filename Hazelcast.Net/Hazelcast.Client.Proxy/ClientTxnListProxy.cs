@@ -34,7 +34,7 @@ namespace Hazelcast.Client.Proxy
             ThrowExceptionIfNull(e);
             var value = ToData(e);
             var request = TransactionalListAddCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), value);
-            return Invoke(request, m => TransactionalListAddCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalListAddCodec.DecodeResponse(m).Response);
         }
 
         public virtual bool Remove(T e)
@@ -42,13 +42,13 @@ namespace Hazelcast.Client.Proxy
             ThrowExceptionIfNull(e);
             var value = ToData(e);
             var request = TransactionalListRemoveCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), value);
-            return Invoke(request, m => TransactionalListRemoveCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalListRemoveCodec.DecodeResponse(m).Response);
         }
 
         public virtual int Size()
         {
             var request = TransactionalListSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            return Invoke(request, m => TransactionalListSizeCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalListSizeCodec.DecodeResponse(m).Response);
         }
     }
 }

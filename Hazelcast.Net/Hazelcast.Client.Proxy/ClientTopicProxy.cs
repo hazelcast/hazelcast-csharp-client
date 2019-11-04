@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Proxy
                     {
                         HandleMessageListener(item, time, uuid, listener);
                     });
-            return RegisterListener(request, m => TopicAddMessageListenerCodec.DecodeResponse(m).response,
+            return RegisterListener(request, m => TopicAddMessageListenerCodec.DecodeResponse(m).Response,
                 id => TopicRemoveMessageListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -60,12 +60,12 @@ namespace Hazelcast.Client.Proxy
             return DeregisterListener(registrationId);
         }
 
-        protected override IClientMessage Invoke(IClientMessage request)
+        protected override ClientMessage Invoke(ClientMessage request)
         {
             return base.Invoke(request, GetKey());
         }
 
-        protected override TT Invoke<TT>(IClientMessage request, Func<IClientMessage, TT> decodeResponse)
+        protected override TT Invoke<TT>(ClientMessage request, Func<ClientMessage, TT> decodeResponse)
         {
             return base.Invoke(request, GetKey(), decodeResponse);
         }

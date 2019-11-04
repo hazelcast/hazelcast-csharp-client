@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class TransactionalMapRemoveIfSameCodec 
     {
-        //hex: 0x100D00
-        public const int RequestMessageType = 1051904;
-        //hex: 0x100D01
-        public const int ResponseMessageType = 1051905;
+        //hex: 0x0E0D00
+        public const int RequestMessageType = 920832;
+        //hex: 0x0E0D01
+        public const int ResponseMessageType = 920833;
         private const int RequestTxnIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + GuidSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;

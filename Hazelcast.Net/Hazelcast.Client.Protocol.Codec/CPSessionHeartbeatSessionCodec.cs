@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CPSessionHeartbeatSessionCodec 
     {
-        //hex: 0x220300
-        public const int RequestMessageType = 2228992;
-        //hex: 0x220301
-        public const int ResponseMessageType = 2228993;
+        //hex: 0x1F0300
+        public const int RequestMessageType = 2032384;
+        //hex: 0x1F0301
+        public const int ResponseMessageType = 2032385;
         private const int RequestSessionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestSessionIdFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;

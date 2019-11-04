@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class AtomicLongCompareAndSetCodec 
     {
-        //hex: 0x0A0400
-        public const int RequestMessageType = 656384;
-        //hex: 0x0A0401
-        public const int ResponseMessageType = 656385;
+        //hex: 0x090400
+        public const int RequestMessageType = 590848;
+        //hex: 0x090401
+        public const int ResponseMessageType = 590849;
         private const int RequestExpectedFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestUpdatedFieldOffset = RequestExpectedFieldOffset + LongSizeInBytes;
         private const int RequestInitialFrameSize = RequestUpdatedFieldOffset + LongSizeInBytes;

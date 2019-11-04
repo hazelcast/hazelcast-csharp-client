@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddMultiMapConfigCodec 
     {
-        //hex: 0x1E0100
-        public const int RequestMessageType = 1966336;
-        //hex: 0x1E0101
-        public const int ResponseMessageType = 1966337;
+        //hex: 0x1B0100
+        public const int RequestMessageType = 1769728;
+        //hex: 0x1B0101
+        public const int ResponseMessageType = 1769729;
         private const int RequestBinaryFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestBackupCountFieldOffset = RequestBinaryFieldOffset + BoolSizeInBytes;
         private const int RequestAsyncBackupCountFieldOffset = RequestBackupCountFieldOffset + IntSizeInBytes;
@@ -67,7 +67,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// entry listener configurations
             ///</summary>
-            public IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
+            public IList<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
 
             /// <summary>
             /// {@code true} to store values in {@code BINARY} format or {@code false} to store

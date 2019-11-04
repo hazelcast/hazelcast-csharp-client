@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddRingbufferConfigCodec 
     {
-        //hex: 0x1E0200
-        public const int RequestMessageType = 1966592;
-        //hex: 0x1E0201
-        public const int ResponseMessageType = 1966593;
+        //hex: 0x1B0200
+        public const int RequestMessageType = 1769984;
+        //hex: 0x1B0201
+        public const int ResponseMessageType = 1769985;
         private const int RequestCapacityFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestBackupCountFieldOffset = RequestCapacityFieldOffset + IntSizeInBytes;
         private const int RequestAsyncBackupCountFieldOffset = RequestBackupCountFieldOffset + IntSizeInBytes;

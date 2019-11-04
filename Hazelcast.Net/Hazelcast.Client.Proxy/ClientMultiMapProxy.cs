@@ -37,14 +37,14 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
             var request = MultiMapPutCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId());
 
-            return Invoke(request, keyData, m => MultiMapPutCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => MultiMapPutCodec.DecodeResponse(m).Response);
         }
 
         public virtual ICollection<TValue> Get(TKey key)
         {
             var keyData = ToData(key);
             var request = MultiMapGetCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
-            var list = Invoke(request, keyData, m => MultiMapGetCodec.DecodeResponse(m).response);
+            var list = Invoke(request, keyData, m => MultiMapGetCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
 
             var request = MultiMapRemoveEntryCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId());
-            return Invoke(request, keyData, m => MultiMapRemoveEntryCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => MultiMapRemoveEntryCodec.DecodeResponse(m).Response);
         }
 
         public virtual ICollection<TValue> Remove(object key)
@@ -62,28 +62,28 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
 
             var request = MultiMapRemoveCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
-            var list = Invoke(request, keyData, m => MultiMapRemoveCodec.DecodeResponse(m).response);
+            var list = Invoke(request, keyData, m => MultiMapRemoveCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 
         public virtual ISet<TKey> KeySet()
         {
             var request = MultiMapKeySetCodec.EncodeRequest(GetName());
-            var result = Invoke(request, m => MultiMapKeySetCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => MultiMapKeySetCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazySet<TKey>(result, GetContext().GetSerializationService());
         }
 
         public virtual ICollection<TValue> Values()
         {
             var request = MultiMapValuesCodec.EncodeRequest(GetName());
-            var list = Invoke(request, m => MultiMapValuesCodec.DecodeResponse(m).response);
+            var list = Invoke(request, m => MultiMapValuesCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 
         public virtual ISet<KeyValuePair<TKey, TValue>> EntrySet()
         {
             var request = MultiMapEntrySetCodec.EncodeRequest(GetName());
-            var dataEntrySet = Invoke(request, m => MultiMapEntrySetCodec.DecodeResponse(m).response);
+            var dataEntrySet = Invoke(request, m => MultiMapEntrySetCodec.DecodeResponse(m).Response);
             return ToEntrySet<TKey, TValue>(dataEntrySet);
         }
 
@@ -91,14 +91,14 @@ namespace Hazelcast.Client.Proxy
         {
             var keyData = ToData(key);
             var request = MultiMapContainsKeyCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
-            return Invoke(request, keyData, m => MultiMapContainsKeyCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => MultiMapContainsKeyCodec.DecodeResponse(m).Response);
         }
 
         public virtual bool ContainsValue(object value)
         {
             var valueData = ToData(value);
             var request = MultiMapContainsValueCodec.EncodeRequest(GetName(), valueData);
-            return Invoke(request, m => MultiMapContainsValueCodec.DecodeResponse(m).response);
+            return Invoke(request, m => MultiMapContainsValueCodec.DecodeResponse(m).Response);
         }
 
         public virtual bool ContainsEntry(TKey key, TValue value)
@@ -107,13 +107,13 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
             var request = MultiMapContainsEntryCodec.EncodeRequest(GetName(), keyData, valueData,
                 ThreadUtil.GetThreadId());
-            return Invoke(request, keyData, m => MultiMapContainsEntryCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => MultiMapContainsEntryCodec.DecodeResponse(m).Response);
         }
 
         public virtual int Size()
         {
             var request = MultiMapSizeCodec.EncodeRequest(GetName());
-            return Invoke(request, m => MultiMapSizeCodec.DecodeResponse(m).response);
+            return Invoke(request, m => MultiMapSizeCodec.DecodeResponse(m).Response);
         }
 
         public virtual void Clear()
@@ -126,7 +126,7 @@ namespace Hazelcast.Client.Proxy
         {
             var keyData = ToData(key);
             var request = MultiMapValueCountCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
-            return Invoke(request, keyData, m => MultiMapValueCountCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => MultiMapValueCountCodec.DecodeResponse(m).Response);
         }
 
         public virtual string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue)
@@ -142,7 +142,7 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                     });
 
-            return RegisterListener(request, message => MultiMapAddEntryListenerCodec.DecodeResponse(message).response,
+            return RegisterListener(request, message => MultiMapAddEntryListenerCodec.DecodeResponse(message).Response,
                 id => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -165,7 +165,7 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(k, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                     });
 
-            return RegisterListener(request, message => MultiMapAddEntryListenerToKeyCodec.DecodeResponse(message).response,
+            return RegisterListener(request, message => MultiMapAddEntryListenerToKeyCodec.DecodeResponse(message).Response,
                 id => MultiMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -192,7 +192,7 @@ namespace Hazelcast.Client.Proxy
 
             var keyData = ToData(key);
             var request = MultiMapIsLockedCodec.EncodeRequest(GetName(), keyData);
-            return Invoke(request, keyData, m => MultiMapIsLockedCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => MultiMapIsLockedCodec.DecodeResponse(m).Response);
         }
 
         public virtual bool TryLock(TKey key)
@@ -222,7 +222,7 @@ namespace Hazelcast.Client.Proxy
             var request = MultiMapTryLockCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId(),
                 leaseUnit.ToMillis(leaseTime),
                 timeunit.ToMillis(timeout), _lockReferenceIdGenerator.GetNextReferenceId());
-            return Invoke(request, keyData, m => MultiMapTryLockCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => MultiMapTryLockCodec.DecodeResponse(m).Response);
         }
 
         public virtual void Unlock(TKey key)

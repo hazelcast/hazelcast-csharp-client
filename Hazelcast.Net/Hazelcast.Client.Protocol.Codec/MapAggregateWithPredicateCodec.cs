@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapAggregateWithPredicateCodec 
     {
-        //hex: 0x013F00
-        public const int RequestMessageType = 81664;
-        //hex: 0x013F01
-        public const int ResponseMessageType = 81665;
+        //hex: 0x013C00
+        public const int RequestMessageType = 80896;
+        //hex: 0x013C01
+        public const int ResponseMessageType = 80897;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

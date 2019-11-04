@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ScheduledExecutorGetResultFromAddressCodec 
     {
-        //hex: 0x1D1000
-        public const int RequestMessageType = 1904640;
-        //hex: 0x1D1001
-        public const int ResponseMessageType = 1904641;
+        //hex: 0x1A1000
+        public const int RequestMessageType = 1708032;
+        //hex: 0x1A1001
+        public const int ResponseMessageType = 1708033;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

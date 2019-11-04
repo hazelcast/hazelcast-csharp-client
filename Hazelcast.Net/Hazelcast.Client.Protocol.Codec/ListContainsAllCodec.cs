@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// Collection to be checked for containment in this list
             ///</summary>
-            public IEnumerable<IData> Values;
+            public IList<IData> Values;
         }
 
         public static ClientMessage EncodeRequest(string name, IEnumerable<IData> values) 

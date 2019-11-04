@@ -38,21 +38,21 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ContinuousQueryAddListenerCodec 
     {
-        //hex: 0x180400
-        public const int RequestMessageType = 1573888;
-        //hex: 0x180401
-        public const int ResponseMessageType = 1573889;
+        //hex: 0x160400
+        public const int RequestMessageType = 1442816;
+        //hex: 0x160401
+        public const int ResponseMessageType = 1442817;
         private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
         private const int EventQueryCacheSingleInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        // hex: 0x180402
-        private const int EventQueryCacheSingleMessageType = 1573890;
-        private const int EventQueryCacheBatchpartitionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventQueryCacheBatchInitialFrameSize = EventQueryCacheBatchpartitionIdFieldOffset + IntSizeInBytes;
-        // hex: 0x180403
-        private const int EventQueryCacheBatchMessageType = 1573891;
+        // hex: 0x160402
+        private const int EventQueryCacheSingleMessageType = 1442818;
+        private const int EventQueryCacheBatchPartitionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventQueryCacheBatchInitialFrameSize = EventQueryCacheBatchPartitionIdFieldOffset + IntSizeInBytes;
+        // hex: 0x160403
+        private const int EventQueryCacheBatchMessageType = 1442819;
 
         public class RequestParameters 
         {
@@ -138,7 +138,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventQueryCacheBatchInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventQueryCacheBatchMessageType);
-            EncodeInt(initialFrame.Content, EventQueryCacheBatchpartitionIdFieldOffset, partitionId);
+            EncodeInt(initialFrame.Content, EventQueryCacheBatchPartitionIdFieldOffset, partitionId);
             clientMessage.Add(initialFrame);
             ListMultiFrameCodec.Encode(clientMessage, events, QueryCacheEventDataCodec.Encode);
             StringCodec.Encode(clientMessage, source);
@@ -160,8 +160,8 @@ namespace Hazelcast.Client.Protocol.Codec
                 }
                 if (messageType == EventQueryCacheBatchMessageType) {
                     var initialFrame = iterator.Next();
-                    int partitionId =  DecodeInt(initialFrame.Content, EventQueryCacheBatchpartitionIdFieldOffset);
-                    IEnumerable<Hazelcast.Map.QueryCacheEventData> events = ListMultiFrameCodec.Decode(ref iterator, QueryCacheEventDataCodec.Decode);
+                    int partitionId =  DecodeInt(initialFrame.Content, EventQueryCacheBatchPartitionIdFieldOffset);
+                    IList<Hazelcast.Map.QueryCacheEventData> events = ListMultiFrameCodec.Decode(ref iterator, QueryCacheEventDataCodec.Decode);
                     string source = StringCodec.Decode(ref iterator);
                     HandleQueryCacheBatchEvent(events, source, partitionId);
                     return;

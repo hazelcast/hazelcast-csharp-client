@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class TransactionRollbackCodec 
     {
-        //hex: 0x170300
-        public const int RequestMessageType = 1508096;
-        //hex: 0x170301
-        public const int ResponseMessageType = 1508097;
+        //hex: 0x150300
+        public const int RequestMessageType = 1377024;
+        //hex: 0x150301
+        public const int ResponseMessageType = 1377025;
         private const int RequestTransactionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTransactionIdFieldOffset + GuidSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;

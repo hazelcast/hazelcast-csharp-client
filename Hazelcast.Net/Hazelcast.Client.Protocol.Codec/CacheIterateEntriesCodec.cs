@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheIterateEntriesCodec 
     {
-        //hex: 0x151D00
-        public const int RequestMessageType = 1383680;
-        //hex: 0x151D01
-        public const int ResponseMessageType = 1383681;
+        //hex: 0x131D00
+        public const int RequestMessageType = 1252608;
+        //hex: 0x131D01
+        public const int ResponseMessageType = 1252609;
         private const int RequestTableIndexFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestBatchFieldOffset = RequestTableIndexFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestBatchFieldOffset + IntSizeInBytes;
@@ -103,7 +103,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public IEnumerable<KeyValuePair<IData, IData>> Entries;
+            public IList<KeyValuePair<IData, IData>> Entries;
         }
 
         public static ClientMessage EncodeResponse(int tableIndex, IEnumerable<KeyValuePair<IData, IData>> entries) 

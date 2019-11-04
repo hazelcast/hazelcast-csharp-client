@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddTopicConfigCodec 
     {
-        //hex: 0x1E0800
-        public const int RequestMessageType = 1968128;
-        //hex: 0x1E0801
-        public const int ResponseMessageType = 1968129;
+        //hex: 0x1B0700
+        public const int RequestMessageType = 1771264;
+        //hex: 0x1B0701
+        public const int ResponseMessageType = 1771265;
         private const int RequestGlobalOrderingEnabledFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestStatisticsEnabledFieldOffset = RequestGlobalOrderingEnabledFieldOffset + BoolSizeInBytes;
         private const int RequestMultiThreadingEnabledFieldOffset = RequestStatisticsEnabledFieldOffset + BoolSizeInBytes;
@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// message listener configurations
             ///</summary>
-            public IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
+            public IList<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
         }
 
         public static ClientMessage EncodeRequest(string name, bool globalOrderingEnabled, bool statisticsEnabled, bool multiThreadingEnabled, IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> listenerConfigs) 

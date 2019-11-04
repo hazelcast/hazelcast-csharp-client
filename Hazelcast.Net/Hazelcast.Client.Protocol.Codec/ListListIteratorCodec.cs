@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// a list iterator over the elements in this list (in proper
             /// sequence), starting at the specified position in the list
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

@@ -40,10 +40,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class PNCounterGetConfiguredReplicaCountCodec 
     {
-        //hex: 0x200300
-        public const int RequestMessageType = 2097920;
-        //hex: 0x200301
-        public const int ResponseMessageType = 2097921;
+        //hex: 0x1D0300
+        public const int RequestMessageType = 1901312;
+        //hex: 0x1D0301
+        public const int ResponseMessageType = 1901313;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + IntSizeInBytes;

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class AtomicRefContainsCodec 
     {
-        //hex: 0x0B0300
-        public const int RequestMessageType = 721664;
-        //hex: 0x0B0301
-        public const int ResponseMessageType = 721665;
+        //hex: 0x0A0300
+        public const int RequestMessageType = 656128;
+        //hex: 0x0A0301
+        public const int ResponseMessageType = 656129;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;

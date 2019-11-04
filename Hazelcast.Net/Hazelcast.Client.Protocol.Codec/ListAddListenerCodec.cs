@@ -47,9 +47,9 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventItemuuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventItemeventTypeFieldOffset = EventItemUuidFieldOffset + GuidSizeInBytes;
-        private const int EventItemInitialFrameSize = EventItemeventTypeFieldOffset + IntSizeInBytes;
+        private const int EventItemUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventItemEventTypeFieldOffset = EventItemUuidFieldOffset + GuidSizeInBytes;
+        private const int EventItemInitialFrameSize = EventItemEventTypeFieldOffset + IntSizeInBytes;
         // hex: 0x050B02
         private const int EventItemMessageType = 330498;
 
@@ -133,8 +133,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventItemInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventItemMessageType);
-            EncodeGuid(initialFrame.Content, EventItemuuidFieldOffset, uuid);
-            EncodeInt(initialFrame.Content, EventItemeventTypeFieldOffset, eventType);
+            EncodeGuid(initialFrame.Content, EventItemUuidFieldOffset, uuid);
+            EncodeInt(initialFrame.Content, EventItemEventTypeFieldOffset, eventType);
             clientMessage.Add(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, item, DataCodec.Encode);
             return clientMessage;
@@ -148,8 +148,8 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventItemMessageType) {
                     var initialFrame = iterator.Next();
-                    Guid uuid =  DecodeGuid(initialFrame.Content, EventItemuuidFieldOffset);
-                    int eventType =  DecodeInt(initialFrame.Content, EventItemeventTypeFieldOffset);
+                    Guid uuid =  DecodeGuid(initialFrame.Content, EventItemUuidFieldOffset);
+                    int eventType =  DecodeInt(initialFrame.Content, EventItemEventTypeFieldOffset);
                     IData item = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
                     HandleItemEvent(item, uuid, eventType);
                     return;

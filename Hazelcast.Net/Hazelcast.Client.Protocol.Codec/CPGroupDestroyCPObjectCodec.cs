@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CPGroupDestroyCPObjectCodec 
     {
-        //hex: 0x210200
-        public const int RequestMessageType = 2163200;
-        //hex: 0x210201
-        public const int ResponseMessageType = 2163201;
+        //hex: 0x1E0200
+        public const int RequestMessageType = 1966592;
+        //hex: 0x1E0201
+        public const int ResponseMessageType = 1966593;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

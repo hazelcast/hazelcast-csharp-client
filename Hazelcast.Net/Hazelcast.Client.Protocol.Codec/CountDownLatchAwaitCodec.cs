@@ -52,10 +52,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CountDownLatchAwaitCodec 
     {
-        //hex: 0x0C0200
-        public const int RequestMessageType = 786944;
-        //hex: 0x0C0201
-        public const int ResponseMessageType = 786945;
+        //hex: 0x0B0200
+        public const int RequestMessageType = 721408;
+        //hex: 0x0B0201
+        public const int ResponseMessageType = 721409;
         private const int RequestInvocationUidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestTimeoutMsFieldOffset = RequestInvocationUidFieldOffset + GuidSizeInBytes;
         private const int RequestInitialFrameSize = RequestTimeoutMsFieldOffset + LongSizeInBytes;

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientCreateProxyCodec 
     {
-        //hex: 0x000500
-        public const int RequestMessageType = 1280;
-        //hex: 0x000501
-        public const int ResponseMessageType = 1281;
+        //hex: 0x000400
+        public const int RequestMessageType = 1024;
+        //hex: 0x000401
+        public const int ResponseMessageType = 1025;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheLoadAllCodec 
     {
-        //hex: 0x151100
-        public const int RequestMessageType = 1380608;
-        //hex: 0x151101
-        public const int ResponseMessageType = 1380609;
+        //hex: 0x131100
+        public const int RequestMessageType = 1249536;
+        //hex: 0x131101
+        public const int ResponseMessageType = 1249537;
         private const int RequestReplaceExistingValuesFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestReplaceExistingValuesFieldOffset + BoolSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// the keys to load
             ///</summary>
-            public IEnumerable<IData> Keys;
+            public IList<IData> Keys;
 
             /// <summary>
             /// when true existing values in the Cache will

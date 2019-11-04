@@ -35,25 +35,25 @@ namespace Hazelcast.Client.Proxy
         public virtual bool IsLocked()
         {
             var request = LockIsLockedCodec.EncodeRequest(GetName());
-            return Invoke(request, m => LockIsLockedCodec.DecodeResponse(m).response);
+            return Invoke(request, m => LockIsLockedCodec.DecodeResponse(m).Response);
         }
 
         public virtual bool IsLockedByCurrentThread()
         {
             var request = LockIsLockedByCurrentThreadCodec.EncodeRequest(GetName(), ThreadUtil.GetThreadId());
-            return Invoke(request, m => LockIsLockedByCurrentThreadCodec.DecodeResponse(m).response);
+            return Invoke(request, m => LockIsLockedByCurrentThreadCodec.DecodeResponse(m).Response);
         }
 
         public virtual int GetLockCount()
         {
             var request = LockGetLockCountCodec.EncodeRequest(GetName());
-            return Invoke(request, m => LockGetLockCountCodec.DecodeResponse(m).response);
+            return Invoke(request, m => LockGetLockCountCodec.DecodeResponse(m).Response);
         }
 
         public virtual long GetRemainingLeaseTime()
         {
             var request = LockGetRemainingLeaseTimeCodec.EncodeRequest(GetName());
-            return Invoke(request, m => LockGetRemainingLeaseTimeCodec.DecodeResponse(m).response);
+            return Invoke(request, m => LockGetRemainingLeaseTimeCodec.DecodeResponse(m).Response);
         }
 
         public virtual void Lock(long leaseTime, TimeUnit? timeUnit)
@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = LockTryLockCodec.EncodeRequest(GetName(), ThreadUtil.GetThreadId(), long.MaxValue,
                 GetTimeInMillis(time, unit), _lockReferenceIdGenerator.GetNextReferenceId());
-            return Invoke(request, m => LockTryLockCodec.DecodeResponse(m).response);
+            return Invoke(request, m => LockTryLockCodec.DecodeResponse(m).Response);
         }
 
         public virtual void Unlock()
@@ -100,7 +100,7 @@ namespace Hazelcast.Client.Proxy
             Invoke(request);
         }
 
-        protected override IClientMessage Invoke(IClientMessage request)
+        protected override ClientMessage Invoke(ClientMessage request)
         {
             return base.Invoke(request, GetKeyData());
         }

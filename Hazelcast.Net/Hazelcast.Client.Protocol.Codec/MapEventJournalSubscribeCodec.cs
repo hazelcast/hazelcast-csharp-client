@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapEventJournalSubscribeCodec 
     {
-        //hex: 0x014700
-        public const int RequestMessageType = 83712;
-        //hex: 0x014701
-        public const int ResponseMessageType = 83713;
+        //hex: 0x014400
+        public const int RequestMessageType = 82944;
+        //hex: 0x014401
+        public const int ResponseMessageType = 82945;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseOldestSequenceFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseNewestSequenceFieldOffset = ResponseOldestSequenceFieldOffset + LongSizeInBytes;

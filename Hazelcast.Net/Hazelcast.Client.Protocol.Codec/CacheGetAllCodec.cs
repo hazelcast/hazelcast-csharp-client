@@ -40,10 +40,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheGetAllCodec 
     {
-        //hex: 0x150A00
-        public const int RequestMessageType = 1378816;
-        //hex: 0x150A01
-        public const int ResponseMessageType = 1378817;
+        //hex: 0x130A00
+        public const int RequestMessageType = 1247744;
+        //hex: 0x130A01
+        public const int ResponseMessageType = 1247745;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The keys whose associated values are to be returned.
             ///</summary>
-            public IEnumerable<IData> Keys;
+            public IList<IData> Keys;
 
             /// <summary>
             /// Expiry policy for the entry. Byte-array which is serialized from an object implementing
@@ -101,7 +101,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// A map of entries that were found for the given keys. Keys not found
             /// in the cache are not in the returned map.
             ///</summary>
-            public IEnumerable<KeyValuePair<IData, IData>> Response;
+            public IList<KeyValuePair<IData, IData>> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<IData, IData>> response) 

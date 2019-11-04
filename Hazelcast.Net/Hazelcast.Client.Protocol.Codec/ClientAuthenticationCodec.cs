@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientAuthenticationCodec 
     {
-        //hex: 0x000200
-        public const int RequestMessageType = 512;
-        //hex: 0x000201
-        public const int ResponseMessageType = 513;
+        //hex: 0x000100
+        public const int RequestMessageType = 256;
+        //hex: 0x000101
+        public const int ResponseMessageType = 257;
         private const int RequestUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestSerializationVersionFieldOffset = RequestUuidFieldOffset + GuidSizeInBytes;
         private const int RequestPartitionCountFieldOffset = RequestSerializationVersionFieldOffset + ByteSizeInBytes;
@@ -57,12 +57,19 @@ namespace Hazelcast.Client.Protocol.Codec
         {
 
             /// <summary>
+            /// Cluster name that client will connect to.
+            ///</summary>
+            public string ClusterName;
+
+            /// <summary>
             /// Name of the user for authentication.
+            /// Used in case Client Identity Config, otherwise it should be passed null.
             ///</summary>
             public string Username;
 
             /// <summary>
             /// Password for the user.
+            /// Used in case Client Identity Config, otherwise it should be passed null.
             ///</summary>
             public string Password;
 
@@ -94,7 +101,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// User defined labels of the client instance
             ///</summary>
-            public IEnumerable<string> Labels;
+            public IList<string> Labels;
 
             /// <summary>
             /// the expected partition count of the cluster. Checked on the server side when provided.
@@ -109,7 +116,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public Guid ClusterId;
         }
 
-        public static ClientMessage EncodeRequest(string username, string password, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, IEnumerable<string> labels, int partitionCount, Guid clusterId) 
+        public static ClientMessage EncodeRequest(string clusterName, string username, string password, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, IEnumerable<string> labels, int partitionCount, Guid clusterId) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
@@ -122,8 +129,9 @@ namespace Hazelcast.Client.Protocol.Codec
             EncodeInt(initialFrame.Content, RequestPartitionCountFieldOffset, partitionCount);
             EncodeGuid(initialFrame.Content, RequestClusterIdFieldOffset, clusterId);
             clientMessage.Add(initialFrame);
-            StringCodec.Encode(clientMessage, username);
-            StringCodec.Encode(clientMessage, password);
+            StringCodec.Encode(clientMessage, clusterName);
+            CodecUtil.EncodeNullable(clientMessage, username, StringCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, password, StringCodec.Encode);
             StringCodec.Encode(clientMessage, clientType);
             StringCodec.Encode(clientMessage, clientHazelcastVersion);
             StringCodec.Encode(clientMessage, clientName);
@@ -140,8 +148,9 @@ namespace Hazelcast.Client.Protocol.Codec
             request.SerializationVersion =  DecodeByte(initialFrame.Content, RequestSerializationVersionFieldOffset);
             request.PartitionCount =  DecodeInt(initialFrame.Content, RequestPartitionCountFieldOffset);
             request.ClusterId =  DecodeGuid(initialFrame.Content, RequestClusterIdFieldOffset);
-            request.Username = StringCodec.Decode(ref iterator);
-            request.Password = StringCodec.Decode(ref iterator);
+            request.ClusterName = StringCodec.Decode(ref iterator);
+            request.Username = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
+            request.Password = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
             request.ClientType = StringCodec.Decode(ref iterator);
             request.ClientHazelcastVersion = StringCodec.Decode(ref iterator);
             request.ClientName = StringCodec.Decode(ref iterator);

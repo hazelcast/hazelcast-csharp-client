@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// list of all removed data in result of this method
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

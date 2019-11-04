@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class SemaphoreReleaseCodec 
     {
-        //hex: 0x0D0300
-        public const int RequestMessageType = 852736;
-        //hex: 0x0D0301
-        public const int ResponseMessageType = 852737;
+        //hex: 0x0C0300
+        public const int RequestMessageType = 787200;
+        //hex: 0x0C0301
+        public const int ResponseMessageType = 787201;
         private const int RequestSessionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestSessionIdFieldOffset + LongSizeInBytes;
         private const int RequestInvocationUidFieldOffset = RequestThreadIdFieldOffset + LongSizeInBytes;

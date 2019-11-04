@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapLoadGivenKeysCodec 
     {
-        //hex: 0x012500
-        public const int RequestMessageType = 75008;
-        //hex: 0x012501
-        public const int ResponseMessageType = 75009;
+        //hex: 0x012200
+        public const int RequestMessageType = 74240;
+        //hex: 0x012201
+        public const int ResponseMessageType = 74241;
         private const int RequestReplaceExistingValuesFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestReplaceExistingValuesFieldOffset + BoolSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// keys to load
             ///</summary>
-            public IEnumerable<IData> Keys;
+            public IList<IData> Keys;
 
             /// <summary>
             /// when <code>true</code>, existing values in the Map will be replaced by those loaded from the MapLoader

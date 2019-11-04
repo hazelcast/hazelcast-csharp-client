@@ -38,24 +38,24 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapAddNearCacheEntryListenerCodec 
     {
-        //hex: 0x011D00
-        public const int RequestMessageType = 72960;
-        //hex: 0x011D01
-        public const int ResponseMessageType = 72961;
+        //hex: 0x011A00
+        public const int RequestMessageType = 72192;
+        //hex: 0x011A01
+        public const int ResponseMessageType = 72193;
         private const int RequestListenerFlagsFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestLocalOnlyFieldOffset = RequestListenerFlagsFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventIMapInvalidationsourceUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventIMapInvalidationpartitionUuidFieldOffset = EventIMapInvalidationSourceUuidFieldOffset + GuidSizeInBytes;
-        private const int EventIMapInvalidationsequenceFieldOffset = EventIMapInvalidationPartitionUuidFieldOffset + GuidSizeInBytes;
-        private const int EventIMapInvalidationInitialFrameSize = EventIMapInvalidationsequenceFieldOffset + LongSizeInBytes;
-        // hex: 0x011D02
-        private const int EventIMapInvalidationMessageType = 72962;
+        private const int EventIMapInvalidationSourceUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventIMapInvalidationPartitionUuidFieldOffset = EventIMapInvalidationSourceUuidFieldOffset + GuidSizeInBytes;
+        private const int EventIMapInvalidationSequenceFieldOffset = EventIMapInvalidationPartitionUuidFieldOffset + GuidSizeInBytes;
+        private const int EventIMapInvalidationInitialFrameSize = EventIMapInvalidationSequenceFieldOffset + LongSizeInBytes;
+        // hex: 0x011A02
+        private const int EventIMapInvalidationMessageType = 72194;
         private const int EventIMapBatchInvalidationInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        // hex: 0x011D03
-        private const int EventIMapBatchInvalidationMessageType = 72963;
+        // hex: 0x011A03
+        private const int EventIMapBatchInvalidationMessageType = 72195;
 
         public class RequestParameters 
         {
@@ -137,9 +137,9 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventIMapInvalidationInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventIMapInvalidationMessageType);
-            EncodeGuid(initialFrame.Content, EventIMapInvalidationsourceUuidFieldOffset, sourceUuid);
-            EncodeGuid(initialFrame.Content, EventIMapInvalidationpartitionUuidFieldOffset, partitionUuid);
-            EncodeLong(initialFrame.Content, EventIMapInvalidationsequenceFieldOffset, sequence);
+            EncodeGuid(initialFrame.Content, EventIMapInvalidationSourceUuidFieldOffset, sourceUuid);
+            EncodeGuid(initialFrame.Content, EventIMapInvalidationPartitionUuidFieldOffset, partitionUuid);
+            EncodeLong(initialFrame.Content, EventIMapInvalidationSequenceFieldOffset, sequence);
             clientMessage.Add(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
             return clientMessage;
@@ -167,9 +167,9 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventIMapInvalidationMessageType) {
                     var initialFrame = iterator.Next();
-                    Guid sourceUuid =  DecodeGuid(initialFrame.Content, EventIMapInvalidationsourceUuidFieldOffset);
-                    Guid partitionUuid =  DecodeGuid(initialFrame.Content, EventIMapInvalidationpartitionUuidFieldOffset);
-                    long sequence =  DecodeLong(initialFrame.Content, EventIMapInvalidationsequenceFieldOffset);
+                    Guid sourceUuid =  DecodeGuid(initialFrame.Content, EventIMapInvalidationSourceUuidFieldOffset);
+                    Guid partitionUuid =  DecodeGuid(initialFrame.Content, EventIMapInvalidationPartitionUuidFieldOffset);
+                    long sequence =  DecodeLong(initialFrame.Content, EventIMapInvalidationSequenceFieldOffset);
                     IData key = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
                     HandleIMapInvalidationEvent(key, sourceUuid, partitionUuid, sequence);
                     return;
@@ -177,10 +177,10 @@ namespace Hazelcast.Client.Protocol.Codec
                 if (messageType == EventIMapBatchInvalidationMessageType) {
                     //empty initial frame
                     iterator.Next();
-                    IEnumerable<IData> keys = ListMultiFrameCodec.Decode(ref iterator, DataCodec.Decode);
-                    IEnumerable<Guid> sourceUuids = ListUUIDCodec.Decode(ref iterator);
-                    IEnumerable<Guid> partitionUuids = ListUUIDCodec.Decode(ref iterator);
-                    IEnumerable<long> sequences = ListLongCodec.Decode(ref iterator);
+                    IList<IData> keys = ListMultiFrameCodec.Decode(ref iterator, DataCodec.Decode);
+                    IList<Guid> sourceUuids = ListUUIDCodec.Decode(ref iterator);
+                    IList<Guid> partitionUuids = ListUUIDCodec.Decode(ref iterator);
+                    IList<long> sequences = ListLongCodec.Decode(ref iterator);
                     HandleIMapBatchInvalidationEvent(keys, sourceUuids, partitionUuids, sequences);
                     return;
                 }

@@ -47,9 +47,9 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventTopicpublishTimeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventTopicuuidFieldOffset = EventTopicPublishTimeFieldOffset + LongSizeInBytes;
-        private const int EventTopicInitialFrameSize = EventTopicuuidFieldOffset + GuidSizeInBytes;
+        private const int EventTopicPublishTimeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventTopicUuidFieldOffset = EventTopicPublishTimeFieldOffset + LongSizeInBytes;
+        private const int EventTopicInitialFrameSize = EventTopicUuidFieldOffset + GuidSizeInBytes;
         // hex: 0x040202
         private const int EventTopicMessageType = 262658;
 
@@ -126,8 +126,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventTopicInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventTopicMessageType);
-            EncodeLong(initialFrame.Content, EventTopicpublishTimeFieldOffset, publishTime);
-            EncodeGuid(initialFrame.Content, EventTopicuuidFieldOffset, uuid);
+            EncodeLong(initialFrame.Content, EventTopicPublishTimeFieldOffset, publishTime);
+            EncodeGuid(initialFrame.Content, EventTopicUuidFieldOffset, uuid);
             clientMessage.Add(initialFrame);
             DataCodec.Encode(clientMessage, item);
             return clientMessage;
@@ -141,8 +141,8 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventTopicMessageType) {
                     var initialFrame = iterator.Next();
-                    long publishTime =  DecodeLong(initialFrame.Content, EventTopicpublishTimeFieldOffset);
-                    Guid uuid =  DecodeGuid(initialFrame.Content, EventTopicuuidFieldOffset);
+                    long publishTime =  DecodeLong(initialFrame.Content, EventTopicPublishTimeFieldOffset);
+                    Guid uuid =  DecodeGuid(initialFrame.Content, EventTopicUuidFieldOffset);
                     IData item = DataCodec.Decode(ref iterator);
                     HandleTopicEvent(item, publishTime, uuid);
                     return;

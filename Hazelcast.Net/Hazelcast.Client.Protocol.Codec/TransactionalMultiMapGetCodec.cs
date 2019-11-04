@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class TransactionalMultiMapGetCodec 
     {
-        //hex: 0x110200
-        public const int RequestMessageType = 1114624;
-        //hex: 0x110201
-        public const int ResponseMessageType = 1114625;
+        //hex: 0x0F0200
+        public const int RequestMessageType = 983552;
+        //hex: 0x0F0201
+        public const int ResponseMessageType = 983553;
         private const int RequestTxnIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + GuidSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The collection of the values associated with the key
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

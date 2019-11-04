@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// An array of all item values in the list.
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientRemovePartitionLostListenerCodec 
     {
-        //hex: 0x000B00
-        public const int RequestMessageType = 2816;
-        //hex: 0x000B01
-        public const int ResponseMessageType = 2817;
+        //hex: 0x000900
+        public const int RequestMessageType = 2304;
+        //hex: 0x000901
+        public const int ResponseMessageType = 2305;
         private const int RequestRegistrationIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + GuidSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

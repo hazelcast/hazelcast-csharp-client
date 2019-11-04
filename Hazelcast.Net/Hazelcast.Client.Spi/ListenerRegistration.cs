@@ -22,13 +22,13 @@ namespace Hazelcast.Client.Spi
     class ListenerRegistration
     {
         public string UserRegistrationId { get; private set; }
-        public IClientMessage RegistrationRequest { get; private set; }
+        public ClientMessage RegistrationRequest { get; private set; }
         public DecodeRegisterResponse DecodeRegisterResponse { get; private set; }
         public EncodeDeregisterRequest EncodeDeregisterRequest { get; private set; }
         public DistributedEventHandler EventHandler { get; private set; }
         public ConcurrentDictionary<ClientConnection, EventRegistration> ConnectionRegistrations { get; private set; }
 
-        public ListenerRegistration(string userRegistrationId, IClientMessage registrationRequest = null,
+        public ListenerRegistration(string userRegistrationId, ClientMessage registrationRequest = null,
             DecodeRegisterResponse decodeRegisterResponse = null, EncodeDeregisterRequest encodeDeregisterRequest = null,
             DistributedEventHandler eventHandler = null)
         {

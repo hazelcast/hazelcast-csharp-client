@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CPGroupCreateCPGroupCodec 
     {
-        //hex: 0x210100
-        public const int RequestMessageType = 2162944;
-        //hex: 0x210101
-        public const int ResponseMessageType = 2162945;
+        //hex: 0x1E0100
+        public const int RequestMessageType = 1966336;
+        //hex: 0x1E0101
+        public const int ResponseMessageType = 1966337;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

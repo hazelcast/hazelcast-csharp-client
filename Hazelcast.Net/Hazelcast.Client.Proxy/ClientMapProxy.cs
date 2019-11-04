@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapAggregateCodec.EncodeRequest(GetName(), ToData(aggregator));
             var response = Invoke(request);
             var resultParameters = MapAggregateCodec.DecodeResponse(response);
-            return ToObject<TResult>(resultParameters.response);
+            return ToObject<TResult>(resultParameters.Response);
         }
 
         public TResult Aggregate<TResult>(IAggregator<TResult> aggregator, IPredicate predicate)
@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapAggregateWithPredicateCodec.EncodeRequest(GetName(), ToData(aggregator), ToData(predicate));
             var response = Invoke(request);
             var resultParameters = MapAggregateWithPredicateCodec.DecodeResponse(response);
-            return ToObject<TResult>(resultParameters.response);
+            return ToObject<TResult>(resultParameters.Response);
         }
 
         public ICollection<TResult> Project<TResult>(IProjection projection)
@@ -62,7 +62,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapProjectCodec.EncodeRequest(GetName(), ToData(projection));
             var response = Invoke(request);
             var resultParameters = MapProjectCodec.DecodeResponse(response);
-            return new ReadOnlyLazyList<TResult, IData>(resultParameters.response, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TResult, IData>(resultParameters.Response, GetContext().GetSerializationService());
         }
 
         public ICollection<TResult> Project<TResult>(IProjection projection, IPredicate predicate)
@@ -72,7 +72,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapProjectWithPredicateCodec.EncodeRequest(GetName(), ToData(projection), ToData(predicate));
             var response = Invoke(request);
             var resultParameters = MapProjectWithPredicateCodec.DecodeResponse(response);
-            return new ReadOnlyLazyList<TResult, IData>(resultParameters.response, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TResult, IData>(resultParameters.Response, GetContext().GetSerializationService());
         }
 
         public bool ContainsKey(object key)
@@ -85,7 +85,7 @@ namespace Hazelcast.Client.Proxy
         protected virtual bool containsKeyInternal(IData keyData)
         {
             var request = MapContainsKeyCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
-            return Invoke(request, keyData, m => MapContainsKeyCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => MapContainsKeyCodec.DecodeResponse(m).Response);
         }
 
         public bool ContainsValue(object value)
@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
             var request = MapContainsValueCodec.EncodeRequest(GetName(), valueData);
             var result = Invoke(request);
-            return MapContainsValueCodec.DecodeResponse(result).response;
+            return MapContainsValueCodec.DecodeResponse(result).Response;
         }
 
         public TValue Get(object key)
@@ -107,7 +107,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = MapGetCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             var result = Invoke(request, keyData);
-            return MapGetCodec.DecodeResponse(result).response;
+            return MapGetCodec.DecodeResponse(result).Response;
         }
 
         public TValue Put(TKey key, TValue value)
@@ -129,7 +129,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = MapRemoveCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             var clientMessage = Invoke(request, keyData);
-            return ToObject<TValue>(MapRemoveCodec.DecodeResponse(clientMessage).response);
+            return ToObject<TValue>(MapRemoveCodec.DecodeResponse(clientMessage).Response);
         }
 
         public bool Remove(object key, object value)
@@ -145,7 +145,7 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
             var request = MapRemoveIfSameCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId());
             var clientMessage = Invoke(request, keyData);
-            return MapRemoveIfSameCodec.DecodeResponse(clientMessage).response;
+            return MapRemoveIfSameCodec.DecodeResponse(clientMessage).Response;
         }
 
         public void Delete(object key)
@@ -174,7 +174,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapGetCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             return InvokeAsync(request, keyData, m =>
             {
-                var resp = MapGetCodec.DecodeResponse(m).response;
+                var resp = MapGetCodec.DecodeResponse(m).Response;
                 return ToObject<TValue>(resp);
             });
         }
@@ -199,7 +199,7 @@ namespace Hazelcast.Client.Proxy
                 MapPutCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(), timeunit.ToMillis(ttl));
             return InvokeAsync(request, keyData, m =>
             {
-                var response = MapPutCodec.DecodeResponse(m).response;
+                var response = MapPutCodec.DecodeResponse(m).Response;
                 return ToObject<TValue>(response);
             });
         }
@@ -216,7 +216,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapRemoveCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             return InvokeAsync(request, keyData, m =>
             {
-                var response = MapRemoveCodec.DecodeResponse(m).response;
+                var response = MapRemoveCodec.DecodeResponse(m).Response;
                 return ToObject<TValue>(response);
             });
         }
@@ -233,7 +233,7 @@ namespace Hazelcast.Client.Proxy
             var request =
                 MapTryRemoveCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId(), timeunit.ToMillis(timeout));
             var result = Invoke(request, keyData);
-            var response = MapTryRemoveCodec.DecodeResponse(result).response;
+            var response = MapTryRemoveCodec.DecodeResponse(result).Response;
             return response;
         }
 
@@ -251,7 +251,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapTryPutCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(),
                 timeunit.ToMillis(timeout));
             var result = Invoke(request, keyData);
-            var response = MapTryPutCodec.DecodeResponse(result).response;
+            var response = MapTryPutCodec.DecodeResponse(result).Response;
             return response;
         }
 
@@ -270,7 +270,7 @@ namespace Hazelcast.Client.Proxy
             var request =
                 MapPutCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(), timeunit.ToMillis(ttl));
             var clientMessage = Invoke(request, keyData);
-            var response = MapPutCodec.DecodeResponse(clientMessage).response;
+            var response = MapPutCodec.DecodeResponse(clientMessage).Response;
             return ToObject<TValue>(response);
         }
 
@@ -309,7 +309,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapPutIfAbsentCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId(),
                 timeunit.ToMillis(ttl));
             var clientMessage = Invoke(request, keyData);
-            var response = MapPutIfAbsentCodec.DecodeResponse(clientMessage).response;
+            var response = MapPutIfAbsentCodec.DecodeResponse(clientMessage).Response;
             return ToObject<TValue>(response);
         }
 
@@ -329,7 +329,7 @@ namespace Hazelcast.Client.Proxy
             var request =
                 MapReplaceIfSameCodec.EncodeRequest(GetName(), keyData, oldValueData, newValueData, ThreadUtil.GetThreadId());
             var clientMessage = Invoke(request, keyData);
-            return MapReplaceIfSameCodec.DecodeResponse(clientMessage).response;
+            return MapReplaceIfSameCodec.DecodeResponse(clientMessage).Response;
         }
 
         public void RemoveAll(IPredicate predicate)
@@ -357,7 +357,7 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
             var request = MapReplaceCodec.EncodeRequest(GetName(), keyData, valueData, ThreadUtil.GetThreadId());
             var clientMessage = Invoke(request, keyData);
-            var response = MapReplaceCodec.DecodeResponse(clientMessage).response;
+            var response = MapReplaceCodec.DecodeResponse(clientMessage).Response;
             return ToObject<TValue>(response);
         }
 
@@ -395,7 +395,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = MapIsLockedCodec.EncodeRequest(GetName(), keyData);
             var result = Invoke(request, keyData);
-            return MapIsLockedCodec.DecodeResponse(result).response;
+            return MapIsLockedCodec.DecodeResponse(result).Response;
         }
 
         public Task<object> SubmitToKey(TKey key, IEntryProcessor entryProcessor)
@@ -410,7 +410,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapSubmitToKeyCodec.EncodeRequest(GetName(), ToData(entryProcessor), keyData, ThreadUtil.GetThreadId());
             var responseTask = InvokeAsync(request, keyData, m =>
             {
-                var response = MapSubmitToKeyCodec.DecodeResponse(m).response;
+                var response = MapSubmitToKeyCodec.DecodeResponse(m).Response;
                 return ToObject<object>(response);
             });
             return responseTask;
@@ -438,7 +438,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = MapTryLockCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId(),
                 leaseUnit.ToMillis(leaseTime), timeunit.ToMillis(time), _lockReferenceIdGenerator.GetNextReferenceId());
-            return Invoke(request, keyData, m => MapTryLockCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => MapTryLockCodec.DecodeResponse(m).Response);
         }
 
         public void Unlock(TKey key)
@@ -460,7 +460,7 @@ namespace Hazelcast.Client.Proxy
         {
             var data = ToData(interceptor);
             var request = MapAddInterceptorCodec.EncodeRequest(GetName(), data);
-            return Invoke(request, m => MapAddInterceptorCodec.DecodeResponse(m).response);
+            return Invoke(request, m => MapAddInterceptorCodec.DecodeResponse(m).Response);
         }
 
         public void RemoveInterceptor(string id)
@@ -501,7 +501,7 @@ namespace Hazelcast.Client.Proxy
                     OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                 });
 
-            return RegisterListener(request, message => MapAddEntryListenerCodec.DecodeResponse(message).response,
+            return RegisterListener(request, message => MapAddEntryListenerCodec.DecodeResponse(message).Response,
                 id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -518,7 +518,7 @@ namespace Hazelcast.Client.Proxy
                     OnEntryEvent(key_, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                 });
 
-            return RegisterListener(request, message => MapAddEntryListenerToKeyCodec.DecodeResponse(message).response,
+            return RegisterListener(request, message => MapAddEntryListenerToKeyCodec.DecodeResponse(message).Response,
                 id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -537,7 +537,7 @@ namespace Hazelcast.Client.Proxy
                     {
                         OnEntryEvent(k, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                     });
-            return RegisterListener(request, message => MapAddEntryListenerCodec.DecodeResponse(message).response,
+            return RegisterListener(request, message => MapAddEntryListenerCodec.DecodeResponse(message).Response,
                 id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -557,7 +557,7 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                     });
 
-            return RegisterListener(request, message => MapAddEntryListenerWithPredicateCodec.DecodeResponse(message).response,
+            return RegisterListener(request, message => MapAddEntryListenerWithPredicateCodec.DecodeResponse(message).Response,
                 id => MapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -573,7 +573,7 @@ namespace Hazelcast.Client.Proxy
             var response = Invoke(request, keyData);
             var parameters = MapGetEntryViewCodec.DecodeResponse(response);
             var entryView = new SimpleEntryView<TKey, TValue>();
-            var dataEntryView = parameters.response;
+            var dataEntryView = parameters.Response;
             if (dataEntryView == null)
             {
                 return null;
@@ -600,7 +600,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapEvictCodec.EncodeRequest(GetName(), keyData, ThreadUtil.GetThreadId());
             var response = Invoke(request, keyData);
             var resultParameters = MapEvictCodec.DecodeResponse(response);
-            return resultParameters.response;
+            return resultParameters.Response;
         }
 
         public void EvictAll()
@@ -622,7 +622,7 @@ namespace Hazelcast.Client.Proxy
                 MapExecuteOnKeyCodec.EncodeRequest(GetName(), ToData(entryProcessor), keyData, ThreadUtil.GetThreadId());
             var response = Invoke(request, keyData);
             var resultParameters = MapExecuteOnKeyCodec.DecodeResponse(response);
-            return ToObject<object>(resultParameters.response);
+            return ToObject<object>(resultParameters.Response);
         }
 
         public IDictionary<TKey, object> ExecuteOnKeys(ISet<TKey> keys, IEntryProcessor entryProcessor)
@@ -635,7 +635,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapExecuteOnKeysCodec.EncodeRequest(GetName(), ToData(entryProcessor), dataList);
             var response = Invoke(request);
             var resultParameters = MapExecuteOnKeysCodec.DecodeResponse(response);
-            return DeserializeEntries<TKey>(resultParameters.response);
+            return DeserializeEntries<TKey>(resultParameters.Response);
         }
 
         public IDictionary<TKey, object> ExecuteOnEntries(IEntryProcessor entryProcessor)
@@ -643,7 +643,7 @@ namespace Hazelcast.Client.Proxy
             var request = MapExecuteOnAllKeysCodec.EncodeRequest(GetName(), ToData(entryProcessor));
             var response = Invoke(request);
             var resultParameters = MapExecuteOnAllKeysCodec.DecodeResponse(response);
-            return DeserializeEntries<TKey>(resultParameters.response);
+            return DeserializeEntries<TKey>(resultParameters.Response);
         }
 
         public IDictionary<TKey, object> ExecuteOnEntries(IEntryProcessor entryProcessor, IPredicate predicate)
@@ -651,13 +651,13 @@ namespace Hazelcast.Client.Proxy
             var request = MapExecuteWithPredicateCodec.EncodeRequest(GetName(), ToData(entryProcessor), ToData(predicate));
             var response = Invoke(request);
             var resultParameters = MapExecuteWithPredicateCodec.DecodeResponse(response);
-            return DeserializeEntries<TKey>(resultParameters.response);
+            return DeserializeEntries<TKey>(resultParameters.Response);
         }
 
         public ISet<TKey> KeySet()
         {
             var request = MapKeySetCodec.EncodeRequest(GetName());
-            var result = Invoke(request, m => MapKeySetCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => MapKeySetCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazySet<TKey>(result, GetContext().GetSerializationService());
         }
 
@@ -682,7 +682,7 @@ namespace Hazelcast.Client.Proxy
             ConcurrentQueue<KeyValuePair<IData, object>> resultingKeyValuePairs)
         {
             var invocationService = GetContext().GetInvocationService();
-            var futures = new ConcurrentQueue<IFuture<IClientMessage>>();
+            var futures = new ConcurrentQueue<IFuture<ClientMessage>>();
             Parallel.For(0, partitionToKeyData.Count, partitionId =>
             {
                 var keyList = (ArrayList) partitionToKeyData[partitionId];
@@ -721,7 +721,7 @@ namespace Hazelcast.Client.Proxy
         public ICollection<TValue> Values()
         {
             var request = MapValuesCodec.EncodeRequest(GetName());
-            var list = Invoke(request, m => MapValuesCodec.DecodeResponse(m).response);
+            var list = Invoke(request, m => MapValuesCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 
@@ -749,13 +749,13 @@ namespace Hazelcast.Client.Proxy
         public int Size()
         {
             var request = MapSizeCodec.EncodeRequest(GetName());
-            return Invoke(request, m => MapSizeCodec.DecodeResponse(m).response);
+            return Invoke(request, m => MapSizeCodec.DecodeResponse(m).Response);
         }
 
         public bool IsEmpty()
         {
             var request = MapIsEmptyCodec.EncodeRequest(GetName());
-            return Invoke(request, m => MapIsEmptyCodec.DecodeResponse(m).response);
+            return Invoke(request, m => MapIsEmptyCodec.DecodeResponse(m).Response);
         }
 
         public void PutAll(IDictionary<TKey, TValue> m)
@@ -783,7 +783,7 @@ namespace Hazelcast.Client.Proxy
 
         protected virtual void PutAllInternal(IDictionary<TKey, TValue> map, ArrayList partitions)
         {
-            var futures = new ConcurrentQueue<IFuture<IClientMessage>>();
+            var futures = new ConcurrentQueue<IFuture<ClientMessage>>();
             Parallel.For(0, partitions.Count, i =>
             {
                 var entries = (ArrayList) partitions[i];
@@ -810,7 +810,7 @@ namespace Hazelcast.Client.Proxy
                 return KeySetWithPagingPredicate((PagingPredicate) predicate);
             }
             var request = MapKeySetWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
-            var keys = Invoke(request, predicate, m => MapKeySetWithPredicateCodec.DecodeResponse(m).response);
+            var keys = Invoke(request, predicate, m => MapKeySetWithPredicateCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazySet<TKey>(keys, GetContext().GetSerializationService());
         }
 
@@ -838,11 +838,11 @@ namespace Hazelcast.Client.Proxy
             }
 
             var request = MapValuesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
-            var result = Invoke(request, predicate, m => MapValuesWithPredicateCodec.DecodeResponse(m).response);
+            var result = Invoke(request, predicate, m => MapValuesWithPredicateCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazyList<TValue, IData>(result, GetContext().GetSerializationService());
         }
 
-        private T Invoke<T>(IClientMessage request, IPredicate predicate, Func<IClientMessage, T> decodeResponse)
+        private T Invoke<T>(ClientMessage request, IPredicate predicate, Func<ClientMessage, T> decodeResponse)
         {
             var partitionPredicate = predicate as PartitionPredicate;
             if (partitionPredicate != null)
@@ -874,7 +874,7 @@ namespace Hazelcast.Client.Proxy
             var resultParameters = MapEntriesWithPagingPredicateCodec.DecodeResponse(response);
 
             var entryList = new List<KeyValuePair<object, object>>();
-            foreach (var dataEntry in resultParameters.response)
+            foreach (var dataEntry in resultParameters.Response)
             {
                 var key = ToObject<TKey>(dataEntry.Key);
                 var value = ToObject<TValue>(dataEntry.Value);
@@ -893,7 +893,7 @@ namespace Hazelcast.Client.Proxy
             var resultParameters = MapKeySetWithPagingPredicateCodec.DecodeResponse(response);
 
             var resultList = new List<KeyValuePair<object, object>>();
-            foreach (var keyData in resultParameters.response)
+            foreach (var keyData in resultParameters.Response)
             {
                 var key = ToObject<TKey>(keyData);
                 resultList.Add(new KeyValuePair<object, object>(key, default(TValue)));
@@ -912,7 +912,7 @@ namespace Hazelcast.Client.Proxy
             var resultParameters = MapValuesWithPagingPredicateCodec.DecodeResponse(response);
 
             var resultList = new List<KeyValuePair<object, object>>();
-            foreach (var dataEntry in resultParameters.response)
+            foreach (var dataEntry in resultParameters.Response)
             {
                 var key = ToObject<TKey>(dataEntry.Key);
                 var value = ToObject<TValue>(dataEntry.Value);

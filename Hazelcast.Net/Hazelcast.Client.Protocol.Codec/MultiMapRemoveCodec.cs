@@ -96,7 +96,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// True if the size of the multimap changed after the remove operation, false otherwise.
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

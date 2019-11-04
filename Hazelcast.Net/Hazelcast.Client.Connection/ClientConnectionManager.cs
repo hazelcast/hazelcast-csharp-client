@@ -305,7 +305,7 @@ namespace Hazelcast.Client.Connection
                     ClientTypes.Csharp, ss.GetVersion(), VersionUtil.GetDllVersion());
             }
 
-            IClientMessage response;
+            ClientMessage response;
             try
             {
                 var invocationService = (ClientInvocationService) _client.GetInvocationService();

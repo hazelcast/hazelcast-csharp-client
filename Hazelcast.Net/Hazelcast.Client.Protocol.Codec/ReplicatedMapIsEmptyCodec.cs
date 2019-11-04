@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ReplicatedMapIsEmptyCodec 
     {
-        //hex: 0x0E0300
-        public const int RequestMessageType = 918272;
-        //hex: 0x0E0301
-        public const int ResponseMessageType = 918273;
+        //hex: 0x0D0300
+        public const int RequestMessageType = 852736;
+        //hex: 0x0D0301
+        public const int ResponseMessageType = 852737;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;

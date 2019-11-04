@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientIsFailoverSupportedCodec 
     {
-        //hex: 0x001400
-        public const int RequestMessageType = 5120;
-        //hex: 0x001401
-        public const int ResponseMessageType = 5121;
+        //hex: 0x001200
+        public const int RequestMessageType = 4608;
+        //hex: 0x001201
+        public const int ResponseMessageType = 4609;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;

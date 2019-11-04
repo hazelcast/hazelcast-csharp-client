@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class TransactionCommitCodec 
     {
-        //hex: 0x170100
-        public const int RequestMessageType = 1507584;
-        //hex: 0x170101
-        public const int ResponseMessageType = 1507585;
+        //hex: 0x150100
+        public const int RequestMessageType = 1376512;
+        //hex: 0x150101
+        public const int ResponseMessageType = 1376513;
         private const int RequestTransactionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTransactionIdFieldOffset + GuidSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;

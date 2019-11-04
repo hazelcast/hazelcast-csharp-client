@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class XATransactionCollectTransactionsCodec 
     {
-        //hex: 0x160200
-        public const int RequestMessageType = 1442304;
-        //hex: 0x160201
-        public const int ResponseMessageType = 1442305;
+        //hex: 0x140200
+        public const int RequestMessageType = 1311232;
+        //hex: 0x140201
+        public const int ResponseMessageType = 1311233;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// Array of Xids.
             ///</summary>
-            public IEnumerable<javax.transaction.xa.Xid> Response;
+            public IList<javax.transaction.xa.Xid> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<javax.transaction.xa.Xid> response) 

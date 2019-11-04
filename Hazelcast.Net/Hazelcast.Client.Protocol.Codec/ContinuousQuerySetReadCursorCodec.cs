@@ -42,10 +42,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ContinuousQuerySetReadCursorCodec 
     {
-        //hex: 0x180500
-        public const int RequestMessageType = 1574144;
-        //hex: 0x180501
-        public const int ResponseMessageType = 1574145;
+        //hex: 0x160500
+        public const int RequestMessageType = 1443072;
+        //hex: 0x160501
+        public const int ResponseMessageType = 1443073;
         private const int RequestSequenceFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestSequenceFieldOffset + LongSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

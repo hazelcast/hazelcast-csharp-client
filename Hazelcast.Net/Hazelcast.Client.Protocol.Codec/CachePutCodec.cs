@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CachePutCodec 
     {
-        //hex: 0x151400
-        public const int RequestMessageType = 1381376;
-        //hex: 0x151401
-        public const int ResponseMessageType = 1381377;
+        //hex: 0x131400
+        public const int RequestMessageType = 1250304;
+        //hex: 0x131401
+        public const int ResponseMessageType = 1250305;
         private const int RequestGetFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestCompletionIdFieldOffset = RequestGetFieldOffset + BoolSizeInBytes;
         private const int RequestInitialFrameSize = RequestCompletionIdFieldOffset + IntSizeInBytes;

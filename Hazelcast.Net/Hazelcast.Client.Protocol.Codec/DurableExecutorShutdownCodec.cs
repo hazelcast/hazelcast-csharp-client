@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DurableExecutorShutdownCodec 
     {
-        //hex: 0x1B0100
-        public const int RequestMessageType = 1769728;
-        //hex: 0x1B0101
-        public const int ResponseMessageType = 1769729;
+        //hex: 0x180100
+        public const int RequestMessageType = 1573120;
+        //hex: 0x180101
+        public const int ResponseMessageType = 1573121;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

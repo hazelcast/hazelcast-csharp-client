@@ -42,10 +42,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapDeleteCodec 
     {
-        //hex: 0x010C00
-        public const int RequestMessageType = 68608;
-        //hex: 0x010C01
-        public const int ResponseMessageType = 68609;
+        //hex: 0x010900
+        public const int RequestMessageType = 67840;
+        //hex: 0x010901
+        public const int ResponseMessageType = 67841;
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;

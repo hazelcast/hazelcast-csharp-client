@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddReliableTopicConfigCodec 
     {
-        //hex: 0x1E0F00
-        public const int RequestMessageType = 1969920;
-        //hex: 0x1E0F01
-        public const int ResponseMessageType = 1969921;
+        //hex: 0x1B0D00
+        public const int RequestMessageType = 1772800;
+        //hex: 0x1B0D01
+        public const int ResponseMessageType = 1772801;
         private const int RequestReadBatchSizeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestStatisticsEnabledFieldOffset = RequestReadBatchSizeFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestStatisticsEnabledFieldOffset + BoolSizeInBytes;
@@ -59,7 +59,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// message listener configurations
             ///</summary>
-            public IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
+            public IList<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
 
             /// <summary>
             /// maximum number of items to read in a batch.

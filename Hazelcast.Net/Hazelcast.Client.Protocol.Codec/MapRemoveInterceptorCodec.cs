@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapRemoveInterceptorCodec 
     {
-        //hex: 0x011800
-        public const int RequestMessageType = 71680;
-        //hex: 0x011801
-        public const int ResponseMessageType = 71681;
+        //hex: 0x011500
+        public const int RequestMessageType = 70912;
+        //hex: 0x011501
+        public const int ResponseMessageType = 70913;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;

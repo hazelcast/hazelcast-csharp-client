@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ScheduledExecutorDisposeFromAddressCodec 
     {
-        //hex: 0x1D1200
-        public const int RequestMessageType = 1905152;
-        //hex: 0x1D1201
-        public const int ResponseMessageType = 1905153;
+        //hex: 0x1A1200
+        public const int RequestMessageType = 1708544;
+        //hex: 0x1A1201
+        public const int ResponseMessageType = 1708545;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

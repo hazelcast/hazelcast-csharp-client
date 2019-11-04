@@ -44,10 +44,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class RingbufferAddAllCodec 
     {
-        //hex: 0x190900
-        public const int RequestMessageType = 1640704;
-        //hex: 0x190901
-        public const int ResponseMessageType = 1640705;
+        //hex: 0x170800
+        public const int RequestMessageType = 1509376;
+        //hex: 0x170801
+        public const int ResponseMessageType = 1509377;
         private const int RequestOverflowPolicyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestOverflowPolicyFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
@@ -64,7 +64,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// the batch of items to add
             ///</summary>
-            public IEnumerable<IData> ValueList;
+            public IList<IData> ValueList;
 
             /// <summary>
             /// the overflowPolicy to use
@@ -102,7 +102,7 @@ namespace Hazelcast.Client.Protocol.Codec
         {
 
             /// <summary>
-            /// the ICompletableFuture to synchronize on completion.
+            /// the CompletionStage to synchronize on completion.
             ///</summary>
             public long Response;
         }

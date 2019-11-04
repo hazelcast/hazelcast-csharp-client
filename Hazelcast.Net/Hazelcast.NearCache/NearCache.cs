@@ -112,7 +112,7 @@ namespace Hazelcast.NearCache
                         HandleIMapBatchInvalidationEvent_v1_0, HandleIMapBatchInvalidationEvent_v1_4);
 
                 RegistrationId = Client.GetListenerService().RegisterListener(request,
-                    message => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).response,
+                    message => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                     id => MapRemoveEntryListenerCodec.EncodeRequest(Name, id), handler);
             }
             catch (Exception e)

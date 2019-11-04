@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CardinalityEstimatorEstimateCodec 
     {
-        //hex: 0x1C0200
-        public const int RequestMessageType = 1835520;
-        //hex: 0x1C0201
-        public const int ResponseMessageType = 1835521;
+        //hex: 0x190200
+        public const int RequestMessageType = 1638912;
+        //hex: 0x190201
+        public const int ResponseMessageType = 1638913;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + LongSizeInBytes;

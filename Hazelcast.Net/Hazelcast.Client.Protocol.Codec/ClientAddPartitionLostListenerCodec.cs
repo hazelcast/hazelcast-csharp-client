@@ -38,19 +38,19 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientAddPartitionLostListenerCodec 
     {
-        //hex: 0x000A00
-        public const int RequestMessageType = 2560;
-        //hex: 0x000A01
-        public const int ResponseMessageType = 2561;
+        //hex: 0x000800
+        public const int RequestMessageType = 2048;
+        //hex: 0x000801
+        public const int ResponseMessageType = 2049;
         private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventPartitionLostpartitionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventPartitionLostlostBackupCountFieldOffset = EventPartitionLostPartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventPartitionLostInitialFrameSize = EventPartitionLostlostBackupCountFieldOffset + IntSizeInBytes;
-        // hex: 0x000A02
-        private const int EventPartitionLostMessageType = 2562;
+        private const int EventPartitionLostPartitionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventPartitionLostLostBackupCountFieldOffset = EventPartitionLostPartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventPartitionLostInitialFrameSize = EventPartitionLostLostBackupCountFieldOffset + IntSizeInBytes;
+        // hex: 0x000802
+        private const int EventPartitionLostMessageType = 2050;
 
         public class RequestParameters 
         {
@@ -119,8 +119,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventPartitionLostInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventPartitionLostMessageType);
-            EncodeInt(initialFrame.Content, EventPartitionLostpartitionIdFieldOffset, partitionId);
-            EncodeInt(initialFrame.Content, EventPartitionLostlostBackupCountFieldOffset, lostBackupCount);
+            EncodeInt(initialFrame.Content, EventPartitionLostPartitionIdFieldOffset, partitionId);
+            EncodeInt(initialFrame.Content, EventPartitionLostLostBackupCountFieldOffset, lostBackupCount);
             clientMessage.Add(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, source, AddressCodec.Encode);
             return clientMessage;
@@ -134,8 +134,8 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventPartitionLostMessageType) {
                     var initialFrame = iterator.Next();
-                    int partitionId =  DecodeInt(initialFrame.Content, EventPartitionLostpartitionIdFieldOffset);
-                    int lostBackupCount =  DecodeInt(initialFrame.Content, EventPartitionLostlostBackupCountFieldOffset);
+                    int partitionId =  DecodeInt(initialFrame.Content, EventPartitionLostPartitionIdFieldOffset);
+                    int lostBackupCount =  DecodeInt(initialFrame.Content, EventPartitionLostLostBackupCountFieldOffset);
                     com.hazelcast.nio.Address source = CodecUtil.DecodeNullable(ref iterator, AddressCodec.Decode);
                     HandlePartitionLostEvent(partitionId, lostBackupCount, source);
                     return;

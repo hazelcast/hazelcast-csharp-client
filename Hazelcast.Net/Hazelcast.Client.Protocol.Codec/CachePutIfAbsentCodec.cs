@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CachePutIfAbsentCodec 
     {
-        //hex: 0x151300
-        public const int RequestMessageType = 1381120;
-        //hex: 0x151301
-        public const int ResponseMessageType = 1381121;
+        //hex: 0x131300
+        public const int RequestMessageType = 1250048;
+        //hex: 0x131301
+        public const int ResponseMessageType = 1250049;
         private const int RequestCompletionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestCompletionIdFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

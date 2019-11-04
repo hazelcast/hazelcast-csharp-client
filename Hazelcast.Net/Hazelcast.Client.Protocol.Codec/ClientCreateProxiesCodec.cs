@@ -41,10 +41,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientCreateProxiesCodec 
     {
-        //hex: 0x001300
-        public const int RequestMessageType = 4864;
-        //hex: 0x001301
-        public const int ResponseMessageType = 4865;
+        //hex: 0x001100
+        public const int RequestMessageType = 4352;
+        //hex: 0x001101
+        public const int ResponseMessageType = 4353;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -57,7 +57,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// Each entry's value is service name.
             /// For possible service names see createProxy message.
             ///</summary>
-            public IEnumerable<KeyValuePair<string, string>> Proxies;
+            public IList<KeyValuePair<string, string>> Proxies;
         }
 
         public static ClientMessage EncodeRequest(IEnumerable<KeyValuePair<string, string>> proxies) 

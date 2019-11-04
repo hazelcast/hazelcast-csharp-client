@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddPNCounterConfigCodec 
     {
-        //hex: 0x1E1600
-        public const int RequestMessageType = 1971712;
-        //hex: 0x1E1601
-        public const int ResponseMessageType = 1971713;
+        //hex: 0x1B1000
+        public const int RequestMessageType = 1773568;
+        //hex: 0x1B1001
+        public const int ResponseMessageType = 1773569;
         private const int RequestReplicaCountFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestStatisticsEnabledFieldOffset = RequestReplicaCountFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestStatisticsEnabledFieldOffset + BoolSizeInBytes;

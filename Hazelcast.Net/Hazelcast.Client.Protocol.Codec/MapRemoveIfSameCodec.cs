@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapRemoveIfSameCodec 
     {
-        //hex: 0x010B00
-        public const int RequestMessageType = 68352;
-        //hex: 0x010B01
-        public const int ResponseMessageType = 68353;
+        //hex: 0x010800
+        public const int RequestMessageType = 67584;
+        //hex: 0x010801
+        public const int ResponseMessageType = 67585;
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

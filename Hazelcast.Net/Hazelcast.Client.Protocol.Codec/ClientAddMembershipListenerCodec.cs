@@ -38,25 +38,25 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientAddMembershipListenerCodec 
     {
-        //hex: 0x000400
-        public const int RequestMessageType = 1024;
-        //hex: 0x000401
-        public const int ResponseMessageType = 1025;
+        //hex: 0x000300
+        public const int RequestMessageType = 768;
+        //hex: 0x000301
+        public const int ResponseMessageType = 769;
         private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventMembereventTypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventMemberInitialFrameSize = EventMembereventTypeFieldOffset + IntSizeInBytes;
-        // hex: 0x000402
-        private const int EventMemberMessageType = 1026;
+        private const int EventMemberEventTypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventMemberInitialFrameSize = EventMemberEventTypeFieldOffset + IntSizeInBytes;
+        // hex: 0x000302
+        private const int EventMemberMessageType = 770;
         private const int EventMemberListInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        // hex: 0x000403
-        private const int EventMemberListMessageType = 1027;
-        private const int EventMemberAttributeChangeoperationTypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventMemberAttributeChangeInitialFrameSize = EventMemberAttributeChangeoperationTypeFieldOffset + IntSizeInBytes;
-        // hex: 0x000404
-        private const int EventMemberAttributeChangeMessageType = 1028;
+        // hex: 0x000303
+        private const int EventMemberListMessageType = 771;
+        private const int EventMemberAttributeChangeOperationTypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventMemberAttributeChangeInitialFrameSize = EventMemberAttributeChangeOperationTypeFieldOffset + IntSizeInBytes;
+        // hex: 0x000304
+        private const int EventMemberAttributeChangeMessageType = 772;
 
         public class RequestParameters 
         {
@@ -125,7 +125,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventMemberInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventMemberMessageType);
-            EncodeInt(initialFrame.Content, EventMembereventTypeFieldOffset, eventType);
+            EncodeInt(initialFrame.Content, EventMemberEventTypeFieldOffset, eventType);
             clientMessage.Add(initialFrame);
             MemberCodec.Encode(clientMessage, member);
             return clientMessage;
@@ -148,7 +148,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventMemberAttributeChangeInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventMemberAttributeChangeMessageType);
-            EncodeInt(initialFrame.Content, EventMemberAttributeChangeoperationTypeFieldOffset, operationType);
+            EncodeInt(initialFrame.Content, EventMemberAttributeChangeOperationTypeFieldOffset, operationType);
             clientMessage.Add(initialFrame);
             MemberCodec.Encode(clientMessage, member);
             ListMultiFrameCodec.Encode(clientMessage, members, MemberCodec.Encode);
@@ -165,7 +165,7 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventMemberMessageType) {
                     var initialFrame = iterator.Next();
-                    int eventType =  DecodeInt(initialFrame.Content, EventMembereventTypeFieldOffset);
+                    int eventType =  DecodeInt(initialFrame.Content, EventMemberEventTypeFieldOffset);
                     com.hazelcast.client.impl.MemberImpl member = MemberCodec.Decode(ref iterator);
                     HandleMemberEvent(member, eventType);
                     return;
@@ -173,15 +173,15 @@ namespace Hazelcast.Client.Protocol.Codec
                 if (messageType == EventMemberListMessageType) {
                     //empty initial frame
                     iterator.Next();
-                    IEnumerable<com.hazelcast.cluster.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
+                    IList<com.hazelcast.cluster.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
                     HandleMemberListEvent(members);
                     return;
                 }
                 if (messageType == EventMemberAttributeChangeMessageType) {
                     var initialFrame = iterator.Next();
-                    int operationType =  DecodeInt(initialFrame.Content, EventMemberAttributeChangeoperationTypeFieldOffset);
+                    int operationType =  DecodeInt(initialFrame.Content, EventMemberAttributeChangeOperationTypeFieldOffset);
                     com.hazelcast.client.impl.MemberImpl member = MemberCodec.Decode(ref iterator);
-                    IEnumerable<com.hazelcast.cluster.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
+                    IList<com.hazelcast.cluster.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
                     string key = StringCodec.Decode(ref iterator);
                     string value = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
                     HandleMemberAttributeChangeEvent(member, members, key, operationType, value);

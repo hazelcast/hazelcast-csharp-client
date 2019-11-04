@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddScheduledExecutorConfigCodec 
     {
-        //hex: 0x1E0B00
-        public const int RequestMessageType = 1968896;
-        //hex: 0x1E0B01
-        public const int ResponseMessageType = 1968897;
+        //hex: 0x1B0A00
+        public const int RequestMessageType = 1772032;
+        //hex: 0x1B0A01
+        public const int ResponseMessageType = 1772033;
         private const int RequestPoolSizeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestDurabilityFieldOffset = RequestPoolSizeFieldOffset + IntSizeInBytes;
         private const int RequestCapacityFieldOffset = RequestDurabilityFieldOffset + IntSizeInBytes;

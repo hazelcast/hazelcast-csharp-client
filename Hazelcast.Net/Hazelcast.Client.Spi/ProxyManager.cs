@@ -62,7 +62,7 @@ namespace Hazelcast.Client.Spi
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
                 _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig());
-            DistributedEventHandler eventHandler = delegate(IClientMessage message)
+            DistributedEventHandler eventHandler = delegate(ClientMessage message)
             {
                 ClientAddDistributedObjectListenerCodec.EventHandler.HandleEvent(message, (name, serviceName, eventType) =>
                 {
@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Spi
                 });
             };
             return context.GetListenerService().RegisterListener(request,
-                m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response,
+                m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).Response,
                 ClientRemoveDistributedObjectListenerCodec.EncodeRequest, eventHandler);
         }
 
@@ -103,7 +103,7 @@ namespace Hazelcast.Client.Spi
                 var request = ClientGetDistributedObjectsCodec.EncodeRequest();
                 var task = _client.GetInvocationService().InvokeOnRandomTarget(request);
                 var response = ThreadUtil.GetResult(task);
-                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).response;
+                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).Response;
                 foreach (var distributedObjectInfo in result)
                 {
                     var proxy = InitProxyLocal(distributedObjectInfo.ServiceName, distributedObjectInfo.ObjectName,

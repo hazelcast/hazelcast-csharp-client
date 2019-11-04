@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapEvictCodec 
     {
-        //hex: 0x012200
-        public const int RequestMessageType = 74240;
-        //hex: 0x012201
-        public const int ResponseMessageType = 74241;
+        //hex: 0x011F00
+        public const int RequestMessageType = 73472;
+        //hex: 0x011F01
+        public const int ResponseMessageType = 73473;
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

@@ -33,49 +33,49 @@ namespace Hazelcast.Client.Proxy
         public virtual long AddAndGet(long delta)
         {
             var request = AtomicLongAddAndGetCodec.EncodeRequest(_name, delta);
-            return Invoke(request, m => AtomicLongAddAndGetCodec.DecodeResponse(m).response);
+            return Invoke(request, m => AtomicLongAddAndGetCodec.DecodeResponse(m).Response);
         }
 
         public virtual bool CompareAndSet(long expect, long update)
         {
             var request = AtomicLongCompareAndSetCodec.EncodeRequest(_name, expect, update);
-            return Invoke(request, m => AtomicLongCompareAndSetCodec.DecodeResponse(m).response);
+            return Invoke(request, m => AtomicLongCompareAndSetCodec.DecodeResponse(m).Response);
         }
 
         public virtual long DecrementAndGet()
         {
             var request = AtomicLongDecrementAndGetCodec.EncodeRequest(_name);
-            return Invoke(request, m => AtomicLongDecrementAndGetCodec.DecodeResponse(m).response);
+            return Invoke(request, m => AtomicLongDecrementAndGetCodec.DecodeResponse(m).Response);
         }
 
         public virtual long Get()
         {
             var request = AtomicLongGetCodec.EncodeRequest(_name);
-            return Invoke(request, m => AtomicLongGetCodec.DecodeResponse(m).response);
+            return Invoke(request, m => AtomicLongGetCodec.DecodeResponse(m).Response);
         }
 
         public virtual long GetAndAdd(long delta)
         {
             var request = AtomicLongGetAndAddCodec.EncodeRequest(_name, delta);
-            return Invoke(request, m => AtomicLongGetAndAddCodec.DecodeResponse(m).response);
+            return Invoke(request, m => AtomicLongGetAndAddCodec.DecodeResponse(m).Response);
         }
 
         public virtual long GetAndSet(long newValue)
         {
             var request = AtomicLongGetAndSetCodec.EncodeRequest(_name, newValue);
-            return Invoke(request, m => AtomicLongGetAndSetCodec.DecodeResponse(m).response);
+            return Invoke(request, m => AtomicLongGetAndSetCodec.DecodeResponse(m).Response);
         }
 
         public virtual long IncrementAndGet()
         {
             var request = AtomicLongIncrementAndGetCodec.EncodeRequest(_name);
-            return Invoke(request, m => AtomicLongIncrementAndGetCodec.DecodeResponse(m).response);
+            return Invoke(request, m => AtomicLongIncrementAndGetCodec.DecodeResponse(m).Response);
         }
 
         public virtual long GetAndIncrement()
         {
             var request = AtomicLongGetAndIncrementCodec.EncodeRequest(_name);
-            return Invoke(request, m => AtomicLongGetAndIncrementCodec.DecodeResponse(m).response);
+            return Invoke(request, m => AtomicLongGetAndIncrementCodec.DecodeResponse(m).Response);
         }
 
         public virtual void Set(long newValue)
@@ -84,7 +84,7 @@ namespace Hazelcast.Client.Proxy
             Invoke(request);
         }
 
-        protected override IClientMessage Invoke(IClientMessage request)
+        protected override ClientMessage Invoke(ClientMessage request)
         {
             return Invoke(request, GetKey());
         }

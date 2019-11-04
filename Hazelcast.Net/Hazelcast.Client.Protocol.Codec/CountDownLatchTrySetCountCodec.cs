@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CountDownLatchTrySetCountCodec 
     {
-        //hex: 0x0C0100
-        public const int RequestMessageType = 786688;
-        //hex: 0x0C0101
-        public const int ResponseMessageType = 786689;
+        //hex: 0x0B0100
+        public const int RequestMessageType = 721152;
+        //hex: 0x0B0101
+        public const int ResponseMessageType = 721153;
         private const int RequestCountFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestCountFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapClearNearCacheCodec 
     {
-        //hex: 0x013B00
-        public const int RequestMessageType = 80640;
-        //hex: 0x013B01
-        public const int ResponseMessageType = 80641;
+        //hex: 0x013800
+        public const int RequestMessageType = 79872;
+        //hex: 0x013801
+        public const int ResponseMessageType = 79873;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

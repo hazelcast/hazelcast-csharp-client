@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class TransactionalMultiMapRemoveCodec 
     {
-        //hex: 0x110300
-        public const int RequestMessageType = 1114880;
-        //hex: 0x110301
-        public const int ResponseMessageType = 1114881;
+        //hex: 0x0F0300
+        public const int RequestMessageType = 983808;
+        //hex: 0x0F0301
+        public const int ResponseMessageType = 983809;
         private const int RequestTxnIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + GuidSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// True if the size of the multimap changed after the remove operation, false otherwise.
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

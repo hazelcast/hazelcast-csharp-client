@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ScheduledExecutorGetStatsFromAddressCodec 
     {
-        //hex: 0x1D0600
-        public const int RequestMessageType = 1902080;
-        //hex: 0x1D0601
-        public const int ResponseMessageType = 1902081;
+        //hex: 0x1A0600
+        public const int RequestMessageType = 1705472;
+        //hex: 0x1A0601
+        public const int ResponseMessageType = 1705473;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseLastIdleTimeNanosFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseTotalIdleTimeNanosFieldOffset = ResponseLastIdleTimeNanosFieldOffset + LongSizeInBytes;

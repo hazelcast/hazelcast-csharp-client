@@ -38,23 +38,23 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheAddInvalidationListenerCodec 
     {
-        //hex: 0x150200
-        public const int RequestMessageType = 1376768;
-        //hex: 0x150201
-        public const int ResponseMessageType = 1376769;
+        //hex: 0x130200
+        public const int RequestMessageType = 1245696;
+        //hex: 0x130201
+        public const int ResponseMessageType = 1245697;
         private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventCacheInvalidationsourceUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventCacheInvalidationpartitionUuidFieldOffset = EventCacheInvalidationSourceUuidFieldOffset + GuidSizeInBytes;
-        private const int EventCacheInvalidationsequenceFieldOffset = EventCacheInvalidationPartitionUuidFieldOffset + GuidSizeInBytes;
-        private const int EventCacheInvalidationInitialFrameSize = EventCacheInvalidationsequenceFieldOffset + LongSizeInBytes;
-        // hex: 0x150202
-        private const int EventCacheInvalidationMessageType = 1376770;
+        private const int EventCacheInvalidationSourceUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventCacheInvalidationPartitionUuidFieldOffset = EventCacheInvalidationSourceUuidFieldOffset + GuidSizeInBytes;
+        private const int EventCacheInvalidationSequenceFieldOffset = EventCacheInvalidationPartitionUuidFieldOffset + GuidSizeInBytes;
+        private const int EventCacheInvalidationInitialFrameSize = EventCacheInvalidationSequenceFieldOffset + LongSizeInBytes;
+        // hex: 0x130202
+        private const int EventCacheInvalidationMessageType = 1245698;
         private const int EventCacheBatchInvalidationInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        // hex: 0x150203
-        private const int EventCacheBatchInvalidationMessageType = 1376771;
+        // hex: 0x130203
+        private const int EventCacheBatchInvalidationMessageType = 1245699;
 
         public class RequestParameters 
         {
@@ -129,9 +129,9 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventCacheInvalidationInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventCacheInvalidationMessageType);
-            EncodeGuid(initialFrame.Content, EventCacheInvalidationsourceUuidFieldOffset, sourceUuid);
-            EncodeGuid(initialFrame.Content, EventCacheInvalidationpartitionUuidFieldOffset, partitionUuid);
-            EncodeLong(initialFrame.Content, EventCacheInvalidationsequenceFieldOffset, sequence);
+            EncodeGuid(initialFrame.Content, EventCacheInvalidationSourceUuidFieldOffset, sourceUuid);
+            EncodeGuid(initialFrame.Content, EventCacheInvalidationPartitionUuidFieldOffset, partitionUuid);
+            EncodeLong(initialFrame.Content, EventCacheInvalidationSequenceFieldOffset, sequence);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
@@ -161,9 +161,9 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventCacheInvalidationMessageType) {
                     var initialFrame = iterator.Next();
-                    Guid sourceUuid =  DecodeGuid(initialFrame.Content, EventCacheInvalidationsourceUuidFieldOffset);
-                    Guid partitionUuid =  DecodeGuid(initialFrame.Content, EventCacheInvalidationpartitionUuidFieldOffset);
-                    long sequence =  DecodeLong(initialFrame.Content, EventCacheInvalidationsequenceFieldOffset);
+                    Guid sourceUuid =  DecodeGuid(initialFrame.Content, EventCacheInvalidationSourceUuidFieldOffset);
+                    Guid partitionUuid =  DecodeGuid(initialFrame.Content, EventCacheInvalidationPartitionUuidFieldOffset);
+                    long sequence =  DecodeLong(initialFrame.Content, EventCacheInvalidationSequenceFieldOffset);
                     string name = StringCodec.Decode(ref iterator);
                     IData key = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
                     HandleCacheInvalidationEvent(name, key, sourceUuid, partitionUuid, sequence);
@@ -173,10 +173,10 @@ namespace Hazelcast.Client.Protocol.Codec
                     //empty initial frame
                     iterator.Next();
                     string name = StringCodec.Decode(ref iterator);
-                    IEnumerable<IData> keys = ListMultiFrameCodec.Decode(ref iterator, DataCodec.Decode);
-                    IEnumerable<Guid> sourceUuids = CodecUtil.DecodeNullable(ref iterator, ListUUIDCodec.Decode);
-                    IEnumerable<Guid> partitionUuids = ListUUIDCodec.Decode(ref iterator);
-                    IEnumerable<long> sequences = ListLongCodec.Decode(ref iterator);
+                    IList<IData> keys = ListMultiFrameCodec.Decode(ref iterator, DataCodec.Decode);
+                    IList<Guid> sourceUuids = CodecUtil.DecodeNullable(ref iterator, ListUUIDCodec.Decode);
+                    IList<Guid> partitionUuids = ListUUIDCodec.Decode(ref iterator);
+                    IList<long> sequences = ListLongCodec.Decode(ref iterator);
                     HandleCacheBatchInvalidationEvent(name, keys, sourceUuids, partitionUuids, sequences);
                     return;
                 }

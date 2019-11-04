@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ScheduledExecutorShutdownCodec 
     {
-        //hex: 0x1D0100
-        public const int RequestMessageType = 1900800;
-        //hex: 0x1D0101
-        public const int ResponseMessageType = 1900801;
+        //hex: 0x1A0100
+        public const int RequestMessageType = 1704192;
+        //hex: 0x1A0101
+        public const int ResponseMessageType = 1704193;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

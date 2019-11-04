@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapExecuteOnKeysCodec 
     {
-        //hex: 0x013600
-        public const int RequestMessageType = 79360;
-        //hex: 0x013601
-        public const int ResponseMessageType = 79361;
+        //hex: 0x013300
+        public const int RequestMessageType = 78592;
+        //hex: 0x013301
+        public const int ResponseMessageType = 78593;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -61,7 +61,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The keys for the entries for which the entry processor shall be executed on.
             ///</summary>
-            public IEnumerable<IData> Keys;
+            public IList<IData> Keys;
         }
 
         public static ClientMessage EncodeRequest(string name, IData entryProcessor, IEnumerable<IData> keys) 
@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// results of entry process on the entries with the provided keys
             ///</summary>
-            public IEnumerable<KeyValuePair<IData, IData>> Response;
+            public IList<KeyValuePair<IData, IData>> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<IData, IData>> response) 

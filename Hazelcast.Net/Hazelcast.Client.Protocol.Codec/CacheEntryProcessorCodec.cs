@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheEntryProcessorCodec 
     {
-        //hex: 0x150900
-        public const int RequestMessageType = 1378560;
-        //hex: 0x150901
-        public const int ResponseMessageType = 1378561;
+        //hex: 0x130900
+        public const int RequestMessageType = 1247488;
+        //hex: 0x130901
+        public const int ResponseMessageType = 1247489;
         private const int RequestCompletionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestCompletionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
@@ -67,7 +67,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// additional arguments to pass to the EntryProcessor
             ///</summary>
-            public IEnumerable<IData> Arguments;
+            public IList<IData> Arguments;
 
             /// <summary>
             /// User generated id which shall be received as a field of the cache event upon completion of

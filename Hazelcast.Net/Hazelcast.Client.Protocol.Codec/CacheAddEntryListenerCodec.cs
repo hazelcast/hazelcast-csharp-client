@@ -38,19 +38,19 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheAddEntryListenerCodec 
     {
-        //hex: 0x150100
-        public const int RequestMessageType = 1376512;
-        //hex: 0x150101
-        public const int ResponseMessageType = 1376513;
+        //hex: 0x130100
+        public const int RequestMessageType = 1245440;
+        //hex: 0x130101
+        public const int ResponseMessageType = 1245441;
         private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventCachetypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventCachecompletionIdFieldOffset = EventCacheTypeFieldOffset + IntSizeInBytes;
-        private const int EventCacheInitialFrameSize = EventCachecompletionIdFieldOffset + IntSizeInBytes;
-        // hex: 0x150102
-        private const int EventCacheMessageType = 1376514;
+        private const int EventCacheTypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventCacheCompletionIdFieldOffset = EventCacheTypeFieldOffset + IntSizeInBytes;
+        private const int EventCacheInitialFrameSize = EventCacheCompletionIdFieldOffset + IntSizeInBytes;
+        // hex: 0x130102
+        private const int EventCacheMessageType = 1245442;
 
         public class RequestParameters 
         {
@@ -125,8 +125,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventCacheInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventCacheMessageType);
-            EncodeInt(initialFrame.Content, EventCachetypeFieldOffset, type);
-            EncodeInt(initialFrame.Content, EventCachecompletionIdFieldOffset, completionId);
+            EncodeInt(initialFrame.Content, EventCacheTypeFieldOffset, type);
+            EncodeInt(initialFrame.Content, EventCacheCompletionIdFieldOffset, completionId);
             clientMessage.Add(initialFrame);
             ListMultiFrameCodec.Encode(clientMessage, keys, CacheEventDataCodec.Encode);
             return clientMessage;
@@ -140,9 +140,9 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventCacheMessageType) {
                     var initialFrame = iterator.Next();
-                    int type =  DecodeInt(initialFrame.Content, EventCachetypeFieldOffset);
-                    int completionId =  DecodeInt(initialFrame.Content, EventCachecompletionIdFieldOffset);
-                    IEnumerable<com.hazelcast.cache.impl.CacheEventData> keys = ListMultiFrameCodec.Decode(ref iterator, CacheEventDataCodec.Decode);
+                    int type =  DecodeInt(initialFrame.Content, EventCacheTypeFieldOffset);
+                    int completionId =  DecodeInt(initialFrame.Content, EventCacheCompletionIdFieldOffset);
+                    IList<com.hazelcast.cache.impl.CacheEventData> keys = ListMultiFrameCodec.Decode(ref iterator, CacheEventDataCodec.Decode);
                     HandleCacheEvent(type, keys, completionId);
                     return;
                 }

@@ -30,12 +30,12 @@ namespace Hazelcast.Client.Spi
 
         bool RemoveEventHandler(long correlationId);
 
-        string RegisterListener(IClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
+        string RegisterListener(ClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
             EncodeDeregisterRequest encodeDeregisterRequest, DistributedEventHandler eventHandler);
 
         bool DeregisterListener(string userRegistrationId);
         
-        void HandleResponseMessage(IClientMessage message);
+        void HandleResponseMessage(ClientMessage message);
         
     }
 }

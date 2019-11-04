@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class TransactionCreateCodec 
     {
-        //hex: 0x170200
-        public const int RequestMessageType = 1507840;
-        //hex: 0x170201
-        public const int ResponseMessageType = 1507841;
+        //hex: 0x150200
+        public const int RequestMessageType = 1376768;
+        //hex: 0x150201
+        public const int ResponseMessageType = 1376769;
         private const int RequestTimeoutFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestDurabilityFieldOffset = RequestTimeoutFieldOffset + LongSizeInBytes;
         private const int RequestTransactionTypeFieldOffset = RequestDurabilityFieldOffset + IntSizeInBytes;

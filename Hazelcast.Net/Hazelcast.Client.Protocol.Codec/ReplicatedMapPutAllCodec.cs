@@ -40,10 +40,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ReplicatedMapPutAllCodec 
     {
-        //hex: 0x0E0800
-        public const int RequestMessageType = 919552;
-        //hex: 0x0E0801
-        public const int ResponseMessageType = 919553;
+        //hex: 0x0D0800
+        public const int RequestMessageType = 854016;
+        //hex: 0x0D0801
+        public const int ResponseMessageType = 854017;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// entries to be stored in this map
             ///</summary>
-            public IEnumerable<KeyValuePair<IData, IData>> Entries;
+            public IList<KeyValuePair<IData, IData>> Entries;
         }
 
         public static ClientMessage EncodeRequest(string name, IEnumerable<KeyValuePair<IData, IData>> entries) 

@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The collection of values in the multimap. the returned collection might be modifiable but it has no effect on the multimap.
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

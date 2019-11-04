@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddQueueConfigCodec 
     {
-        //hex: 0x1E0D00
-        public const int RequestMessageType = 1969408;
-        //hex: 0x1E0D01
-        public const int ResponseMessageType = 1969409;
+        //hex: 0x1B0B00
+        public const int RequestMessageType = 1772288;
+        //hex: 0x1B0B01
+        public const int ResponseMessageType = 1772289;
         private const int RequestBackupCountFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestAsyncBackupCountFieldOffset = RequestBackupCountFieldOffset + IntSizeInBytes;
         private const int RequestMaxSizeFieldOffset = RequestAsyncBackupCountFieldOffset + IntSizeInBytes;
@@ -63,7 +63,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// item listeners configuration
             ///</summary>
-            public IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
+            public IList<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
 
             /// <summary>
             /// number of synchronous backups

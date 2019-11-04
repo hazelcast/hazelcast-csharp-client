@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Proxy
                 var request = TransactionCreateCodec.EncodeRequest(GetTimeoutMillis(), _options.GetDurability(),
                     (int) _options.GetTransactionType(), _threadId);
                 var response = Invoke(request);
-                _txnId = TransactionCreateCodec.DecodeResponse(response).response;
+                _txnId = TransactionCreateCodec.DecodeResponse(response).Response;
                 _state = TransactionState.Active;
             }
             catch (Exception e)
@@ -159,7 +159,7 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        private IClientMessage Invoke(IClientMessage request)
+        private ClientMessage Invoke(ClientMessage request)
         {
             var rpc = _client.GetInvocationService();
             try

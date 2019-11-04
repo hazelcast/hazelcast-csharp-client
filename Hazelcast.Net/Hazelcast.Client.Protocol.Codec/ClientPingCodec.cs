@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientPingCodec 
     {
-        //hex: 0x000F00
-        public const int RequestMessageType = 3840;
-        //hex: 0x000F01
-        public const int ResponseMessageType = 3841;
+        //hex: 0x000D00
+        public const int RequestMessageType = 3328;
+        //hex: 0x000D01
+        public const int ResponseMessageType = 3329;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

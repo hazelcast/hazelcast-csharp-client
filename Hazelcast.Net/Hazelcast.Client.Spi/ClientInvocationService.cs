@@ -96,7 +96,7 @@ using Hazelcast.Util;
             CleanupInvocations(connection);
         }
 
-        public void HandleClientMessage(IClientMessage message)
+        public void HandleClientMessage(ClientMessage message)
         {
             if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
             {
@@ -114,7 +114,7 @@ using Hazelcast.Util;
             }
         }
 
-        public IFuture<IClientMessage> InvokeListenerOnConnection(IClientMessage request, 
+        public IFuture<ClientMessage> InvokeListenerOnConnection(ClientMessage request, 
             DistributedEventHandler eventHandler, ClientConnection connection)
         {
             var clientInvocation = new ClientInvocation(request, connection, eventHandler);
@@ -122,14 +122,14 @@ using Hazelcast.Util;
             return clientInvocation.Future;
         }
 
-        public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
+        public IFuture<ClientMessage> InvokeOnConnection(ClientMessage request, ClientConnection connection)
         {
             var clientInvocation = new ClientInvocation(request, connection);
             InvokeInternal(clientInvocation, null, connection);
             return clientInvocation.Future;
         }
 
-        protected IFuture<IClientMessage> Invoke(ClientInvocation invocation, Address address = null)
+        protected IFuture<ClientMessage> Invoke(ClientInvocation invocation, Address address = null)
         {
             InvokeInternal(invocation, address);
             return invocation.Future;
@@ -402,7 +402,7 @@ using Hazelcast.Util;
             throw new IOException("Could not find any available address");
         }
 
-        private void HandleResponseMessage(IClientMessage response)
+        private void HandleResponseMessage(ClientMessage response)
         {
             var correlationId = response.GetCorrelationId();
             ClientInvocation invocation;
@@ -465,10 +465,10 @@ using Hazelcast.Util;
             _invocations.TryRemove(correlationId, out ignored);
         }
         
-        public abstract IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
-        public abstract IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
-        public abstract IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
-        public abstract IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
-        public abstract IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId);
+        public abstract IFuture<ClientMessage> InvokeOnKeyOwner(ClientMessage request, object key);
+        public abstract IFuture<ClientMessage> InvokeOnMember(ClientMessage request, IMember member);
+        public abstract IFuture<ClientMessage> InvokeOnRandomTarget(ClientMessage request);
+        public abstract IFuture<ClientMessage> InvokeOnTarget(ClientMessage request, Address target);
+        public abstract IFuture<ClientMessage> InvokeOnPartition(ClientMessage request, int partitionId);
     }
 }

@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = CountDownLatchAwaitCodec.EncodeRequest(GetName(), GetTimeInMillis(timeout, unit));
             var response = Invoke(request);
-            return CountDownLatchAwaitCodec.DecodeResponse(response).response;
+            return CountDownLatchAwaitCodec.DecodeResponse(response).Response;
         }
 
         public virtual void CountDown()
@@ -46,17 +46,17 @@ namespace Hazelcast.Client.Proxy
         {
             var request = CountDownLatchGetCountCodec.EncodeRequest(GetName());
             var response = Invoke(request);
-            return CountDownLatchGetCountCodec.DecodeResponse(response).response;
+            return CountDownLatchGetCountCodec.DecodeResponse(response).Response;
         }
 
         public virtual bool TrySetCount(int count)
         {
             var request = CountDownLatchTrySetCountCodec.EncodeRequest(GetName(), count);
             var response = Invoke(request);
-            return CountDownLatchTrySetCountCodec.DecodeResponse(response).response;
+            return CountDownLatchTrySetCountCodec.DecodeResponse(response).Response;
         }
 
-        protected override IClientMessage Invoke(IClientMessage request)
+        protected override ClientMessage Invoke(ClientMessage request)
         {
             return Invoke(request, GetKey());
         }

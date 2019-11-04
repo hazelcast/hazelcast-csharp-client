@@ -42,7 +42,7 @@ namespace Hazelcast.Client
             StackTrace = stackTrace;
         }
 
-        public Error(IClientMessage message)
+        public Error(ClientMessage message)
         {
             ErrorCode = message.GetInt();
             ClassName = message.GetStringUtf8();
@@ -65,7 +65,7 @@ namespace Hazelcast.Client
             }
         }
 
-        public static Error Decode(IClientMessage flyweight)
+        public static Error Decode(ClientMessage flyweight)
         {
             return new Error(flyweight);
         }

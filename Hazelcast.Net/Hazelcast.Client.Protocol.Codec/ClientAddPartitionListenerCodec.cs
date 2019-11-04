@@ -38,16 +38,16 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientAddPartitionListenerCodec 
     {
-        //hex: 0x001200
-        public const int RequestMessageType = 4608;
-        //hex: 0x001201
-        public const int ResponseMessageType = 4609;
+        //hex: 0x001000
+        public const int RequestMessageType = 4096;
+        //hex: 0x001001
+        public const int ResponseMessageType = 4097;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
-        private const int EventPartitionspartitionStateVersionFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventPartitionsInitialFrameSize = EventPartitionspartitionStateVersionFieldOffset + IntSizeInBytes;
-        // hex: 0x001202
-        private const int EventPartitionsMessageType = 4610;
+        private const int EventPartitionsPartitionStateVersionFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int EventPartitionsInitialFrameSize = EventPartitionsPartitionStateVersionFieldOffset + IntSizeInBytes;
+        // hex: 0x001002
+        private const int EventPartitionsMessageType = 4098;
 
         public class RequestParameters 
         {
@@ -103,7 +103,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[EventPartitionsInitialFrameSize], UnfragmentedMessage);
             initialFrame.Flags |= IsEventFlag;
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventPartitionsMessageType);
-            EncodeInt(initialFrame.Content, EventPartitionspartitionStateVersionFieldOffset, partitionStateVersion);
+            EncodeInt(initialFrame.Content, EventPartitionsPartitionStateVersionFieldOffset, partitionStateVersion);
             clientMessage.Add(initialFrame);
             EntryListAddressListIntegerCodec.Encode(clientMessage, partitions);
             return clientMessage;
@@ -117,8 +117,8 @@ namespace Hazelcast.Client.Protocol.Codec
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventPartitionsMessageType) {
                     var initialFrame = iterator.Next();
-                    int partitionStateVersion =  DecodeInt(initialFrame.Content, EventPartitionspartitionStateVersionFieldOffset);
-                    IEnumerable<KeyValuePair<com.hazelcast.nio.Address, IEnumerable<int>>> partitions = EntryListAddressListIntegerCodec.Decode(ref iterator);
+                    int partitionStateVersion =  DecodeInt(initialFrame.Content, EventPartitionsPartitionStateVersionFieldOffset);
+                    IList<KeyValuePair<com.hazelcast.nio.Address, IList<int>>> partitions = EntryListAddressListIntegerCodec.Decode(ref iterator);
                     HandlePartitionsEvent(partitions, partitionStateVersion);
                     return;
                 }

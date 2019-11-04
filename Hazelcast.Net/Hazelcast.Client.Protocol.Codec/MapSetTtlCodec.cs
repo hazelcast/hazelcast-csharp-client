@@ -49,10 +49,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapSetTtlCodec 
     {
-        //hex: 0x014900
-        public const int RequestMessageType = 84224;
-        //hex: 0x014901
-        public const int ResponseMessageType = 84225;
+        //hex: 0x014600
+        public const int RequestMessageType = 83456;
+        //hex: 0x014601
+        public const int ResponseMessageType = 83457;
         private const int RequestTtlFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestTtlFieldOffset + LongSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

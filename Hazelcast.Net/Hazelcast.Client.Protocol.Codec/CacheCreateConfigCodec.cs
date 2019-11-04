@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheCreateConfigCodec 
     {
-        //hex: 0x150700
-        public const int RequestMessageType = 1378048;
-        //hex: 0x150701
-        public const int ResponseMessageType = 1378049;
+        //hex: 0x130700
+        public const int RequestMessageType = 1246976;
+        //hex: 0x130701
+        public const int ResponseMessageType = 1246977;
         private const int RequestCreateAlsoOnOthersFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestCreateAlsoOnOthersFieldOffset + BoolSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheAssignAndGetUuidsCodec 
     {
-        //hex: 0x152000
-        public const int RequestMessageType = 1384448;
-        //hex: 0x152001
-        public const int ResponseMessageType = 1384449;
+        //hex: 0x132000
+        public const int RequestMessageType = 1253376;
+        //hex: 0x132001
+        public const int ResponseMessageType = 1253377;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// partitionId to assigned uuid entry list
             ///</summary>
-            public IEnumerable<KeyValuePair<int, Guid>> PartitionUuidList;
+            public IList<KeyValuePair<int, Guid>> PartitionUuidList;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<int, Guid>> partitionUuidList) 

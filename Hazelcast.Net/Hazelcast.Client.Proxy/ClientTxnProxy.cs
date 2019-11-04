@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Proxy
             return Proxy.GetTxnId();
         }
 
-        protected virtual IClientMessage Invoke(IClientMessage request)
+        protected virtual ClientMessage Invoke(ClientMessage request)
         {
             var rpc = Proxy.GetClient().GetInvocationService();
             try
@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        protected virtual T Invoke<T>(IClientMessage request, Func<IClientMessage, T> decodeResponse)
+        protected virtual T Invoke<T>(ClientMessage request, Func<ClientMessage, T> decodeResponse)
         {
             var response = Invoke(request);
             return decodeResponse(response);

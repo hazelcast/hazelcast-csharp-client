@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheEventJournalSubscribeCodec 
     {
-        //hex: 0x152100
-        public const int RequestMessageType = 1384704;
-        //hex: 0x152101
-        public const int ResponseMessageType = 1384705;
+        //hex: 0x132100
+        public const int RequestMessageType = 1253632;
+        //hex: 0x132101
+        public const int ResponseMessageType = 1253633;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseOldestSequenceFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseNewestSequenceFieldOffset = ResponseOldestSequenceFieldOffset + LongSizeInBytes;

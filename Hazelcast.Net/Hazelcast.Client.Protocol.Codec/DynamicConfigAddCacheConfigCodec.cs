@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddCacheConfigCodec 
     {
-        //hex: 0x1E1000
-        public const int RequestMessageType = 1970176;
-        //hex: 0x1E1001
-        public const int ResponseMessageType = 1970177;
+        //hex: 0x1B0E00
+        public const int RequestMessageType = 1773056;
+        //hex: 0x1B0E01
+        public const int ResponseMessageType = 1773057;
         private const int RequestStatisticsEnabledFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestManagementEnabledFieldOffset = RequestStatisticsEnabledFieldOffset + BoolSizeInBytes;
         private const int RequestReadThroughFieldOffset = RequestManagementEnabledFieldOffset + BoolSizeInBytes;
@@ -150,7 +150,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// partition lost listener configurations
             ///</summary>
-            public IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> PartitionLostListenerConfigs;
+            public IList<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> PartitionLostListenerConfigs;
 
             /// <summary>
             /// expiry policy factory class name. When configuring an expiry policy,
@@ -166,7 +166,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// cache entry listeners configuration
             ///</summary>
-            public IEnumerable<com.hazelcast.config.CacheSimpleEntryListenerConfig> CacheEntryListeners;
+            public IList<com.hazelcast.config.CacheSimpleEntryListenerConfig> CacheEntryListeners;
 
             /// <summary>
             /// cache eviction configuration

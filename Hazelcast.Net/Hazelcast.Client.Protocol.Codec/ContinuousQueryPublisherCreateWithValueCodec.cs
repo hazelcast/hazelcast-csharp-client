@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ContinuousQueryPublisherCreateWithValueCodec 
     {
-        //hex: 0x180100
-        public const int RequestMessageType = 1573120;
-        //hex: 0x180101
-        public const int ResponseMessageType = 1573121;
+        //hex: 0x160100
+        public const int RequestMessageType = 1442048;
+        //hex: 0x160101
+        public const int ResponseMessageType = 1442049;
         private const int RequestBatchSizeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestBufferSizeFieldOffset = RequestBatchSizeFieldOffset + IntSizeInBytes;
         private const int RequestDelaySecondsFieldOffset = RequestBufferSizeFieldOffset + IntSizeInBytes;
@@ -136,7 +136,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// Array of key-value pairs.
             ///</summary>
-            public IEnumerable<KeyValuePair<IData, IData>> Response;
+            public IList<KeyValuePair<IData, IData>> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<IData, IData>> response) 

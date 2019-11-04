@@ -40,10 +40,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheRemoveAllCodec 
     {
-        //hex: 0x150500
-        public const int RequestMessageType = 1377536;
-        //hex: 0x150501
-        public const int ResponseMessageType = 1377537;
+        //hex: 0x130500
+        public const int RequestMessageType = 1246464;
+        //hex: 0x130501
+        public const int ResponseMessageType = 1246465;
         private const int RequestCompletionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestCompletionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;

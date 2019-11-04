@@ -38,10 +38,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapForceUnlockCodec 
     {
-        //hex: 0x013700
-        public const int RequestMessageType = 79616;
-        //hex: 0x013701
-        public const int ResponseMessageType = 79617;
+        //hex: 0x013400
+        public const int RequestMessageType = 78848;
+        //hex: 0x013401
+        public const int ResponseMessageType = 78849;
         private const int RequestReferenceIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestReferenceIdFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;

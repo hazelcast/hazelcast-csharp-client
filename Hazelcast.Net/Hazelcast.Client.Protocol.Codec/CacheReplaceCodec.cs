@@ -40,10 +40,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class CacheReplaceCodec 
     {
-        //hex: 0x151800
-        public const int RequestMessageType = 1382400;
-        //hex: 0x151801
-        public const int ResponseMessageType = 1382401;
+        //hex: 0x131800
+        public const int RequestMessageType = 1251328;
+        //hex: 0x131801
+        public const int ResponseMessageType = 1251329;
         private const int RequestCompletionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestCompletionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;

@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DurableExecutorRetrieveAndDisposeResultCodec 
     {
-        //hex: 0x1B0600
-        public const int RequestMessageType = 1771008;
-        //hex: 0x1B0601
-        public const int ResponseMessageType = 1771009;
+        //hex: 0x180600
+        public const int RequestMessageType = 1574400;
+        //hex: 0x180601
+        public const int ResponseMessageType = 1574401;
         private const int RequestSequenceFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestSequenceFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;

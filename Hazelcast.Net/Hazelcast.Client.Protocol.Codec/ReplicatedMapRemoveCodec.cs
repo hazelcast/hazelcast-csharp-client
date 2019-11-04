@@ -40,10 +40,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ReplicatedMapRemoveCodec 
     {
-        //hex: 0x0E0700
-        public const int RequestMessageType = 919296;
-        //hex: 0x0E0701
-        public const int ResponseMessageType = 919297;
+        //hex: 0x0D0700
+        public const int RequestMessageType = 853760;
+        //hex: 0x0D0701
+        public const int ResponseMessageType = 853761;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 

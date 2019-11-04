@@ -59,7 +59,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// Collection containing elements to be added to this list
             ///</summary>
-            public IEnumerable<IData> ValueList;
+            public IList<IData> ValueList;
         }
 
         public static ClientMessage EncodeRequest(string name, IEnumerable<IData> valueList) 

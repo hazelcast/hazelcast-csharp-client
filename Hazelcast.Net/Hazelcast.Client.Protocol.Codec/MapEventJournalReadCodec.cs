@@ -44,10 +44,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapEventJournalReadCodec 
     {
-        //hex: 0x014800
-        public const int RequestMessageType = 83968;
-        //hex: 0x014801
-        public const int ResponseMessageType = 83969;
+        //hex: 0x014500
+        public const int RequestMessageType = 83200;
+        //hex: 0x014501
+        public const int ResponseMessageType = 83201;
         private const int RequestStartSequenceFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestMinSizeFieldOffset = RequestStartSequenceFieldOffset + LongSizeInBytes;
         private const int RequestMaxSizeFieldOffset = RequestMinSizeFieldOffset + IntSizeInBytes;
@@ -133,7 +133,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public IEnumerable<IData> Items;
+            public IList<IData> Items;
 
             /// <summary>
             /// TODO DOC

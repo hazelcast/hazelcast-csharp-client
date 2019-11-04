@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddReplicatedMapConfigCodec 
     {
-        //hex: 0x1E0700
-        public const int RequestMessageType = 1967872;
-        //hex: 0x1E0701
-        public const int ResponseMessageType = 1967873;
+        //hex: 0x1B0600
+        public const int RequestMessageType = 1771008;
+        //hex: 0x1B0601
+        public const int ResponseMessageType = 1771009;
         private const int RequestAsyncFillupFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestStatisticsEnabledFieldOffset = RequestAsyncFillupFieldOffset + BoolSizeInBytes;
         private const int RequestMergeBatchSizeFieldOffset = RequestStatisticsEnabledFieldOffset + BoolSizeInBytes;
@@ -84,7 +84,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// entry listener configurations
             ///</summary>
-            public IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
+            public IList<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
 
             /// <summary>
             /// name of an existing configured split brain protection to be used to determine the minimum number of members

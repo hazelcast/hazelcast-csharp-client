@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapProjectCodec 
     {
-        //hex: 0x014000
-        public const int RequestMessageType = 81920;
-        //hex: 0x014001
-        public const int ResponseMessageType = 81921;
+        //hex: 0x013D00
+        public const int RequestMessageType = 81152;
+        //hex: 0x013D01
+        public const int ResponseMessageType = 81153;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -89,7 +89,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// the resulted collection upon transformation to the type of the projection
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

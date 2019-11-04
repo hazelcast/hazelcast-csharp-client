@@ -43,10 +43,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class RingbufferReadManyCodec 
     {
-        //hex: 0x190A00
-        public const int RequestMessageType = 1640960;
-        //hex: 0x190A01
-        public const int ResponseMessageType = 1640961;
+        //hex: 0x170900
+        public const int RequestMessageType = 1509632;
+        //hex: 0x170901
+        public const int ResponseMessageType = 1509633;
         private const int RequestStartSequenceFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestMinCountFieldOffset = RequestStartSequenceFieldOffset + LongSizeInBytes;
         private const int RequestMaxCountFieldOffset = RequestMinCountFieldOffset + IntSizeInBytes;
@@ -125,7 +125,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public IEnumerable<IData> Items;
+            public IList<IData> Items;
 
             /// <summary>
             /// TODO DOC

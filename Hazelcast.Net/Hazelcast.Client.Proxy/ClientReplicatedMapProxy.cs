@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(key, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                     });
             return RegisterListener(request,
-                message => ReplicatedMapAddEntryListenerCodec.DecodeResponse(message).response,
+                message => ReplicatedMapAddEntryListenerCodec.DecodeResponse(message).Response,
                 id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -62,7 +62,7 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(k, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                     });
             return RegisterListener(request,
-                message => ReplicatedMapAddEntryListenerCodec.DecodeResponse(message).response,
+                message => ReplicatedMapAddEntryListenerCodec.DecodeResponse(message).Response,
                 id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -80,7 +80,7 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(k, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                     });
             return RegisterListener(request,
-                message => ReplicatedMapAddEntryListenerWithPredicateCodec.DecodeResponse(message).response,
+                message => ReplicatedMapAddEntryListenerWithPredicateCodec.DecodeResponse(message).Response,
                 id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -100,7 +100,7 @@ namespace Hazelcast.Client.Proxy
                         OnEntryEvent(k, value, oldValue, mergingValue, type, uuid, entries, listenerAdapter);
                     });
             return RegisterListener(request,
-                message => ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(message).response,
+                message => ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(message).Response,
                 id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -114,14 +114,14 @@ namespace Hazelcast.Client.Proxy
         {
             var keyData = ToData(key);
             var request = ReplicatedMapContainsKeyCodec.EncodeRequest(GetName(), keyData);
-            return Invoke(request, keyData, m => ReplicatedMapContainsKeyCodec.DecodeResponse(m).response);
+            return Invoke(request, keyData, m => ReplicatedMapContainsKeyCodec.DecodeResponse(m).Response);
         }
 
         public bool ContainsValue(object value)
         {
             var valueData = ToData(value);
             var request = ReplicatedMapContainsValueCodec.EncodeRequest(GetName(), valueData);
-            return InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapContainsValueCodec.DecodeResponse(m).response);
+            return InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapContainsValueCodec.DecodeResponse(m).Response);
         }
 
         public TValue Get(object key)
@@ -129,20 +129,20 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = ReplicatedMapGetCodec.EncodeRequest(GetName(), keyData);
             var result = Invoke(request, keyData);
-            var value = ToObject<TValue>(ReplicatedMapGetCodec.DecodeResponse(result).response);
+            var value = ToObject<TValue>(ReplicatedMapGetCodec.DecodeResponse(result).Response);
             return value;
         }
 
         public bool IsEmpty()
         {
             var request = ReplicatedMapIsEmptyCodec.EncodeRequest(GetName());
-            return InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapIsEmptyCodec.DecodeResponse(m).response);
+            return InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapIsEmptyCodec.DecodeResponse(m).Response);
         }
 
         public ISet<KeyValuePair<TKey, TValue>> EntrySet()
         {
             var request = ReplicatedMapEntrySetCodec.EncodeRequest(GetName());
-            var entries = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapEntrySetCodec.DecodeResponse(m).response);
+            var entries = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapEntrySetCodec.DecodeResponse(m).Response);
             ISet<KeyValuePair<TKey, TValue>> entrySet = new HashSet<KeyValuePair<TKey, TValue>>();
             foreach (var entry in entries)
             {
@@ -156,7 +156,7 @@ namespace Hazelcast.Client.Proxy
         public ISet<TKey> KeySet()
         {
             var request = ReplicatedMapKeySetCodec.EncodeRequest(GetName());
-            var result = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapKeySetCodec.DecodeResponse(m).response);
+            var result = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapKeySetCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazySet<TKey>(result, GetContext().GetSerializationService());
         }
 
@@ -171,7 +171,7 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
             var request = ReplicatedMapPutCodec.EncodeRequest(GetName(), keyData, valueData, timeunit.ToMillis(ttl));
             var clientMessage = Invoke(request, keyData);
-            var response = ReplicatedMapPutCodec.DecodeResponse(clientMessage).response;
+            var response = ReplicatedMapPutCodec.DecodeResponse(clientMessage).Response;
             return ToObject<TValue>(response);
         }
 
@@ -193,7 +193,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = ReplicatedMapRemoveCodec.EncodeRequest(GetName(), keyData);
             var clientMessage = Invoke(request, keyData);
-            return ToObject<TValue>(ReplicatedMapRemoveCodec.DecodeResponse(clientMessage).response);
+            return ToObject<TValue>(ReplicatedMapRemoveCodec.DecodeResponse(clientMessage).Response);
         }
 
         public bool RemoveEntryListener(string registrationId)
@@ -204,13 +204,13 @@ namespace Hazelcast.Client.Proxy
         public int Size()
         {
             var request = ReplicatedMapSizeCodec.EncodeRequest(GetName());
-            return InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapSizeCodec.DecodeResponse(m).response);
+            return InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapSizeCodec.DecodeResponse(m).Response);
         }
 
         public ICollection<TValue> Values()
         {
             var request = ReplicatedMapValuesCodec.EncodeRequest(GetName());
-            var list = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapValuesCodec.DecodeResponse(m).response);
+            var list = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapValuesCodec.DecodeResponse(m).Response);
             return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
         }
 

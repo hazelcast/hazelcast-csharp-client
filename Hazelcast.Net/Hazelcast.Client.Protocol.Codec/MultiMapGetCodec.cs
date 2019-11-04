@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// The collection of the values associated with the key.
             ///</summary>
-            public IEnumerable<IData> Response;
+            public IList<IData> Response;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<IData> response) 

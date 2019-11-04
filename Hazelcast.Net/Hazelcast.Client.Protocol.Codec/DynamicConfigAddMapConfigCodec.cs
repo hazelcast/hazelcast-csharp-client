@@ -39,10 +39,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class DynamicConfigAddMapConfigCodec 
     {
-        //hex: 0x1E0E00
-        public const int RequestMessageType = 1969664;
-        //hex: 0x1E0E01
-        public const int ResponseMessageType = 1969665;
+        //hex: 0x1B0C00
+        public const int RequestMessageType = 1772544;
+        //hex: 0x1B0C01
+        public const int ResponseMessageType = 1772545;
         private const int RequestBackupCountFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestAsyncBackupCountFieldOffset = RequestBackupCountFieldOffset + IntSizeInBytes;
         private const int RequestTimeToLiveSecondsFieldOffset = RequestAsyncBackupCountFieldOffset + IntSizeInBytes;
@@ -119,12 +119,12 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// entry listener configurations
             ///</summary>
-            public IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
+            public IList<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> ListenerConfigs;
 
             /// <summary>
             /// partition lost listener configurations
             ///</summary>
-            public IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> PartitionLostListenerConfigs;
+            public IList<com.hazelcast.client.impl.protocol.task.dynamicconfig.ListenerConfigHolder> PartitionLostListenerConfigs;
 
             /// <summary>
             /// {@code true} to enable gathering of statistics, otherwise {@code false}
@@ -176,17 +176,17 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// index configurations
             ///</summary>
-            public IEnumerable<com.hazelcast.config.IndexConfig> IndexConfigs;
+            public IList<com.hazelcast.config.IndexConfig> IndexConfigs;
 
             /// <summary>
             /// map attributes
             ///</summary>
-            public IEnumerable<com.hazelcast.config.AttributeConfig> AttributeConfigs;
+            public IList<com.hazelcast.config.AttributeConfig> AttributeConfigs;
 
             /// <summary>
             /// configurations for query caches on this map
             ///</summary>
-            public IEnumerable<com.hazelcast.client.impl.protocol.task.dynamicconfig.QueryCacheConfigHolder> QueryCacheConfigs;
+            public IList<com.hazelcast.client.impl.protocol.task.dynamicconfig.QueryCacheConfigHolder> QueryCacheConfigs;
 
             /// <summary>
             /// name of class implementing {@code com.hazelcast.core.PartitioningStrategy}

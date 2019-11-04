@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ScheduledExecutorCancelFromAddressCodec 
     {
-        //hex: 0x1D0A00
-        public const int RequestMessageType = 1903104;
-        //hex: 0x1D0A01
-        public const int ResponseMessageType = 1903105;
+        //hex: 0x1A0A00
+        public const int RequestMessageType = 1706496;
+        //hex: 0x1A0A01
+        public const int ResponseMessageType = 1706497;
         private const int RequestMayInterruptIfRunningFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestMayInterruptIfRunningFieldOffset + BoolSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

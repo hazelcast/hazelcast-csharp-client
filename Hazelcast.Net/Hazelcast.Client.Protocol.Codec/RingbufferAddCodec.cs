@@ -47,10 +47,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class RingbufferAddCodec 
     {
-        //hex: 0x190600
-        public const int RequestMessageType = 1639936;
-        //hex: 0x190601
-        public const int ResponseMessageType = 1639937;
+        //hex: 0x170600
+        public const int RequestMessageType = 1508864;
+        //hex: 0x170601
+        public const int ResponseMessageType = 1508865;
         private const int RequestOverflowPolicyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestOverflowPolicyFieldOffset + IntSizeInBytes;
         private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;

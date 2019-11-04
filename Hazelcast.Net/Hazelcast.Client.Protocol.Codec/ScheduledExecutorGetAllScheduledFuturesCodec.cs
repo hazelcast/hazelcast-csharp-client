@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ScheduledExecutorGetAllScheduledFuturesCodec 
     {
-        //hex: 0x1D0400
-        public const int RequestMessageType = 1901568;
-        //hex: 0x1D0401
-        public const int ResponseMessageType = 1901569;
+        //hex: 0x1A0400
+        public const int RequestMessageType = 1704960;
+        //hex: 0x1A0401
+        public const int ResponseMessageType = 1704961;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// A list of scheduled task handlers used to construct the future proxies.
             ///</summary>
-            public IEnumerable<KeyValuePair<com.hazelcast.cluster.Member, IEnumerable<com.hazelcast.scheduledexecutor.ScheduledTaskHandler>>> Handlers;
+            public IList<KeyValuePair<com.hazelcast.cluster.Member, IList<com.hazelcast.scheduledexecutor.ScheduledTaskHandler>>> Handlers;
         }
 
         public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<com.hazelcast.cluster.Member, IEnumerable<com.hazelcast.scheduledexecutor.ScheduledTaskHandler>>> handlers) 

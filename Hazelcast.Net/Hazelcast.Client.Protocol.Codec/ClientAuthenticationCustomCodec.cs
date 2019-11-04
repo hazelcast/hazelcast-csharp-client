@@ -37,10 +37,10 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientAuthenticationCustomCodec 
     {
-        //hex: 0x000300
-        public const int RequestMessageType = 768;
-        //hex: 0x000301
-        public const int ResponseMessageType = 769;
+        //hex: 0x000200
+        public const int RequestMessageType = 512;
+        //hex: 0x000201
+        public const int ResponseMessageType = 513;
         private const int RequestUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestSerializationVersionFieldOffset = RequestUuidFieldOffset + GuidSizeInBytes;
         private const int RequestPartitionCountFieldOffset = RequestSerializationVersionFieldOffset + ByteSizeInBytes;
@@ -55,6 +55,11 @@ namespace Hazelcast.Client.Protocol.Codec
 
         public class RequestParameters 
         {
+
+            /// <summary>
+            /// Cluster name that client will connect to.
+            ///</summary>
+            public string ClusterName;
 
             /// <summary>
             /// Secret byte array for authentication.
@@ -89,7 +94,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// User defined labels of the client instance
             ///</summary>
-            public IEnumerable<string> Labels;
+            public IList<string> Labels;
 
             /// <summary>
             /// the expected partition count of the cluster. Checked on the server side when provided.
@@ -104,7 +109,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public Guid ClusterId;
         }
 
-        public static ClientMessage EncodeRequest(IData credentials, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, IEnumerable<string> labels, int partitionCount, Guid clusterId) 
+        public static ClientMessage EncodeRequest(string clusterName, IData credentials, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, IEnumerable<string> labels, int partitionCount, Guid clusterId) 
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
@@ -117,6 +122,7 @@ namespace Hazelcast.Client.Protocol.Codec
             EncodeInt(initialFrame.Content, RequestPartitionCountFieldOffset, partitionCount);
             EncodeGuid(initialFrame.Content, RequestClusterIdFieldOffset, clusterId);
             clientMessage.Add(initialFrame);
+            StringCodec.Encode(clientMessage, clusterName);
             DataCodec.Encode(clientMessage, credentials);
             StringCodec.Encode(clientMessage, clientType);
             StringCodec.Encode(clientMessage, clientHazelcastVersion);
@@ -134,6 +140,7 @@ namespace Hazelcast.Client.Protocol.Codec
             request.SerializationVersion =  DecodeByte(initialFrame.Content, RequestSerializationVersionFieldOffset);
             request.PartitionCount =  DecodeInt(initialFrame.Content, RequestPartitionCountFieldOffset);
             request.ClusterId =  DecodeGuid(initialFrame.Content, RequestClusterIdFieldOffset);
+            request.ClusterName = StringCodec.Decode(ref iterator);
             request.Credentials = DataCodec.Decode(ref iterator);
             request.ClientType = StringCodec.Decode(ref iterator);
             request.ClientHazelcastVersion = StringCodec.Decode(ref iterator);
