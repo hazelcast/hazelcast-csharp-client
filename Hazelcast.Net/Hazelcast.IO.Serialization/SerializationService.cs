@@ -161,7 +161,7 @@ namespace Hazelcast.IO.Serialization
                 {
                     obj = _managedContext.Initialize(obj);
                 }
-                return (T) obj;
+                return obj;
             }
             catch (Exception e)
             {

@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Proxy
 
         private long _startTime;
         private TransactionState _state = TransactionState.NoTxn;
-        private string _txnId;
+        private Guid _txnId;
 
         internal TransactionProxy(HazelcastClient client, TransactionOptions options, IMember txOwner)
         {
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Proxy
             return _options.GetTimeoutMillis();
         }
 
-        public string GetTxnId()
+        public Guid GetTxnId()
         {
             return _txnId;
         }

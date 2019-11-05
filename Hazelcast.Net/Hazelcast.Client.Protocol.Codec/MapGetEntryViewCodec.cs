@@ -21,6 +21,7 @@ using Hazelcast.Client.Protocol.Codec.Custom;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
+using Hazelcast.Map;
 using static Hazelcast.Client.Protocol.Codec.BuiltIn.FixedSizeTypesCodec;
 using static Hazelcast.Client.Protocol.ClientMessage;
 using static Hazelcast.IO.Bits;
@@ -82,7 +83,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static MapGetEntryViewCodec.RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -99,7 +100,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public com.hazelcast.map.impl.SimpleEntryView<IData, IData> Response;
+            public SimpleEntryView<IData, IData> Response;
 
             /// <summary>
             /// TODO DOC
@@ -107,7 +108,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public long MaxIdle;
         }
 
-        public static ClientMessage EncodeResponse(com.hazelcast.map.impl.SimpleEntryView<IData, IData> response, long maxIdle) 
+        public static ClientMessage EncodeResponse(SimpleEntryView<IData, IData> response, long maxIdle) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
@@ -119,7 +120,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static MapGetEntryViewCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
+        public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();

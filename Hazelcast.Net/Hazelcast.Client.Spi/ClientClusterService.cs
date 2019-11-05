@@ -149,8 +149,8 @@ namespace Hazelcast.Client.Spi
             var cp = cm.ClientPrincipal;
             var ownerConnection = cm.GetConnection(OwnerConnectionAddress);
 
-            var socketAddress = ownerConnection != null ? ownerConnection.GetLocalSocketAddress() : null;
-            var uuid = cp != null ? cp.GetUuid() : null;
+            var socketAddress = ownerConnection?.GetLocalSocketAddress();
+            var uuid = cp != null ? cp.Uuid : Guid.Empty;
             return new Client(uuid, socketAddress);
         }
 

@@ -78,7 +78,7 @@ namespace Hazelcast.Client.Proxy
             return ThreadUtil.GetThreadId();
         }
 
-        protected virtual string GetTransactionId()
+        protected virtual Guid GetTransactionId()
         {
             return Proxy.GetTxnId();
         }

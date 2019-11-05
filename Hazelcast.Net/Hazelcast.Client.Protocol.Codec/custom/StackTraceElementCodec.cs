@@ -19,6 +19,7 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec.BuiltIn;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 using static Hazelcast.Client.Protocol.Codec.BuiltIn.FixedSizeTypesCodec;
 using static Hazelcast.Client.Protocol.ClientMessage;
 using static Hazelcast.IO.Bits;

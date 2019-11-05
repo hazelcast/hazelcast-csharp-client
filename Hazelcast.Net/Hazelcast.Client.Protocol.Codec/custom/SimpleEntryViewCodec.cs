@@ -19,6 +19,8 @@ using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec.BuiltIn;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
+using Hazelcast.Map;
 using static Hazelcast.Client.Protocol.Codec.BuiltIn.FixedSizeTypesCodec;
 using static Hazelcast.Client.Protocol.ClientMessage;
 using static Hazelcast.IO.Bits;
@@ -44,7 +46,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
         private const int MaxIdleFieldOffset = TtlFieldOffset + LongSizeInBytes;
         private const int InitialFrameSize = MaxIdleFieldOffset + LongSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, com.hazelcast.map.impl.SimpleEntryView<IData, IData> simpleEntryView) 
+        public static void Encode(ClientMessage clientMessage, SimpleEntryView<IData, IData> simpleEntryView) 
         {
             clientMessage.Add(BeginFrame);
 
@@ -67,7 +69,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static com.hazelcast.map.impl.SimpleEntryView<IData, IData> Decode(ref FrameIterator iterator) 
+        public static SimpleEntryView<IData, IData> Decode(ref FrameIterator iterator) 
         {
             // begin frame
             iterator.Next();

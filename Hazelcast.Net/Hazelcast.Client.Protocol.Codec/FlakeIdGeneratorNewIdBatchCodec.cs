@@ -76,7 +76,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static FlakeIdGeneratorNewIdBatchCodec.RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -105,20 +105,20 @@ namespace Hazelcast.Client.Protocol.Codec
             public int BatchSize;
         }
 
-        public static ClientMessage EncodeResponse(long base, long increment, int batchSize) 
+        public static ClientMessage EncodeResponse(long @base, long increment, int batchSize) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
             clientMessage.Add(initialFrame);
 
-            EncodeLong(initialFrame.Content, ResponseBaseFieldOffset, base);
+            EncodeLong(initialFrame.Content, ResponseBaseFieldOffset, @base);
             EncodeLong(initialFrame.Content, ResponseIncrementFieldOffset, increment);
             EncodeInt(initialFrame.Content, ResponseBatchSizeFieldOffset, batchSize);
             return clientMessage;
         }
 
-        public static FlakeIdGeneratorNewIdBatchCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
+        public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();

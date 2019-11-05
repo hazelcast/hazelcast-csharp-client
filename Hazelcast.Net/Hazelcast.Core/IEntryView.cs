@@ -28,7 +28,7 @@ namespace Hazelcast.Core
         ///     </p>
         /// </remarks>
         /// <returns>cost in bytes</returns>
-        long GetCost();
+        long Cost { get; }
 
         /// <summary>Returns the creation time of the entry.</summary>
         /// <remarks>
@@ -41,12 +41,12 @@ namespace Hazelcast.Core
         ///     </p>
         /// </remarks>
         /// <returns>creation time</returns>
-        long GetCreationTime();
+        long CreationTime { get; }
 
         /// <summary>Returns the expiration time of the entry.</summary>
         /// <remarks>Returns the expiration time of the entry.</remarks>
         /// <returns>expiration time</returns>
-        long GetExpirationTime();
+        long ExpirationTime { get; }
 
         /// <summary>Returns number of hits of the entry.</summary>
         /// <remarks>
@@ -59,12 +59,12 @@ namespace Hazelcast.Core
         ///     </p>
         /// </remarks>
         /// <returns>hits</returns>
-        long GetHits();
+        long Hits { get; }
 
         /// <summary>Returns the key of the entry.</summary>
         /// <remarks>Returns the key of the entry.</remarks>
         /// <returns>key</returns>
-        TKey GetKey();
+        TKey Key { get; }
 
         /// <summary>Returns the last access time to the entry.</summary>
         /// <remarks>
@@ -77,7 +77,7 @@ namespace Hazelcast.Core
         ///     </p>
         /// </remarks>
         /// <returns>last access time</returns>
-        long GetLastAccessTime();
+        long LastAccessTime { get; }
 
         /// <summary>Returns the last time value is flushed to mapstore.</summary>
         /// <remarks>
@@ -90,7 +90,7 @@ namespace Hazelcast.Core
         ///     </p>
         /// </remarks>
         /// <returns>last store time</returns>
-        long GetLastStoredTime();
+        long LastStoredTime { get; }
 
         /// <summary>Returns the last time value is updated.</summary>
         /// <remarks>
@@ -103,15 +103,15 @@ namespace Hazelcast.Core
         ///     </p>
         /// </remarks>
         /// <returns>last update time</returns>
-        long GetLastUpdateTime();
+        long LastUpdateTime { get; }
 
         /// <summary>Returns the value of the entry.</summary>
         /// <remarks>Returns the value of the entry.</remarks>
         /// <returns>value</returns>
-        TValue GetValue();
+        TValue Value { get; }
 
         /// <summary>Returns the version of the entry</summary>
         /// <returns>version</returns>
-        long GetVersion();
+        long Version { get; }
     }
 }

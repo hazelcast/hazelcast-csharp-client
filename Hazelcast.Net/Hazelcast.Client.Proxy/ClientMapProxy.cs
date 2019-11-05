@@ -578,18 +578,18 @@ namespace Hazelcast.Client.Proxy
             {
                 return null;
             }
-            entryView.SetKey(ToObject<TKey>(dataEntryView.GetKey()));
-            entryView.SetValue(ToObject<TValue>(dataEntryView.GetValue()));
-            entryView.SetCost(dataEntryView.GetCost());
-            entryView.SetCreationTime(dataEntryView.GetCreationTime());
-            entryView.SetExpirationTime(dataEntryView.GetExpirationTime());
-            entryView.SetHits(dataEntryView.GetHits());
-            entryView.SetLastAccessTime(dataEntryView.GetLastAccessTime());
-            entryView.SetLastStoredTime(dataEntryView.GetLastStoredTime());
-            entryView.SetLastUpdateTime(dataEntryView.GetLastUpdateTime());
-            entryView.SetVersion(dataEntryView.GetVersion());
-            entryView.SetEvictionCriteriaNumber(dataEntryView.GetEvictionCriteriaNumber());
-            entryView.SetTtl(dataEntryView.GetTtl());
+            entryView.Key = ToObject<TKey>(((SimpleEntryView) dataEntryView).Key);
+            entryView.Value = ToObject<TValue>(((SimpleEntryView) dataEntryView).Value);
+            entryView.Cost = dataEntryView.Cost;
+            entryView.CreationTime = dataEntryView.CreationTime;
+            entryView.ExpirationTime = dataEntryView.ExpirationTime;
+            entryView.Hits = dataEntryView.Hits;
+            entryView.LastAccessTime = dataEntryView.LastAccessTime;
+            entryView.LastStoredTime = dataEntryView.LastStoredTime;
+            entryView.LastUpdateTime = dataEntryView.LastUpdateTime;
+            entryView.Version = dataEntryView.Version;
+            entryView.EvictionCriteriaNumber = dataEntryView.EvictionCriteriaNumber;
+            entryView.Ttl = dataEntryView.Ttl;
             //TODO putCache
             return entryView;
         }

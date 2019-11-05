@@ -87,7 +87,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static CachePutAllCodec.RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -113,7 +113,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static CachePutAllCodec.ResponseParameters DecodeResponse(ClientMessage clientMessage)
+        public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
