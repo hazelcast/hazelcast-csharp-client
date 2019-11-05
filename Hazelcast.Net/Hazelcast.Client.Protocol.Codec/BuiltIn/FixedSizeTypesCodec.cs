@@ -66,21 +66,34 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 
         public static void EncodeGuid(byte[] buffer, int pos, Guid value)
         {
-            throw new NotImplementedException("Guid is not implemented yet");
+            var isNull = value == Guid.Empty;
+            EncodeBool(buffer, pos, isNull);
+            if (isNull)
+            {
+                return;
+            }
 
-            //long mostSigBits = value.getMostSignificantBits();
-            //long leastSigBits = value.getLeastSignificantBits();
-            //EncodeLong(buffer, pos, mostSigBits);
-            //EncodeLong(buffer, pos + LongSizeInBytes, leastSigBits);
+            // TODO: perf improvements can me made in here to do not alloc, https://github.com/kevin-montrose/Jil/blob/0631e89ca667bccea353f1e7394663bedf91d9f8/Jil/Serialize/Methods.cs#L48-L220
+            // TODO: correctness - GUIDs are not written in Java format
+            var bytes = value.ToByteArray();
+
+            Array.Copy(bytes, 0, buffer, pos + BoolSizeInBytes, 16);
         }
 
         public static Guid DecodeGuid(byte[] buffer, int pos)
         {
-            throw new NotImplementedException("Guid is not implemented yet");
+            var isNull = DecodeBool(buffer, pos);
+            if (isNull)
+            {
+                return Guid.Empty;
+            }
 
-            //long mostSigBits = DecodeLong(buffer, pos);
-            //long leastSigBits = DecodeLong(buffer, pos + LongSizeInBytes);
-            //return new UUID(mostSigBits, leastSigBits);
+            // TODO: perf improvements can me made in here to do not alloc, https://github.com/kevin-montrose/Jil/blob/49e8a84ba9719e94de58d3d75ab8bb6eddf4183b/Jil/Deserialize/Methods.cs#L36-L77
+            // TODO: correctness - GUIDs are not written in Java format
+
+            var bytes = new byte[16];
+            Array.Copy(buffer, pos + BoolSizeInBytes, bytes, 0, 16);
+            return new Guid(bytes);
         }
     }
 }
