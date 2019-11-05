@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Net;
 
 namespace Hazelcast.Core
@@ -30,7 +31,7 @@ namespace Hazelcast.Core
         IPEndPoint GetSocketAddress();
 
         /// <summary>Returns unique uuid for this endpoint</summary>
-        /// <returns>unique uuid for this endpoint</returns>
-        string GetUuid();
+        /// <value>unique uuid for this endpoint</value>
+        Guid Uuid { get; }
     }
 }

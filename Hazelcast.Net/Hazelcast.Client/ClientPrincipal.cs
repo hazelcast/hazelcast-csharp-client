@@ -19,8 +19,8 @@ namespace Hazelcast.Client
 {
     internal sealed class ClientPrincipal : IEquatable<ClientPrincipal>
     {
-        private readonly Guid _ownerUuid;
-        private readonly Guid _uuid;
+        public Guid OwnerUuid { get; }
+        public Guid Uuid { get; }
 
         public ClientPrincipal()
         {
@@ -28,15 +28,15 @@ namespace Hazelcast.Client
 
         public ClientPrincipal(Guid uuid, Guid ownerUuid)
         {
-            _uuid = uuid;
-            _ownerUuid = ownerUuid;
+            Uuid = uuid;
+            OwnerUuid = ownerUuid;
         }
 
         public bool Equals(ClientPrincipal other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return _ownerUuid.Equals(other._ownerUuid) && _uuid.Equals(other._uuid);
+            return OwnerUuid.Equals(other.OwnerUuid) && Uuid.Equals(other.Uuid);
         }
 
         public override bool Equals(object obj)
@@ -48,15 +48,15 @@ namespace Hazelcast.Client
         {
             unchecked
             {
-                return (_ownerUuid.GetHashCode() * 397) ^ _uuid.GetHashCode();
+                return (OwnerUuid.GetHashCode() * 397) ^ Uuid.GetHashCode();
             }
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder("ClientPrincipal{");
-            sb.Append("uuid='").Append(_uuid).Append('\'');
-            sb.Append(", ownerUuid='").Append(_ownerUuid).Append('\'');
+            sb.Append("uuid='").Append(Uuid).Append('\'');
+            sb.Append(", ownerUuid='").Append(OwnerUuid).Append('\'');
             sb.Append('}');
             return sb.ToString();
         }

@@ -312,7 +312,7 @@ using Hazelcast.Util;
 
         private void ValidateInvocation(ClientInvocation clientInvocation, ClientConnection connection)
         {
-            if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.Member.GetUuid())
+            if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.Member.Uuid)
             {
                 throw new TargetNotMemberException(
                     "The member UUID on the invocation doesn't match the member UUID on the connection.");

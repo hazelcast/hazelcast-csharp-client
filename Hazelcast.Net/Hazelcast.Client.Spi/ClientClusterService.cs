@@ -118,7 +118,7 @@ namespace Hazelcast.Client.Spi
         public IMember GetMember(string uuid)
         {
             var memberList = GetMemberList();
-            return memberList.FirstOrDefault(member => uuid.Equals(member.GetUuid()));
+            return memberList.FirstOrDefault(member => uuid.Equals(member.Uuid));
         }
 
         public ICollection<IMember> GetMemberList()

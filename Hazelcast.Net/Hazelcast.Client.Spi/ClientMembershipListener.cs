@@ -86,7 +86,7 @@ using Hazelcast.Util;
             }
             foreach (var target in memberMap.Values)
             {
-                if (target.GetUuid().Equals(uuid))
+                if (target.Uuid.Equals(uuid))
                 {
                     var type = (Core.MemberAttributeOperationType) operationType;
                     ((Member) target).UpdateAttribute(type, key, value);

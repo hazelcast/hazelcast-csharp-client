@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Net;
 using Hazelcast.Core;
 
@@ -28,9 +29,9 @@ namespace Hazelcast.Client
             _socketAddress = socketAddress;
         }
 
-        public virtual string GetUuid()
+        public virtual Guid Uuid
         {
-            return _uuid;
+            get { return _uuid; }
         }
 
         public virtual IPEndPoint GetSocketAddress()
