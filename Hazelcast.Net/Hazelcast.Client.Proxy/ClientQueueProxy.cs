@@ -307,7 +307,7 @@ namespace Hazelcast.Client.Proxy
             return Invoke(request, m => QueueIteratorCodec.DecodeResponse(m).Response);
         }
 
-        private void HandleItemListener(IData itemData, string uuid, ItemEventType eventType, IItemListener<T> listener,
+        private void HandleItemListener(IData itemData, Guid uuid, ItemEventType eventType, IItemListener<T> listener,
             bool includeValue)
         {
             var item = includeValue

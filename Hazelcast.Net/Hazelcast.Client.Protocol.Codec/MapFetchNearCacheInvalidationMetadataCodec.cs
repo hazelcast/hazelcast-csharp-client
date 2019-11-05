@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Protocol.Codec
             EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
             clientMessage.Add(initialFrame);
 
-            EntryListStringEntryListIntegerLongCodec.Encode(clientMessage, namePartitionSequenceList);
+            EntryListCodec.Encode(clientMessage, namePartitionSequenceList, StringCodec.Encode, EntryListIntegerLongCodec.Encode);
             EntryListIntegerUUIDCodec.Encode(clientMessage, partitionUuidList);
             return clientMessage;
         }
@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             //empty initial frame
             iterator.Next();
-            response.NamePartitionSequenceList = EntryListStringEntryListIntegerLongCodec.Decode(ref iterator);
+            response.NamePartitionSequenceList = EntryListCodec.Decode(ref iterator, StringCodec.Decode, EntryListIntegerLongCodec.Decode);
             response.PartitionUuidList = EntryListIntegerUUIDCodec.Decode(ref iterator);
             return response;
         }

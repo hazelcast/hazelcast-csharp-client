@@ -853,7 +853,7 @@ namespace Hazelcast.Client.Proxy
         }
 
         private void OnEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValue, int eventTypeInt,
-            string uuid, int numberOfAffectedEntries, EntryListenerAdapter<TKey, TValue> listenerAdapter)
+            Guid uuid, int numberOfAffectedEntries, EntryListenerAdapter<TKey, TValue> listenerAdapter)
         {
             var member = GetContext().GetClusterService().GetMember(uuid);
             listenerAdapter.OnEntryEvent(GetName(), keyData, valueData, oldValueData, mergingValue, (EntryEventType) eventTypeInt,

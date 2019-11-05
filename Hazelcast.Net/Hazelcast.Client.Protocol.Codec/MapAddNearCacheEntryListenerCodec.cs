@@ -159,9 +159,9 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public abstract class AbstractEventHandler 
+        public static class EventHandler 
         {
-            public void Handle(ClientMessage clientMessage) 
+            public static void HandleEvent(ClientMessage clientMessage, HandleIMapInvalidationEvent handleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent handleIMapBatchInvalidationEvent)
             {
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
@@ -171,7 +171,7 @@ namespace Hazelcast.Client.Protocol.Codec
                     Guid partitionUuid =  DecodeGuid(initialFrame.Content, EventIMapInvalidationPartitionUuidFieldOffset);
                     long sequence =  DecodeLong(initialFrame.Content, EventIMapInvalidationSequenceFieldOffset);
                     IData key = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
-                    HandleIMapInvalidationEvent(key, sourceUuid, partitionUuid, sequence);
+                    handleIMapInvalidationEvent(key, sourceUuid, partitionUuid, sequence);
                     return;
                 }
                 if (messageType == EventIMapBatchInvalidationMessageType) {
@@ -181,15 +181,15 @@ namespace Hazelcast.Client.Protocol.Codec
                     IList<Guid> sourceUuids = ListUUIDCodec.Decode(ref iterator);
                     IList<Guid> partitionUuids = ListUUIDCodec.Decode(ref iterator);
                     IList<long> sequences = ListLongCodec.Decode(ref iterator);
-                    HandleIMapBatchInvalidationEvent(keys, sourceUuids, partitionUuids, sequences);
+                    handleIMapBatchInvalidationEvent(keys, sourceUuids, partitionUuids, sequences);
                     return;
                 }
-                Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
+                Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-
-            public abstract void HandleIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence);
-
-            public abstract void HandleIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids, IEnumerable<long> sequences);
+        
+            public delegate void HandleIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence);
+        
+            public delegate void HandleIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids, IEnumerable<long> sequences);
         }
     }
 }

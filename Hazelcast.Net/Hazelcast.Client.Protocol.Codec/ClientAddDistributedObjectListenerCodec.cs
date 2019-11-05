@@ -124,9 +124,9 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public abstract class AbstractEventHandler 
+        public static class EventHandler 
         {
-            public void Handle(ClientMessage clientMessage) 
+            public static void HandleEvent(ClientMessage clientMessage, HandleDistributedObjectEvent handleDistributedObjectEvent)
             {
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
@@ -136,13 +136,13 @@ namespace Hazelcast.Client.Protocol.Codec
                     string name = StringCodec.Decode(ref iterator);
                     string serviceName = StringCodec.Decode(ref iterator);
                     string eventType = StringCodec.Decode(ref iterator);
-                    HandleDistributedObjectEvent(name, serviceName, eventType);
+                    handleDistributedObjectEvent(name, serviceName, eventType);
                     return;
                 }
-                Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
+                Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-
-            public abstract void HandleDistributedObjectEvent(string name, string serviceName, string eventType);
+        
+            public delegate void HandleDistributedObjectEvent(string name, string serviceName, string eventType);
         }
     }
 }

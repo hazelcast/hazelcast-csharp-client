@@ -133,9 +133,9 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public abstract class AbstractEventHandler 
+        public static class EventHandler 
         {
-            public void Handle(ClientMessage clientMessage) 
+            public static void HandleEvent(ClientMessage clientMessage, HandleTopicEvent handleTopicEvent)
             {
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
@@ -144,13 +144,13 @@ namespace Hazelcast.Client.Protocol.Codec
                     long publishTime =  DecodeLong(initialFrame.Content, EventTopicPublishTimeFieldOffset);
                     Guid uuid =  DecodeGuid(initialFrame.Content, EventTopicUuidFieldOffset);
                     IData item = DataCodec.Decode(ref iterator);
-                    HandleTopicEvent(item, publishTime, uuid);
+                    handleTopicEvent(item, publishTime, uuid);
                     return;
                 }
-                Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
+                Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-
-            public abstract void HandleTopicEvent(IData item, long publishTime, Guid uuid);
+        
+            public delegate void HandleTopicEvent(IData item, long publishTime, Guid uuid);
         }
     }
 }

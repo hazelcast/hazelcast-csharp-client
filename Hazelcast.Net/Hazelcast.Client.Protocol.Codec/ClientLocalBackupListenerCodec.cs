@@ -115,22 +115,22 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public abstract class AbstractEventHandler 
+        public static class EventHandler 
         {
-            public void Handle(ClientMessage clientMessage) 
+            public static void HandleEvent(ClientMessage clientMessage, HandleBackupEvent handleBackupEvent)
             {
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventBackupMessageType) {
                     var initialFrame = iterator.Next();
                     long sourceInvocationCorrelationId =  DecodeLong(initialFrame.Content, EventBackupSourceInvocationCorrelationIdFieldOffset);
-                    HandleBackupEvent(sourceInvocationCorrelationId);
+                    handleBackupEvent(sourceInvocationCorrelationId);
                     return;
                 }
-                Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
+                Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-
-            public abstract void HandleBackupEvent(long sourceInvocationCorrelationId);
+        
+            public delegate void HandleBackupEvent(long sourceInvocationCorrelationId);
         }
     }
 }

@@ -111,7 +111,7 @@ namespace Hazelcast.Client.Protocol.Codec
             EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
             clientMessage.Add(initialFrame);
 
-            EntryListDataDataCodec.Encode(clientMessage, response);
+            EntryListCodec.Encode(clientMessage, response, DataCodec.Encode, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -121,7 +121,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             //empty initial frame
             iterator.Next();
-            response.Response = EntryListDataDataCodec.Decode(ref iterator);
+            response.Response = EntryListCodec.Decode(ref iterator, DataCodec.Decode, DataCodec.Decode);
             return response;
         }
     }

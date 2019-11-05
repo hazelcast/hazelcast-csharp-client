@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Spi
             return members.ContainsKey(address) ? members[address] : null;
         }
 
-        public IMember GetMember(string uuid)
+        public IMember GetMember(Guid uuid)
         {
             var memberList = GetMemberList();
             return memberList.FirstOrDefault(member => uuid.Equals(member.Uuid));

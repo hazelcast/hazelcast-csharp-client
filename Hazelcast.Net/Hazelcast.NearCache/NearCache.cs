@@ -69,7 +69,7 @@ namespace Hazelcast.NearCache
             Logger.Severe("Unexpected event from server");
         }
 
-        private void HandleIMapBatchInvalidationEvent_v1_4(IList<IData> keys, IList<string> sourceuuids,
+        private void HandleIMapBatchInvalidationEvent_v1_4(IList<IData> keys, IList<Guid> sourceuuids,
             IList<Guid> partitionuuids, IList<long> sequences)
         {
             _repairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
@@ -80,7 +80,7 @@ namespace Hazelcast.NearCache
             Logger.Severe("Unexpected event from server");
         }
 
-        private void HandleIMapInvalidationEvent_v1_4(IData key, string sourceUuid, Guid partitionUuid, long sequence)
+        private void HandleIMapInvalidationEvent_v1_4(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
         {
             _repairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);
         }

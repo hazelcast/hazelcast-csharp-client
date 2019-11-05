@@ -21,7 +21,6 @@ using Hazelcast.Client.Protocol.Codec.Custom;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
-using Hazelcast.Map;
 using static Hazelcast.Client.Protocol.Codec.BuiltIn.FixedSizeTypesCodec;
 using static Hazelcast.Client.Protocol.ClientMessage;
 using static Hazelcast.IO.Bits;
@@ -100,7 +99,7 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// TODO DOC
             ///</summary>
-            public SimpleEntryView<IData, IData> Response;
+            public Hazelcast.Map.SimpleEntryView<IData, IData> Response;
 
             /// <summary>
             /// TODO DOC
@@ -108,7 +107,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public long MaxIdle;
         }
 
-        public static ClientMessage EncodeResponse(SimpleEntryView<IData, IData> response, long maxIdle) 
+        public static ClientMessage EncodeResponse(Hazelcast.Map.SimpleEntryView<IData, IData> response, long maxIdle) 
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

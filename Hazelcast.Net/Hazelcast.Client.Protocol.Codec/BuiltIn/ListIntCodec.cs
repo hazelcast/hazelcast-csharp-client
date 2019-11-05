@@ -20,7 +20,7 @@ using static Hazelcast.Client.Protocol.ClientMessage;
 
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
-    internal static class ListIntCodec
+    internal static class ListIntegerCodec
     {
         public static void Encode(ClientMessage clientMessage, IEnumerable<int> collection)
         {
@@ -37,12 +37,12 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(frame);
         }
 
-        public static IEnumerable<int> Decode(ref FrameIterator iterator)
+        public static IList<int> Decode(ref FrameIterator iterator)
         {
             return Decode(ref iterator.Next());
         }
 
-        public static IEnumerable<int> Decode(ref Frame frame)
+        public static IList<int> Decode(ref Frame frame)
         {
             var itemCount = frame.Content == null ? 0 : frame.Content.Length / IntSizeInBytes;
             var result = new List<int>(itemCount);

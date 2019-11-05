@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Protocol.Codec
             EncodeInt(initialFrame.Content, RequestCompletionIdFieldOffset, completionId);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            EntryListDataDataCodec.Encode(clientMessage, entries);
+            EntryListCodec.Encode(clientMessage, entries, DataCodec.Encode, DataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, expiryPolicy, DataCodec.Encode);
             return clientMessage;
         }
@@ -94,7 +94,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             request.CompletionId =  DecodeInt(initialFrame.Content, RequestCompletionIdFieldOffset);
             request.Name = StringCodec.Decode(ref iterator);
-            request.Entries = EntryListDataDataCodec.Decode(ref iterator);
+            request.Entries = EntryListCodec.Decode(ref iterator, DataCodec.Decode, DataCodec.Decode);
             request.ExpiryPolicy = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
             return request;
         }

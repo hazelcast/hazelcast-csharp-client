@@ -25,7 +25,7 @@ namespace Hazelcast.NearCache
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(RepairingHandler));
 
-        private readonly string _localUuid;
+        private readonly Guid _localUuid;
         private readonly int _maxToleratedMissCount;
         private readonly MetaDataContainer[] _metaDataContainers;
 
@@ -34,7 +34,7 @@ namespace Hazelcast.NearCache
 
         private readonly IClientPartitionService _partitionService;
 
-        public RepairingHandler(string localUuid, NearCache nearCache, IClientPartitionService partitionService)
+        public RepairingHandler(Guid localUuid, NearCache nearCache, IClientPartitionService partitionService)
         {
             _localUuid = localUuid;
             _nearCache = nearCache;
@@ -114,7 +114,7 @@ namespace Hazelcast.NearCache
         }
 
         //Handles a single invalidation
-        public void Handle(IData key, string sourceUuid, Guid partitionGuid, long sequence)
+        public void Handle(IData key, Guid sourceUuid, Guid partitionGuid, long sequence)
         {
             // apply invalidation if it's not originated by local member/client (because local
             // Near Caches are invalidated immediately there is no need to invalidate them twice)
@@ -139,7 +139,7 @@ namespace Hazelcast.NearCache
         /**
          * Handles batch invalidations
          */
-        public void Handle(IEnumerable<IData> keys, IEnumerable<string> sourceUuids, IEnumerable<Guid> partitionUuids,
+        public void Handle(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids,
             IEnumerable<long> sequences)
         {
             var keyIterator = keys.GetEnumerator();

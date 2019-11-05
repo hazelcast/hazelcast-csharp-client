@@ -145,9 +145,9 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public abstract class AbstractEventHandler 
+        public static class EventHandler 
         {
-            public void Handle(ClientMessage clientMessage) 
+            public static void HandleEvent(ClientMessage clientMessage, HandleQueryCacheSingleEvent handleQueryCacheSingleEvent, HandleQueryCacheBatchEvent handleQueryCacheBatchEvent)
             {
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
@@ -155,7 +155,7 @@ namespace Hazelcast.Client.Protocol.Codec
                     //empty initial frame
                     iterator.Next();
                     Hazelcast.Map.QueryCacheEventData data = QueryCacheEventDataCodec.Decode(ref iterator);
-                    HandleQueryCacheSingleEvent(data);
+                    handleQueryCacheSingleEvent(data);
                     return;
                 }
                 if (messageType == EventQueryCacheBatchMessageType) {
@@ -163,15 +163,15 @@ namespace Hazelcast.Client.Protocol.Codec
                     int partitionId =  DecodeInt(initialFrame.Content, EventQueryCacheBatchPartitionIdFieldOffset);
                     IList<Hazelcast.Map.QueryCacheEventData> events = ListMultiFrameCodec.Decode(ref iterator, QueryCacheEventDataCodec.Decode);
                     string source = StringCodec.Decode(ref iterator);
-                    HandleQueryCacheBatchEvent(events, source, partitionId);
+                    handleQueryCacheBatchEvent(events, source, partitionId);
                     return;
                 }
-                Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
+                Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-
-            public abstract void HandleQueryCacheSingleEvent(Hazelcast.Map.QueryCacheEventData data);
-
-            public abstract void HandleQueryCacheBatchEvent(IEnumerable<Hazelcast.Map.QueryCacheEventData> events, string source, int partitionId);
+        
+            public delegate void HandleQueryCacheSingleEvent(Hazelcast.Map.QueryCacheEventData data);
+        
+            public delegate void HandleQueryCacheBatchEvent(IEnumerable<Hazelcast.Map.QueryCacheEventData> events, string source, int partitionId);
         }
     }
 }

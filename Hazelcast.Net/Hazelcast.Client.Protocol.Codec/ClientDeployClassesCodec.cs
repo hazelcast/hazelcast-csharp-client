@@ -64,7 +64,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
             clientMessage.Add(initialFrame);
-            EntryListStringByteArrayCodec.Encode(clientMessage, classDefinitions);
+            EntryListCodec.Encode(clientMessage, classDefinitions, StringCodec.Encode, ByteArrayCodec.Encode);
             return clientMessage;
         }
 
@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.ClassDefinitions = EntryListStringByteArrayCodec.Decode(ref iterator);
+            request.ClassDefinitions = EntryListCodec.Decode(ref iterator, StringCodec.Decode, ByteArrayCodec.Decode);
             return request;
         }
 

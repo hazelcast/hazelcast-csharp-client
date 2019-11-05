@@ -105,27 +105,27 @@ namespace Hazelcast.Client.Protocol.Codec
             EncodeInt(initialFrame.Content, TypeFieldOffset, EventPartitionsMessageType);
             EncodeInt(initialFrame.Content, EventPartitionsPartitionStateVersionFieldOffset, partitionStateVersion);
             clientMessage.Add(initialFrame);
-            EntryListAddressListIntegerCodec.Encode(clientMessage, partitions);
+            EntryListCodec.Encode(clientMessage, partitions, AddressCodec.Encode, ListIntegerCodec.Encode);
             return clientMessage;
         }
 
-        public abstract class AbstractEventHandler 
+        public static class EventHandler 
         {
-            public void Handle(ClientMessage clientMessage) 
+            public static void HandleEvent(ClientMessage clientMessage, HandlePartitionsEvent handlePartitionsEvent)
             {
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventPartitionsMessageType) {
                     var initialFrame = iterator.Next();
                     int partitionStateVersion =  DecodeInt(initialFrame.Content, EventPartitionsPartitionStateVersionFieldOffset);
-                    IList<KeyValuePair<IO.Address, IList<int>>> partitions = EntryListAddressListIntegerCodec.Decode(ref iterator);
-                    HandlePartitionsEvent(partitions, partitionStateVersion);
+                    IList<KeyValuePair<IO.Address, IList<int>>> partitions = EntryListCodec.Decode(ref iterator, AddressCodec.Decode, ListIntegerCodec.Decode);
+                    handlePartitionsEvent(partitions, partitionStateVersion);
                     return;
                 }
-                Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
+                Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-
-            public abstract void HandlePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IEnumerable<int>>> partitions, int partitionStateVersion);
+        
+            public delegate void HandlePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IEnumerable<int>>> partitions, int partitionStateVersion);
         }
     }
 }

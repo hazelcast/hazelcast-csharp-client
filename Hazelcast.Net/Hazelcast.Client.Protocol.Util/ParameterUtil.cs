@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Protocol.Util
 
         public static int CalculateDataSize(bool data)
         {
-            return Bits.BooleanSizeInBytes;
+            return Bits.BoolSizeInBytes;
         }
     }
 }

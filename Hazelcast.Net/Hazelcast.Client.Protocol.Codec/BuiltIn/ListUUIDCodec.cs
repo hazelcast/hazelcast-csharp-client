@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(frame);
         }
 
-        public static IEnumerable<Guid> Decode(ref FrameIterator iterator)
+        public static IList<Guid> Decode(ref FrameIterator iterator)
         {
             return Decode(ref iterator.Next());
         }

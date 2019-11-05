@@ -126,9 +126,9 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public abstract class AbstractEventHandler 
+        public static class EventHandler 
         {
-            public void Handle(ClientMessage clientMessage) 
+            public static void HandleEvent(ClientMessage clientMessage, HandlePartitionLostEvent handlePartitionLostEvent)
             {
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
@@ -137,13 +137,13 @@ namespace Hazelcast.Client.Protocol.Codec
                     int partitionId =  DecodeInt(initialFrame.Content, EventPartitionLostPartitionIdFieldOffset);
                     int lostBackupCount =  DecodeInt(initialFrame.Content, EventPartitionLostLostBackupCountFieldOffset);
                     IO.Address source = CodecUtil.DecodeNullable(ref iterator, AddressCodec.Decode);
-                    HandlePartitionLostEvent(partitionId, lostBackupCount, source);
+                    handlePartitionLostEvent(partitionId, lostBackupCount, source);
                     return;
                 }
-                Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
+                Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-
-            public abstract void HandlePartitionLostEvent(int partitionId, int lostBackupCount, IO.Address source);
+        
+            public delegate void HandlePartitionLostEvent(int partitionId, int lostBackupCount, IO.Address source);
         }
     }
 }

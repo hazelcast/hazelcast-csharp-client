@@ -69,7 +69,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
             clientMessage.Add(initialFrame);
-            EntryListStringStringCodec.Encode(clientMessage, proxies);
+            EntryListCodec.Encode(clientMessage, proxies, StringCodec.Encode, StringCodec.Encode);
             return clientMessage;
         }
 
@@ -79,7 +79,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.Proxies = EntryListStringStringCodec.Decode(ref iterator);
+            request.Proxies = EntryListCodec.Decode(ref iterator, StringCodec.Decode, StringCodec.Decode);
             return request;
         }
 

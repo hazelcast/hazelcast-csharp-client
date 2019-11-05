@@ -157,9 +157,9 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public abstract class AbstractEventHandler 
+        public static class EventHandler 
         {
-            public void Handle(ClientMessage clientMessage) 
+            public static void HandleEvent(ClientMessage clientMessage, HandleMemberEvent handleMemberEvent, HandleMemberListEvent handleMemberListEvent, HandleMemberAttributeChangeEvent handleMemberAttributeChangeEvent)
             {
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
@@ -167,14 +167,14 @@ namespace Hazelcast.Client.Protocol.Codec
                     var initialFrame = iterator.Next();
                     int eventType =  DecodeInt(initialFrame.Content, EventMemberEventTypeFieldOffset);
                     Core.Member member = MemberCodec.Decode(ref iterator);
-                    HandleMemberEvent(member, eventType);
+                    handleMemberEvent(member, eventType);
                     return;
                 }
                 if (messageType == EventMemberListMessageType) {
                     //empty initial frame
                     iterator.Next();
                     IList<Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
-                    HandleMemberListEvent(members);
+                    handleMemberListEvent(members);
                     return;
                 }
                 if (messageType == EventMemberAttributeChangeMessageType) {
@@ -184,17 +184,17 @@ namespace Hazelcast.Client.Protocol.Codec
                     IList<Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
                     string key = StringCodec.Decode(ref iterator);
                     string value = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
-                    HandleMemberAttributeChangeEvent(member, members, key, operationType, value);
+                    handleMemberAttributeChangeEvent(member, members, key, operationType, value);
                     return;
                 }
-                Logger.GetLogger(GetType()).Finest("Unknown message type received on event handler :" + messageType);
+                Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-
-            public abstract void HandleMemberEvent(Core.Member member, int eventType);
-
-            public abstract void HandleMemberListEvent(IEnumerable<Core.Member> members);
-
-            public abstract void HandleMemberAttributeChangeEvent(Core.Member member, IEnumerable<Core.Member> members, string key, int operationType, string value);
+        
+            public delegate void HandleMemberEvent(Core.Member member, int eventType);
+        
+            public delegate void HandleMemberListEvent(IEnumerable<Core.Member> members);
+        
+            public delegate void HandleMemberAttributeChangeEvent(Core.Member member, IEnumerable<Core.Member> members, string key, int operationType, string value);
         }
     }
 }

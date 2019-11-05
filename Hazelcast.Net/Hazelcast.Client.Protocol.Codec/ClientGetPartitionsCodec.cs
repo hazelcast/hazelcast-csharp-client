@@ -92,7 +92,7 @@ namespace Hazelcast.Client.Protocol.Codec
             clientMessage.Add(initialFrame);
 
             EncodeInt(initialFrame.Content, ResponsePartitionStateVersionFieldOffset, partitionStateVersion);
-            EntryListAddressListIntegerCodec.Encode(clientMessage, partitions);
+            EntryListCodec.Encode(clientMessage, partitions, AddressCodec.Encode, ListIntegerCodec.Encode);
             return clientMessage;
         }
 
@@ -102,7 +102,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             var initialFrame = iterator.Next();
             response.PartitionStateVersion = DecodeInt(initialFrame.Content, ResponsePartitionStateVersionFieldOffset);
-            response.Partitions = EntryListAddressListIntegerCodec.Decode(ref iterator);
+            response.Partitions = EntryListCodec.Decode(ref iterator, AddressCodec.Decode, ListIntegerCodec.Decode);
             return response;
         }
     }
