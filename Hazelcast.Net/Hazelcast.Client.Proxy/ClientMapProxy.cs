@@ -762,11 +762,13 @@ namespace Hazelcast.Client.Proxy
         {
             var partitionService = GetContext().GetPartitionService();
             var partitionCount = partitionService.GetPartitionCount();
-            var partitions = new ArrayList(partitionCount);
+            var partitions = new List<KeyValuePair<IData, IData>>[partitionCount];
+
             for (var i = 0; i < partitionCount; i++)
             {
-                partitions.Add(new ArrayList());
+                partitions[i]= new List<KeyValuePair<IData, IData>>();
             }
+
             foreach (var kvp in m)
             {
                 ValidationUtil.CheckNotNull(kvp.Key, ValidationUtil.NULL_KEY_IS_NOT_ALLOWED);
@@ -774,19 +776,19 @@ namespace Hazelcast.Client.Proxy
                 var keyData = ToData(kvp.Key);
                 var valueData = ToData(kvp.Value);
                 var partitionId = partitionService.GetPartitionId(keyData);
-                var partition = (ArrayList) partitions[partitionId];
-                partition.Add(keyData);
-                partition.Add(valueData);
+                var partition = partitions[partitionId];
+                partition.Add(new KeyValuePair<IData, IData>(keyData, valueData));
             }
-            PutAllInternal(m, partitions);
+
+            PutAllInternal(partitions);
         }
 
-        protected virtual void PutAllInternal(IDictionary<TKey, TValue> map, ArrayList partitions)
+        protected virtual void PutAllInternal(List<KeyValuePair<IData,IData>>[] partitions)
         {
             var futures = new ConcurrentQueue<IFuture<ClientMessage>>();
-            Parallel.For(0, partitions.Count, i =>
+            Parallel.For(0, partitions.Length, i =>
             {
-                var entries = (ArrayList) partitions[i];
+                var entries = partitions[i];
                 if (entries.Count > 0)
                 {
                     var request = MapPutAllCodec.EncodeRequest(GetName(), entries);

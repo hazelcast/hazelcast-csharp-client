@@ -59,12 +59,12 @@ namespace Hazelcast.Client.Protocol.Util
                 {
                     // first fragment
                     var builder = new BufferBuilder();
-                    _builderBySessionIdMap.Add(_message.GetCorrelationId(), builder);
+                    _builderBySessionIdMap.Add(_message.CorrelationId, builder);
                     builder.Append(_message.GetBuffer(), 0, _message.GetFrameLength());
                 }
                 else
                 {
-                    var builder = _builderBySessionIdMap[_message.GetCorrelationId()];
+                    var builder = _builderBySessionIdMap[_message.CorrelationId];
                     if (builder.Position() == 0)
                     {
                         throw new InvalidOperationException();
@@ -78,7 +78,7 @@ namespace Hazelcast.Client.Protocol.Util
                         cm.SetFrameLength(msgLength);
                         //HANDLE-MESSAGE
                         HandleMessage(cm);
-                        _builderBySessionIdMap.Remove(_message.GetCorrelationId());
+                        _builderBySessionIdMap.Remove(_message.CorrelationId);
                     }
                 }
                 _message = ClientMessage.Create();

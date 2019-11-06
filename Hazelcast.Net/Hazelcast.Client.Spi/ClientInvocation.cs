@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
@@ -24,7 +25,7 @@ using Hazelcast.Util;
     {
         private readonly ClientConnection _boundConnection;
         private readonly SettableFuture<ClientMessage> _future;
-        private readonly string _memberUuid;
+        private readonly Guid _memberUuid;
         private readonly ClientMessage _message;
         private readonly int _partitionId = -1;
 
@@ -45,7 +46,7 @@ using Hazelcast.Util;
             _partitionId = partitionId;
         }
 
-        public ClientInvocation(ClientMessage message, string memberUuid) : this(message)
+        public ClientInvocation(ClientMessage message, Guid memberUuid) : this(message)
         {
             _memberUuid = memberUuid;
         }
@@ -62,7 +63,7 @@ using Hazelcast.Util;
             _eventHandler = eventHandler;
         }
 
-        public string MemberUuid
+        public Guid MemberUuid
         {
             get { return _memberUuid; }
         }

@@ -29,7 +29,7 @@ using Hazelcast.Logging;
 using Hazelcast.Util;
 
 #pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener
     {
@@ -114,7 +114,7 @@ using Hazelcast.Util;
             }
         }
 
-        public IFuture<ClientMessage> InvokeListenerOnConnection(ClientMessage request, 
+        public IFuture<ClientMessage> InvokeListenerOnConnection(ClientMessage request,
             DistributedEventHandler eventHandler, ClientConnection connection)
         {
             var clientInvocation = new ClientInvocation(request, connection, eventHandler);
@@ -271,7 +271,7 @@ using Hazelcast.Util;
                    || exception is HazelcastInstanceNotActiveException
                    || exception is AuthenticationException
             // above exceptions OR retryable exception case as below
-                   || exception is RetryableHazelcastException && (_redoOperations || invocation.Message.IsRetryable());
+                   || exception is RetryableHazelcastException && (_redoOperations || invocation.Message.IsRetryable);
         }
 
         private Address GetNewInvocationAddress(ClientInvocation invocation)
@@ -281,7 +281,7 @@ using Hazelcast.Util;
             {
                 newAddress = invocation.Address;
             }
-            else if (invocation.MemberUuid != null)
+            else if (invocation.MemberUuid != Guid.Empty)
             {
                 var member = _client.GetClientClusterService().GetMember(invocation.MemberUuid);
                 if (member == null)
@@ -301,12 +301,12 @@ using Hazelcast.Util;
         private void UpdateInvocation(ClientInvocation clientInvocation, ClientConnection connection)
         {
             var correlationId = NextCorrelationId();
-            clientInvocation.Message.SetCorrelationId(correlationId);
+            clientInvocation.Message.CorrelationId = correlationId;
             clientInvocation.Message.AddFlag(ClientMessage.BeginAndEndFlags);
             clientInvocation.SentConnection = connection;
             if (clientInvocation.PartitionId != -1)
             {
-                clientInvocation.Message.SetPartitionId(clientInvocation.PartitionId);
+                clientInvocation.Message.PartitionId = clientInvocation.PartitionId;
             }
         }
 
@@ -326,11 +326,11 @@ using Hazelcast.Util;
 
         private bool TrySend(ClientInvocation clientInvocation, ClientConnection connection)
         {
-            var correlationId = clientInvocation.Message.GetCorrelationId();
+            var correlationId = clientInvocation.Message.CorrelationId;
             if (!TryRegisterInvocation(correlationId, clientInvocation)) return false;
 
             //enqueue to write queue
-            if (connection.WriteAsync((ISocketWritable) clientInvocation.Message))
+            if (connection.WriteAsync((ISocketWritable)clientInvocation.Message))
             {
                 return true;
             }
@@ -404,11 +404,10 @@ using Hazelcast.Util;
 
         private void HandleResponseMessage(ClientMessage response)
         {
-            var correlationId = response.GetCorrelationId();
-            ClientInvocation invocation;
-            if (_invocations.TryRemove(correlationId, out invocation))
+            var correlationId = response.CorrelationId;
+            if (_invocations.TryRemove(correlationId, out var invocation))
             {
-                if (response.GetMessageType() == Error.Type)
+                if (response.MessageType == Error.Type)
                 {
                     var error = Error.Decode(response);
                     if (Logger.IsFinestEnabled())
@@ -464,7 +463,7 @@ using Hazelcast.Util;
             ClientInvocation ignored;
             _invocations.TryRemove(correlationId, out ignored);
         }
-        
+
         public abstract IFuture<ClientMessage> InvokeOnKeyOwner(ClientMessage request, object key);
         public abstract IFuture<ClientMessage> InvokeOnMember(ClientMessage request, IMember member);
         public abstract IFuture<ClientMessage> InvokeOnRandomTarget(ClientMessage request);

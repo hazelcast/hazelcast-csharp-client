@@ -281,21 +281,20 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        protected override void PutAllInternal(IDictionary<TKey, TValue> map, ArrayList partitions)
+        protected override void PutAllInternal(List<KeyValuePair<IData, IData>>[] partitions)
         {
             try
             {
-                base.PutAllInternal(map, partitions);
+                base.PutAllInternal(partitions);
             }
             finally
             {
-                Parallel.For(0, partitions.Count, partitionId =>
+                Parallel.For(0, partitions.Length, partitionId =>
                 {
-                    var entries = (ArrayList)partitions[partitionId];
-                    var entryCount = entries.Count / 2;
-                    for (var k = 0; k < entryCount; k += 2)
+                    var entries = partitions[partitionId];
+                    foreach (var kvp in entries)
                     {
-                        _nearCache.Invalidate((IData)entries[k]);
+                        _nearCache.Invalidate(kvp.Key);
                     }
                 });
             }

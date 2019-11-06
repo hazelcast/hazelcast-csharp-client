@@ -195,7 +195,7 @@ namespace Hazelcast.Client.Spi
             }
 
             var serverRegistrationId = listenerRegistration.DecodeRegisterResponse(clientMessage);
-            var correlationId = listenerRegistration.RegistrationRequest.GetCorrelationId();
+            var correlationId = listenerRegistration.RegistrationRequest.CorrelationId;
             var registration = new EventRegistration(serverRegistrationId, correlationId, connection);
 
             Debug.Assert(listenerRegistration.ConnectionRegistrations != null, "registrationMap should be created!");
@@ -283,10 +283,10 @@ namespace Hazelcast.Client.Spi
 
         public void HandleResponseMessage(ClientMessage message)
         {
-            var partitionId = message.GetPartitionId();
+            var partitionId = message.PartitionId;
             Task.Factory.StartNew(o =>
             {
-                var correlationId = message.GetCorrelationId();
+                var correlationId = message.CorrelationId;
                 DistributedEventHandler eventHandler;
                 if (!_eventHandlers.TryGetValue(correlationId, out eventHandler))
                 {
