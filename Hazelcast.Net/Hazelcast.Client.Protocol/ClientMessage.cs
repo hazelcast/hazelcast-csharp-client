@@ -117,6 +117,8 @@ namespace Hazelcast.Client.Protocol
             return ref _tail[index - 1];
         }
 
+        public int FrameCount => _written;
+
         public void Merge(ClientMessage fragment)
         {
             // ignore the first frame of the fragment since first frame marks the fragment
@@ -209,49 +211,6 @@ namespace Hazelcast.Client.Protocol
             return newMessage;
         }
 
-        //    @Override
-        //public boolean equals(Object o)
-        //    {
-        //        if (this == o)
-        //        {
-        //            return true;
-        //        }
-        //        if (o == null || getClass() != o.getClass())
-        //        {
-        //            return false;
-        //        }
-        //        if (!super.equals(o))
-        //        {
-        //            return false;
-        //        }
-
-        //        ClientMessage message = (ClientMessage)o;
-
-        //        if (isRetryable != message.isRetryable)
-        //        {
-        //            return false;
-        //        }
-        //        if (AcquiresResource != message.AcquiresResource)
-        //        {
-        //            return false;
-        //        }
-        //        if (!Objects.equals(OperationName, message.OperationName))
-        //        {
-        //            return false;
-        //        }
-        //        return Objects.equals(Connection, message.Connection);
-        //    }
-
-        //    public override int GetHashCode()
-        //    {
-        //        var result = base.GetHashCode();
-        //        result = 31 * result + (IsRetryable ? 1 : 0);
-        //        result = 31 * result + (AcquiresResource ? 1 : 0);
-        //        result = 31 * result + (OperationName != null ? OperationName.GetHashCode() : 0);
-        //        result = 31 * result + (Connection != null ? Connection.hashCode() : 0);
-        //        return result;
-        //    }
-
         public struct Frame
         {
             public readonly byte[] Content;
@@ -282,35 +241,6 @@ namespace Hazelcast.Client.Protocol
             public bool IsNullFrame => IsFlagSet(Flags, IsNullFlag);
 
             public int Size => Content == null ? SizeOfFrameLengthAndFlags : SizeOfFrameLengthAndFlags + Content.Length;
-
-            //    @Override
-            //public boolean equals(Object o)
-            //    {
-            //        if (this == o)
-            //        {
-            //            return true;
-            //        }
-            //        if (o == null || getClass() != o.getClass())
-            //        {
-            //            return false;
-            //        }
-
-            //        Frame frame = (Frame)o;
-
-            //        if (Flags != frame.Flags)
-            //        {
-            //            return false;
-            //        }
-            //        return Array.equals(Content, frame.Content);
-            //    }
-
-            //    @Override
-            //public int hashCode()
-            //    {
-            //        int result = Arrays.hashCode(Content);
-            //        result = 31 * result + Flags;
-            //        return result;
-            //    }
         }
 
         public FrameIterator GetIterator() => new FrameIterator(this);
@@ -338,5 +268,24 @@ namespace Hazelcast.Client.Protocol
                 return ref _message.Get(_index);
             }
         }
+
+        public struct Accessor
+        {
+            readonly ClientMessage _message;
+            int _index; 
+
+            public Accessor(ClientMessage message)
+            {
+                _message = message;
+                _index = 0;
+            }
+
+            public bool IsEmpty => _message == null || _index >= _message._written;
+            public bool HasNext => _message != null && _index < _message._written;
+            public ref Frame Frame => ref _message.Get(_index);
+            public void MoveNext() => _index++;
+        }
+
+        public Accessor GetAccessor() => new Accessor(this);
     }
 }

@@ -331,7 +331,7 @@ namespace Hazelcast.Client.Spi
             if (!TryRegisterInvocation(correlationId, clientInvocation)) return false;
 
             //enqueue to write queue
-            if (connection.WriteAsync((ISocketWritable)clientInvocation.Message))
+            if (connection.WriteAsync(clientInvocation.Message))   
             {
                 return true;
             }

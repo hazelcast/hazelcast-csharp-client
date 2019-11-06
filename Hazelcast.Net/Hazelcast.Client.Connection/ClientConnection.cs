@@ -22,6 +22,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
@@ -45,12 +46,12 @@ namespace Hazelcast.Client.Connection
         private readonly int _id;
         private readonly ByteBuffer _receiveBuffer;
         private readonly ByteBuffer _sendBuffer;
-        private readonly BlockingCollection<ISocketWritable> _writeQueue = new BlockingCollection<ISocketWritable>();
+        private readonly BlockingCollection<ClientMessage> _writeQueue = new BlockingCollection<ClientMessage>();
 
         private readonly Socket _clientSocket;
         private readonly Stream _stream;
         private bool _isOwner;
-        private volatile ISocketWritable _lastWritable;
+        private volatile ClientMessage _lastWritable;
         private readonly AtomicBoolean _live;
         private volatile IMember _member;
         private Thread _writeThread;
@@ -274,17 +275,17 @@ namespace Hazelcast.Client.Connection
             return "Connection [" + _member + " -> CLOSED ]";
         }
 
-        public bool WriteAsync(ISocketWritable packet)
+        public bool WriteAsync(ClientMessage message)
         {
             if (!Live)
             {
                 if (Logger.IsFinestEnabled())
                 {
-                    Logger.Finest("Connection is closed, won't write packet -> " + packet);
+                    Logger.Finest("Connection is closed, won't write message -> " + message);
                 }
                 return false;
             }
-            return _writeQueue.TryAdd(packet);
+            return _writeQueue.TryAdd(message);
         }
 
         internal Socket GetSocket()
@@ -422,13 +423,15 @@ namespace Hazelcast.Client.Connection
         {
             try
             {
+                var writer = new ClientMessageWriter();
+                ClientMessage msg = default;
                 while (!_writeQueue.IsAddingCompleted)
                 {
                     try
                     {
-                        if (_lastWritable == null)
+                        if (msg == null)
                         {
-                            _lastWritable = _writeQueue.Take();
+                            msg = _writeQueue.Take();
                         }
                     }
                     catch (Exception)
@@ -440,21 +443,21 @@ namespace Hazelcast.Client.Connection
                         }
                     }
 
-                    while (_sendBuffer.HasRemaining() && _lastWritable != null)
+                    while (_sendBuffer.HasRemaining() && msg != null)
                     {
-                        var complete = _lastWritable.WriteTo(_sendBuffer);
+                        var complete = writer.WriteTo(_sendBuffer, msg);
                         if (complete)
                         {
                             //grap one from queue
-                            ISocketWritable tmp;
-                            _writeQueue.TryTake(out tmp);
-                            _lastWritable = tmp;
+                            _writeQueue.TryTake(out var tmp);
+                            msg = tmp;
                         }
                         else
                         {
                             break;
                         }
                     }
+
                     if (_sendBuffer.Position > 0)
                     {
                         _sendBuffer.Flip();
@@ -466,7 +469,7 @@ namespace Hazelcast.Client.Connection
                         }
                         catch (Exception e)
                         {
-                            _lastWritable = null;
+                            msg = null;
                             HandleSocketException(e);
                         }
                     }

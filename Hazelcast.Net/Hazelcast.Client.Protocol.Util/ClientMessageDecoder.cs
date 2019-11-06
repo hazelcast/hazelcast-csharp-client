@@ -38,11 +38,10 @@ namespace Hazelcast.Client.Protocol.Util
         // private readonly Connection _connection;
         // private ClientEndpointManager clientEndpointManager;
 
-        private readonly Dictionary<long, ClientMessage> builderBySessionIdMap = new Dictionary<long, ClientMessage>();
+        private readonly Dictionary<long, ClientMessage> _builderBySessionIdMap = new Dictionary<long, ClientMessage>();
         private readonly Action<ClientMessage> _onMessage;
         private readonly int _maxMessageLength;
         private ClientMessageReader _activeReader;
-        private bool _clientIsTrusted;
 
         public ClientMessageDecoder(Action<ClientMessage> onMessage)
         {
@@ -53,68 +52,59 @@ namespace Hazelcast.Client.Protocol.Util
             //}
             //clientEndpointManager = onMessage instanceof ClientEngine ? ((ClientEngine)onMessage).getEndpointManager() : null;
             //maxMessageLength = properties.getInteger(GroupProperty.CLIENT_PROTOCOL_UNVERIFIED_MESSAGE_BYTES);
-            var maxMessageLength = int.MaxValue;
-            _activeReader = new ClientMessageReader(maxMessageLength);
+            _maxMessageLength = int.MaxValue;
+            _activeReader = new ClientMessageReader(_maxMessageLength);
             //this.connection = connection;
         }
 
         public void OnRead(ByteBuffer src)
         {
-            try
+            while (src.HasRemaining())
             {
-                while (src.HasRemaining())
+                var trusted = IsEndpointTrusted();
+                var complete = _activeReader.ReadFrom(src, trusted);
+                if (!complete)
                 {
-                    var trusted = isEndpointTrusted();
-                    var complete = _activeReader.ReadFrom(src, trusted);
-                    if (!complete)
-                    {
-                        break;
-                    }
+                    break;
+                }
 
-                    var firstFrame = _activeReader.Message.Head;
-                    var flags = firstFrame.Flags;
-                    if (ClientMessage.IsFlagSet(flags, ClientMessage.UnfragmentedMessage))
+                var firstFrame = _activeReader.Message.Head;
+                var flags = firstFrame.Flags;
+                if (ClientMessage.IsFlagSet(flags, ClientMessage.UnfragmentedMessage))
+                {
+                    HandleMessage(_activeReader.Message);
+                }
+                else if (!trusted)
+                {
+                    throw new InvalidOperationException("Fragmented client messages are not allowed before the client is authenticated.");
+                }
+                else
+                {
+                    var frameIterator = _activeReader.Message.GetIterator();
+                    //ignore the fragmentationFrame
+                    frameIterator.Next();
+                    var startFrame = frameIterator.Next();
+                    var fragmentationId = Bits.ReadLongL(firstFrame.Content, ClientMessage.FragmentationIdOffset);
+                    if (ClientMessage.IsFlagSet(flags, ClientMessage.BeginFragmentFlag))
                     {
-                        handleMessage(_activeReader.Message);
+                        _builderBySessionIdMap[fragmentationId] = ClientMessage.CreateForDecode(startFrame);
                     }
-                    else if (!trusted)
+                    else if (ClientMessage.IsFlagSet(flags, ClientMessage.EndFragmentFlag))
                     {
-                        throw new InvalidOperationException("Fragmented client messages are not allowed before the client is authenticated.");
+                        var clientMessage = MergeIntoExistingClientMessage(fragmentationId);
+                        HandleMessage(clientMessage);
                     }
                     else
                     {
-                        var frameIterator = _activeReader.Message.GetIterator();
-                        //ignore the fragmentationFrame
-                        frameIterator.Next();
-                        var startFrame = frameIterator.Next();
-                        var fragmentationId = Bits.ReadLongL(firstFrame.Content, ClientMessage.FragmentationIdOffset);
-                        if (ClientMessage.IsFlagSet(flags, ClientMessage.BeginFragmentFlag))
-                        {
-                            builderBySessionIdMap[fragmentationId] = ClientMessage.CreateForDecode(startFrame);
-                        }
-                        else if (ClientMessage.IsFlagSet(flags, ClientMessage.EndFragmentFlag))
-                        {
-                            var clientMessage = MergeIntoExistingClientMessage(fragmentationId);
-                            handleMessage(clientMessage);
-                        }
-                        else
-                        {
-                            MergeIntoExistingClientMessage(fragmentationId);
-                        }
+                        MergeIntoExistingClientMessage(fragmentationId);
                     }
-
-                    _activeReader = new ClientMessageReader(_maxMessageLength);
                 }
 
-                return CLEAN;
-            }
-            finally
-            {
-                compactOrClear(src);
+                _activeReader = new ClientMessageReader(_maxMessageLength);
             }
         }
 
-        private bool isEndpointTrusted()
+        private bool IsEndpointTrusted()
         {
             return false;
             //    if (clientEndpointManager == null || clientIsTrusted)
@@ -128,16 +118,16 @@ namespace Hazelcast.Client.Protocol.Util
 
         private ClientMessage MergeIntoExistingClientMessage(long fragmentationId)
         {
-            var existingMessage = builderBySessionIdMap[fragmentationId];
+            var existingMessage = _builderBySessionIdMap[fragmentationId];
             existingMessage.Merge(_activeReader.Message);
             return existingMessage;
         }
 
-        private void handleMessage(ClientMessage clientMessage)
+        private void HandleMessage(ClientMessage clientMessage)
         {
-            clientMessage.setConnection(connection);
-            normalPacketsRead.inc();
-            dst.accept(clientMessage);
+            //clientMessage.setConnection(connection);
+            //normalPacketsRead.inc();
+            _onMessage(clientMessage);
         }
     }
 }
