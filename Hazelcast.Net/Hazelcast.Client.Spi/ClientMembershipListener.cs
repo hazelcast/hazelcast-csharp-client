@@ -77,7 +77,7 @@ using Hazelcast.Util;
             _partitionService.RefreshPartitions();
         }
 
-        private void HandleMemberAttributeChange(string uuid, string key, int operationType, string value)
+        private void HandleMemberAttributeChange(Core.Member member, IEnumerable<Member> members, string key, int operationType, string value)
         {
             var memberMap = _clusterService.GetMembersRef();
             if (memberMap == null)
@@ -86,7 +86,7 @@ using Hazelcast.Util;
             }
             foreach (var target in memberMap.Values)
             {
-                if (target.Uuid.Equals(uuid))
+                if (target.Uuid.Equals(member.Uuid))
                 {
                     var type = (Core.MemberAttributeOperationType) operationType;
                     ((Member) target).UpdateAttribute(type, key, value);
@@ -98,7 +98,7 @@ using Hazelcast.Util;
             }
         }
 
-        private void HandleMemberCollection(ICollection<IMember> initialMembers)
+        private void HandleMemberCollection(IEnumerable<IMember> initialMembers)
         {
             var prevMembers = new HashSet<IMember>();
             if (_members.Any())

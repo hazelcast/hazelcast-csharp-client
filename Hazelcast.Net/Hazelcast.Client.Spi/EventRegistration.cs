@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Client.Connection;
 
 #pragma warning disable CS1591
@@ -19,11 +20,11 @@ using Hazelcast.Client.Connection;
 {
     internal class EventRegistration
     {
-        public string ServerRegistrationId { get; private set; }
+        public Guid ServerRegistrationId { get; private set; }
         public long CorrelationId { get; private set; }
         public ClientConnection ClientConnection { get; private set; }
 
-        public EventRegistration(string serverRegistrationId, long correlationId, ClientConnection clientConnection)
+        public EventRegistration(Guid serverRegistrationId, long correlationId, ClientConnection clientConnection)
         {
             ServerRegistrationId = serverRegistrationId;
             CorrelationId = correlationId;
