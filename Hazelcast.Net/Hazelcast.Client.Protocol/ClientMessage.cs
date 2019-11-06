@@ -71,19 +71,16 @@ namespace Hazelcast.Client.Protocol
 
         public static ClientMessage CreateForEncode() => new ClientMessage();
 
-        public static ClientMessage CreateForDecode(IEnumerable<Frame> frames)
+        public static ClientMessage CreateForDecode(Frame frame)
         {
             var message = new ClientMessage();
-
-            foreach (var frame in frames)
-            {
-                message.Add(frame);
-            }
-
+            message.Add(frame);
             return message;
         }
 
-        private ref Frame Head => ref Get(0);
+        public ref Frame Head => ref Get(0);
+
+        public ref Frame Tail => ref Get(_written - 1);
 
         public void Add(Frame frame)
         {
@@ -118,6 +115,16 @@ namespace Hazelcast.Client.Protocol
             }
 
             return ref _tail[index - 1];
+        }
+
+        public void Merge(ClientMessage fragment)
+        {
+            // ignore the first frame of the fragment since first frame marks the fragment
+            var count = fragment._written;
+            for (var i = 1; i < count; i++)
+            {
+                Add(fragment.Get(i));
+            }
         }
 
         public int HeaderFlags => Head.Flags;
@@ -160,8 +167,6 @@ namespace Hazelcast.Client.Protocol
                 return frameLength;
             }
         }
-
-        public bool IsUrgent => false;
 
         public override string ToString()
         {

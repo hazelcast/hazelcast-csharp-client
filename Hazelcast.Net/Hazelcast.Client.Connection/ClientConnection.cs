@@ -18,8 +18,6 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -42,7 +40,7 @@ namespace Hazelcast.Client.Connection
         private const int ConnectionTimeout = 30000;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientConnection));
 
-        private readonly ClientMessageBuilder _builder;
+        private readonly ClientMessageDecoder _decoder;
         private readonly ClientConnectionManager _clientConnectionManager;
         private readonly int _id;
         private readonly ByteBuffer _receiveBuffer;
@@ -110,7 +108,7 @@ namespace Hazelcast.Client.Connection
                 _sendBuffer = ByteBuffer.Allocate(BufferSize);
                 _receiveBuffer = ByteBuffer.Allocate(BufferSize);
 
-                _builder = new ClientMessageBuilder(invocationService.HandleClientMessage);
+                _decoder = new ClientMessageDecoder(invocationService.HandleClientMessage);
 
                 var networkStream = new NetworkStream(_clientSocket, false);
                 var sslConfig = clientNetworkConfig.GetSSLConfig();
@@ -368,7 +366,7 @@ namespace Hazelcast.Client.Connection
                 _receiveBuffer.Position += receivedByteSize;
                 _receiveBuffer.Flip();
 
-                _builder.OnData(_receiveBuffer);
+                _decoder.OnRead(_receiveBuffer);
                 LastRead = DateTime.Now;
                 if (_receiveBuffer.HasRemaining())
                 {
