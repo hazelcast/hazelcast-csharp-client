@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Client.Protocol.Codec.Custom;
 using Hazelcast.Util;
 
 namespace Hazelcast.Client.Protocol
@@ -31,6 +32,12 @@ namespace Hazelcast.Client.Protocol
             ClassName = className;
             Message = message;
             StackTraceElements = stackTraceElements;
+        }
+
+        public static ErrorHolder Decode(ClientMessage message)
+        {
+            var iterator = message.GetIterator();
+            return ErrorHolderCodec.Decode(ref iterator);
         }
     }
 }

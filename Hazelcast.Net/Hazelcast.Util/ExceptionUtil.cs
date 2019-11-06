@@ -13,7 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using Hazelcast.Client;
+using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec.Custom;
 using Hazelcast.Core;
 
 namespace Hazelcast.Util
@@ -47,11 +50,6 @@ namespace Hazelcast.Util
             return new HazelcastException(t);
         }
 
-        public static Exception Rethrow(Error error)
-        {
-            return Rethrow(ToException(error));
-        }
-
         public static Exception Rethrow(Exception t)
         {
             if (t is NotImplementedException)
@@ -69,7 +67,7 @@ namespace Hazelcast.Util
             return t;
         }
 
-        public static Exception ToException(Error error)
+        public static Exception ToException(IEnumerable<ErrorHolder> error)
         {
             return ExceptionFactory.CreateException(error);
         }

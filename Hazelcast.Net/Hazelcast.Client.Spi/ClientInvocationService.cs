@@ -23,6 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec.BuiltIn;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
@@ -407,9 +408,9 @@ namespace Hazelcast.Client.Spi
             var correlationId = response.CorrelationId;
             if (_invocations.TryRemove(correlationId, out var invocation))
             {
-                if (response.MessageType == Error.Type)
+                if (response.MessageType == ResponseMessageConst.Exception)
                 {
-                    var error = Error.Decode(response);
+                    var error = ErrorsCodec.Decode(response);
                     if (Logger.IsFinestEnabled())
                     {
                         Logger.Finest("Error received from server: " + error);
