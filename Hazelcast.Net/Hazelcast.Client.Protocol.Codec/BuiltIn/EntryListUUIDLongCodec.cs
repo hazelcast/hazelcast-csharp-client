@@ -21,7 +21,7 @@ using static Hazelcast.Client.Protocol.ClientMessage;
 
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
-    internal static class EntryListGuidLongCodec
+    internal static class EntryListUUIDLongCodec
     {
         private const int EntrySizeInBytes = GuidSizeInBytes + LongSizeInBytes;
 
@@ -40,7 +40,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(frame);
         }
 
-        public static IEnumerable<KeyValuePair<Guid, long>> Decode(ref FrameIterator iterator)
+        public static IList<KeyValuePair<Guid, long>> Decode(ref FrameIterator iterator)
         {
             ref var frame = ref iterator.Next();
             var itemCount = frame.Content.Length / EntrySizeInBytes;

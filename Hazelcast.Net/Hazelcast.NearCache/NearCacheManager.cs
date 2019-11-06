@@ -132,8 +132,8 @@ namespace Hazelcast.NearCache
 
             FetchMetadataInternal(names, responseParameter =>
             {
-                RepairGuids(responseParameter.partitionUuidList);
-                RepairSequences(responseParameter.namePartitionSequenceList);
+                RepairGuids(responseParameter.PartitionUuidList);
+                RepairSequences(responseParameter.NamePartitionSequenceList);
             });
         }
 
