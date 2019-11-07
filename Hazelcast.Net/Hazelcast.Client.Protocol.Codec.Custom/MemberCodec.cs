@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,45 +31,42 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
     // definitions on the https://github.com/hazelcast/hazelcast-client-protocol
     // and regenerate it.
 
-    internal static class QueryCacheEventDataCodec 
+    internal static class MemberCodec
     {
-        private const int SequenceFieldOffset = 0;
-        private const int EventTypeFieldOffset = SequenceFieldOffset + LongSizeInBytes;
-        private const int PartitionIdFieldOffset = EventTypeFieldOffset + IntSizeInBytes;
-        private const int InitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int UuidFieldOffset = 0;
+        private const int LiteMemberFieldOffset = UuidFieldOffset + GuidSizeInBytes;
+        private const int InitialFrameSize = LiteMemberFieldOffset + BoolSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Map.QueryCacheEventData queryCacheEventData) 
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Core.Member member)
         {
             clientMessage.Add(BeginFrame);
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeLong(initialFrame.Content, SequenceFieldOffset, queryCacheEventData.Sequence);
-            EncodeInt(initialFrame.Content, EventTypeFieldOffset, queryCacheEventData.EventType);
-            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, queryCacheEventData.PartitionId);
+            EncodeGuid(initialFrame.Content, UuidFieldOffset, member.Uuid);
+            EncodeBool(initialFrame.Content, LiteMemberFieldOffset, member.IsLiteMember);
             clientMessage.Add(initialFrame);
 
-            CodecUtil.EncodeNullable(clientMessage, queryCacheEventData.DataKey, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, queryCacheEventData.DataNewValue, DataCodec.Encode);
+            AddressCodec.Encode(clientMessage, member.Address);
+            MapCodec.Encode(clientMessage, member.Attributes, StringCodec.Encode, StringCodec.Encode);
 
             clientMessage.Add(EndFrame);
         }
 
-        public static Hazelcast.Map.QueryCacheEventData Decode(ref FrameIterator iterator) 
+        public static Hazelcast.Core.Member Decode(ref FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
 
             ref var initialFrame = ref iterator.Next();
-            var sequence = DecodeLong(initialFrame.Content, SequenceFieldOffset);
-            var eventType = DecodeInt(initialFrame.Content, EventTypeFieldOffset);
-            var partitionId = DecodeInt(initialFrame.Content, PartitionIdFieldOffset);
+            var uuid = DecodeGuid(initialFrame.Content, UuidFieldOffset);
+            var liteMember = DecodeBool(initialFrame.Content, LiteMemberFieldOffset);
 
-            var dataKey = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
-            var dataNewValue = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
+            var address = AddressCodec.Decode(ref iterator);
+            var attributes = MapCodec.Decode(ref iterator, StringCodec.Decode, StringCodec.Decode);
 
             CodecUtil.FastForwardToEndFrame(ref iterator);
 
-            return CustomTypeFactory.CreateQueryCacheEventData(dataKey, dataNewValue, sequence, eventType, partitionId);
+            return new Hazelcast.Core.Member(address, uuid, attributes, liteMember);
         }
     }
 }

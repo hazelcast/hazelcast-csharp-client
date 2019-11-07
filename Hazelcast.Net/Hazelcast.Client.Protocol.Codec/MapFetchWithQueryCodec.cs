@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// Fetches the specified number of entries from the specified partition starting from specified table index
     /// that match the predicate and applies the projection logic on them.
     ///</summary>
-    internal static class MapFetchWithQueryCodec 
+    internal static class MapFetchWithQueryCodec
     {
         //hex: 0x014300
         public const int RequestMessageType = 82688;
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int ResponseNextTableIndexToReadFromFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseNextTableIndexToReadFromFieldOffset + IntSizeInBytes;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public IData Predicate;
         }
 
-        public static ClientMessage EncodeRequest(string name, int tableIndex, int batch, IData projection, IData predicate) 
+        public static ClientMessage EncodeRequest(string name, int tableIndex, int batch, IData projection, IData predicate)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
@@ -94,7 +94,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -107,7 +107,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -121,7 +121,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public int NextTableIndexToReadFrom;
         }
 
-        public static ClientMessage EncodeResponse(IEnumerable<IData> results, int nextTableIndexToReadFrom) 
+        public static ClientMessage EncodeResponse(IEnumerable<IData> results, int nextTableIndexToReadFrom)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

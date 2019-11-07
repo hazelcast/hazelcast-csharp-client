@@ -204,7 +204,7 @@ using Hazelcast.Util;
 
         private bool ProcessPartitionResponse(ClientGetPartitionsCodec.ResponseParameters response)
         {
-            var partitionResponse = response.partitions;
+            var partitionResponse = response.Partitions;
             foreach (var entry in partitionResponse)
             {
                 var address = entry.Key;

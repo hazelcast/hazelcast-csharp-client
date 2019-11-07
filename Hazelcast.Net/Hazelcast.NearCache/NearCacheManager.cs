@@ -220,8 +220,8 @@ namespace Hazelcast.NearCache
                 var names = new List<string> {nearCache.Name};
                 FetchMetadataInternal(names, responseParameter =>
                 {
-                    repairingHandler.InitGuids(responseParameter.partitionUuidList);
-                    repairingHandler.InitSequences(responseParameter.namePartitionSequenceList);
+                    repairingHandler.InitGuids(responseParameter.PartitionUuidList);
+                    repairingHandler.InitSequences(responseParameter.NamePartitionSequenceList);
                 });
 
                 //start repairing task if not started

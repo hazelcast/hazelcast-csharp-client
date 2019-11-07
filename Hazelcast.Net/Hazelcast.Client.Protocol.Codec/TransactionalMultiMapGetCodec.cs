@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// <summary>
     /// Returns the collection of values associated with the key.
     ///</summary>
-    internal static class TransactionalMultiMapGetCodec 
+    internal static class TransactionalMultiMapGetCodec
     {
         //hex: 0x0F0200
         public const int RequestMessageType = 983552;
@@ -46,7 +46,7 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -70,7 +70,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public IData Key;
         }
 
-        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key) 
+        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
@@ -86,7 +86,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -98,7 +98,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -107,7 +107,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public IList<IData> Response;
         }
 
-        public static ClientMessage EncodeResponse(IEnumerable<IData> response) 
+        public static ClientMessage EncodeResponse(IEnumerable<IData> response)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

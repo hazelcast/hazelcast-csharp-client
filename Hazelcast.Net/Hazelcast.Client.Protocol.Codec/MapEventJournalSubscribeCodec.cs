@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// This includes retrieving the event journal sequences of the
     /// oldest and newest event in the journal.
     ///</summary>
-    internal static class MapEventJournalSubscribeCodec 
+    internal static class MapEventJournalSubscribeCodec
     {
         //hex: 0x014400
         public const int RequestMessageType = 82944;
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int ResponseNewestSequenceFieldOffset = ResponseOldestSequenceFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseNewestSequenceFieldOffset + LongSizeInBytes;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -57,7 +57,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public string Name;
         }
 
-        public static ClientMessage EncodeRequest(string name) 
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
@@ -70,7 +70,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -80,7 +80,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -94,7 +94,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public long NewestSequence;
         }
 
-        public static ClientMessage EncodeResponse(long oldestSequence, long newestSequence) 
+        public static ClientMessage EncodeResponse(long oldestSequence, long newestSequence)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

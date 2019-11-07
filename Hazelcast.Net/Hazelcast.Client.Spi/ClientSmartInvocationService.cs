@@ -35,7 +35,7 @@ using Hazelcast.IO;
 
         public override IFuture<ClientMessage> InvokeOnMember(ClientMessage request, IMember target)
         {
-            return Invoke(new ClientInvocation(request, target.Uuid()), target.Address);
+            return Invoke(new ClientInvocation(request, target.Uuid), target.Address);
         }
 
         public override IFuture<ClientMessage> InvokeOnPartition(ClientMessage request, int partitionId)

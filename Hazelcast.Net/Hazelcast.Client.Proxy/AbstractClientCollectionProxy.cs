@@ -112,7 +112,7 @@ namespace Hazelcast.Client.Proxy
 
         protected abstract ICollection<T> GetAll();
 
-        protected void HandleItemListener(IData itemData, string uuid, ItemEventType eventType,
+        protected void HandleItemListener(IData itemData, Guid uuid, ItemEventType eventType,
             IItemListener<T> listener, bool includeValue)
         {
             var item = includeValue

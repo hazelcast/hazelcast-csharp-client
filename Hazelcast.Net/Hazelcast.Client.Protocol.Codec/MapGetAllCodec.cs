@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// matching to a different partition id shall be ignored. The API implementation using this request may need to send multiple
     /// of these request messages for filling a request for a key set if the keys belong to different partitions.
     ///</summary>
-    internal static class MapGetAllCodec 
+    internal static class MapGetAllCodec
     {
         //hex: 0x012400
         public const int RequestMessageType = 74752;
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -62,7 +62,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public IList<IData> Keys;
         }
 
-        public static ClientMessage EncodeRequest(string name, IEnumerable<IData> keys) 
+        public static ClientMessage EncodeRequest(string name, IEnumerable<IData> keys)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
@@ -76,7 +76,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -87,7 +87,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -96,7 +96,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public IList<KeyValuePair<IData, IData>> Response;
         }
 
-        public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<IData, IData>> response) 
+        public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<IData, IData>> response)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

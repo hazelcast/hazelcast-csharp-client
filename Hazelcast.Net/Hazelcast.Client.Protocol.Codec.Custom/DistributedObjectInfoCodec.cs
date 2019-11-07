@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,41 +31,30 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
     // definitions on the https://github.com/hazelcast/hazelcast-client-protocol
     // and regenerate it.
 
-    internal static class ErrorHolderCodec 
+    internal static class DistributedObjectInfoCodec
     {
-        private const int ErrorCodeFieldOffset = 0;
-        private const int InitialFrameSize = ErrorCodeFieldOffset + IntSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, ErrorHolder errorHolder) 
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Client.DistributedObjectInfo distributedObjectInfo)
         {
             clientMessage.Add(BeginFrame);
 
-            var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeInt(initialFrame.Content, ErrorCodeFieldOffset, errorHolder.ErrorCode);
-            clientMessage.Add(initialFrame);
-
-            StringCodec.Encode(clientMessage, errorHolder.ClassName);
-            CodecUtil.EncodeNullable(clientMessage, errorHolder.Message, StringCodec.Encode);
-            ListMultiFrameCodec.Encode(clientMessage, errorHolder.StackTraceElements, StackTraceElementCodec.Encode);
+            StringCodec.Encode(clientMessage, distributedObjectInfo.ServiceName);
+            StringCodec.Encode(clientMessage, distributedObjectInfo.Name);
 
             clientMessage.Add(EndFrame);
         }
 
-        public static ErrorHolder Decode(ref FrameIterator iterator) 
+        public static Hazelcast.Client.DistributedObjectInfo Decode(ref FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
 
-            ref var initialFrame = ref iterator.Next();
-            var errorCode = DecodeInt(initialFrame.Content, ErrorCodeFieldOffset);
-
-            var className = StringCodec.Decode(ref iterator);
-            var message = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
-            var stackTraceElements = ListMultiFrameCodec.Decode(ref iterator, StackTraceElementCodec.Decode);
+            var serviceName = StringCodec.Decode(ref iterator);
+            var name = StringCodec.Decode(ref iterator);
 
             CodecUtil.FastForwardToEndFrame(ref iterator);
 
-            return new ErrorHolder(errorCode, className, message, stackTraceElements);
+            return new Hazelcast.Client.DistributedObjectInfo(serviceName, name);
         }
     }
 }

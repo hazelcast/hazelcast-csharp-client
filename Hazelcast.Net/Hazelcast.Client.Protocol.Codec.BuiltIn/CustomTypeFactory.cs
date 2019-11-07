@@ -28,9 +28,12 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
         {
             try
             {
+                // The creation of the address uses https://docs.microsoft.com/en-us/dotnet/api/system.net.dns.gethostaddresses
+                // This method may throw ArgumentException, SocketException, ArgumentOutOfRangeException, ArgumentNullException
+                // Java implementation may throw https://docs.oracle.com/javase/7/docs/api/java/net/UnknownHostException.html
                 return new Address(host, port);
             }
-            catch (UnknownHostException e)
+            catch(Exception e)
             {
                 throw new HazelcastException(e);
             }

@@ -279,9 +279,9 @@ namespace Hazelcast.Client.Test
 
 
             var entryview = map.GetEntryView("key1");
-            var value = entryview.GetValue() as Item;
+            var value = entryview.Value as Item;
 
-            Assert.AreEqual("key1", entryview.GetKey());
+            Assert.AreEqual("key1", entryview.Key);
             Assert.True(item.Equals(value));
             //Assert.AreEqual(2, entryview.GetHits());
             //Assert.True(entryview.GetCreationTime() > 0);
@@ -528,10 +528,10 @@ namespace Hazelcast.Client.Test
 
             var entryView = map.GetEntryView("item1");
 
-            Assert.AreEqual(0, entryView.GetHits());
+            Assert.AreEqual(0, entryView.Hits);
 
-            Assert.AreEqual("item1", entryView.GetKey());
-            Assert.AreEqual("value1", entryView.GetValue());
+            Assert.AreEqual("item1", entryView.Key);
+            Assert.AreEqual("value1", entryView.Value);
         }
 
         /// <exception cref="System.Exception"></exception>

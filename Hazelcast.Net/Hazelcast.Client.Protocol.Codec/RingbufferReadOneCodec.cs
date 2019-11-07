@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// readers or it can be read multiple times by the same reader. Currently it isn't possible to control how long this
     /// call is going to block. In the future we could add e.g. tryReadOne(long sequence, long timeout, TimeUnit unit).
     ///</summary>
-    internal static class RingbufferReadOneCodec 
+    internal static class RingbufferReadOneCodec
     {
         //hex: 0x170700
         public const int RequestMessageType = 1509120;
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestInitialFrameSize = RequestSequenceFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -62,7 +62,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public long Sequence;
         }
 
-        public static ClientMessage EncodeRequest(string name, long sequence) 
+        public static ClientMessage EncodeRequest(string name, long sequence)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
@@ -76,7 +76,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -86,7 +86,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -95,7 +95,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public IData Response;
         }
 
-        public static ClientMessage EncodeResponse(IData response) 
+        public static ClientMessage EncodeResponse(IData response)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

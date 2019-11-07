@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,30 +31,41 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
     // definitions on the https://github.com/hazelcast/hazelcast-client-protocol
     // and regenerate it.
 
-    internal static class DistributedObjectInfoCodec 
+    internal static class StackTraceElementCodec
     {
+        private const int LineNumberFieldOffset = 0;
+        private const int InitialFrameSize = LineNumberFieldOffset + IntSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Client.DistributedObjectInfo distributedObjectInfo) 
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Util.StackTraceElement stackTraceElement)
         {
             clientMessage.Add(BeginFrame);
 
-            StringCodec.Encode(clientMessage, distributedObjectInfo.ServiceName);
-            StringCodec.Encode(clientMessage, distributedObjectInfo.Name);
+            var initialFrame = new Frame(new byte[InitialFrameSize]);
+            EncodeInt(initialFrame.Content, LineNumberFieldOffset, stackTraceElement.LineNumber);
+            clientMessage.Add(initialFrame);
+
+            StringCodec.Encode(clientMessage, stackTraceElement.ClassName);
+            StringCodec.Encode(clientMessage, stackTraceElement.MethodName);
+            CodecUtil.EncodeNullable(clientMessage, stackTraceElement.FileName, StringCodec.Encode);
 
             clientMessage.Add(EndFrame);
         }
 
-        public static Hazelcast.Client.DistributedObjectInfo Decode(ref FrameIterator iterator) 
+        public static Hazelcast.Util.StackTraceElement Decode(ref FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
 
-            var serviceName = StringCodec.Decode(ref iterator);
-            var name = StringCodec.Decode(ref iterator);
+            ref var initialFrame = ref iterator.Next();
+            var lineNumber = DecodeInt(initialFrame.Content, LineNumberFieldOffset);
+
+            var className = StringCodec.Decode(ref iterator);
+            var methodName = StringCodec.Decode(ref iterator);
+            var fileName = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
 
             CodecUtil.FastForwardToEndFrame(ref iterator);
 
-            return new Hazelcast.Client.DistributedObjectInfo(serviceName, name);
+            return new Hazelcast.Util.StackTraceElement(className, methodName, fileName, lineNumber);
         }
     }
 }

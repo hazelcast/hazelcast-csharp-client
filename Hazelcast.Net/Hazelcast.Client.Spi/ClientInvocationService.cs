@@ -99,11 +99,12 @@ namespace Hazelcast.Client.Spi
 
         public void HandleClientMessage(ClientMessage message)
         {
-            if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
-            {
-                _clientListenerService.HandleResponseMessage(message);
-            }
-            else
+            // TODO: Listeners
+            //if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
+            //{
+            //    _clientListenerService.HandleResponseMessage(message);
+            //}
+            //else
             {
                 _client.GetClientExecutionService().Submit(() =>
                 {
@@ -303,7 +304,6 @@ namespace Hazelcast.Client.Spi
         {
             var correlationId = NextCorrelationId();
             clientInvocation.Message.CorrelationId = correlationId;
-            clientInvocation.Message.AddFlag(ClientMessage.BeginAndEndFlags);
             clientInvocation.SentConnection = connection;
             if (clientInvocation.PartitionId != -1)
             {

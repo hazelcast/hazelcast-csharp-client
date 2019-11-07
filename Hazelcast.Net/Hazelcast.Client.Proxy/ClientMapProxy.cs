@@ -471,29 +471,29 @@ namespace Hazelcast.Client.Proxy
 
         public string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue)
         {
-            return AddEntryListener((MapListener) listener, key, includeValue);
+            return AddEntryListener((MapListener)listener, key, includeValue);
         }
 
         public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key, bool includeValue)
         {
-            return AddEntryListener((MapListener) listener, predicate, key, includeValue);
+            return AddEntryListener((MapListener)listener, predicate, key, includeValue);
         }
 
         public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, bool includeValue)
         {
-            return AddEntryListener((MapListener) listener, predicate, includeValue);
+            return AddEntryListener((MapListener)listener, predicate, includeValue);
         }
 
         public string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue)
         {
-            return AddEntryListener((MapListener) listener, includeValue);
+            return AddEntryListener((MapListener)listener, includeValue);
         }
 
         public string AddEntryListener(MapListener listener, bool includeValue)
         {
             var listenerAdapter =
                 EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
-            var listenerFlags = (int) listenerAdapter.ListenerFlags;
+            var listenerFlags = (int)listenerAdapter.ListenerFlags;
             var request = MapAddEntryListenerCodec.EncodeRequest(GetName(), includeValue, listenerFlags, IsSmart());
             DistributedEventHandler handler = eventData => MapAddEntryListenerCodec.EventHandler.HandleEvent(eventData,
                 (key, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -510,7 +510,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var listenerAdapter =
                 EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
-            var listenerFlags = (int) listenerAdapter.ListenerFlags;
+            var listenerFlags = (int)listenerAdapter.ListenerFlags;
             var request = MapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, includeValue, listenerFlags, IsSmart());
             DistributedEventHandler handler = eventData => MapAddEntryListenerToKeyCodec.EventHandler.HandleEvent(eventData,
                 (key_, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -528,7 +528,7 @@ namespace Hazelcast.Client.Proxy
             var predicateData = ToData(predicate);
             var listenerAdapter =
                 EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
-            var listenerFlags = (int) listenerAdapter.ListenerFlags;
+            var listenerFlags = (int)listenerAdapter.ListenerFlags;
             var request = MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(GetName(), keyData, predicateData,
                 includeValue, listenerFlags, IsSmart());
             DistributedEventHandler handler = eventData =>
@@ -546,7 +546,7 @@ namespace Hazelcast.Client.Proxy
             var predicateData = ToData(predicate);
             var listenerAdapter =
                 EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
-            var listenerFlags = (int) listenerAdapter.ListenerFlags;
+            var listenerFlags = (int)listenerAdapter.ListenerFlags;
             var request =
                 MapAddEntryListenerWithPredicateCodec.EncodeRequest(GetName(), predicateData, includeValue, listenerFlags,
                     IsSmart());
@@ -578,8 +578,8 @@ namespace Hazelcast.Client.Proxy
             {
                 return null;
             }
-            entryView.Key = ToObject<TKey>(((SimpleEntryView) dataEntryView).Key);
-            entryView.Value = ToObject<TValue>(((SimpleEntryView) dataEntryView).Value);
+            entryView.Key = ToObject<TKey>(((SimpleEntryView)dataEntryView).Key);
+            entryView.Value = ToObject<TValue>(((SimpleEntryView)dataEntryView).Value);
             entryView.Cost = dataEntryView.Cost;
             entryView.CreationTime = dataEntryView.CreationTime;
             entryView.ExpirationTime = dataEntryView.ExpirationTime;
@@ -685,16 +685,22 @@ namespace Hazelcast.Client.Proxy
             var futures = new ConcurrentQueue<IFuture<ClientMessage>>();
             Parallel.For(0, partitionToKeyData.Count, partitionId =>
             {
-                var keyList = (ArrayList) partitionToKeyData[partitionId];
+                var keyList = (ArrayList)partitionToKeyData[partitionId];
                 if (keyList.Count > 0)
                 {
-                    var request = MapGetAllCodec.EncodeRequest(GetName(), keyList);
+                    var request = MapGetAllCodec.EncodeRequest(GetName(), keyList.Cast<IData>());
                     futures.Enqueue(invocationService.InvokeOnPartition(request, partitionId));
                 }
             });
             var messages = ThreadUtil.GetResult(futures);
             Parallel.ForEach(messages,
-                clientMessage => { MapGetAllCodec.DecodeResponse(clientMessage, resultingKeyValuePairs); });
+                clientMessage =>
+                {
+                    foreach (var kvp in MapGetAllCodec.DecodeResponse(clientMessage).Response)
+                    {
+                        resultingKeyValuePairs.Enqueue(new KeyValuePair<IData, object>(kvp.Key, kvp.Value));
+                    }
+                });
         }
 
         private ArrayList GetPartitionKeyData(ICollection<TKey> keys)
@@ -712,7 +718,7 @@ namespace Hazelcast.Client.Proxy
                 ValidationUtil.CheckNotNull(key, ValidationUtil.NULL_KEY_IS_NOT_ALLOWED);
                 var keyData = ToData(key);
                 var partitionId = partitionService.GetPartitionId(keyData);
-                var keyList = (ArrayList) partitionToKeyData[partitionId];
+                var keyList = (ArrayList)partitionToKeyData[partitionId];
                 keyList.Add(keyData);
             });
             return partitionToKeyData;
@@ -731,14 +737,18 @@ namespace Hazelcast.Client.Proxy
             var response = Invoke(request);
 
             var result = new ConcurrentQueue<KeyValuePair<IData, object>>();
-            MapEntrySetCodec.DecodeResponse(response, result);
+            foreach (var kvp in MapEntrySetCodec.DecodeResponse(response).Response)
+            {
+                result.Enqueue(new KeyValuePair<IData, object>(kvp.Key, kvp.Value));
+            }
             return new ReadOnlyLazyEntrySet<TKey, TValue>(result, GetContext().GetSerializationService());
         }
 
         public void AddIndex(string attribute, bool ordered)
         {
-            var request = MapAddIndexCodec.EncodeRequest(GetName(), attribute, ordered);
-            Invoke(request);
+            throw new NotImplementedException();
+            //var request = MapAddIndexCodec.EncodeRequest(GetName(), attribute, ordered);
+            //Invoke(request);
         }
 
         public void Set(TKey key, TValue value)
@@ -766,7 +776,7 @@ namespace Hazelcast.Client.Proxy
 
             for (var i = 0; i < partitionCount; i++)
             {
-                partitions[i]= new List<KeyValuePair<IData, IData>>();
+                partitions[i] = new List<KeyValuePair<IData, IData>>();
             }
 
             foreach (var kvp in m)
@@ -783,7 +793,7 @@ namespace Hazelcast.Client.Proxy
             PutAllInternal(partitions);
         }
 
-        protected virtual void PutAllInternal(List<KeyValuePair<IData,IData>>[] partitions)
+        protected virtual void PutAllInternal(List<KeyValuePair<IData, IData>>[] partitions)
         {
             var futures = new ConcurrentQueue<IFuture<ClientMessage>>();
             Parallel.For(0, partitions.Length, i =>
@@ -809,7 +819,7 @@ namespace Hazelcast.Client.Proxy
         {
             if (predicate is PagingPredicate)
             {
-                return KeySetWithPagingPredicate((PagingPredicate) predicate);
+                return KeySetWithPagingPredicate((PagingPredicate)predicate);
             }
             var request = MapKeySetWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
             var keys = Invoke(request, predicate, m => MapKeySetWithPredicateCodec.DecodeResponse(m).Response);
@@ -820,13 +830,16 @@ namespace Hazelcast.Client.Proxy
         {
             if (predicate is PagingPredicate)
             {
-                return EntrySetWithPagingPredicate((PagingPredicate) predicate);
+                return EntrySetWithPagingPredicate((PagingPredicate)predicate);
             }
             var request = MapEntriesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
             var entries = Invoke(request, predicate, (response) =>
             {
                 var resultQueue = new ConcurrentQueue<KeyValuePair<IData, object>>();
-                MapEntriesWithPredicateCodec.DecodeResponse(response, resultQueue);
+                foreach (var kvp in MapEntriesWithPredicateCodec.DecodeResponse(response).Response)
+                {
+                    resultQueue.Enqueue(new KeyValuePair<IData, object>(kvp.Key, kvp.Value));
+                }
                 return resultQueue;
             });
             return new ReadOnlyLazyEntrySet<TKey, TValue>(entries, GetContext().GetSerializationService());
@@ -836,7 +849,7 @@ namespace Hazelcast.Client.Proxy
         {
             if (predicate is PagingPredicate)
             {
-                return ValuesForPagingPredicate((PagingPredicate) predicate);
+                return ValuesForPagingPredicate((PagingPredicate)predicate);
             }
 
             var request = MapValuesWithPredicateCodec.EncodeRequest(GetName(), ToData(predicate));
@@ -858,7 +871,7 @@ namespace Hazelcast.Client.Proxy
             Guid uuid, int numberOfAffectedEntries, EntryListenerAdapter<TKey, TValue> listenerAdapter)
         {
             var member = GetContext().GetClusterService().GetMember(uuid);
-            listenerAdapter.OnEntryEvent(GetName(), keyData, valueData, oldValueData, mergingValue, (EntryEventType) eventTypeInt,
+            listenerAdapter.OnEntryEvent(GetName(), keyData, valueData, oldValueData, mergingValue, (EntryEventType)eventTypeInt,
                 member, numberOfAffectedEntries);
         }
 

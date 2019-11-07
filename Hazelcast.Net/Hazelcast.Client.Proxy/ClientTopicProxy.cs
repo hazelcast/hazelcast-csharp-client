@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Proxy
             return _key ?? (_key = ToData(GetName()));
         }
 
-        private void HandleMessageListener(IData item, long time, string uuid, Action<Message<T>> listener)
+        private void HandleMessageListener(IData item, long time, Guid uuid, Action<Message<T>> listener)
         {
             var messageObject = ToObject<T>(item);
             var member = GetContext().GetClusterService().GetMember(uuid);

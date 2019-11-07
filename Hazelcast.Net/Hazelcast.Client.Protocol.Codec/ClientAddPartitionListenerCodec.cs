@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// <summary>
     /// TODO DOC
     ///</summary>
-    internal static class ClientAddPartitionListenerCodec 
+    internal static class ClientAddPartitionListenerCodec
     {
         //hex: 0x001000
         public const int RequestMessageType = 4096;
@@ -49,11 +49,11 @@ namespace Hazelcast.Client.Protocol.Codec
         // hex: 0x001002
         private const int EventPartitionsMessageType = 4098;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
         }
 
-        public static ClientMessage EncodeRequest() 
+        public static ClientMessage EncodeRequest()
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
@@ -65,7 +65,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -74,11 +74,11 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
         }
 
-        public static ClientMessage EncodeResponse() 
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
@@ -96,8 +96,8 @@ namespace Hazelcast.Client.Protocol.Codec
             iterator.Next();
             return response;
         }
-    
-        public static ClientMessage EncodePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IEnumerable<int>>> partitions, int partitionStateVersion) 
+
+        public static ClientMessage EncodePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IEnumerable<int>>> partitions, int partitionStateVersion)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventPartitionsInitialFrameSize], UnfragmentedMessage);
@@ -109,7 +109,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static class EventHandler 
+        public static class EventHandler
         {
             public static void HandleEvent(ClientMessage clientMessage, HandlePartitionsEvent handlePartitionsEvent)
             {
@@ -124,8 +124,7 @@ namespace Hazelcast.Client.Protocol.Codec
                 }
                 Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-        
-            public delegate void HandlePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IEnumerable<int>>> partitions, int partitionStateVersion);
+            public delegate void HandlePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IList<int>>> partitions, int partitionStateVersion);
         }
     }
 }

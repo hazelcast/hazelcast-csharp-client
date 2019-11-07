@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// Same as put except that MapStore, if defined, will not be called to store/persist the entry.
     /// If ttl and maxIdle are 0, then the entry lives forever.
     ///</summary>
-    internal static class MapPutTransientWithMaxIdleCodec 
+    internal static class MapPutTransientWithMaxIdleCodec
     {
         //hex: 0x014800
         public const int RequestMessageType = 83968;
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestInitialFrameSize = RequestMaxIdleFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public long MaxIdle;
         }
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData value, long threadId, long ttl, long maxIdle) 
+        public static ClientMessage EncodeRequest(string name, IData key, IData value, long threadId, long ttl, long maxIdle)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
@@ -101,7 +101,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -124,7 +124,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public IData Response;
         }
 
-        public static ClientMessage EncodeResponse(IData response) 
+        public static ClientMessage EncodeResponse(IData response)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);

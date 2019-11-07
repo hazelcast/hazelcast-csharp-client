@@ -64,23 +64,13 @@ namespace Hazelcast.NearCache
             return record.Guid != latestMetaData.Guid || record.Sequence < latestMetaData.StaleSequence;
         }
 
-        private void HandleIMapBatchInvalidationEvent_v1_0(IList<IData> keys)
-        {
-            Logger.Severe("Unexpected event from server");
-        }
-
-        private void HandleIMapBatchInvalidationEvent_v1_4(IList<IData> keys, IList<Guid> sourceuuids,
-            IList<Guid> partitionuuids, IList<long> sequences)
+        private void HandleIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids,
+            IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences)
         {
             _repairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
         }
 
-        private void HandleIMapInvalidationEvent_v1_0(IData key)
-        {
-            Logger.Severe("Unexpected event from server");
-        }
-
-        private void HandleIMapInvalidationEvent_v1_4(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
+        private void HandleIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
         {
             _repairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);
         }
@@ -108,8 +98,8 @@ namespace Hazelcast.NearCache
                         false);
                 DistributedEventHandler handler = message =>
                     MapAddNearCacheInvalidationListenerCodec.EventHandler.HandleEvent(message,
-                        HandleIMapInvalidationEvent_v1_0, HandleIMapInvalidationEvent_v1_4,
-                        HandleIMapBatchInvalidationEvent_v1_0, HandleIMapBatchInvalidationEvent_v1_4);
+                        HandleIMapInvalidationEvent,
+                        HandleIMapBatchInvalidationEvent);
 
                 RegistrationId = Client.GetListenerService().RegisterListener(request,
                     message => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,

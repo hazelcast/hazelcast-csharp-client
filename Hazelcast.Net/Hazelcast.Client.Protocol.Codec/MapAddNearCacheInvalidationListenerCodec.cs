@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// Eventually consistent client near caches should use this method to add invalidation listeners
     /// instead of {@link #addNearCacheEntryListener(String, int, boolean)}
     ///</summary>
-    internal static class MapAddNearCacheInvalidationListenerCodec 
+    internal static class MapAddNearCacheInvalidationListenerCodec
     {
         //hex: 0x014200
         public const int RequestMessageType = 82432;
@@ -59,7 +59,7 @@ namespace Hazelcast.Client.Protocol.Codec
         // hex: 0x014203
         private const int EventIMapBatchInvalidationMessageType = 82435;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -78,7 +78,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public bool LocalOnly;
         }
 
-        public static ClientMessage EncodeRequest(string name, int listenerFlags, bool localOnly) 
+        public static ClientMessage EncodeRequest(string name, int listenerFlags, bool localOnly)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -113,7 +113,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public Guid Response;
         }
 
-        public static ClientMessage EncodeResponse(Guid response) 
+        public static ClientMessage EncodeResponse(Guid response)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
@@ -132,8 +132,8 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = DecodeGuid(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
         }
-    
-        public static ClientMessage EncodeIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence) 
+
+        public static ClientMessage EncodeIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventIMapInvalidationInitialFrameSize], UnfragmentedMessage);
@@ -146,8 +146,8 @@ namespace Hazelcast.Client.Protocol.Codec
             CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
             return clientMessage;
         }
-    
-        public static ClientMessage EncodeIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids, IEnumerable<long> sequences) 
+
+        public static ClientMessage EncodeIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids, IEnumerable<long> sequences)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventIMapBatchInvalidationInitialFrameSize], UnfragmentedMessage);
@@ -161,7 +161,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static class EventHandler 
+        public static class EventHandler
         {
             public static void HandleEvent(ClientMessage clientMessage, HandleIMapInvalidationEvent handleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent handleIMapBatchInvalidationEvent)
             {
@@ -188,9 +188,7 @@ namespace Hazelcast.Client.Protocol.Codec
                 }
                 Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-        
             public delegate void HandleIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence);
-        
             public delegate void HandleIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids, IEnumerable<long> sequences);
         }
     }

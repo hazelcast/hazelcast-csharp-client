@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// <summary>
     /// TODO DOC
     ///</summary>
-    internal static class ClientAddMembershipListenerCodec 
+    internal static class ClientAddMembershipListenerCodec
     {
         //hex: 0x000300
         public const int RequestMessageType = 768;
@@ -58,7 +58,7 @@ namespace Hazelcast.Client.Protocol.Codec
         // hex: 0x000304
         private const int EventMemberAttributeChangeMessageType = 772;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -68,7 +68,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public bool LocalOnly;
         }
 
-        public static ClientMessage EncodeRequest(bool localOnly) 
+        public static ClientMessage EncodeRequest(bool localOnly)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
@@ -81,7 +81,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -90,7 +90,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -99,7 +99,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public Guid Response;
         }
 
-        public static ClientMessage EncodeResponse(Guid response) 
+        public static ClientMessage EncodeResponse(Guid response)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
@@ -118,8 +118,8 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = DecodeGuid(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
         }
-    
-        public static ClientMessage EncodeMemberEvent(Core.Member member, int eventType) 
+
+        public static ClientMessage EncodeMemberEvent(Hazelcast.Core.Member member, int eventType)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventMemberInitialFrameSize], UnfragmentedMessage);
@@ -130,8 +130,8 @@ namespace Hazelcast.Client.Protocol.Codec
             MemberCodec.Encode(clientMessage, member);
             return clientMessage;
         }
-    
-        public static ClientMessage EncodeMemberListEvent(IEnumerable<Core.Member> members) 
+
+        public static ClientMessage EncodeMemberListEvent(IEnumerable<Hazelcast.Core.Member> members)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventMemberListInitialFrameSize], UnfragmentedMessage);
@@ -141,8 +141,8 @@ namespace Hazelcast.Client.Protocol.Codec
             ListMultiFrameCodec.Encode(clientMessage, members, MemberCodec.Encode);
             return clientMessage;
         }
-    
-        public static ClientMessage EncodeMemberAttributeChangeEvent(Core.Member member, IEnumerable<Core.Member> members, string key, int operationType, string value) 
+
+        public static ClientMessage EncodeMemberAttributeChangeEvent(Hazelcast.Core.Member member, IEnumerable<Hazelcast.Core.Member> members, string key, int operationType, string value)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventMemberAttributeChangeInitialFrameSize], UnfragmentedMessage);
@@ -157,7 +157,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static class EventHandler 
+        public static class EventHandler
         {
             public static void HandleEvent(ClientMessage clientMessage, HandleMemberEvent handleMemberEvent, HandleMemberListEvent handleMemberListEvent, HandleMemberAttributeChangeEvent handleMemberAttributeChangeEvent)
             {
@@ -166,22 +166,22 @@ namespace Hazelcast.Client.Protocol.Codec
                 if (messageType == EventMemberMessageType) {
                     var initialFrame = iterator.Next();
                     int eventType =  DecodeInt(initialFrame.Content, EventMemberEventTypeFieldOffset);
-                    Core.Member member = MemberCodec.Decode(ref iterator);
+                    Hazelcast.Core.Member member = MemberCodec.Decode(ref iterator);
                     handleMemberEvent(member, eventType);
                     return;
                 }
                 if (messageType == EventMemberListMessageType) {
                     //empty initial frame
                     iterator.Next();
-                    IList<Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
+                    IList<Hazelcast.Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
                     handleMemberListEvent(members);
                     return;
                 }
                 if (messageType == EventMemberAttributeChangeMessageType) {
                     var initialFrame = iterator.Next();
                     int operationType =  DecodeInt(initialFrame.Content, EventMemberAttributeChangeOperationTypeFieldOffset);
-                    Core.Member member = MemberCodec.Decode(ref iterator);
-                    IList<Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
+                    Hazelcast.Core.Member member = MemberCodec.Decode(ref iterator);
+                    IList<Hazelcast.Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
                     string key = StringCodec.Decode(ref iterator);
                     string value = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
                     handleMemberAttributeChangeEvent(member, members, key, operationType, value);
@@ -189,12 +189,9 @@ namespace Hazelcast.Client.Protocol.Codec
                 }
                 Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-        
-            public delegate void HandleMemberEvent(Core.Member member, int eventType);
-        
-            public delegate void HandleMemberListEvent(IEnumerable<Core.Member> members);
-        
-            public delegate void HandleMemberAttributeChangeEvent(Core.Member member, IEnumerable<Core.Member> members, string key, int operationType, string value);
+            public delegate void HandleMemberEvent(Hazelcast.Core.Member member, int eventType);
+            public delegate void HandleMemberListEvent(IEnumerable<Hazelcast.Core.Member> members);
+            public delegate void HandleMemberAttributeChangeEvent(Hazelcast.Core.Member member, IEnumerable<Hazelcast.Core.Member> members, string key, int operationType, string value);
         }
     }
 }

@@ -106,7 +106,7 @@ namespace Hazelcast.Client.Spi
                 var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).Response;
                 foreach (var distributedObjectInfo in result)
                 {
-                    var proxy = InitProxyLocal(distributedObjectInfo.ServiceName, distributedObjectInfo.ObjectName,
+                    var proxy = InitProxyLocal(distributedObjectInfo.ServiceName, distributedObjectInfo.Name,
                         typeof(IDistributedObject));
                     _proxies.TryAdd(distributedObjectInfo, proxy);
                 }
@@ -209,15 +209,10 @@ namespace Hazelcast.Client.Spi
                 (type, id) => ProxyFactory(typeof(ClientSetProxy<>), type, ServiceNames.Set, id));
             Register(ServiceNames.Topic,
                 (type, id) => ProxyFactory(typeof(ClientTopicProxy<>), type, ServiceNames.Topic, id));
-            Register(ServiceNames.AtomicLong,
-                (type, id) => ProxyFactory(typeof(ClientAtomicLongProxy), type, ServiceNames.AtomicLong, id));
-            Register(ServiceNames.Lock, (type, id) => ProxyFactory(typeof(ClientLockProxy), type, ServiceNames.Lock, id));
-            Register(ServiceNames.CountDownLatch,
-                (type, id) => ProxyFactory(typeof(ClientCountDownLatchProxy), type, ServiceNames.CountDownLatch, id));
-            Register(ServiceNames.PNCounter,
-               (type, id) => ProxyFactory(typeof(ClientPNCounterProxy), type, ServiceNames.PNCounter, id));
-            Register(ServiceNames.Semaphore,
-                (type, id) => ProxyFactory(typeof(ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
+            //Register(ServiceNames.PNCounter,
+            //   (type, id) => ProxyFactory(typeof(ClientPNCounterProxy), type, ServiceNames.PNCounter, id));
+            //Register(ServiceNames.Semaphore,
+            //    (type, id) => ProxyFactory(typeof(ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
             Register(ServiceNames.Ringbuffer,
                 (type, id) => ProxyFactory(typeof(ClientRingbufferProxy<>), type, ServiceNames.Ringbuffer, id));
             Register(ServiceNames.ReplicatedMap,

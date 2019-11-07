@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// Subscribes to this topic. When someone publishes a message on this topic. onMessage() function of the given
     /// MessageListener is called. More than one message listener can be added on one instance.
     ///</summary>
-    internal static class TopicAddMessageListenerCodec 
+    internal static class TopicAddMessageListenerCodec
     {
         //hex: 0x040200
         public const int RequestMessageType = 262656;
@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Protocol.Codec
         // hex: 0x040202
         private const int EventTopicMessageType = 262658;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -67,7 +67,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public bool LocalOnly;
         }
 
-        public static ClientMessage EncodeRequest(string name, bool localOnly) 
+        public static ClientMessage EncodeRequest(string name, bool localOnly)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
@@ -81,7 +81,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -100,7 +100,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public Guid Response;
         }
 
-        public static ClientMessage EncodeResponse(Guid response) 
+        public static ClientMessage EncodeResponse(Guid response)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
@@ -119,8 +119,8 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = DecodeGuid(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
         }
-    
-        public static ClientMessage EncodeTopicEvent(IData item, long publishTime, Guid uuid) 
+
+        public static ClientMessage EncodeTopicEvent(IData item, long publishTime, Guid uuid)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[EventTopicInitialFrameSize], UnfragmentedMessage);
@@ -133,7 +133,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static class EventHandler 
+        public static class EventHandler
         {
             public static void HandleEvent(ClientMessage clientMessage, HandleTopicEvent handleTopicEvent)
             {
@@ -149,7 +149,6 @@ namespace Hazelcast.Client.Protocol.Codec
                 }
                 Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-        
             public delegate void HandleTopicEvent(IData item, long publishTime, Guid uuid);
         }
     }

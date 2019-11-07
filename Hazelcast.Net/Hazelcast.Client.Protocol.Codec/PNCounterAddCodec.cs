@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Protocol.Codec
     /// If smart routing is disabled, the actual member processing the client
     /// message may act as a proxy.
     ///</summary>
-    internal static class PNCounterAddCodec 
+    internal static class PNCounterAddCodec
     {
         //hex: 0x1D0200
         public const int RequestMessageType = 1901056;
@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int ResponseReplicaCountFieldOffset = ResponseValueFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseReplicaCountFieldOffset + IntSizeInBytes;
 
-        public class RequestParameters 
+        public class RequestParameters
         {
 
             /// <summary>
@@ -84,10 +84,10 @@ namespace Hazelcast.Client.Protocol.Codec
             /// <summary>
             /// the target replica
             ///</summary>
-            public IO.Address TargetReplica;
+            public Hazelcast.IO.Address TargetReplica;
         }
 
-        public static ClientMessage EncodeRequest(string name, long delta, bool getBeforeUpdate, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, IO.Address targetReplica) 
+        public static ClientMessage EncodeRequest(string name, long delta, bool getBeforeUpdate, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, Hazelcast.IO.Address targetReplica)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage) 
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var request = new RequestParameters();
@@ -117,7 +117,7 @@ namespace Hazelcast.Client.Protocol.Codec
             return request;
         }
 
-        public class ResponseParameters 
+        public class ResponseParameters
         {
 
             /// <summary>
@@ -136,7 +136,7 @@ namespace Hazelcast.Client.Protocol.Codec
             public int ReplicaCount;
         }
 
-        public static ClientMessage EncodeResponse(long value, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, int replicaCount) 
+        public static ClientMessage EncodeResponse(long value, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, int replicaCount)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
