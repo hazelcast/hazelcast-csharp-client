@@ -1,5 +1,5 @@
 param(
-    [string]$serverVersion = "3.12.2"
+    [string]$serverVersion = "4.0-BETA-1"
 )
 
 $hazelcastTestVersion=$serverVersion

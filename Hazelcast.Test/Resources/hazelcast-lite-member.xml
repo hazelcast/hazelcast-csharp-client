@@ -9,10 +9,7 @@
     <property name="hazelcast.partition.count">5</property>
   </properties>
 
-  <group>
-    <name>dev</name>
-    <password>dev-pass</password>
-  </group>
+  <cluster name="dev" password="dev-pass"/>
 
   <lite-member enabled="true"/>
   <management-center enabled="false">http://localhost:8080/mancenter</management-center>

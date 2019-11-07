@@ -3,10 +3,7 @@
                   xmlns="http://www.hazelcast.com/schema/client-config"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-  <group>
-    <name>dev</name>
-    <password>dev-pass</password>
-  </group>
+  <cluster name="dev" password="dev-pass"/>
 
   <network>
     <cluster-members>
