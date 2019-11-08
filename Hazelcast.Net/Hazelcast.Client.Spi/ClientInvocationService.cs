@@ -313,7 +313,7 @@ namespace Hazelcast.Client.Spi
 
         private void ValidateInvocation(ClientInvocation clientInvocation, ClientConnection connection)
         {
-            if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.Member.Uuid)
+            if (clientInvocation.MemberUuid != Guid.Empty && clientInvocation.MemberUuid != connection.Member.Uuid)
             {
                 throw new TargetNotMemberException(
                     "The member UUID on the invocation doesn't match the member UUID on the connection.");

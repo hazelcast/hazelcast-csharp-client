@@ -95,7 +95,7 @@ namespace Hazelcast.Client.Protocol
                     break;
                 default:
                     var index = _written - 1;
-                    if (_tail.Length < index)
+                    if (index >= _tail.Length)
                     {
                         Array.Resize(ref _tail, _tail.Length * 2);
                     }
@@ -272,7 +272,7 @@ namespace Hazelcast.Client.Protocol
         public struct Accessor
         {
             readonly ClientMessage _message;
-            int _index; 
+            int _index;
 
             public Accessor(ClientMessage message)
             {
