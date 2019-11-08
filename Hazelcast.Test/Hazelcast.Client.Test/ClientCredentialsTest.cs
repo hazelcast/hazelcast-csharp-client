@@ -169,7 +169,7 @@ namespace Hazelcast.Client.Test
 
             var client = _clientFactory.CreateClient(clientConfig =>
             {
-                clientConfig.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
+                clientConfig.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
                 clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig()
                     .SetImplementation(new UsernamePasswordCredentialsFactory());
             });
@@ -206,13 +206,13 @@ namespace Hazelcast.Client.Test
                     .SetProperty("username", _cluster.Id)
                     .SetProperty("password", _cluster.Id);
             });
-            Assert.NotNull(factory.groupConfig);
+            Assert.NotNull(factory.config);
             Assert.NotNull(factory.properties);
             Assert.True(client.GetLifecycleService().IsRunning());
             
             client.Shutdown();
             
-            Assert.Null(factory.groupConfig);
+            Assert.Null(factory.config);
             Assert.Null(factory.properties);
         }
     }
@@ -237,32 +237,31 @@ namespace Hazelcast.Client.Test
 
     internal class DummyCredentialFactory : ICredentialsFactory
     {
-        internal GroupConfig groupConfig;
+        internal ClientConfig config;
         internal IDictionary<string, string> properties;
 
-        public void Configure(GroupConfig groupConfig, IDictionary<string, string> properties)
+        public void Configure(ClientConfig config, IDictionary<string, string> properties)
         {
-            this.groupConfig = groupConfig;
+            this.config = config;
             this.properties = properties;
         }
 
         public ICredentials NewCredentials()
         {
-            string username, password;
-            if (!properties.TryGetValue("username", out username))
+            if (!properties.TryGetValue("username", out var username))
             {
-                username = groupConfig.GetName();
+                username = config.GetClusterName();
             }
-            if (!properties.TryGetValue("password", out password))
+            if (!properties.TryGetValue("password", out var password))
             {
-                password = groupConfig.GetPassword();
+                password = config.GetClusterPassword();
             }
             return new UsernamePasswordCredentials(username, password);
         }
 
         public void Destroy()
         {
-            groupConfig = null;
+            config = null;
             properties = null;
         }
     }

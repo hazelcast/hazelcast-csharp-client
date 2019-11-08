@@ -73,9 +73,7 @@ namespace Hazelcast.Client
         private HazelcastClient(ClientConfig config)
         {
             _config = config;
-            var groupConfig = config.GetGroupConfig();
-            _instanceName = "hz.client_" + _id + (groupConfig != null ? "_" + groupConfig.GetName() : string.Empty);
-
+            _instanceName = "hz.client_" + _id + "_" + config.GetClusterName();
             _lifecycleService = new LifecycleService(this);
             try
             {
@@ -493,7 +491,7 @@ namespace Hazelcast.Client
             ValidateSecurityConfig(securityConfig);
             var c = GetCredentialsFromFactory(config);
             if (c == null) {
-                return new DefaultCredentialsFactory(securityConfig, config.GetGroupConfig());
+                return new DefaultCredentialsFactory(securityConfig, config);
             }
             return c;
         }
@@ -533,7 +531,7 @@ namespace Hazelcast.Client
             if (factory == null) {
                 return null;
             }
-            factory.Configure(config.GetGroupConfig(), credentialsFactoryConfig.GetProperties());
+            factory.Configure(config, credentialsFactoryConfig.GetProperties());
             return factory;
         }
     }

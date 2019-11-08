@@ -27,7 +27,7 @@ namespace Hazelcast.Examples.Transactions
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
             var config = new ClientConfig();
-            config.GetGroupConfig().SetName("dev").SetPassword("dev-pass");
+            config.SetClusterName("dev").SetClusterPassword("dev-pass");
             config.GetNetworkConfig().AddAddress("127.0.0.1:5701")
                 .SetSmartRouting(false);
 

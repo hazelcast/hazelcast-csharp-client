@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Client;
 using Hazelcast.Core;
@@ -26,7 +27,7 @@ namespace Hazelcast.Config
     /// </summary>
     public class ClientConfig
     {
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConfig));
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientConfig));
 
         private IConfigPatternMatcher _configPatternMatcher = new MatchingPointConfigPatternMatcher();
 
@@ -36,14 +37,28 @@ namespace Hazelcast.Config
         /// </summary>
         private ClientSecurityConfig _securityConfig = new ClientSecurityConfig();
 
-        /// <summary>pool-size for internal ExecutorService which handles responses etc.</summary>
-        private int _executorPoolSize = -1;
+        /// <summary>
+        /// Default cluster password.
+        /// </summary>
+        public const string DefaultClusterPassword = "dev-pass";
 
         /// <summary>
-        /// The Group Configuration properties like:
-        /// Name and Password that is used to connect to the cluster.
+        /// Default cluster name.
         /// </summary>
-        private GroupConfig _groupConfig = new GroupConfig();
+        public const string DefaultClusterName = "dev";
+
+        /// <summary>
+        /// The cluster name to connect to.
+        /// </summary>
+        private string _clusterName = DefaultClusterName;
+
+        /// <summary>
+        /// The cluster password to connect to.
+        /// </summary>
+        private string _clusterPassword = DefaultClusterPassword;
+
+        /// <summary>pool-size for internal ExecutorService which handles responses etc.</summary>
+        private int _executorPoolSize = -1;
 
         /// <summary>List of listeners that Hazelcast will automatically Add as a part of initialization process.</summary>
         /// <remarks>
@@ -134,12 +149,21 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Gets <see cref="GroupConfig"/>.
+        /// Gets the cluster name.
         /// </summary>
-        /// <returns><see cref="GroupConfig"/></returns>
-        public virtual GroupConfig GetGroupConfig()
+        /// <returns>The current cluster name.</returns>
+        public string GetClusterName()
         {
-            return _groupConfig;
+            return _clusterName;
+        }
+
+        /// <summary>
+        /// Gets the password of the cluster.
+        /// </summary>
+        /// <returns>The current cluster password.</returns>
+        public string GetClusterPassword()
+        {
+            return _clusterPassword;
         }
 
         /// <summary>
@@ -210,7 +234,8 @@ namespace Hazelcast.Config
         /// Gets <see cref="ClientSecurityConfig"/>.
         /// </summary>
         /// <returns><see cref="ClientSecurityConfig"/></returns>
-        public ClientSecurityConfig GetSecurityConfig() {
+        public ClientSecurityConfig GetSecurityConfig()
+        {
             return _securityConfig;
         }
 
@@ -247,14 +272,23 @@ namespace Hazelcast.Config
             return this;
         }
 
-        /// <summary>
-        /// Sets <see cref="GroupConfig"/> object.
+        ///<summary>
+        /// Sets the cluster name uniquely identifying the hazelcast cluster. This name is used in different scenarios, such as identifying cluster for WAN publisher.
         /// </summary>
-        /// <param name="groupConfig"><see cref="GroupConfig"/> to be set</param>
-        /// <returns><see cref="ClientConfig"/> for chaining</returns>
-        public virtual ClientConfig SetGroupConfig(GroupConfig groupConfig)
+        public ClientConfig SetClusterName(string clusterName)
         {
-            _groupConfig = groupConfig;
+            _clusterName = clusterName ?? throw new ArgumentNullException(nameof(clusterName));
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the password of the cluster.
+        /// </summary>
+        /// <param name="password">The new password.</param>
+        /// <returns>The configuration object.</returns>
+        public ClientConfig SetClusterPassword(string password)
+        {
+            _clusterPassword = password ?? throw new ArgumentNullException(nameof(password));
             return this;
         }
 
@@ -329,7 +363,8 @@ namespace Hazelcast.Config
         /// </summary>
         /// <param name="securityConfig"><see cref="ClientSecurityConfig"/></param>
         /// <returns><see cref="ClientConfig"/> for chaining</returns>
-        public ClientConfig SetSecurityConfig(ClientSecurityConfig securityConfig) {
+        public ClientConfig SetSecurityConfig(ClientSecurityConfig securityConfig)
+        {
             _securityConfig = securityConfig;
             return this;
         }

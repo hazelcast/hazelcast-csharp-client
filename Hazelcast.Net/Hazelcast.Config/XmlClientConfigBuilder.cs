@@ -193,12 +193,12 @@ namespace Hazelcast.Config
 
             if (name != null)
             {
-                _clientConfig.GetGroupConfig().SetName(name);
+                _clientConfig.SetClusterName(name);
             }
 
             if (password != null)
             {
-                _clientConfig.GetGroupConfig().SetPassword(password);
+                _clientConfig.SetClusterPassword(password);
             }
         }
 

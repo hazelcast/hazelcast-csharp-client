@@ -41,7 +41,7 @@ namespace Hazelcast.Client.Protocol.Util
         public bool ReadFrom(ByteBuffer src, bool trusted)
         {
             while (ReadFrame(src, trusted))
-            {
+            {   
                 if (Message.Tail.IsEndFrame)
                 {
                     return true;

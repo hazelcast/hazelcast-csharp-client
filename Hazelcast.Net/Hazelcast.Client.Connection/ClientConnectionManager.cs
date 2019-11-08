@@ -291,7 +291,7 @@ namespace Hazelcast.Client.Connection
             LastCredentials = credentials;
 
             // TODO: fill up from config
-            var clusterName = "name";
+            var clusterName = "dev";
             var labels = new[] { "label1" };
             var clusterId = Guid.Empty;
             var ownerId = Guid.Empty;
