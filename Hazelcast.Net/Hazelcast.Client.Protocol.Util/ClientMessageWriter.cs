@@ -31,7 +31,7 @@ namespace Hazelcast.Client.Protocol.Util
             }
             for (; ; )
             {
-                var isLastFrame = _accessor.HasNext;
+                var isLastFrame = _accessor.IsLast;
                 if (WriteFrame(dst, ref _accessor.Frame, isLastFrame))
                 {
                     _writeOffset = -1;

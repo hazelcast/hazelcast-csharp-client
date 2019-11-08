@@ -281,7 +281,7 @@ namespace Hazelcast.Client.Protocol
             }
 
             public bool IsEmpty => _message == null || _index >= _message._written;
-            public bool HasNext => _message != null && _index < _message._written;
+            public bool IsLast => _index == _message._written - 1;
             public ref Frame Frame => ref _message.Get(_index);
             public void MoveNext() => _index++;
         }
