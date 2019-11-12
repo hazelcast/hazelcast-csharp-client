@@ -79,7 +79,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.Proxies = EntryListCodec.Decode(ref iterator, StringCodec.Decode, StringCodec.Decode);
+            request.Proxies = EntryListCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);
             return request;
         }
 

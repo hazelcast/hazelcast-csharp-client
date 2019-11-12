@@ -33,14 +33,14 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(new ClientMessage.Frame(data.ToByteArray()));
         }
 
-        public static IData Decode(ref ClientMessage.Frame frame)
+        public static IData Decode(ClientMessage.Frame frame)
         {
             return new HeapData(frame.Content);
         }
 
-        public static IData Decode(ref ClientMessage.FrameIterator iterator)
+        public static IData Decode(ClientMessage.FrameIterator iterator)
         {
-            return Decode(ref iterator.Next());
+            return Decode(iterator.Next());
         }
     }
 }

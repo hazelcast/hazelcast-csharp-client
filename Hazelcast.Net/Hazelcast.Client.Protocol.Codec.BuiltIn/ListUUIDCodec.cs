@@ -37,12 +37,12 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(frame);
         }
 
-        public static IList<Guid> Decode(ref FrameIterator iterator)
+        public static IList<Guid> Decode(FrameIterator iterator)
         {
-            return Decode(ref iterator.Next());
+            return Decode(iterator.Next());
         }
 
-        public static List<Guid> Decode(ref Frame frame)
+        public static List<Guid> Decode(Frame frame)
         {
             var itemCount = frame.Content.Length / GuidSizeInBytes;
             var result = new List<Guid>(itemCount);

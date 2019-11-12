@@ -118,13 +118,13 @@ namespace Hazelcast.Client.Protocol.Codec
                 if (messageType == EventPartitionsMessageType) {
                     var initialFrame = iterator.Next();
                     int partitionStateVersion =  DecodeInt(initialFrame.Content, EventPartitionsPartitionStateVersionFieldOffset);
-                    IList<KeyValuePair<IO.Address, IList<int>>> partitions = EntryListCodec.Decode(ref iterator, AddressCodec.Decode, ListIntegerCodec.Decode);
+                    IList<KeyValuePair<IO.Address, IList<int>>> partitions = EntryListCodec.Decode(iterator, AddressCodec.Decode, ListIntegerCodec.Decode);
                     handlePartitionsEvent(partitions, partitionStateVersion);
                     return;
                 }
                 Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-            public delegate void HandlePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IList<int>>> partitions, int partitionStateVersion);
+            public delegate void HandlePartitionsEvent(IList<KeyValuePair<IO.Address, IList<int>>> partitions, int partitionStateVersion);
         }
     }
 }

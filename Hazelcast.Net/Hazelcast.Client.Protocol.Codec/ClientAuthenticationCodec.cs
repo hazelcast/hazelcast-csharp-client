@@ -148,13 +148,13 @@ namespace Hazelcast.Client.Protocol.Codec
             request.SerializationVersion =  DecodeByte(initialFrame.Content, RequestSerializationVersionFieldOffset);
             request.PartitionCount =  DecodeInt(initialFrame.Content, RequestPartitionCountFieldOffset);
             request.ClusterId =  DecodeGuid(initialFrame.Content, RequestClusterIdFieldOffset);
-            request.ClusterName = StringCodec.Decode(ref iterator);
-            request.Username = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
-            request.Password = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
-            request.ClientType = StringCodec.Decode(ref iterator);
-            request.ClientHazelcastVersion = StringCodec.Decode(ref iterator);
-            request.ClientName = StringCodec.Decode(ref iterator);
-            request.Labels = ListMultiFrameCodec.Decode(ref iterator, StringCodec.Decode);
+            request.ClusterName = StringCodec.Decode(iterator);
+            request.Username = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+            request.Password = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+            request.ClientType = StringCodec.Decode(iterator);
+            request.ClientHazelcastVersion = StringCodec.Decode(iterator);
+            request.ClientName = StringCodec.Decode(iterator);
+            request.Labels = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
             return request;
         }
 
@@ -226,8 +226,8 @@ namespace Hazelcast.Client.Protocol.Codec
             response.SerializationVersion = DecodeByte(initialFrame.Content, ResponseSerializationVersionFieldOffset);
             response.PartitionCount = DecodeInt(initialFrame.Content, ResponsePartitionCountFieldOffset);
             response.ClusterId = DecodeGuid(initialFrame.Content, ResponseClusterIdFieldOffset);
-            response.Address = CodecUtil.DecodeNullable(ref iterator, AddressCodec.Decode);
-            response.ServerHazelcastVersion = StringCodec.Decode(ref iterator);
+            response.Address = CodecUtil.DecodeNullable(iterator, AddressCodec.Decode);
+            response.ServerHazelcastVersion = StringCodec.Decode(iterator);
             return response;
         }
     }

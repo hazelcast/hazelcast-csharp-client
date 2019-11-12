@@ -73,7 +73,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.ProxyName = StringCodec.Decode(ref iterator);
+            request.ProxyName = StringCodec.Decode(iterator);
             return request;
         }
 

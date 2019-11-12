@@ -52,19 +52,19 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static Hazelcast.Core.Member Decode(ref FrameIterator iterator)
+        public static Hazelcast.Core.Member Decode(FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
 
-            ref var initialFrame = ref iterator.Next();
+            var initialFrame = iterator.Next();
             var uuid = DecodeGuid(initialFrame.Content, UuidFieldOffset);
             var liteMember = DecodeBool(initialFrame.Content, LiteMemberFieldOffset);
 
-            var address = AddressCodec.Decode(ref iterator);
-            var attributes = MapCodec.Decode(ref iterator, StringCodec.Decode, StringCodec.Decode);
+            var address = AddressCodec.Decode(iterator);
+            var attributes = MapCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);
 
-            CodecUtil.FastForwardToEndFrame(ref iterator);
+            CodecUtil.FastForwardToEndFrame(iterator);
 
             return new Hazelcast.Core.Member(address, uuid, attributes, liteMember);
         }

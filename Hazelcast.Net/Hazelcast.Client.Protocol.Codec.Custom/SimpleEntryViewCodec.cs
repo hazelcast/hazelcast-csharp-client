@@ -68,12 +68,12 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static Hazelcast.Map.SimpleEntryView<IData, IData> Decode(ref FrameIterator iterator)
+        public static Hazelcast.Map.SimpleEntryView<IData, IData> Decode(FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
 
-            ref var initialFrame = ref iterator.Next();
+            var initialFrame = iterator.Next();
             var cost = DecodeLong(initialFrame.Content, CostFieldOffset);
             var creationTime = DecodeLong(initialFrame.Content, CreationTimeFieldOffset);
             var expirationTime = DecodeLong(initialFrame.Content, ExpirationTimeFieldOffset);
@@ -85,10 +85,10 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             var ttl = DecodeLong(initialFrame.Content, TtlFieldOffset);
             var maxIdle = DecodeLong(initialFrame.Content, MaxIdleFieldOffset);
 
-            var key = DataCodec.Decode(ref iterator);
-            var value = DataCodec.Decode(ref iterator);
+            var key = DataCodec.Decode(iterator);
+            var value = DataCodec.Decode(iterator);
 
-            CodecUtil.FastForwardToEndFrame(ref iterator);
+            CodecUtil.FastForwardToEndFrame(iterator);
 
             return CustomTypeFactory.CreateSimpleEntryView(key, value, cost, creationTime, expirationTime, hits, lastAccessTime, lastStoredTime, lastUpdateTime, version, ttl, maxIdle);
         }

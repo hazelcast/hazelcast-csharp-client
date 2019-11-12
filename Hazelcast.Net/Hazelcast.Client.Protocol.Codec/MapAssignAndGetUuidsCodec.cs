@@ -95,7 +95,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             //empty initial frame
             iterator.Next();
-            response.PartitionUuidList = EntryListIntegerUUIDCodec.Decode(ref iterator);
+            response.PartitionUuidList = EntryListIntegerUUIDCodec.Decode(iterator);
             return response;
         }
     }

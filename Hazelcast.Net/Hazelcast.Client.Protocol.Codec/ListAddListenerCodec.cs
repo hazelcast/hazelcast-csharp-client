@@ -94,7 +94,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             request.IncludeValue =  DecodeBool(initialFrame.Content, RequestIncludeValueFieldOffset);
             request.LocalOnly =  DecodeBool(initialFrame.Content, RequestLocalOnlyFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
             return request;
         }
 
@@ -150,7 +150,7 @@ namespace Hazelcast.Client.Protocol.Codec
                     var initialFrame = iterator.Next();
                     Guid uuid =  DecodeGuid(initialFrame.Content, EventItemUuidFieldOffset);
                     int eventType =  DecodeInt(initialFrame.Content, EventItemEventTypeFieldOffset);
-                    IData item = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
+                    IData item = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                     handleItemEvent(item, uuid, eventType);
                     return;
                 }

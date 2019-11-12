@@ -105,8 +105,8 @@ namespace Hazelcast.Client.Protocol.Codec
             request.ThreadId =  DecodeLong(initialFrame.Content, RequestThreadIdFieldOffset);
             request.Ttl =  DecodeLong(initialFrame.Content, RequestTtlFieldOffset);
             request.ReferenceId =  DecodeLong(initialFrame.Content, RequestReferenceIdFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
-            request.Key = DataCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 

@@ -102,7 +102,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             var initialFrame = iterator.Next();
             response.PartitionStateVersion = DecodeInt(initialFrame.Content, ResponsePartitionStateVersionFieldOffset);
-            response.Partitions = EntryListCodec.Decode(ref iterator, AddressCodec.Decode, ListIntegerCodec.Decode);
+            response.Partitions = EntryListCodec.Decode(iterator, AddressCodec.Decode, ListIntegerCodec.Decode);
             return response;
         }
     }

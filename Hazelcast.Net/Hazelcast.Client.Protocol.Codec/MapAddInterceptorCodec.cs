@@ -79,8 +79,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.Name = StringCodec.Decode(ref iterator);
-            request.Interceptor = DataCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
+            request.Interceptor = DataCodec.Decode(iterator);
             return request;
         }
 
@@ -110,7 +110,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             //empty initial frame
             iterator.Next();
-            response.Response = StringCodec.Decode(ref iterator);
+            response.Response = StringCodec.Decode(iterator);
             return response;
         }
     }

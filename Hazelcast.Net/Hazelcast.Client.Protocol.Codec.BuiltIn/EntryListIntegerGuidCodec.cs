@@ -40,9 +40,9 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(frame);
         }
 
-        public static IList<KeyValuePair<int, Guid>> Decode(ref FrameIterator iterator)
+        public static IList<KeyValuePair<int, Guid>> Decode(FrameIterator iterator)
         {
-            ref var frame = ref iterator.Next();
+            var frame = iterator.Next();
             var itemCount = frame.Content.Length / EntrySizeInBytes;
             var result = new List<KeyValuePair<int, Guid>>();
             for (var i = 0; i < itemCount; i++)

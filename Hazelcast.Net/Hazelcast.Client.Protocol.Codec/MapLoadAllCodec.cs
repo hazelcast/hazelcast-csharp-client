@@ -80,7 +80,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             var initialFrame = iterator.Next();
             request.ReplaceExistingValues =  DecodeBool(initialFrame.Content, RequestReplaceExistingValuesFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
             return request;
         }
 

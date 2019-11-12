@@ -104,7 +104,7 @@ namespace Hazelcast.Client.Protocol.Codec
             request.IncludeValue =  DecodeBool(initialFrame.Content, RequestIncludeValueFieldOffset);
             request.ListenerFlags =  DecodeInt(initialFrame.Content, RequestListenerFlagsFieldOffset);
             request.LocalOnly =  DecodeBool(initialFrame.Content, RequestLocalOnlyFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
             return request;
         }
 
@@ -148,7 +148,7 @@ namespace Hazelcast.Client.Protocol.Codec
             EncodeInt(initialFrame.Content, EventEntryNumberOfAffectedEntriesFieldOffset, numberOfAffectedEntries);
             clientMessage.Add(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, value, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, @value, DataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, oldValue, DataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, mergingValue, DataCodec.Encode);
             return clientMessage;
@@ -165,10 +165,10 @@ namespace Hazelcast.Client.Protocol.Codec
                     int eventType =  DecodeInt(initialFrame.Content, EventEntryEventTypeFieldOffset);
                     Guid uuid =  DecodeGuid(initialFrame.Content, EventEntryUuidFieldOffset);
                     int numberOfAffectedEntries =  DecodeInt(initialFrame.Content, EventEntryNumberOfAffectedEntriesFieldOffset);
-                    IData key = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
-                    IData value = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
-                    IData oldValue = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
-                    IData mergingValue = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
+                    IData key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+                    IData value = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+                    IData oldValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+                    IData mergingValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                     handleEntryEvent(key, value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
                     return;
                 }

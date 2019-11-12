@@ -33,12 +33,12 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(frame);
         }
 
-        public static long[] Decode(ref FrameIterator iterator)
+        public static long[] Decode(FrameIterator iterator)
         {
-            return Decode(ref iterator.Next());
+            return Decode(iterator.Next());
         }
 
-        public static long[] Decode(ref Frame frame)
+        public static long[] Decode(Frame frame)
         {
             var itemCount = frame.Content.Length / LongSizeInBytes;
             var result = new long[itemCount];

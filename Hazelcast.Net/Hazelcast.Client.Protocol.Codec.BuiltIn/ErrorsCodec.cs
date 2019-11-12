@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             var iterator = clientMessage.GetIterator();
             //initial frame
             iterator.Next();
-            return ListMultiFrameCodec.Decode(ref iterator, ErrorHolderCodec.Decode);
+            return ListMultiFrameCodec.Decode(iterator, ErrorHolderCodec.Decode);
         }
     }
 }

@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Protocol.Codec
             EncodeLong(initialFrame.Content, RequestTimeoutMillisFieldOffset, timeoutMillis);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, value);
+            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -87,8 +87,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             var initialFrame = iterator.Next();
             request.TimeoutMillis =  DecodeLong(initialFrame.Content, RequestTimeoutMillisFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
-            request.Value = DataCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 

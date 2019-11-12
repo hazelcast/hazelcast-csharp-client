@@ -44,15 +44,15 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static Hazelcast.Client.DistributedObjectInfo Decode(ref FrameIterator iterator)
+        public static Hazelcast.Client.DistributedObjectInfo Decode(FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
 
-            var serviceName = StringCodec.Decode(ref iterator);
-            var name = StringCodec.Decode(ref iterator);
+            var serviceName = StringCodec.Decode(iterator);
+            var name = StringCodec.Decode(iterator);
 
-            CodecUtil.FastForwardToEndFrame(ref iterator);
+            CodecUtil.FastForwardToEndFrame(iterator);
 
             return new Hazelcast.Client.DistributedObjectInfo(serviceName, name);
         }

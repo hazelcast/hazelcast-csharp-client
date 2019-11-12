@@ -87,7 +87,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             var initialFrame = iterator.Next();
             request.LocalOnly =  DecodeBool(initialFrame.Content, RequestLocalOnlyFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
             return request;
         }
 
@@ -143,7 +143,7 @@ namespace Hazelcast.Client.Protocol.Codec
                     var initialFrame = iterator.Next();
                     long publishTime =  DecodeLong(initialFrame.Content, EventTopicPublishTimeFieldOffset);
                     Guid uuid =  DecodeGuid(initialFrame.Content, EventTopicUuidFieldOffset);
-                    IData item = DataCodec.Decode(ref iterator);
+                    IData item = DataCodec.Decode(iterator);
                     handleTopicEvent(item, publishTime, uuid);
                     return;
                 }

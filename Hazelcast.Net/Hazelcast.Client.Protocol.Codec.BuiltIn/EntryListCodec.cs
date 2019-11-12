@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             }
         }
 
-        public static IList<KeyValuePair<TKey, TValue>> Decode<TKey, TValue>(ref FrameIterator iterator,
+        public static IList<KeyValuePair<TKey, TValue>> Decode<TKey, TValue>(FrameIterator iterator,
                                                           DecodeDelegate<TKey> decodeKeyFunc,
                                                           DecodeDelegate<TValue> decodeValueFunc)
         {
@@ -59,10 +59,10 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 
             //begin frame, map
             iterator.Next();
-            while (!IsNextFrameIsDataStructureEndFrame(ref iterator))
+            while (!IsNextFrameIsDataStructureEndFrame(iterator))
             {
-                var key = decodeKeyFunc(ref iterator);
-                var value = decodeValueFunc(ref iterator);
+                var key = decodeKeyFunc(iterator);
+                var value = decodeValueFunc(iterator);
                 result.Add(new KeyValuePair<TKey, TValue>(key, value));
             }
             //end frame, map
@@ -70,10 +70,10 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             return result;
         }
 
-        public static IEnumerable<KeyValuePair<TKey, TValue>> DecodeNullable<TKey, TValue>(ref FrameIterator iterator,
+        public static IEnumerable<KeyValuePair<TKey, TValue>> DecodeNullable<TKey, TValue>(FrameIterator iterator,
             DecodeDelegate<TKey> decodeKeyFunc, DecodeDelegate<TValue> decodeValueFunc)
         {
-            return IsNextFrameIsNullEndFrame(ref iterator) ? null : Decode(ref iterator, decodeKeyFunc, decodeValueFunc);
+            return IsNextFrameIsNullEndFrame(iterator) ? null : Decode(iterator, decodeKeyFunc, decodeValueFunc);
         }
     }
 }

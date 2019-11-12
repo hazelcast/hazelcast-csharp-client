@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.ClassDefinitions = EntryListCodec.Decode(ref iterator, StringCodec.Decode, ByteArrayCodec.Decode);
+            request.ClassDefinitions = EntryListCodec.Decode(iterator, StringCodec.Decode, ByteArrayCodec.Decode);
             return request;
         }
 

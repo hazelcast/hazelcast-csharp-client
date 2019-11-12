@@ -34,10 +34,10 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             ListLongCodec.Encode(clientMessage, valueList);
         }
 
-        public static IList<KeyValuePair<long, byte[]>> Decode(ref FrameIterator iterator)
+        public static IList<KeyValuePair<long, byte[]>> Decode(FrameIterator iterator)
         {
-            var listV = ListMultiFrameCodec.Decode(ref iterator, ByteArrayCodec.Decode);
-            var listK = ListLongCodec.Decode(ref iterator);
+            var listV = ListMultiFrameCodec.Decode(iterator, ByteArrayCodec.Decode);
+            var listK = ListLongCodec.Decode(iterator);
 
             var result = new List<KeyValuePair<long, byte[]>>(listV.Count);
             for (var i = 0; i < listK.Count; i++)

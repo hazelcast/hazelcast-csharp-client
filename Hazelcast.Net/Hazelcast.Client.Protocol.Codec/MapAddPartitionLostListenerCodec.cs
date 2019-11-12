@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             var initialFrame = iterator.Next();
             request.LocalOnly =  DecodeBool(initialFrame.Content, RequestLocalOnlyFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
             return request;
         }
 

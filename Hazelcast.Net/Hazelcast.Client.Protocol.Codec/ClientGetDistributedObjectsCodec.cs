@@ -95,7 +95,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             //empty initial frame
             iterator.Next();
-            response.Response = ListMultiFrameCodec.Decode(ref iterator, DistributedObjectInfoCodec.Decode);
+            response.Response = ListMultiFrameCodec.Decode(iterator, DistributedObjectInfoCodec.Decode);
             return response;
         }
     }

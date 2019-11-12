@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Protocol
         public static ErrorHolder Decode(ClientMessage message)
         {
             var iterator = message.GetIterator();
-            return ErrorHolderCodec.Decode(ref iterator);
+            return ErrorHolderCodec.Decode(iterator);
         }
     }
 }

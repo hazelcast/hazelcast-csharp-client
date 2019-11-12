@@ -133,9 +133,9 @@ namespace Hazelcast.Client.Protocol.Codec
                 if (messageType == EventDistributedObjectMessageType) {
                     //empty initial frame
                     iterator.Next();
-                    string name = StringCodec.Decode(ref iterator);
-                    string serviceName = StringCodec.Decode(ref iterator);
-                    string eventType = StringCodec.Decode(ref iterator);
+                    string name = StringCodec.Decode(iterator);
+                    string serviceName = StringCodec.Decode(iterator);
+                    string eventType = StringCodec.Decode(iterator);
                     handleDistributedObjectEvent(name, serviceName, eventType);
                     return;
                 }

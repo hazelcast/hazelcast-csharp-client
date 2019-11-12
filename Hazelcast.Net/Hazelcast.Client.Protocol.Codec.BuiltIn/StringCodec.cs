@@ -30,12 +30,12 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(new Frame(Utf8.GetBytes(value)));
         }
 
-        public static string Decode(ref FrameIterator iterator)
+        public static string Decode(FrameIterator iterator)
         {
-            return Decode(ref iterator.Next());
+            return Decode(iterator.Next());
         }
 
-        public static string Decode(ref Frame frame)
+        public static string Decode(Frame frame)
         {
             return Utf8.GetString(frame.Content);
         }

@@ -111,9 +111,9 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             request.Delta =  DecodeLong(initialFrame.Content, RequestDeltaFieldOffset);
             request.GetBeforeUpdate =  DecodeBool(initialFrame.Content, RequestGetBeforeUpdateFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
-            request.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(ref iterator);
-            request.TargetReplica = AddressCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
+            request.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
+            request.TargetReplica = AddressCodec.Decode(iterator);
             return request;
         }
 
@@ -136,14 +136,14 @@ namespace Hazelcast.Client.Protocol.Codec
             public int ReplicaCount;
         }
 
-        public static ClientMessage EncodeResponse(long value, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, int replicaCount)
+        public static ClientMessage EncodeResponse(long @value, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, int replicaCount)
         {
             var clientMessage = CreateForEncode();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
             clientMessage.Add(initialFrame);
 
-            EncodeLong(initialFrame.Content, ResponseValueFieldOffset, value);
+            EncodeLong(initialFrame.Content, ResponseValueFieldOffset, @value);
             EncodeInt(initialFrame.Content, ResponseReplicaCountFieldOffset, replicaCount);
             EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
             return clientMessage;
@@ -156,7 +156,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             response.Value = DecodeLong(initialFrame.Content, ResponseValueFieldOffset);
             response.ReplicaCount = DecodeInt(initialFrame.Content, ResponseReplicaCountFieldOffset);
-            response.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(ref iterator);
+            response.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
             return response;
         }
     }

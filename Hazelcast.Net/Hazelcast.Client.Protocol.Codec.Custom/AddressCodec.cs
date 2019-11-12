@@ -49,17 +49,17 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static Hazelcast.IO.Address Decode(ref FrameIterator iterator)
+        public static Hazelcast.IO.Address Decode(FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
 
-            ref var initialFrame = ref iterator.Next();
+            var initialFrame = iterator.Next();
             var port = DecodeInt(initialFrame.Content, PortFieldOffset);
 
-            var host = StringCodec.Decode(ref iterator);
+            var host = StringCodec.Decode(iterator);
 
-            CodecUtil.FastForwardToEndFrame(ref iterator);
+            CodecUtil.FastForwardToEndFrame(iterator);
 
             return CustomTypeFactory.CreateAddress(host, port);
         }

@@ -29,14 +29,14 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(new ClientMessage.Frame(bytes));
         }
 
-        public static byte[] Decode(ref ClientMessage.Frame frame)
+        public static byte[] Decode(ClientMessage.Frame frame)
         {
             return frame.Content;
         }
 
-        public static byte[] Decode(ref ClientMessage.FrameIterator iterator)
+        public static byte[] Decode(ClientMessage.FrameIterator iterator)
         {
-            return Decode(ref iterator.Next());
+            return Decode(iterator.Next());
         }
     }
 }

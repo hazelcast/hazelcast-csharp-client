@@ -51,19 +51,19 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static Hazelcast.Client.Protocol.ErrorHolder Decode(ref FrameIterator iterator)
+        public static Hazelcast.Client.Protocol.ErrorHolder Decode(FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
 
-            ref var initialFrame = ref iterator.Next();
+            var initialFrame = iterator.Next();
             var errorCode = DecodeInt(initialFrame.Content, ErrorCodeFieldOffset);
 
-            var className = StringCodec.Decode(ref iterator);
-            var message = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
-            var stackTraceElements = ListMultiFrameCodec.Decode(ref iterator, StackTraceElementCodec.Decode);
+            var className = StringCodec.Decode(iterator);
+            var message = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+            var stackTraceElements = ListMultiFrameCodec.Decode(iterator, StackTraceElementCodec.Decode);
 
-            CodecUtil.FastForwardToEndFrame(ref iterator);
+            CodecUtil.FastForwardToEndFrame(iterator);
 
             return new Hazelcast.Client.Protocol.ErrorHolder(errorCode, className, message, stackTraceElements);
         }

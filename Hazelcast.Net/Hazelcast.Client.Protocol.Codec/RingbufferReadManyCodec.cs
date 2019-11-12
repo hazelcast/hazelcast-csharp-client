@@ -109,8 +109,8 @@ namespace Hazelcast.Client.Protocol.Codec
             request.StartSequence =  DecodeLong(initialFrame.Content, RequestStartSequenceFieldOffset);
             request.MinCount =  DecodeInt(initialFrame.Content, RequestMinCountFieldOffset);
             request.MaxCount =  DecodeInt(initialFrame.Content, RequestMaxCountFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
-            request.Filter = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
+            request.Name = StringCodec.Decode(iterator);
+            request.Filter = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return request;
         }
 
@@ -159,8 +159,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             response.ReadCount = DecodeInt(initialFrame.Content, ResponseReadCountFieldOffset);
             response.NextSeq = DecodeLong(initialFrame.Content, ResponseNextSeqFieldOffset);
-            response.Items = ListMultiFrameCodec.Decode(ref iterator, DataCodec.Decode);
-            response.ItemSeqs = CodecUtil.DecodeNullable(ref iterator, LongArrayCodec.Decode);
+            response.Items = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            response.ItemSeqs = CodecUtil.DecodeNullable(iterator, LongArrayCodec.Decode);
             return response;
         }
     }

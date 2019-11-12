@@ -88,7 +88,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             request.TableIndex =  DecodeInt(initialFrame.Content, RequestTableIndexFieldOffset);
             request.Batch =  DecodeInt(initialFrame.Content, RequestBatchFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
             return request;
         }
 
@@ -124,7 +124,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             var initialFrame = iterator.Next();
             response.TableIndex = DecodeInt(initialFrame.Content, ResponseTableIndexFieldOffset);
-            response.Keys = ListMultiFrameCodec.Decode(ref iterator, DataCodec.Decode);
+            response.Keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;
         }
     }

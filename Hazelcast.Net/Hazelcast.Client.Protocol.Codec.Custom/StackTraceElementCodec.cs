@@ -51,19 +51,19 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             clientMessage.Add(EndFrame);
         }
 
-        public static Hazelcast.Util.StackTraceElement Decode(ref FrameIterator iterator)
+        public static Hazelcast.Util.StackTraceElement Decode(FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
 
-            ref var initialFrame = ref iterator.Next();
+            var initialFrame = iterator.Next();
             var lineNumber = DecodeInt(initialFrame.Content, LineNumberFieldOffset);
 
-            var className = StringCodec.Decode(ref iterator);
-            var methodName = StringCodec.Decode(ref iterator);
-            var fileName = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
+            var className = StringCodec.Decode(iterator);
+            var methodName = StringCodec.Decode(iterator);
+            var fileName = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
 
-            CodecUtil.FastForwardToEndFrame(ref iterator);
+            CodecUtil.FastForwardToEndFrame(iterator);
 
             return new Hazelcast.Util.StackTraceElement(className, methodName, fileName, lineNumber);
         }

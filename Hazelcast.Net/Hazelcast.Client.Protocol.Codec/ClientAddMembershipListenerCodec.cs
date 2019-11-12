@@ -153,7 +153,7 @@ namespace Hazelcast.Client.Protocol.Codec
             MemberCodec.Encode(clientMessage, member);
             ListMultiFrameCodec.Encode(clientMessage, members, MemberCodec.Encode);
             StringCodec.Encode(clientMessage, key);
-            CodecUtil.EncodeNullable(clientMessage, value, StringCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, @value, StringCodec.Encode);
             return clientMessage;
         }
 
@@ -166,24 +166,24 @@ namespace Hazelcast.Client.Protocol.Codec
                 if (messageType == EventMemberMessageType) {
                     var initialFrame = iterator.Next();
                     int eventType =  DecodeInt(initialFrame.Content, EventMemberEventTypeFieldOffset);
-                    Hazelcast.Core.Member member = MemberCodec.Decode(ref iterator);
+                    Hazelcast.Core.Member member = MemberCodec.Decode(iterator);
                     handleMemberEvent(member, eventType);
                     return;
                 }
                 if (messageType == EventMemberListMessageType) {
                     //empty initial frame
                     iterator.Next();
-                    IList<Hazelcast.Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
+                    IList<Hazelcast.Core.Member> members = ListMultiFrameCodec.Decode(iterator, MemberCodec.Decode);
                     handleMemberListEvent(members);
                     return;
                 }
                 if (messageType == EventMemberAttributeChangeMessageType) {
                     var initialFrame = iterator.Next();
                     int operationType =  DecodeInt(initialFrame.Content, EventMemberAttributeChangeOperationTypeFieldOffset);
-                    Hazelcast.Core.Member member = MemberCodec.Decode(ref iterator);
-                    IList<Hazelcast.Core.Member> members = ListMultiFrameCodec.Decode(ref iterator, MemberCodec.Decode);
-                    string key = StringCodec.Decode(ref iterator);
-                    string value = CodecUtil.DecodeNullable(ref iterator, StringCodec.Decode);
+                    Hazelcast.Core.Member member = MemberCodec.Decode(iterator);
+                    IList<Hazelcast.Core.Member> members = ListMultiFrameCodec.Decode(iterator, MemberCodec.Decode);
+                    string key = StringCodec.Decode(iterator);
+                    string value = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
                     handleMemberAttributeChangeEvent(member, members, key, operationType, value);
                     return;
                 }

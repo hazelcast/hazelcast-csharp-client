@@ -64,14 +64,14 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             }
         }
 
-        public static List<T> Decode<T>(ref FrameIterator iterator, DecodeDelegate<T> decodeFunction)
+        public static List<T> Decode<T>(FrameIterator iterator, DecodeDelegate<T> decodeFunction)
         {
             var result = new List<T>();
             //begin frame, list
             iterator.Next();
-            while (!IsNextFrameIsDataStructureEndFrame(ref iterator))
+            while (!IsNextFrameIsDataStructureEndFrame(iterator))
             {
-                result.Add(decodeFunction(ref iterator));
+                result.Add(decodeFunction(iterator));
             }
 
             //end frame, list
@@ -79,14 +79,14 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             return result;
         }
 
-        public static List<T> DecodeContainsNullable<T>(ref FrameIterator iterator, DecodeDelegate<T> decodeFunction)
+        public static List<T> DecodeContainsNullable<T>(FrameIterator iterator, DecodeDelegate<T> decodeFunction)
         {
             var result = new List<T>();
             //begin frame, list
             iterator.Next();
-            while (!IsNextFrameIsDataStructureEndFrame(ref iterator))
+            while (!IsNextFrameIsDataStructureEndFrame(iterator))
             {
-                result.Add(IsNextFrameIsNullEndFrame(ref iterator) ? default : decodeFunction(ref iterator));
+                result.Add(IsNextFrameIsNullEndFrame(iterator) ? default : decodeFunction(iterator));
             }
 
             //end frame, list
@@ -96,7 +96,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 
         public static List<T> DecodeNullable<T>(ref FrameIterator iterator, DecodeDelegate<T> decodeFunction)
         {
-            return IsNextFrameIsNullEndFrame(ref iterator) ? null : Decode(ref iterator, decodeFunction);
+            return IsNextFrameIsNullEndFrame(iterator) ? null : Decode(iterator, decodeFunction);
         }
     }
 }

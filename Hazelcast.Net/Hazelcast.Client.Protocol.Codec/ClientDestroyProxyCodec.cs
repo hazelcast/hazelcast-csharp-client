@@ -93,8 +93,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.Name = StringCodec.Decode(ref iterator);
-            request.ServiceName = StringCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
+            request.ServiceName = StringCodec.Decode(iterator);
             return request;
         }
 

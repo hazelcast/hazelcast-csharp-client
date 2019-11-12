@@ -81,8 +81,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.Name = StringCodec.Decode(ref iterator);
-            request.Entries = EntryListCodec.Decode(ref iterator, DataCodec.Decode, DataCodec.Decode);
+            request.Name = StringCodec.Decode(iterator);
+            request.Entries = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
             return request;
         }
 

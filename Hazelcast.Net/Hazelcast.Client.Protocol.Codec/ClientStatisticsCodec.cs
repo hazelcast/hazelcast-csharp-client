@@ -220,7 +220,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.Stats = StringCodec.Decode(ref iterator);
+            request.Stats = StringCodec.Decode(iterator);
             return request;
         }
 

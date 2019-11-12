@@ -49,12 +49,12 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(frame);
         }
 
-        public static List<long> Decode(ref ClientMessage.FrameIterator iterator)
+        public static List<long> Decode(ClientMessage.FrameIterator iterator)
         {
-            return Decode(ref iterator.Next());
+            return Decode(iterator.Next());
         }
 
-        public static List<long> Decode(ref ClientMessage.Frame frame)
+        public static List<long> Decode(ClientMessage.Frame frame)
         {
             var itemCount = frame.Content == null ? 0 : frame.Content.Length / Bits.LongSizeInBytes;
             var result = new List<long>(itemCount);

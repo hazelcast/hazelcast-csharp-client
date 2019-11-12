@@ -107,10 +107,10 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             request.TxnId =  DecodeGuid(initialFrame.Content, RequestTxnIdFieldOffset);
             request.ThreadId =  DecodeLong(initialFrame.Content, RequestThreadIdFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
-            request.Key = DataCodec.Decode(ref iterator);
-            request.OldValue = DataCodec.Decode(ref iterator);
-            request.NewValue = DataCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            request.OldValue = DataCodec.Decode(iterator);
+            request.NewValue = DataCodec.Decode(iterator);
             return request;
         }
 

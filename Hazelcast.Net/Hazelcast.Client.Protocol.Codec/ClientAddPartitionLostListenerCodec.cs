@@ -136,7 +136,7 @@ namespace Hazelcast.Client.Protocol.Codec
                     var initialFrame = iterator.Next();
                     int partitionId =  DecodeInt(initialFrame.Content, EventPartitionLostPartitionIdFieldOffset);
                     int lostBackupCount =  DecodeInt(initialFrame.Content, EventPartitionLostLostBackupCountFieldOffset);
-                    Hazelcast.IO.Address source = CodecUtil.DecodeNullable(ref iterator, AddressCodec.Decode);
+                    Hazelcast.IO.Address source = CodecUtil.DecodeNullable(iterator, AddressCodec.Decode);
                     handlePartitionLostEvent(partitionId, lostBackupCount, source);
                     return;
                 }

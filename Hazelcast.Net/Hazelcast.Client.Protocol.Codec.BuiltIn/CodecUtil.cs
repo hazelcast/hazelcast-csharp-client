@@ -28,11 +28,11 @@ using System;
 
 namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
-    delegate T DecodeDelegate<T>(ref ClientMessage.FrameIterator iterator);
+    delegate T DecodeDelegate<T>(ClientMessage.FrameIterator iterator);
 
     internal static class CodecUtil
     {
-        public static void FastForwardToEndFrame(ref ClientMessage.FrameIterator iterator)
+        public static void FastForwardToEndFrame(ClientMessage.FrameIterator iterator)
         {
             // We are starting from 1 because of the BeginFrame we read
             // in the beginning of the Decode method
@@ -64,17 +64,17 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             }
         }
 
-        public static T DecodeNullable<T>(ref ClientMessage.FrameIterator iterator, DecodeDelegate<T> decode)
+        public static T DecodeNullable<T>(ClientMessage.FrameIterator iterator, DecodeDelegate<T> decode)
         {
-            return IsNextFrameIsNullEndFrame(ref iterator) ? default : decode(ref iterator);
+            return IsNextFrameIsNullEndFrame(iterator) ? default : decode(iterator);
         }   
 
-        public static bool IsNextFrameIsDataStructureEndFrame(ref ClientMessage.FrameIterator iterator)
+        public static bool IsNextFrameIsDataStructureEndFrame(ClientMessage.FrameIterator iterator)
         {
             return iterator.PeekNext().IsEndFrame;
         }       
 
-        public static bool IsNextFrameIsNullEndFrame(ref ClientMessage.FrameIterator iterator)
+        public static bool IsNextFrameIsNullEndFrame(ClientMessage.FrameIterator iterator)
         {
             var isNull = iterator.PeekNext().IsNullFrame;
             if (isNull)

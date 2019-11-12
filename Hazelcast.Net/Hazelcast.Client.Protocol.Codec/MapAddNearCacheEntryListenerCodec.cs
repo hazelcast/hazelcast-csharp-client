@@ -98,7 +98,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             request.ListenerFlags =  DecodeInt(initialFrame.Content, RequestListenerFlagsFieldOffset);
             request.LocalOnly =  DecodeBool(initialFrame.Content, RequestLocalOnlyFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
             return request;
         }
 
@@ -170,17 +170,17 @@ namespace Hazelcast.Client.Protocol.Codec
                     Guid sourceUuid =  DecodeGuid(initialFrame.Content, EventIMapInvalidationSourceUuidFieldOffset);
                     Guid partitionUuid =  DecodeGuid(initialFrame.Content, EventIMapInvalidationPartitionUuidFieldOffset);
                     long sequence =  DecodeLong(initialFrame.Content, EventIMapInvalidationSequenceFieldOffset);
-                    IData key = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
+                    IData key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                     handleIMapInvalidationEvent(key, sourceUuid, partitionUuid, sequence);
                     return;
                 }
                 if (messageType == EventIMapBatchInvalidationMessageType) {
                     //empty initial frame
                     iterator.Next();
-                    IList<IData> keys = ListMultiFrameCodec.Decode(ref iterator, DataCodec.Decode);
-                    IList<Guid> sourceUuids = ListUUIDCodec.Decode(ref iterator);
-                    IList<Guid> partitionUuids = ListUUIDCodec.Decode(ref iterator);
-                    IList<long> sequences = ListLongCodec.Decode(ref iterator);
+                    IList<IData> keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+                    IList<Guid> sourceUuids = ListUUIDCodec.Decode(iterator);
+                    IList<Guid> partitionUuids = ListUUIDCodec.Decode(iterator);
+                    IList<long> sequences = ListLongCodec.Decode(iterator);
                     handleIMapBatchInvalidationEvent(keys, sourceUuids, partitionUuids, sequences);
                     return;
                 }

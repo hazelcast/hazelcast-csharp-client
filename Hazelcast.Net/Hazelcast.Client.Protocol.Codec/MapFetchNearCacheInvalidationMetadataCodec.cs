@@ -78,8 +78,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             //empty initial frame
             iterator.Next();
-            request.Names = ListMultiFrameCodec.Decode(ref iterator, StringCodec.Decode);
-            request.Address = AddressCodec.Decode(ref iterator);
+            request.Names = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
+            request.Address = AddressCodec.Decode(iterator);
             return request;
         }
 
@@ -115,8 +115,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             //empty initial frame
             iterator.Next();
-            response.NamePartitionSequenceList = EntryListCodec.Decode(ref iterator, StringCodec.Decode, EntryListIntegerLongCodec.Decode);
-            response.PartitionUuidList = EntryListIntegerUUIDCodec.Decode(ref iterator);
+            response.NamePartitionSequenceList = EntryListCodec.Decode(iterator, StringCodec.Decode, EntryListIntegerLongCodec.Decode);
+            response.PartitionUuidList = EntryListIntegerUUIDCodec.Decode(iterator);
             return response;
         }
     }

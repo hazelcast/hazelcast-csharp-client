@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Protocol.Codec
             EncodeInt(initialFrame.Content, RequestIndexFieldOffset, index);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, value);
+            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -85,8 +85,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var request = new RequestParameters();
             var initialFrame = iterator.Next();
             request.Index =  DecodeInt(initialFrame.Content, RequestIndexFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
-            request.Value = DataCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 
@@ -116,7 +116,7 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             //empty initial frame
             iterator.Next();
-            response.Response = CodecUtil.DecodeNullable(ref iterator, DataCodec.Decode);
+            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
     }

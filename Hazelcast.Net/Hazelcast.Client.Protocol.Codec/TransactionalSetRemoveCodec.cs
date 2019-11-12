@@ -94,8 +94,8 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             request.TxnId =  DecodeGuid(initialFrame.Content, RequestTxnIdFieldOffset);
             request.ThreadId =  DecodeLong(initialFrame.Content, RequestThreadIdFieldOffset);
-            request.Name = StringCodec.Decode(ref iterator);
-            request.Item = DataCodec.Decode(ref iterator);
+            request.Name = StringCodec.Decode(iterator);
+            request.Item = DataCodec.Decode(iterator);
             return request;
         }
 
