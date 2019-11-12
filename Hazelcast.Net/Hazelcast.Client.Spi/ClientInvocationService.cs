@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec.BuiltIn;
+using Hazelcast.Client.Protocol.Codec.Custom;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
@@ -408,7 +409,7 @@ namespace Hazelcast.Client.Spi
             var correlationId = response.CorrelationId;
             if (_invocations.TryRemove(correlationId, out var invocation))
             {
-                if (response.MessageType == ResponseMessageConst.Exception)
+                if (response.MessageType == ErrorsCodec.ExceptionMessageType)
                 {
                     var error = ErrorsCodec.Decode(response);
                     if (Logger.IsFinestEnabled())
