@@ -26,7 +26,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
                                          Action<ClientMessage, TKey> encodeKeyFunc,
                                          Action<ClientMessage, TValue> encodeValueFunc)
         {
-            clientMessage.Add(BeginFrame);
+            clientMessage.Add(BeginFrame.Copy());
 
             foreach (var kvp in collection)
             {

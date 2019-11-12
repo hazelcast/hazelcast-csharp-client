@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Client.DistributedObjectInfo distributedObjectInfo)
         {
-            clientMessage.Add(BeginFrame);
+            clientMessage.Add(BeginFrame.Copy());
 
             StringCodec.Encode(clientMessage, distributedObjectInfo.ServiceName);
             StringCodec.Encode(clientMessage, distributedObjectInfo.Name);

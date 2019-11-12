@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
     {
         public static void Encode<TKey, TValue>(ClientMessage clientMessage, IDictionary<TKey, TValue> map, Action<ClientMessage, TKey> encodeKey, Action<ClientMessage, TValue> encodeValue)
         {
-            clientMessage.Add(BeginFrame);
+            clientMessage.Add(BeginFrame.Copy());
 
             foreach (var kvp in map)
             {

@@ -39,7 +39,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Core.Member member)
         {
-            clientMessage.Add(BeginFrame);
+            clientMessage.Add(BeginFrame.Copy());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
             EncodeGuid(initialFrame.Content, UuidFieldOffset, member.Uuid);

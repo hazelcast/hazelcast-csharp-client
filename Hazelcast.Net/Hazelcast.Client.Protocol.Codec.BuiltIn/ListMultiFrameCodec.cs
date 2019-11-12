@@ -23,7 +23,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
     {
         public static void Encode<T>(ClientMessage clientMessage, IEnumerable<T> collection, Action<ClientMessage, T> encodeFunction)
         {
-            clientMessage.Add(BeginFrame);
+            clientMessage.Add(BeginFrame.Copy());
 
             foreach (var item in collection)
             {
@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 
         public static void EncodeContainsNullable<T>(ClientMessage clientMessage, IEnumerable<T> collection, Action<ClientMessage, T> encodeFunction)
         {
-            clientMessage.Add(BeginFrame);
+            clientMessage.Add(BeginFrame.Copy());
 
             foreach (var item in collection)
             {

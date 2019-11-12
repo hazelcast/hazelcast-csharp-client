@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
         public static void Encode(ClientMessage clientMessage, IEnumerable<KeyValuePair<long, byte[]>> collection)
         {
             var valueList = new List<long>();
-            clientMessage.Add(BeginFrame);
+            clientMessage.Add(BeginFrame.Copy());
 
             foreach (var kvp in collection)
             {

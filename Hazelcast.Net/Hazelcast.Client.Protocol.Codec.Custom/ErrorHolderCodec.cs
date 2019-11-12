@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Client.Protocol.ErrorHolder errorHolder)
         {
-            clientMessage.Add(BeginFrame);
+            clientMessage.Add(BeginFrame.Copy());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
             EncodeInt(initialFrame.Content, ErrorCodeFieldOffset, errorHolder.ErrorCode);
