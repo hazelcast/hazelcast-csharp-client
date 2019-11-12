@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
         {
             if (value == null)
             {
-                clientMessage.Add(ClientMessage.NullFrame);
+                clientMessage.Add(ClientMessage.NullFrame.Copy());
             }
             else
             {
@@ -67,26 +67,19 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
         public static T DecodeNullable<T>(ref ClientMessage.FrameIterator iterator, DecodeDelegate<T> decode)
         {
             return IsNextFrameIsNullEndFrame(ref iterator) ? default : decode(ref iterator);
-        }
+        }   
 
         public static bool IsNextFrameIsDataStructureEndFrame(ref ClientMessage.FrameIterator iterator)
         {
-            try
-            {
-                return iterator.Next().IsEndFrame;
-            }
-            finally
-            {
-                iterator.Previous();
-            }
-        }
+            return iterator.PeekNext().IsEndFrame;
+        }       
 
         public static bool IsNextFrameIsNullEndFrame(ref ClientMessage.FrameIterator iterator)
         {
-            var isNull = iterator.Next().IsNullFrame;
-            if (!isNull)
+            var isNull = iterator.PeekNext().IsNullFrame;
+            if (isNull)
             {
-                iterator.Previous();
+                iterator.Next();    
             }
             return isNull;
         }

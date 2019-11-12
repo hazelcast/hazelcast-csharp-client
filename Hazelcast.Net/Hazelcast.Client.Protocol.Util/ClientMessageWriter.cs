@@ -19,28 +19,28 @@ namespace Hazelcast.Client.Protocol.Util
 {
     internal class ClientMessageWriter
     {
-        private ClientMessage.Accessor _accessor;
-        //-1 means length is not written yet
-        private int _writeOffset = -1;
+        private ClientMessage.Frame _currentFrame;
+        private int _writeOffset = LengthNotWrittenYet;
+        const int LengthNotWrittenYet = -1;
 
         public bool WriteTo(ByteBuffer dst, ClientMessage clientMessage)
         {
-            if (_accessor.IsEmpty)
+            if (_currentFrame == null)
             {
-                _accessor = clientMessage.GetAccessor();
+                _currentFrame = clientMessage.Head;
             }
             for (; ; )
             {
-                var isLastFrame = _accessor.IsLast;
-                if (WriteFrame(dst, ref _accessor.Frame, isLastFrame))
+                var isLastFrame = _currentFrame.next == null;
+                if (WriteFrame(dst, _currentFrame, isLastFrame))
                 {
-                    _writeOffset = -1;
+                    _writeOffset = LengthNotWrittenYet;
                     if (isLastFrame)
                     {
-                        _accessor = default;
+                        _currentFrame = null;
                         return true;
                     }
-                    _accessor.MoveNext();
+                    _currentFrame = _currentFrame.next;
                 }
                 else
                 {
@@ -49,7 +49,7 @@ namespace Hazelcast.Client.Protocol.Util
             }
         }
 
-        private bool WriteFrame(ByteBuffer dst, ref ClientMessage.Frame frame, bool isLastFrame)
+        private bool WriteFrame(ByteBuffer dst, ClientMessage.Frame frame, bool isLastFrame)
         {
             // the number of bytes that can be written to the bb
             var bytesWritable = dst.Remaining();

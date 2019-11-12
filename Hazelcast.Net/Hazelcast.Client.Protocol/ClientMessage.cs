@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Hazelcast.IO;
 using static Hazelcast.IO.Bits;
@@ -54,19 +53,21 @@ namespace Hazelcast.Client.Protocol
         public bool AcquiresResource;
         public string OperationName;
 
-        private Frame _head;
-        private Frame[] _tail;
-        private int _written;
+        Frame _startFrame;
+        Frame _endFrame;
 
         private ClientMessage()
         {
         }
 
-        private ClientMessage(ClientMessage message)
+        private ClientMessage(Frame startFrame)
         {
-            _head = message._head;
-            _tail = message._tail;
-            _written = message._written;
+            _startFrame = startFrame;
+            _endFrame = startFrame;
+            while (_endFrame.next != null)
+            {
+                _endFrame = _endFrame.next;
+            }
         }
 
         public static ClientMessage CreateForEncode() => new ClientMessage();
@@ -78,58 +79,34 @@ namespace Hazelcast.Client.Protocol
             return message;
         }
 
-        public ref Frame Head => ref Get(0);
+        public Frame Head => _startFrame;
+        public Frame Tail => _endFrame;
 
-        public ref Frame Tail => ref Get(_written - 1);
-
-        public void Add(Frame frame)
+        public ClientMessage Add(Frame frame)
         {
-            switch (_written)
+            frame.next = null;
+            if (_startFrame == null)
             {
-                case 0:
-                    _head = frame;
-                    break;
-                case 1:
-                    _tail = new Frame[1];
-                    _tail[0] = frame;
-                    break;
-                default:
-                    var index = _written - 1;
-                    if (index >= _tail.Length)
-                    {
-                        Array.Resize(ref _tail, _tail.Length * 2);
-                    }
-
-                    _tail[index] = frame;
-                    break;
+                _startFrame = frame;
+                _endFrame = frame;
+                return this;
             }
 
-            _written += 1;
+            _endFrame.next = frame;
+            _endFrame = frame;
+            return this;
         }
-
-        public ref Frame Get(int index)
-        {
-            if (index == 0 && _written > 0)
-            {
-                return ref _head;
-            }
-
-            return ref _tail[index - 1];
-        }
-
-        public int FrameCount => _written;
 
         public void Merge(ClientMessage fragment)
         {
             // ignore the first frame of the fragment since first frame marks the fragment
-            var count = fragment._written;
-            for (var i = 1; i < count; i++)
+            var fragmentMessageStartFrame = fragment._startFrame.next;
+            _endFrame.next = fragmentMessageStartFrame;
+            while (_endFrame.next != null)
             {
-                Add(fragment.Get(i));
+                _endFrame = _endFrame.next;
             }
         }
-
-        public int HeaderFlags => Head.Flags;
 
         public int MessageType
         {
@@ -159,13 +136,13 @@ namespace Hazelcast.Client.Protocol
         {
             get
             {
-                var frameLength = 0;
-
-                for (var i = 0; i < _written; i++)
+                int frameLength = 0;
+                Frame currentFrame = _startFrame;
+                while (currentFrame != null)
                 {
-                    frameLength += Get(i).Content.Length;
+                    frameLength += currentFrame.Size;
+                    currentFrame = currentFrame.next;
                 }
-
                 return frameLength;
             }
         }
@@ -173,7 +150,7 @@ namespace Hazelcast.Client.Protocol
         public override string ToString()
         {
             var sb = new StringBuilder("ClientMessage{");
-            if (_written > 0)
+            if (_startFrame != null)
             {
                 sb.Append("length=").Append(FrameLength);
                 sb.Append(", correlationId=").Append(CorrelationId);
@@ -196,42 +173,56 @@ namespace Hazelcast.Client.Protocol
          */
         public ClientMessage CopyWithNewCorrelationId(long correlationId)
         {
-            var newMessage = new ClientMessage(this);
+            var initialFrameCopy = _startFrame.DeepCopy();
 
-            // replace the first frame, deep copy
-            var initialFrameCopy = newMessage.Head.Copy();
-            newMessage._head = initialFrameCopy;
-
-            newMessage.CorrelationId = correlationId;
-
-            newMessage.IsRetryable = IsRetryable;
-            newMessage.AcquiresResource = AcquiresResource;
-            newMessage.OperationName = OperationName;
+            var newMessage = new ClientMessage(initialFrameCopy)
+            {
+                CorrelationId = correlationId,
+                IsRetryable = IsRetryable,
+                AcquiresResource = AcquiresResource,
+                OperationName = OperationName
+            };
 
             return newMessage;
         }
 
-        public struct Frame
+        public class Frame
         {
             public readonly byte[] Content;
             //begin-fragment end-fragment final begin-data-structure end-data-structure is-null is-event 9reserverd
             public int Flags;
 
-            public Frame(byte[] content) : this(content, DefaultFlags)
+            internal Frame next;
+
+            public Frame(byte[] content): this(content, DefaultFlags)
             {
             }
 
             public Frame(byte[] content, int flags)
             {
-                Content = content ?? throw new ArgumentNullException(nameof(content));
+                Content = content;
                 Flags = flags;
             }
 
+            // Shares the content bytes
             public Frame Copy()
             {
-                var bytes = new byte[Content.Length];
-                Buffer.BlockCopy(Content, 0, bytes, 0, Content.Length);
-                return new Frame(bytes, Flags);
+                return new Frame(Content, Flags)
+                {
+                    next = next
+                };
+            }
+
+            // Copies the content bytes
+            public Frame DeepCopy()
+            {
+                var newContent = new byte[Content.Length];
+                Array.Copy(Content, newContent, Content.Length);
+
+                return new Frame(newContent, Flags)
+                {
+                    next = next
+                };
             }
 
             public bool IsEndFrame => IsFlagSet(Flags, EndDataStructureFlag);
@@ -240,52 +231,35 @@ namespace Hazelcast.Client.Protocol
 
             public bool IsNullFrame => IsFlagSet(Flags, IsNullFlag);
 
+            public bool IsFinal => IsFlagSet(Flags, IsFinalFlag);
+
             public int Size => Content == null ? SizeOfFrameLengthAndFlags : SizeOfFrameLengthAndFlags + Content.Length;
         }
 
-        public FrameIterator GetIterator() => new FrameIterator(this);
+        public FrameIterator GetIterator() => new FrameIterator(_startFrame);
 
-        public ref struct FrameIterator
+        public class FrameIterator
         {
-            private readonly ClientMessage _message;
-            private int _index;
+            private Frame nextFrame;
 
-            internal FrameIterator(ClientMessage message)
+            internal FrameIterator(Frame start)
             {
-                _message = message;
-                _index = -1;
+                nextFrame = start;
             }
 
-            public ref Frame Next()
+            public Frame Next()
             {
-                _index += 1;
-                return ref _message.Get(_index);
+                var result = nextFrame;
+                if (nextFrame != null)
+                {
+                    nextFrame = nextFrame.next;
+                }
+                return result;
             }
 
-            public ref Frame Previous()
-            {
-                _index -= 1;
-                return ref _message.Get(_index);
-            }
+            public bool HasNext => nextFrame != null;
+            
+            public Frame PeekNext() => nextFrame;
         }
-
-        public struct Accessor
-        {
-            readonly ClientMessage _message;
-            int _index;
-
-            public Accessor(ClientMessage message)
-            {
-                _message = message;
-                _index = 0;
-            }
-
-            public bool IsEmpty => _message == null || _index >= _message._written;
-            public bool IsLast => _index == _message._written - 1;
-            public ref Frame Frame => ref _message.Get(_index);
-            public void MoveNext() => _index++;
-        }
-
-        public Accessor GetAccessor() => new Accessor(this);
     }
 }
