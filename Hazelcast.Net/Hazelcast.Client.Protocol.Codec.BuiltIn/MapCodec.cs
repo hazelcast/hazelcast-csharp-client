@@ -52,7 +52,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
         {
             if (map == null)
             {
-                clientMessage.Add(NullFrame);
+                clientMessage.Add(NullFrame.Copy());
             }
             else
             {

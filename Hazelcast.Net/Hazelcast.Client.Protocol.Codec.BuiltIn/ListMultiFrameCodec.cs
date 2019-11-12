@@ -41,7 +41,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             {
                 if (item == null)
                 {
-                    clientMessage.Add(NullFrame);
+                    clientMessage.Add(NullFrame.Copy());
                 }
                 else
                 {
@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
         {
             if (collection == null)
             {
-                clientMessage.Add(NullFrame);
+                clientMessage.Add(NullFrame.Copy());
             }
             else
             {
