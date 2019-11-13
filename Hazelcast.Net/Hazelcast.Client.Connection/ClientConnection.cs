@@ -296,7 +296,7 @@ namespace Hazelcast.Client.Connection
         /// <exception cref="System.IO.IOException"></exception>
         public void Init(ISocketInterceptor socketInterceptor)
         {
-            var initBytes = Encoding.UTF8.GetBytes(Protocols.ClientBinaryNew);
+            var initBytes = Encoding.UTF8.GetBytes(Protocols.ClientBinary);
             _stream.Write(initBytes, 0, initBytes.Length);
             if (socketInterceptor != null)
             {

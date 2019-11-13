@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
     internal static class FixedSizeTypesCodec
     {
-        public const int GuidSizeInBytes = LongSizeInBytes * 2;
+        public const int GuidSizeInBytes = BoolSizeInBytes + LongSizeInBytes * 2;
 
         public static void EncodeInt(byte[] buffer, int pos, int value)
         {
