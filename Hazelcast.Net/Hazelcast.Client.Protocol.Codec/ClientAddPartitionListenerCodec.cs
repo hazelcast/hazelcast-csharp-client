@@ -124,7 +124,7 @@ namespace Hazelcast.Client.Protocol.Codec
                 }
                 Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
-            public delegate void HandlePartitionsEvent(IEnumerable<KeyValuePair<IO.Address, IEnumerable<int>>> partitions, int partitionStateVersion);
+            public delegate void HandlePartitionsEvent(IList<KeyValuePair<IO.Address, IList<int>>> partitions, int partitionStateVersion);
         }
     }
 }

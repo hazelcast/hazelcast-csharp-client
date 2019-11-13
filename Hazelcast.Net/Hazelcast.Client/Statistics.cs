@@ -145,19 +145,19 @@ namespace Hazelcast.Client
 
         private void SendStatsToOwner(StringBuilder stats)
         {
-            var request = ClientStatisticsCodec.EncodeRequest(stats.ToString());
-            try
-            {
-                _client.GetInvocationService().InvokeOnTarget(request, _ownerAddress);
-            }
-            catch (Exception e)
-            {
-                // suppress exception, do not print too many messages
-                if (Logger.IsFinestEnabled())
-                {
-                    Logger.Finest("Could not send stats ", e);
-                }
-            }
+            //var request = ClientStatisticsCodec.EncodeRequest(stats.ToString());
+            //try
+            //{
+            //    _client.GetInvocationService().InvokeOnTarget(request, _ownerAddress);
+            //}
+            //catch (Exception e)
+            //{
+            //    // suppress exception, do not print too many messages
+            //    if (Logger.IsFinestEnabled())
+            //    {
+            //        Logger.Finest("Could not send stats ", e);
+            //    }
+            //}
         }
 
         private void RegisterMetrics()
