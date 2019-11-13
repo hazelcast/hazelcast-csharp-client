@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Runtime.InteropServices;
 using Hazelcast.IO;
 using static Hazelcast.IO.Bits;
 
@@ -73,11 +74,30 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
                 return;
             }
 
-            // TODO: perf improvements can me made in here to do not alloc, https://github.com/kevin-montrose/Jil/blob/0631e89ca667bccea353f1e7394663bedf91d9f8/Jil/Serialize/Methods.cs#L48-L220
-            // TODO: correctness - GUIDs are not written in Java format
-            var bytes = value.ToByteArray();
+            var order = default(JavaUUIDOrder);
+            order.Value = value;
 
-            Array.Copy(bytes, 0, buffer, pos + BoolSizeInBytes, 16);
+            pos++;
+
+            buffer[pos++] = order.B00;
+            buffer[pos++] = order.B01;
+            buffer[pos++] = order.B02;
+            buffer[pos++] = order.B03;
+
+            buffer[pos++] = order.B04;
+            buffer[pos++] = order.B05;
+            buffer[pos++] = order.B06;
+            buffer[pos++] = order.B07;
+
+            buffer[pos++] = order.B08;
+            buffer[pos++] = order.B09;
+            buffer[pos++] = order.B10;
+            buffer[pos++] = order.B11;
+
+            buffer[pos++] = order.B12;
+            buffer[pos++] = order.B13;
+            buffer[pos++] = order.B14;
+            buffer[pos++] = order.B15;
         }
 
         public static Guid DecodeGuid(byte[] buffer, int pos)
@@ -88,12 +108,77 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
                 return Guid.Empty;
             }
 
-            // TODO: perf improvements can me made in here to do not alloc, https://github.com/kevin-montrose/Jil/blob/49e8a84ba9719e94de58d3d75ab8bb6eddf4183b/Jil/Deserialize/Methods.cs#L36-L77
-            // TODO: correctness - GUIDs are not written in Java format
+            var order = default(JavaUUIDOrder);
 
-            var bytes = new byte[16];
-            Array.Copy(buffer, pos + BoolSizeInBytes, bytes, 0, 16);
-            return new Guid(bytes);
+            pos++;
+
+            order.B00 = buffer[pos++];
+            order.B01 = buffer[pos++];
+            order.B02 = buffer[pos++];
+            order.B03 = buffer[pos++];
+
+            order.B04 = buffer[pos++];
+            order.B05 = buffer[pos++];
+            order.B06 = buffer[pos++];
+            order.B07 = buffer[pos++];
+
+            order.B08 = buffer[pos++];
+            order.B09 = buffer[pos++];
+            order.B10 = buffer[pos++];
+            order.B11 = buffer[pos++];
+
+            order.B12 = buffer[pos++];
+            order.B13 = buffer[pos++];
+            order.B14 = buffer[pos++];
+            order.B15 = buffer[pos++];
+
+            return order.Value;
+        }
+
+        // the following GUID: "00010203-0405-0607-0809-0a0b0c0d0e0f" is:
+        // in .NET ToArray   as 3, 2, 1, 0,     5, 4, 7, 6,     8,   9, 10, 11,     12, 13, 14, 15
+        // in Java UUIDCodec as 7, 6, 5, 4,     3, 2, 1, 0,     15, 14, 13, 12,     11, 10, 9,  8
+        [StructLayout(LayoutKind.Explicit, Pack = 1)]
+        struct JavaUUIDOrder
+        {
+            [FieldOffset(0)]
+            public Guid Value;
+
+            [FieldOffset(6)]
+            public byte B00;
+            [FieldOffset(7)]
+            public byte B01;
+            [FieldOffset(4)]
+            public byte B02;
+            [FieldOffset(5)]
+            public byte B03;
+
+            [FieldOffset(0)]
+            public byte B04;
+            [FieldOffset(1)]    
+            public byte B05;
+            [FieldOffset(2)]
+            public byte B06;
+            [FieldOffset(3)]
+            public byte B07;
+
+            [FieldOffset(15)]
+            public byte B08;
+            [FieldOffset(14)]
+            public byte B09;
+            [FieldOffset(13)]
+            public byte B10;
+            [FieldOffset(12)]
+            public byte B11;
+
+            [FieldOffset(11)]
+            public byte B12;
+            [FieldOffset(10)]
+            public byte B13;
+            [FieldOffset(9)]
+            public byte B14;
+            [FieldOffset(8)]
+            public byte B15;
         }
     }
 }
