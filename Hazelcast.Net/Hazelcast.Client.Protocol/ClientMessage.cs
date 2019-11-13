@@ -80,6 +80,7 @@ namespace Hazelcast.Client.Protocol
         }
 
         public Frame Head => _startFrame;
+        public int HeaderFlags => _startFrame.Flags;
         public Frame Tail => _endFrame;
 
         public ClientMessage Add(Frame frame)

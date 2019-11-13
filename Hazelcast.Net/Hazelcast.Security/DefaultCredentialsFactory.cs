@@ -54,7 +54,7 @@ namespace Hazelcast.Security
             }
             if (credentials == null)
             {
-                credentials = new UsernamePasswordCredentials(config.GetClusterName(), config.GetClusterPassword());
+                credentials = new UsernamePasswordCredentials(null, null);
             }
             return credentials;
         }

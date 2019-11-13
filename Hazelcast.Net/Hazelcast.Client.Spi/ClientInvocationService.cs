@@ -100,12 +100,11 @@ namespace Hazelcast.Client.Spi
 
         public void HandleClientMessage(ClientMessage message)
         {
-            // TODO: Listeners
-            //if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
-            //{
-            //    _clientListenerService.HandleResponseMessage(message);
-            //}
-            //else
+            if (ClientMessage.IsFlagSet(message.HeaderFlags, ClientMessage.IsEventFlag))
+            {
+                _clientListenerService.HandleResponseMessage(message);
+            }
+            else
             {
                 _client.GetClientExecutionService().Submit(() =>
                 {
