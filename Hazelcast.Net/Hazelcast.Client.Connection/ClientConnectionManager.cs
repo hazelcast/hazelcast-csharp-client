@@ -25,6 +25,7 @@ using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
 using Hazelcast.Security;
@@ -303,7 +304,17 @@ namespace Hazelcast.Client.Connection
             }
             else
             {
-                var data = ss.ToData(credentials);
+                IData data;
+
+                if (credentials is TokenCredentials tokenCredentials)
+                {
+                    data = new HeapData(tokenCredentials.Token);
+                }
+                else
+                {
+                    data = ss.ToData(credentials);
+                }
+
                 request = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, data, _clientId, ClientTypes.Csharp,
                     serializationVersion, VersionUtil.GetDllVersion(), _client.GetName(), labels, _clusterPartitionCount, clusterId);
             }
@@ -333,7 +344,7 @@ namespace Hazelcast.Client.Connection
                     _clusterId = result.ClusterId;
                     if (isOwnerConnection)
                     {
-                        var member = new Member(result.Address, ownerId);   
+                        var member = new Member(result.Address, ownerId);
                         ClientPrincipal = new ClientPrincipal(result.Uuid, ownerId);
                         connection.Member = member;
                         connection.SetOwner();
@@ -350,6 +361,8 @@ namespace Hazelcast.Client.Connection
                     }
                     break;
                 case AuthenticationStatus.CredentialsFailed:
+                    // if credentials are token credentials, refresh the token whenever auth fails. They might have been stale.
+                    (credentials as TokenCredentials)?.Refresh();
                     throw new AuthenticationException("Invalid credentials! Principal: " + ClientPrincipal);
                 case AuthenticationStatus.SerializationVersionMismatch:
                     throw new InvalidOperationException("Server serialization version does not match to client");
