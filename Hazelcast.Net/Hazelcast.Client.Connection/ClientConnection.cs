@@ -18,12 +18,11 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Util;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
@@ -42,17 +41,17 @@ namespace Hazelcast.Client.Connection
         private const int ConnectionTimeout = 30000;
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientConnection));
 
-        private readonly ClientMessageBuilder _builder;
+        private readonly ClientMessageDecoder _decoder;
         private readonly ClientConnectionManager _clientConnectionManager;
         private readonly int _id;
         private readonly ByteBuffer _receiveBuffer;
         private readonly ByteBuffer _sendBuffer;
-        private readonly BlockingCollection<ISocketWritable> _writeQueue = new BlockingCollection<ISocketWritable>();
+        private readonly BlockingCollection<ClientMessage> _writeQueue = new BlockingCollection<ClientMessage>();
 
         private readonly Socket _clientSocket;
         private readonly Stream _stream;
         private bool _isOwner;
-        private volatile ISocketWritable _lastWritable;
+        private volatile ClientMessage _lastWritable;
         private readonly AtomicBoolean _live;
         private volatile IMember _member;
         private Thread _writeThread;
@@ -99,7 +98,7 @@ namespace Hazelcast.Client.Connection
                 var connectionTimeout = clientNetworkConfig.GetConnectionTimeout() > -1
                     ? clientNetworkConfig.GetConnectionTimeout()
                     : ConnectionTimeout;
-                var socketResult = _clientSocket.BeginConnect(address.GetInetAddress(), address.GetPort(), null, null);
+                var socketResult = _clientSocket.BeginConnect(address.GetInetAddress(), address.Port, null, null);
 
                 if (!socketResult.AsyncWaitHandle.WaitOne(connectionTimeout, true) || !_clientSocket.Connected)
                 {
@@ -110,7 +109,7 @@ namespace Hazelcast.Client.Connection
                 _sendBuffer = ByteBuffer.Allocate(BufferSize);
                 _receiveBuffer = ByteBuffer.Allocate(BufferSize);
 
-                _builder = new ClientMessageBuilder(invocationService.HandleClientMessage);
+                _decoder = new ClientMessageDecoder(invocationService.HandleClientMessage);
 
                 var networkStream = new NetworkStream(_clientSocket, false);
                 var sslConfig = clientNetworkConfig.GetSSLConfig();
@@ -244,7 +243,7 @@ namespace Hazelcast.Client.Connection
 
         public Address GetAddress()
         {
-            return _member != null ? _member.GetAddress() : null;
+            return _member != null ? _member.Address : null;
         }
 
         public IPEndPoint GetLocalSocketAddress()
@@ -276,17 +275,17 @@ namespace Hazelcast.Client.Connection
             return "Connection [" + _member + " -> CLOSED ]";
         }
 
-        public bool WriteAsync(ISocketWritable packet)
+        public bool WriteAsync(ClientMessage message)
         {
             if (!Live)
             {
                 if (Logger.IsFinestEnabled())
                 {
-                    Logger.Finest("Connection is closed, won't write packet -> " + packet);
+                    Logger.Finest("Connection is closed, won't write message -> " + message);
                 }
                 return false;
             }
-            return _writeQueue.TryAdd(packet);
+            return _writeQueue.TryAdd(message);
         }
 
         internal Socket GetSocket()
@@ -297,7 +296,7 @@ namespace Hazelcast.Client.Connection
         /// <exception cref="System.IO.IOException"></exception>
         public void Init(ISocketInterceptor socketInterceptor)
         {
-            var initBytes = Encoding.UTF8.GetBytes(Protocols.ClientBinaryNew);
+            var initBytes = Encoding.UTF8.GetBytes(Protocols.ClientBinary);
             _stream.Write(initBytes, 0, initBytes.Length);
             if (socketInterceptor != null)
             {
@@ -368,7 +367,7 @@ namespace Hazelcast.Client.Connection
                 _receiveBuffer.Position += receivedByteSize;
                 _receiveBuffer.Flip();
 
-                _builder.OnData(_receiveBuffer);
+                _decoder.OnRead(_receiveBuffer);
                 LastRead = DateTime.Now;
                 if (_receiveBuffer.HasRemaining())
                 {
@@ -424,13 +423,15 @@ namespace Hazelcast.Client.Connection
         {
             try
             {
+                var writer = new ClientMessageWriter();
+                ClientMessage msg = default;
                 while (!_writeQueue.IsAddingCompleted)
                 {
                     try
                     {
-                        if (_lastWritable == null)
+                        if (msg == null)
                         {
-                            _lastWritable = _writeQueue.Take();
+                            msg = _writeQueue.Take();
                         }
                     }
                     catch (Exception)
@@ -442,21 +443,21 @@ namespace Hazelcast.Client.Connection
                         }
                     }
 
-                    while (_sendBuffer.HasRemaining() && _lastWritable != null)
+                    while (_sendBuffer.HasRemaining() && msg != null)
                     {
-                        var complete = _lastWritable.WriteTo(_sendBuffer);
+                        var complete = writer.WriteTo(_sendBuffer, msg);
                         if (complete)
                         {
                             //grap one from queue
-                            ISocketWritable tmp;
-                            _writeQueue.TryTake(out tmp);
-                            _lastWritable = tmp;
+                            _writeQueue.TryTake(out var tmp);
+                            msg = tmp;
                         }
                         else
                         {
                             break;
                         }
                     }
+
                     if (_sendBuffer.Position > 0)
                     {
                         _sendBuffer.Flip();
@@ -468,7 +469,7 @@ namespace Hazelcast.Client.Connection
                         }
                         catch (Exception e)
                         {
-                            _lastWritable = null;
+                            msg = null;
                             HandleSocketException(e);
                         }
                     }

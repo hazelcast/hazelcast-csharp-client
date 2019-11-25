@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Proxy
             var data = ToData(e);
             var request = TransactionalQueueOfferCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), data,
                 unit.ToMillis(timeout));
-            return Invoke(request, m => TransactionalQueueOfferCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalQueueOfferCodec.DecodeResponse(m).Response);
         }
 
         public virtual T Poll()
@@ -62,7 +62,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = TransactionalQueuePollCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 unit.ToMillis(timeout));
-            var result = Invoke(request, m => TransactionalQueuePollCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalQueuePollCodec.DecodeResponse(m).Response);
             return ToObject<T>(result);
         }
 
@@ -83,21 +83,21 @@ namespace Hazelcast.Client.Proxy
         {
             var request = TransactionalQueuePeekCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 unit.ToMillis(timeout));
-            var result = Invoke(request, m => TransactionalQueuePeekCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalQueuePeekCodec.DecodeResponse(m).Response);
             return ToObject<T>(result);
         }
 
         public T Take()
         {
             var request = TransactionalQueueTakeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            var result = Invoke(request, m => TransactionalQueueTakeCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalQueueTakeCodec.DecodeResponse(m).Response);
             return ToObject<T>(result);
         }
 
         public virtual int Size()
         {
             var request = TransactionalQueueSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            return Invoke(request, m => TransactionalQueueSizeCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalQueueSizeCodec.DecodeResponse(m).Response);
         }
 
         public override string GetServiceName()

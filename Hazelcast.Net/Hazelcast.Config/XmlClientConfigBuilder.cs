@@ -167,8 +167,8 @@ namespace Hazelcast.Config
                     case "serialization":
                         HandleSerialization(node);
                         break;
-                    case "group":
-                        HandleGroup(node);
+                    case "cluster":
+                        HandleCluster(node);
                         break;
                     case "listeners":
                         HandleListeners(node);
@@ -186,23 +186,19 @@ namespace Hazelcast.Config
             }
         }
 
-        private void HandleGroup(XmlNode node)
+        private void HandleCluster(XmlNode node)
         {
-            foreach (XmlNode n in node.ChildNodes)
+            var name = GetAttribute(node, "name");
+            var password = GetAttribute(node, "password");
+
+            if (name != null)
             {
-                var value = GetTextContent(n).Trim();
-                var nodeName = CleanNodeName(n.Name);
-                if ("name".Equals(nodeName))
-                {
-                    _clientConfig.GetGroupConfig().SetName(value);
-                }
-                else
-                {
-                    if ("password".Equals(nodeName))
-                    {
-                        _clientConfig.GetGroupConfig().SetPassword(value);
-                    }
-                }
+                _clientConfig.SetClusterName(name);
+            }
+
+            if (password != null)
+            {
+                _clientConfig.SetClusterPassword(password);
             }
         }
 

@@ -12,106 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Spi;
-using Hazelcast.Core;
-using Hazelcast.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
     public class ClientExecutorServiceTest : HazelcastTestSupport
     {
-        private ClientExecutionService _clientExecutionService;
-
-        private CancellationTokenSource cts;
+        ClientExecutionService _clientExecutionService;
 
         [SetUp]
         public void Setup()
         {
-            cts = new CancellationTokenSource();
+
             _clientExecutionService = new ClientExecutionService("name", 10);
         }
 
         [TearDown]
         public void TearDown()
         {
-            cts.Dispose();
             _clientExecutionService.Shutdown();
         }
 
         [Test]
-        public void TestScheduleWithCancellation_cancelled()
+        public async Task Schedule_Cancelled()
         {
-            var executed = false;
-            var continued = false;
-            _clientExecutionService.ScheduleWithCancellation(() =>
-                {
-                    executed = true;
-                }, 2, TimeUnit.Seconds, cts.Token)
-                .ContinueWith(t =>
-                    {
-                        if (!t.IsCanceled)
-                        {
-                            continued = true;
-                        }
-                    }
-            );
-            cts.Cancel();
-            TestSupport.AssertTrueEventually(() =>
+            using (var cts = new CancellationTokenSource())
             {
-                Assert.False(executed);
-                Assert.False(continued);
-            });
+                var task = _clientExecutionService.Schedule(
+                        () => throw new Exception("Should not execute"), TimeSpan.FromSeconds(2), cts.Token);
+
+                cts.Cancel();
+
+                await task.ShouldThrow<TaskCanceledException>();
+            }
         }
 
         [Test]
-        public void TestScheduleWithCancellation_completed()
+        public async Task Schedule_Completed()
         {
-            var executed = false;
-            var continued = false;
-            _clientExecutionService.ScheduleWithCancellation(() =>
-                {
-                    executed = true;
-                }, 2, TimeUnit.Seconds, cts.Token)
-                .ContinueWith(t =>
-                    {
-                        if (!t.IsCanceled)
-                        {
-                            continued = true;
-                        }
-                    }
-                );
-            TestSupport.AssertTrueEventually(() =>
-            {
-                Assert.True(executed);
-                Assert.True(continued);
-            });
-        }
+            var executed = new TaskCompletionSource<object>();
 
-        [Test]
-        public void TestSchedule_completed()
-        {
-            var executed = false;
-            var continued = false;
-            _clientExecutionService.Schedule(() =>
-                {
-                    executed = true;
-                }, 2, TimeUnit.Seconds)
-                .ContinueWith(t =>
-                    {
-                        if (!t.IsCanceled)
-                        {
-                            continued = true;
-                        }
-                    }
-                );
-            TestSupport.AssertTrueEventually(() =>
-            {
-                Assert.True(executed);
-                Assert.True(continued);
-            });
+            var task = _clientExecutionService
+                .Schedule(() => { executed.SetResult(executed); }, TimeSpan.FromSeconds(2), CancellationToken.None);
+
+            await Task.WhenAll(executed.Task, task);
         }
     }
 }

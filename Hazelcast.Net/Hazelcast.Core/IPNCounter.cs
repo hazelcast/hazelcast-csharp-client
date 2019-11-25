@@ -67,7 +67,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Adds the given value to the current value.
         /// </summary>
-        /// <param name="delta">the value to add</param>
+        /// <param name="delta">the value to Add</param>
         /// <returns>The previous value</returns>
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
@@ -77,7 +77,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Adds the given value to the current value
         /// </summary>
-        /// <param name="delta">the value to add</param>
+        /// <param name="delta">the value to Add</param>
         /// <returns>the updated value</returns>
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
@@ -87,7 +87,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Subtracts the given value from the current value.
         /// </summary>
-        /// <param name="delta">the value to add</param>
+        /// <param name="delta">the value to Add</param>
         /// <returns>the previous value</returns>
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>

@@ -31,7 +31,7 @@ using Hazelcast.Util;
         ClientPartitionService : IClientPartitionService, IConnectionListener
     {
         private const int PartitionTimeout = 60000;
-        private const int PartitionRefreshPeriod = 10000;
+        private static readonly TimeSpan PartitionRefreshPeriod = TimeSpan.FromSeconds(10);
 
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (IClientPartitionService));
         private readonly HazelcastClient _client;
@@ -99,7 +99,7 @@ using Hazelcast.Util;
             _client.GetConnectionManager().AddConnectionListener(this);
             _partitionUpdaterToken = new CancellationTokenSource();
             _client.GetClientExecutionService().ScheduleWithFixedDelay(() => GetPartitions(),
-                0, PartitionRefreshPeriod, TimeUnit.Milliseconds, _partitionUpdaterToken.Token);
+                TimeSpan.Zero, PartitionRefreshPeriod, _partitionUpdaterToken.Token);
         }
 
         public void Stop()
@@ -204,7 +204,7 @@ using Hazelcast.Util;
 
         private bool ProcessPartitionResponse(ClientGetPartitionsCodec.ResponseParameters response)
         {
-            var partitionResponse = response.partitions;
+            var partitionResponse = response.Partitions;
             foreach (var entry in partitionResponse)
             {
                 var address = entry.Key;

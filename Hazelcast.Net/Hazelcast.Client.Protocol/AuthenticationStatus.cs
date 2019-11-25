@@ -20,8 +20,7 @@ namespace Hazelcast.Client.Protocol
     internal enum AuthenticationStatus
     {
         Authenticated = 0,
-        CredentialsFailed= 1,
+        CredentialsFailed = 1,
         SerializationVersionMismatch = 2
-
     }
 }

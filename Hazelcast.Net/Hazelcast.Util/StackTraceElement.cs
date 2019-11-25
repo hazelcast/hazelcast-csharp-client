@@ -24,10 +24,10 @@ namespace Hazelcast.Util
             LineNumber = lineNumber;
         }
 
-        public string ClassName { get; private set; }
-        public string MethodName { get; private set; }
-        public string FileName { get; private set; }
-        public int LineNumber { get; private set; }
+        public string ClassName { get; }
+        public string MethodName { get; }
+        public string FileName { get; }
+        public int LineNumber { get; }
 
         public override bool Equals(object obj)
         {
@@ -55,9 +55,6 @@ namespace Hazelcast.Util
                    string.Equals(FileName, other.FileName) && LineNumber == other.LineNumber;
         }
 
-        public override string ToString()
-        {
-            return string.Format("{0} : {1} : {2} : [{3}] ", FileName, ClassName, MethodName, LineNumber);
-        }
+        public override string ToString() => $"{FileName} : {ClassName} : {MethodName} : [{LineNumber}] ";
     }
 }

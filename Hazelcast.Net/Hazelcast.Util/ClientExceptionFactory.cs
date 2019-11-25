@@ -83,31 +83,30 @@ namespace Hazelcast.Util
                 {ClientProtocolErrorCodes.ConsistencyLostException, (m, c) => new ConsistencyLostException(m)}
             };
 
-        public Exception CreateException(Error error)
+        public Exception CreateException(IEnumerable<ErrorHolder> error)
         {
-            return CreateException(error.ErrorCode, error.ClassName, error.Message, error.StackTrace,
-                error.CauseErrorCode, error.CauseClassName);
+            using (var enumerator = error.GetEnumerator())
+            {
+                return CreateException(enumerator);
+            }
         }
 
-        public Exception CreateException(int errorCode, string className, string message, StackTraceElement[] stackTrace
-            , int? causeErrorCode, string causeClassName)
+        private Exception CreateException(IEnumerator<ErrorHolder> enumerator)
         {
-            Exception cause = null;
-            if (causeClassName != null && causeErrorCode.HasValue)
+            if (enumerator.MoveNext() == false)
             {
-                cause = CreateException(causeErrorCode.Value, null, null);
+                return null;
             }
 
-            var exception = CreateException(errorCode, message, cause);
+            var holder = enumerator.Current;
 
-            return exception;
+            return CreateException(holder.ErrorCode, holder.Message, CreateException(enumerator));
         }
 
         private Exception CreateException(int errorCode, string message, Exception cause)
         {
-            ExceptionFactoryDelegate factory;
             if (Enum.IsDefined(typeof (ClientProtocolErrorCodes), errorCode) &&
-                _errorCodeToException.TryGetValue((ClientProtocolErrorCodes) errorCode, out factory))
+                _errorCodeToException.TryGetValue((ClientProtocolErrorCodes) errorCode, out var factory))
             {
                 return factory.Invoke(message, cause);
             }

@@ -16,7 +16,6 @@ using System;
 using Hazelcast.Core;
 using Hazelcast.IO;
 
-#pragma warning disable CS1591
  namespace Hazelcast.Client.Spi
 {
     /// <summary>
@@ -24,7 +23,7 @@ using Hazelcast.IO;
     /// E.g. a map.get sent to a machine where the partition has just moved to another machine.
     /// </summary>
     [Serializable]
-    public class RetryableHazelcastException : HazelcastException
+    class RetryableHazelcastException : HazelcastException
     {
         /// <inheritdoc />
         public RetryableHazelcastException()
@@ -41,7 +40,7 @@ using Hazelcast.IO;
     /// A <see cref="RetryableHazelcastException"/> that indicates operation is sent to a machine that isn't member of the cluster
     /// </summary>
     [Serializable]
-    public class TargetNotMemberException : RetryableHazelcastException
+    class TargetNotMemberException : RetryableHazelcastException
     {
         /// <inheritdoc />
         public TargetNotMemberException(string message) : base(message)
@@ -54,7 +53,7 @@ using Hazelcast.IO;
     /// whether the invocation runs or not is indeterminate
     /// </summary>
     [Serializable]
-    public class TargetDisconnectedException : RetryableHazelcastException
+    class TargetDisconnectedException : RetryableHazelcastException
     {
         /// <summary>
         /// Constructor version with an Address instance to assign to

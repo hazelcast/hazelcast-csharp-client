@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
@@ -23,9 +24,9 @@ using Hazelcast.Util;
     internal class ClientInvocation
     {
         private readonly ClientConnection _boundConnection;
-        private readonly SettableFuture<IClientMessage> _future;
-        private readonly string _memberUuid;
-        private readonly IClientMessage _message;
+        private readonly SettableFuture<ClientMessage> _future;
+        private readonly Guid _memberUuid;
+        private readonly ClientMessage _message;
         private readonly int _partitionId = -1;
 
         // the point at which the request should be considered timed out
@@ -33,36 +34,36 @@ using Hazelcast.Util;
         
         private readonly DistributedEventHandler _eventHandler;
 
-        public ClientInvocation(IClientMessage message)
+        public ClientInvocation(ClientMessage message)
         {
             _message = message;
-            _future = new SettableFuture<IClientMessage>();
+            _future = new SettableFuture<ClientMessage>();
             _invocationTimeMillis = Clock.CurrentTimeMillis();
         }
 
-        public ClientInvocation(IClientMessage message, int partitionId) : this(message)
+        public ClientInvocation(ClientMessage message, int partitionId) : this(message)
         {
             _partitionId = partitionId;
         }
 
-        public ClientInvocation(IClientMessage message, string memberUuid) : this(message)
+        public ClientInvocation(ClientMessage message, Guid memberUuid) : this(message)
         {
             _memberUuid = memberUuid;
         }
 
-        public ClientInvocation(IClientMessage message, Address address) : this(message)
+        public ClientInvocation(ClientMessage message, Address address) : this(message)
         {
             Address = address;
         }
 
-        public ClientInvocation(IClientMessage message, ClientConnection boundConnection, DistributedEventHandler eventHandler = null)
+        public ClientInvocation(ClientMessage message, ClientConnection boundConnection, DistributedEventHandler eventHandler = null)
             : this(message)
         {
             _boundConnection = boundConnection;
             _eventHandler = eventHandler;
         }
 
-        public string MemberUuid
+        public Guid MemberUuid
         {
             get { return _memberUuid; }
         }
@@ -72,12 +73,12 @@ using Hazelcast.Util;
             get { return _partitionId; }
         }
 
-        public IClientMessage Message
+        public ClientMessage Message
         {
             get { return _message; }
         }
 
-        public SettableFuture<IClientMessage> Future
+        public SettableFuture<ClientMessage> Future
         {
             get { return _future; }
         }

@@ -18,40 +18,31 @@ namespace Hazelcast.Client
 {
     internal class DistributedObjectInfo
     {
-        private readonly string _objectName;
-        private readonly string _serviceName;
-
-        public DistributedObjectInfo(string serviceName, string objectName)
+        public DistributedObjectInfo(string serviceName, string name)
         {
-            _objectName = objectName;
-            _serviceName = serviceName;
-        }
-        
-        public string ObjectName
-        {
-            get { return _objectName; }
+            Name = name;
+            ServiceName = serviceName;
         }
 
-        public  string ServiceName
-        {
-            get { return _serviceName; }
-        }
+        public string Name { get; }
+
+        public string ServiceName { get; }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            var other= (DistributedObjectInfo) obj;
-            return string.Equals(_objectName, other._objectName) && string.Equals(_serviceName, other._serviceName);
+            var other = (DistributedObjectInfo)obj;
+            return string.Equals(Name, other.Name) && string.Equals(ServiceName, other.ServiceName);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((_objectName != null ? _objectName.GetHashCode() : 0) * 397) ^
-                       (_serviceName != null ? _serviceName.GetHashCode() : 0);
+                return ((Name != null ? Name.GetHashCode() : 0) * 397) ^
+                       (ServiceName != null ? ServiceName.GetHashCode() : 0);
             }
         }
 
@@ -59,8 +50,8 @@ namespace Hazelcast.Client
         {
             var sb = new StringBuilder();
             sb.Append("DistributedObjectInfo");
-            sb.Append("{service='").Append(_serviceName).Append('\'');
-            sb.Append(", objectName=").Append(_objectName);
+            sb.Append("{service='").Append(ServiceName).Append('\'');
+            sb.Append(", objectName=").Append(Name);
             sb.Append('}');
             return sb.ToString();
         }

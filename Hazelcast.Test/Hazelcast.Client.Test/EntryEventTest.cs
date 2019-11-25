@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using NUnit.Framework;
@@ -38,7 +39,7 @@ namespace Hazelcast.Client.Test
             testInt = 666;
             dataInt = serializationService.ToData(testInt);
 
-            var member = new Member(new Address("localhost", 5701), "");
+            var member = new Member(new Address("localhost", 5701), Guid.Empty);
 
             dataAwareEntryEvent = new DataAwareEntryEvent<string, int?>("source", member, EntryEventType.Added,
                 dataString, dataInt, dataInt, null, serializationService);

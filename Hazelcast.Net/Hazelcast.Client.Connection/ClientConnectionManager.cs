@@ -34,7 +34,7 @@ namespace Hazelcast.Client.Connection
 {
     internal class ClientConnectionManager
     {
-        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ClientConnectionManager));
+        private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientConnectionManager));
 
         private readonly ConcurrentDictionary<Address, ClientConnection> _activeConnections =
             new ConcurrentDictionary<Address, ClientConnection>();
@@ -58,6 +58,9 @@ namespace Hazelcast.Client.Connection
         private CancellationTokenSource _heartbeatToken;
         private readonly AtomicBoolean _live = new AtomicBoolean(false);
         private int _nextConnectionId;
+        private readonly Guid _clientId = Guid.NewGuid();
+        private volatile int _clusterPartitionCount = -1;
+        private Guid _clusterId;
 
         public ClientConnectionManager(HazelcastClient client)
         {
@@ -85,7 +88,7 @@ namespace Hazelcast.Client.Connection
                 EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.timeout") ?? defaultHeartbeatTimeout;
             var heartbeatIntervalMillis =
                 EnvironmentUtil.ReadInt("hazelcast.client.heartbeat.interval") ?? defaultHeartbeatInterval;
-            
+
             _heartbeatTimeout = TimeSpan.FromMilliseconds(heartbeatTimeoutMillis);
             _heartbeatInterval = TimeSpan.FromMilliseconds(heartbeatIntervalMillis);
         }
@@ -97,13 +100,12 @@ namespace Hazelcast.Client.Connection
                 return;
             }
             _credentialsFactory = _client.GetCredentialsFactory();
-            
+
             //start Heartbeat
             _heartbeatToken = new CancellationTokenSource();
             _client.GetClientExecutionService().ScheduleWithFixedDelay(Heartbeat,
-                (long) _heartbeatInterval.TotalMilliseconds,
-                (long) _heartbeatInterval.TotalMilliseconds,
-                TimeUnit.Milliseconds,
+                _heartbeatInterval,
+                _heartbeatInterval,
                 _heartbeatToken.Token);
         }
 
@@ -143,16 +145,16 @@ namespace Hazelcast.Client.Connection
         }
 
         public ICredentials LastCredentials { get; set; }
-        
+
         public ClientPrincipal ClientPrincipal { get; set; }
 
         public bool Live
         {
             get { return _live.Get(); }
         }
-        
+
         public GetAddressDictionary AddressProvider { get; set; }
-        
+
         public ICollection<ClientConnection> ActiveConnections
         {
             get { return _activeConnections.Values; }
@@ -193,7 +195,7 @@ namespace Hazelcast.Client.Connection
                 return connection;
             }
         }
-        
+
         /// <summary>
         /// Gets an existing connection for the given address
         /// </summary>
@@ -228,7 +230,7 @@ namespace Hazelcast.Client.Connection
             else
             {
                 // connection has not authenticated yet
-                ((ClientInvocationService) _client.GetInvocationService()).CleanUpConnectionResources(connection);
+                ((ClientInvocationService)_client.GetInvocationService()).CleanUpConnectionResources(connection);
             }
         }
 
@@ -279,37 +281,37 @@ namespace Hazelcast.Client.Connection
         {
             if (Logger.IsFinestEnabled())
             {
-                Logger.Finest(string.Format("Authenticating against the {0} node", isOwnerConnection?"owner":"non-owner"));
-            }
-            string uuid = null;
-            string ownerUuid = null;
-            if (ClientPrincipal != null)
-            {
-                uuid = ClientPrincipal.GetUuid();
-                ownerUuid = ClientPrincipal.GetOwnerUuid();
+                Logger.Finest(string.Format("Authenticating against the {0} node", isOwnerConnection ? "owner" : "non-owner"));
             }
 
             var ss = _client.GetSerializationService();
+            var serializationVersion = ss.GetVersion();
             ClientMessage request;
             var credentials = _credentialsFactory.NewCredentials();
             LastCredentials = credentials;
-            if (credentials.GetType() == typeof(UsernamePasswordCredentials))
+
+            // TODO: fill up from config
+            var clusterName = _client.GetClientConfig().GetClusterName();
+            var labels = new[] { "label1" };
+            var clusterId = Guid.Empty;
+            var ownerId = Guid.Empty;
+
+            if (credentials is UsernamePasswordCredentials userPassword)
             {
-                var usernamePasswordCr = (UsernamePasswordCredentials) credentials;
-                request = ClientAuthenticationCodec.EncodeRequest(usernamePasswordCr.Username, usernamePasswordCr.Password, uuid,
-                    ownerUuid, isOwnerConnection, ClientTypes.Csharp, ss.GetVersion(), VersionUtil.GetDllVersion());
+                request = ClientAuthenticationCodec.EncodeRequest(clusterName, userPassword.Username, userPassword.Password, _clientId, ClientTypes.Csharp,
+                    serializationVersion, VersionUtil.GetDllVersion(), _client.GetName(), labels, _clusterPartitionCount, clusterId);
             }
             else
             {
                 var data = ss.ToData(credentials);
-                request = ClientAuthenticationCustomCodec.EncodeRequest(data, uuid, ownerUuid, isOwnerConnection,
-                    ClientTypes.Csharp, ss.GetVersion(), VersionUtil.GetDllVersion());
+                request = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, data, _clientId, ClientTypes.Csharp,
+                    serializationVersion, VersionUtil.GetDllVersion(), _client.GetName(), labels, _clusterPartitionCount, clusterId);
             }
 
-            IClientMessage response;
+            ClientMessage response;
             try
             {
-                var invocationService = (ClientInvocationService) _client.GetInvocationService();
+                var invocationService = (ClientInvocationService)_client.GetInvocationService();
                 response = ThreadUtil.GetResult(invocationService.InvokeOnConnection(request, connection), _heartbeatTimeout);
             }
             catch (Exception e)
@@ -320,28 +322,29 @@ namespace Hazelcast.Client.Connection
             }
             var result = ClientAuthenticationCodec.DecodeResponse(response);
 
-            if (result.address == null)
+            if (result.Address == null)
             {
                 throw new HazelcastException("Could not resolve address for member.");
             }
-            switch (result.status)
+            switch ((AuthenticationStatus)result.Status)
             {
                 case AuthenticationStatus.Authenticated:
+                    _clusterPartitionCount = result.PartitionCount;
+                    _clusterId = result.ClusterId;
                     if (isOwnerConnection)
                     {
-                        var member = new Member(result.address, result.ownerUuid);
-                        ClientPrincipal = new ClientPrincipal(result.uuid, result.ownerUuid);
+                        var member = new Member(result.Address, ownerId);   
+                        ClientPrincipal = new ClientPrincipal(result.Uuid, ownerId);
                         connection.Member = member;
                         connection.SetOwner();
-                        connection.ConnectedServerVersionStr = result.serverHazelcastVersion;
+                        connection.ConnectedServerVersionStr = result.ServerHazelcastVersion;
                     }
                     else
                     {
-                        var member = _client.GetClientClusterService().GetMember(result.address);
+                        var member = _client.GetClientClusterService().GetMember(result.Address);
                         if (member == null)
                         {
-                            throw new HazelcastException(string.Format("Node with address '{0}' was not found in the member list",
-                                result.address));
+                            throw new HazelcastException($"Node with address '{result.Address}' was not found in the member list");
                         }
                         connection.Member = member;
                     }
@@ -351,8 +354,8 @@ namespace Hazelcast.Client.Connection
                 case AuthenticationStatus.SerializationVersionMismatch:
                     throw new InvalidOperationException("Server serialization version does not match to client");
                 default:
-                    throw new AuthenticationException("Authentication status code not supported. status: " + result.status);
-            }           
+                    throw new AuthenticationException("Authentication status code not supported. status: " + result.Status);
+            }
         }
 
         private void FireConnectionListenerEvent(Action<IConnectionListener> listenerAction)
@@ -398,7 +401,7 @@ namespace Hazelcast.Client.Connection
                     Logger.Finest("Sending heartbeat to " + connection);
                 }
                 var request = ClientPingCodec.EncodeRequest();
-                ((ClientInvocationService) _client.GetInvocationService()).InvokeOnConnection(request, connection);
+                ((ClientInvocationService)_client.GetInvocationService()).InvokeOnConnection(request, connection);
             }
         }
 
@@ -415,7 +418,7 @@ namespace Hazelcast.Client.Connection
                 {
                     Logger.Finest("Creating new connection for " + publicAddress + " with id " + id);
                 }
-                connection = new ClientConnection(this, (ClientInvocationService) _client.GetInvocationService(), id,
+                connection = new ClientConnection(this, (ClientInvocationService)_client.GetInvocationService(), id,
                     publicAddress, _networkConfig);
                 connection.Init(_socketInterceptor);
                 Authenticate(connection, isOwner);
@@ -437,7 +440,7 @@ namespace Hazelcast.Client.Connection
                 throw ExceptionUtil.Rethrow(e, typeof(IOException), typeof(SocketException), typeof(TargetDisconnectedException));
             }
         }
-        
+
         private void PromoteToOwner(ClientConnection connection)
         {
             if (Logger.IsFinestEnabled())

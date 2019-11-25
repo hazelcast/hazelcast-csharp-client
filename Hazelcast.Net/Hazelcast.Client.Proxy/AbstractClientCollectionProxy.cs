@@ -112,7 +112,7 @@ namespace Hazelcast.Client.Proxy
 
         protected abstract ICollection<T> GetAll();
 
-        protected void HandleItemListener(IData itemData, string uuid, ItemEventType eventType,
+        protected void HandleItemListener(IData itemData, Guid uuid, ItemEventType eventType,
             IItemListener<T> listener, bool includeValue)
         {
             var item = includeValue
@@ -130,12 +130,12 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        protected override TE Invoke<TE>(IClientMessage request, Func<IClientMessage, TE> decodeResponse)
+        protected override TE Invoke<TE>(ClientMessage request, Func<ClientMessage, TE> decodeResponse)
         {
             return base.Invoke(request, GetPartitionKey(), decodeResponse);
         }
 
-        protected override IClientMessage Invoke(IClientMessage request)
+        protected override ClientMessage Invoke(ClientMessage request)
         {
             return base.Invoke(request, GetPartitionKey());
         }

@@ -23,23 +23,27 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Connection;
 using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec.BuiltIn;
+using Hazelcast.Client.Protocol.Codec.Custom;
 using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
 #pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientInvocationService : IClientInvocationService, IConnectionListener
     {
         private const int DefaultInvocationTimeout = 120;
-        private const int RetryWaitTime = 1000;
+        private const int RetryWaitTimeMillis = 1000;
+        static readonly TimeSpan RetryWaitTime = TimeSpan.FromMilliseconds(RetryWaitTimeMillis);
 
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ClientInvocationService));
         private readonly HazelcastClient _client;
         private ClientConnectionManager _clientConnectionManager;
         private IClientListenerService _clientListenerService;
+
 
         private readonly ConcurrentDictionary<long, ClientInvocation> _invocations =
             new ConcurrentDictionary<long, ClientInvocation>();
@@ -58,25 +62,13 @@ using Hazelcast.Util;
              DefaultInvocationTimeout) * 1000;
         }
 
-        protected HazelcastClient Client
-        {
-            get { return _client; }
-        }
+        protected HazelcastClient Client => _client;
 
-        internal int InvocationRetryCount
-        {
-            get { return _invocationTimeoutMillis / RetryWaitTime; }
-        }
+        internal int InvocationRetryCount => _invocationTimeoutMillis / RetryWaitTimeMillis;
 
-        internal int InvocationRetryWaitTime
-        {
-            get { return RetryWaitTime; }
-        }
-        
-        public int InvocationTimeoutMillis
-        {
-            get { return _invocationTimeoutMillis; }
-        }
+        internal int InvocationRetryWaitTime => RetryWaitTimeMillis;
+
+        public int InvocationTimeoutMillis => _invocationTimeoutMillis;
 
         public void Start()
         {
@@ -106,9 +98,9 @@ using Hazelcast.Util;
             CleanupInvocations(connection);
         }
 
-        public void HandleClientMessage(IClientMessage message)
+        public void HandleClientMessage(ClientMessage message)
         {
-            if (message.IsFlagSet(ClientMessage.ListenerEventFlag))
+            if (ClientMessage.IsFlagSet(message.HeaderFlags, ClientMessage.IsEventFlag))
             {
                 _clientListenerService.HandleResponseMessage(message);
             }
@@ -124,7 +116,7 @@ using Hazelcast.Util;
             }
         }
 
-        public IFuture<IClientMessage> InvokeListenerOnConnection(IClientMessage request, 
+        public IFuture<ClientMessage> InvokeListenerOnConnection(ClientMessage request,
             DistributedEventHandler eventHandler, ClientConnection connection)
         {
             var clientInvocation = new ClientInvocation(request, connection, eventHandler);
@@ -132,14 +124,14 @@ using Hazelcast.Util;
             return clientInvocation.Future;
         }
 
-        public IFuture<IClientMessage> InvokeOnConnection(IClientMessage request, ClientConnection connection)
+        public IFuture<ClientMessage> InvokeOnConnection(ClientMessage request, ClientConnection connection)
         {
             var clientInvocation = new ClientInvocation(request, connection);
             InvokeInternal(clientInvocation, null, connection);
             return clientInvocation.Future;
         }
 
-        protected IFuture<IClientMessage> Invoke(ClientInvocation invocation, Address address = null)
+        protected IFuture<ClientMessage> Invoke(ClientInvocation invocation, Address address = null)
         {
             InvokeInternal(invocation, address);
             return invocation.Future;
@@ -161,7 +153,7 @@ using Hazelcast.Util;
                     {
                         if (address != null && _client.GetClientClusterService().GetMember(address) == null)
                         {
-                            throw new TargetNotMemberException(string.Format("Target {0} is not a member.", address));
+                            throw new TargetNotMemberException($"Target {address} is not a member.");
                         }
 
                         //Create an async connection and send the invocation afterward.
@@ -219,7 +211,7 @@ using Hazelcast.Util;
                             {
                                 var address = GetNewInvocationAddress(invocation);
                                 InvokeInternal(invocation, address);
-                            }, RetryWaitTime, TimeUnit.Milliseconds)
+                            }, RetryWaitTime, CancellationToken.None)
                             .ContinueWith(t =>
                                 {
                                     HandleInvocationException(invocation, t.Exception.Flatten().InnerExceptions.First());
@@ -281,7 +273,7 @@ using Hazelcast.Util;
                    || exception is HazelcastInstanceNotActiveException
                    || exception is AuthenticationException
             // above exceptions OR retryable exception case as below
-                   || exception is RetryableHazelcastException && (_redoOperations || invocation.Message.IsRetryable());
+                   || exception is RetryableHazelcastException && (_redoOperations || invocation.Message.IsRetryable);
         }
 
         private Address GetNewInvocationAddress(ClientInvocation invocation)
@@ -291,7 +283,7 @@ using Hazelcast.Util;
             {
                 newAddress = invocation.Address;
             }
-            else if (invocation.MemberUuid != null)
+            else if (invocation.MemberUuid != Guid.Empty)
             {
                 var member = _client.GetClientClusterService().GetMember(invocation.MemberUuid);
                 if (member == null)
@@ -299,7 +291,7 @@ using Hazelcast.Util;
                     Logger.Finest("Could not find a member with UUID " + invocation.MemberUuid);
                     throw new InvalidOperationException("Could not find a member with UUID " + invocation.MemberUuid);
                 }
-                newAddress = member.GetAddress();
+                newAddress = member.Address;
             }
             else if (invocation.PartitionId != -1)
             {
@@ -311,18 +303,17 @@ using Hazelcast.Util;
         private void UpdateInvocation(ClientInvocation clientInvocation, ClientConnection connection)
         {
             var correlationId = NextCorrelationId();
-            clientInvocation.Message.SetCorrelationId(correlationId);
-            clientInvocation.Message.AddFlag(ClientMessage.BeginAndEndFlags);
+            clientInvocation.Message.CorrelationId = correlationId;
             clientInvocation.SentConnection = connection;
             if (clientInvocation.PartitionId != -1)
             {
-                clientInvocation.Message.SetPartitionId(clientInvocation.PartitionId);
+                clientInvocation.Message.PartitionId = clientInvocation.PartitionId;
             }
         }
 
         private void ValidateInvocation(ClientInvocation clientInvocation, ClientConnection connection)
         {
-            if (clientInvocation.MemberUuid != null && clientInvocation.MemberUuid != connection.Member.GetUuid())
+            if (clientInvocation.MemberUuid != Guid.Empty && clientInvocation.MemberUuid != connection.Member.Uuid)
             {
                 throw new TargetNotMemberException(
                     "The member UUID on the invocation doesn't match the member UUID on the connection.");
@@ -336,11 +327,11 @@ using Hazelcast.Util;
 
         private bool TrySend(ClientInvocation clientInvocation, ClientConnection connection)
         {
-            var correlationId = clientInvocation.Message.GetCorrelationId();
+            var correlationId = clientInvocation.Message.CorrelationId;
             if (!TryRegisterInvocation(correlationId, clientInvocation)) return false;
 
             //enqueue to write queue
-            if (connection.WriteAsync((ISocketWritable) clientInvocation.Message))
+            if (connection.WriteAsync(clientInvocation.Message))   
             {
                 return true;
             }
@@ -407,20 +398,19 @@ using Hazelcast.Util;
             var member = _client.GetLoadBalancer().Next();
             if (member != null)
             {
-                return member.GetAddress();
+                return member.Address;
             }
             throw new IOException("Could not find any available address");
         }
 
-        private void HandleResponseMessage(IClientMessage response)
+        private void HandleResponseMessage(ClientMessage response)
         {
-            var correlationId = response.GetCorrelationId();
-            ClientInvocation invocation;
-            if (_invocations.TryRemove(correlationId, out invocation))
+            var correlationId = response.CorrelationId;
+            if (_invocations.TryRemove(correlationId, out var invocation))
             {
-                if (response.GetMessageType() == Error.Type)
+                if (response.MessageType == ErrorsCodec.ExceptionMessageType)
                 {
-                    var error = Error.Decode(response);
+                    var error = ErrorsCodec.Decode(response);
                     if (Logger.IsFinestEnabled())
                     {
                         Logger.Finest("Error received from server: " + error);
@@ -474,11 +464,11 @@ using Hazelcast.Util;
             ClientInvocation ignored;
             _invocations.TryRemove(correlationId, out ignored);
         }
-        
-        public abstract IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key);
-        public abstract IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member);
-        public abstract IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request);
-        public abstract IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target);
-        public abstract IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId);
+
+        public abstract IFuture<ClientMessage> InvokeOnKeyOwner(ClientMessage request, object key);
+        public abstract IFuture<ClientMessage> InvokeOnMember(ClientMessage request, IMember member);
+        public abstract IFuture<ClientMessage> InvokeOnRandomTarget(ClientMessage request);
+        public abstract IFuture<ClientMessage> InvokeOnTarget(ClientMessage request, Address target);
+        public abstract IFuture<ClientMessage> InvokeOnPartition(ClientMessage request, int partitionId);
     }
 }

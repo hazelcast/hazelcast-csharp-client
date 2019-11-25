@@ -15,19 +15,16 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
-#pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Spi
 {
     /// <summary>
     /// Executor service for Hazelcast clients.
     /// </summary>
-    public interface IClientExecutionService
+    interface IClientExecutionService
     {
-        Task Schedule(Action command, long delay, TimeUnit unit);
-        Task ScheduleWithCancellation(Action command, long delay, TimeUnit unit, CancellationToken token);
-        void ScheduleWithFixedDelay(Action command, long initialDelay, long period, TimeUnit unit, CancellationToken token);
+        Task Schedule(Action command, TimeSpan delay, CancellationToken token);
+        void ScheduleWithFixedDelay(Action command, TimeSpan initialDelay, TimeSpan period, CancellationToken ct);
         void Shutdown();
         Task Submit(Action action);
         Task<T> Submit<T>(Func<T> function);

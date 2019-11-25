@@ -36,7 +36,8 @@ namespace Hazelcast.Client.Test.Config
         [Test]
         public void TestGroupConfig()
         {
-            Assert.That(_clientConfig.GetGroupConfig(), Is.EqualTo(new GroupConfig("dev", "dev-pass")));
+            Assert.AreEqual("dev", _clientConfig.GetClusterName());
+            Assert.AreEqual("dev-pass", _clientConfig.GetClusterPassword());
         }
 
         [Test]

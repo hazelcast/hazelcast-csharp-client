@@ -46,13 +46,16 @@ namespace Hazelcast.NearCache
             }
         }
 
-        private void HandleIMapBatchInvalidationEvent_v1_4(IList<IData> keys, IList<string> sourceuuids,
-            IList<Guid> partitionuuids, IList<long> sequences)
+        private void HandleIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids,
+            IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences)
         {
-            HandleIMapBatchInvalidationEvent_v1_0(keys);
+            foreach (var data in keys)
+            {
+                Invalidate(data);
+            }
         }
 
-        private void HandleIMapInvalidationEvent_v1_0(IData key)
+        private void HandleIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
         {
             if (key == null)
             {
@@ -64,11 +67,6 @@ namespace Hazelcast.NearCache
             }
         }
 
-        private void HandleIMapInvalidationEvent_v1_4(IData key, string sourceUuid, Guid partitionUuid, long sequence)
-        {
-            HandleIMapInvalidationEvent_v1_0(key);
-        }
-
         private void RegisterInvalidateListener()
         {
             try
@@ -76,12 +74,11 @@ namespace Hazelcast.NearCache
                 var request =
                     MapAddNearCacheEntryListenerCodec.EncodeRequest(Name, (int) EntryEventType.Invalidation, false);
                 DistributedEventHandler handler = message =>
-                    MapAddNearCacheEntryListenerCodec.EventHandler.HandleEvent(message,
-                        HandleIMapInvalidationEvent_v1_0, HandleIMapInvalidationEvent_v1_4,
-                        HandleIMapBatchInvalidationEvent_v1_0, HandleIMapBatchInvalidationEvent_v1_4);
+                    MapAddNearCacheEntryListenerCodec.EventHandler.HandleEvent(message, HandleIMapInvalidationEvent,
+                        HandleIMapBatchInvalidationEvent);
 
                 RegistrationId = Client.GetListenerService().RegisterListener(request,
-                    message => MapAddNearCacheEntryListenerCodec.DecodeResponse(message).response,
+                    message => MapAddNearCacheEntryListenerCodec.DecodeResponse(message).Response,
                     id => MapRemoveEntryListenerCodec.EncodeRequest(Name, id), handler);
             }
             catch (Exception e)

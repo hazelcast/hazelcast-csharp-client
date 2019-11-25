@@ -77,7 +77,7 @@ using Hazelcast.Util;
             _partitionService.RefreshPartitions();
         }
 
-        private void HandleMemberAttributeChange(string uuid, string key, int operationType, string value)
+        private void HandleMemberAttributeChange(Core.Member member, IEnumerable<Member> members, string key, int operationType, string value)
         {
             var memberMap = _clusterService.GetMembersRef();
             if (memberMap == null)
@@ -86,9 +86,9 @@ using Hazelcast.Util;
             }
             foreach (var target in memberMap.Values)
             {
-                if (target.GetUuid().Equals(uuid))
+                if (target.Uuid.Equals(member.Uuid))
                 {
-                    var type = (MemberAttributeOperationType) operationType;
+                    var type = (Core.MemberAttributeOperationType) operationType;
                     ((Member) target).UpdateAttribute(type, key, value);
                     var memberAttributeEvent = new MemberAttributeEvent(_client.GetCluster(), target, type, key,
                         value);
@@ -98,7 +98,7 @@ using Hazelcast.Util;
             }
         }
 
-        private void HandleMemberCollection(ICollection<IMember> initialMembers)
+        private void HandleMemberCollection(IEnumerable<IMember> initialMembers)
         {
             var prevMembers = new HashSet<IMember>();
             if (_members.Any())
@@ -154,7 +154,7 @@ using Hazelcast.Util;
                     var future = invocationService.InvokeListenerOnConnection(clientMessage, handler, connection);
                     var response = ThreadUtil.GetResult(future);
                     //registration id is ignored as this listener will never be removed
-                    var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).response;
+                    var registirationId = ClientAddMembershipListenerCodec.DecodeResponse(response).Response;
                     WaitInitialMemberListFetched();
                 }
                 catch (Exception e)
@@ -196,7 +196,7 @@ using Hazelcast.Util;
             foreach (var member in  prevMembers)
             {
                 events.Add(new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, eventMembers));
-                var address = member.GetAddress();
+                var address = member.Address;
                 if (_clusterService.GetMember(address) == null)
                 {
                     var connection = _connectionManager.GetConnection(address);
@@ -236,10 +236,10 @@ using Hazelcast.Util;
         {
             _members.Remove(member);
             Logger.Info(MembersString());
-            var connection = _connectionManager.GetConnection(member.GetAddress());
+            var connection = _connectionManager.GetConnection(member.Address);
             if (connection != null)
             {
-                _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(member.GetAddress(),
+                _connectionManager.DestroyConnection(connection, new TargetDisconnectedException(member.Address,
                     "member left the cluster."));
             }
             var @event = new MembershipEvent(_client.GetCluster(), member, MembershipEvent.MemberRemoved, ImmutableSetOfMembers());

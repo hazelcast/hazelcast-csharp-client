@@ -30,14 +30,14 @@ namespace Hazelcast.Client.Proxy
             var request = TransactionalMapContainsKeyCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData);
 
-            return Invoke(request, m => TransactionalMapContainsKeyCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalMapContainsKeyCodec.DecodeResponse(m).Response);
         }
 
         public virtual TValue Get(object key)
         {
             var keyData = ToData(key);
             var request = TransactionalMapGetCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), keyData);
-            var result = Invoke(request, m => TransactionalMapGetCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalMapGetCodec.DecodeResponse(m).Response);
             return ToObject<TValue>(result);
         }
 
@@ -46,20 +46,20 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = TransactionalMapGetForUpdateCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData);
-            var result = Invoke(request, m => TransactionalMapGetForUpdateCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalMapGetForUpdateCodec.DecodeResponse(m).Response);
             return ToObject<TValue>(result);
         }
 
         public virtual int Size()
         {
             var request = TransactionalMapSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            return Invoke(request, m => TransactionalMapSizeCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalMapSizeCodec.DecodeResponse(m).Response);
         }
 
         public virtual bool IsEmpty()
         {
             var request = TransactionalMapIsEmptyCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            return Invoke(request, m => TransactionalMapIsEmptyCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalMapIsEmptyCodec.DecodeResponse(m).Response);
         }
 
         public virtual TValue Put(TKey key, TValue value)
@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Proxy
 
             var request = TransactionalMapPutCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData, valueData, timeunit.ToMillis(ttl));
-            var result = Invoke(request, m => TransactionalMapPutCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalMapPutCodec.DecodeResponse(m).Response);
             return ToObject<TValue>(result);
         }
 
@@ -95,7 +95,7 @@ namespace Hazelcast.Client.Proxy
 
             var request = TransactionalMapPutIfAbsentCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData, valueData);
-            var result = Invoke(request, m => TransactionalMapPutIfAbsentCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalMapPutIfAbsentCodec.DecodeResponse(m).Response);
             return ToObject<TValue>(result);
         }
 
@@ -106,7 +106,7 @@ namespace Hazelcast.Client.Proxy
 
             var request = TransactionalMapReplaceCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData, valueData);
-            var result = Invoke(request, m => TransactionalMapReplaceCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalMapReplaceCodec.DecodeResponse(m).Response);
             return ToObject<TValue>(result);
         }
 
@@ -118,7 +118,7 @@ namespace Hazelcast.Client.Proxy
 
             var request = TransactionalMapReplaceIfSameCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData, oldValueData, newValueData);
-            return Invoke(request, m => TransactionalMapReplaceIfSameCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalMapReplaceIfSameCodec.DecodeResponse(m).Response);
         }
 
         public virtual TValue Remove(object key)
@@ -126,7 +126,7 @@ namespace Hazelcast.Client.Proxy
             var keyData = ToData(key);
             var request = TransactionalMapRemoveCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
                 keyData);
-            var result = Invoke(request, m => TransactionalMapRemoveCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => TransactionalMapRemoveCodec.DecodeResponse(m).Response);
             return ToObject<TValue>(result);
         }
 
@@ -144,13 +144,13 @@ namespace Hazelcast.Client.Proxy
             var valueData = ToData(value);
             var request = TransactionalMapRemoveIfSameCodec.EncodeRequest(GetName(), GetTransactionId(),
                 GetThreadId(), keyData, valueData);
-            return Invoke(request, m => TransactionalMapRemoveIfSameCodec.DecodeResponse(m).response);
+            return Invoke(request, m => TransactionalMapRemoveIfSameCodec.DecodeResponse(m).Response);
         }
 
         public virtual ICollection<TKey> KeySet()
         {
             var request = TransactionalMapKeySetCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            var dataKeySet = Invoke(request, m => TransactionalMapKeySetCodec.DecodeResponse(m).response);
+            var dataKeySet = Invoke(request, m => TransactionalMapKeySetCodec.DecodeResponse(m).Response);
             return ToSet<TKey>(dataKeySet);
         }
 
@@ -159,14 +159,14 @@ namespace Hazelcast.Client.Proxy
             var data = ToData(predicate);
             var request = TransactionalMapKeySetWithPredicateCodec.EncodeRequest(GetName(), GetTransactionId(),
                 GetThreadId(), data);
-            var dataKeySet = Invoke(request, m => TransactionalMapKeySetWithPredicateCodec.DecodeResponse(m).response);
+            var dataKeySet = Invoke(request, m => TransactionalMapKeySetWithPredicateCodec.DecodeResponse(m).Response);
             return ToSet<TKey>(dataKeySet);
         }
 
         public virtual ICollection<TValue> Values()
         {
             var request = TransactionalMapValuesCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
-            var dataValues = Invoke(request, m => TransactionalMapValuesCodec.DecodeResponse(m).response);
+            var dataValues = Invoke(request, m => TransactionalMapValuesCodec.DecodeResponse(m).Response);
             return ToList<TValue>(dataValues);
         }
 
@@ -175,7 +175,7 @@ namespace Hazelcast.Client.Proxy
             var data = ToData(predicate);
             var request = TransactionalMapValuesWithPredicateCodec.EncodeRequest(GetName(), GetTransactionId(),
                 GetThreadId(), data);
-            var dataValues = Invoke(request, m => TransactionalMapValuesWithPredicateCodec.DecodeResponse(m).response);
+            var dataValues = Invoke(request, m => TransactionalMapValuesWithPredicateCodec.DecodeResponse(m).Response);
             return ToList<TValue>(dataValues);
         }
 

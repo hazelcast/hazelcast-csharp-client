@@ -38,7 +38,7 @@ namespace Hazelcast.Core
         /// <summary>Adds an item listener for this collection.</summary>
         /// <remarks>
         /// Adds an item listener for this collection. Listener will get notified
-        /// for all collection add/remove events.
+        /// for all collection Add/remove events.
         /// </remarks>
         /// <param name="listener">item listener</param>
         /// <param name="includeValue">

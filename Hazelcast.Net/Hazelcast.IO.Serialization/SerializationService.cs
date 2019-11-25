@@ -125,14 +125,21 @@ namespace Hazelcast.IO.Serialization
 
         public T ToObject<T>(object @object)
         {
+            var o = ToObject(@object);
+            return o == null ? default : (T) o;
+        }
+
+        public object ToObject(object @object)
+        {
             if (!(@object is IData))
             {
-                return @object == null ? default(T) : (T)@object;
+                return @object;
             }
+
             var data = (IData) @object;
             if (IsNullData(data))
             {
-                return default(T);
+                return null;
             }
             var pool = _bufferPoolThreadLocal.Get();
             var @in = pool.TakeInputBuffer(data);
@@ -154,7 +161,7 @@ namespace Hazelcast.IO.Serialization
                 {
                     obj = _managedContext.Initialize(obj);
                 }
-                return (T) obj;
+                return obj;
             }
             catch (Exception e)
             {

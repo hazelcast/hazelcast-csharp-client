@@ -36,6 +36,7 @@ namespace Hazelcast.IO.Serialization
         IData ToData(object obj);
         IData ToData(object obj, IPartitioningStrategy strategy);
         T ToObject<T>(object data);
+        object ToObject(object data);
         void WriteObject(IObjectDataOutput output, object obj);
         IBufferObjectDataOutput CreateObjectDataOutput();
     }
