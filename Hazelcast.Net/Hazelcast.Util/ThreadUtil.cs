@@ -24,34 +24,34 @@ namespace Hazelcast.Util
 {
     internal static class ThreadUtil
     {
-        public static IList<IClientMessage> GetResult(IEnumerable<IFuture<IClientMessage>> futures)
+        public static IList<ClientMessage> GetResult(IEnumerable<IFuture<ClientMessage>> futures)
         {
             var tasks = futures.Select(future => future.ToTask()).ToArray();
             Task.WaitAll(tasks);
             return tasks.Select(task => task.Result).ToList();
         }
 
-        public static IClientMessage GetResult(IFuture<IClientMessage> future)
+        public static ClientMessage GetResult(IFuture<ClientMessage> future)
         {
             return future.GetResult(Timeout.Infinite);
         }
 
-        public static IClientMessage GetResult(IFuture<IClientMessage> future, int timeout)
+        public static ClientMessage GetResult(IFuture<ClientMessage> future, int timeout)
         {
             return future.GetResult(timeout);
         }
 
-        public static IClientMessage GetResult(IFuture<IClientMessage> future, TimeSpan timeout)
+        public static ClientMessage GetResult(IFuture<ClientMessage> future, TimeSpan timeout)
         {
             return future.GetResult((int) timeout.TotalMilliseconds);
         }
 
-        public static IClientMessage GetResult(Task<IClientMessage> task)
+        public static ClientMessage GetResult(Task<ClientMessage> task)
         {
             return GetResult(task, Timeout.Infinite);
         }
 
-        public static IClientMessage GetResult(Task<IClientMessage> task, int timeoutMillis)
+        public static ClientMessage GetResult(Task<ClientMessage> task, int timeoutMillis)
         {
             try
             {

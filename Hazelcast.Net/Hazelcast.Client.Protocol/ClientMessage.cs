@@ -13,365 +13,254 @@
 // limitations under the License.
 
 using System;
-using System.IO;
 using System.Text;
-using Hazelcast.Client.Protocol.Util;
 using Hazelcast.IO;
-using Hazelcast.Net.Ext;
-using Hazelcast.Util;
+using static Hazelcast.IO.Bits;
 
 namespace Hazelcast.Client.Protocol
 {
-    /// <summary>
-    ///     Client Message is the carrier framed data as defined below.
-    /// </summary>
-    /// <remarks>
-    ///     <p>
-    ///         Client Message is the carrier framed data as defined below.
-    ///     </p>
-    ///     <p>
-    ///         Any request parameter, response or event data will be carried in
-    ///         the payload.
-    ///     </p>
-    ///     <p />
-    ///     <pre>
-    ///         0                   1                   2                   3
-    ///         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    ///         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    ///         |R|                      Frame Length                           |
-    ///         +-------------+---------------+---------------------------------+
-    ///         |  Version    |B|E|  Flags    |               Type              |
-    ///         +-------------+---------------+---------------------------------+
-    ///         |                                                               |
-    ///         +                       CorrelationId                           +
-    ///         |                                                               |
-    ///         +---------------------------------------------------------------+
-    ///         |                        PartitionId                            |
-    ///         +-----------------------------+---------------------------------+
-    ///         |        Data Offset          |                                 |
-    ///         +-----------------------------+                                 |
-    ///         |                      Message Payload Data                    ...
-    ///         |                                                              ...
-    ///     </pre>
-    /// </remarks>
-    internal class ClientMessage : MessageFlyweight, ISocketWritable, ISocketReadable, IClientMessage
+    public class ClientMessage //, IOutboundFrame
     {
-        /// <summary>Current protocol version</summary>
-        public const short Version = 0;
+        // All offsets here are offset of frame.content byte[]
+        // Note that frames have frame length and flags before this byte[] content
+        public const int TypeFieldOffset = 0;
+        public const int CorrelationIdFieldOffset = TypeFieldOffset + IntSizeInBytes;
+        public const int ResponseBackupAcksFieldOffset = CorrelationIdFieldOffset + LongSizeInBytes;
+        //offset valid for fragmentation frames only
+        public const int FragmentationIdOffset = 0;
+        //optional fixed partition id field offset
+        public const int PartitionIdFieldOffset = CorrelationIdFieldOffset + LongSizeInBytes;
 
-        /// <summary>Begin Flag</summary>
-        public const short BeginFlag = unchecked(0x80);
+        public const int DefaultFlags = 0;
+        public const int BeginFragmentFlag = 1 << 15;
+        public const int EndFragmentFlag = 1 << 14;
+        public const int UnfragmentedMessage = BeginFragmentFlag | EndFragmentFlag;
+        public const int IsFinalFlag = 1 << 13;
+        public const int BeginDataStructureFlag = 1 << 12;
+        public const int EndDataStructureFlag = 1 << 11;
+        public const int IsNullFlag = 1 << 10;
+        public const int IsEventFlag = 1 << 9;
 
-        /// <summary>End Flag</summary>
-        public const short EndFlag = unchecked(0x40);
+        //frame length + flags
+        public const int SizeOfFrameLengthAndFlags = IntSizeInBytes + ShortSizeInBytes;
+        public static readonly Frame NullFrame = new Frame(new byte[0], IsNullFlag);
+        public static readonly Frame BeginFrame = new Frame(new byte[0], BeginDataStructureFlag);
+        public static readonly Frame EndFrame = new Frame(new byte[0], EndDataStructureFlag);
 
-        /// <summary>Begin and End Flags</summary>
-        public const short BeginAndEndFlags = BeginFlag | EndFlag;
+        private const long SerialVersionUid = 1L;
 
-        /// <summary>Listener Event Flag</summary>
-        public const short ListenerEventFlag = unchecked(0x01);
+        public bool IsRetryable;
+        public bool AcquiresResource;
+        public string OperationName;
 
-        private const int InitialBufferSize = 1024;
-        private const int FrameLengthFieldOffset = 0;
-        private const int VersionFieldOffset = FrameLengthFieldOffset + Bits.IntSizeInBytes;
-        private const int FlagsFieldOffset = VersionFieldOffset + Bits.ByteSizeInBytes;
-        private const int TypeFieldOffset = FlagsFieldOffset + Bits.ByteSizeInBytes;
-        private const int CorrelationIdFieldOffset = TypeFieldOffset + Bits.ShortSizeInBytes;
-        private const int PartitionIdFieldOffset = CorrelationIdFieldOffset + Bits.LongSizeInBytes;
-        private const int DataOffsetFieldOffset = PartitionIdFieldOffset + Bits.IntSizeInBytes;
+        Frame _startFrame;
+        Frame _endFrame;
 
-        /// <summary>ClientMessage Fixed Header size in bytes</summary>
-        public const int HeaderSize = DataOffsetFieldOffset + Bits.ShortSizeInBytes;
-
-        private bool _isRetryable;
-        private int _writeOffset;
-
-        /// <param name="flag">Check this flag to see if it is set.</param>
-        /// <returns>true if the given flag is set, false otherwise.</returns>
-        public virtual bool IsFlagSet(short flag)
+        private ClientMessage()
         {
-            var i = GetFlags() & flag;
-            return i == flag;
         }
 
-        /// <summary>Sets the flags field value.</summary>
-        /// <param name="flags">The value to set in the flags field.</param>
-        /// <returns>The ClientMessage with the new flags field value.</returns>
-        public virtual IClientMessage AddFlag(short flags)
+        private ClientMessage(Frame startFrame)
         {
-            Uint8Put(FlagsFieldOffset, (short) (GetFlags() | flags));
-            return this;
-        }
-
-        /// <summary>Returns the message type field.</summary>
-        /// <returns>The message type field value.</returns>
-        public virtual int GetMessageType()
-        {
-            return Uint16Get(TypeFieldOffset);
-        }
-
-        /// <summary>Returns the correlation id field.</summary>
-        /// <returns>The correlation id field.</returns>
-        public virtual long GetCorrelationId()
-        {
-            return Int64Get(CorrelationIdFieldOffset);
-        }
-
-        /// <summary>Sets the correlation id field.</summary>
-        /// <param name="correlationId">The value to set in the correlation id field.</param>
-        /// <returns>The ClientMessage with the new correlation id field value.</returns>
-        public virtual IClientMessage SetCorrelationId(long correlationId)
-        {
-            Int64Set(CorrelationIdFieldOffset, correlationId);
-            return this;
-        }
-
-        /// <summary>Returns the partition id field.</summary>
-        /// <returns>The partition id field.</returns>
-        public virtual int GetPartitionId()
-        {
-            return Int32Get(PartitionIdFieldOffset);
-        }
-
-        /// <summary>Sets the partition id field.</summary>
-        /// <param name="partitionId">The value to set in the partitions id field.</param>
-        /// <returns>The ClientMessage with the new partitions id field value.</returns>
-        public virtual IClientMessage SetPartitionId(int partitionId)
-        {
-            Int32Set(PartitionIdFieldOffset, partitionId);
-            return this;
-        }
-
-        public virtual bool IsRetryable()
-        {
-            return _isRetryable;
-        }
-
-        public virtual bool ReadFrom(ByteBuffer source)
-        {
-            var frameLength = 0;
-            if (Buffer == null)
+            _startFrame = startFrame;
+            _endFrame = startFrame;
+            while (_endFrame.next != null)
             {
-                //init internal buffer
-                var remaining = source.Remaining();
-                if (remaining < Bits.IntSizeInBytes) {
-                    //we don't have even the frame length ready
-                    return false;
-                }
-                frameLength = Bits.ReadIntL(source.Array(), source.Position);
-                if (frameLength < HeaderSize)
+                _endFrame = _endFrame.next;
+            }
+        }
+
+        public static ClientMessage CreateForEncode() => new ClientMessage();
+
+        public static ClientMessage CreateForDecode(Frame frame)
+        {
+            var message = new ClientMessage();
+            message.Add(frame);
+            return message;
+        }
+
+        public Frame Head => _startFrame;
+        public int HeaderFlags => _startFrame.Flags;
+        public Frame Tail => _endFrame;
+
+        public ClientMessage Add(Frame frame)
+        {
+            frame.next = null;
+            if (_startFrame == null)
+            {
+                _startFrame = frame;
+                _endFrame = frame;
+                return this;
+            }
+
+            _endFrame.next = frame;
+            _endFrame = frame;
+            return this;
+        }
+
+        public void Merge(ClientMessage fragment)
+        {
+            // ignore the first frame of the fragment since first frame marks the fragment
+            var fragmentMessageStartFrame = fragment._startFrame.next;
+            _endFrame.next = fragmentMessageStartFrame;
+            while (_endFrame.next != null)
+            {
+                _endFrame = _endFrame.next;
+            }
+        }
+
+        public int MessageType
+        {
+            get => Bits.ReadIntL(Head.Content, TypeFieldOffset);
+            set => Bits.WriteIntL(Head.Content, TypeFieldOffset, value);
+        }
+
+        public long CorrelationId
+        {
+            get => Bits.ReadLongL(Head.Content, CorrelationIdFieldOffset);
+            set => Bits.WriteLongL(Head.Content, CorrelationIdFieldOffset, value);
+        }
+
+        public int PartitionId
+        {
+            get => Bits.ReadIntL(Head.Content, PartitionIdFieldOffset);
+            set => Bits.WriteIntL(Head.Content, PartitionIdFieldOffset, value);
+        }
+
+        public static bool IsFlagSet(int flags, int flagMask)
+        {
+            var i = flags & flagMask;
+            return i == flagMask;
+        }
+
+        public int FrameLength
+        {
+            get
+            {
+                int frameLength = 0;
+                Frame currentFrame = _startFrame;
+                while (currentFrame != null)
                 {
-                    throw new InvalidDataException("Client message frame length cannot be smaller than header size.");
+                    frameLength += currentFrame.Size;
+                    currentFrame = currentFrame.next;
                 }
-                Wrap(new SafeBuffer(new byte[frameLength]), 0);
+                return frameLength;
             }
-            frameLength = frameLength > 0 ? frameLength : GetFrameLength();
-            Accumulate(source, frameLength - Index());
-            return IsComplete();
-        }
-
-        public virtual bool WriteTo(ByteBuffer destination)
-        {
-            var byteArray = Buffer.ByteArray();
-            var size = GetFrameLength();
-            // the number of bytes that can be written to the bb.
-            var bytesWritable = destination.Remaining();
-            // the number of bytes that need to be written.
-            var bytesNeeded = size - _writeOffset;
-            int bytesWrite;
-            bool done;
-            if (bytesWritable >= bytesNeeded)
-            {
-                // All bytes for the value are available.
-                bytesWrite = bytesNeeded;
-                done = true;
-            }
-            else
-            {
-                // Not all bytes for the value are available. Write as much as is available.
-                bytesWrite = bytesWritable;
-                done = false;
-            }
-            destination.Put(byteArray, _writeOffset, bytesWrite);
-            _writeOffset += bytesWrite;
-            if (done)
-            {
-                //clear the write offset so that same client message can be resend if needed.
-                _writeOffset = 0;
-            }
-            return done;
-        }
-
-        public virtual bool IsUrgent()
-        {
-            return false;
-        }
-
-        public static ClientMessage Create()
-        {
-            return new ClientMessage();
-        }
-
-        public static ClientMessage CreateForDecode(IClientProtocolBuffer buffer, int offset)
-        {
-            var clientMessage = new ClientMessage();
-            clientMessage.WrapForDecode(buffer, offset);
-            return clientMessage;
-        }
-
-        public static ClientMessage CreateForEncode(int initialCapacity)
-        {
-            initialCapacity = QuickMath.NextPowerOfTwo(initialCapacity);
-            return CreateForEncode(new SafeBuffer(new byte[initialCapacity]), 0);
-        }
-
-        public static ClientMessage CreateForEncode(IClientProtocolBuffer buffer, int offset)
-        {
-            var clientMessage = new ClientMessage();
-            clientMessage.WrapForEncode(buffer, offset);
-            return clientMessage;
-        }
-
-        /// <summary>Returns the setDataOffset field.</summary>
-        /// <returns>The setDataOffset type field value.</returns>
-        public virtual int GetDataOffset()
-        {
-            return Uint16Get(DataOffsetFieldOffset);
-        }
-
-        /// <summary>Returns the flags field value.</summary>
-        /// <returns>The flags field value.</returns>
-        public virtual short GetFlags()
-        {
-            return Uint8Get(FlagsFieldOffset);
-        }
-
-        /// <summary>Returns the frame length field.</summary>
-        /// <returns>The frame length field.</returns>
-        public virtual int GetFrameLength()
-        {
-            return Int32Get(FrameLengthFieldOffset);
-        }
-
-        /// <summary>Returns the version field value.</summary>
-        /// <returns>The version field value.</returns>
-        public virtual short GetVersion()
-        {
-            return Uint8Get(VersionFieldOffset);
-        }
-
-        /// <summary>Checks the frame size and total data size to validate the message size.</summary>
-        /// <returns>true if the message is constructed.</returns>
-        public virtual bool IsComplete()
-        {
-            return (Index() >= HeaderSize) && (Index() == GetFrameLength());
-        }
-
-        /// <summary>Sets the dataOffset field.</summary>
-        /// <param name="dataOffset">The value to set in the dataOffset field.</param>
-        /// <returns>The ClientMessage with the new dataOffset field value.</returns>
-        public virtual ClientMessage SetDataOffset(int dataOffset)
-        {
-            Uint16Put(DataOffsetFieldOffset, dataOffset);
-            return this;
-        }
-
-        /// <summary>Sets the frame length field.</summary>
-        /// <param name="length">The value to set in the frame length field.</param>
-        /// <returns>The ClientMessage with the new frame length field value.</returns>
-        public virtual ClientMessage SetFrameLength(int length)
-        {
-            Int32Set(FrameLengthFieldOffset, length);
-            return this;
-        }
-
-        /// <summary>Sets the message type field.</summary>
-        /// <param name="type">The value to set in the message type field.</param>
-        /// <returns>The ClientMessage with the new message type field value.</returns>
-        public virtual ClientMessage SetMessageType(int type)
-        {
-            Uint16Put(TypeFieldOffset, type);
-            return this;
-        }
-
-        public virtual void SetRetryable(bool isRetryable)
-        {
-            _isRetryable = isRetryable;
-        }
-
-        /// <summary>Sets the version field value.</summary>
-        /// <param name="version">The value to set in the version field.</param>
-        /// <returns>The ClientMessage with the new version field value.</returns>
-        public virtual ClientMessage SetVersion(short version)
-        {
-            Uint8Put(VersionFieldOffset, version);
-            return this;
         }
 
         public override string ToString()
         {
-            var len = Index();
             var sb = new StringBuilder("ClientMessage{");
-            sb.Append("length=").Append(len);
-            if (len >= HeaderSize)
+            if (_startFrame != null)
             {
-                sb.Append(", correlationId=").Append(GetCorrelationId());
-                sb.Append(", messageType=").Append(GetMessageType().ToString("X"));
-                sb.Append(", partitionId=").Append(GetPartitionId());
-                sb.Append(", isComplete=").Append(IsComplete());
-                sb.Append(", isRetryable=").Append(IsRetryable());
-                sb.Append(", isEvent=").Append(IsFlagSet(ListenerEventFlag));
-                sb.Append(", writeOffset=").Append(_writeOffset);
+                sb.Append("length=").Append(FrameLength);
+                sb.Append(", correlationId=").Append(CorrelationId);
+                sb.Append(", operation=").Append(OperationName);
+                sb.Append(", messageType=").Append(MessageType.ToString("X"));
+                sb.Append(", isRetryable=").Append(IsRetryable);
+                sb.Append(", isEvent=").Append(IsFlagSet(Head.Flags, IsEventFlag));
+                sb.Append(", isFragmented=").Append(!IsFlagSet(Head.Flags, UnfragmentedMessage));
             }
             sb.Append('}');
             return sb.ToString();
         }
 
-        public virtual ClientMessage UpdateFrameLength()
+        /**
+         * Copies the clientMessage efficiently with correlation id
+         * Only initialFrame is duplicated, rest of the frames are shared
+         *
+         * @param correlationId new id
+         * @return the copy message
+         */
+        public ClientMessage CopyWithNewCorrelationId(long correlationId)
         {
-            SetFrameLength(Index());
-            return this;
-        }
+            var initialFrameCopy = _startFrame.DeepCopy();
 
-        protected internal virtual void WrapForDecode(IClientProtocolBuffer buffer, int offset)
-        {
-            EnsureHeaderSize(offset, buffer.Capacity());
-            Wrap(buffer, offset);
-            Index(GetDataOffset());
-        }
-
-        protected internal virtual void WrapForEncode(IClientProtocolBuffer buffer, int offset)
-        {
-            EnsureHeaderSize(offset, buffer.Capacity());
-            Wrap(buffer, offset);
-            SetDataOffset(HeaderSize);
-            SetFrameLength(HeaderSize);
-            Index(GetDataOffset());
-            SetPartitionId(-1);
-        }
-
-        private int Accumulate(ByteBuffer byteBuffer, int length)
-        {
-            var remaining = byteBuffer.Remaining();
-            var readLength = remaining < length ? remaining : length;
-            if (readLength > 0)
+            var newMessage = new ClientMessage(initialFrameCopy)
             {
-                Buffer.PutBytes(Index(), byteBuffer.Array(), byteBuffer.Position, readLength);
-                byteBuffer.Position = byteBuffer.Position + readLength;
-                Index(Index() + readLength);
-                return readLength;
-            }
-            return 0;
+                CorrelationId = correlationId,
+                IsRetryable = IsRetryable,
+                AcquiresResource = AcquiresResource,
+                OperationName = OperationName
+            };
+
+            return newMessage;
         }
 
-
-        private void EnsureHeaderSize(int offset, int length)
+        public class Frame
         {
-            if (length - offset < HeaderSize)
+            public readonly byte[] Content;
+            //begin-fragment end-fragment final begin-data-structure end-data-structure is-null is-event 9reserverd
+            public int Flags;
+
+            internal Frame next;
+
+            public Frame(byte[] content): this(content, DefaultFlags)
             {
-                throw new IndexOutOfRangeException("ClientMessage buffer must contain at least " + HeaderSize +
-                                                   " bytes! length: " + length + ", offset: " + offset);
             }
+
+            public Frame(byte[] content, int flags)
+            {
+                Content = content;
+                Flags = flags;
+            }
+
+            // Shares the content bytes
+            public Frame Copy()
+            {
+                return new Frame(Content, Flags)
+                {
+                    next = next
+                };
+            }
+
+            // Copies the content bytes
+            public Frame DeepCopy()
+            {
+                var newContent = new byte[Content.Length];
+                Array.Copy(Content, newContent, Content.Length);
+
+                return new Frame(newContent, Flags)
+                {
+                    next = next
+                };
+            }
+
+            public bool IsEndFrame => IsFlagSet(Flags, EndDataStructureFlag);
+
+            public bool IsBeginFrame => IsFlagSet(Flags, BeginDataStructureFlag);
+
+            public bool IsNullFrame => IsFlagSet(Flags, IsNullFlag);
+
+            public bool IsFinal => IsFlagSet(Flags, IsFinalFlag);
+
+            public int Size => Content == null ? SizeOfFrameLengthAndFlags : SizeOfFrameLengthAndFlags + Content.Length;
+        }
+
+        public FrameIterator GetIterator() => new FrameIterator(_startFrame);
+
+        public class FrameIterator
+        {
+            private Frame nextFrame;
+
+            internal FrameIterator(Frame start)
+            {
+                nextFrame = start;
+            }
+
+            public Frame Next()
+            {
+                var result = nextFrame;
+                if (nextFrame != null)
+                {
+                    nextFrame = nextFrame.next;
+                }
+                return result;
+            }
+
+            public bool HasNext => nextFrame != null;
+            
+            public Frame PeekNext() => nextFrame;
         }
     }
 }

@@ -25,7 +25,7 @@ using Hazelcast.IO;
         {
         }
 
-        public override IFuture<IClientMessage> InvokeOnKeyOwner(IClientMessage request, object key)
+        public override IFuture<ClientMessage> InvokeOnKeyOwner(ClientMessage request, object key)
         {
             var partitionService = (ClientPartitionService) Client.GetClientPartitionService();
             var partitionId = partitionService.GetPartitionId(key);
@@ -33,22 +33,22 @@ using Hazelcast.IO;
             return SendToOwner(new ClientInvocation(request, partitionId));
         }
 
-        public override IFuture<IClientMessage> InvokeOnMember(IClientMessage request, IMember member)
+        public override IFuture<ClientMessage> InvokeOnMember(ClientMessage request, IMember member)
         {
-            return SendToOwner(new ClientInvocation(request, member.GetUuid()));
+            return SendToOwner(new ClientInvocation(request, member.Uuid));
         }
 
-        public override IFuture<IClientMessage> InvokeOnPartition(IClientMessage request, int partitionId)
+        public override IFuture<ClientMessage> InvokeOnPartition(ClientMessage request, int partitionId)
         {
             return SendToOwner(new ClientInvocation(request, partitionId));
         }
 
-        public override IFuture<IClientMessage> InvokeOnRandomTarget(IClientMessage request)
+        public override IFuture<ClientMessage> InvokeOnRandomTarget(ClientMessage request)
         {
             return SendToOwner(new ClientInvocation(request));
         }
 
-        public override IFuture<IClientMessage> InvokeOnTarget(IClientMessage request, Address target)
+        public override IFuture<ClientMessage> InvokeOnTarget(ClientMessage request, Address target)
         {
             return SendToOwner(new ClientInvocation(request));
         }
@@ -58,7 +58,7 @@ using Hazelcast.IO;
             return Client.GetClientClusterService().GetOwnerConnectionAddress();
         }
 
-        private IFuture<IClientMessage> SendToOwner(ClientInvocation invocation)
+        private IFuture<ClientMessage> SendToOwner(ClientInvocation invocation)
         {
             var clusterService = Client.GetClientClusterService();
             var address = clusterService.GetOwnerConnectionAddress();

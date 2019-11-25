@@ -46,7 +46,7 @@ namespace Hazelcast.Client.Proxy
             _transaction = new TransactionProxy(client, options, TxnOwnerNode);
         }
 
-        public virtual string GetTxnId()
+        public virtual Guid GetTxnId()
         {
             return _transaction.GetTxnId();
         }

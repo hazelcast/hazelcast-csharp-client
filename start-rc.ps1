@@ -1,12 +1,12 @@
 param(
-    [string]$serverVersion = "3.12.2"
+    [string]$serverVersion = "4.0-SNAPSHOT"
 )
 
 $hazelcastTestVersion=$serverVersion
 $hazelcastVersion=$serverVersion
 $hazelcastEnterpriseVersion=$serverVersion
 $hazelcastEnterpriseTestVersion=$serverVersion
-$hazelcastRCVersion="0.5-SNAPSHOT"
+$hazelcastRCVersion="0.6-SNAPSHOT"
 $snapshotRepo="https://oss.sonatype.org/content/repositories/snapshots"
 $releaseRepo="http://repo1.maven.apache.org/maven2"
 $enterpriseReleaseRepo="https://repository.hazelcast.com/release/"

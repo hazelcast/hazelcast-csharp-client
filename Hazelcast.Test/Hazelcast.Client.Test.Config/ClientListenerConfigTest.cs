@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Test.Config
 
             var client = _clientFactory.CreateClient(clientConfig =>
             {
-                clientConfig.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
+                clientConfig.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
                 clientConfig.AddListenerConfig(new ListenerConfig(typeof(SimpleLifecycleListener).AssemblyQualifiedName));
             });
 
@@ -65,7 +65,7 @@ namespace Hazelcast.Client.Test.Config
             var client = _clientFactory.CreateClient(clientConfig =>
             {
                 clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
-                clientConfig.GetGroupConfig().SetName(_cluster.Id).SetPassword(_cluster.Id);
+                clientConfig.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
                 clientConfig.AddListenerConfig(new ListenerConfig(typeof(SimpleMembershipListener).AssemblyQualifiedName));
             });
             StartMember(_remoteController, _cluster);

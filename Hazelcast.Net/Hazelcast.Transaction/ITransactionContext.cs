@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Core;
 
 namespace Hazelcast.Transaction
@@ -38,7 +39,7 @@ namespace Hazelcast.Transaction
         /// <summary>Gets the id that uniquely identifies the transaction.</summary>
         /// <remarks>Gets the id that uniquely identifies the transaction.</remarks>
         /// <returns>the transaction id.</returns>
-        string GetTxnId();
+        Guid GetTxnId();
 
         /// <summary>Rollback of the current transaction.</summary>
         /// <remarks>Rollback of the current transaction.</remarks>

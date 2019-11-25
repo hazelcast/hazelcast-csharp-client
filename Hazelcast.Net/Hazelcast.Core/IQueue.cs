@@ -25,7 +25,7 @@ namespace Hazelcast.Core
         /// Removes all available elements from this queue and adds them
         /// to the given collection.  This operation may be more
         /// efficient than repeatedly polling this queue.  A failure
-        /// encountered while attempting to add elements to
+        /// encountered while attempting to Add elements to
         /// collection <c>c</c> may result in elements being in neither,
         /// either or both collections when the associated exception is
         /// thrown.  Attempts to drain a queue to itself result in
@@ -41,7 +41,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Removes at most the given number of available elements from
         /// this queue and adds them to the given collection.  A failure
-        /// encountered while attempting to add elements to
+        /// encountered while attempting to Add elements to
         /// collection <c>c</c> may result in elements being in neither,
         /// either or both collections when the associated exception is
         /// thrown.  Attempts to drain a queue to itself result in
@@ -75,7 +75,7 @@ namespace Hazelcast.Core
         /// <c>true</c> upon success and <c>false</c> if no space is currently
         /// available.
         /// </remarks>
-        /// <param name="e">the element to add</param>
+        /// <param name="e">the element to Add</param>
         /// <returns>
         /// <c>true</c> if the element was added to this queue, else
         /// <c>false</c>
@@ -90,7 +90,7 @@ namespace Hazelcast.Core
         /// Inserts the specified element into this queue, waiting up to the
         /// specified wait time if necessary for space to become available.
         /// </remarks>
-        /// <param name="e">the element to add</param>
+        /// <param name="e">the element to Add</param>
         /// <param name="timeout">
         /// how long to wait before giving up, in units of
         /// <c>unit</c>
@@ -144,7 +144,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Inserts the specified element into this queue, waiting if necessary for space to become available.
         /// </summary>
-        /// <param name="e">the element to add</param>
+        /// <param name="e">the element to Add</param>
         void Put(T e);
 
         /// <summary>

@@ -1,0 +1,2225 @@
+[assembly: System.CLSCompliantAttribute(true)]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute(@"Hazelcast.Benchmark, PublicKey=00240000048000009400000006020000002400005253413100040000010001004d81045a994968ac643918d7bbce405b2473471d8de6aed6bbffc0fe1874bfcabf3c0b437c6c5293a589bdcbe884c6d86934069b35deaf5ab2e770cbff41a20dd4014bb53e481c30bd3ead29437b02dec5916a717a4a2b4fd353e81238b89ae09e5ba0ab615c5fef7937aabab4e240c3dffe2b948047769eeb07f674589d0bb3")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute(@"Hazelcast.Test, PublicKey=00240000048000009400000006020000002400005253413100040000010001004d81045a994968ac643918d7bbce405b2473471d8de6aed6bbffc0fe1874bfcabf3c0b437c6c5293a589bdcbe884c6d86934069b35deaf5ab2e770cbff41a20dd4014bb53e481c30bd3ead29437b02dec5916a717a4a2b4fd353e81238b89ae09e5ba0ab615c5fef7937aabab4e240c3dffe2b948047769eeb07f674589d0bb3")]
+[assembly: System.Runtime.InteropServices.ComVisibleAttribute(false)]
+[assembly: System.Runtime.Versioning.TargetFrameworkAttribute(".NETFramework,Version=v4.5", FrameworkDisplayName=".NET Framework 4.5")]
+namespace Hazelcast.Client.Connection
+{
+    public interface ISocketFactory
+    {
+        System.Net.Sockets.Socket CreateSocket();
+    }
+}
+namespace Hazelcast.Client
+{
+    public sealed class HazelcastClient : Hazelcast.Core.IHazelcastInstance
+    {
+        public const string PropPartitioningStrategyClass = "hazelcast.partitioning.strategy.class";
+        public string AddDistributedObjectListener(Hazelcast.Core.IDistributedObjectListener distributedObjectListener) { }
+        public static System.Collections.Generic.ICollection<Hazelcast.Core.IHazelcastInstance> GetAllHazelcastClients() { }
+        public Hazelcast.Core.IAtomicLong GetAtomicLong(string name) { }
+        public Hazelcast.Core.IClientService GetClientService() { }
+        public Hazelcast.Core.ICluster GetCluster() { }
+        public Hazelcast.Core.ICountDownLatch GetCountDownLatch(string name) { }
+        public T GetDistributedObject<T>(string serviceName, string name)
+            where T : Hazelcast.Core.IDistributedObject { }
+        public System.Collections.Generic.ICollection<Hazelcast.Core.IDistributedObject> GetDistributedObjects() { }
+        public Hazelcast.Core.IIdGenerator GetIdGenerator(string name) { }
+        public Hazelcast.Core.ILifecycleService GetLifecycleService() { }
+        public Hazelcast.Core.IHList<T> GetList<T>(string name) { }
+        public Hazelcast.Client.ILoadBalancer GetLoadBalancer() { }
+        public Hazelcast.Core.IEndpoint GetLocalEndpoint() { }
+        public Hazelcast.Core.ILock GetLock(string key) { }
+        public Hazelcast.Core.IMap<TKey, TValue> GetMap<TKey, TValue>(string name) { }
+        public Hazelcast.Core.IMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name) { }
+        public string GetName() { }
+        public Hazelcast.Core.IPNCounter GetPNCounter(string name) { }
+        public Hazelcast.Core.IQueue<T> GetQueue<T>(string name) { }
+        public Hazelcast.Core.IReplicatedMap<TKey, TValue> GetReplicatedMap<TKey, TValue>(string name) { }
+        public Hazelcast.Core.IRingbuffer<T> GetRingbuffer<T>(string name) { }
+        public Hazelcast.Core.ISemaphore GetSemaphore(string name) { }
+        public Hazelcast.Core.IHSet<T> GetSet<T>(string name) { }
+        public Hazelcast.Core.ITopic<T> GetTopic<T>(string name) { }
+        public System.Collections.Concurrent.ConcurrentDictionary<string, object> GetUserContext() { }
+        public static Hazelcast.Core.IHazelcastInstance NewHazelcastClient() { }
+        public static Hazelcast.Core.IHazelcastInstance NewHazelcastClient(string configFile) { }
+        public static Hazelcast.Core.IHazelcastInstance NewHazelcastClient(Hazelcast.Config.ClientConfig config) { }
+        public Hazelcast.Transaction.ITransactionContext NewTransactionContext() { }
+        public Hazelcast.Transaction.ITransactionContext NewTransactionContext(Hazelcast.Transaction.TransactionOptions options) { }
+        public bool RemoveDistributedObjectListener(string registrationId) { }
+        public void Shutdown() { }
+        public static void ShutdownAll() { }
+    }
+    public interface ILoadBalancer
+    {
+        void Init(Hazelcast.Core.ICluster cluster, Hazelcast.Config.ClientConfig config);
+        Hazelcast.Core.IMember Next();
+    }
+}
+namespace Hazelcast.Client.Protocol
+{
+    public interface IClientMessage
+    {
+        Hazelcast.Client.Protocol.IClientMessage AddFlag(short flags);
+        bool GetBoolean();
+        byte GetByte();
+        long GetCorrelationId();
+        Hazelcast.IO.Serialization.IData GetData();
+        short GetFlags();
+        int GetFrameLength();
+        int GetInt();
+        long GetLong();
+        System.Collections.Generic.KeyValuePair<Hazelcast.IO.Serialization.IData, Hazelcast.IO.Serialization.IData> GetMapEntry();
+        int GetMessageType();
+        int GetPartitionId();
+        short GetShort();
+        string GetStringUtf8();
+        short GetVersion();
+        bool IsComplete();
+        bool IsFlagSet(short listenerEventFlag);
+        bool IsRetryable();
+        Hazelcast.Client.Protocol.IClientMessage SetCorrelationId(long correlationId);
+        Hazelcast.Client.Protocol.IClientMessage SetPartitionId(int partitionId);
+    }
+}
+namespace Hazelcast.Config
+{
+    public abstract class AbstractXmlConfigHelper
+    {
+        protected AbstractXmlConfigHelper() { }
+        public static bool CheckTrue(string value) { }
+        public string CleanNodeName(System.Xml.XmlNode node) { }
+        public static string CleanNodeName(string nodeName) { }
+        protected void FillDataSerializableFactories(System.Xml.XmlNode node, Hazelcast.Config.SerializationConfig serializationConfig) { }
+        protected virtual void FillPortableFactories(System.Xml.XmlNode node, Hazelcast.Config.SerializationConfig serializationConfig) { }
+        protected virtual void FillProperties(System.Xml.XmlNode node, System.Collections.Generic.Dictionary<string, string> properties) { }
+        protected virtual void FillSerializers(System.Xml.XmlNode node, Hazelcast.Config.SerializationConfig serializationConfig) { }
+        protected virtual string GetAttribute(System.Xml.XmlNode node, string attName) { }
+        protected virtual int GetIntegerValue(string parameterName, string value, int defaultValue) { }
+        protected virtual string GetTextContent(System.Xml.XmlNode node) { }
+        protected virtual Hazelcast.Config.SSLConfig ParseSSLConfig(System.Xml.XmlNode node) { }
+        protected virtual Hazelcast.Config.SerializationConfig ParseSerialization(System.Xml.XmlNode node) { }
+        protected virtual Hazelcast.Config.SocketInterceptorConfig ParseSocketInterceptorConfig(System.Xml.XmlNode node) { }
+    }
+    public class ClientCloudConfig
+    {
+        public ClientCloudConfig() { }
+        public string GetDiscoveryToken() { }
+        public bool IsEnabled() { }
+        public Hazelcast.Config.ClientCloudConfig SetDiscoveryToken(string discoveryToken) { }
+        public Hazelcast.Config.ClientCloudConfig SetEnabled(bool enabled) { }
+    }
+    public class ClientConfig
+    {
+        public ClientConfig() { }
+        public virtual Hazelcast.Config.ClientConfig AddListenerConfig(Hazelcast.Config.ListenerConfig listenerConfig) { }
+        public virtual Hazelcast.Config.ClientConfig AddNearCacheConfig(Hazelcast.Config.NearCacheConfig nearCacheConfig) { }
+        public virtual Hazelcast.Config.ClientConfig AddNearCacheConfig(string mapName, Hazelcast.Config.NearCacheConfig nearCacheConfig) { }
+        public virtual Hazelcast.Config.ClientConfig AddProxyFactoryConfig(Hazelcast.Config.ProxyFactoryConfig proxyFactoryConfig) { }
+        public virtual Hazelcast.Security.ICredentials GetCredentials() { }
+        public virtual int GetExecutorPoolSize() { }
+        public virtual Hazelcast.Config.GroupConfig GetGroupConfig() { }
+        public virtual System.Collections.Generic.IList<Hazelcast.Config.ListenerConfig> GetListenerConfigs() { }
+        public virtual Hazelcast.Core.IManagedContext GetManagedContext() { }
+        public virtual Hazelcast.Config.NearCacheConfig GetNearCacheConfig(string mapName) { }
+        public virtual System.Collections.Generic.IDictionary<string, Hazelcast.Config.NearCacheConfig> GetNearCacheConfigMap() { }
+        public virtual Hazelcast.Config.ClientNetworkConfig GetNetworkConfig() { }
+        public virtual System.Collections.Generic.IList<Hazelcast.Config.ProxyFactoryConfig> GetProxyFactoryConfigs() { }
+        public Hazelcast.Config.ClientSecurityConfig GetSecurityConfig() { }
+        public virtual Hazelcast.Config.SerializationConfig GetSerializationConfig() { }
+        public Hazelcast.Config.ClientConfig SetConfigPatternMatcher(Hazelcast.Config.IConfigPatternMatcher matchingPointConfigPatternMatcher) { }
+        public virtual Hazelcast.Config.ClientConfig SetCredentials(Hazelcast.Security.ICredentials credentials) { }
+        public virtual Hazelcast.Config.ClientConfig SetExecutorPoolSize(int executorPoolSize) { }
+        public virtual Hazelcast.Config.ClientConfig SetGroupConfig(Hazelcast.Config.GroupConfig groupConfig) { }
+        public virtual Hazelcast.Config.ClientConfig SetListenerConfigs(System.Collections.Generic.IList<Hazelcast.Config.ListenerConfig> listenerConfigs) { }
+        public virtual Hazelcast.Config.ClientConfig SetManagedContext(Hazelcast.Core.IManagedContext managedContext) { }
+        public virtual Hazelcast.Config.ClientConfig SetNearCacheConfigMap(System.Collections.Generic.IDictionary<string, Hazelcast.Config.NearCacheConfig> nearCacheConfigMap) { }
+        public virtual Hazelcast.Config.ClientConfig SetNetworkConfig(Hazelcast.Config.ClientNetworkConfig networkConfig) { }
+        public virtual Hazelcast.Config.ClientConfig SetProxyFactoryConfigs(System.Collections.Generic.IList<Hazelcast.Config.ProxyFactoryConfig> proxyFactoryConfigs) { }
+        public Hazelcast.Config.ClientConfig SetSecurityConfig(Hazelcast.Config.ClientSecurityConfig securityConfig) { }
+        public virtual Hazelcast.Config.ClientConfig SetSerializationConfig(Hazelcast.Config.SerializationConfig serializationConfig) { }
+    }
+    public class ClientNetworkConfig
+    {
+        public ClientNetworkConfig() { }
+        public virtual Hazelcast.Config.ClientNetworkConfig AddAddress(params string[] addresses) { }
+        public virtual System.Collections.Generic.IList<string> GetAddresses() { }
+        public Hazelcast.Config.ClientCloudConfig GetCloudConfig() { }
+        public virtual int GetConnectionAttemptLimit() { }
+        public virtual int GetConnectionAttemptPeriod() { }
+        public virtual int GetConnectionTimeout() { }
+        public virtual Hazelcast.Config.SSLConfig GetSSLConfig() { }
+        public virtual Hazelcast.Config.SocketInterceptorConfig GetSocketInterceptorConfig() { }
+        public virtual Hazelcast.Config.SocketOptions GetSocketOptions() { }
+        public virtual bool IsRedoOperation() { }
+        public virtual bool IsSmartRouting() { }
+        public virtual Hazelcast.Config.ClientNetworkConfig SetAddresses(System.Collections.Generic.IList<string> addresses) { }
+        public Hazelcast.Config.ClientNetworkConfig SetCloudConfig(Hazelcast.Config.ClientCloudConfig cloudConfig) { }
+        public virtual Hazelcast.Config.ClientNetworkConfig SetConnectionAttemptLimit(int connectionAttemptLimit) { }
+        public virtual Hazelcast.Config.ClientNetworkConfig SetConnectionAttemptPeriod(int connectionAttemptPeriod) { }
+        public virtual Hazelcast.Config.ClientNetworkConfig SetConnectionTimeout(int connectionTimeout) { }
+        public virtual Hazelcast.Config.ClientNetworkConfig SetRedoOperation(bool redoOperation) { }
+        public virtual Hazelcast.Config.ClientNetworkConfig SetSSLConfig(Hazelcast.Config.SSLConfig sslConfig) { }
+        public virtual Hazelcast.Config.ClientNetworkConfig SetSmartRouting(bool smartRouting) { }
+        public virtual Hazelcast.Config.ClientNetworkConfig SetSocketInterceptorConfig(Hazelcast.Config.SocketInterceptorConfig socketInterceptorConfig) { }
+        public virtual Hazelcast.Config.ClientNetworkConfig SetSocketOptions(Hazelcast.Config.SocketOptions socketOptions) { }
+    }
+    public class ClientSecurityConfig
+    {
+        public ClientSecurityConfig() { }
+        public Hazelcast.Security.ICredentials GetCredentials() { }
+        public string GetCredentialsClassName() { }
+        public Hazelcast.Config.CredentialsFactoryConfig GetCredentialsFactoryConfig() { }
+        public Hazelcast.Config.ClientSecurityConfig SetCredentials(Hazelcast.Security.ICredentials credentials) { }
+        public Hazelcast.Config.ClientSecurityConfig SetCredentialsClassName(string credentialsClassname) { }
+        public Hazelcast.Config.ClientSecurityConfig SetCredentialsFactoryConfig(Hazelcast.Config.CredentialsFactoryConfig credentialsFactoryConfig) { }
+    }
+    public class ConfigurationException : Hazelcast.Core.HazelcastException
+    {
+        public ConfigurationException(string itemName, string candidate, string duplicate) { }
+        public ConfigurationException(string message) { }
+    }
+    public class CredentialsFactoryConfig
+    {
+        public CredentialsFactoryConfig(string className = null) { }
+        public string GetClassName() { }
+        public Hazelcast.Security.ICredentialsFactory GetImplementation() { }
+        public System.Collections.Generic.Dictionary<string, string> GetProperties() { }
+        public string GetProperty(string name) { }
+        public Hazelcast.Config.CredentialsFactoryConfig SetClassName(string classname) { }
+        public Hazelcast.Config.CredentialsFactoryConfig SetImplementation(Hazelcast.Security.ICredentialsFactory factoryImpl) { }
+        public Hazelcast.Config.CredentialsFactoryConfig SetProperties(System.Collections.Generic.Dictionary<string, string> properites) { }
+        public Hazelcast.Config.CredentialsFactoryConfig SetProperty(string name, string value) { }
+    }
+    public class GlobalSerializerConfig
+    {
+        public GlobalSerializerConfig() { }
+        public virtual string GetClassName() { }
+        public virtual Hazelcast.IO.Serialization.ISerializer GetImplementation() { }
+        public bool GetOverrideClrSerialization() { }
+        public virtual Hazelcast.Config.GlobalSerializerConfig SetClassName(string className) { }
+        public virtual Hazelcast.Config.GlobalSerializerConfig SetImplementation<T>(Hazelcast.IO.Serialization.IStreamSerializer<T> implementation) { }
+        public Hazelcast.Config.GlobalSerializerConfig SetOverrideClrSerialization(bool overrideClrSerialization) { }
+        public override string ToString() { }
+    }
+    public sealed class GroupConfig
+    {
+        public const string DefaultGroupName = "dev";
+        public const string DefaultGroupPassword = "dev-pass";
+        public GroupConfig() { }
+        public GroupConfig(string name) { }
+        public GroupConfig(string name, string password) { }
+        public override bool Equals(object obj) { }
+        public override int GetHashCode() { }
+        public string GetName() { }
+        public string GetPassword() { }
+        public Hazelcast.Config.GroupConfig SetName(string name) { }
+        public Hazelcast.Config.GroupConfig SetPassword(string password) { }
+        public override string ToString() { }
+    }
+    public interface IConfigPatternMatcher
+    {
+        string Matches(System.Collections.Generic.IEnumerable<string> configPatterns, string itemName);
+    }
+    public enum InMemoryFormat
+    {
+        Binary = 0,
+        Object = 1,
+    }
+    public class ListenerConfig
+    {
+        public ListenerConfig() { }
+        public ListenerConfig(string className) { }
+        public ListenerConfig(Hazelcast.Core.IEventListener implementation) { }
+        public virtual string GetClassName() { }
+        public virtual Hazelcast.Core.IEventListener GetImplementation() { }
+        public virtual bool IsIncludeValue() { }
+        public virtual bool IsLocal() { }
+        public Hazelcast.Config.ListenerConfig SetClassName(string className) { }
+        public virtual Hazelcast.Config.ListenerConfig SetImplementation(Hazelcast.Core.IEventListener implementation) { }
+        public override string ToString() { }
+    }
+    public class NearCacheConfig
+    {
+        public const string DefaultEvictionPolicy = "Lru";
+        public const int DefaultMaxIdleSeconds = 0;
+        public const int DefaultMaxSize = 2147483647;
+        public static readonly Hazelcast.Config.InMemoryFormat DefaultMemoryFormat;
+        public const int DefaultTtlSeconds = 0;
+        public NearCacheConfig(int timeToLiveSeconds, int maxSize, string evictionPolicy, int maxIdleSeconds, bool invalidateOnChange, Hazelcast.Config.InMemoryFormat inMemoryFormat) { }
+        public NearCacheConfig(Hazelcast.Config.NearCacheConfig config) { }
+        public NearCacheConfig() { }
+        public NearCacheConfig(string name) { }
+        public virtual Hazelcast.Config.NearCacheConfigReadOnly GetAsReadOnly() { }
+        public virtual string GetEvictionPolicy() { }
+        public virtual Hazelcast.Config.InMemoryFormat GetInMemoryFormat() { }
+        public virtual int GetMaxIdleSeconds() { }
+        public virtual int GetMaxSize() { }
+        public virtual string GetName() { }
+        public virtual int GetTimeToLiveSeconds() { }
+        [System.ObsoleteAttribute("This configuration is not used on client")]
+        public virtual bool IsCacheLocalEntries() { }
+        public virtual bool IsInvalidateOnChange() { }
+        public bool IsSerializeKeys() { }
+        [System.ObsoleteAttribute("This configuration is not used on client")]
+        public virtual Hazelcast.Config.NearCacheConfig SetCacheLocalEntries(bool cacheLocalEntries) { }
+        public virtual Hazelcast.Config.NearCacheConfig SetEvictionPolicy(string evictionPolicy) { }
+        public virtual Hazelcast.Config.NearCacheConfig SetInMemoryFormat(Hazelcast.Config.InMemoryFormat inMemoryFormat) { }
+        public virtual Hazelcast.Config.NearCacheConfig SetInMemoryFormat(string inMemoryFormat) { }
+        public virtual Hazelcast.Config.NearCacheConfig SetInvalidateOnChange(bool invalidateOnChange) { }
+        public virtual Hazelcast.Config.NearCacheConfig SetMaxIdleSeconds(int maxIdleSeconds) { }
+        public virtual Hazelcast.Config.NearCacheConfig SetMaxSize(int maxSize) { }
+        public virtual Hazelcast.Config.NearCacheConfig SetName(string name) { }
+        public Hazelcast.Config.NearCacheConfig SetSerializeKeys(bool serializeKeys) { }
+        public virtual Hazelcast.Config.NearCacheConfig SetTimeToLiveSeconds(int timeToLiveSeconds) { }
+        public override string ToString() { }
+    }
+    public class NearCacheConfigReadOnly : Hazelcast.Config.NearCacheConfig
+    {
+        public NearCacheConfigReadOnly(Hazelcast.Config.NearCacheConfig config) { }
+        public override Hazelcast.Config.NearCacheConfig SetEvictionPolicy(string evictionPolicy) { }
+        public override Hazelcast.Config.NearCacheConfig SetInMemoryFormat(Hazelcast.Config.InMemoryFormat inMemoryFormat) { }
+        public override Hazelcast.Config.NearCacheConfig SetInMemoryFormat(string inMemoryFormat) { }
+        public override Hazelcast.Config.NearCacheConfig SetInvalidateOnChange(bool invalidateOnChange) { }
+        public override Hazelcast.Config.NearCacheConfig SetMaxIdleSeconds(int maxIdleSeconds) { }
+        public override Hazelcast.Config.NearCacheConfig SetMaxSize(int maxSize) { }
+        public override Hazelcast.Config.NearCacheConfig SetName(string name) { }
+        public override Hazelcast.Config.NearCacheConfig SetTimeToLiveSeconds(int timeToLiveSeconds) { }
+    }
+    public class ProxyFactoryConfig
+    {
+        public ProxyFactoryConfig() { }
+        public ProxyFactoryConfig(string className, string service) { }
+        public virtual string GetClassName() { }
+        public virtual string GetService() { }
+        public virtual void SetClassName(string className) { }
+        public virtual void SetService(string service) { }
+    }
+    public class SSLConfig
+    {
+        public const string CertificateFilePath = "CertificateFilePath";
+        public const string CertificateName = "CertificateServerName";
+        public const string CertificatePassword = "CertificatePassword";
+        public const string CheckCertificateRevocation = "CheckCertificateRevocation";
+        public const string SslProtocol = "SslProtocol";
+        public const string ValidateCertificateChain = "ValidateCertificateChain";
+        public const string ValidateCertificateName = "ValidateCertificateName";
+        public SSLConfig() { }
+        public virtual System.Collections.Generic.Dictionary<string, string> GetProperties() { }
+        public virtual string GetProperty(string name) { }
+        public bool IsEnabled() { }
+        public Hazelcast.Config.SSLConfig SetEnabled(bool enabled) { }
+        public Hazelcast.Config.SSLConfig SetProperties(System.Collections.Generic.Dictionary<string, string> properties) { }
+        public virtual Hazelcast.Config.SSLConfig SetProperty(string name, string value) { }
+        public override string ToString() { }
+    }
+    public class SerializationConfig
+    {
+        public SerializationConfig() { }
+        public virtual Hazelcast.Config.SerializationConfig AddClassDefinition(Hazelcast.IO.Serialization.IClassDefinition classDefinition) { }
+        public virtual Hazelcast.Config.SerializationConfig AddDataSerializableFactory(int factoryId, Hazelcast.IO.Serialization.IDataSerializableFactory dataSerializableFactory) { }
+        public virtual Hazelcast.Config.SerializationConfig AddDataSerializableFactoryClass(int factoryId, string dataSerializableFactoryClass) { }
+        public virtual Hazelcast.Config.SerializationConfig AddDataSerializableFactoryClass(int factoryId, System.Type dataSerializableFactoryClass) { }
+        public virtual Hazelcast.Config.SerializationConfig AddPortableFactory(int factoryId, Hazelcast.IO.Serialization.IPortableFactory portableFactory) { }
+        public virtual Hazelcast.Config.SerializationConfig AddPortableFactoryClass(int factoryId, System.Type portableFactoryClass) { }
+        public virtual Hazelcast.Config.SerializationConfig AddPortableFactoryClass(int factoryId, string portableFactoryClass) { }
+        public virtual Hazelcast.Config.SerializationConfig AddSerializerConfig(Hazelcast.Config.SerializerConfig serializerConfig) { }
+        public virtual Hazelcast.Net.Ext.ByteOrder GetByteOrder() { }
+        public virtual System.Collections.Generic.ICollection<Hazelcast.IO.Serialization.IClassDefinition> GetClassDefinitions() { }
+        public virtual System.Collections.Generic.IDictionary<int, Hazelcast.IO.Serialization.IDataSerializableFactory> GetDataSerializableFactories() { }
+        public virtual System.Collections.Generic.IDictionary<int, string> GetDataSerializableFactoryClasses() { }
+        public virtual Hazelcast.Config.GlobalSerializerConfig GetGlobalSerializerConfig() { }
+        public virtual System.Collections.Generic.IDictionary<int, Hazelcast.IO.Serialization.IPortableFactory> GetPortableFactories() { }
+        public virtual System.Collections.Generic.IDictionary<int, string> GetPortableFactoryClasses() { }
+        public virtual int GetPortableVersion() { }
+        public virtual System.Collections.Generic.ICollection<Hazelcast.Config.SerializerConfig> GetSerializerConfigs() { }
+        public virtual bool IsCheckClassDefErrors() { }
+        [System.ObsoleteAttribute("This configuration is not used in .net client")]
+        public virtual bool IsEnableCompression() { }
+        [System.ObsoleteAttribute("This configuration is not used in .net client")]
+        public virtual bool IsEnableSharedObject() { }
+        public virtual bool IsUseNativeByteOrder() { }
+        public virtual Hazelcast.Config.SerializationConfig SetByteOrder(Hazelcast.Net.Ext.ByteOrder byteOrder) { }
+        public virtual Hazelcast.Config.SerializationConfig SetCheckClassDefErrors(bool checkClassDefErrors) { }
+        public virtual Hazelcast.Config.SerializationConfig SetClassDefinitions(System.Collections.Generic.ICollection<Hazelcast.IO.Serialization.IClassDefinition> classDefinitions) { }
+        public virtual Hazelcast.Config.SerializationConfig SetDataSerializableFactories(System.Collections.Generic.IDictionary<int, Hazelcast.IO.Serialization.IDataSerializableFactory> dataSerializableFactories) { }
+        public virtual Hazelcast.Config.SerializationConfig SetDataSerializableFactoryClasses(System.Collections.Generic.IDictionary<int, string> dataSerializableFactoryClasses) { }
+        [System.ObsoleteAttribute("This configuration is not used in .net client")]
+        public virtual Hazelcast.Config.SerializationConfig SetEnableCompression(bool enableCompression) { }
+        [System.ObsoleteAttribute("This configuration is not used in .net client")]
+        public virtual Hazelcast.Config.SerializationConfig SetEnableSharedObject(bool enableSharedObject) { }
+        public virtual Hazelcast.Config.SerializationConfig SetGlobalSerializerConfig(Hazelcast.Config.GlobalSerializerConfig globalSerializerConfig) { }
+        public virtual Hazelcast.Config.SerializationConfig SetPortableFactories(System.Collections.Generic.IDictionary<int, Hazelcast.IO.Serialization.IPortableFactory> portableFactories) { }
+        public virtual Hazelcast.Config.SerializationConfig SetPortableFactoryClasses(System.Collections.Generic.IDictionary<int, string> portableFactoryClasses) { }
+        public virtual Hazelcast.Config.SerializationConfig SetPortableVersion(int portableVersion) { }
+        public virtual Hazelcast.Config.SerializationConfig SetSerializerConfigs(System.Collections.Generic.ICollection<Hazelcast.Config.SerializerConfig> serializerConfigs) { }
+        public virtual Hazelcast.Config.SerializationConfig SetUseNativeByteOrder(bool useNativeByteOrder) { }
+        public override string ToString() { }
+    }
+    public class SerializerConfig
+    {
+        public SerializerConfig() { }
+        public virtual string GetClassName() { }
+        public virtual Hazelcast.IO.Serialization.ISerializer GetImplementation() { }
+        public virtual System.Type GetTypeClass() { }
+        public virtual string GetTypeClassName() { }
+        public virtual Hazelcast.Config.SerializerConfig SetClass(System.Type clazz) { }
+        public virtual Hazelcast.Config.SerializerConfig SetClassName(string className) { }
+        public virtual Hazelcast.Config.SerializerConfig SetImplementation<T>(Hazelcast.IO.Serialization.IByteArraySerializer<T> implementation) { }
+        public virtual Hazelcast.Config.SerializerConfig SetImplementation<T>(Hazelcast.IO.Serialization.IStreamSerializer<T> implementation) { }
+        public virtual Hazelcast.Config.SerializerConfig SetTypeClass(System.Type typeClass) { }
+        public virtual Hazelcast.Config.SerializerConfig SetTypeClassName(string typeClassName) { }
+        public override string ToString() { }
+    }
+    public class SocketInterceptorConfig
+    {
+        public SocketInterceptorConfig() { }
+        public virtual string GetClassName() { }
+        public virtual object GetImplementation() { }
+        public virtual System.Collections.Generic.Dictionary<string, string> GetProperties() { }
+        public virtual string GetProperty(string name) { }
+        public virtual bool IsEnabled() { }
+        public virtual Hazelcast.Config.SocketInterceptorConfig SetClassName(string className) { }
+        public virtual Hazelcast.Config.SocketInterceptorConfig SetEnabled(bool enabled) { }
+        public virtual Hazelcast.Config.SocketInterceptorConfig SetImplementation(object implementation) { }
+        public virtual Hazelcast.Config.SocketInterceptorConfig SetProperties(System.Collections.Generic.Dictionary<string, string> properties) { }
+        public virtual Hazelcast.Config.SocketInterceptorConfig SetProperty(string name, string value) { }
+        public override string ToString() { }
+    }
+    public class SocketOptions
+    {
+        public SocketOptions() { }
+        public virtual int GetBufferSize() { }
+        public virtual int GetLingerSeconds() { }
+        [System.ObsoleteAttribute("This configuration is not used.")]
+        public virtual Hazelcast.Client.Connection.ISocketFactory GetSocketFactory() { }
+        public virtual int GetTimeout() { }
+        public virtual bool IsKeepAlive() { }
+        public virtual bool IsReuseAddress() { }
+        public virtual bool IsTcpNoDelay() { }
+        public virtual Hazelcast.Config.SocketOptions SetBufferSize(int bufferSize) { }
+        public virtual Hazelcast.Config.SocketOptions SetKeepAlive(bool keepAlive) { }
+        public virtual Hazelcast.Config.SocketOptions SetLingerSeconds(int lingerSeconds) { }
+        public virtual Hazelcast.Config.SocketOptions SetReuseAddress(bool reuseAddress) { }
+        [System.ObsoleteAttribute("This configuration is not used.")]
+        public virtual Hazelcast.Config.SocketOptions SetSocketFactory(Hazelcast.Client.Connection.ISocketFactory socketFactory) { }
+        public virtual Hazelcast.Config.SocketOptions SetTcpNoDelay(bool tcpNoDelay) { }
+        public virtual Hazelcast.Config.SocketOptions SetTimeout(int timeout) { }
+    }
+    public class XmlClientConfigBuilder : Hazelcast.Config.AbstractXmlConfigHelper
+    {
+        public static Hazelcast.Config.ClientConfig Build(string configFile = null) { }
+        public static Hazelcast.Config.ClientConfig Build(System.IO.TextReader reader) { }
+        protected Hazelcast.Config.ClientConfig Init() { }
+    }
+}
+namespace Hazelcast.Core
+{
+    public abstract class AbstractAggregator<R> : Hazelcast.Core.IAggregator<R>
+    {
+        protected string attributePath;
+        protected AbstractAggregator() { }
+        public int GetFactoryId() { }
+    }
+    public abstract class AbstractMapEvent : Hazelcast.Core.EventObject
+    {
+        protected readonly Hazelcast.Core.IMember Member;
+        protected readonly string Name;
+        protected AbstractMapEvent(string source, Hazelcast.Core.IMember member, Hazelcast.Core.EntryEventType eventType) { }
+        public virtual Hazelcast.Core.EntryEventType GetEventType() { }
+        public virtual Hazelcast.Core.IMember GetMember() { }
+        public virtual string GetName() { }
+        public override object GetSource() { }
+        public override string ToString() { }
+    }
+    public class static Aggregators
+    {
+        public static Hazelcast.Core.IAggregator<System.Numerics.BigInteger> BigIntegerSum() { }
+        public static Hazelcast.Core.IAggregator<System.Numerics.BigInteger> BigIntegerSum(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<long> Count() { }
+        public static Hazelcast.Core.IAggregator<long> Count(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<double> DoubleAvg() { }
+        public static Hazelcast.Core.IAggregator<double> DoubleAvg(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<double> DoubleSum() { }
+        public static Hazelcast.Core.IAggregator<double> DoubleSum(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<long> FixedPointSum() { }
+        public static Hazelcast.Core.IAggregator<long> FixedPointSum(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<double> FloatingPointSum() { }
+        public static Hazelcast.Core.IAggregator<double> FloatingPointSum(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<double> IntegerAvg() { }
+        public static Hazelcast.Core.IAggregator<double> IntegerAvg(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<long> IntegerSum() { }
+        public static Hazelcast.Core.IAggregator<long> IntegerSum(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<double> LongAvg() { }
+        public static Hazelcast.Core.IAggregator<double> LongAvg(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<long> LongSum() { }
+        public static Hazelcast.Core.IAggregator<long> LongSum(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<TResult> Max<TResult>() { }
+        public static Hazelcast.Core.IAggregator<TResult> Max<TResult>(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<TResult> Min<TResult>() { }
+        public static Hazelcast.Core.IAggregator<TResult> Min<TResult>(string attributePath) { }
+        public static Hazelcast.Core.IAggregator<double> NumberAvg() { }
+        public static Hazelcast.Core.IAggregator<double> NumberAvg(string attributePath) { }
+    }
+    public class AndPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public AndPredicate() { }
+        public AndPredicate(params Hazelcast.Core.IPredicate[] predicates) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.AndPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class BetweenPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public BetweenPredicate() { }
+        public BetweenPredicate(string attributeName, object from, object to) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.BetweenPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class BigIntegerSumAggregator : Hazelcast.Core.AbstractAggregator<System.Numerics.BigInteger>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public BigIntegerSumAggregator() { }
+        public BigIntegerSumAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public enum ClientType
+    {
+        Java = 0,
+        Csharp = 1,
+        Cpp = 2,
+        Python = 3,
+        Ruby = 4,
+        Other = 5,
+    }
+    public class ConsistencyLostException : Hazelcast.Core.HazelcastException
+    {
+        public ConsistencyLostException() { }
+        public ConsistencyLostException(string message) { }
+    }
+    public sealed class CountAggregator : Hazelcast.Core.AbstractAggregator<long>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public CountAggregator() { }
+        public CountAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class DataAwareEntryEvent<TKey, TValue> : Hazelcast.Core.EntryEvent<TKey, TValue>
+    {
+        public DataAwareEntryEvent(string source, Hazelcast.Core.IMember member, Hazelcast.Core.EntryEventType eventType, Hazelcast.IO.Serialization.IData keyData, Hazelcast.IO.Serialization.IData valueData, Hazelcast.IO.Serialization.IData oldValueData, Hazelcast.IO.Serialization.IData mergingValueData, Hazelcast.IO.Serialization.ISerializationService serializationService) { }
+        public override TKey GetKey() { }
+        public override TValue GetMergingValue() { }
+        public override TValue GetOldValue() { }
+        public override TValue GetValue() { }
+    }
+    public class DistributedObjectDestroyedException : Hazelcast.Core.HazelcastException
+    {
+        public DistributedObjectDestroyedException() { }
+        public DistributedObjectDestroyedException(string message) { }
+        public DistributedObjectDestroyedException(string message, System.Exception cause) { }
+        public DistributedObjectDestroyedException(System.Exception cause) { }
+    }
+    public class DistributedObjectEvent
+    {
+        protected Hazelcast.Core.IDistributedObject DistributedObject;
+        protected DistributedObjectEvent(string eventType, string serviceName, string objectName) { }
+        public virtual Hazelcast.Core.IDistributedObject GetDistributedObject() { }
+        public virtual T GetDistributedObject<T>()
+            where T : Hazelcast.Core.IDistributedObject { }
+        public string GetEventType() { }
+        public string GetObjectName() { }
+        public string GetServiceName() { }
+        protected virtual void InitDistributedObject<T>()
+            where T : Hazelcast.Core.IDistributedObject { }
+        public override string ToString() { }
+        public class static EventType
+        {
+            public const string Created = "CREATED";
+            public const string Destroyed = "DESTROYED";
+        }
+    }
+    public sealed class DoubleAverageAggregator : Hazelcast.Core.AbstractAggregator<double>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public DoubleAverageAggregator() { }
+        public DoubleAverageAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class DoubleSumAggregator : Hazelcast.Core.AbstractAggregator<double>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public DoubleSumAggregator() { }
+        public DoubleSumAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class EntryAdapter<TKey, TValue> : Hazelcast.Core.EntryAddedListener<TKey, TValue>, Hazelcast.Core.EntryEvictedListener<TKey, TValue>, Hazelcast.Core.EntryRemovedListener<TKey, TValue>, Hazelcast.Core.EntryUpdatedListener<TKey, TValue>, Hazelcast.Core.IEntryListener<TKey, TValue>, Hazelcast.Core.IEventListener, Hazelcast.Core.MapClearedListener, Hazelcast.Core.MapEvictedListener, Hazelcast.Core.MapListener
+    {
+        public EntryAdapter() { }
+        public EntryAdapter(System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> fAdded, System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> fRemoved, System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> fUpdated, System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> fEvicted) { }
+        public EntryAdapter(System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> fAdded, System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> fRemoved, System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> fUpdated, System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> fEvicted, System.Action<Hazelcast.Core.MapEvent> fEvictAll, System.Action<Hazelcast.Core.MapEvent> fClearAll) { }
+        public System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> Added { get; set; }
+        public System.Action<Hazelcast.Core.MapEvent> ClearAll { get; set; }
+        public System.Action<Hazelcast.Core.MapEvent> EvictAll { get; set; }
+        public System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> Evicted { get; set; }
+        public System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> Removed { get; set; }
+        public System.Action<Hazelcast.Core.EntryEvent<TKey, TValue>> Updated { get; set; }
+        public void EntryAdded(Hazelcast.Core.EntryEvent<TKey, TValue> @event) { }
+        public void EntryEvicted(Hazelcast.Core.EntryEvent<TKey, TValue> @event) { }
+        public void EntryRemoved(Hazelcast.Core.EntryEvent<TKey, TValue> @event) { }
+        public void EntryUpdated(Hazelcast.Core.EntryEvent<TKey, TValue> @event) { }
+        public void MapCleared(Hazelcast.Core.MapEvent @event) { }
+        public void MapEvicted(Hazelcast.Core.MapEvent @event) { }
+    }
+    public interface EntryAddedListener<TKey, TValue> : Hazelcast.Core.IEventListener, Hazelcast.Core.MapListener
+    {
+        void EntryAdded(Hazelcast.Core.EntryEvent<TKey, TValue> @event);
+    }
+    [System.FlagsAttribute()]
+    public enum EntryEventType
+    {
+        Added = 1,
+        Removed = 2,
+        Updated = 4,
+        Evicted = 8,
+        EvictAll = 16,
+        ClearAll = 32,
+        Merged = 64,
+        Expired = 128,
+        Invalidation = 256,
+        All = 255,
+    }
+    public class EntryEvent<TKey, TValue> : Hazelcast.Core.AbstractMapEvent
+    {
+        public EntryEvent(string source, Hazelcast.Core.IMember member, Hazelcast.Core.EntryEventType eventType, TKey key, TValue value, TValue oldValue = null, TValue mergingValue = null) { }
+        public virtual TKey GetKey() { }
+        public virtual TValue GetMergingValue() { }
+        public virtual TValue GetOldValue() { }
+        public virtual TValue GetValue() { }
+        public override string ToString() { }
+    }
+    public interface EntryEvictedListener<TKey, TValue> : Hazelcast.Core.IEventListener, Hazelcast.Core.MapListener
+    {
+        void EntryEvicted(Hazelcast.Core.EntryEvent<TKey, TValue> @event);
+    }
+    public interface EntryExpiredListener<TKey, TValue> : Hazelcast.Core.IEventListener, Hazelcast.Core.MapListener
+    {
+        void EntryExpired(Hazelcast.Core.EntryEvent<TKey, TValue> @event);
+    }
+    public interface EntryMergedListener<TKey, TValue> : Hazelcast.Core.IEventListener, Hazelcast.Core.MapListener
+    {
+        void EntryMerged(Hazelcast.Core.EntryEvent<TKey, TValue> @event);
+    }
+    public interface EntryRemovedListener<TKey, TValue> : Hazelcast.Core.IEventListener, Hazelcast.Core.MapListener
+    {
+        void EntryRemoved(Hazelcast.Core.EntryEvent<TKey, TValue> @event);
+    }
+    public interface EntryUpdatedListener<TKey, TValue> : Hazelcast.Core.IEventListener, Hazelcast.Core.MapListener
+    {
+        void EntryUpdated(Hazelcast.Core.EntryEvent<TKey, TValue> @event);
+    }
+    public class EqualPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        protected string AttributeName;
+        protected object Value;
+        public EqualPredicate() { }
+        public EqualPredicate(string attributeName, object value) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.EqualPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public virtual int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class EventObject
+    {
+        public EventObject(object source) { }
+        public virtual object GetSource() { }
+    }
+    public class FalsePredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public FalsePredicate() { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.FalsePredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class FixedSumAggregator : Hazelcast.Core.AbstractAggregator<long>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public FixedSumAggregator() { }
+        public FixedSumAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class FloatingPointSumAggregator : Hazelcast.Core.AbstractAggregator<double>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public FloatingPointSumAggregator() { }
+        public FloatingPointSumAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class GreaterLessPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public GreaterLessPredicate() { }
+        public GreaterLessPredicate(string attributeName, object value, bool isEqual, bool isLess) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.GreaterLessPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class HazelcastException : System.SystemException
+    {
+        public HazelcastException() { }
+        public HazelcastException(string message) { }
+        public HazelcastException(string message, System.Exception cause) { }
+        public HazelcastException(System.Exception cause) { }
+    }
+    public class HazelcastInstanceNotActiveException : System.InvalidOperationException
+    {
+        public HazelcastInstanceNotActiveException() { }
+    }
+    public sealed class HazelcastJsonValue
+    {
+        public HazelcastJsonValue(string jsonString) { }
+        public override bool Equals(object obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+    }
+    public class IAggregator<TResult>
+    {
+        public IAggregator() { }
+    }
+    public interface IAtomicLong : Hazelcast.Core.IDistributedObject
+    {
+        long AddAndGet(long delta);
+        bool CompareAndSet(long expect, long update);
+        long DecrementAndGet();
+        long Get();
+        long GetAndAdd(long delta);
+        long GetAndIncrement();
+        long GetAndSet(long newValue);
+        long IncrementAndGet();
+        void Set(long newValue);
+    }
+    public interface IClient : Hazelcast.Core.IEndpoint
+    {
+        Hazelcast.Core.ClientType GetClientType();
+    }
+    public interface IClientListener : Hazelcast.Core.IEventListener
+    {
+        void ClientConnected(Hazelcast.Core.IClient client);
+        void ClientDisconnected(Hazelcast.Core.IClient client);
+    }
+    public interface IClientService
+    {
+        string AddClientListener(Hazelcast.Core.IClientListener clientListener);
+        System.Collections.Generic.ICollection<Hazelcast.Core.IClient> GetConnectedClients();
+        bool RemoveClientListener(string registrationId);
+    }
+    public interface ICluster
+    {
+        string AddMembershipListener(Hazelcast.Core.IMembershipListener listener);
+        long GetClusterTime();
+        Hazelcast.Core.IMember GetLocalMember();
+        System.Collections.Generic.IList<Hazelcast.Core.IMember> GetMembers();
+        bool RemoveMembershipListener(string registrationId);
+    }
+    public interface ICountDownLatch : Hazelcast.Core.IDistributedObject
+    {
+        bool Await(long timeout, Hazelcast.Core.TimeUnit unit);
+        void CountDown();
+        int GetCount();
+        bool TrySetCount(int count);
+    }
+    public interface IDistributedObject
+    {
+        void Destroy();
+        string GetName();
+        string GetPartitionKey();
+        string GetServiceName();
+    }
+    public interface IDistributedObjectListener : Hazelcast.Core.IEventListener
+    {
+        void DistributedObjectCreated(Hazelcast.Core.DistributedObjectEvent @event);
+        void DistributedObjectDestroyed(Hazelcast.Core.DistributedObjectEvent @event);
+    }
+    public interface IEndpoint
+    {
+        System.Net.IPEndPoint GetSocketAddress();
+        string GetUuid();
+    }
+    public interface IEntryListener<TKey, TValue> : Hazelcast.Core.EntryAddedListener<TKey, TValue>, Hazelcast.Core.EntryEvictedListener<TKey, TValue>, Hazelcast.Core.EntryRemovedListener<TKey, TValue>, Hazelcast.Core.EntryUpdatedListener<TKey, TValue>, Hazelcast.Core.IEventListener, Hazelcast.Core.MapClearedListener, Hazelcast.Core.MapEvictedListener, Hazelcast.Core.MapListener { }
+    public interface IEntryView<TKey, TValue>
+    {
+        long GetCost();
+        long GetCreationTime();
+        long GetExpirationTime();
+        long GetHits();
+        TKey GetKey();
+        long GetLastAccessTime();
+        long GetLastStoredTime();
+        long GetLastUpdateTime();
+        TValue GetValue();
+        long GetVersion();
+    }
+    public interface IEventListener { }
+    public interface IExecutionCallback<T>
+    {
+        void OnFailure(System.Exception t);
+        void OnResponse(T response);
+    }
+    public interface IExecutorService : Hazelcast.Core.IDistributedObject
+    {
+        void ExecuteOnAllMembers(Hazelcast.Util.Runnable command);
+        void ExecuteOnKeyOwner(Hazelcast.Util.Runnable command, object key);
+        void ExecuteOnMember(Hazelcast.Util.Runnable command, Hazelcast.Core.IMember member);
+        void ExecuteOnMembers(Hazelcast.Util.Runnable command, System.Collections.Generic.ICollection<Hazelcast.Core.IMember> members);
+        void Submit<T>(Hazelcast.Util.Runnable task, Hazelcast.Core.IExecutionCallback<T> callback);
+        void Submit<T>(Hazelcast.Util.Callable<T> task, Hazelcast.Core.IExecutionCallback<T> callback);
+        System.Collections.Generic.IDictionary<Hazelcast.Core.IMember, System.Threading.Tasks.Task<T>> SubmitToAllMembers<T>(Hazelcast.Util.Callable<T> task);
+        void SubmitToAllMembers(Hazelcast.Util.Runnable task, Hazelcast.Core.IMultiExecutionCallback callback);
+        void SubmitToAllMembers<T>(Hazelcast.Util.Callable<T> task, Hazelcast.Core.IMultiExecutionCallback callback);
+        System.Threading.Tasks.Task<T> SubmitToKeyOwner<T>(Hazelcast.Util.Callable<T> task, object key);
+        void SubmitToKeyOwner<T>(Hazelcast.Util.Runnable task, object key, Hazelcast.Core.IExecutionCallback<T> callback);
+        void SubmitToKeyOwner<T>(Hazelcast.Util.Callable<T> task, object key, Hazelcast.Core.IExecutionCallback<T> callback);
+        System.Threading.Tasks.Task<T> SubmitToMember<T>(Hazelcast.Util.Callable<T> task, Hazelcast.Core.IMember member);
+        void SubmitToMember<T>(Hazelcast.Util.Runnable task, Hazelcast.Core.IMember member, Hazelcast.Core.IExecutionCallback<T> callback);
+        void SubmitToMember<T>(Hazelcast.Util.Callable<T> task, Hazelcast.Core.IMember member, Hazelcast.Core.IExecutionCallback<T> callback);
+        System.Collections.Generic.IDictionary<Hazelcast.Core.IMember, System.Threading.Tasks.Task<T>> SubmitToMembers<T>(Hazelcast.Util.Callable<T> task, System.Collections.Generic.ICollection<Hazelcast.Core.IMember> members);
+        void SubmitToMembers(Hazelcast.Util.Runnable task, System.Collections.Generic.ICollection<Hazelcast.Core.IMember> members, Hazelcast.Core.IMultiExecutionCallback callback);
+        void SubmitToMembers<T>(Hazelcast.Util.Callable<T> task, System.Collections.Generic.ICollection<Hazelcast.Core.IMember> members, Hazelcast.Core.IMultiExecutionCallback callback);
+    }
+    public interface IHCollection<T> : Hazelcast.Core.IDistributedObject, System.Collections.Generic.ICollection<T>, System.Collections.Generic.IEnumerable<T>, System.Collections.IEnumerable
+    {
+        bool Add(T item);
+        bool AddAll<TE>(System.Collections.Generic.IEnumerable<TE> c);
+        string AddItemListener(Hazelcast.Core.IItemListener<T> listener, bool includeValue);
+        bool ContainsAll<TE>(System.Collections.Generic.IEnumerable<TE> c);
+        bool IsEmpty();
+        bool RemoveAll<TE>(System.Collections.Generic.IEnumerable<TE> c);
+        bool RemoveItemListener(string registrationId);
+        bool RetainAll<TE>(System.Collections.Generic.IEnumerable<TE> c);
+        int Size();
+        T[] ToArray();
+        TE[] ToArray<TE>(TE[] a);
+    }
+    public interface IHList<T> : Hazelcast.Core.IDistributedObject, Hazelcast.Core.IHCollection<T>, System.Collections.Generic.ICollection<T>, System.Collections.Generic.IEnumerable<T>, System.Collections.Generic.IList<T>, System.Collections.IEnumerable
+    {
+        void Add(int index, T element);
+        bool AddAll<TE>(int index, System.Collections.Generic.ICollection<TE> c)
+            where TE : T;
+        T Get(int index);
+        int LastIndexOf(T o);
+        T Remove(int index);
+        T Set(int index, T element);
+        System.Collections.Generic.IList<T> SubList(int fromIndex, int toIndex);
+    }
+    public interface IHSet<T> : Hazelcast.Core.IDistributedObject, Hazelcast.Core.IHCollection<T>, System.Collections.Generic.ICollection<T>, System.Collections.Generic.IEnumerable<T>, System.Collections.IEnumerable { }
+    public interface IHazelcastInstance
+    {
+        string AddDistributedObjectListener(Hazelcast.Core.IDistributedObjectListener distributedObjectListener);
+        Hazelcast.Core.IAtomicLong GetAtomicLong(string name);
+        Hazelcast.Core.IClientService GetClientService();
+        Hazelcast.Core.ICluster GetCluster();
+        Hazelcast.Core.ICountDownLatch GetCountDownLatch(string name);
+        T GetDistributedObject<T>(string serviceName, string name)
+            where T : Hazelcast.Core.IDistributedObject;
+        System.Collections.Generic.ICollection<Hazelcast.Core.IDistributedObject> GetDistributedObjects();
+        Hazelcast.Core.IIdGenerator GetIdGenerator(string name);
+        Hazelcast.Core.ILifecycleService GetLifecycleService();
+        Hazelcast.Core.IHList<T> GetList<T>(string name);
+        Hazelcast.Core.IEndpoint GetLocalEndpoint();
+        Hazelcast.Core.ILock GetLock(string key);
+        Hazelcast.Core.IMap<TKey, TValue> GetMap<TKey, TValue>(string name);
+        Hazelcast.Core.IMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name);
+        string GetName();
+        Hazelcast.Core.IPNCounter GetPNCounter(string name);
+        Hazelcast.Core.IQueue<T> GetQueue<T>(string name);
+        Hazelcast.Core.IReplicatedMap<TKey, TValue> GetReplicatedMap<TKey, TValue>(string name);
+        Hazelcast.Core.IRingbuffer<T> GetRingbuffer<T>(string name);
+        Hazelcast.Core.ISemaphore GetSemaphore(string name);
+        Hazelcast.Core.IHSet<T> GetSet<T>(string name);
+        Hazelcast.Core.ITopic<T> GetTopic<T>(string name);
+        System.Collections.Concurrent.ConcurrentDictionary<string, object> GetUserContext();
+        Hazelcast.Transaction.ITransactionContext NewTransactionContext();
+        Hazelcast.Transaction.ITransactionContext NewTransactionContext(Hazelcast.Transaction.TransactionOptions options);
+        bool RemoveDistributedObjectListener(string registrationId);
+        void Shutdown();
+    }
+    public interface IHazelcastInstanceAware
+    {
+        void SetHazelcastInstance(Hazelcast.Core.IHazelcastInstance hazelcastInstance);
+    }
+    public interface IIdGenerator : Hazelcast.Core.IDistributedObject
+    {
+        bool Init(long id);
+        long NewId();
+    }
+    public interface IInitialMembershipListener : Hazelcast.Core.IEventListener, Hazelcast.Core.IMembershipListener
+    {
+        void Init(Hazelcast.Core.InitialMembershipEvent membershipEvent);
+    }
+    public interface IItemListener<TE> : Hazelcast.Core.IEventListener
+    {
+        void ItemAdded(Hazelcast.Core.ItemEvent<TE> item);
+        void ItemRemoved(Hazelcast.Core.ItemEvent<TE> item);
+    }
+    public interface ILifecycleListener : Hazelcast.Core.IEventListener
+    {
+        void StateChanged(Hazelcast.Core.LifecycleEvent lifecycleEvent);
+    }
+    public interface ILifecycleService
+    {
+        string AddLifecycleListener(Hazelcast.Core.ILifecycleListener lifecycleListener);
+        bool IsRunning();
+        bool RemoveLifecycleListener(string registrationId);
+        void Shutdown();
+        void Terminate();
+    }
+    public class ILikePredicate : Hazelcast.Core.LikePredicate
+    {
+        public ILikePredicate() { }
+        public ILikePredicate(string attributeName, string expression) { }
+        public override int GetId() { }
+        public override string ToString() { }
+    }
+    public interface ILock : Hazelcast.Core.IDistributedObject
+    {
+        void ForceUnlock();
+        int GetLockCount();
+        long GetRemainingLeaseTime();
+        bool IsLocked();
+        bool IsLockedByCurrentThread();
+        void Lock();
+        void Lock(long leaseTime, System.Nullable<Hazelcast.Core.TimeUnit> timeUnit);
+        bool TryLock();
+        bool TryLock(long time, System.Nullable<Hazelcast.Core.TimeUnit> unit);
+        void Unlock();
+    }
+    public interface IManagedContext
+    {
+        object Initialize(object obj);
+    }
+    public interface IMap<TKey, TValue> : Hazelcast.Core.IDistributedObject
+    {
+        string AddEntryListener(Hazelcast.Core.MapListener listener, bool includeValue);
+        string AddEntryListener(Hazelcast.Core.MapListener listener, TKey key, bool includeValue);
+        string AddEntryListener(Hazelcast.Core.MapListener listener, Hazelcast.Core.IPredicate predicate, TKey key, bool includeValue);
+        string AddEntryListener(Hazelcast.Core.MapListener listener, Hazelcast.Core.IPredicate predicate, bool includeValue);
+        [System.ObsoleteAttribute()]
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener, bool includeValue);
+        [System.ObsoleteAttribute()]
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener, TKey key, bool includeValue);
+        [System.ObsoleteAttribute()]
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener, Hazelcast.Core.IPredicate predicate, TKey key, bool includeValue);
+        [System.ObsoleteAttribute()]
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener, Hazelcast.Core.IPredicate predicate, bool includeValue);
+        void AddIndex(string attribute, bool ordered);
+        string AddInterceptor(Hazelcast.Map.IMapInterceptor interceptor);
+        TResult Aggregate<TResult>(Hazelcast.Core.IAggregator<TResult> aggregator);
+        TResult Aggregate<TResult>(Hazelcast.Core.IAggregator<TResult> aggregator, Hazelcast.Core.IPredicate predicate);
+        void Clear();
+        bool ContainsKey(object key);
+        bool ContainsValue(object value);
+        void Delete(object key);
+        System.Collections.Generic.ISet<System.Collections.Generic.KeyValuePair<TKey, TValue>> EntrySet();
+        System.Collections.Generic.ISet<System.Collections.Generic.KeyValuePair<TKey, TValue>> EntrySet(Hazelcast.Core.IPredicate predicate);
+        bool Evict(TKey key);
+        void EvictAll();
+        System.Collections.Generic.IDictionary<TKey, object> ExecuteOnEntries(Hazelcast.Map.IEntryProcessor entryProcessor);
+        System.Collections.Generic.IDictionary<TKey, object> ExecuteOnEntries(Hazelcast.Map.IEntryProcessor entryProcessor, Hazelcast.Core.IPredicate predicate);
+        object ExecuteOnKey(TKey key, Hazelcast.Map.IEntryProcessor entryProcessor);
+        System.Collections.Generic.IDictionary<TKey, object> ExecuteOnKeys(System.Collections.Generic.ISet<TKey> keys, Hazelcast.Map.IEntryProcessor entryProcessor);
+        void Flush();
+        void ForceUnlock(TKey key);
+        TValue Get(object key);
+        System.Collections.Generic.IDictionary<TKey, TValue> GetAll(System.Collections.Generic.ICollection<TKey> keys);
+        System.Threading.Tasks.Task<TValue> GetAsync(TKey key);
+        Hazelcast.Core.IEntryView<TKey, TValue> GetEntryView(TKey key);
+        bool IsEmpty();
+        bool IsLocked(TKey key);
+        System.Collections.Generic.ISet<TKey> KeySet();
+        System.Collections.Generic.ISet<TKey> KeySet(Hazelcast.Core.IPredicate predicate);
+        void Lock(TKey key);
+        void Lock(TKey key, long leaseTime, Hazelcast.Core.TimeUnit timeUnit);
+        System.Collections.Generic.ICollection<TResult> Project<TResult>(Hazelcast.Core.IProjection projection);
+        System.Collections.Generic.ICollection<TResult> Project<TResult>(Hazelcast.Core.IProjection projection, Hazelcast.Core.IPredicate predicate);
+        TValue Put(TKey key, TValue value);
+        TValue Put(TKey key, TValue value, long ttl, Hazelcast.Core.TimeUnit timeunit);
+        void PutAll(System.Collections.Generic.IDictionary<TKey, TValue> m);
+        System.Threading.Tasks.Task<TValue> PutAsync(TKey key, TValue value);
+        System.Threading.Tasks.Task<TValue> PutAsync(TKey key, TValue value, long ttl, Hazelcast.Core.TimeUnit timeunit);
+        TValue PutIfAbsent(TKey key, TValue value);
+        TValue PutIfAbsent(TKey key, TValue value, long ttl, Hazelcast.Core.TimeUnit timeunit);
+        void PutTransient(TKey key, TValue value, long ttl, Hazelcast.Core.TimeUnit timeunit);
+        TValue Remove(object key);
+        bool Remove(object key, object value);
+        void RemoveAll(Hazelcast.Core.IPredicate predicate);
+        System.Threading.Tasks.Task<TValue> RemoveAsync(TKey key);
+        bool RemoveEntryListener(string id);
+        void RemoveInterceptor(string id);
+        TValue Replace(TKey key, TValue value);
+        bool Replace(TKey key, TValue oldValue, TValue newValue);
+        void Set(TKey key, TValue value);
+        void Set(TKey key, TValue value, long ttl, Hazelcast.Core.TimeUnit timeunit);
+        int Size();
+        System.Threading.Tasks.Task<object> SubmitToKey(TKey key, Hazelcast.Map.IEntryProcessor entryProcessor);
+        bool TryLock(TKey key);
+        bool TryLock(TKey key, long time, Hazelcast.Core.TimeUnit timeunit);
+        bool TryLock(TKey key, long time, Hazelcast.Core.TimeUnit timeunit, long leaseTime, Hazelcast.Core.TimeUnit leaseTimeunit);
+        bool TryPut(TKey key, TValue value, long timeout, Hazelcast.Core.TimeUnit timeunit);
+        bool TryRemove(TKey key, long timeout, Hazelcast.Core.TimeUnit timeunit);
+        void Unlock(TKey key);
+        System.Collections.Generic.ICollection<TValue> Values();
+        System.Collections.Generic.ICollection<TValue> Values(Hazelcast.Core.IPredicate predicate);
+    }
+    public interface IMember : Hazelcast.Core.IEndpoint
+    {
+        bool IsLiteMember { get; }
+        Hazelcast.IO.Address GetAddress();
+        string GetAttribute(string key);
+        System.Collections.Generic.IDictionary<string, string> GetAttributes();
+    }
+    public interface IMembershipListener : Hazelcast.Core.IEventListener
+    {
+        void MemberAdded(Hazelcast.Core.MembershipEvent membershipEvent);
+        void MemberAttributeChanged(Hazelcast.Core.MemberAttributeEvent memberAttributeEvent);
+        void MemberRemoved(Hazelcast.Core.MembershipEvent membershipEvent);
+    }
+    public interface IMessageListener<T> : Hazelcast.Core.IEventListener
+    {
+        void OnMessage(Hazelcast.Core.Message<T> message);
+    }
+    public interface IMultiExecutionCallback
+    {
+        void OnComplete(System.Collections.Generic.IDictionary<Hazelcast.Core.IMember, object> values);
+        void OnResponse(Hazelcast.Core.IMember member, object value);
+    }
+    public interface IMultiMap<TKey, TValue> : Hazelcast.Core.IDistributedObject
+    {
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener, bool includeValue);
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener, TKey key, bool includeValue);
+        void Clear();
+        bool ContainsEntry(TKey key, TValue value);
+        bool ContainsKey(TKey key);
+        bool ContainsValue(object value);
+        System.Collections.Generic.ISet<System.Collections.Generic.KeyValuePair<TKey, TValue>> EntrySet();
+        void ForceUnlock(TKey key);
+        System.Collections.Generic.ICollection<TValue> Get(TKey key);
+        bool IsLocked(TKey key);
+        System.Collections.Generic.ISet<TKey> KeySet();
+        void Lock(TKey key);
+        void Lock(TKey key, long leaseTime, Hazelcast.Core.TimeUnit timeUnit);
+        bool Put(TKey key, TValue value);
+        bool Remove(object key, object value);
+        System.Collections.Generic.ICollection<TValue> Remove(object key);
+        bool RemoveEntryListener(string registrationId);
+        int Size();
+        bool TryLock(TKey key);
+        bool TryLock(TKey key, long time, Hazelcast.Core.TimeUnit timeunit);
+        bool TryLock(TKey key, long time, Hazelcast.Core.TimeUnit timeunit, long leaseTime, Hazelcast.Core.TimeUnit leaseTimeunit);
+        void Unlock(TKey key);
+        int ValueCount(TKey key);
+        System.Collections.Generic.ICollection<TValue> Values();
+    }
+    public interface IPNCounter : Hazelcast.Core.IDistributedObject
+    {
+        long AddAndGet(long delta);
+        long DecrementAndGet();
+        long Get();
+        long GetAndAdd(long delta);
+        long GetAndDecrement();
+        long GetAndIncrement();
+        long GetAndSubtract(long delta);
+        long IncrementAndGet();
+        void Reset();
+        long SubtractAndGet(long delta);
+    }
+    public interface IPartition
+    {
+        Hazelcast.Core.IMember GetOwner();
+        int GetPartitionId();
+    }
+    public interface IPartitionAware<T>
+    {
+        T GetPartitionKey();
+    }
+    public interface IPartitioningStrategy
+    {
+        object GetPartitionKey(object key);
+    }
+    public interface IPredicate : Hazelcast.IO.Serialization.IIdentifiedDataSerializable { }
+    [System.ObsoleteAttribute("Use non generic version, IPredicate instead.")]
+    public interface IPredicate<TKey, TValue> : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable { }
+    public class IProjection
+    {
+        public IProjection() { }
+    }
+    public interface IQueue<T> : Hazelcast.Core.IDistributedObject, Hazelcast.Core.IHCollection<T>, System.Collections.Generic.ICollection<T>, System.Collections.Generic.IEnumerable<T>, System.Collections.IEnumerable
+    {
+        bool Contains(object o);
+        int DrainTo<TE>(System.Collections.Generic.ICollection<TE> c)
+            where TE : T;
+        int DrainTo<TE>(System.Collections.Generic.ICollection<TE> c, int maxElements)
+            where TE : T;
+        T Element();
+        bool Offer(T e);
+        bool Offer(T e, long timeout, Hazelcast.Core.TimeUnit unit);
+        T Peek();
+        T Poll();
+        T Poll(long timeout, Hazelcast.Core.TimeUnit unit);
+        void Put(T e);
+        int RemainingCapacity();
+        bool Remove(object o);
+        T Remove();
+        T Take();
+    }
+    public interface IReplicatedMap<TKey, TValue> : Hazelcast.Core.IDistributedObject
+    {
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener);
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener, TKey key);
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener, Hazelcast.Core.IPredicate predicate);
+        string AddEntryListener(Hazelcast.Core.IEntryListener<TKey, TValue> listener, Hazelcast.Core.IPredicate predicate, TKey key);
+        void Clear();
+        bool ContainsKey(object key);
+        bool ContainsValue(object value);
+        System.Collections.Generic.ISet<System.Collections.Generic.KeyValuePair<TKey, TValue>> EntrySet();
+        TValue Get(object key);
+        bool IsEmpty();
+        System.Collections.Generic.ISet<TKey> KeySet();
+        TValue Put(TKey key, TValue value);
+        TValue Put(TKey key, TValue value, long ttl, Hazelcast.Core.TimeUnit timeunit);
+        void PutAll(System.Collections.Generic.IDictionary<TKey, TValue> m);
+        TValue Remove(object key);
+        bool RemoveEntryListener(string id);
+        int Size();
+        System.Collections.Generic.ICollection<TValue> Values();
+    }
+    public interface IRingbuffer<T> : Hazelcast.Core.IDistributedObject
+    {
+        long Add(T item);
+        System.Threading.Tasks.Task<long> AddAllAsync<TE>(System.Collections.Generic.ICollection<TE> collection, Hazelcast.Core.OverflowPolicy overflowPolicy)
+            where TE : T;
+        System.Threading.Tasks.Task<long> AddAsync(T item, Hazelcast.Core.OverflowPolicy overflowPolicy);
+        long Capacity();
+        long HeadSequence();
+        System.Threading.Tasks.Task<System.Collections.Generic.IList<T>> ReadManyAsync(long startSequence, int minCount, int maxCount);
+        T ReadOne(long sequence);
+        long RemainingCapacity();
+        long Size();
+        long TailSequence();
+    }
+    public interface ISemaphore : Hazelcast.Core.IDistributedObject
+    {
+        void Acquire();
+        void Acquire(int permits);
+        int AvailablePermits();
+        int DrainPermits();
+        bool Init(int permits);
+        void ReducePermits(int reduction);
+        void Release();
+        void Release(int permits);
+        bool TryAcquire();
+        bool TryAcquire(int permits);
+        bool TryAcquire(long timeout, Hazelcast.Core.TimeUnit unit);
+        bool TryAcquire(int permits, long timeout, Hazelcast.Core.TimeUnit unit);
+    }
+    public interface ITopic<T> : Hazelcast.Core.IDistributedObject
+    {
+        string AddMessageListener(Hazelcast.Core.IMessageListener<T> listener);
+        string AddMessageListener(System.Action<Hazelcast.Core.Message<T>> listener);
+        new string GetName();
+        void Publish(T message);
+        bool RemoveMessageListener(string registrationId);
+    }
+    public interface ITransactionalList<E> : Hazelcast.Core.IDistributedObject, Hazelcast.Transaction.ITransactionalObject
+    {
+        bool Add(E e);
+        bool Remove(E e);
+        int Size();
+    }
+    public interface ITransactionalMap<TKey, TValue> : Hazelcast.Core.IDistributedObject, Hazelcast.Transaction.ITransactionalObject
+    {
+        bool ContainsKey(object key);
+        void Delete(object key);
+        TValue Get(object key);
+        TValue GetForUpdate(object key);
+        bool IsEmpty();
+        System.Collections.Generic.ICollection<TKey> KeySet();
+        System.Collections.Generic.ICollection<TKey> KeySet(Hazelcast.Core.IPredicate predicate);
+        TValue Put(TKey key, TValue value);
+        TValue Put(TKey key, TValue value, long ttl, Hazelcast.Core.TimeUnit timeunit);
+        TValue PutIfAbsent(TKey key, TValue value);
+        TValue Remove(object key);
+        bool Remove(object key, object value);
+        TValue Replace(TKey key, TValue value);
+        bool Replace(TKey key, TValue oldValue, TValue newValue);
+        void Set(TKey key, TValue value);
+        int Size();
+        System.Collections.Generic.ICollection<TValue> Values();
+        System.Collections.Generic.ICollection<TValue> Values(Hazelcast.Core.IPredicate predicate);
+    }
+    public interface ITransactionalMultiMap<TKey, TValue> : Hazelcast.Core.IDistributedObject, Hazelcast.Transaction.ITransactionalObject
+    {
+        System.Collections.Generic.ICollection<TValue> Get(TKey key);
+        bool Put(TKey key, TValue value);
+        bool Remove(object key, object value);
+        System.Collections.Generic.ICollection<TValue> Remove(object key);
+        int Size();
+        int ValueCount(TKey key);
+    }
+    public interface ITransactionalQueue<T> : Hazelcast.Core.IDistributedObject, Hazelcast.Transaction.ITransactionalObject
+    {
+        bool Offer(T e);
+        bool Offer(T e, long timeout, Hazelcast.Core.TimeUnit unit);
+        T Peek();
+        T Peek(long timeout, Hazelcast.Core.TimeUnit unit);
+        T Poll();
+        T Poll(long timeout, Hazelcast.Core.TimeUnit unit);
+        int Size();
+        T Take();
+    }
+    public interface ITransactionalSet<E> : Hazelcast.Core.IDistributedObject, Hazelcast.Transaction.ITransactionalObject
+    {
+        bool Add(E e);
+        bool Remove(E e);
+        int Size();
+    }
+    public class InPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public InPredicate() { }
+        public InPredicate(string attributeName, params object[] values) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.InPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class InitialMembershipEvent : Hazelcast.Core.EventObject
+    {
+        public InitialMembershipEvent(Hazelcast.Core.ICluster cluster, System.Collections.Generic.ICollection<Hazelcast.Core.IMember> members) { }
+        public virtual Hazelcast.Core.ICluster GetCluster() { }
+        public virtual System.Collections.Generic.ICollection<Hazelcast.Core.IMember> GetMembers() { }
+        public override string ToString() { }
+    }
+    public class InstanceofPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public InstanceofPredicate() { }
+        public InstanceofPredicate(string className) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.InstanceofPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class IntegerAverageAggregator : Hazelcast.Core.AbstractAggregator<double>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public IntegerAverageAggregator() { }
+        public IntegerAverageAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class IntegerSumAggregator : Hazelcast.Core.AbstractAggregator<long>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public IntegerSumAggregator() { }
+        public IntegerSumAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public enum ItemEventType
+    {
+        Added = 1,
+        Removed = 2,
+    }
+    public class ItemEvent<TE> : Hazelcast.Core.EventObject
+    {
+        public ItemEvent(string name, Hazelcast.Core.ItemEventType itemEventType, TE item, Hazelcast.Core.IMember member) { }
+        public virtual Hazelcast.Core.ItemEventType GetEventType() { }
+        public virtual TE GetItem() { }
+        public virtual Hazelcast.Core.IMember GetMember() { }
+        public override string ToString() { }
+    }
+    public class ItemListener<T> : Hazelcast.Core.IEventListener, Hazelcast.Core.IItemListener<T>
+    {
+        public ItemListener() { }
+        public System.Action<Hazelcast.Core.ItemEvent<T>> OnItemAdded { get; set; }
+        public System.Action<Hazelcast.Core.ItemEvent<T>> OnItemRemoved { get; set; }
+        public void ItemAdded(Hazelcast.Core.ItemEvent<T> item) { }
+        public void ItemRemoved(Hazelcast.Core.ItemEvent<T> item) { }
+    }
+    public sealed class LifecycleEvent
+    {
+        public LifecycleEvent(Hazelcast.Core.LifecycleEvent.LifecycleState state) { }
+        public override bool Equals(object o) { }
+        public override int GetHashCode() { }
+        public Hazelcast.Core.LifecycleEvent.LifecycleState GetState() { }
+        public override string ToString() { }
+        public enum LifecycleState
+        {
+            Starting = 0,
+            Started = 1,
+            ShuttingDown = 2,
+            Shutdown = 3,
+            Merging = 4,
+            Merged = 5,
+            ClientConnected = 6,
+            ClientDisconnected = 7,
+        }
+    }
+    public class LifecycleListener : Hazelcast.Core.IEventListener, Hazelcast.Core.ILifecycleListener
+    {
+        public LifecycleListener(System.Action<Hazelcast.Core.LifecycleEvent> action) { }
+        public void StateChanged(Hazelcast.Core.LifecycleEvent lifecycleEvent) { }
+    }
+    public class LikePredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        protected string AttributeName;
+        protected string Expression;
+        public LikePredicate() { }
+        public LikePredicate(string attributeName, string expression) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.LikePredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public virtual int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class LongAverageAggregator : Hazelcast.Core.AbstractAggregator<double>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public LongAverageAggregator() { }
+        public LongAverageAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class LongSumAggregator : Hazelcast.Core.AbstractAggregator<long>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public LongSumAggregator() { }
+        public LongSumAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public interface MapClearedListener : Hazelcast.Core.IEventListener, Hazelcast.Core.MapListener
+    {
+        void MapCleared(Hazelcast.Core.MapEvent @event);
+    }
+    public class MapEvent : Hazelcast.Core.AbstractMapEvent
+    {
+        public MapEvent(string source, Hazelcast.Core.IMember member, Hazelcast.Core.EntryEventType eventType, int numberofEntriesAffected) { }
+        public int GetNumberOfEntriesAffected() { }
+    }
+    public interface MapEvictedListener : Hazelcast.Core.IEventListener, Hazelcast.Core.MapListener
+    {
+        void MapEvicted(Hazelcast.Core.MapEvent @event);
+    }
+    public interface MapListener : Hazelcast.Core.IEventListener { }
+    public sealed class MaxAggregator<TResult> : Hazelcast.Core.AbstractAggregator<TResult>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public MaxAggregator() { }
+        public MaxAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class MemberAttributeEvent : Hazelcast.Core.MembershipEvent
+    {
+        public MemberAttributeEvent() { }
+        public MemberAttributeEvent(Hazelcast.Core.ICluster cluster, Hazelcast.Core.IMember member, Hazelcast.Core.MemberAttributeOperationType operationType, string key, object value) { }
+        public string GetKey() { }
+        public override Hazelcast.Core.IMember GetMember() { }
+        public Hazelcast.Core.MemberAttributeOperationType GetOperationType() { }
+        public object GetValue() { }
+    }
+    public enum MemberAttributeOperationType
+    {
+        Put = 1,
+        Remove = 2,
+    }
+    public class MembershipEvent : Hazelcast.Core.EventObject
+    {
+        public const int MemberAdded = 1;
+        public const int MemberAttributeChanged = 5;
+        public const int MemberRemoved = 2;
+        public MembershipEvent(Hazelcast.Core.ICluster cluster, Hazelcast.Core.IMember member, int eventType, System.Collections.Generic.ICollection<Hazelcast.Core.IMember> members) { }
+        public virtual Hazelcast.Core.ICluster GetCluster() { }
+        public virtual int GetEventType() { }
+        public virtual Hazelcast.Core.IMember GetMember() { }
+        public virtual System.Collections.Generic.ICollection<Hazelcast.Core.IMember> GetMembers() { }
+        public override string ToString() { }
+    }
+    public class MembershipListener : Hazelcast.Core.IEventListener, Hazelcast.Core.IMembershipListener
+    {
+        public MembershipListener() { }
+        public System.Action<Hazelcast.Core.MembershipEvent> OnMemberAdded { get; set; }
+        public System.Action<Hazelcast.Core.MemberAttributeEvent> OnMemberAttributeChanged { get; set; }
+        public System.Action<Hazelcast.Core.MembershipEvent> OnMemberRemoved { get; set; }
+        public void MemberAdded(Hazelcast.Core.MembershipEvent membershipEvent) { }
+        public void MemberAttributeChanged(Hazelcast.Core.MemberAttributeEvent memberAttributeEvent) { }
+        public void MemberRemoved(Hazelcast.Core.MembershipEvent membershipEvent) { }
+    }
+    public class Message<T> : Hazelcast.Core.EventObject
+    {
+        public Message(string topicName, T messageObject, long publishTime, Hazelcast.Core.IMember publishingMember) { }
+        public virtual T GetMessageObject() { }
+        public virtual long GetPublishTime() { }
+        public virtual Hazelcast.Core.IMember GetPublishingMember() { }
+    }
+    public sealed class MinAggregator<TResult> : Hazelcast.Core.AbstractAggregator<TResult>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public MinAggregator() { }
+        public MinAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class NoDataMemberInClusterException : Hazelcast.Core.HazelcastException
+    {
+        public NoDataMemberInClusterException() { }
+        public NoDataMemberInClusterException(string message) { }
+    }
+    public class NotEqualPredicate : Hazelcast.Core.EqualPredicate
+    {
+        public NotEqualPredicate() { }
+        public NotEqualPredicate(string attributeName, object value) { }
+        public override int GetId() { }
+        public override string ToString() { }
+    }
+    public class NotPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public NotPredicate() { }
+        public NotPredicate(Hazelcast.Core.IPredicate predicate) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.NotPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class NumberAverageAggregator : Hazelcast.Core.AbstractAggregator<double>, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public NumberAverageAggregator() { }
+        public NumberAverageAggregator(string attributePath) { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class OrPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public OrPredicate(params Hazelcast.Core.IPredicate[] predicates) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.OrPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public enum OverflowPolicy
+    {
+        Overwrite = 0,
+        Fail = 1,
+    }
+    public class PagingPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public PagingPredicate() { }
+        public PagingPredicate(int pageSize, Hazelcast.Core.IPredicate predicate = null, System.Collections.Generic.IComparer<System.Collections.Generic.KeyValuePair<object, object>> comparer = null) { }
+        public System.Collections.Generic.IComparer<System.Collections.Generic.KeyValuePair<object, object>> Comparer { get; set; }
+        public System.Nullable<Hazelcast.Util.IterationType> IterationType { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int GetFactoryId() { }
+        public int GetId() { }
+        public System.Collections.Generic.KeyValuePair<int, System.Collections.Generic.KeyValuePair<object, object>> GetNearestAnchorEntry() { }
+        public void NextPage() { }
+        public void PreviousPage() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void Reset() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class PartitionPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public PartitionPredicate() { }
+        public PartitionPredicate(object partitionKey, Hazelcast.Core.IPredicate predicate) { }
+        public int GetFactoryId() { }
+        public int GetId() { }
+        public object GetPartitionKey() { }
+        public Hazelcast.Core.IPredicate GetTarget() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class static PredicateExt
+    {
+        public static Hazelcast.Core.AndPredicate And(this Hazelcast.Core.IPredicate firstPredicate, Hazelcast.Core.IPredicate secondPredicate) { }
+        public static Hazelcast.Core.BetweenPredicate Between(this Hazelcast.Core.PredicateProperty predicateProperty, object from, object to) { }
+        public static Hazelcast.Core.EqualPredicate Equal(this Hazelcast.Core.PredicateProperty predicateProperty, object value) { }
+        public static Hazelcast.Core.GreaterLessPredicate GreaterThan(this Hazelcast.Core.PredicateProperty predicateProperty, object value) { }
+        public static Hazelcast.Core.GreaterLessPredicate GreaterThanOrEqual(this Hazelcast.Core.PredicateProperty predicateProperty, object value) { }
+        public static Hazelcast.Core.ILikePredicate ILike(this Hazelcast.Core.PredicateProperty predicateProperty, string expression) { }
+        public static Hazelcast.Core.InPredicate In(this Hazelcast.Core.PredicateProperty predicateProperty, params object[] values) { }
+        public static Hazelcast.Core.GreaterLessPredicate LessThan(this Hazelcast.Core.PredicateProperty predicateProperty, object value) { }
+        public static Hazelcast.Core.GreaterLessPredicate LessThanOrEqual(this Hazelcast.Core.PredicateProperty predicateProperty, object value) { }
+        public static Hazelcast.Core.LikePredicate Like(this Hazelcast.Core.PredicateProperty predicateProperty, string expression) { }
+        public static Hazelcast.Core.RegexPredicate MatchesRegex(this Hazelcast.Core.PredicateProperty predicateProperty, string regex) { }
+        public static Hazelcast.Core.NotPredicate Not(this Hazelcast.Core.IPredicate predicate) { }
+        public static Hazelcast.Core.NotEqualPredicate NotEqual(this Hazelcast.Core.PredicateProperty predicateProperty, object value) { }
+        public static Hazelcast.Core.OrPredicate Or(this Hazelcast.Core.IPredicate firstPredicate, Hazelcast.Core.IPredicate secondPredicate) { }
+    }
+    public class PredicateProperty
+    {
+        public PredicateProperty(string property) { }
+        public string Property { get; }
+    }
+    public class static Predicates
+    {
+        public static Hazelcast.Core.AndPredicate And(params Hazelcast.Core.IPredicate[] predicates) { }
+        public static Hazelcast.Core.FalsePredicate False() { }
+        public static Hazelcast.Core.InstanceofPredicate InstanceOf(string fullJavaClassName) { }
+        public static Hazelcast.Core.BetweenPredicate IsBetween(string attributeName, object from, object to) { }
+        public static Hazelcast.Core.EqualPredicate IsEqual(string attributeName, object value) { }
+        public static Hazelcast.Core.GreaterLessPredicate IsGreaterThan(string attributeName, object value) { }
+        public static Hazelcast.Core.GreaterLessPredicate IsGreaterThanOrEqual(string attributeName, object value) { }
+        public static Hazelcast.Core.ILikePredicate IsILike(string attributeName, string expression) { }
+        public static Hazelcast.Core.InPredicate IsIn(string attributeName, params object[] values) { }
+        public static Hazelcast.Core.GreaterLessPredicate IsLessThan(string attributeName, object value) { }
+        public static Hazelcast.Core.GreaterLessPredicate IsLessThanOrEqual(string attributeName, object value) { }
+        public static Hazelcast.Core.LikePredicate IsLike(string attributeName, string expression) { }
+        public static Hazelcast.Core.NotEqualPredicate IsNotEqual(string attributeName, object value) { }
+        public static Hazelcast.Core.PredicateProperty Key(string property = null) { }
+        public static Hazelcast.Core.RegexPredicate MatchesRegex(string attributeName, string regex) { }
+        public static Hazelcast.Core.NotPredicate Not(Hazelcast.Core.IPredicate predicate) { }
+        public static Hazelcast.Core.OrPredicate Or(params Hazelcast.Core.IPredicate[] predicates) { }
+        public static Hazelcast.Core.PredicateProperty Property(string property) { }
+        public static Hazelcast.Core.SqlPredicate Sql(string sql) { }
+        public static Hazelcast.Core.PredicateProperty This() { }
+        public static Hazelcast.Core.TruePredicate True() { }
+    }
+    public class QueryException : Hazelcast.Core.HazelcastException
+    {
+        public QueryException() { }
+        public QueryException(string message) { }
+        public QueryException(string message, System.Exception cause) { }
+        public QueryException(System.Exception cause) { }
+    }
+    public class RegexPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public RegexPredicate() { }
+        public RegexPredicate(string attributeName, string regex) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.RegexPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public sealed class SingleAttributeProjection : Hazelcast.Core.IProjection, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public SingleAttributeProjection() { }
+        public SingleAttributeProjection(string attributePath) { }
+        public int GetFactoryId() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class SqlPredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public SqlPredicate() { }
+        public SqlPredicate(string sql) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.SqlPredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+    public class StaleSequenceException : Hazelcast.Core.HazelcastException
+    {
+        public StaleSequenceException() { }
+        public StaleSequenceException(string message) { }
+    }
+    public enum TimeUnit : long
+    {
+        Milliseconds = 1,
+        Seconds = 1000,
+        Minutes = 60000,
+    }
+    public class TruePredicate : Hazelcast.Core.IPredicate, Hazelcast.IO.Serialization.IIdentifiedDataSerializable
+    {
+        public TruePredicate() { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.Core.TruePredicate other) { }
+        public int GetFactoryId() { }
+        public override int GetHashCode() { }
+        public int GetId() { }
+        public void ReadData(Hazelcast.IO.IObjectDataInput input) { }
+        public override string ToString() { }
+        public void WriteData(Hazelcast.IO.IObjectDataOutput output) { }
+    }
+}
+namespace Hazelcast.IO
+{
+    public sealed class Address
+    {
+        public const int Id = 1;
+        public Address() { }
+        public Address(string host, int port) { }
+        public Address(System.Net.IPAddress inetAddress, int port) { }
+        public Address(System.Net.IPEndPoint inetSocketAddress) { }
+        public Address(string hostname, System.Net.IPAddress ipAddress, int port) { }
+        public override bool Equals(object obj) { }
+        public static System.Net.IPAddress GetAddressByName(string name) { }
+        public override int GetHashCode() { }
+        public string GetHost() { }
+        public System.Net.IPAddress GetInetAddress() { }
+        public System.Net.IPEndPoint GetInetSocketAddress() { }
+        public int GetPort() { }
+        public string GetScopeId() { }
+        public string GetScopedHost() { }
+        public bool IsIPv4() { }
+        public bool IsIPv6() { }
+        public void SetScopeId(string scopeId) { }
+        public override string ToString() { }
+    }
+    public class static BufferObjectDataInputConstants
+    {
+        public const int UtfBufferSize = 1024;
+    }
+    public class static BufferObjectDataOutputConstants
+    {
+        public const int UtfBufferSize = 1024;
+    }
+    public interface IBufferObjectDataInput : Hazelcast.IO.IDataInput, Hazelcast.IO.IObjectDataInput, System.IDisposable
+    {
+        void Clear();
+        void Init(byte[] data, int offset);
+        int Position();
+        void Position(int newPos);
+        int Read(int position);
+        bool ReadBoolean(int position);
+        byte ReadByte(int position);
+        char ReadChar(int position);
+        double ReadDouble(int position);
+        double ReadDouble(Hazelcast.Net.Ext.ByteOrder byteOrder);
+        double ReadDouble(int position, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        float ReadFloat(int position);
+        float ReadFloat(Hazelcast.Net.Ext.ByteOrder byteOrder);
+        float ReadFloat(int position, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        int ReadInt(int position);
+        int ReadInt(Hazelcast.Net.Ext.ByteOrder byteOrder);
+        int ReadInt(int position, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        long ReadLong(int position);
+        long ReadLong(Hazelcast.Net.Ext.ByteOrder byteOrder);
+        long ReadLong(int position, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        short ReadShort(int position);
+        short ReadShort(Hazelcast.Net.Ext.ByteOrder byteOrder);
+        short ReadShort(int position, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void Reset();
+    }
+    public interface IBufferObjectDataOutput : Hazelcast.IO.IDataOutput, Hazelcast.IO.IObjectDataOutput, System.IDisposable
+    {
+        void Clear();
+        int Position();
+        void Position(int newPos);
+        void Write(int position, int b);
+        void WriteBoolean(int position, bool v);
+        void WriteByte(int position, int v);
+        void WriteChar(int position, int v);
+        void WriteDouble(int position, double v);
+        void WriteDouble(double v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteDouble(int position, double v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteFloat(int position, float v);
+        void WriteFloat(float v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteFloat(int position, float v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteInt(int position, int v);
+        void WriteInt(int v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteInt(int position, int v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteLong(int position, long v);
+        void WriteLong(long v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteLong(int position, long v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteShort(int position, int v);
+        void WriteShort(int v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteShort(int position, int v, Hazelcast.Net.Ext.ByteOrder byteOrder);
+        void WriteZeroBytes(int count);
+    }
+    public interface IDataInput
+    {
+        bool ReadBoolean();
+        byte ReadByte();
+        char ReadChar();
+        double ReadDouble();
+        float ReadFloat();
+        void ReadFully(byte[] b);
+        void ReadFully(byte[] b, int off, int len);
+        int ReadInt();
+        long ReadLong();
+        short ReadShort();
+        string ReadUTF();
+        int ReadUnsignedByte();
+        int ReadUnsignedShort();
+        int SkipBytes(int n);
+    }
+    public interface IDataOutput
+    {
+        void Write(int b);
+        void Write(byte[] b);
+        void Write(byte[] b, int off, int len);
+        void WriteBoolean(bool v);
+        void WriteByte(int v);
+        void WriteBytes(string s);
+        void WriteChar(int v);
+        void WriteChars(string s);
+        void WriteDouble(double v);
+        void WriteFloat(float v);
+        void WriteInt(int v);
+        void WriteLong(long v);
+        void WriteShort(int v);
+        void WriteUTF(string s);
+    }
+    public interface IMemberSocketInterceptor : Hazelcast.IO.ISocketInterceptor
+    {
+        void OnAccept(System.Net.Sockets.Socket acceptedSocket);
+    }
+    public interface IObjectDataInput : Hazelcast.IO.IDataInput
+    {
+        Hazelcast.Net.Ext.ByteOrder GetByteOrder();
+        bool[] ReadBooleanArray();
+        byte[] ReadByteArray();
+        char[] ReadCharArray();
+        Hazelcast.IO.Serialization.IData ReadData();
+        double[] ReadDoubleArray();
+        float[] ReadFloatArray();
+        int[] ReadIntArray();
+        long[] ReadLongArray();
+        T ReadObject<T>();
+        short[] ReadShortArray();
+        string[] ReadUTFArray();
+    }
+    public interface IObjectDataOutput : Hazelcast.IO.IDataOutput
+    {
+        Hazelcast.Net.Ext.ByteOrder GetByteOrder();
+        byte[] ToByteArray();
+        void WriteBooleanArray(bool[] booleans);
+        void WriteByteArray(byte[] bytes);
+        void WriteCharArray(char[] chars);
+        void WriteData(Hazelcast.IO.Serialization.IData data);
+        void WriteDoubleArray(double[] values);
+        void WriteFloatArray(float[] values);
+        void WriteIntArray(int[] ints);
+        void WriteLongArray(long[] longs);
+        void WriteObject(object @object);
+        void WriteShortArray(short[] values);
+        void WriteUTFArray(string[] values);
+    }
+    public interface ISocketInterceptor
+    {
+        void Init(System.Collections.Generic.Dictionary<string, string> properties);
+        void OnConnect(System.Net.Sockets.Socket connectedSocket);
+    }
+}
+namespace Hazelcast.IO.Serialization
+{
+    public sealed class ClassDefinitionBuilder
+    {
+        public ClassDefinitionBuilder(int factoryId, int classId) { }
+        public ClassDefinitionBuilder(int factoryId, int classId, int version) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddBooleanArrayField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddBooleanField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddByteArrayField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddByteField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddCharArrayField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddCharField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddDoubleArrayField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddDoubleField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddFloatArrayField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddFloatField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddIntArrayField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddIntField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddLongArrayField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddLongField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddPortableArrayField(string fieldName, Hazelcast.IO.Serialization.IClassDefinition def) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddPortableField(string fieldName, Hazelcast.IO.Serialization.IClassDefinition def) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddShortArrayField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddShortField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddUTFArrayField(string fieldName) { }
+        public Hazelcast.IO.Serialization.ClassDefinitionBuilder AddUTFField(string fieldName) { }
+        public Hazelcast.IO.Serialization.IClassDefinition Build() { }
+        public int GetClassId() { }
+        public int GetFactoryId() { }
+        public int GetVersion() { }
+    }
+    public enum FieldType
+    {
+        Portable = 0,
+        Byte = 1,
+        Boolean = 2,
+        Char = 3,
+        Short = 4,
+        Int = 5,
+        Long = 6,
+        Float = 7,
+        Double = 8,
+        Utf = 9,
+        PortableArray = 10,
+        ByteArray = 11,
+        BooleanArray = 12,
+        CharArray = 13,
+        ShortArray = 14,
+        IntArray = 15,
+        LongArray = 16,
+        FloatArray = 17,
+        DoubleArray = 18,
+        UtfArray = 19,
+    }
+    public class HazelcastSerializationException : Hazelcast.Core.HazelcastException
+    {
+        public HazelcastSerializationException(string message) { }
+        public HazelcastSerializationException(string message, System.Exception cause) { }
+        public HazelcastSerializationException(System.Exception e) { }
+    }
+    public interface IByteArraySerializer<T> : Hazelcast.IO.Serialization.ISerializer
+    {
+        T Read(byte[] buffer);
+        byte[] Write(T obj);
+    }
+    public interface IClassDefinition
+    {
+        int GetClassId();
+        int GetFactoryId();
+        Hazelcast.IO.Serialization.IFieldDefinition GetField(string name);
+        Hazelcast.IO.Serialization.IFieldDefinition GetField(int fieldIndex);
+        int GetFieldClassId(string fieldName);
+        int GetFieldCount();
+        System.Collections.Generic.ICollection<string> GetFieldNames();
+        Hazelcast.IO.Serialization.FieldType GetFieldType(string fieldName);
+        int GetVersion();
+        bool HasField(string fieldName);
+    }
+    public interface IData
+    {
+        int DataSize();
+        int GetHeapCost();
+        int GetPartitionHash();
+        int GetTypeId();
+        bool HasPartitionHash();
+        bool IsPortable();
+        byte[] ToByteArray();
+        int TotalSize();
+    }
+    [System.ObsoleteAttribute("IDataSerializable is no longer supported in the .NET client. Please use IIdentifi" +
+        "edDataSerializable instead.")]
+    public interface IDataSerializable
+    {
+        string GetJavaClassName();
+        void ReadData(Hazelcast.IO.IObjectDataInput input);
+        void WriteData(Hazelcast.IO.IObjectDataOutput output);
+    }
+    public interface IDataSerializableFactory
+    {
+        Hazelcast.IO.Serialization.IIdentifiedDataSerializable Create(int typeId);
+    }
+    public interface IDataSerializerHook
+    {
+        Hazelcast.IO.Serialization.IDataSerializableFactory CreateFactory();
+        int GetFactoryId();
+    }
+    public interface IFieldDefinition
+    {
+        int GetClassId();
+        int GetFactoryId();
+        Hazelcast.IO.Serialization.FieldType GetFieldType();
+        int GetIndex();
+        string GetName();
+        int GetVersion();
+    }
+    public interface IIdentifiedDataSerializable
+    {
+        int GetFactoryId();
+        int GetId();
+        void ReadData(Hazelcast.IO.IObjectDataInput input);
+        void WriteData(Hazelcast.IO.IObjectDataOutput output);
+    }
+    public interface IPortable
+    {
+        int GetClassId();
+        int GetFactoryId();
+        void ReadPortable(Hazelcast.IO.Serialization.IPortableReader reader);
+        void WritePortable(Hazelcast.IO.Serialization.IPortableWriter writer);
+    }
+    public interface IPortableContext
+    {
+        Hazelcast.Net.Ext.ByteOrder GetByteOrder();
+        int GetClassVersion(int factoryId, int classId);
+        Hazelcast.IO.Serialization.IFieldDefinition GetFieldDefinition(Hazelcast.IO.Serialization.IClassDefinition cd, string name);
+        Hazelcast.Core.IManagedContext GetManagedContext();
+        int GetVersion();
+        Hazelcast.IO.Serialization.IClassDefinition LookupClassDefinition(int factoryId, int classId, int version);
+        Hazelcast.IO.Serialization.IClassDefinition LookupClassDefinition(Hazelcast.IO.Serialization.IData data);
+        Hazelcast.IO.Serialization.IClassDefinition LookupOrRegisterClassDefinition(Hazelcast.IO.Serialization.IPortable portable);
+        Hazelcast.IO.Serialization.IClassDefinition RegisterClassDefinition(Hazelcast.IO.Serialization.IClassDefinition cd);
+        void SetClassVersion(int factoryId, int classId, int version);
+    }
+    public interface IPortableFactory
+    {
+        Hazelcast.IO.Serialization.IPortable Create(int classId);
+    }
+    public interface IPortableReader
+    {
+        int GetFieldClassId(string fieldName);
+        System.Collections.Generic.ICollection<string> GetFieldNames();
+        Hazelcast.IO.Serialization.FieldType GetFieldType(string fieldName);
+        Hazelcast.IO.IObjectDataInput GetRawDataInput();
+        int GetVersion();
+        bool HasField(string fieldName);
+        bool ReadBoolean(string fieldName);
+        bool[] ReadBooleanArray(string fieldName);
+        byte ReadByte(string fieldName);
+        byte[] ReadByteArray(string fieldName);
+        char ReadChar(string fieldName);
+        char[] ReadCharArray(string fieldName);
+        double ReadDouble(string fieldName);
+        double[] ReadDoubleArray(string fieldName);
+        float ReadFloat(string fieldName);
+        float[] ReadFloatArray(string fieldName);
+        int ReadInt(string fieldName);
+        int[] ReadIntArray(string fieldName);
+        long ReadLong(string fieldName);
+        long[] ReadLongArray(string fieldName);
+        TPortable ReadPortable<TPortable>(string fieldName)
+            where TPortable : Hazelcast.IO.Serialization.IPortable;
+        Hazelcast.IO.Serialization.IPortable[] ReadPortableArray(string fieldName);
+        short ReadShort(string fieldName);
+        short[] ReadShortArray(string fieldName);
+        string ReadUTF(string fieldName);
+        string[] ReadUTFArray(string fieldName);
+    }
+    public interface IPortableWriter
+    {
+        Hazelcast.IO.IObjectDataOutput GetRawDataOutput();
+        void WriteBoolean(string fieldName, bool value);
+        void WriteBooleanArray(string fieldName, bool[] bools);
+        void WriteByte(string fieldName, byte value);
+        void WriteByteArray(string fieldName, byte[] bytes);
+        void WriteChar(string fieldName, int value);
+        void WriteCharArray(string fieldName, char[] chars);
+        void WriteDouble(string fieldName, double value);
+        void WriteDoubleArray(string fieldName, double[] values);
+        void WriteFloat(string fieldName, float value);
+        void WriteFloatArray(string fieldName, float[] values);
+        void WriteInt(string fieldName, int value);
+        void WriteIntArray(string fieldName, int[] ints);
+        void WriteLong(string fieldName, long value);
+        void WriteLongArray(string fieldName, long[] longs);
+        void WriteNullPortable(string fieldName, int factoryId, int classId);
+        void WritePortable(string fieldName, Hazelcast.IO.Serialization.IPortable portable);
+        void WritePortableArray(string fieldName, Hazelcast.IO.Serialization.IPortable[] portables);
+        void WriteShort(string fieldName, short value);
+        void WriteShortArray(string fieldName, short[] values);
+        void WriteUTF(string fieldName, string value);
+        void WriteUTFArray(string fieldName, string[] strings);
+    }
+    public interface ISerializationService
+    {
+        Hazelcast.IO.IBufferObjectDataInput CreateObjectDataInput(byte[] data);
+        Hazelcast.IO.IBufferObjectDataInput CreateObjectDataInput(Hazelcast.IO.Serialization.IData data);
+        Hazelcast.IO.IBufferObjectDataOutput CreateObjectDataOutput(int size);
+        Hazelcast.IO.IBufferObjectDataOutput CreateObjectDataOutput();
+        Hazelcast.IO.Serialization.IPortableReader CreatePortableReader(Hazelcast.IO.Serialization.IData data);
+        void Destroy();
+        void DisposeData(Hazelcast.IO.Serialization.IData data);
+        Hazelcast.Net.Ext.ByteOrder GetByteOrder();
+        Hazelcast.Core.IManagedContext GetManagedContext();
+        Hazelcast.IO.Serialization.IPortableContext GetPortableContext();
+        byte GetVersion();
+        T ReadObject<T>(Hazelcast.IO.IObjectDataInput input);
+        Hazelcast.IO.Serialization.IData ToData(object obj);
+        Hazelcast.IO.Serialization.IData ToData(object obj, Hazelcast.Core.IPartitioningStrategy strategy);
+        T ToObject<T>(object data);
+        void WriteObject(Hazelcast.IO.IObjectDataOutput output, object obj);
+    }
+    public interface ISerializer
+    {
+        void Destroy();
+        int GetTypeId();
+    }
+    public interface ISerializerHook<T>
+    {
+        Hazelcast.IO.Serialization.ISerializer CreateSerializer();
+        System.Type GetSerializationType();
+        bool IsOverwritable();
+    }
+    public interface IStreamSerializer<T> : Hazelcast.IO.Serialization.ISerializer
+    {
+        T Read(Hazelcast.IO.IObjectDataInput input);
+        void Write(Hazelcast.IO.IObjectDataOutput output, T obj);
+    }
+    public interface IVersionedPortable : Hazelcast.IO.Serialization.IPortable
+    {
+        int GetClassVersion();
+    }
+    public class JavaClass
+    {
+        public JavaClass(string name) { }
+        public string Name { get; }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Hazelcast.IO.Serialization.JavaClass other) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+    }
+    public class JavaEnum
+    {
+        public JavaEnum(string type, string value) { }
+        public string Type { get; }
+        public string Value { get; }
+        protected bool Equals(Hazelcast.IO.Serialization.JavaEnum other) { }
+        public override bool Equals(object obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+    }
+}
+namespace Hazelcast.Logging
+{
+    public abstract class AbstractLogger : Hazelcast.Logging.ILogger
+    {
+        protected AbstractLogger() { }
+        public virtual void Finest(string message) { }
+        public virtual void Finest(string message, System.Exception thrown) { }
+        public virtual void Finest(System.Exception thrown) { }
+        public abstract Hazelcast.Logging.LogLevel GetLevel();
+        public virtual void Info(string message) { }
+        public virtual bool IsFinestEnabled() { }
+        public abstract bool IsLoggable(Hazelcast.Logging.LogLevel arg1);
+        public abstract void Log(Hazelcast.Logging.LogLevel arg1, string arg2);
+        public abstract void Log(Hazelcast.Logging.LogLevel arg1, string arg2, System.Exception arg3);
+        public virtual void Severe(string message) { }
+        public virtual void Severe(System.Exception thrown) { }
+        public virtual void Severe(string message, System.Exception thrown) { }
+        public virtual void Warning(string message) { }
+        public virtual void Warning(System.Exception thrown) { }
+        public virtual void Warning(string message, System.Exception thrown) { }
+    }
+    public interface ILogger
+    {
+        void Finest(string message);
+        void Finest(System.Exception thrown);
+        void Finest(string message, System.Exception thrown);
+        Hazelcast.Logging.LogLevel GetLevel();
+        void Info(string message);
+        bool IsFinestEnabled();
+        bool IsLoggable(Hazelcast.Logging.LogLevel level);
+        void Log(Hazelcast.Logging.LogLevel level, string message);
+        void Log(Hazelcast.Logging.LogLevel level, string message, System.Exception thrown);
+        void Severe(string message);
+        void Severe(System.Exception thrown);
+        void Severe(string message, System.Exception thrown);
+        void Warning(string message);
+        void Warning(System.Exception thrown);
+        void Warning(string message, System.Exception thrown);
+    }
+    public interface ILoggerFactory
+    {
+        Hazelcast.Logging.ILogger GetLogger(string name);
+    }
+    public enum LogLevel
+    {
+        Off = 0,
+        Severe = 1,
+        Warning = 2,
+        Info = 3,
+        Config = 4,
+        Fine = 5,
+        Finer = 6,
+        Finest = 7,
+        All = 8,
+    }
+    public class Logger
+    {
+        public Logger() { }
+        public static Hazelcast.Logging.ILogger GetLogger(System.Type clazz) { }
+        public static Hazelcast.Logging.ILogger GetLogger(string name) { }
+        public static Hazelcast.Logging.ILoggerFactory GetLoggerFactory() { }
+        public static Hazelcast.Logging.ILoggerFactory NewLoggerFactory(string loggerType) { }
+        public static void SetLoggerFactory(Hazelcast.Logging.ILoggerFactory loggerFactory) { }
+    }
+}
+namespace Hazelcast.Map
+{
+    public interface IEntryProcessor { }
+    public interface IMapInterceptor
+    {
+        void AfterGet(object value);
+        void AfterPut(object value);
+        void AfterRemove(object value);
+        object InterceptGet(object value);
+        object InterceptPut(object oldValue, object newValue);
+        object InterceptRemove(object removedValue);
+    }
+}
+namespace Hazelcast.Net.Ext
+{
+    public class ByteOrder
+    {
+        public static readonly Hazelcast.Net.Ext.ByteOrder BigEndian;
+        public const string BigEndianText = "BIG_ENDIAN";
+        public static readonly Hazelcast.Net.Ext.ByteOrder LittleEndian;
+        public const string LittleEndianText = "LITTLE_ENDIAN";
+        public static Hazelcast.Net.Ext.ByteOrder GetByteOrder(string name) { }
+        public static Hazelcast.Net.Ext.ByteOrder NativeOrder() { }
+    }
+}
+namespace Hazelcast.Security
+{
+    public abstract class AbstractCredentials : Hazelcast.Security.ICredentials
+    {
+        public AbstractCredentials() { }
+        public AbstractCredentials(string principal) { }
+        public override bool Equals(object obj) { }
+        public string GetEndpoint() { }
+        public override int GetHashCode() { }
+        public virtual string GetPrincipal() { }
+        public void SetEndpoint(string endpoint) { }
+        public virtual void SetPrincipal(string principal) { }
+    }
+    public class DefaultCredentialsFactory : Hazelcast.Security.ICredentialsFactory
+    {
+        public DefaultCredentialsFactory(Hazelcast.Config.ClientSecurityConfig securityConfig, Hazelcast.Config.GroupConfig groupConfig) { }
+        public void Configure(Hazelcast.Config.GroupConfig groupConfig, System.Collections.Generic.IDictionary<string, string> properties) { }
+        public void Destroy() { }
+        public Hazelcast.Security.ICredentials NewCredentials() { }
+    }
+    public interface ICredentials
+    {
+        string GetEndpoint();
+        string GetPrincipal();
+        void SetEndpoint(string endpoint);
+    }
+    public interface ICredentialsFactory
+    {
+        void Configure(Hazelcast.Config.GroupConfig groupConfig, System.Collections.Generic.IDictionary<string, string> properties);
+        void Destroy();
+        Hazelcast.Security.ICredentials NewCredentials();
+    }
+    public class UsernamePasswordCredentials : Hazelcast.Security.AbstractCredentials
+    {
+        public UsernamePasswordCredentials() { }
+        public UsernamePasswordCredentials(string username, string password) { }
+        public string Password { get; set; }
+        public string Username { get; set; }
+        public override string ToString() { }
+    }
+    public class UsernamePasswordCredentialsFactory : Hazelcast.Security.ICredentialsFactory
+    {
+        public UsernamePasswordCredentialsFactory() { }
+        public void Configure(Hazelcast.Config.GroupConfig groupConfig, System.Collections.Generic.IDictionary<string, string> properties) { }
+        public void Destroy() { }
+        public Hazelcast.Security.ICredentials NewCredentials() { }
+    }
+}
+namespace Hazelcast.Transaction
+{
+    public interface ITransactionContext : Hazelcast.Transaction.ITransactionalTaskContext
+    {
+        void BeginTransaction();
+        void CommitTransaction();
+        string GetTxnId();
+        void RollbackTransaction();
+    }
+    public interface ITransactionalObject : Hazelcast.Core.IDistributedObject { }
+    public interface ITransactionalTaskContext
+    {
+        Hazelcast.Core.ITransactionalList<T> GetList<T>(string name);
+        Hazelcast.Core.ITransactionalMap<TKey, TValue> GetMap<TKey, TValue>(string name);
+        Hazelcast.Core.ITransactionalMultiMap<TKey, TValue> GetMultiMap<TKey, TValue>(string name);
+        Hazelcast.Core.ITransactionalQueue<T> GetQueue<T>(string name);
+        Hazelcast.Core.ITransactionalSet<T> GetSet<T>(string name);
+        T GetTransactionalObject<T>(string serviceName, string name)
+            where T : Hazelcast.Transaction.ITransactionalObject;
+    }
+    public sealed class TransactionOptions
+    {
+        public TransactionOptions() { }
+        public static Hazelcast.Transaction.TransactionOptions GetDefault() { }
+        public int GetDurability() { }
+        public long GetTimeoutMillis() { }
+        public Hazelcast.Transaction.TransactionOptions.TransactionType GetTransactionType() { }
+        public Hazelcast.Transaction.TransactionOptions SetDurability(int durability) { }
+        public Hazelcast.Transaction.TransactionOptions SetTimeout(long timeout, Hazelcast.Core.TimeUnit timeUnit) { }
+        public Hazelcast.Transaction.TransactionOptions SetTransactionType(Hazelcast.Transaction.TransactionOptions.TransactionType transactionType) { }
+        public override string ToString() { }
+        public enum TransactionType
+        {
+            TwoPhase = 1,
+            [System.ObsoleteAttribute("Use OnePhase instead")]
+            Local = 2,
+            OnePhase = 2,
+        }
+    }
+    public enum TransactionState
+    {
+        NoTxn = 0,
+        Active = 1,
+        Preparing = 2,
+        Prepared = 3,
+        Committing = 4,
+        Committed = 5,
+        CommitFailed = 6,
+        RollingBack = 7,
+        RolledBack = 8,
+    }
+}
+namespace Hazelcast.Util
+{
+    public delegate T Callable<T>();
+    public delegate string DecodeRegisterResponse(Hazelcast.Client.Protocol.IClientMessage requestMessage);
+    public delegate void DistributedEventHandler(Hazelcast.Client.Protocol.IClientMessage eventMessage);
+    public delegate Hazelcast.Client.Protocol.IClientMessage EncodeDeregisterRequest(string registrationId);
+    public enum IterationType
+    {
+        Key = 0,
+        Value = 1,
+        Entry = 2,
+    }
+    public delegate void Runnable();
+}

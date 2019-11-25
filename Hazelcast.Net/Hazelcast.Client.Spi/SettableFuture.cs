@@ -18,7 +18,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Util;
 
-#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     //WARNING: All exceptions should returned from the _taskSource otherwise UnobservedTaskException problem occur

@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Proxy
 
         private long _startTime;
         private TransactionState _state = TransactionState.NoTxn;
-        private string _txnId;
+        private Guid _txnId;
 
         internal TransactionProxy(HazelcastClient client, TransactionOptions options, IMember txOwner)
         {
@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Proxy
             return _options.GetTimeoutMillis();
         }
 
-        public string GetTxnId()
+        public Guid GetTxnId()
         {
             return _txnId;
         }
@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Proxy
                 var request = TransactionCreateCodec.EncodeRequest(GetTimeoutMillis(), _options.GetDurability(),
                     (int) _options.GetTransactionType(), _threadId);
                 var response = Invoke(request);
-                _txnId = TransactionCreateCodec.DecodeResponse(response).response;
+                _txnId = TransactionCreateCodec.DecodeResponse(response).Response;
                 _state = TransactionState.Active;
             }
             catch (Exception e)
@@ -159,7 +159,7 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        private IClientMessage Invoke(IClientMessage request)
+        private ClientMessage Invoke(ClientMessage request)
         {
             var rpc = _client.GetInvocationService();
             try

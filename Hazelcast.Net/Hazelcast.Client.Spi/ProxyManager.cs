@@ -28,7 +28,6 @@ using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Util;
 
-#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     internal sealed class ProxyManager
@@ -63,7 +62,7 @@ namespace Hazelcast.Client.Spi
             var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
                 _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
                 _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig());
-            DistributedEventHandler eventHandler = delegate(IClientMessage message)
+            DistributedEventHandler eventHandler = delegate(ClientMessage message)
             {
                 ClientAddDistributedObjectListenerCodec.EventHandler.HandleEvent(message, (name, serviceName, eventType) =>
                 {
@@ -84,7 +83,7 @@ namespace Hazelcast.Client.Spi
                 });
             };
             return context.GetListenerService().RegisterListener(request,
-                m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).response,
+                m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).Response,
                 ClientRemoveDistributedObjectListenerCodec.EncodeRequest, eventHandler);
         }
 
@@ -104,10 +103,10 @@ namespace Hazelcast.Client.Spi
                 var request = ClientGetDistributedObjectsCodec.EncodeRequest();
                 var task = _client.GetInvocationService().InvokeOnRandomTarget(request);
                 var response = ThreadUtil.GetResult(task);
-                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).response;
+                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).Response;
                 foreach (var distributedObjectInfo in result)
                 {
-                    var proxy = InitProxyLocal(distributedObjectInfo.ServiceName, distributedObjectInfo.ObjectName,
+                    var proxy = InitProxyLocal(distributedObjectInfo.ServiceName, distributedObjectInfo.Name,
                         typeof(IDistributedObject));
                     _proxies.TryAdd(distributedObjectInfo, proxy);
                 }
@@ -210,15 +209,10 @@ namespace Hazelcast.Client.Spi
                 (type, id) => ProxyFactory(typeof(ClientSetProxy<>), type, ServiceNames.Set, id));
             Register(ServiceNames.Topic,
                 (type, id) => ProxyFactory(typeof(ClientTopicProxy<>), type, ServiceNames.Topic, id));
-            Register(ServiceNames.AtomicLong,
-                (type, id) => ProxyFactory(typeof(ClientAtomicLongProxy), type, ServiceNames.AtomicLong, id));
-            Register(ServiceNames.Lock, (type, id) => ProxyFactory(typeof(ClientLockProxy), type, ServiceNames.Lock, id));
-            Register(ServiceNames.CountDownLatch,
-                (type, id) => ProxyFactory(typeof(ClientCountDownLatchProxy), type, ServiceNames.CountDownLatch, id));
-            Register(ServiceNames.PNCounter,
-               (type, id) => ProxyFactory(typeof(ClientPNCounterProxy), type, ServiceNames.PNCounter, id));
-            Register(ServiceNames.Semaphore,
-                (type, id) => ProxyFactory(typeof(ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
+            //Register(ServiceNames.PNCounter,
+            //   (type, id) => ProxyFactory(typeof(ClientPNCounterProxy), type, ServiceNames.PNCounter, id));
+            //Register(ServiceNames.Semaphore,
+            //    (type, id) => ProxyFactory(typeof(ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
             Register(ServiceNames.Ringbuffer,
                 (type, id) => ProxyFactory(typeof(ClientRingbufferProxy<>), type, ServiceNames.Ringbuffer, id));
             Register(ServiceNames.ReplicatedMap,
@@ -304,7 +298,7 @@ namespace Hazelcast.Client.Spi
                 var member = loadBalancer.Next();
                 if (member != null && !member.IsLiteMember)
                 {
-                    return member.GetAddress();
+                    return member.Address;
                 }
 
                 if (liteMember == null)
@@ -313,7 +307,7 @@ namespace Hazelcast.Client.Spi
                 }
             }
 
-            return liteMember != null ? liteMember.GetAddress() : null;
+            return liteMember != null ? liteMember.Address : null;
         }
 
         private static Type GetTypeWithParameters(Type proxyType, Type interfaceType)

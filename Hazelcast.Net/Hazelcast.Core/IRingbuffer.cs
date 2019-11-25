@@ -51,7 +51,7 @@ namespace Hazelcast.Core
     {
         /// <summary>Adds an item to the tail of the Ringbuffer.</summary>
         /// <remarks>
-        /// Adds an item to the tail of the Ringbuffer. If there is no space in the Ringbuffer, the add will overwrite the oldest
+        /// Adds an item to the tail of the Ringbuffer. If there is no space in the Ringbuffer, the Add will overwrite the oldest
         /// item in the ringbuffer no matter what the ttl is. For more control on this behavior, check the
         /// <see cref="AddAsync"/>
         /// and the
@@ -66,7 +66,7 @@ namespace Hazelcast.Core
         /// this id is not the sequence of the item you are about to publish but from a previously published item. So it can't be used
         /// to find that item.
         /// </remarks>
-        /// <param name="item">the item to add.</param>
+        /// <param name="item">the item to Add.</param>
         /// <returns>the sequence of the added item.</returns>
         /// <exception cref="System.ArgumentNullException">if item is null.</exception>
         /// <seealso cref="AddAsync"/>
@@ -88,10 +88,10 @@ namespace Hazelcast.Core
         /// If the collection is larger than the capacity of the ringbuffer, then the items that were written first will
         /// be overwritten. Therefor this call will not block.
         /// The items are inserted in the order of the Iterator of the collection. If an addAll is executed concurrently with
-        /// an add or addAll, no guarantee is given that items are contiguous.
+        /// an Add or addAll, no guarantee is given that items are contiguous.
         /// The result of the future contains the sequenceId of the last written item
         /// </remarks>
-        /// <param name="collection">the batch of items to add.</param>
+        /// <param name="collection">the batch of items to Add.</param>
         /// <param name="overflowPolicy">overflow policy to use</param>
         /// <returns>the ICompletableFuture to synchronize on completion.</returns>
         /// <exception cref="System.ArgumentNullException">
@@ -131,9 +131,9 @@ namespace Hazelcast.Core
         /// }
         /// </code>
         /// </summary>
-        /// <param name="item">the item to add</param>
+        /// <param name="item">the item to Add</param>
         /// <param name="overflowPolicy">the OverflowPolicy to use.</param>
-        /// <returns>the sequenceId of the added item, or -1 if the add failed.</returns>
+        /// <returns>the sequenceId of the added item, or -1 if the Add failed.</returns>
         /// <exception cref="System.ArgumentNullException">if item or overflowPolicy is null.</exception>
         Task<long> AddAsync(T item, OverflowPolicy overflowPolicy);
 
@@ -189,7 +189,7 @@ namespace Hazelcast.Core
         /// </code>
         /// This method is not destructive unlike e.g. a queue.take. So the same item can be read by multiple readers or it can be
         /// read multiple times by the same reader.
-        /// Currently it isn't possible to control how long this call is going to block. In the future we could add e.g.
+        /// Currently it isn't possible to control how long this call is going to block. In the future we could Add e.g.
         /// tryReadOne(long sequence, long timeout, TimeUnit unit).
         /// </remarks>
         /// <param name="sequence">the sequence of the item to read.</param>

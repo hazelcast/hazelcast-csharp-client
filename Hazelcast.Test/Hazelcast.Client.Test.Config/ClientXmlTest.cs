@@ -29,7 +29,7 @@ namespace Hazelcast.Client.Test.Config
             var networkConfig = new ClientNetworkConfig();
             networkConfig.SetAddresses(new[] {"127.0.0.1:5701"});
             config.SetNetworkConfig(networkConfig);
-            config.SetGroupConfig(new GroupConfig("mike-local", "password"));
+            config.SetClusterName("mike-local").SetClusterPassword("password");
             var _client = HazelcastClient.NewHazelcastClient(config);
 
 

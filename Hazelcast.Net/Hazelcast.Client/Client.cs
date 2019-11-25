@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Net;
 using Hazelcast.Core;
 
@@ -20,27 +21,20 @@ namespace Hazelcast.Client
     internal class Client : IClient
     {
         private readonly IPEndPoint _socketAddress;
-        private readonly string _uuid;
 
-        public Client(string uuid, IPEndPoint socketAddress)
+        public Client(Guid uuid, IPEndPoint socketAddress)
         {
-            _uuid = uuid;
+            Uuid = uuid;
             _socketAddress = socketAddress;
         }
 
-        public virtual string GetUuid()
-        {
-            return _uuid;
-        }
+        public Guid Uuid { get; }
 
-        public virtual IPEndPoint GetSocketAddress()
+        public IPEndPoint GetSocketAddress()
         {
             return _socketAddress;
         }
 
-        public virtual ClientType GetClientType()
-        {
-            return ClientType.Csharp;
-        }
+        public ClientType GetClientType() => ClientType.Csharp;
     }
 }

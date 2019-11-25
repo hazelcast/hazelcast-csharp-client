@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.IO;
 
-#pragma warning disable CS1591
  namespace Hazelcast.Client.Spi
 {
-    public interface IClientClusterService
+    interface IClientClusterService
     {
         /// <param name="listener">The listener to be registered.</param>
         /// <returns>The registration id.</returns>
@@ -48,7 +48,7 @@ using Hazelcast.IO;
         /// <summary>Gets the member with the given uuid.</summary>
         /// <param name="uuid">The uuid of the member.</param>
         /// <returns>The member that was found, or null if not found. If uuid is null, null is returned.</returns>
-        IMember GetMember(string uuid);
+        IMember GetMember(Guid uuid);
 
         /// <summary>Gets the collection of members.</summary>
         /// <returns>The collection of members. Null will never be returned.</returns>

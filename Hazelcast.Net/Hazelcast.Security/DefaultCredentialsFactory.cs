@@ -25,12 +25,12 @@ namespace Hazelcast.Security
     {
         private readonly ICredentials credentials;
 
-        public DefaultCredentialsFactory(ClientSecurityConfig securityConfig, GroupConfig groupConfig)
+        public DefaultCredentialsFactory(ClientSecurityConfig securityConfig, ClientConfig config)
         {
-            credentials = InitCredentials(securityConfig, groupConfig);
+            credentials = InitCredentials(securityConfig, config);
         }
 
-        private ICredentials InitCredentials(ClientSecurityConfig securityConfig, GroupConfig groupConfig)
+        private ICredentials InitCredentials(ClientSecurityConfig securityConfig, ClientConfig config)
         {
             var credentials = securityConfig.GetCredentials();
             if (credentials == null)
@@ -54,12 +54,12 @@ namespace Hazelcast.Security
             }
             if (credentials == null)
             {
-                credentials = new UsernamePasswordCredentials(groupConfig.GetName(), groupConfig.GetPassword());
+                credentials = new UsernamePasswordCredentials(null, null);
             }
             return credentials;
         }
 
-        public void Configure(GroupConfig groupConfig, IDictionary<string, string> properties)
+        public void Configure(ClientConfig config, IDictionary<string, string> properties)
         {
         }
 

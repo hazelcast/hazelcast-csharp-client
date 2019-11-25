@@ -27,9 +27,9 @@ namespace Hazelcast.Security
         /// <summary>
         /// Configures <see cref="ICredentialsFactory"/>
         /// </summary>
-        /// <param name="groupConfig"><see cref="GroupConfig"/></param>
+        /// <param name="config"><see cref="GroupConfig"/></param>
         /// <param name="properties">properties that will be used to pass custom configurations by user</param>
-        void Configure(GroupConfig groupConfig, IDictionary<string, string> properties);
+        void Configure(ClientConfig config, IDictionary<string, string> properties);
 
         /// <summary>
         /// Creates new <see cref="ICredentials"/> object.

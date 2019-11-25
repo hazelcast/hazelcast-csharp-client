@@ -95,7 +95,7 @@ namespace Hazelcast.Client.Spi
                 var publicAddressStr = matchesPublic[i].Value;
 
                 var publicAddress = AddressUtil.ParseSocketAddress(publicAddressStr);
-                privateToPublicAddresses.Add(new Address(privateAddressStr, publicAddress.GetPort()), publicAddress);
+                privateToPublicAddresses.Add(new Address(privateAddressStr, publicAddress.Port), publicAddress);
             }
             return privateToPublicAddresses;
         }

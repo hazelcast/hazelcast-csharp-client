@@ -3,15 +3,12 @@
                   xmlns="http://www.hazelcast.com/schema/client-config"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-  <group>
-    <name>dev</name>
-    <password>dev-pass</password>
-  </group>
+  <cluster name="dev" password="dev-pass"/>
 
   <network>
     <cluster-members>
-      <address>127.0.0.1</address>
-      <address>127.0.0.2</address>
+      <Address>127.0.0.1</Address>
+      <Address>127.0.0.2</Address>
     </cluster-members>
     <smart-routing>true</smart-routing>
     <redo-operation>true</redo-operation>
@@ -27,7 +24,7 @@
     <socket-options>
       <tcp-no-delay>false</tcp-no-delay>
       <keep-alive>true</keep-alive>
-      <reuse-address>true</reuse-address>
+      <reuse-Address>true</reuse-Address>
       <linger-seconds>3</linger-seconds>
       <timeout>-1</timeout>
       <buffer-size>32</buffer-size>

@@ -92,7 +92,7 @@ namespace Hazelcast.Client.Protocol
         AccessControl = 68,
         Login = 69,
         UnsupportedCallback = 70,
-        NoDataMemeber = 71,
+        NoDataMember = 71,
         ReplicatedMapCantBeCreated = 72,
         MaxMessageSizeExceeded = 73,
         WANReplicationQueueFull = 74,
@@ -109,6 +109,15 @@ namespace Hazelcast.Client.Protocol
         FlakeIdNodeIdOutOfRangeException = 85,
         TargetNotReplicaException = 86,
         MutationDisallowedException = 87,
-        ConsistencyLostException = 88
+        ConsistencyLostException = 88,
+        SessionExpiredException = 89,
+        WaitKeyCancelledException = 90,
+        LockAcquireLimitReachedException = 91,
+        LockOwnershipLostException = 92,
+        CpGroupDestroyedException = 93,
+        CannotReplicateException = 94,
+        LeaderDemotedException = 95,
+        StaleAppendRequestException = 96,
+        NotLeaderException = 97
     }
 }

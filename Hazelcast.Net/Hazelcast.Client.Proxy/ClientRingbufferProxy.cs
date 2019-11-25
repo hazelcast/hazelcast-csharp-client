@@ -43,31 +43,31 @@ namespace Hazelcast.Client.Proxy
 
             var request = RingbufferCapacityCodec.EncodeRequest(GetName());
             return _capacity = Invoke(request, m =>
-                RingbufferCapacityCodec.DecodeResponse(m).response);
+                RingbufferCapacityCodec.DecodeResponse(m).Response);
         }
 
         public long Size()
         {
             var request = RingbufferSizeCodec.EncodeRequest(GetName());
-            return Invoke(request, m => RingbufferSizeCodec.DecodeResponse(m).response);
+            return Invoke(request, m => RingbufferSizeCodec.DecodeResponse(m).Response);
         }
 
         public long TailSequence()
         {
             var request = RingbufferTailSequenceCodec.EncodeRequest(GetName());
-            return Invoke(request, m => RingbufferTailSequenceCodec.DecodeResponse(m).response);
+            return Invoke(request, m => RingbufferTailSequenceCodec.DecodeResponse(m).Response);
         }
 
         public long HeadSequence()
         {
             var request = RingbufferHeadSequenceCodec.EncodeRequest(GetName());
-            return Invoke(request, m => RingbufferHeadSequenceCodec.DecodeResponse(m).response);
+            return Invoke(request, m => RingbufferHeadSequenceCodec.DecodeResponse(m).Response);
         }
 
         public long RemainingCapacity()
         {
             var request = RingbufferRemainingCapacityCodec.EncodeRequest(GetName());
-            return Invoke(request, m => RingbufferRemainingCapacityCodec.DecodeResponse(m).response);
+            return Invoke(request, m => RingbufferRemainingCapacityCodec.DecodeResponse(m).Response);
         }
 
         public long Add(T item)
@@ -75,7 +75,7 @@ namespace Hazelcast.Client.Proxy
             ValidationUtil.ThrowExceptionIfNull(item, "Item cannot be null");
 
             var request = RingbufferAddCodec.EncodeRequest(GetName(), (int) OverflowPolicy.Overwrite, ToData(item));
-            return Invoke(request, m => RingbufferAddCodec.DecodeResponse(m).response);
+            return Invoke(request, m => RingbufferAddCodec.DecodeResponse(m).Response);
         }
 
         public Task<long> AddAsync(T item, OverflowPolicy overflowPolicy)
@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Proxy
             ValidationUtil.ThrowExceptionIfNull(item, "Item cannot be null");
 
             var request = RingbufferAddCodec.EncodeRequest(GetName(), (int) OverflowPolicy.Overwrite, ToData(item));
-            return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddCodec.DecodeResponse(m).response);
+            return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddCodec.DecodeResponse(m).Response);
         }
 
         public T ReadOne(long sequence)
@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Proxy
             CheckSequence(sequence);
 
             var request = RingbufferReadOneCodec.EncodeRequest(GetName(), sequence);
-            var response = Invoke(request, m => RingbufferReadOneCodec.DecodeResponse(m).response);
+            var response = Invoke(request, m => RingbufferReadOneCodec.DecodeResponse(m).Response);
             return ToObject<T>(response);
         }
 
@@ -101,7 +101,7 @@ namespace Hazelcast.Client.Proxy
 
             var valueList = ToDataList(collection);
             var request = RingbufferAddAllCodec.EncodeRequest(GetName(), valueList, (int) overflowPolicy);
-            return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddAllCodec.DecodeResponse(m).response);
+            return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddAllCodec.DecodeResponse(m).Response);
         }
 
         public Task<IList<T>> ReadManyAsync(long startSequence, int minCount, int maxCount)
@@ -115,10 +115,10 @@ namespace Hazelcast.Client.Proxy
             var request = RingbufferReadManyCodec.EncodeRequest(GetName(), startSequence, minCount, maxCount, null);
 
             return InvokeAsync(request, GetPartitionKey(),
-                m => ToList<T>(RingbufferReadManyCodec.DecodeResponse(m).items));
+                m => ToList<T>(RingbufferReadManyCodec.DecodeResponse(m).Items));
         }
 
-        protected override IClientMessage Invoke(IClientMessage request)
+        protected override ClientMessage Invoke(ClientMessage request)
         {
             return base.Invoke(request, GetPartitionKey());
         }

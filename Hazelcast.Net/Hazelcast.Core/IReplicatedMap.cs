@@ -34,7 +34,7 @@ namespace Hazelcast.Core
         ///     Adds an entry listener for this map.
         /// </summary>
         /// <remarks>
-        ///     Adds an entry listener for this map. Listener will get notified for all map add/remove/update/evict events.
+        ///     Adds an entry listener for this map. Listener will get notified for all map Add/remove/update/evict events.
         /// </remarks>
         /// <param name="listener">entry listener</param>
         /// <returns>returns registration id</returns>
@@ -44,7 +44,7 @@ namespace Hazelcast.Core
         /// <remarks>
         ///     Adds the specified entry listener for the specified key.
         ///     The listener will get notified for all
-        ///     add/remove/update/evict events of the specified key only.
+        ///     Add/remove/update/evict events of the specified key only.
         ///     <p />
         ///     <p>
         ///         <b>Warning:</b>
@@ -61,7 +61,7 @@ namespace Hazelcast.Core
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
         ///     Adds a continuous entry listener for this map. Listener will get notified
-        ///     for map add/remove/update/evict events filtered by given predicate.
+        ///     for map Add/remove/update/evict events filtered by given predicate.
         /// </remarks>
         /// <param name="listener">entry listener</param>
         /// <param name="predicate">predicate for filtering entries</param>
@@ -71,7 +71,7 @@ namespace Hazelcast.Core
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
         ///     Adds a continuous entry listener for this map. Listener will get notified
-        ///     for map add/remove/update/evict events filtered by given predicate.
+        ///     for map Add/remove/update/evict events filtered by given predicate.
         /// </remarks>
         /// <param name="listener">entry listener</param>
         /// <param name="predicate">predicate for filtering entries</param>

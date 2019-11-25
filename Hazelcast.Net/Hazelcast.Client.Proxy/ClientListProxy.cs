@@ -34,7 +34,7 @@ namespace Hazelcast.Client.Proxy
             var value = ToData(item);
             var request = ListIndexOfCodec.EncodeRequest(GetName(), value);
             var response = Invoke(request);
-            return ListIndexOfCodec.DecodeResponse(response).response;
+            return ListIndexOfCodec.DecodeResponse(response).Response;
         }
 
         public void Insert(int index, T item)
@@ -57,7 +57,7 @@ namespace Hazelcast.Client.Proxy
         {
             var request = ListGetCodec.EncodeRequest(GetName(), index);
             var response = Invoke(request);
-            return ToObject<T>(ListGetCodec.DecodeResponse(response).response);
+            return ToObject<T>(ListGetCodec.DecodeResponse(response).Response);
         }
 
         public T Set(int index, T element)
@@ -66,7 +66,7 @@ namespace Hazelcast.Client.Proxy
             var value = ToData(element);
             var request = ListSetCodec.EncodeRequest(GetName(), index, value);
             var response = Invoke(request);
-            return ToObject<T>(ListSetCodec.DecodeResponse(response).response);
+            return ToObject<T>(ListSetCodec.DecodeResponse(response).Response);
         }
 
         public void Add(int index, T element)
@@ -80,7 +80,7 @@ namespace Hazelcast.Client.Proxy
         public T Remove(int index)
         {
             var request = ListRemoveWithIndexCodec.EncodeRequest(GetName(), index);
-            var result = Invoke(request, m => ListRemoveWithIndexCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => ListRemoveWithIndexCodec.DecodeResponse(m).Response);
             return ToObject<T>(result);
         }
 
@@ -90,7 +90,7 @@ namespace Hazelcast.Client.Proxy
             var value = ToData(item);
             var request = ListLastIndexOfCodec.EncodeRequest(GetName(), value);
             var response = Invoke(request);
-            return ListLastIndexOfCodec.DecodeResponse(response).response;
+            return ListLastIndexOfCodec.DecodeResponse(response).Response;
         }
 
         public bool AddAll<TE>(int index, ICollection<TE> c) where TE : T
@@ -98,14 +98,14 @@ namespace Hazelcast.Client.Proxy
             var valueList = ToDataList(c);
             var request = ListAddAllWithIndexCodec.EncodeRequest(GetName(), index, valueList);
             var response = Invoke(request);
-            return ListAddAllWithIndexCodec.DecodeResponse(response).response;
+            return ListAddAllWithIndexCodec.DecodeResponse(response).Response;
         }
 
         public virtual IList<T> SubList(int fromIndex, int toIndex)
         {
             var request = ListSubCodec.EncodeRequest(GetName(), fromIndex, toIndex);
             var response = Invoke(request);
-            ICollection<IData> collection = ListSubCodec.DecodeResponse(response).response;
+            ICollection<IData> collection = ListSubCodec.DecodeResponse(response).Response;
             return ToList<T>(collection);
         }
 
@@ -120,7 +120,7 @@ namespace Hazelcast.Client.Proxy
                         HandleItemListener(item, uuid, (ItemEventType) type, listener, includeValue);
                     });
 
-            return RegisterListener(request, m => ListAddListenerCodec.DecodeResponse(m).response,
+            return RegisterListener(request, m => ListAddListenerCodec.DecodeResponse(m).Response,
                 id => ListRemoveListenerCodec.EncodeRequest(GetName(), id), handler);
         }
 
@@ -133,47 +133,47 @@ namespace Hazelcast.Client.Proxy
         {
             var request = ListAddCodec.EncodeRequest(GetName(), ToData(item));
             var response = Invoke(request);
-            return ListAddCodec.DecodeResponse(response).response;
+            return ListAddCodec.DecodeResponse(response).Response;
         }
 
         public override int Size()
         {
             var request = ListSizeCodec.EncodeRequest(GetName());
-            return Invoke(request, m => ListSizeCodec.DecodeResponse(m).response);
+            return Invoke(request, m => ListSizeCodec.DecodeResponse(m).Response);
         }
 
         public override bool IsEmpty()
         {
             var request = ListIsEmptyCodec.EncodeRequest(GetName());
-            return Invoke(request, m => ListIsEmptyCodec.DecodeResponse(m).response);
+            return Invoke(request, m => ListIsEmptyCodec.DecodeResponse(m).Response);
         }
 
         public override bool ContainsAll<TE>(ICollection<TE> c)
         {
             var valueSet = ToDataList(c);
             var request = ListContainsAllCodec.EncodeRequest(GetName(), valueSet);
-            return Invoke(request, m => ListContainsAllCodec.DecodeResponse(m).response);
+            return Invoke(request, m => ListContainsAllCodec.DecodeResponse(m).Response);
         }
 
         public override bool RemoveAll<TE>(ICollection<TE> c)
         {
             var valueSet = ToDataList(c);
             var request = ListCompareAndRemoveAllCodec.EncodeRequest(GetName(), valueSet);
-            return Invoke(request, m => ListCompareAndRemoveAllCodec.DecodeResponse(m).response);
+            return Invoke(request, m => ListCompareAndRemoveAllCodec.DecodeResponse(m).Response);
         }
 
         public override bool RetainAll<TE>(ICollection<TE> c)
         {
             var valueSet = ToDataList(c);
             var request = ListCompareAndRetainAllCodec.EncodeRequest(GetName(), valueSet);
-            return Invoke(request, m => ListCompareAndRetainAllCodec.DecodeResponse(m).response);
+            return Invoke(request, m => ListCompareAndRetainAllCodec.DecodeResponse(m).Response);
         }
 
         public override bool AddAll<TE>(ICollection<TE> c)
         {
             var values = ToDataList(c);
             var request = ListAddAllCodec.EncodeRequest(GetName(), values);
-            return Invoke(request, m => ListAddAllCodec.DecodeResponse(m).response);
+            return Invoke(request, m => ListAddAllCodec.DecodeResponse(m).Response);
         }
 
         public override void Clear()
@@ -185,7 +185,7 @@ namespace Hazelcast.Client.Proxy
         public override bool Contains(T item)
         {
             var request = ListContainsCodec.EncodeRequest(GetName(), ToData(item));
-            return Invoke(request, m => ListContainsCodec.DecodeResponse(m).response);
+            return Invoke(request, m => ListContainsCodec.DecodeResponse(m).Response);
         }
 
         public override void CopyTo(T[] array, int index)
@@ -196,13 +196,13 @@ namespace Hazelcast.Client.Proxy
         public override bool Remove(T item)
         {
             var request = ListRemoveCodec.EncodeRequest(GetName(), ToData(item));
-            return Invoke(request, m => ListRemoveCodec.DecodeResponse(m).response);
+            return Invoke(request, m => ListRemoveCodec.DecodeResponse(m).Response);
         }
 
         protected override ICollection<T> GetAll()
         {
             var request = ListGetAllCodec.EncodeRequest(GetName());
-            var result = Invoke(request, m => ListGetAllCodec.DecodeResponse(m).response);
+            var result = Invoke(request, m => ListGetAllCodec.DecodeResponse(m).Response);
             return ToList<T>(result);
         }
     }

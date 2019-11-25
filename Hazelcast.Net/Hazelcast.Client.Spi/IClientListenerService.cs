@@ -15,28 +15,27 @@
 using Hazelcast.Client.Protocol;
 using Hazelcast.Util;
 
-#pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Spi
 {
     /// <summary>
-    /// Client service to add/remove remote listeners.
+    /// Client service to Add/remove remote listeners.
     /// </summary>
     /// <remarks>
     /// For smart client, it registers local  listeners to all nodes in the cluster.
     /// For dummy client, it registers global listener to one node.
     /// </remarks>
-    public interface IClientListenerService
+    interface IClientListenerService
     {
         bool AddEventHandler(long correlationId, DistributedEventHandler eventHandler);
 
         bool RemoveEventHandler(long correlationId);
 
-        string RegisterListener(IClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
+        string RegisterListener(ClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
             EncodeDeregisterRequest encodeDeregisterRequest, DistributedEventHandler eventHandler);
 
         bool DeregisterListener(string userRegistrationId);
         
-        void HandleResponseMessage(IClientMessage message);
+        void HandleResponseMessage(ClientMessage message);
         
     }
 }

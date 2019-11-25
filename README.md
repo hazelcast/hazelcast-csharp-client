@@ -226,10 +226,10 @@ When you download and unzip `hazelcast-<version>.zip` (or `tar`), you see the `h
 
 ```xml
 <hazelcast>
-    <group>
+    <cluster>
         <name>dev</name>
         <password>dev-pass</password>
-    </group>
+    </cluster>
     <network>
         <port auto-increment="true" port-count="100">5701</port>
         <join>
@@ -255,8 +255,8 @@ When you download and unzip `hazelcast-<version>.zip` (or `tar`), you see the `h
 
 We will go over some important configuration elements in the rest of this section.
 
-- `<group>`: Specifies which cluster this member belongs to. A member connects only to the other members that are in the same group as
-itself. As shown in the above configuration sample, there are `<name>` and `<password>` tags under the `<group>` element with some pre-configured values. You may give your clusters different names so that they can
+- `<cluster>`: Specifies which cluster this member belongs to. A member connects only to the other members that are in the same group as
+itself. As shown in the above configuration sample, there are `<name>` and `<password>` tags under the `<cluster>` element with some pre-configured values. You may give your clusters different names so that they can
 live in the same network without disturbing each other. Note that the cluster name should be the same across all members and clients that belong
  to the same cluster. The `<password>` tag is not in use since Hazelcast 3.9. It is there for backward compatibility
 purposes. You can remove or leave it as it is if you use Hazelcast 3.9 or later.
@@ -339,10 +339,10 @@ cfg.GetGroupConfig().SetName("group name of your cluster").SetPassword("group pa
 **Declarative Configuration:**
 
 ```xml
-<group>
+<cluster>
   <name>group name of you cluster</name>
   <password>group password</password>
-</group>
+</cluster>
 ```
 
 > **NOTE: If you have a Hazelcast IMDG release older than 3.11, you need to provide also a group password along with the group name.**
@@ -534,10 +534,10 @@ Following is a sample XML configuration file:
 ```xml
 <hazelcast-client>
 
-  <group>
+  <cluster>
     <name>dev</name>
     <password>dev-pass</password>
-  </group>
+  </cluster>
 
   <network>
     <cluster-members>
@@ -1140,10 +1140,10 @@ The following are example configurations.
 
 ```xml
 <hazelcast-client>
-  <group>
+  <cluster>
     <name>hazel</name>
     <password>cast</password>
-  </group>
+  </cluster>
   <network>
     <hazelcast-cloud enabled="true">
         <discovery-token>EXAMPLE_TOKEN</discovery-token>
@@ -1908,7 +1908,7 @@ import com.hazelcast.nio.serialization.DataSerializableFactory;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 
 public class IdentifiedFactory implements DataSerializableFactory {
-    public static final int FACTORY_ID = 5;
+    public const int FACTORY_ID = 5;
 
      @Override
     public IdentifiedDataSerializable create(int typeId) {

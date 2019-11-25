@@ -45,7 +45,7 @@ namespace Hazelcast.Client
 
         private readonly HazelcastClient _client;
         private readonly bool _enabled;
-        private readonly int _period;
+        private readonly TimeSpan _period;
         private CancellationTokenSource _heartbeatToken;
 
         private readonly AtomicBoolean _live = new AtomicBoolean(false);
@@ -58,7 +58,7 @@ namespace Hazelcast.Client
         {
             _client = client;
             _enabled = EnvironmentUtil.ReadBool("hazelcast.client.statistics.enabled") ?? false;
-            _period = EnvironmentUtil.ReadInt("hazelcast.client.statistics.period.seconds") ?? 3;
+            _period = TimeSpan.FromSeconds(EnvironmentUtil.ReadInt("hazelcast.client.statistics.period.seconds") ?? 3);
         }
 
         public void Start()
@@ -72,10 +72,9 @@ namespace Hazelcast.Client
 
             _heartbeatToken = new CancellationTokenSource();
 
-            _client.GetClientExecutionService().ScheduleWithFixedDelay(PeriodicStatisticsSendTask, _period, _period,
-                TimeUnit.Seconds, _heartbeatToken.Token);
+            _client.GetClientExecutionService().ScheduleWithFixedDelay(PeriodicStatisticsSendTask, _period, _period, _heartbeatToken.Token);
 
-            Logger.Info(string.Format("Client statistics is enabled with period {0} seconds.", _period));
+            Logger.Info($"Client statistics is enabled with period {_period} seconds.");
         }
 
         public void Destroy()
@@ -107,10 +106,8 @@ namespace Hazelcast.Client
             {
                 if (Logger.IsFinestEnabled())
                 {
-                    Logger.Finest(string.Format(
-                        "Client statistics can not be sent to server {0} since, " +
-                        "connected owner server version is less than the minimum supported server version {1}",
-                        ownerAddress, SinceVersionString));
+                    Logger.Finest($"Client statistics can not be sent to server {ownerAddress} since, " +
+                                  $"connected owner server version is less than the minimum supported server version {SinceVersionString}");
                 }
             }
 
@@ -148,19 +145,19 @@ namespace Hazelcast.Client
 
         private void SendStatsToOwner(StringBuilder stats)
         {
-            var request = ClientStatisticsCodec.EncodeRequest(stats.ToString());
-            try
-            {
-                _client.GetInvocationService().InvokeOnTarget(request, _ownerAddress);
-            }
-            catch (Exception e)
-            {
-                // suppress exception, do not print too many messages
-                if (Logger.IsFinestEnabled())
-                {
-                    Logger.Finest("Could not send stats ", e);
-                }
-            }
+            //var request = ClientStatisticsCodec.EncodeRequest(stats.ToString());
+            //try
+            //{
+            //    _client.GetInvocationService().InvokeOnTarget(request, _ownerAddress);
+            //}
+            //catch (Exception e)
+            //{
+            //    // suppress exception, do not print too many messages
+            //    if (Logger.IsFinestEnabled())
+            //    {
+            //        Logger.Finest("Could not send stats ", e);
+            //    }
+            //}
         }
 
         private void RegisterMetrics()

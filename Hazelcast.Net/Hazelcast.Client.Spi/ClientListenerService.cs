@@ -66,7 +66,7 @@ namespace Hazelcast.Client.Spi
             IsSmart = client.GetClientConfig().GetNetworkConfig().IsSmartRouting();
         }
 
-        public string RegisterListener(IClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
+        public string RegisterListener(ClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
             EncodeDeregisterRequest encodeDeregisterRequest, DistributedEventHandler eventHandler)
         {
             //This method should not be called from registrationExecutor
@@ -184,7 +184,7 @@ namespace Hazelcast.Client.Spi
             var future = ((ClientInvocationService) _client.GetInvocationService()).InvokeListenerOnConnection(
                 listenerRegistration.RegistrationRequest, listenerRegistration.EventHandler, connection);
 
-            IClientMessage clientMessage;
+            ClientMessage clientMessage;
             try
             {
                 clientMessage = ThreadUtil.GetResult(future);
@@ -195,7 +195,7 @@ namespace Hazelcast.Client.Spi
             }
 
             var serverRegistrationId = listenerRegistration.DecodeRegisterResponse(clientMessage);
-            var correlationId = listenerRegistration.RegistrationRequest.GetCorrelationId();
+            var correlationId = listenerRegistration.RegistrationRequest.CorrelationId;
             var registration = new EventRegistration(serverRegistrationId, correlationId, connection);
 
             Debug.Assert(listenerRegistration.ConnectionRegistrations != null, "registrationMap should be created!");
@@ -228,7 +228,7 @@ namespace Hazelcast.Client.Spi
                     {
                         try
                         {
-                            _connectionManager.GetOrConnectAsync(member.GetAddress()).Wait(token);
+                            _connectionManager.GetOrConnectAsync(member.Address).Wait(token);
                         }
                         catch (Exception)
                         {
@@ -281,12 +281,12 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        public void HandleResponseMessage(IClientMessage message)
+        public void HandleResponseMessage(ClientMessage message)
         {
-            var partitionId = message.GetPartitionId();
+            var partitionId = message.PartitionId;
             Task.Factory.StartNew(o =>
             {
-                var correlationId = message.GetCorrelationId();
+                var correlationId = message.CorrelationId;
                 DistributedEventHandler eventHandler;
                 if (!_eventHandlers.TryGetValue(correlationId, out eventHandler))
                 {
@@ -364,7 +364,7 @@ namespace Hazelcast.Client.Spi
             {
                 try
                 {
-                    _connectionManager.GetOrConnectAsync(member.GetAddress()).IgnoreExceptions();
+                    _connectionManager.GetOrConnectAsync(member.Address).IgnoreExceptions();
                 }
                 catch (Exception)
                 {

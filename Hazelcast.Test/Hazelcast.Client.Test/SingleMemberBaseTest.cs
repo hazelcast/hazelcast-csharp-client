@@ -51,8 +51,7 @@ namespace Hazelcast.Client.Test
                 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.GetGroupConfig().SetName(HzCluster.Id).SetPassword(HzCluster.Id);
+            config.SetClusterName(HzCluster.Id).SetClusterPassword(HzCluster.Id);
         }
-
     }
 }

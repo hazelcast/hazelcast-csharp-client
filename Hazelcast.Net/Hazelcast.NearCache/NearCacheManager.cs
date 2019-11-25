@@ -132,8 +132,8 @@ namespace Hazelcast.NearCache
 
             FetchMetadataInternal(names, responseParameter =>
             {
-                RepairGuids(responseParameter.partitionUuidList);
-                RepairSequences(responseParameter.namePartitionSequenceList);
+                RepairGuids(responseParameter.PartitionUuidList);
+                RepairSequences(responseParameter.NamePartitionSequenceList);
             });
         }
 
@@ -143,7 +143,7 @@ namespace Hazelcast.NearCache
             var dataMembers = _client.GetClientClusterService().GetMemberList().Where(member => !member.IsLiteMember);
             foreach (var member in dataMembers)
             {
-                var address = member.GetAddress();
+                var address = member.Address;
                 var request = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, address);
                 try
                 {
@@ -220,8 +220,8 @@ namespace Hazelcast.NearCache
                 var names = new List<string> {nearCache.Name};
                 FetchMetadataInternal(names, responseParameter =>
                 {
-                    repairingHandler.InitGuids(responseParameter.partitionUuidList);
-                    repairingHandler.InitSequences(responseParameter.namePartitionSequenceList);
+                    repairingHandler.InitGuids(responseParameter.PartitionUuidList);
+                    repairingHandler.InitSequences(responseParameter.NamePartitionSequenceList);
                 });
 
                 //start repairing task if not started
