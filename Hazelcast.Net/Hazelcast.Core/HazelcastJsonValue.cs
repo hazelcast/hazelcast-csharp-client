@@ -46,7 +46,7 @@ namespace Hazelcast.Core
         /// <exception cref="System.NullReferenceException">if jsonString param is null</exception>
         public HazelcastJsonValue(string jsonString)
         {
-            ValidationUtil.CheckNotNull(jsonString, ValidationUtil.NULL_JSON_STRING_IS_NOT_ALLOWED);
+            ValidationUtil.CheckNotNull(jsonString, ValidationUtil.NullJsonStringIsNotAllowed);
             _jsonString = jsonString;
         }
 

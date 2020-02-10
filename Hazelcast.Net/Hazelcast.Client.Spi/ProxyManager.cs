@@ -16,7 +16,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using Hazelcast.Client.Protocol;
@@ -24,9 +23,10 @@ using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Proxy;
 using Hazelcast.Config;
 using Hazelcast.Core;
-using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Util;
+using static Hazelcast.Core.ServiceNames;
+using static Hazelcast.Util.ValidationUtil;
 
 namespace Hazelcast.Client.Spi
 {
@@ -35,279 +35,111 @@ namespace Hazelcast.Client.Spi
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ProxyManager));
         private readonly HazelcastClient _client;
 
-        private readonly ConcurrentDictionary<DistributedObjectInfo, ClientProxy> _proxies =
-            new ConcurrentDictionary<DistributedObjectInfo, ClientProxy>();
+        private readonly ConcurrentDictionary<DistributedObjectInfo, Lazy<ClientProxy>> _proxies =
+            new ConcurrentDictionary<DistributedObjectInfo, Lazy<ClientProxy>>();
 
-        private readonly ConcurrentDictionary<string, ClientProxyFactory> _proxyFactories =
-            new ConcurrentDictionary<string, ClientProxyFactory>();
+        private readonly ConcurrentDictionary<string, Func<string, Type, ClientProxy>> _proxyFactories =
+            new ConcurrentDictionary<string, Func<string, Type, ClientProxy>>();
+
 
         public ProxyManager(HazelcastClient client)
         {
             _client = client;
-            var listenerConfigs = client.GetClientConfig().GetListenerConfigs();
-            if (listenerConfigs != null && listenerConfigs.Count > 0)
-            {
-                foreach (var listenerConfig in listenerConfigs.Where(listenerConfig =>
-                    listenerConfig.GetImplementation() is IDistributedObjectListener))
-                {
-                    AddDistributedObjectListener((IDistributedObjectListener) listenerConfig.GetImplementation());
-                }
-            }
-        }
-
-        public string AddDistributedObjectListener(IDistributedObjectListener listener)
-        {
-            var isSmart = _client.GetClientConfig().GetNetworkConfig().IsSmartRouting();
-            var request = ClientAddDistributedObjectListenerCodec.EncodeRequest(isSmart);
-            var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig());
-            DistributedEventHandler eventHandler = delegate(ClientMessage message)
-            {
-                ClientAddDistributedObjectListenerCodec.EventHandler.HandleEvent(message, (name, serviceName, eventType) =>
-                {
-                    var _event = new LazyDistributedObjectEvent(eventType, serviceName, name, this);
-                    switch (eventType)
-                    {
-                        case DistributedObjectEvent.EventType.Created:
-                            listener.DistributedObjectCreated(_event);
-                            break;
-                        case DistributedObjectEvent.EventType.Destroyed:
-                            listener.DistributedObjectDestroyed(_event);
-                            break;
-                        default:
-                            Logger.Warning(string.Format("Undefined DistributedObjectListener event type received: {0} !!!",
-                                eventType));
-                            break;
-                    }
-                });
-            };
-            return context.GetListenerService().RegisterListener(request,
-                m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).Response,
-                ClientRemoveDistributedObjectListenerCodec.EncodeRequest, eventHandler);
-        }
-
-        public void Shutdown()
-        {
-            foreach (var proxy in _proxies)
-            {
-                proxy.Value.OnShutdown();
-            }
-            _proxies.Clear();
-        }
-
-        public ICollection<IDistributedObject> GetDistributedObjects()
-        {
-            try
-            {
-                var request = ClientGetDistributedObjectsCodec.EncodeRequest();
-                var task = _client.GetInvocationService().InvokeOnRandomTarget(request);
-                var response = ThreadUtil.GetResult(task);
-                var result = ClientGetDistributedObjectsCodec.DecodeResponse(response).Response;
-                foreach (var distributedObjectInfo in result)
-                {
-                    var proxy = InitProxyLocal(distributedObjectInfo.ServiceName, distributedObjectInfo.Name,
-                        typeof(IDistributedObject));
-                    _proxies.TryAdd(distributedObjectInfo, proxy);
-                }
-
-                return GetLocalDistributedObjects();
-            }
-            catch (Exception e)
-            {
-                throw ExceptionUtil.Rethrow(e);
-            }
-        }
-
-        private ICollection<IDistributedObject> GetLocalDistributedObjects()
-        {
-            return new ReadOnlyCollection<IDistributedObject>(_proxies.Values.ToList<IDistributedObject>());
-        }
-
-        private ClientProxy InitProxyLocal(string service, string id, Type requestedInterface)
-        {
-            var proxy = MakeProxy(service, id, requestedInterface);
-            proxy.SetContext(new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig()));
-            proxy.Init();
-            return proxy;
-        }
-
-        public ClientProxy GetOrCreateProxy<T>(string service, string id) where T : IDistributedObject
-        {
-            var objectInfo = new DistributedObjectInfo(service, id);
-            var requestedInterface = typeof(T);
-            var clientProxy = _proxies.GetOrAdd(objectInfo, distributedObjectInfo =>
-            {
-                // create a new proxy, which needs initialization on server.
-                var proxy = InitProxyLocal(service, id, requestedInterface);
-                InitializeWithRetry(proxy);
-                return proxy;
-            });
-
-            // only return the existing proxy, if the requested type args match
-            var proxyInterface = clientProxy.GetType().GetInterface(requestedInterface.Name);
-            var proxyArgs = proxyInterface.GetGenericArguments();
-            var requestedArgs = requestedInterface.GetGenericArguments();
-            if (proxyArgs.SequenceEqual(requestedArgs))
-            {
-                // the proxy we found matches what we were looking for
-                return clientProxy;
-            }
-
-            var isAssignable = true;
-            for (int i = 0; i < proxyArgs.Length; i++)
-            {
-                if (!proxyArgs[i].IsAssignableFrom(requestedArgs[i]))
-                {
-                    isAssignable = false;
-                    break;
-                }
-            }
-
-            if (isAssignable)
-            {
-                _proxies.TryRemove(objectInfo, out clientProxy);
-                return GetOrCreateProxy<T>(service, id);
-            }
-
-            throw new InvalidCastException(string.Format("Distributed object is already created with incompatible types [{0}]",
-                string.Join(", ", (object[]) proxyArgs)));
-        }
-
-        private ClientProxy MakeProxy(string service, string id, Type requestedInterface)
-        {
-            ClientProxyFactory factory;
-            _proxyFactories.TryGetValue(service, out factory);
-            if (factory == null)
-            {
-                throw new ArgumentException("No factory registered for service: " + service);
-            }
-
-            var clientProxy = factory(requestedInterface, id);
-            return clientProxy;
         }
 
         public void Init(ClientConfig config)
         {
             // register defaults
-            Register(ServiceNames.Map, (type, id) =>
-            {
-                var clientConfig = _client.GetClientConfig();
-                var nearCacheConfig = clientConfig.GetNearCacheConfig(id);
-                var proxyType = nearCacheConfig != null ? typeof(ClientMapNearCacheProxy<,>) : typeof(ClientMapProxy<,>);
-                return ProxyFactory(proxyType, type, ServiceNames.Map, id);
-            });
-            Register(ServiceNames.Queue,
-                (type, id) => ProxyFactory(typeof(ClientQueueProxy<>), type, ServiceNames.Queue, id));
-            Register(ServiceNames.MultiMap,
-                (type, id) => ProxyFactory(typeof(ClientMultiMapProxy<,>), type, ServiceNames.MultiMap, id));
-            Register(ServiceNames.List,
-                (type, id) => ProxyFactory(typeof(ClientListProxy<>), type, ServiceNames.List, id));
-            Register(ServiceNames.Set,
-                (type, id) => ProxyFactory(typeof(ClientSetProxy<>), type, ServiceNames.Set, id));
-            Register(ServiceNames.Topic,
-                (type, id) => ProxyFactory(typeof(ClientTopicProxy<>), type, ServiceNames.Topic, id));
-            //Register(ServiceNames.PNCounter,
-            //   (type, id) => ProxyFactory(typeof(ClientPNCounterProxy), type, ServiceNames.PNCounter, id));
-            //Register(ServiceNames.Semaphore,
-            //    (type, id) => ProxyFactory(typeof(ClientSemaphoreProxy), type, ServiceNames.Semaphore, id));
-            Register(ServiceNames.Ringbuffer,
-                (type, id) => ProxyFactory(typeof(ClientRingbufferProxy<>), type, ServiceNames.Ringbuffer, id));
-            Register(ServiceNames.ReplicatedMap,
-                (type, id) => ProxyFactory(typeof(ClientReplicatedMapProxy<,>), type, ServiceNames.ReplicatedMap, id));
+            Register(ServiceNames.Map, CreateClientMapProxyFactory);
+            Register(Queue, typeof(ClientQueueProxy<>));
+            Register(MultiMap, typeof(ClientMultiMapProxy<,>));
+            Register(List, typeof(ClientListProxy<>));
+            Register(Set, typeof(ClientSetProxy<>));
+            Register(Topic, typeof(ClientTopicProxy<>));
+//            Register(ServiceNames.PNCounter, typeof(ClientPNCounterProxy));
+            Register(Ringbuffer, typeof(ClientRingbufferProxy<>));
+            Register(ReplicatedMap, typeof(ClientReplicatedMapProxy<,>));
+        }
 
-            Register(ServiceNames.IdGenerator, delegate(Type type, string id)
-            {
-                var atomicLong = _client.GetAtomicLong("IdGeneratorService.ATOMIC_LONG_NAME" + id);
-                return Activator.CreateInstance(typeof(ClientIdGeneratorProxy), ServiceNames.IdGenerator, id, atomicLong) as
-                    ClientProxy;
-            });
+        private ClientProxy CreateClientMapProxyFactory(string id, Type type)
+        {
+            var clientConfig = _client.ClientConfig;
+            var nearCacheConfig = clientConfig.GetNearCacheConfig(id);
+            var proxyType = nearCacheConfig != null ? typeof(ClientMapNearCacheProxy<,>) : typeof(ClientMapProxy<,>);
+            return InstantiateClientProxy(proxyType, type, ServiceNames.Map, id, _client);
+        }
 
-            foreach (var proxyFactoryConfig in config.GetProxyFactoryConfigs())
+        public Guid AddDistributedObjectListener(IDistributedObjectListener listener)
+        {
+            var listenerService = _client.ListenerService;
+            var request = ClientAddDistributedObjectListenerCodec.EncodeRequest(listenerService.RegisterLocalOnly);
+
+            void HandleDistributedObjectEvent(string name, string serviceName, string eventTypeName, Guid source)
             {
-                try
+                var ns = new DistributedObjectInfo(serviceName, name);
+                _proxies.TryGetValue(ns, out var lazyProxy);
+                // ClientProxy proxy = future == null ? null : future.get();
+                var eventType =
+                    (DistributedObjectEvent.DistributedEventType) Enum.Parse(typeof(DistributedObjectEvent.DistributedEventType),
+                        eventTypeName);
+                var _event = new DistributedObjectEvent(eventType, serviceName, name, lazyProxy.Value, source, this);
+                switch (eventType)
                 {
-                    ClientProxyFactory clientProxyFactory = null;
-                    var type = Type.GetType(proxyFactoryConfig.GetClassName());
-                    if (type != null)
-                    {
-                        clientProxyFactory = (ClientProxyFactory) Activator.CreateInstance(type);
-                    }
+                    case DistributedObjectEvent.DistributedEventType.CREATED:
+                        listener.DistributedObjectCreated(_event);
+                        break;
+                    case DistributedObjectEvent.DistributedEventType.DESTROYED:
+                        listener.DistributedObjectDestroyed(_event);
+                        break;
+                    default:
+                        Logger.Warning($"Undefined DistributedObjectListener event type received: {eventType} !!!");
+                        break;
+                }
+            }
 
-                    Register(proxyFactoryConfig.GetService(), clientProxyFactory);
-                }
-                catch (Exception e)
-                {
-                    Logger.Severe(e);
-                }
+            void EventHandler(ClientMessage message) =>
+                ClientAddDistributedObjectListenerCodec.EventHandler.HandleEvent(message, HandleDistributedObjectEvent);
+
+            return listenerService.RegisterListener(request,
+                m => ClientAddDistributedObjectListenerCodec.DecodeResponse(m).Response,
+                ClientRemoveDistributedObjectListenerCodec.EncodeRequest, EventHandler);
+        }
+
+        public bool RemoveDistributedObjectListener(Guid id)
+        {
+            return _client.ListenerService.DeregisterListener(id);
+        }
+
+        private void Register(string serviceName, Type proxyType)
+        {
+            try
+            {
+                Register(serviceName, (id, type) => InstantiateClientProxy(proxyType, type, Queue, id, _client));
+            }
+            catch (Exception e)
+            {
+                throw new HazelcastException($"Factory for service: {serviceName} could not be created for {proxyType}", e);
             }
         }
 
-        public void Register(string serviceName, ClientProxyFactory factory)
+        private void Register(string serviceName, Func<string, Type, ClientProxy> factory)
         {
-            if (_proxyFactories.ContainsKey(serviceName))
+            if (!_proxyFactories.TryAdd(serviceName, factory))
             {
-                throw new ArgumentException("Factory for service: " + serviceName + " is already registered!");
+                throw new ArgumentException($"Factory for service: {serviceName} is already registered!");
             }
-
-            _proxyFactories.GetOrAdd(serviceName, factory);
         }
 
-        public bool RemoveDistributedObjectListener(string id)
-        {
-            var context = new ClientContext(_client.GetSerializationService(), _client.GetClientClusterService(),
-                _client.GetClientPartitionService(), _client.GetInvocationService(), _client.GetClientExecutionService(),
-                _client.GetListenerService(), _client.GetNearCacheManager(), this, _client.GetClientConfig());
-            return context.GetListenerService().DeregisterListener(id);
-        }
-
-        public ClientProxy RemoveProxy(string service, string id)
-        {
-            var ns = new DistributedObjectInfo(service, id);
-            ClientProxy removed;
-            _proxies.TryRemove(ns, out removed);
-            return removed;
-        }
-
-        internal static ClientProxy ProxyFactory(Type proxyType, Type interfaceType, string name, string id)
+        private static ClientProxy InstantiateClientProxy(Type proxyType, Type interfaceType, string name, string id,
+            HazelcastClient client)
         {
             if (proxyType.ContainsGenericParameters)
             {
                 var typeWithParams = GetTypeWithParameters(proxyType, interfaceType);
-                return Activator.CreateInstance(typeWithParams, name, id) as ClientProxy;
+                return Activator.CreateInstance(typeWithParams, name, id, client) as ClientProxy;
             }
 
             return Activator.CreateInstance(proxyType, name, id) as ClientProxy;
-        }
-
-        public HazelcastClient GetHazelcastInstance()
-        {
-            return _client;
-        }
-
-        private Address FindNextAddressToCreateARequest()
-        {
-            var clusterSize = _client.GetClientClusterService().GetSize();
-            IMember liteMember = null;
-
-            var loadBalancer = _client.GetLoadBalancer();
-            for (var i = 0; i < clusterSize; i++)
-            {
-                var member = loadBalancer.Next();
-                if (member != null && !member.IsLiteMember)
-                {
-                    return member.Address;
-                }
-
-                if (liteMember == null)
-                {
-                    liteMember = member;
-                }
-            }
-
-            return liteMember != null ? liteMember.Address : null;
         }
 
         private static Type GetTypeWithParameters(Type proxyType, Type interfaceType)
@@ -327,25 +159,33 @@ namespace Hazelcast.Client.Spi
             return proxyType.MakeGenericType(types);
         }
 
-        private void InitializeOnServer(ClientProxy clientProxy)
+        public ICollection<IDistributedObject> GetDistributedObjects()
         {
-            var initializationTarget = FindNextAddressToCreateARequest();
-            var invocationTarget = initializationTarget;
-            if (initializationTarget != null && _client.GetConnectionManager().GetConnection(initializationTarget) == null)
-            {
-                invocationTarget = _client.GetClientClusterService().GetOwnerConnectionAddress();
-            }
-
-            if (invocationTarget == null)
-            {
-                throw new IOException("Not able to setup owner connection!");
-            }
-
-            var request =
-                ClientCreateProxyCodec.EncodeRequest(clientProxy.GetName(), clientProxy.GetServiceName(), initializationTarget);
             try
             {
-                ThreadUtil.GetResult(_client.GetInvocationService().InvokeOnTarget(request, invocationTarget));
+                var request = ClientGetDistributedObjectsCodec.EncodeRequest();
+                var task = _client.InvocationService.InvokeOnRandomTarget(request);
+
+                var localDistributedObjects = new HashSet<DistributedObjectInfo>();
+                var distributedObjects = GetLocalDistributedObjects();
+                foreach (var localInfo in distributedObjects)
+                {
+                    localDistributedObjects.Add(new DistributedObjectInfo(localInfo.ServiceName, localInfo.Name));
+                }
+
+                var response = ThreadUtil.GetResult(task);
+                var newDistributedObjectInfo = ClientGetDistributedObjectsCodec.DecodeResponse(response).Response;
+                foreach (var distributedObjectInfo in newDistributedObjectInfo)
+                {
+                    localDistributedObjects.Remove(distributedObjectInfo);
+                    GetOrCreateLocalProxy<IDistributedObject>(distributedObjectInfo.ServiceName, distributedObjectInfo.Name);
+                }
+
+                foreach (var distributedObjectInfo in localDistributedObjects)
+                {
+                    DestroyProxyLocally(distributedObjectInfo.ServiceName, distributedObjectInfo.Name);
+                }
+                return GetLocalDistributedObjects();
             }
             catch (Exception e)
             {
@@ -353,42 +193,152 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        private void InitializeWithRetry(ClientProxy clientProxy)
+        private ICollection<IDistributedObject> GetLocalDistributedObjects()
         {
-            var clientInvocationService = (ClientInvocationService) _client.GetInvocationService();
-            long retryCountLimit = clientInvocationService.InvocationRetryCount;
-            for (var retryCount = 0; retryCount < retryCountLimit; retryCount++)
+            return new ReadOnlyCollection<IDistributedObject>(_proxies.Values.Select(lazy => lazy.Value)
+                .ToList<IDistributedObject>());
+        }
+
+        public ClientProxy GetOrCreateProxy<T>(string service, string id)
+        {
+            return GetOrCreateProxyInternal<T>(service, id, true);
+        }
+
+        public ClientProxy GetOrCreateLocalProxy<T>(string service, string id)
+        {
+            return GetOrCreateProxyInternal<T>(service, id, false);
+        }
+
+        private ClientProxy GetOrCreateProxyInternal<T>(string service, string id, bool remote)
+        {
+            CheckNotNull(service, "Service name is required!");
+            CheckNotNull(id, "Object name is required!");
+            var requestedInterface = typeof(T);
+            var ns = new DistributedObjectInfo(service, id);
+            var lazy = _proxies.GetOrAdd(ns, new Lazy<ClientProxy>(() =>
             {
+                if (!_proxyFactories.TryGetValue(service, out var factory))
+                {
+                    new ArgumentException($"No factory registered for service: {service}");
+                }
                 try
                 {
-                    InitializeOnServer(clientProxy);
-                    return;
+                    var _clientProxy = factory(id, requestedInterface);
+                    if (remote)
+                    {
+                        Initialize(_clientProxy);
+                    }
+                    _clientProxy.OnInitialize();
+                    return _clientProxy;
                 }
                 catch (Exception e)
                 {
-                    Logger.Warning("Got error initializing proxy", e);
-                    if (IsRetryable(e))
+                    throw ExceptionUtil.Rethrow(e);
+                }
+            }, LazyThreadSafetyMode.ExecutionAndPublication));
+
+            ClientProxy clientProxy;
+            try
+            {
+                clientProxy = lazy.Value;
+            }
+            catch (Exception e)
+            {
+                _proxies.TryRemove(ns, out _);
+                throw ExceptionUtil.Rethrow(e);
+            }
+
+            // only return the existing proxy, if the requested type args match
+            var proxyInterface = clientProxy.GetType().GetInterface(requestedInterface.Name);
+            var proxyArgs = proxyInterface.GetGenericArguments();
+            var requestedArgs = requestedInterface.GetGenericArguments();
+            if (proxyArgs.SequenceEqual(requestedArgs))
+            {
+                // the proxy we found matches what we were looking for
+                return clientProxy;
+            }
+            //TODO implement support for multiple generic parameters            
+            throw new InvalidCastException(
+                $"Distributed object is already created with incompatible types [{string.Join(", ", (object[]) proxyArgs)}]");
+        }
+
+        private void Initialize(ClientProxy clientProxy)
+        {
+            var request = ClientCreateProxyCodec.EncodeRequest(clientProxy.Name, clientProxy.ServiceName);
+            ThreadUtil.GetResult(_client.InvocationService.InvokeOnRandomTarget(request));
+        }
+
+        public void DestroyProxy(ClientProxy clientProxy)
+        {
+            var ns = new DistributedObjectInfo(clientProxy.Name, clientProxy.ServiceName);
+            if (_proxies.TryRemove(ns, out var registeredProxyLazy))
+            {
+                ClientProxy registeredProxy = null;
+                try
+                {
+                    registeredProxy = registeredProxyLazy.Value;
+                    if (registeredProxy != null)
                     {
                         try
                         {
-                            Thread.Sleep(clientInvocationService.InvocationRetryWaitTime);
+                            registeredProxy.DestroyLocally();
                         }
-                        catch (ThreadInterruptedException)
+                        finally
                         {
+                            registeredProxy.DestroyRemotely();
                         }
                     }
-                    else
+                }
+                finally
+                {
+                    if (clientProxy != registeredProxy)
                     {
-                        throw;
+                        // The given proxy is stale and was already destroyed, but the caller
+                        // may have allocated local resources in the context of this stale proxy
+                        // instance after it was destroyed, so we have to cleanup it locally one
+                        // more time to make sure there are no leaking local resources.
+                        clientProxy.DestroyLocally();
                     }
                 }
             }
         }
 
-        private bool IsRetryable(Exception exception)
+        public void DestroyProxyLocally(string service, string id)
         {
-            return exception is RetryableHazelcastException || exception is IOException || exception is AuthenticationException ||
-                   exception is HazelcastInstanceNotActiveException;
+            var objectNamespace = new DistributedObjectInfo(service, id);
+            if (_proxies.TryRemove(objectNamespace, out var lazy))
+            {
+                var clientProxy = lazy.Value;
+                clientProxy.DestroyLocally();
+            }
+        }
+
+        public void Destroy()
+        {
+            foreach (var lazy in _proxies.Values)
+            {
+                try
+                {
+                    lazy.Value.OnShutdown();
+                }
+                catch (Exception e)
+                {
+                    Logger.Finest("Proxy destroy error!", e);
+                }
+            }
+            _proxies.Clear();
+        }
+
+        public void CreateDistributedObjectsOnCluster()
+        {
+            ICollection<KeyValuePair<string, string>> proxyEntries =
+                _proxies.Keys.Select(ns => new KeyValuePair<string, string>(ns.Name, ns.ServiceName)).ToList();
+            if (proxyEntries.Count == 0)
+            {
+                return;
+            }
+            var request = ClientCreateProxiesCodec.EncodeRequest(proxyEntries);
+            _client.InvocationService.InvokeOnRandomTarget(request);
         }
     }
 }

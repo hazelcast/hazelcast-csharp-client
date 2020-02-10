@@ -33,6 +33,18 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             clientMessage.Add(new ClientMessage.Frame(data.ToByteArray()));
         }
 
+        public static void EncodeNullable(ClientMessage clientMessage, IData data)
+        {
+            if (data == null)
+            {
+                clientMessage.Add(ClientMessage.NullFrame.Copy());
+            }
+            else
+            {
+                clientMessage.Add(new ClientMessage.Frame(data.ToByteArray()));
+            }
+        }
+
         public static IData Decode(ClientMessage.Frame frame)
         {
             return new HeapData(frame.Content);

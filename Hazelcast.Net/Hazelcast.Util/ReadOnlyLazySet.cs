@@ -34,7 +34,7 @@ namespace Hazelcast.Util
 
         public IEnumerator<T> GetEnumerator()
         {
-            return new ReadOnlyLazyList<T, IData>.Enumerator(list, serializationService);
+            return ReadOnlyLazyList<T, IData>.DeserializeIterator(list, serializationService);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -59,19 +59,10 @@ namespace Hazelcast.Util
             }
         }
 
-        public int Count
-        {
-            get { return list.Count; }
-        }
+        public int Count => list.Count;
 
-        public bool IsReadOnly
-        {
-            get
-            {
-                return true;
-            }
-        }
-        
+        public bool IsReadOnly => true;
+
         public bool SetEquals(IEnumerable<T> other)
         {
             //TODO set equal implementation 

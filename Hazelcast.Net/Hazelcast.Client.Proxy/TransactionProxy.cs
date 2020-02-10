@@ -14,9 +14,9 @@
 
 using System;
 using System.Threading;
+using Hazelcast.Client.Network;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
-using Hazelcast.Core;
 using Hazelcast.Transaction;
 using Hazelcast.Util;
 
@@ -31,27 +31,22 @@ namespace Hazelcast.Client.Proxy
         private readonly TransactionOptions _options;
         private readonly long _threadId = ThreadUtil.GetThreadId();
 
-        private readonly IMember _txOwner;
+        private readonly Connection _txConnection;
 
         private long _startTime;
         private TransactionState _state = TransactionState.NoTxn;
         private Guid _txnId;
 
-        internal TransactionProxy(HazelcastClient client, TransactionOptions options, IMember txOwner)
+        internal TransactionProxy(HazelcastClient client, TransactionOptions options, Connection txConnection)
         {
             _options = options;
             _client = client;
-            _txOwner = txOwner;
+            _txConnection = txConnection;
         }
 
         public TransactionState GetState()
         {
             return _state;
-        }
-
-        public long GetTimeoutMillis()
-        {
-            return _options.GetTimeoutMillis();
         }
 
         public Guid GetTxnId()
@@ -74,7 +69,7 @@ namespace Hazelcast.Client.Proxy
                 }
                 _threadFlag = true;
                 _startTime = Clock.CurrentTimeMillis();
-                var request = TransactionCreateCodec.EncodeRequest(GetTimeoutMillis(), _options.GetDurability(),
+                var request = TransactionCreateCodec.EncodeRequest(_options.GetTimeoutMillis(), _options.GetDurability(),
                     (int) _options.GetTransactionType(), _threadId);
                 var response = Invoke(request);
                 _txnId = TransactionCreateCodec.DecodeResponse(response).Response;
@@ -161,15 +156,15 @@ namespace Hazelcast.Client.Proxy
 
         private ClientMessage Invoke(ClientMessage request)
         {
-            var rpc = _client.GetInvocationService();
+            var invocationService = _client.InvocationService;
             try
             {
-                var task = rpc.InvokeOnMember(request, _txOwner);
+                var task = invocationService.InvokeOnConnection(request, _txConnection);
                 return ThreadUtil.GetResult(task);
             }
             catch (Exception e)
             {
-                throw ExceptionUtil.Rethrow(e);
+                throw ExceptionUtil.Rethrow(e, exception => new TransactionException(exception));
             }
         }
     }

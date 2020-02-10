@@ -35,48 +35,30 @@ namespace Hazelcast.Client.Protocol.Util
 {
     internal class ClientMessageDecoder
     {
-        // private readonly Connection _connection;
-        // private ClientEndpointManager clientEndpointManager;
-
         private readonly Dictionary<long, ClientMessage> _builderBySessionIdMap = new Dictionary<long, ClientMessage>();
+        private ClientMessageReader _activeReader = new ClientMessageReader();
         private readonly Action<ClientMessage> _onMessage;
-        private readonly int _maxMessageLength;
-        private ClientMessageReader _activeReader;
 
         public ClientMessageDecoder(Action<ClientMessage> onMessage)
         {
             _onMessage = onMessage;
-            //if (properties == null)
-            //{
-            //    properties = new HazelcastProperties((Properties)null);
-            //}
-            //clientEndpointManager = onMessage instanceof ClientEngine ? ((ClientEngine)onMessage).getEndpointManager() : null;
-            //maxMessageLength = properties.getInteger(GroupProperty.CLIENT_PROTOCOL_UNVERIFIED_MESSAGE_BYTES);
-            _maxMessageLength = int.MaxValue;
-            _activeReader = new ClientMessageReader(_maxMessageLength);
-            //this.connection = connection;
         }
 
         public void OnRead(ByteBuffer src)
         {
             while (src.HasRemaining())
             {
-                var trusted = IsEndpointTrusted();
-                var complete = _activeReader.ReadFrom(src, trusted);
+                var complete = _activeReader.ReadFrom(src);
                 if (!complete)
                 {
                     break;
                 }
 
-                var firstFrame = _activeReader.Message.Head;
+                var firstFrame = _activeReader.Message.FirstFrame;
                 var flags = firstFrame.Flags;
                 if (ClientMessage.IsFlagSet(flags, ClientMessage.UnfragmentedMessage))
                 {
                     HandleMessage(_activeReader.Message);
-                }
-                else if (!trusted)
-                {
-                    throw new InvalidOperationException("Fragmented client messages are not allowed before the client is authenticated.");
                 }
                 else
                 {
@@ -100,20 +82,8 @@ namespace Hazelcast.Client.Protocol.Util
                     }
                 }
 
-                _activeReader = new ClientMessageReader(_maxMessageLength);
+                _activeReader = new ClientMessageReader();
             }
-        }
-
-        private bool IsEndpointTrusted()
-        {
-            return false;
-            //    if (clientEndpointManager == null || clientIsTrusted)
-            //    {
-            //        return true;
-            //    }
-            //    ClientEndpoint endpoint = clientEndpointManager.getEndpoint(connection);
-            //    clientIsTrusted = endpoint != null && endpoint.isAuthenticated();
-            //    return clientIsTrusted;
         }
 
         private ClientMessage MergeIntoExistingClientMessage(long fragmentationId)
@@ -125,8 +95,6 @@ namespace Hazelcast.Client.Protocol.Util
 
         private void HandleMessage(ClientMessage clientMessage)
         {
-            //clientMessage.setConnection(connection);
-            //normalPacketsRead.inc();
             _onMessage(clientMessage);
         }
     }

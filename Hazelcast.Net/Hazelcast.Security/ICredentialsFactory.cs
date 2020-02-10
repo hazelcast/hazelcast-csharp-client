@@ -12,24 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Config;
 
 namespace Hazelcast.Security
 {
-    /// <summary>
-    /// <see cref="ICredentialsFactory"/> is used to create <see cref="ICredentials"/> objects to be used
-    /// during node authentication before connection is accepted by the master node.
-    /// </summary>
-    public interface ICredentialsFactory
+    public interface ICredentialsFactory : IDisposable
     {
         
         /// <summary>
-        /// Configures <see cref="ICredentialsFactory"/>
+        /// This method is (only) called if the factory instance is newly created from a class name provided in
+        /// <see cref="CredentialsFactoryConfig"/>
         /// </summary>
-        /// <param name="config"><see cref="GroupConfig"/></param>
-        /// <param name="properties">properties that will be used to pass custom configurations by user</param>
-        void Configure(ClientConfig config, IDictionary<string, string> properties);
+        /// <param name="properties">factory properties defined in configuration</param>
+        void Init(IDictionary<string, string> properties);
 
         /// <summary>
         /// Creates new <see cref="ICredentials"/> object.
@@ -39,10 +36,5 @@ namespace Hazelcast.Security
         /// </remarks>
         /// <returns>the new Credentials object</returns>
         ICredentials NewCredentials();
-
-        /// <summary>
-        /// Destroys <see cref="ICredentialsFactory"/>
-        /// </summary>
-        void Destroy();
     }
 }

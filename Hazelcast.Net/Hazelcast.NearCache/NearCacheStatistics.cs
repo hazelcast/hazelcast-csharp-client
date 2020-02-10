@@ -31,35 +31,20 @@ namespace Hazelcast.NearCache
             _creationTime = Clock.CurrentTimeMillis();
         }
 
-        public long CreationTime
-        {
-            get { return _creationTime; }
-        }
+        public long CreationTime => _creationTime;
 
-        public long Hits
-        {
-            get { return Interlocked.Read(ref _hits); }
-        }
+        public long Hits => Interlocked.Read(ref _hits);
 
-        public long Misses
-        {
-            get { return Interlocked.Read(ref _misses); }
-        }
+        public long Misses => Interlocked.Read(ref _misses);
 
-        public long Evictions
-        {
-            get { return Interlocked.Read(ref _evictions); }
-        }
+        public long Evictions => Interlocked.Read(ref _evictions);
 
-        public long Expirations
-        {
-            get { return Interlocked.Read(ref _expirations); }
-        }
+        public long Expirations => Interlocked.Read(ref _expirations);
 
         public long OwnedEntryCount
         {
-            get { return Interlocked.Read(ref _ownedEntryCount); }
-            set { _ownedEntryCount = value; }
+            get => Interlocked.Read(ref _ownedEntryCount);
+            set => _ownedEntryCount = value;
         }
 
         public void DecrementOwnedEntryCount()

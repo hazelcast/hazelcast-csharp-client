@@ -20,25 +20,30 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Util
 {
-    internal abstract class AbstractLoadBalancer : ILoadBalancer, IMembershipListener
+    public abstract class AbstractLoadBalancer : ILoadBalancer, IInitialMembershipListener
     {
-        private volatile ICluster _clusterRef;
+        private ICluster _cluster;
         private IMember[] _members;
 
         public IMember[] Members
         {
-            get { return _members; }
-            private set { Interlocked.Exchange(ref _members, value); }
+            get => _members;
+            private set => Interlocked.Exchange(ref _members, value);
         }
 
         public void Init(ICluster cluster, ClientConfig config)
         {
-            _clusterRef = cluster;
+            Volatile.Write(ref _cluster, cluster);
             SetMembersFromCluster();
             cluster.AddMembershipListener(this);
         }
 
         public abstract IMember Next();
+
+        public void Init(InitialMembershipEvent membershipEvent)
+        {
+            SetMembersFromCluster();
+        }
 
         public void MemberAdded(MembershipEvent membershipEvent)
         {
@@ -50,18 +55,9 @@ namespace Hazelcast.Util
             SetMembersFromCluster();
         }
 
-        public void MemberAttributeChanged(MemberAttributeEvent memberAttributeEvent)
+        protected void SetMembersFromCluster()
         {
-        }
-
-        protected internal void SetMembersFromCluster()
-        {
-            var cluster = _clusterRef;
-            if (cluster != null)
-            {
-                var memberSet = cluster.GetMembers();
-                Members = memberSet.ToArray();
-            }
+            Members = _cluster?.Members?.ToArray();
         }
     }
 }

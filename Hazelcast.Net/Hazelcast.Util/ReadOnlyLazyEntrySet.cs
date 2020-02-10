@@ -21,10 +21,11 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
-    internal class ReadOnlyLazyEntrySet<TKey, TValue> : AbstractLazyDictionary<TKey, TValue>, ISet<KeyValuePair<TKey, TValue>>
+    internal class ReadOnlyLazyEntrySet<TKey, TValue, D> : AbstractLazyDictionary<TKey, TValue, D>,
+        ISet<KeyValuePair<TKey, TValue>> where D : class
     {
-        public ReadOnlyLazyEntrySet(ConcurrentQueue<KeyValuePair<IData, object>> contentQueue,
-            ISerializationService serializationService) : base(contentQueue, serializationService)
+        public ReadOnlyLazyEntrySet(IList<KeyValuePair<IData, D>> content, ISerializationService serializationService) : base(
+            content, serializationService)
         {
         }
 
@@ -32,7 +33,7 @@ namespace Hazelcast.Util
         {
             if (other == null)
             {
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
             }
             foreach (var pair in other)
             {
@@ -93,6 +94,5 @@ namespace Hazelcast.Util
         {
             throw new NotSupportedException("Readonly Set");
         }
-
     }
 }

@@ -39,7 +39,8 @@ namespace Hazelcast.Client.Test
             testInt = 666;
             dataInt = serializationService.ToData(testInt);
 
-            var member = new Member(new Address("localhost", 5701), Guid.Empty);
+            IMember member = new MemberInfo(new Address("localhost", 5701), Guid.Empty,
+                null, false,new MemberVersion(4,0,0));
 
             dataAwareEntryEvent = new DataAwareEntryEvent<string, int?>("source", member, EntryEventType.Added,
                 dataString, dataInt, dataInt, null, serializationService);

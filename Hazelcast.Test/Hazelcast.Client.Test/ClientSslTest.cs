@@ -42,7 +42,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:ValidCertNameSigned, 
                 clientCertificate:null, 
                 certPassword:null);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
 
         [Test]
@@ -72,7 +72,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:"Invalid Cert Name", 
                 clientCertificate:null, 
                 certPassword:null);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
 
         [Test]
@@ -86,7 +86,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:"Invalid Cert Name", 
                 clientCertificate:null, 
                 certPassword:null);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
 
         [Test]
@@ -100,7 +100,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:null, 
                 clientCertificate:null, 
                 certPassword:null);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
 
         [Test]
@@ -130,7 +130,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:null, 
                 clientCertificate:null, 
                 certPassword:null);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
 
         [Test]
@@ -144,7 +144,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:ValidCertNameSigned, 
                 clientCertificate:null, 
                 certPassword:null);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
     }
 }

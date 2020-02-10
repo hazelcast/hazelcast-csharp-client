@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public abstract class AbstractLazyDictionaryTest
     {
-        internal abstract AbstractLazyDictionary<int, string> TestCollection { get; }
+        internal abstract AbstractLazyDictionary<int, string, object> TestCollection { get; }
 
         [Test]
         public void Test_GetEnumerator()

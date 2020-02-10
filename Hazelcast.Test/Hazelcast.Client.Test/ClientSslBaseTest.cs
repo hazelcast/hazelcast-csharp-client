@@ -69,7 +69,7 @@ namespace Hazelcast.Client.Test
             clientConfig.GetNetworkConfig().AddAddress("localhost:5701");
             clientConfig.GetNetworkConfig().SetSSLConfig(CreateSslConfig(isSslEnabled, validateCertificateChain,
                 validateCertificateName, checkCertificateRevocation, certSubjectName, clientCertificate, certPassword));
-            clientConfig.SetClusterName(cluster.Id).SetClusterPassword(cluster.Id);
+            clientConfig.SetClusterName(cluster.Id);
             Client = HazelcastClient.NewHazelcastClient(clientConfig);
         }
 

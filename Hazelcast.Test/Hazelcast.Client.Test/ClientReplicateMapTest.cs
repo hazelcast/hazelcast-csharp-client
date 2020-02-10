@@ -265,7 +265,8 @@ namespace Hazelcast.Client.Test
             var listener = CreateEventListener(1);
             var regId = ReplicatedMap.AddEntryListener(listener, 1);
             Assert.IsTrue(ReplicatedMap.RemoveEntryListener(regId));
-            Assert.IsFalse(ReplicatedMap.RemoveEntryListener("Invalid Registration Id"));
+            var invalidRegistrationId = Guid.NewGuid();
+            Assert.IsFalse(ReplicatedMap.RemoveEntryListener(invalidRegistrationId));
         }
 
         [Test]

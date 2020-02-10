@@ -19,20 +19,20 @@ namespace Hazelcast.Util
     /// <summary>A utility class for validating arguments and state.</summary>
     internal static class ValidationUtil
     {
-        public const string NULL_LISTENER_IS_NOT_ALLOWED = "Null listener is not allowed!";
-        public const string NULL_KEY_IS_NOT_ALLOWED = "Null key is not allowed!";
-        public const string NULL_VALUE_IS_NOT_ALLOWED = "Null value is not allowed!";
-        public const string NULL_PREDICATE_IS_NOT_ALLOWED = "Predicate should not be null!";
-        public const string NULL_AGGREGATOR_IS_NOT_ALLOWED = "Aggregator should not be null!";
-        public const string NULL_PROJECTION_IS_NOT_ALLOWED = "Projection should not be null!";
-        public const string NULL_JSON_STRING_IS_NOT_ALLOWED = "JSON string cannot be null!";
+        public const string NullListenerIsNotAllowed = "Null listener is not allowed!";
+        public const string NullKeyIsNotAllowed = "Null key is not allowed!";
+        public const string NullValueIsNotAllowed = "Null value is not allowed!";
+        public const string NullPredicateIsNotAllowed = "Predicate should not be null!";
+        public const string NullAggregatorIsNotAllowed = "Aggregator should not be null!";
+        public const string NullProjectionIsNotAllowed = "Projection should not be null!";
+        public const string NullJsonStringIsNotAllowed = "JSON string cannot be null!";
 
         public static string HasText(string argument, string argName)
         {
             IsNotNull(argument, argName);
             if (argument.Length == 0)
             {
-                throw new ArgumentException(string.Format("argument {0} can't be an empty string", argName));
+                throw new ArgumentException($"argument {argName} can't be an empty string");
             }
             return argument;
         }
@@ -41,7 +41,7 @@ namespace Hazelcast.Util
         {
             if (argument == null)
             {
-                throw new ArgumentException(string.Format("argument {0} can't be null", argName));
+                throw new ArgumentException($"argument {argName} can't be null");
             }
             return argument;
         }

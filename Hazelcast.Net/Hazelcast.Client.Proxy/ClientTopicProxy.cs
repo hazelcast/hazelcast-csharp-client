@@ -26,25 +26,25 @@ namespace Hazelcast.Client.Proxy
     {
         private volatile IData _key;
 
-        public ClientTopicProxy(string serviceName, string objectId) : base(serviceName, objectId)
+        public ClientTopicProxy(string serviceName, string objectId, HazelcastClient client) : base(serviceName, objectId, client)
         {
         }
 
         public virtual void Publish(T message)
         {
             var data = ToData(message);
-            var request = TopicPublishCodec.EncodeRequest(GetName(), data);
+            var request = TopicPublishCodec.EncodeRequest(Name, data);
             Invoke(request);
         }
 
-        public virtual string AddMessageListener(IMessageListener<T> listener)
+        public virtual Guid AddMessageListener(IMessageListener<T> listener)
         {
             return AddMessageListener(listener.OnMessage);
         }
 
-        public virtual string AddMessageListener(Action<Message<T>> listener)
+        public virtual Guid AddMessageListener(Action<Message<T>> listener)
         {
-            var request = TopicAddMessageListenerCodec.EncodeRequest(GetName(), IsSmart());
+            var request = TopicAddMessageListenerCodec.EncodeRequest(Name, IsSmart());
             DistributedEventHandler handler = m =>
                 TopicAddMessageListenerCodec.EventHandler.HandleEvent(m,
                     (item, time, uuid) =>
@@ -52,10 +52,10 @@ namespace Hazelcast.Client.Proxy
                         HandleMessageListener(item, time, uuid, listener);
                     });
             return RegisterListener(request, m => TopicAddMessageListenerCodec.DecodeResponse(m).Response,
-                id => TopicRemoveMessageListenerCodec.EncodeRequest(GetName(), id), handler);
+                id => TopicRemoveMessageListenerCodec.EncodeRequest(Name, id), handler);
         }
 
-        public virtual bool RemoveMessageListener(string registrationId)
+        public virtual bool RemoveMessageListener(Guid registrationId)
         {
             return DeregisterListener(registrationId);
         }
@@ -72,14 +72,14 @@ namespace Hazelcast.Client.Proxy
 
         private IData GetKey()
         {
-            return _key ?? (_key = ToData(GetName()));
+            return _key ?? (_key = ToData(Name));
         }
 
         private void HandleMessageListener(IData item, long time, Guid uuid, Action<Message<T>> listener)
         {
             var messageObject = ToObject<T>(item);
-            var member = GetContext().GetClusterService().GetMember(uuid);
-            var message = new Message<T>(GetName(), messageObject, time, member);
+            var member = Client.ClusterService.GetMember(uuid);
+            var message = new Message<T>(Name, messageObject, time, member);
             listener(message);
         }
     }

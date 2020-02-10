@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,52 +43,22 @@ namespace Hazelcast.Client.Protocol.Codec
         public const int ResponseMessageType = 134145;
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + IntSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Name of the MultiMap
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// The key whose values count is to be returned
-            ///</summary>
-            public IData Key;
-
-            /// <summary>
-            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation
-            ///</summary>
-            public long ThreadId;
-        }
 
         public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "MultiMap.ValueCount";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame.Content, RequestThreadIdFieldOffset, threadId);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.ThreadId =  DecodeLong(initialFrame.Content, RequestThreadIdFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
@@ -100,17 +70,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public int Response;
         }
 
-        public static ClientMessage EncodeResponse(int response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeInt(initialFrame.Content, ResponseResponseFieldOffset, response);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -119,5 +78,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = DecodeInt(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
         }
+
     }
 }

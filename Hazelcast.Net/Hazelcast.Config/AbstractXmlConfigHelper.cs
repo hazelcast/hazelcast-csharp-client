@@ -21,9 +21,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Config
 {
-#pragma warning disable CS1591
-
-    public abstract class AbstractXmlConfigHelper
+public abstract class AbstractXmlConfigHelper
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (AbstractXmlConfigHelper));
 

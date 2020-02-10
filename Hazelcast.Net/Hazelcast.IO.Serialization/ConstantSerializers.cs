@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
+using Hazelcast.Client.Protocol.Codec.BuiltIn;
+
 namespace Hazelcast.IO.Serialization
 {
     internal sealed class ConstantSerializers
@@ -375,10 +379,7 @@ namespace Hazelcast.IO.Serialization
 
         internal sealed class ByteArraySerializer : IByteArraySerializer<byte[]>
         {
-            public int GetTypeId()
-            {
-                return SerializationConstants.ConstantTypeByteArray;
-            }
+            public int GetTypeId() => SerializationConstants.ConstantTypeByteArray;
 
             /// <exception cref="System.IO.IOException"></exception>
             public byte[] Write(byte[] @object)
@@ -394,6 +395,81 @@ namespace Hazelcast.IO.Serialization
 
             public void Destroy()
             {
+            }
+        }
+
+        internal class GuidSerializer : SingletonSerializer<Guid>
+        {
+            public override int GetTypeId() => SerializationConstants.ConstantTypeUuid;
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override Guid Read(IObjectDataInput input)
+            {
+                var order = default(FixedSizeTypesCodec.JavaUUIDOrder);
+
+                order.B00 = input.ReadByte();
+                order.B01 = input.ReadByte();
+                order.B02 = input.ReadByte();
+                order.B03 = input.ReadByte();
+
+                order.B04 = input.ReadByte();
+                order.B05 = input.ReadByte();
+                order.B06 = input.ReadByte();
+                order.B07 = input.ReadByte();
+
+                order.B08 = input.ReadByte();
+                order.B09 = input.ReadByte();
+                order.B10 = input.ReadByte();
+                order.B11 = input.ReadByte();
+
+                order.B12 = input.ReadByte();
+                order.B13 = input.ReadByte();
+                order.B14 = input.ReadByte();
+                order.B15 = input.ReadByte();
+
+                return order.Value;
+            }
+
+            /// <exception cref="System.IO.IOException"></exception>
+            public override void Write(IObjectDataOutput output, Guid obj)
+            {
+                var order = default(FixedSizeTypesCodec.JavaUUIDOrder);
+                order.Value = obj;
+                output.WriteByte(order.B00);
+                output.WriteByte(order.B01);
+                output.WriteByte(order.B02);
+                output.WriteByte(order.B03);
+
+                output.WriteByte(order.B04);
+                output.WriteByte(order.B05);
+                output.WriteByte(order.B06);
+                output.WriteByte(order.B07);
+
+                output.WriteByte(order.B08);
+                output.WriteByte(order.B09);
+                output.WriteByte(order.B10);
+                output.WriteByte(order.B11);
+
+                output.WriteByte(order.B12);
+                output.WriteByte(order.B13);
+                output.WriteByte(order.B14);
+                output.WriteByte(order.B15);
+            }
+        }
+
+        internal class KeyValuePairSerializer : SingletonSerializer<KeyValuePair<object, object>>
+        {
+            public override int GetTypeId() => SerializationConstants.ConstantTypeSimpleEntry;
+
+            public override KeyValuePair<object, object> Read(IObjectDataInput input)
+            {
+                return new KeyValuePair<object, object>(input.ReadObject<object>(),input.ReadObject<object>());
+            }
+
+            public override void Write(IObjectDataOutput output, KeyValuePair<object, object> obj)
+            {
+                output.WriteObject(obj.Key);
+                output.WriteObject(obj.Value);
             }
         }
 

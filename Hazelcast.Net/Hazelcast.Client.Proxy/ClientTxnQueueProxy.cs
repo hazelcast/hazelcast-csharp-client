@@ -15,6 +15,7 @@
 using System;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
+using Hazelcast.Transaction;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -40,7 +41,7 @@ namespace Hazelcast.Client.Proxy
         public virtual bool Offer(T e, long timeout, TimeUnit unit)
         {
             var data = ToData(e);
-            var request = TransactionalQueueOfferCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), data,
+            var request = TransactionalQueueOfferCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId(), data,
                 unit.ToMillis(timeout));
             return Invoke(request, m => TransactionalQueueOfferCodec.DecodeResponse(m).Response);
         }
@@ -60,7 +61,7 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public virtual T Poll(long timeout, TimeUnit unit)
         {
-            var request = TransactionalQueuePollCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+            var request = TransactionalQueuePollCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId(),
                 unit.ToMillis(timeout));
             var result = Invoke(request, m => TransactionalQueuePollCodec.DecodeResponse(m).Response);
             return ToObject<T>(result);
@@ -81,7 +82,7 @@ namespace Hazelcast.Client.Proxy
         /// <exception cref="System.Exception"></exception>
         public virtual T Peek(long timeout, TimeUnit unit)
         {
-            var request = TransactionalQueuePeekCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+            var request = TransactionalQueuePeekCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId(),
                 unit.ToMillis(timeout));
             var result = Invoke(request, m => TransactionalQueuePeekCodec.DecodeResponse(m).Response);
             return ToObject<T>(result);
@@ -89,20 +90,20 @@ namespace Hazelcast.Client.Proxy
 
         public T Take()
         {
-            var request = TransactionalQueueTakeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
+            var request = TransactionalQueueTakeCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId());
             var result = Invoke(request, m => TransactionalQueueTakeCodec.DecodeResponse(m).Response);
             return ToObject<T>(result);
         }
 
         public virtual int Size()
         {
-            var request = TransactionalQueueSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
+            var request = TransactionalQueueSizeCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId());
             return Invoke(request, m => TransactionalQueueSizeCodec.DecodeResponse(m).Response);
         }
 
-        public override string GetServiceName()
+        public override string ServiceName
         {
-            return ServiceNames.Queue;
+            get { return ServiceNames.Queue; }
         }
 
         internal override void OnDestroy()

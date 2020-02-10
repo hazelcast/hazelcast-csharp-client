@@ -30,7 +30,7 @@ namespace Hazelcast.Client.Test
         protected HazelcastClient ClientInternal { get; private set; }
         protected ThreadSafeRemoteController RemoteController { get; private set; }
         protected Cluster HzCluster { get; private set; }
-        private readonly ConcurrentDictionary<string, Remote.Member> MemberList = new ConcurrentDictionary<string, Remote.Member>();
+        private readonly ConcurrentDictionary<Guid, Remote.Member> MemberList = new ConcurrentDictionary<Guid, Remote.Member>();
 
         public virtual void SetupCluster(Action initMembers)
         {
@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Test
             HzCluster = CreateCluster(RemoteController, GetServerConfig());
             initMembers();
             Client = CreateClient();
-            ClientInternal = ((HazelcastClientProxy)Client).GetClient();
+            ClientInternal = (HazelcastClient)Client;
         }
         public virtual void SetupCluster()
         {
@@ -64,27 +64,27 @@ namespace Hazelcast.Client.Test
 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(HzCluster.Id).SetClusterPassword(HzCluster.Id);
+            config.SetClusterName(HzCluster.Id);
         }
 
-        protected string StartNewMember()
+        protected Guid StartNewMember()
         {
             var newMember = RemoteController.startMember(HzCluster.Id);
-            MemberList.TryAdd(newMember.Uuid,newMember);
-            return newMember.Uuid;
+            var guid = Guid.Parse(newMember.Uuid);
+            MemberList.TryAdd(guid,newMember);
+            return guid;
         }
         
-        protected void ShutdownMember(string memberUuid)
+        protected void ShutdownMember(Guid memberUuid)
         {
-            Member member;
-            if(MemberList.TryRemove(memberUuid, out member))
+            if(MemberList.TryRemove(memberUuid, out var member))
             {
                 StopMember(RemoteController, HzCluster, member);
             }
         }
         protected bool ShutdownCluster()
         {
-            _logger.Info(string.Format("Shutting cluster {0}", HzCluster.Id));
+            _logger.Info($"Shutting cluster {HzCluster.Id}");
             var result = StopCluster(RemoteController, HzCluster);
             if (result)
             {

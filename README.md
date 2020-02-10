@@ -1610,7 +1610,7 @@ You can register the following types of member events.
 * `memberRemoved`: An existing member leaves the cluster.
 * `memberAttributeChanged`: An attribute of a member is changed. See the [Defining Member Attributes section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#defining-member-attributes) in the Hazelcast IMDG Reference Manual to learn about member attributes.
 
-You can use the `ICluster` ( `HazelcastClient.GetCluster()` ) interface to register for the membership listeners. There are two types of listeners: `IInitialMembershipListener` and `IMembershipListener`.
+You can use the `ICluster` ( `HazelcastClient.Cluster` ) interface to register for the membership listeners. There are two types of listeners: `IInitialMembershipListener` and `IMembershipListener`.
 The difference is that `IInitialMembershipListener` also gets notified when the client connects to the cluster and retrieves the whole membership list.
 You need to implement one of these two interfaces and register an instance of the listener to the cluster.
 
@@ -1677,8 +1677,8 @@ You can register these listener implementations using the following code.
 //register the listeners
 var hz = HazelcastClient.NewHazelcastClient(config);
 
-hz.GetCluster().AddMembershipListener(new MyMemberListener());
-hz.GetCluster().AddMembershipListener(new MyInitialMemberListener());
+hz.Cluster.AddMembershipListener(new MyMemberListener());
+hz.Cluster.AddMembershipListener(new MyInitialMemberListener());
 ```
 
 The `memberAttributeChanged` has its own type of event named as `MemberAttributeEvent`. When there is an attribute change on the member, this event is fired.

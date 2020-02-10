@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             DataCodec.Encode(clientMessage, simpleEntryView.Key);
             DataCodec.Encode(clientMessage, simpleEntryView.Value);
 
-            clientMessage.Add(EndFrame);
+            clientMessage.Add(EndFrame.Copy());
         }
 
         public static Hazelcast.Map.SimpleEntryView<IData, IData> Decode(FrameIterator iterator)
@@ -86,11 +86,11 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             var maxIdle = DecodeLong(initialFrame.Content, MaxIdleFieldOffset);
 
             var key = DataCodec.Decode(iterator);
-            var value = DataCodec.Decode(iterator);
+            var @value = DataCodec.Decode(iterator);
 
             CodecUtil.FastForwardToEndFrame(iterator);
 
-            return CustomTypeFactory.CreateSimpleEntryView(key, value, cost, creationTime, expirationTime, hits, lastAccessTime, lastStoredTime, lastUpdateTime, version, ttl, maxIdle);
+            return CustomTypeFactory.CreateSimpleEntryView(key, @value, cost, creationTime, expirationTime, hits, lastAccessTime, lastStoredTime, lastUpdateTime, version, ttl, maxIdle);
         }
     }
 }

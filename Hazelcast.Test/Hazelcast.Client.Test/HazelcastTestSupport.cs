@@ -78,8 +78,11 @@ namespace Hazelcast.Client.Test
         protected virtual void ConfigureClient(ClientConfig config)
         {
             config.GetNetworkConfig().AddAddress("localhost:5701");
-            config.GetNetworkConfig().SetConnectionAttemptLimit(20);
-            config.GetNetworkConfig().SetConnectionAttemptPeriod(2000);
+            var cs = config.GetConnectionStrategyConfig();
+            cs.AsyncStart = false;
+            cs.ReconnectMode = ReconnectMode.ON;
+            cs.ConnectionRetryConfig.ClusterConnectTimeoutMillis = 60000;
+            cs.ConnectionRetryConfig.InitialBackoffMillis = 2000;
         }
 
         protected virtual void ConfigureGroup(ClientConfig config)
@@ -141,13 +144,17 @@ namespace Hazelcast.Client.Test
 
         protected int GetUniquePartitionOwnerCount(IHazelcastInstance client)
         {
-            var proxy = ((HazelcastClientProxy) client);
-            var partitionService = proxy.GetClient().GetClientPartitionService();
+            //trigger partition table create
+            client.GetMap<object, object>("default").Get(new object());
+            
+            var clientInternal = ((HazelcastClient) client);
+            var partitionService = clientInternal.PartitionService;
             var count = partitionService.GetPartitionCount();
-            var owners = new HashSet<Address>();
+            var owners = new HashSet<Guid>();
             for (var i = 0; i < count; i++)
             {
-                owners.Add(partitionService.GetPartitionOwner(i));
+                var partitionOwner = partitionService.GetPartitionOwner(i);
+                if(partitionOwner!= null) owners.Add(partitionOwner.Value);
             }
             return owners.Count;
         }
@@ -167,13 +174,13 @@ namespace Hazelcast.Client.Test
             Cluster cluster, int expectedSize)
         {
             var resetEvent = new ManualResetEventSlim();
-            var regId = client.GetCluster().AddMembershipListener(new MembershipListener
+            var regId = client.Cluster.AddMembershipListener(new MembershipListener
             {
                 OnMemberAdded = @event => resetEvent.Set()
             });
             var member = StartMember(remoteController, cluster);
             Assert.IsTrue(resetEvent.Wait(120*1000), "The member did not get added in 120 seconds");
-            Assert.IsTrue(client.GetCluster().RemoveMembershipListener(regId));
+            Assert.IsTrue(client.Cluster.RemoveMembershipListener(regId));
 
             // make sure partitions are updated
             TestSupport.AssertTrueEventually(
@@ -206,13 +213,13 @@ namespace Hazelcast.Client.Test
             Cluster cluster, Member member)
         {
             var resetEvent = new ManualResetEventSlim();
-            var regId = client.GetCluster().AddMembershipListener(new MembershipListener
+            var regId = client.Cluster.AddMembershipListener(new MembershipListener
             {
                 OnMemberRemoved = @event => resetEvent.Set()
             });
             StopMember(remoteController, cluster, member);
             Assert.IsTrue(resetEvent.Wait(120*1000), "The member did not get removed in 120 seconds");
-            Assert.IsTrue(client.GetCluster().RemoveMembershipListener(regId));
+            Assert.IsTrue(client.Cluster.RemoveMembershipListener(regId));
         }
 
         protected virtual void SuspendMember(RemoteController.Client remoteController,  Cluster cluster, Member member)
@@ -222,7 +229,7 @@ namespace Hazelcast.Client.Test
 
         protected object GenerateKeyForPartition(IHazelcastInstance client, int partitionId)
         {
-            var partitionService = ((HazelcastClientProxy) client).GetClient().GetClientPartitionService();
+            var partitionService = ((HazelcastClient) client).PartitionService;
             while (true) {
                 var randomKey = TestSupport.RandomString();
                 if (partitionService.GetPartitionId(randomKey) == partitionId) {

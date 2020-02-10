@@ -23,7 +23,6 @@ namespace Hazelcast.IO.Serialization
         int GetClassVersion(int factoryId, int classId);
 
         IFieldDefinition GetFieldDefinition(IClassDefinition cd, string name);
-        IManagedContext GetManagedContext();
         int GetVersion();
         IClassDefinition LookupClassDefinition(int factoryId, int classId, int version);
 

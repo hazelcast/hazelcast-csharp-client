@@ -117,7 +117,7 @@ namespace Hazelcast.Client.Proxy
     //    {
     //        if (_key == null)
     //        {
-    //            _key = GetContext().GetSerializationService().ToData(GetName());
+    //            _key = GetContext().SerializationService.ToData(GetName());
     //        }
     //        return _key;
     //    }

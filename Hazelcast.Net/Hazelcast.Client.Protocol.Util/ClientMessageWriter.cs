@@ -13,21 +13,22 @@
 // limitations under the License.
 
 using Hazelcast.IO;
+using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Client.Protocol.Util
 {
     internal class ClientMessageWriter
     {
+        private const int LengthNotWrittenYet = -1;
         private ClientMessage.Frame _currentFrame;
         private int _writeOffset = LengthNotWrittenYet;
-        const int LengthNotWrittenYet = -1;
 
         public bool WriteTo(ByteBuffer dst, ClientMessage clientMessage)
         {
             if (_currentFrame == null)
             {
-                _currentFrame = clientMessage.Head;
+                _currentFrame = clientMessage.FirstFrame;
             }
             for (; ; )
             {

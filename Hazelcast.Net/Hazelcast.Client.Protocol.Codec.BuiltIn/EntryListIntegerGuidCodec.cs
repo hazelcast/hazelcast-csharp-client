@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using static Hazelcast.IO.Bits;
 using static Hazelcast.Client.Protocol.Codec.BuiltIn.FixedSizeTypesCodec;
 using static Hazelcast.Client.Protocol.ClientMessage;
@@ -25,9 +24,9 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
     {
         private const int EntrySizeInBytes = IntSizeInBytes + GuidSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, IEnumerable<KeyValuePair<int, Guid>> collection)
+        public static void Encode(ClientMessage clientMessage, ICollection<KeyValuePair<int, Guid>> collection)
         {
-            var itemCount = collection.Count();
+            var itemCount = collection.Count;
             var frame = new Frame(new byte[itemCount * EntrySizeInBytes]);
 
             var i = 0;

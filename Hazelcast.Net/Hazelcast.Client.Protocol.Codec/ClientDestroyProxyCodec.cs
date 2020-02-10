@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Protocol.Codec
     // and regenerate it.
 
     /// <summary>
-    /// TODO DOC
+    /// Destroys the proxy given by its name cluster-wide. Also, clears and releases all resources of this proxy.
     ///</summary>
     internal static class ClientDestroyProxyCodec
     {
@@ -42,74 +42,24 @@ namespace Hazelcast.Client.Protocol.Codec
         //hex: 0x000501
         public const int ResponseMessageType = 1281;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// The distributed object name for which the proxy is being destroyed for.
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// The name of the service. Possible service names are:
-            /// "hz:impl:listService"
-            /// "hz:impl:queueService"
-            /// "hz:impl:setService"
-            /// "hz:impl:idGeneratorService"
-            /// "hz:impl:executorService"
-            /// "hz:impl:mapService"
-            /// "hz:impl:multiMapService"
-            /// "hz:impl:splitBrainProtectionService"
-            /// "hz:impl:replicatedMapService"
-            /// "hz:impl:ringbufferService"
-            /// "hz:core:proxyService"
-            /// "hz:impl:reliableTopicService"
-            /// "hz:impl:topicService"
-            /// "hz:core:txManagerService"
-            /// "hz:impl:xaService"
-            ///</summary>
-            public string ServiceName;
-        }
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, string serviceName)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Client.DestroyProxy";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             StringCodec.Encode(clientMessage, serviceName);
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            //empty initial frame
-            iterator.Next();
-            request.Name = StringCodec.Decode(iterator);
-            request.ServiceName = StringCodec.Decode(iterator);
-            return request;
-        }
-
         public class ResponseParameters
         {
-        }
-
-        public static ClientMessage EncodeResponse()
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -120,5 +70,6 @@ namespace Hazelcast.Client.Protocol.Codec
             iterator.Next();
             return response;
         }
+
     }
 }

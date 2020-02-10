@@ -14,7 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Client.Connection;
+using Hazelcast.Client.Network;
 using Hazelcast.Client.Protocol;
 using Hazelcast.IO;
 
@@ -24,13 +24,13 @@ namespace Hazelcast.Util
 
     public delegate T Callable<T>();
 
-    internal delegate void Authenticator(ClientConnection connection);
+    internal delegate void Authenticator(Connection connection);
 
-    public delegate void DistributedEventHandler(ClientMessage eventMessage);
+    internal delegate void DistributedEventHandler(ClientMessage eventMessage);
 
-    public delegate Guid DecodeRegisterResponse(ClientMessage requestMessage);
+    internal delegate Guid DecodeRegisterResponse(ClientMessage requestMessage);
 
-    public delegate ClientMessage EncodeDeregisterRequest(Guid registrationId);
+    internal delegate ClientMessage EncodeDeregisterRequest(Guid registrationId);
     
     internal delegate IDictionary<Address, Address> GetAddressDictionary();
 }

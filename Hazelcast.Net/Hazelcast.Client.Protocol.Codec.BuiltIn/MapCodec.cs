@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
                 encodeValue(clientMessage, kvp.Value);
             }
 
-            clientMessage.Add(EndFrame);
+            clientMessage.Add(EndFrame.Copy());
         }
 
         public static void EncodeNullable<TKey, TValue>(ClientMessage clientMessage, IDictionary<TKey, TValue> map, Action<ClientMessage, TKey> encodeKey, Action<ClientMessage, TValue> encodeValue)

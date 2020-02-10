@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Protocol.Codec
     // and regenerate it.
 
     /// <summary>
-    /// TODO DOC
+    /// Creates a transaction with the given parameters.
     ///</summary>
     internal static class TransactionCreateCodec
     {
@@ -46,65 +46,23 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestTransactionTypeFieldOffset = RequestDurabilityFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTransactionTypeFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// The maximum allowed duration for the transaction operations.
-            ///</summary>
-            public long Timeout;
-
-            /// <summary>
-            /// The durability of the transaction
-            ///</summary>
-            public int Durability;
-
-            /// <summary>
-            /// Identifies the type of the transaction. Possible values are:
-            /// 1 (Two phase):  The two phase commit is more than the classic two phase commit (if you want a regular
-            /// two phase commit, use local). Before it commits, it copies the commit-log to other members, so in
-            /// case of member failure, another member can complete the commit.
-            /// 2 (Local): Unlike the name suggests, local is a two phase commit. So first all cohorts are asked
-            /// to prepare if everyone agrees then all cohorts are asked to commit. The problem happens when during
-            /// the commit phase one or more members crash, that the system could be left in an inconsistent state.
-            ///</summary>
-            public int TransactionType;
-
-            /// <summary>
-            /// The thread id for the transaction.
-            ///</summary>
-            public long ThreadId;
-        }
 
         public static ClientMessage EncodeRequest(long timeout, int durability, int transactionType, long threadId)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = true;
             clientMessage.OperationName = "Transaction.Create";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame.Content, RequestTimeoutFieldOffset, timeout);
             EncodeInt(initialFrame.Content, RequestDurabilityFieldOffset, durability);
             EncodeInt(initialFrame.Content, RequestTransactionTypeFieldOffset, transactionType);
             EncodeLong(initialFrame.Content, RequestThreadIdFieldOffset, threadId);
             clientMessage.Add(initialFrame);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.Timeout =  DecodeLong(initialFrame.Content, RequestTimeoutFieldOffset);
-            request.Durability =  DecodeInt(initialFrame.Content, RequestDurabilityFieldOffset);
-            request.TransactionType =  DecodeInt(initialFrame.Content, RequestTransactionTypeFieldOffset);
-            request.ThreadId =  DecodeLong(initialFrame.Content, RequestThreadIdFieldOffset);
-            return request;
         }
 
         public class ResponseParameters
@@ -116,17 +74,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public Guid Response;
         }
 
-        public static ClientMessage EncodeResponse(Guid response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeGuid(initialFrame.Content, ResponseResponseFieldOffset, response);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -135,5 +82,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = DecodeGuid(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
         }
+
     }
 }

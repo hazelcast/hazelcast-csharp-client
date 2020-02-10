@@ -16,6 +16,9 @@ namespace Hazelcast.IO.Serialization
 {
     internal sealed class SerializationConstants
     {
+        // WARNING: DON'T CHANGE VALUES!
+        // WARNING: DON'T ADD ANY NEW CONSTANT SERIALIZER!
+
         public const int ConstantTypeNull = 0;
         public const int ConstantTypePortable = -1;
         public const int ConstantTypeDataSerializable = -2;
@@ -37,27 +40,67 @@ namespace Hazelcast.IO.Serialization
         public const int ConstantTypeFloatArray = -18;
         public const int ConstantTypeDoubleArray = -19;
         public const int ConstantTypeStringArray = -20;
+        public const int ConstantTypeUuid = -21;
+        public const int ConstantTypeSimpleEntry = -22;
+        public const int ConstantTypeSimpleImmutableEntry = -23;
 
-        public const int DefaultTypeJavaClass = -21;
-        public const int DefaultTypeDate = -22;
-        public const int DefaultTypeBigInteger = -23;
-        public const int DefaultTypeBigDecimal = -24;
-        public const int DefaultTypeJavaEnum = -25;
-        public const int DefaultTypeArrayList = -26;
-        public const int DefaultTypeLinkedList = -27;
+        // ------------------------------------------------------------
+        // DEFAULT SERIALIZERS
 
-        public const int ConstantSerializersLength = 28;
+        public const int JavaDefaultTypeClass = -24;
+        public const int JavaDefaultTypeDate = -25;
+        public const int JavaDefaultTypeBigInteger = -26;
+        public const int JavaDefaultTypeBigDecimal = -27;
+        public const int JavaDefaultTypeArray = -28;
+        public const int JavaDefaultTypeArrayList = -29;
+        public const int JavaDefaultTypeLinkedList = -30;
+        public const int JavaDefaultTypeCopyOnWriteArrayList = -31;
+        public const int JavaDefaultTypeHashMap = -32;
+        public const int JavaDefaultTypeConcurrentSkipListMap = -33;
+        public const int JavaDefaultTypeConcurrentHashMap = -34;
+        public const int JavaDefaultTypeLinkedHashMap = -35;
+        public const int JavaDefaultTypeTreeMap = -36;
+        public const int JavaDefaultTypeHashSet = -37;
+        public const int JavaDefaultTypeTreeSet = -38;
+        public const int JavaDefaultTypeLinkedHashSet = -39;
+        public const int JavaDefaultTypeCopyOnWriteArraySet = -40;
+        public const int JavaDefaultTypeConcurrentSkipListSet = -41;
+        public const int JavaDefaultTypeArrayDeque = -42;
+        public const int JavaDefaultTypeLinkedBlockingQueue = -43;
+        public const int JavaDefaultTypeArrayBlockingQueue = -44;
+        public const int JavaDefaultTypePriorityBlockingQueue = -45;
+        public const int JavaDefaultTypeDelayQueue = -46;
+        public const int JavaDefaultTypeSynchronousQueue = -47;
+        public const int JavaDefaultTypeLinkedTransferQueue = -48;
+        public const int JavaDefaultTypePriorityQueue = -49;
+        public const int JavaDefaultTypeEnum = -50;
 
-        public const int DefaultTypeSerializable = -110; // C# serializable
-        public const int JavascriptJSONSerializationType = -130;
+        // ------------------------------------------------------------
+        // JAVA SERIALIZATION
 
-        public const int ConstantSerializersArraySize = 131; // To include -130 as an index
+        public const int JavaDefaultTypeSerializable = -100;
+        public const int JavaDefaultTypeExternalizable = -101;
+
+        // ------------------------------------------------------------
+        // LANGUAGE SPECIFIC SERIALIZERS
+        // USED BY CLIENTS (Not deserialized by server)
+
+        public const int CsharpClrSerializationType = -110;
+        public const int PythonPickleSerializationType = -120;
+        public const int JavascriptJsonSerializationType = -130;
+        public const int GoGobSerializationType = -140;
+
+        public const int ConstantSerializersArraySize = 200;
+        
+        // RESERVED FOR  HIBERNATE SERIALIZERS: -200 to -300
+        
+        // RESERVED FOR JET: -300 to -400
     }
 
     internal static class FactoryIds
     {
-        public const int PredicateFactoryId = -32;
-        public const int AggregatorDsFactoryId = -41;
-        public const int ProjectionDsFactoryId = -42;
+        public const int PredicateFactoryId = -20;
+        public const int AggregatorDsFactoryId = -29;
+        public const int ProjectionDsFactoryId = -30;
     }
 }

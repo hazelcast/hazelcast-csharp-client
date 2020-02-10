@@ -63,7 +63,7 @@ namespace Hazelcast.Test
 
     internal class SimpleMapTestFromClient
     {
-        public static int THREAD_COUNT = 50;
+        public static int THREAD_COUNT = 1;
         public static int ENTRY_COUNT = 10*1000;
         public static int VALUE_SIZE = 1000;
         public static int STATS_SECONDS = 10;
@@ -133,7 +133,7 @@ namespace Hazelcast.Test
                 try
                 {
                     Thread.Sleep(STATS_SECONDS*1000);
-                    Console.WriteLine("cluster size:" + hazelcast.GetCluster().GetMembers().Count);
+                    Console.WriteLine("cluster size:" + hazelcast.Cluster.Members.Count);
                     var currentStats = stats.GetAndReset();
                     Console.WriteLine(currentStats.ToString());
                     Console.WriteLine("Operations per Second : " + currentStats.Total()/STATS_SECONDS);
@@ -152,7 +152,7 @@ namespace Hazelcast.Test
 
             var clientConfig = new ClientConfig();
             clientConfig.GetNetworkConfig().AddAddress("192.168.2.50:5701");
-            clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
+            // clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
             hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
 
             Console.WriteLine("Client Ready to go");

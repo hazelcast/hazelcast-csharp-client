@@ -22,9 +22,9 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
 {
     internal static class ListIntegerCodec
     {
-        public static void Encode(ClientMessage clientMessage, IEnumerable<int> collection)
+        public static void Encode(ClientMessage clientMessage, ICollection<int> collection)
         {
-            var itemCount = collection.Count();
+            var itemCount = collection.Count;
             var frame = new Frame(new byte[itemCount * IntSizeInBytes]);
 
             var i = 0;

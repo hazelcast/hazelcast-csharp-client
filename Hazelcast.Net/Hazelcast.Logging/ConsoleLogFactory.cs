@@ -38,7 +38,7 @@ namespace Hazelcast.Logging
                 }
                 else
                 {
-                    throw new ConfigurationException("Log level " + logLevel + " is invalid, the allowed values are " +
+                    throw new InvalidConfigurationException("Log level " + logLevel + " is invalid, the allowed values are " +
                                                      string.Join(", ", (LogLevel[]) Enum.GetValues(typeof (LogLevel))));
                 }
             }
@@ -60,9 +60,9 @@ namespace Hazelcast.Logging
                 _loggingLevel = loggingLevel;
             }
 
-            public override LogLevel GetLevel()
+            public override LogLevel LogLevel
             {
-                return _loggingLevel;
+                get { return _loggingLevel; }
             }
 
             public override bool IsLoggable(LogLevel arg1)

@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Concurrent;
-using Hazelcast.Client.Connection;
+using Hazelcast.Client.Network;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Util;
 
@@ -21,14 +22,16 @@ namespace Hazelcast.Client.Spi
 {
     class ListenerRegistration
     {
-        public string UserRegistrationId { get; private set; }
-        public ClientMessage RegistrationRequest { get; private set; }
-        public DecodeRegisterResponse DecodeRegisterResponse { get; private set; }
-        public EncodeDeregisterRequest EncodeDeregisterRequest { get; private set; }
-        public DistributedEventHandler EventHandler { get; private set; }
-        public ConcurrentDictionary<ClientConnection, EventRegistration> ConnectionRegistrations { get; private set; }
+        public Guid UserRegistrationId { get; }
+        public ClientMessage RegistrationRequest { get; }
+        public DecodeRegisterResponse DecodeRegisterResponse { get; }
+        public EncodeDeregisterRequest EncodeDeregisterRequest { get; }
+        public DistributedEventHandler EventHandler { get; }
 
-        public ListenerRegistration(string userRegistrationId, ClientMessage registrationRequest = null,
+        public ConcurrentDictionary<Connection, EventRegistration> ConnectionRegistrations { get; } =
+            new ConcurrentDictionary<Connection, EventRegistration>();
+
+        public ListenerRegistration(Guid userRegistrationId, ClientMessage registrationRequest = null,
             DecodeRegisterResponse decodeRegisterResponse = null, EncodeDeregisterRequest encodeDeregisterRequest = null,
             DistributedEventHandler eventHandler = null)
         {
@@ -37,7 +40,6 @@ namespace Hazelcast.Client.Spi
             EncodeDeregisterRequest = encodeDeregisterRequest;
             DecodeRegisterResponse = decodeRegisterResponse;
             EventHandler = eventHandler;
-            ConnectionRegistrations  = new ConcurrentDictionary<ClientConnection, EventRegistration>();
         }
 
         protected bool Equals(ListenerRegistration other)

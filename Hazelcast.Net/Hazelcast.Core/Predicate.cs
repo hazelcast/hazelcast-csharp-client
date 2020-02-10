@@ -25,12 +25,12 @@ namespace Hazelcast.Core
     /// </summary>
     public static class Predicates
     {
-        private const string KeyConst = "__key";
+        public const string KeyConst = "__key";
         private const string ThisConst = "this";
 
         public static PredicateProperty Key(string property = null)
         {
-            return new PredicateProperty(property != null ? KeyConst + "#" + property : KeyConst);
+            return new PredicateProperty(property != null ? KeyConst + "." + property : KeyConst);
         }
 
         public static PredicateProperty Property(string property)

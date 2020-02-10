@@ -32,17 +32,13 @@ namespace Hazelcast.NearCache
         {
         }
 
-        public RepairingHandler RepairingHandler
-        {
-            get { return _repairingHandler; }
-        }
+        public RepairingHandler RepairingHandler => _repairingHandler;
 
         public override void Init()
         {
             if (InvalidateOnChange)
             {
-                var localUuid = Client.GetClientClusterService().GetLocalClient().Uuid;
-                _repairingHandler = new RepairingHandler(localUuid, this, Client.GetClientPartitionService());
+                _repairingHandler = new RepairingHandler(Client.ClientGuid, this, Client.PartitionService);
                 RegisterInvalidateListener();
             }
         }
@@ -81,7 +77,7 @@ namespace Hazelcast.NearCache
             {
                 return;
             }
-            var partitionId = Client.GetClientPartitionService().GetPartitionId(newRecord.Key);
+            var partitionId = Client.PartitionService.GetPartitionId(newRecord.Key);
             var metadataContainer = _repairingHandler.GetMetaDataContainer(partitionId);
             newRecord.PartitionId = partitionId;
             newRecord.Sequence = metadataContainer.Sequence;
@@ -101,7 +97,7 @@ namespace Hazelcast.NearCache
                         HandleIMapInvalidationEvent,
                         HandleIMapBatchInvalidationEvent);
 
-                RegistrationId = Client.GetListenerService().RegisterListener(request,
+                RegistrationId = Client.ListenerService.RegisterListener(request,
                     message => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                     id => MapRemoveEntryListenerCodec.EncodeRequest(Name, id), handler);
             }

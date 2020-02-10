@@ -14,70 +14,70 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client
 {
     internal sealed class LifecycleService : ILifecycleService
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (ILifecycleService));
-        private readonly AtomicBoolean _active = new AtomicBoolean(false);
         private readonly HazelcastClient _client;
+        private readonly AtomicBoolean _active = new AtomicBoolean(false);
 
-        private readonly ConcurrentDictionary<string, ILifecycleListener> _lifecycleListeners =
-            new ConcurrentDictionary<string, ILifecycleListener>();
+        private readonly ConcurrentDictionary<Guid, ILifecycleListener> _lifecycleListeners =
+            new ConcurrentDictionary<Guid, ILifecycleListener>();
+        private readonly object _lifecycleEventLock = new object();
 
-        private readonly object _lifecycleLock = new object();
+        //Monitor which ensures that all client components are down when shutdown() is finished.
+        private readonly object _shutdownLock = new object();
 
         public LifecycleService(HazelcastClient client)
         {
             _client = client;
-            var listenerConfigs = client.GetClientConfig().GetListenerConfigs();
-            if (listenerConfigs != null && listenerConfigs.Count > 0)
-            {
-                foreach (var listenerConfig in listenerConfigs)
-                {
-                    var listener = listenerConfig.GetImplementation();
-                    if (listener == null)
-                    {
-                        try
-                        {
-                            var className = listenerConfig.GetClassName();
-                            var type = Type.GetType(className);
-                            if (type != null)
-                            {
-                                listener = Activator.CreateInstance(type) as IEventListener;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Severe(e);
-                        }
-                    }
-                    var lifecycleListener = listener as ILifecycleListener;
-                    if (lifecycleListener != null)
-                    {
-                        AddLifecycleListener(lifecycleListener);
-                    }
-                }
-            }
+        }
+
+        public void Start(ICollection<IEventListener> configuredListeners)
+        {
+            ListenerService.RegisterConfigListeners<ILifecycleListener>(configuredListeners, AddLifecycleListener);
+            FireLifecycleEvent(LifecycleEvent.LifecycleState.Starting);
+            _active.Set(true);
             FireLifecycleEvent(LifecycleEvent.LifecycleState.Starting);
         }
 
-        public string AddLifecycleListener(ILifecycleListener lifecycleListener)
+        public Guid AddLifecycleListener(ILifecycleListener lifecycleListener)
         {
-            var id = Guid.NewGuid().ToString();
+            var id = Guid.NewGuid();
             _lifecycleListeners.TryAdd(id, lifecycleListener);
             return id;
         }
 
-        public bool RemoveLifecycleListener(string registrationId)
+        public bool RemoveLifecycleListener(Guid registrationId)
         {
-            ILifecycleListener returned;
-            _lifecycleListeners.TryRemove(registrationId, out returned);
+            _lifecycleListeners.TryRemove(registrationId, out var returned);
             return returned != null;
+        }
+
+        public void FireLifecycleEvent(LifecycleEvent.LifecycleState lifecycleState)
+        {
+            var lifecycleEvent = new LifecycleEvent(lifecycleState);
+            Logger.Info($"HazelcastClient[{_client.Name}] {VersionUtil.GetDllVersion()} is {lifecycleEvent.GetState()}");
+            Task.Run(() =>
+            {
+                lock (_lifecycleEventLock)
+                {
+                    foreach (var entry in _lifecycleListeners)
+                    {
+                        entry.Value.StateChanged(lifecycleEvent);
+                    }
+                }
+            }).IgnoreExceptions();
         }
 
         public bool IsRunning()
@@ -87,34 +87,27 @@ namespace Hazelcast.Client
 
         public void Shutdown()
         {
-            _active.Set(false);
-            lock (_lifecycleLock)
-            {
-                FireLifecycleEvent(LifecycleEvent.LifecycleState.ShuttingDown);
-                _client.DoShutdown();
-                FireLifecycleEvent(LifecycleEvent.LifecycleState.Shutdown);
-            }
+            _client.OnGracefulShutdown(); 
+            DoShutdown();
         }
 
         public void Terminate()
         {
-            Shutdown();
+            DoShutdown();
         }
 
-        public void FireLifecycleEvent(LifecycleEvent.LifecycleState lifecycleState)
+        private void DoShutdown()
         {
-            var lifecycleEvent = new LifecycleEvent(lifecycleState);
-            Logger.Info("HazelcastClient[" + _client.GetName() + "] is " + lifecycleEvent.GetState());
-            foreach (var entry in _lifecycleListeners)
+            lock (_shutdownLock)
             {
-                entry.Value.StateChanged(lifecycleEvent);
+                if (!_active.CompareAndSet(true, false)) 
+                {
+                    return;
+                }
+                FireLifecycleEvent(LifecycleEvent.LifecycleState.ShuttingDown);
+                _client.DoShutdown();
+                FireLifecycleEvent(LifecycleEvent.LifecycleState.Shutdown);
             }
-        }
-
-        internal void SetStarted()
-        {
-            _active.Set(true);
-            FireLifecycleEvent(LifecycleEvent.LifecycleState.Started);
         }
     }
 }

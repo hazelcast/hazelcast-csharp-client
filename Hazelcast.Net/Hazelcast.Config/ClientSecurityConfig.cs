@@ -21,65 +21,43 @@ namespace Hazelcast.Config
     /// </summary>
     public class ClientSecurityConfig
     {
-
-        private ICredentials _credentials;
-        private string _credentialsClassName;
-        private CredentialsFactoryConfig credentialsFactoryConfig = new CredentialsFactoryConfig();
-
-        /// <summary>
-        /// The configured <see cref="ICredentials"/> implementation
-        /// </summary>
-        /// <returns>credentials</returns>
-        public ICredentials GetCredentials() {
-            return _credentials;
-        }
-
-        /// <summary>
-        /// Sets the <see cref="ICredentials"/> implementation
-        /// </summary>
-        /// <param name="credentials">credentials implementation</param>
-        /// <returns>configured <see cref="ClientSecurityConfig"/> for chaining</returns>
-        public ClientSecurityConfig SetCredentials(ICredentials credentials) {
-            _credentials = credentials;
-            return this;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public string GetCredentialsClassName() {
-            return _credentialsClassName;
-        }
-
-        /// <summary>
-        /// Credentials class will be instantiated from class name when setCredentialsFactoryConfig and  setCredentials
-        /// are not used. The class will be instantiated with empty constructor.
-        /// </summary>
-        /// <param name="credentialsClassname">class name for credentials</param>
-        /// <returns>configured <see cref="ClientSecurityConfig"/> for chaining</returns>
-        public ClientSecurityConfig SetCredentialsClassName(string credentialsClassname) {
-            _credentialsClassName = credentialsClassname;
-            return this;
-        }
+        private IIdentityConfig _identityConfig;
         
-        /// <summary>
-        /// Returns the CredentialsFactory Config
-        /// </summary>
-        /// <returns><see cref="GetCredentialsFactoryConfig"/></returns>
-        public CredentialsFactoryConfig GetCredentialsFactoryConfig() {
-            return credentialsFactoryConfig;
+        public UsernamePasswordIdentityConfig UsernamePasswordIdentityConfig
+        {
+            get => _identityConfig as UsernamePasswordIdentityConfig;
+            set => _identityConfig = value;
         }
 
-        /// <summary>
-        /// Credentials Factory Config allows user to pass custom properties and use group config when instantiating a credentials object.
-        /// </summary>
-        /// <param name="credentialsFactoryConfig">the config that will be used to create credentials factory</param>
-        /// <returns>configured <see cref="ClientSecurityConfig"/> for chaining</returns>
-        public ClientSecurityConfig SetCredentialsFactoryConfig(CredentialsFactoryConfig credentialsFactoryConfig) {
-            this.credentialsFactoryConfig = credentialsFactoryConfig;
-            return this;
+        public TokenIdentityConfig TokenIdentityConfig
+        {
+            get => _identityConfig as TokenIdentityConfig;
+            set => _identityConfig = value;
         }
 
+        public CredentialsIdentityConfig CredentialsIdentityConfig
+        {
+            get => _identityConfig as CredentialsIdentityConfig;
+            set => _identityConfig = value;
+        }
+
+
+        public CredentialsFactoryConfig CredentialsFactoryConfig
+        {
+            get => _identityConfig as CredentialsFactoryConfig;
+            set => _identityConfig = value;
+        }
+
+        public bool HasIdentityConfig => _identityConfig != null;
+
+        public ICredentialsFactory AsCredentialsFactory()
+        {
+            return _identityConfig?.AsCredentialsFactory();
+        }
+
+        public ICredentials Credentials
+        {
+            set => _identityConfig = new CredentialsIdentityConfig{Credentials = value};
+        }
     }
 }

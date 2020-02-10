@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
-using Hazelcast.IO;
 using Hazelcast.Remote;
 using NUnit.Framework;
 
@@ -37,7 +38,7 @@ namespace Hazelcast.Client.Test
 
             StartMember(_remoteController, _cluster);
             _client = CreateClient();
-
+            _client.GetMap<object, object>("default").Get(new object());
         }
 
         [TearDown]
@@ -50,15 +51,19 @@ namespace Hazelcast.Client.Test
 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+            config.SetClusterName(_cluster.Id);
         }
 
-        private static HashSet<Address> GetPartitionOwners(int partitionCount, IClientPartitionService partitionService)
+        private static HashSet<Guid> GetPartitionOwners(int partitionCount, PartitionService partitionService)
         {
-            var partitionOwners = new HashSet<Address>();
+            var partitionOwners = new HashSet<Guid>();
             for (var i = 0; i < partitionCount; i++)
             {
-                partitionOwners.Add(partitionService.GetPartitionOwner(i));
+                var partitionOwner = partitionService.GetPartitionOwner(i);
+                if (partitionOwner.HasValue)
+                {
+                    partitionOwners.Add(partitionOwner.Value);
+                }
             }
             return partitionOwners;
         }
@@ -66,8 +71,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestPartitionsUpdatedAfterNewNode()
         {
-            var proxy = (HazelcastClientProxy) _client;
-            var partitionService = proxy.GetClient().GetClientPartitionService();
+            var partitionService = ((HazelcastClient) _client).PartitionService;
 
             var partitionCount = partitionService.GetPartitionCount();
             Assert.AreEqual(271, partitionCount);

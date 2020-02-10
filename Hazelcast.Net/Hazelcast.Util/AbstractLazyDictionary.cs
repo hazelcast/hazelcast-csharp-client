@@ -34,15 +34,14 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
-    internal abstract class AbstractLazyDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
+    internal abstract class AbstractLazyDictionary<TKey, TValue, D> : IEnumerable<KeyValuePair<TKey, TValue>> where D : class
     {
-        protected readonly ConcurrentQueue<KeyValuePair<IData, object>> _contentQueue;
+        protected readonly IList<KeyValuePair<IData, D>> _content;
         protected readonly ISerializationService _serializationService;
 
-        protected AbstractLazyDictionary(ConcurrentQueue<KeyValuePair<IData, object>> contentQueue,
-            ISerializationService serializationService)
+        protected AbstractLazyDictionary(IList<KeyValuePair<IData, D>> content, ISerializationService serializationService)
         {
-            _contentQueue = contentQueue;
+            _content = content;
             _serializationService = serializationService;
         }
 
@@ -50,7 +49,7 @@ namespace Hazelcast.Util
         {
             var keyData = _serializationService.ToData(item.Key);
 
-            foreach (var pair in _contentQueue)
+            foreach (var pair in _content)
             {
                 if (pair.Key.Equals(keyData))
                 {
@@ -65,14 +64,7 @@ namespace Hazelcast.Util
         public bool ContainsKey(TKey key)
         {
             var keyData = _serializationService.ToData(key);
-            foreach (var pair in _contentQueue)
-            {
-                if (pair.Key.Equals(keyData))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return _content.Any(pair => pair.Key.Equals(keyData));
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
@@ -95,18 +87,12 @@ namespace Hazelcast.Util
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            return new Enumerator(_contentQueue.GetEnumerator(), _serializationService);
+            return DeserializeIterator(_content, _serializationService);
         }
 
-        public int Count
-        {
-            get { return _contentQueue.Count; }
-        }
+        public int Count => _content.Count;
 
-        public bool IsReadOnly
-        {
-            get { return true; }
-        }
+        public bool IsReadOnly => true;
 
         public void Add(KeyValuePair<TKey, TValue> item)
         {
@@ -132,8 +118,7 @@ namespace Hazelcast.Util
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            KeyValuePair<IData, object> entry;
-            if (FindEntry(key, out entry))
+            if (FindEntry(key, out var entry))
             {
                 value = _serializationService.ToObject<TValue>(entry.Value);
                 return true;
@@ -146,14 +131,13 @@ namespace Hazelcast.Util
         {
             get
             {
-                KeyValuePair<IData, object> entry;
-                if (FindEntry(key, out entry))
+                if (FindEntry(key, out var entry))
                 {
                     return _serializationService.ToObject<TValue>(entry.Value);
                 }
                 throw new KeyNotFoundException();
             }
-            set { throw new NotSupportedException("Readonly dictionary"); }
+            set => throw new NotSupportedException("Readonly dictionary");
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
@@ -161,61 +145,29 @@ namespace Hazelcast.Util
             throw new NotSupportedException("Readonly Set");
         }
 
-        private bool FindEntry(TKey key, out KeyValuePair<IData, object> entry)
+        private bool FindEntry(TKey key, out KeyValuePair<IData, D> entry)
         {
             var keyData = _serializationService.ToData(key);
             try
             {
-                entry = _contentQueue.First(pair => pair.Key.Equals(keyData));
+                entry = _content.First(pair => pair.Key.Equals(keyData));
                 return true;
             }
             catch (Exception)
             {
-                entry = default(KeyValuePair<IData, object>);
+                entry = default(KeyValuePair<IData, D>);
                 return false;
             }
         }
 
-        private struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
+        private static IEnumerator<KeyValuePair<TKey, TValue>> DeserializeIterator(IEnumerable<KeyValuePair<IData, D>> source,
+            ISerializationService ss)
         {
-            private readonly IEnumerator<KeyValuePair<IData, object>> _enumerator;
-            private readonly ISerializationService _ss;
-
-            internal Enumerator(IEnumerator<KeyValuePair<IData, object>> enumerator, ISerializationService ss)
+            foreach (var kvp in source)
             {
-                _enumerator = enumerator;
-                _ss = ss;
-            }
-
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
-
-            public KeyValuePair<TKey, TValue> Current
-            {
-                get
-                {
-                    var current = _enumerator.Current;
-                    var key = _ss.ToObject<TKey>(current.Key);
-                    var value = _ss.ToObject<TValue>(current.Value);
-                    return new KeyValuePair<TKey, TValue>(key, value);
-                }
-            }
-
-            public void Dispose()
-            {
-                _enumerator.Dispose();
-            }
-
-            public bool MoveNext()
-            {
-                return _enumerator.MoveNext();
-            }
-
-            void IEnumerator.Reset()
-            {
-                _enumerator.Reset();
+                var key = ss.ToObject<TKey>(kvp.Key);
+                var value = ss.ToObject<TValue>(kvp.Value);
+                yield return new KeyValuePair<TKey, TValue>(key, value);
             }
         }
     }

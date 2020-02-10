@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Test
 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+            config.SetClusterName(_cluster.Id);
         }
 
         protected override void ConfigureClient(ClientConfig config)
@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestListenerWithNonSmartRouting()
         {
-            var cm  = ((HazelcastClientProxy) _client).GetClient().GetConnectionManager();
+            var cm  = ((HazelcastClient) _client).ConnectionManager;
             for (int i = 0; i < 100; i++)
             {
                 var options = new TransactionOptions().SetTransactionType(TransactionOptions.TransactionType.TwoPhase);

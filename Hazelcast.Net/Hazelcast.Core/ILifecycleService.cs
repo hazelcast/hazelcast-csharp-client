@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Core
 {
     /// <summary>
@@ -23,14 +25,9 @@ namespace Hazelcast.Core
     public interface ILifecycleService
     {
         /// <summary>Add listener object to listen lifecycle events.</summary>
-        /// <remarks>Add listener object to listen lifecycle events.</remarks>
         /// <param name="lifecycleListener">Listener object</param>
         /// <returns>listener id</returns>
-        string AddLifecycleListener(ILifecycleListener lifecycleListener);
-
-        /// <summary>whether the instance is running</summary>
-        /// <returns>true if instance is active and running</returns>
-        bool IsRunning();
+        Guid AddLifecycleListener(ILifecycleListener lifecycleListener);
 
         /// <summary>Remove lifecycle listener</summary>
         /// <param name="registrationId">
@@ -38,7 +35,11 @@ namespace Hazelcast.Core
         ///     <see cref="AddLifecycleListener(ILifecycleListener)">AddLifecycleListener(ILifecycleListener)</see>
         /// </param>
         /// <returns>true if removed successfully</returns>
-        bool RemoveLifecycleListener(string registrationId);
+        bool RemoveLifecycleListener(Guid registrationId);
+
+        /// <summary>whether the instance is running</summary>
+        /// <returns>true if instance is active and running</returns>
+        bool IsRunning();
 
         /// <summary>gracefully shutdowns IHazelcastInstance.</summary>
         /// <remarks>
@@ -49,7 +50,6 @@ namespace Hazelcast.Core
         void Shutdown();
 
         /// <summary>terminate IHazelcastInstance ungracefully.</summary>
-        /// <remarks>terminate IHazelcastInstance ungracefully. Does not wait partition operations, forces immediate shutdown.</remarks>
         void Terminate();
     }
 }

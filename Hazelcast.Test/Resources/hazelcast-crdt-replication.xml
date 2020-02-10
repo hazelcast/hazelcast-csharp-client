@@ -10,9 +10,6 @@
     <property name="hazelcast.partition.count">5</property>
   </properties>
 
-  <cluster name="dev" password="dev-pass"/>
-  
-  <management-center enabled="false">http://localhost:8080/mancenter</management-center>
   
   <network>
     <port auto-increment="true" port-count="100">5701</port>

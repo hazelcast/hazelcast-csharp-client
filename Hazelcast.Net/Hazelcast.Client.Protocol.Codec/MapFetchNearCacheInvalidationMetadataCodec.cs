@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,76 +37,40 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapFetchNearCacheInvalidationMetadataCodec
     {
-        //hex: 0x013F00
-        public const int RequestMessageType = 81664;
-        //hex: 0x013F01
-        public const int ResponseMessageType = 81665;
-        private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        //hex: 0x013D00
+        public const int RequestMessageType = 81152;
+        //hex: 0x013D01
+        public const int ResponseMessageType = 81153;
+        private const int RequestUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
+        private const int RequestInitialFrameSize = RequestUuidFieldOffset + GuidSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// names of the maps
-            ///</summary>
-            public IList<string> Names;
-
-            /// <summary>
-            /// TODO DOC
-            ///</summary>
-            public Hazelcast.IO.Address Address;
-        }
-
-        public static ClientMessage EncodeRequest(IEnumerable<string> names, Hazelcast.IO.Address address)
+        public static ClientMessage EncodeRequest(ICollection<string> names, Guid uuid)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.FetchNearCacheInvalidationMetadata";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
+            EncodeGuid(initialFrame.Content, RequestUuidFieldOffset, uuid);
             clientMessage.Add(initialFrame);
             ListMultiFrameCodec.Encode(clientMessage, names, StringCodec.Encode);
-            AddressCodec.Encode(clientMessage, address);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            //empty initial frame
-            iterator.Next();
-            request.Names = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
-            request.Address = AddressCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
         {
 
             /// <summary>
-            /// TODO DOC
+            /// Map of partition ids and sequence number of invalidations mapped by the map name.
             ///</summary>
             public IList<KeyValuePair<string, IList<KeyValuePair<int, long>>>> NamePartitionSequenceList;
 
             /// <summary>
-            /// TODO DOC
+            /// Map of member UUIDs mapped by the partition ids of invalidations.
             ///</summary>
             public IList<KeyValuePair<int, Guid>> PartitionUuidList;
-        }
-
-        public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<string, IEnumerable<KeyValuePair<int, long>>>> namePartitionSequenceList, IEnumerable<KeyValuePair<int, Guid>> partitionUuidList)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EntryListCodec.Encode(clientMessage, namePartitionSequenceList, StringCodec.Encode, EntryListIntegerLongCodec.Encode);
-            EntryListIntegerUUIDCodec.Encode(clientMessage, partitionUuidList);
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -119,5 +83,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.PartitionUuidList = EntryListIntegerUUIDCodec.Decode(iterator);
             return response;
         }
+
     }
 }

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 
 namespace Hazelcast.IO.Serialization
@@ -39,7 +40,7 @@ namespace Hazelcast.IO.Serialization
             }
             catch (ObjectDisposedException)
             {
-                throw new HazelcastInstanceNotActiveException();
+                throw new HazelcastClientNotActiveException();
             }
         }
 

@@ -63,16 +63,6 @@ namespace Hazelcast.Client.Test
                 }
             }
         }
-
-
-        [Test]
-        public void addingIndexes()
-        {
-            // single-attribute index
-            map.AddIndex("name", true);
-            // nested-attribute index
-            map.AddIndex("limb.name", true);
-        }
         
         
         [Test]

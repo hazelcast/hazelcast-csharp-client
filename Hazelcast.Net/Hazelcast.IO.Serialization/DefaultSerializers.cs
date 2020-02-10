@@ -14,6 +14,7 @@
 
 using Hazelcast.Core;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
@@ -23,11 +24,11 @@ namespace Hazelcast.IO.Serialization
 {
     class DefaultSerializers
     {
-        public class JavaClassSerializer : ConstantSerializers.SingletonSerializer<JavaClass>
+        internal class JavaClassSerializer : ConstantSerializers.SingletonSerializer<JavaClass>
         {
             public override int GetTypeId()
             {
-                return SerializationConstants.DefaultTypeJavaClass;
+                return SerializationConstants.JavaDefaultTypeClass;
             }
 
             public override JavaClass Read(IObjectDataInput input)
@@ -45,7 +46,7 @@ namespace Hazelcast.IO.Serialization
         {
             public override int GetTypeId()
             {
-                return SerializationConstants.JavascriptJSONSerializationType;
+                return SerializationConstants.JavascriptJsonSerializationType;
             }
 
             /// <exception cref="System.IO.IOException"></exception>
@@ -61,13 +62,13 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public class DateSerializer : ConstantSerializers.SingletonSerializer<DateTime>
+        internal class DateSerializer : ConstantSerializers.SingletonSerializer<DateTime>
         {
             private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
             public override int GetTypeId()
             {
-                return SerializationConstants.DefaultTypeDate;
+                return SerializationConstants.JavaDefaultTypeDate;
             }
 
             public override DateTime Read(IObjectDataInput input)
@@ -87,15 +88,15 @@ namespace Hazelcast.IO.Serialization
 
             private static long ToEpochDateTime(DateTime dateTime)
             {
-                return (long)dateTime.Subtract(Epoch).TotalMilliseconds;
+                return (long) dateTime.Subtract(Epoch).TotalMilliseconds;
             }
         }
 
-        public class BigIntegerSerializer : ConstantSerializers.SingletonSerializer<BigInteger>
+        internal class BigIntegerSerializer : ConstantSerializers.SingletonSerializer<BigInteger>
         {
             public override int GetTypeId()
             {
-                return SerializationConstants.DefaultTypeBigInteger;
+                return SerializationConstants.JavaDefaultTypeBigInteger;
             }
 
             public override BigInteger Read(IObjectDataInput input)
@@ -115,30 +116,11 @@ namespace Hazelcast.IO.Serialization
 
         // TODO: BigDecimal
 
-        public class JavaEnumSerializer : ConstantSerializers.SingletonSerializer<JavaEnum>
+        internal class ListSerializer<T> : ConstantSerializers.SingletonSerializer<List<T>>
         {
             public override int GetTypeId()
             {
-                return SerializationConstants.DefaultTypeJavaEnum;
-            }
-
-            public override JavaEnum Read(IObjectDataInput input)
-            {
-                return new JavaEnum(input.ReadUTF(), input.ReadUTF());
-            }
-
-            public override void Write(IObjectDataOutput output, JavaEnum obj)
-            {
-                output.WriteUTF(obj.Type);
-                output.WriteUTF(obj.Value);
-            }
-        }
-
-        public class ListSerializer<T> : ConstantSerializers.SingletonSerializer<List<T>>
-        {
-            public override int GetTypeId()
-            {
-                return SerializationConstants.DefaultTypeArrayList;
+                return SerializationConstants.JavaDefaultTypeArrayList;
             }
 
             public override List<T> Read(IObjectDataInput input)
@@ -165,11 +147,11 @@ namespace Hazelcast.IO.Serialization
             }
         }
 
-        public class LinkedListSerializer<T> : ConstantSerializers.SingletonSerializer<LinkedList<T>>
+        internal class LinkedListSerializer<T> : ConstantSerializers.SingletonSerializer<LinkedList<T>>
         {
             public override int GetTypeId()
             {
-                return SerializationConstants.DefaultTypeLinkedList;
+                return SerializationConstants.JavaDefaultTypeLinkedList;
             }
 
             public override LinkedList<T> Read(IObjectDataInput input)
@@ -199,11 +181,11 @@ namespace Hazelcast.IO.Serialization
         /// <summary>
         /// Serialize using default .NET serialization
         /// </summary>
-        public class SerializableSerializer : ConstantSerializers.SingletonSerializer<object>
+        internal class SerializableSerializer : ConstantSerializers.SingletonSerializer<object>
         {
             public override int GetTypeId()
             {
-                return SerializationConstants.DefaultTypeSerializable;
+                return SerializationConstants.CsharpClrSerializationType;
             }
 
             public override object Read(IObjectDataInput input)
@@ -212,13 +194,145 @@ namespace Hazelcast.IO.Serialization
                 var stream = new MemoryStream(input.ReadByteArray());
                 return formatter.Deserialize(stream);
             }
-            
+
             public override void Write(IObjectDataOutput output, object obj)
             {
                 var formatter = new BinaryFormatter();
                 var stream = new MemoryStream();
                 formatter.Serialize(stream, obj);
                 output.WriteByteArray(stream.GetBuffer());
+            }
+        }
+
+        internal class ArrayStreamSerializer : ConstantSerializers.SingletonSerializer<object[]>
+        {
+            public override int GetTypeId() => SerializationConstants.JavaDefaultTypeArray;
+
+            public override object[] Read(IObjectDataInput input)
+            {
+                var length = input.ReadInt();
+                var objects = new object[length];
+                for (var i = 0; i < length; i++)
+                {
+                    objects[i] = input.ReadObject<object>();
+                }
+                return objects;
+            }
+
+            public override void Write(IObjectDataOutput output, object[] obj)
+            {
+                output.WriteInt(obj.Length);
+                foreach (var t in obj)
+                {
+                    output.WriteObject(t);
+                }
+            }
+        }
+
+        internal class HashMapStreamSerializer : AbstractDictStreamSerializer<Dictionary<object, object>>
+        {
+            public override int GetTypeId() => SerializationConstants.JavaDefaultTypeHashMap;
+
+            public override Dictionary<object, object> Read(IObjectDataInput input)
+            {
+                var size = input.ReadInt();
+                var dict = new Dictionary<object, object>(size);
+                return DeserializeEntries(input, size, dict);
+            }
+        }
+
+        internal class ConcurrentHashMapStreamSerializer : AbstractDictStreamSerializer<ConcurrentDictionary<object, object>>
+        {
+            private static readonly int DefaultConcurrencyLevel = Environment.ProcessorCount;
+
+            public override int GetTypeId() => SerializationConstants.JavaDefaultTypeConcurrentHashMap;
+
+            public override ConcurrentDictionary<object, object> Read(IObjectDataInput input)
+            {
+                var size = input.ReadInt();
+                var dict = new ConcurrentDictionary<object, object>(DefaultConcurrencyLevel, size);
+                return DeserializeEntries(input, size, dict);
+            }
+        }
+
+        internal class HashSetStreamSerializer : AbstractCollectionStreamSerializer<HashSet<object>>
+        {
+            public override int GetTypeId() => SerializationConstants.JavaDefaultTypeHashSet;
+
+            public override HashSet<object> Read(IObjectDataInput input)
+            {
+                var size = input.ReadInt();
+                var set = new HashSet<object>();
+                return DeserializeEntries(input, size, set);
+            }
+        }
+
+        internal abstract class AbstractCollectionStreamSerializer<CollectionType> : IStreamSerializer<CollectionType>
+            where CollectionType : ISet<object>
+        {
+            public void Destroy()
+            {
+            }
+
+            public abstract int GetTypeId();
+
+            public abstract CollectionType Read(IObjectDataInput input);
+
+            public void Write(IObjectDataOutput output, CollectionType obj)
+            {
+                var size = obj.Count;
+                output.WriteInt(size);
+                if (size > 0)
+                {
+                    foreach (var o in obj)
+                    {
+                        output.WriteObject(o);
+                    }
+                }
+            }
+            
+            protected CollectionType DeserializeEntries(IObjectDataInput input, int size, CollectionType collection)
+            {
+                for (var i = 0; i < size; i++)
+                {
+                    collection.Add(input.ReadObject<object>());
+                }
+                return collection;
+            }
+        }
+
+        internal abstract class AbstractDictStreamSerializer<DType> : IStreamSerializer<DType>
+            where DType : IDictionary<object, object>
+        {
+            public abstract int GetTypeId();
+
+            public void Destroy()
+            {
+            }
+
+            public abstract DType Read(IObjectDataInput input);
+
+            public void Write(IObjectDataOutput output, DType obj)
+            {
+                var size = obj.Count;
+                output.WriteInt(size);
+                if (size > 0)
+                {
+                    foreach (var kvp in obj)
+                    {
+                        output.WriteObject(kvp.Key);
+                        output.WriteObject(kvp.Value);
+                    }
+                }
+            }
+
+            protected DType DeserializeEntries(IObjectDataInput input, int size, DType result)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    result.Add(input.ReadObject<object>(), input.ReadObject<object>());
+                }
+                return result;
             }
         }
     }

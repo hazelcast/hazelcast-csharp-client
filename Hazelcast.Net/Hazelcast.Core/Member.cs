@@ -23,113 +23,61 @@ using Hazelcast.Logging;
 
 namespace Hazelcast.Core
 {
-    internal sealed class Member : IMember
-    {
-        private readonly ConcurrentDictionary<string, string> _attributes = new ConcurrentDictionary<string, string>();
-        private readonly ILogger _logger;
-
-        public Member()
-        {
-        }
-
-        public Member(Address address)
-            : this(address, Guid.Empty)
-        {
-        }
-
-        public Member(Address address, Guid uuid)
-            : this(address, uuid, new Dictionary<string, string>(), false)
-        {
-        }
-
-        public Member(Address address, Guid uuid, IDictionary<string, string> attributes, bool liteMember)
-        {
-            _logger = Logger.GetLogger(typeof (Member) + ":" + address);
-            Address = address;
-            Uuid = uuid;
-            IsLiteMember = liteMember;
-            foreach (var kv in attributes)
-            {
-                _attributes.TryAdd(kv.Key, kv.Value);
-            }
-        }
-
-        public bool IsLiteMember { get; }
-
-        public Address Address { get; }
-
-        public IPEndPoint GetSocketAddress()
-        {
-            try
-            {
-                return Address.GetInetSocketAddress();
-            }
-            catch (Exception e)
-            {
-                if (_logger != null)
-                {
-                    _logger.Warning(e);
-                }
-                return null;
-            }
-        }
-
-        public Guid Uuid { get; }
-
-        public IDictionary<string, string> Attributes => _attributes;
-
-        public string GetAttribute(string key)
-        {
-            _attributes.TryGetValue(key, out var @out);
-            return @out;
-        }
-
-        private bool Equals(Member other)
-        {
-            return Equals(Address, other.Address) && string.Equals(Uuid, other.Uuid);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj is Member && Equals((Member) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return ((Address != null ? Address.GetHashCode() : 0) * 397) ^ (Uuid != null ? Uuid.GetHashCode() : 0);
-            }
-        }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder("Member [");
-            sb.Append(Address.Host);
-            sb.Append("]");
-            sb.Append(":");
-            sb.Append(Address.Port);
-            sb.Append(" - ").Append(Uuid);
-            if (IsLiteMember) {
-                sb.Append(" lite");
-            }
-            return sb.ToString();
-        }
-
-        internal void UpdateAttribute(MemberAttributeOperationType operationType, string key, string value)
-        {
-            switch (operationType)
-            {
-                case MemberAttributeOperationType.Put:
-                    _attributes.TryAdd(key, value);
-                    break;
-                case MemberAttributeOperationType.Remove:
-                    string _out;
-                    _attributes.TryRemove(key, out _out);
-                    break;
-            }
-        }
-    }
+    // internal sealed class Member : IMember
+    // {
+    //     private readonly ILogger _logger;
+    //
+    //     public Member(Address address, Guid guid, IDictionary<string,string> attributes, bool isLiteMember, MemberVersion version)
+    //     {
+    //         _logger = Logger.GetLogger(typeof (Member) + ":" + address);
+    //         Address = address;
+    //         Guid = guid;
+    //         IsLiteMember = isLiteMember;
+    //         Version = version;
+    //         Attributes = attributes;
+    //     }
+    //
+    //     public Address Address { get; }
+    //     public Guid Guid { get; }
+    //     public IDictionary<string, string> Attributes { get; }
+    //     public bool IsLiteMember { get; }
+    //     public MemberVersion Version { get; }
+    //
+    //
+    //     public IPEndPoint SocketAddress
+    //     {
+    //         get
+    //         {
+    //             try
+    //             {
+    //                 return Address.GetInetSocketAddress();
+    //             }
+    //             catch (Exception e)
+    //             {
+    //                 _logger?.Warning(e);
+    //                 return null;
+    //             }
+    //         }
+    //     }
+    //
+    //     private bool Equals(Member other)
+    //     {
+    //         return Guid.Equals(other.Guid);
+    //     }
+    //
+    //     public override bool Equals(object obj)
+    //     {
+    //         if (ReferenceEquals(null, obj)) return false;
+    //         if (ReferenceEquals(this, obj)) return true;
+    //         if (obj.GetType() != this.GetType()) return false;
+    //         return Equals((Member) obj);
+    //     }
+    //
+    //     public override int GetHashCode() => Guid.GetHashCode();
+    //
+    //     public override string ToString()
+    //     {
+    //         return $"Member [{Address.Host}]:{Address.Port} - {Guid}{(IsLiteMember ? " lite" : "")}";
+    //     }
+    // }
 }

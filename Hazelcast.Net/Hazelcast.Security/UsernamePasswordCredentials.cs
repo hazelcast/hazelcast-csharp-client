@@ -18,44 +18,22 @@ namespace Hazelcast.Security
 {
     /// <summary>
     ///     Simple implementation of
-    ///     <see cref="ICredentials">ICredentials</see>
+    ///     <see cref="IPasswordCredentials">IPasswordCredentials</see>
     ///     using
     ///     username and password as security attributes.
     /// </summary>
     [Serializable]
-    public class UsernamePasswordCredentials : AbstractCredentials
+    public class UsernamePasswordCredentials : IPasswordCredentials
     {
-        public UsernamePasswordCredentials() : this("", "") {}
+        public string Name { get; set; }
         
-        public UsernamePasswordCredentials(string username, string password) : base(username)
-        {
-            Password = password;
-        }
-
-        /// <summary>
-        /// Username property, act as the principal value of the ICredential interface
-        /// </summary>
-        public string Username
-        {
-            get
-            {
-                return GetPrincipal(); 
-            }
-            set
-            {
-                SetPrincipal(value);
-            }
-        }
-
-        /// <summary>
-        /// Password principal
-        /// </summary>
         public string Password { get; set; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return "UsernamePasswordCredentials [username=" + Username + "]";
+            return "UsernamePasswordCredentials [username=" + Name + "]";
         }
+
     }
 }

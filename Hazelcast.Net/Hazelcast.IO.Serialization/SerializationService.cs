@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
@@ -44,7 +45,6 @@ namespace Hazelcast.IO.Serialization
             new ConcurrentDictionary<int, ISerializerAdapter>();
 
         private readonly IInputOutputFactory _inputOutputFactory;
-        private readonly IManagedContext _managedContext;
         private readonly ISerializerAdapter _nullSerializerAdapter;
         private readonly int _outputBufferSize;
         private readonly PortableContext _portableContext;
@@ -63,12 +63,9 @@ namespace Hazelcast.IO.Serialization
         internal SerializationService(IInputOutputFactory inputOutputFactory, int version,
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
             IDictionary<int, IPortableFactory> portableFactories, ICollection<IClassDefinition> classDefinitions,
-            bool checkClassDefErrors, IManagedContext managedContext,
-            IPartitioningStrategy partitionStrategy, int initialOutputBufferSize, bool enableCompression,
-            bool enableSharedObject)
+            bool checkClassDefErrors, IPartitioningStrategy partitionStrategy, int initialOutputBufferSize)
         {
             _inputOutputFactory = inputOutputFactory;
-            _managedContext = managedContext;
             GlobalPartitioningStrategy = partitionStrategy;
             _outputBufferSize = initialOutputBufferSize;
             _bufferPoolThreadLocal = new BufferPoolThreadLocal(this);
@@ -126,7 +123,7 @@ namespace Hazelcast.IO.Serialization
         public T ToObject<T>(object @object)
         {
             var o = ToObject(@object);
-            return o == null ? default : (T) o;
+            return o == null ? default(T) : (T) o;
         }
 
         public object ToObject(object @object)
@@ -154,13 +151,9 @@ namespace Hazelcast.IO.Serialization
                         throw new HazelcastSerializationException("There is no suitable de-serializer for type " +
                                                                   typeId);
                     }
-                    throw new HazelcastInstanceNotActiveException();
+                    throw new HazelcastClientNotActiveException();
                 }
                 var obj = serializer.Read(@in);
-                if (_managedContext != null)
-                {
-                    obj = _managedContext.Initialize(obj);
-                }
                 return obj;
             }
             catch (Exception e)
@@ -210,13 +203,9 @@ namespace Hazelcast.IO.Serialization
                         throw new HazelcastSerializationException("There is no suitable de-serializer for type "
                                                                   + typeId);
                     }
-                    throw new HazelcastInstanceNotActiveException();
+                    throw new HazelcastClientNotActiveException();
                 }
                 var obj = serializer.Read(input);
-                if (_managedContext != null)
-                {
-                    obj = _managedContext.Initialize(obj);
-                }
                 try
                 {
                     return (T) obj;
@@ -287,11 +276,6 @@ namespace Hazelcast.IO.Serialization
             _bufferPoolThreadLocal.Dispose();
         }
 
-        public IManagedContext GetManagedContext()
-        {
-            return _managedContext;
-        }
-
         public virtual ByteOrder GetByteOrder()
         {
             return _inputOutputFactory.GetByteOrder();
@@ -357,13 +341,12 @@ namespace Hazelcast.IO.Serialization
             {
                 var index = IndexForDefaultType(typeId);
                 if (index < ConstantSerializersSize && 
-                    index != IndexForDefaultType(SerializationConstants.DefaultTypeSerializable))
+                    index != IndexForDefaultType(SerializationConstants.CsharpClrSerializationType))
                 {
                     return _constantTypeIds[index];
                 }
             }
-            ISerializerAdapter result;
-            _idMap.TryGetValue(typeId, out result);
+            _idMap.TryGetValue(typeId, out var result);
             return _idMap.TryGetValue(typeId, out result) ? result : default(ISerializerAdapter);
         }
 
@@ -595,6 +578,9 @@ namespace Hazelcast.IO.Serialization
             RegisterConstant(typeof (long), new ConstantSerializers.LongSerializer());
             RegisterConstant(typeof (float), new ConstantSerializers.FloatSerializer());
             RegisterConstant(typeof (double), new ConstantSerializers.DoubleSerializer());
+            RegisterConstant(typeof (string), new ConstantSerializers.StringSerializer());
+            RegisterConstant(typeof (Guid), new ConstantSerializers.GuidSerializer());
+            RegisterConstant(typeof (KeyValuePair<object,object>), new ConstantSerializers.KeyValuePairSerializer());
             RegisterConstant(typeof (bool[]), new ConstantSerializers.BooleanArraySerializer());
             RegisterConstant(typeof (byte[]), new ConstantSerializers.ByteArraySerializer());
             RegisterConstant(typeof (char[]), new ConstantSerializers.CharArraySerializer());
@@ -604,21 +590,29 @@ namespace Hazelcast.IO.Serialization
             RegisterConstant(typeof (float[]), new ConstantSerializers.FloatArraySerializer());
             RegisterConstant(typeof (double[]), new ConstantSerializers.DoubleArraySerializer());
             RegisterConstant(typeof (string[]), new ConstantSerializers.StringArraySerializer());
-            RegisterConstant(typeof (string), new ConstantSerializers.StringSerializer());
         }
 
         private void RegisterDefaultSerializers()
         {
-            RegisterConstant(typeof (DateTime), new DefaultSerializers.DateSerializer());
-
+            
             //TODO: proper support for generic types
             RegisterConstant(typeof (JavaClass), new DefaultSerializers.JavaClassSerializer());
-            RegisterConstant(typeof(HazelcastJsonValue), new DefaultSerializers.HazelcastJsonValueSerializer());
+            RegisterConstant(typeof (DateTime), new DefaultSerializers.DateSerializer());
             RegisterConstant(typeof (BigInteger), new DefaultSerializers.BigIntegerSerializer());
-            RegisterConstant(typeof (JavaEnum), new DefaultSerializers.JavaEnumSerializer());
+
+            
+            RegisterConstant(typeof (object[]), new DefaultSerializers.ArrayStreamSerializer());
+            
+            //TODO map server side collection types.
             RegisterConstant(typeof (List<object>), new DefaultSerializers.ListSerializer<object>());
             RegisterConstant(typeof (LinkedList<object>), new DefaultSerializers.LinkedListSerializer<object>());
 
+            RegisterConstant(typeof(Dictionary<object, object>), new DefaultSerializers.HashMapStreamSerializer());
+            RegisterConstant(typeof(ConcurrentDictionary<object, object>), new DefaultSerializers.ConcurrentHashMapStreamSerializer());
+            
+            RegisterConstant(typeof(HashSet<object>), new DefaultSerializers.HashSetStreamSerializer());
+            
+            RegisterConstant(typeof(HazelcastJsonValue), new DefaultSerializers.HazelcastJsonValueSerializer());
             _idMap.TryAdd(_serializableSerializerAdapter.GetTypeId(), _serializableSerializerAdapter);
         }
 
@@ -694,7 +688,7 @@ namespace Hazelcast.IO.Serialization
                 {
                     throw new HazelcastSerializationException("There is no suitable serializer for " + type);
                 }
-                throw new HazelcastInstanceNotActiveException();
+                throw new HazelcastClientNotActiveException();
             }
             return serializer;
         }

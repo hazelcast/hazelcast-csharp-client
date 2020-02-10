@@ -50,11 +50,11 @@ namespace Hazelcast.Client.Test.Config
 
             var client = _clientFactory.CreateClient(clientConfig =>
             {
-                clientConfig.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+                clientConfig.SetClusterName(_cluster.Id);
                 clientConfig.AddListenerConfig(new ListenerConfig(typeof(SimpleLifecycleListener).AssemblyQualifiedName));
             });
 
-            Assert.True(client.GetLifecycleService().IsRunning());
+            Assert.True(client.LifecycleService.IsRunning());
             Assert.True(SimpleLifecycleListener.reset.Wait(1000));
         }
 
@@ -64,13 +64,13 @@ namespace Hazelcast.Client.Test.Config
             StartMember(_remoteController, _cluster);
             var client = _clientFactory.CreateClient(clientConfig =>
             {
-                clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
-                clientConfig.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+                // clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
+                clientConfig.SetClusterName(_cluster.Id);
                 clientConfig.AddListenerConfig(new ListenerConfig(typeof(SimpleMembershipListener).AssemblyQualifiedName));
             });
             StartMember(_remoteController, _cluster);
 
-            Assert.True(client.GetLifecycleService().IsRunning());
+            Assert.True(client.LifecycleService.IsRunning());
             Assert.True(SimpleMembershipListener.reset.Wait(1000));
         }
     }
@@ -93,11 +93,6 @@ namespace Hazelcast.Client.Test.Config
         internal static readonly ManualResetEventSlim reset = new ManualResetEventSlim();
 
         public void MemberAdded(MembershipEvent membershipEvent)
-        {
-            reset.Set();
-        }
-
-        public void MemberAttributeChanged(MemberAttributeEvent memberAttributeEvent)
         {
             reset.Set();
         }

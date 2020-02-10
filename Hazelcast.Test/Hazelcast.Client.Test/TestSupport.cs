@@ -159,7 +159,7 @@ namespace Hazelcast.Client.Test
         public static Task<bool> WaitForClientState(IHazelcastInstance instance, LifecycleEvent.LifecycleState state)
         {
             var task = new TaskCompletionSource<bool>();
-            var regId = instance.GetLifecycleService().AddLifecycleListener(new LifecycleListener(l =>
+            var regId = instance.LifecycleService.AddLifecycleListener(new LifecycleListener(l =>
             {
                 if (l.GetState() == state)
                 {
@@ -167,7 +167,7 @@ namespace Hazelcast.Client.Test
                 }
             }));
 
-            task.Task.ContinueWith(f => { instance.GetLifecycleService().RemoveLifecycleListener(regId); }).IgnoreExceptions();
+            task.Task.ContinueWith(f => { instance.LifecycleService.RemoveLifecycleListener(regId); }).IgnoreExceptions();
 
             return task.Task;
         }

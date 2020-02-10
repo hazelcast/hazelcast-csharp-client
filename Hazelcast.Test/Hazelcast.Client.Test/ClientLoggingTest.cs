@@ -28,12 +28,12 @@ namespace Hazelcast.Client.Test
         [Test]
 		public void TestConsoleLoggingInvalidLevel()
 		{
-			Assert.Throws<ConfigurationException>(() =>
+			Assert.Throws<InvalidConfigurationException>(() =>
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "asdf");
             var logger = new ConsoleLogFactory().GetLogger("logger");
 
-            Assert.IsFalse(logger.IsFinestEnabled());
+            Assert.IsFalse(logger.IsFinestEnabled);
         });
 		}
 
@@ -56,8 +56,8 @@ namespace Hazelcast.Client.Test
                 memoryStream.Seek(0, SeekOrigin.Begin);
                 var log = new StreamReader(memoryStream).ReadToEnd();
 
-                Assert.IsFalse(logger.IsFinestEnabled());
-                Assert.That(logger.GetLevel(), Is.EqualTo(LogLevel.Info));
+                Assert.IsFalse(logger.IsFinestEnabled);
+                Assert.That(logger.LogLevel, Is.EqualTo(LogLevel.Info));
                 Assert.That(log, Does.Contain(message1));
                 Assert.That(log, Does.Not.Contain(message2));
             }
@@ -131,9 +131,9 @@ namespace Hazelcast.Client.Test
             public List<Tuple<LogLevel, string, Exception>> Logs = new List<Tuple<LogLevel, string, Exception>>();
             public string Name { get; set; }
 
-            public override LogLevel GetLevel()
+            public override LogLevel LogLevel
             {
-                return LogLevel.Info;
+                get { return LogLevel.Info; }
             }
 
 

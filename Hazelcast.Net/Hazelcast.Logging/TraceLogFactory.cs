@@ -49,9 +49,9 @@ namespace Hazelcast.Logging
                 Trace.TraceInformation(thrown.Message);
             }
 
-            public virtual bool IsFinestEnabled()
+            public virtual bool IsFinestEnabled
             {
-                return true;
+                get { return true; }
             }
 
             public virtual void Info(string message)
@@ -100,9 +100,9 @@ namespace Hazelcast.Logging
                 Trace.WriteLine(message);
             }
 
-            public virtual LogLevel GetLevel()
+            public virtual LogLevel LogLevel
             {
-                return LogLevel.Off;
+                get { return LogLevel.Off; }
             }
 
             public bool IsLoggable(LogLevel level)

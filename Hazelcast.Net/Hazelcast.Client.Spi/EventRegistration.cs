@@ -13,22 +13,21 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Client.Connection;
+using Hazelcast.Client.Network;
 
-#pragma warning disable CS1591
- namespace Hazelcast.Client.Spi
+namespace Hazelcast.Client.Spi
 {
     internal class EventRegistration
     {
         public Guid ServerRegistrationId { get; private set; }
         public long CorrelationId { get; private set; }
-        public ClientConnection ClientConnection { get; private set; }
+        public Connection Connection { get; private set; }
 
-        public EventRegistration(Guid serverRegistrationId, long correlationId, ClientConnection clientConnection)
+        public EventRegistration(Guid serverRegistrationId, long correlationId, Connection connection)
         {
             ServerRegistrationId = serverRegistrationId;
             CorrelationId = correlationId;
-            ClientConnection = clientConnection;
+            Connection = connection;
         }
     }
 }

@@ -27,7 +27,7 @@ namespace Hazelcast.IO.Serialization
         private readonly int _offset;
 
         protected readonly IClassDefinition Cd;
-        protected internal readonly PortableSerializer Serializer;
+        private readonly PortableSerializer Serializer;
         private bool _raw;
 
         public DefaultPortableReader(PortableSerializer serializer, IBufferObjectDataInput @in, IClassDefinition cd)
@@ -318,7 +318,7 @@ namespace Hazelcast.IO.Serialization
                 CheckFactoryAndClass(fd, factoryId, classId);
                 if (!isNull)
                 {
-                    return (TPortable) Serializer.ReadAndInitialize(_in, factoryId, classId);
+                    return (TPortable) Serializer.Read(_in, factoryId, classId);
                 }
                 return default(TPortable);
             }
@@ -360,7 +360,7 @@ namespace Hazelcast.IO.Serialization
                     {
                         var start = _in.ReadInt(offset + i*Bits.IntSizeInBytes);
                         _in.Position(start);
-                        portables[i] = Serializer.ReadAndInitialize(_in, factoryId, classId);
+                        portables[i] = Serializer.Read(_in, factoryId, classId);
                     }
                 }
                 return portables;

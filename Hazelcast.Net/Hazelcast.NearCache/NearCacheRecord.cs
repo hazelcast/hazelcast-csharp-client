@@ -47,22 +47,19 @@ namespace Hazelcast.NearCache
 
         public int PartitionId
         {
-            get { return _partitionId; }
-            set { _partitionId = value; }
+            get => _partitionId;
+            set => _partitionId = value;
         }
 
         public long Sequence
         {
-            get { return _sequence.Get(); }
-            set { _sequence.Set(value); }
+            get => _sequence.Get();
+            set => _sequence.Set(value);
         }
 
         public Guid Guid { get; set; }
 
-        internal long LastAccessTime
-        {
-            get { return Interlocked.Read(ref _lastAccessTime); }
-        }
+        internal long LastAccessTime => Interlocked.Read(ref _lastAccessTime);
 
         internal void Access()
         {

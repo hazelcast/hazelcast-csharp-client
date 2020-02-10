@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,58 +45,22 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + GuidSizeInBytes;
         private const int RequestTimeoutFieldOffset = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int RequestInitialFrameSize = RequestTimeoutFieldOffset + LongSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Name of the Transactional Queue
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// ID of the transaction
-            ///</summary>
-            public Guid TxnId;
-
-            /// <summary>
-            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
-            ///</summary>
-            public long ThreadId;
-
-            /// <summary>
-            /// How long to wait before giving up, in milliseconds
-            ///</summary>
-            public long Timeout;
-        }
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, long timeout)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "TransactionalQueue.Peek";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeGuid(initialFrame.Content, RequestTxnIdFieldOffset, txnId);
             EncodeLong(initialFrame.Content, RequestThreadIdFieldOffset, threadId);
             EncodeLong(initialFrame.Content, RequestTimeoutFieldOffset, timeout);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.TxnId =  DecodeGuid(initialFrame.Content, RequestTxnIdFieldOffset);
-            request.ThreadId =  DecodeLong(initialFrame.Content, RequestThreadIdFieldOffset);
-            request.Timeout =  DecodeLong(initialFrame.Content, RequestTimeoutFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
@@ -108,17 +72,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public IData Response;
         }
 
-        public static ClientMessage EncodeResponse(IData response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -128,5 +81,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
+
     }
 }

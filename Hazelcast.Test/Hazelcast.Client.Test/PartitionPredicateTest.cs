@@ -38,7 +38,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Init()
         {
-            var partitionService = ((HazelcastClientProxy) Client).GetClient().GetClientPartitionService();
+            var partitionService = ClientInternal.PartitionService;
             map = Client.GetMap<object, object>(TestSupport.RandomString());
             
             map.Clear();
@@ -77,7 +77,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestKeySet() 
         {
-            var partitionService = ((HazelcastClientProxy) Client).GetClient().GetClientPartitionService();
+            var partitionService = ClientInternal.PartitionService;
             var keys = map.KeySet(predicate);
             Assert.AreEqual(ItemsPerPartition, keys.Count);
             foreach (var key in keys)
@@ -89,7 +89,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestEntries() 
         {
-            var partitionService = ((HazelcastClientProxy) Client).GetClient().GetClientPartitionService();
+            var partitionService = ClientInternal.PartitionService;
             var entries = map.EntrySet(predicate);
             Assert.AreEqual(ItemsPerPartition, entries.Count);
             foreach (var entry in entries)

@@ -55,6 +55,7 @@ namespace Hazelcast.Client.Spi
             {
                 Monitor.Enter(_lock);
                 _taskSource.SetResult(value);
+                _taskSource.Task.Wait();
                 Notify();
                 Monitor.Exit(_lock);
             }

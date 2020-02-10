@@ -136,7 +136,7 @@ namespace Hazelcast.NearCache.Test
                 }
             }
             // stop client
-            ClientInternal.GetLifecycleService().Terminate();
+            ClientInternal.LifecycleService.Terminate();
 
             // fail after stopping hazelcast instance
             if (msg != null)

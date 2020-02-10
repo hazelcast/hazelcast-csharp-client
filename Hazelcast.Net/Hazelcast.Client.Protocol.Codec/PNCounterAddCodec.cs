@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,77 +51,34 @@ namespace Hazelcast.Client.Protocol.Codec
         public const int ResponseMessageType = 1901057;
         private const int RequestDeltaFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestGetBeforeUpdateFieldOffset = RequestDeltaFieldOffset + LongSizeInBytes;
-        private const int RequestInitialFrameSize = RequestGetBeforeUpdateFieldOffset + BoolSizeInBytes;
-        private const int ResponseValueFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int RequestTargetReplicaUUIDFieldOffset = RequestGetBeforeUpdateFieldOffset + BoolSizeInBytes;
+        private const int RequestInitialFrameSize = RequestTargetReplicaUUIDFieldOffset + GuidSizeInBytes;
+        private const int ResponseValueFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseReplicaCountFieldOffset = ResponseValueFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseReplicaCountFieldOffset + IntSizeInBytes;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// the name of the PNCounter
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// the delta to add to the counter value, can be negative
-            ///</summary>
-            public long Delta;
-
-            /// <summary>
-            /// {@code true} if the operation should return the
-            /// counter value before the addition, {@code false}
-            /// if it should return the value after the addition
-            ///</summary>
-            public bool GetBeforeUpdate;
-
-            /// <summary>
-            /// last observed replica timestamps (vector clock)
-            ///</summary>
-            public IList<KeyValuePair<Guid, long>> ReplicaTimestamps;
-
-            /// <summary>
-            /// the target replica
-            ///</summary>
-            public Hazelcast.IO.Address TargetReplica;
-        }
-
-        public static ClientMessage EncodeRequest(string name, long delta, bool getBeforeUpdate, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, Hazelcast.IO.Address targetReplica)
+        public static ClientMessage EncodeRequest(string name, long delta, bool getBeforeUpdate, ICollection<KeyValuePair<Guid, long>> replicaTimestamps, Guid targetReplicaUUID)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "PNCounter.Add";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame.Content, RequestDeltaFieldOffset, delta);
             EncodeBool(initialFrame.Content, RequestGetBeforeUpdateFieldOffset, getBeforeUpdate);
+            EncodeGuid(initialFrame.Content, RequestTargetReplicaUUIDFieldOffset, targetReplicaUUID);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
-            AddressCodec.Encode(clientMessage, targetReplica);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.Delta =  DecodeLong(initialFrame.Content, RequestDeltaFieldOffset);
-            request.GetBeforeUpdate =  DecodeBool(initialFrame.Content, RequestGetBeforeUpdateFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            request.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
-            request.TargetReplica = AddressCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
         {
 
             /// <summary>
-            /// TODO DOC
+            /// Value of the counter.
             ///</summary>
             public long Value;
 
@@ -131,22 +88,9 @@ namespace Hazelcast.Client.Protocol.Codec
             public IList<KeyValuePair<Guid, long>> ReplicaTimestamps;
 
             /// <summary>
-            /// TODO DOC
+            /// Number of replicas that keep the state of this counter.
             ///</summary>
             public int ReplicaCount;
-        }
-
-        public static ClientMessage EncodeResponse(long @value, IEnumerable<KeyValuePair<Guid, long>> replicaTimestamps, int replicaCount)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeLong(initialFrame.Content, ResponseValueFieldOffset, @value);
-            EncodeInt(initialFrame.Content, ResponseReplicaCountFieldOffset, replicaCount);
-            EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -159,5 +103,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
             return response;
         }
+
     }
 }

@@ -103,26 +103,6 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// While client is trying to connect initially to one of the members in the configured address list,
-        /// all might be not available. Instead of giving up, throwing Exception and stopping client, it will
-        /// attempt to retry as much as connection attempt limit times.
-        /// </summary>
-        /// <returns>number of times to attempt to connect</returns>
-        public virtual int GetConnectionAttemptLimit()
-        {
-            return _connectionAttemptLimit;
-        }
-
-        /// <summary>
-        /// Gets the connection attempt period, in millis, for the next attempt to find a member to connect.
-        /// </summary>
-        /// <returns>connection attempt period in millis</returns>
-        public virtual int GetConnectionAttemptPeriod()
-        {
-            return _connectionAttemptPeriod;
-        }
-
-        /// <summary>
         /// Gets connection timeout.
         /// </summary>
         /// <returns>connection timeout</returns>
@@ -207,34 +187,6 @@ namespace Hazelcast.Config
             return this;
         }
 
-
-        /// <summary>
-        /// While client is trying to connect initially to one of the members in the configured address list,
-        /// all might be not available. Instead of giving up, throwing Exception and stopping client, it will
-        /// attempt to retry as much as connection attempt limit times.
-        /// </summary>
-        /// <param name="connectionAttemptLimit">
-        /// number of times to attempt to connect;
-        /// A zero value means try forever.
-        /// A negative value means default value
-        /// </param>
-        /// <returns><see cref="ClientNetworkConfig"/> for chaining</returns>
-        public virtual ClientNetworkConfig SetConnectionAttemptLimit(int connectionAttemptLimit)
-        {
-            _connectionAttemptLimit = connectionAttemptLimit;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets the connection attempt period, in millis, for the next attempt to find a member to connect..
-        /// </summary>
-        /// <param name="connectionAttemptPeriod">time to wait before another attempt in millis</param>
-        /// <returns><see cref="ClientNetworkConfig"/> for chaining</returns>
-        public virtual ClientNetworkConfig SetConnectionAttemptPeriod(int connectionAttemptPeriod)
-        {
-            _connectionAttemptPeriod = connectionAttemptPeriod;
-            return this;
-        }
 
         /// <summary>
         /// Sets connection timeout

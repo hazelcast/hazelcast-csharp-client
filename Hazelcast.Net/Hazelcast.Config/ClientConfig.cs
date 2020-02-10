@@ -14,11 +14,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Client;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Security;
 using Hazelcast.Util;
+using static Hazelcast.Util.ValidationUtil;
 
 namespace Hazelcast.Config
 {
@@ -38,11 +40,6 @@ namespace Hazelcast.Config
         private ClientSecurityConfig _securityConfig = new ClientSecurityConfig();
 
         /// <summary>
-        /// Default cluster password.
-        /// </summary>
-        public const string DefaultClusterPassword = "dev-pass";
-
-        /// <summary>
         /// Default cluster name.
         /// </summary>
         public const string DefaultClusterName = "dev";
@@ -52,10 +49,6 @@ namespace Hazelcast.Config
         /// </summary>
         private string _clusterName = DefaultClusterName;
 
-        /// <summary>
-        /// The cluster password to connect to.
-        /// </summary>
-        private string _clusterPassword = DefaultClusterPassword;
 
         /// <summary>pool-size for internal ExecutorService which handles responses etc.</summary>
         private int _executorPoolSize = -1;
@@ -72,7 +65,6 @@ namespace Hazelcast.Config
         /// <summary>Used to distribute the operations to multiple Endpoints.</summary>
         private ILoadBalancer _loadBalancer = new RoundRobinLB();
 
-        private IManagedContext _managedContext;
 
         private IDictionary<string, NearCacheConfig> _nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
 
@@ -82,14 +74,15 @@ namespace Hazelcast.Config
         /// </summary>
         private ClientNetworkConfig _networkConfig = new ClientNetworkConfig();
 
-        private IList<ProxyFactoryConfig> _proxyFactoryConfigs = new List<ProxyFactoryConfig>();
 
         private SerializationConfig _serializationConfig = new SerializationConfig();
+        
+        public string InstanceName { get; set; }
 
         /// <summary>
         /// Helper method to Add a new ListenerConfig.
         /// </summary>
-        /// <param name="listenerConfig">ListnerConfig</param>
+        /// <param name="listenerConfig">ListenerConfig</param>
         /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>
         public virtual ClientConfig AddListenerConfig(ListenerConfig listenerConfig)
         {
@@ -121,26 +114,6 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Helper method to Add a new <see cref="ProxyFactoryConfig"/>.
-        /// </summary>
-        /// <param name="proxyFactoryConfig">ProxyFactoryConfig</param>
-        /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>
-        public virtual ClientConfig AddProxyFactoryConfig(ProxyFactoryConfig proxyFactoryConfig)
-        {
-            _proxyFactoryConfigs.Add(proxyFactoryConfig);
-            return this;
-        }
-
-        /// <summary>
-        /// Gets <see cref="ICredentials"/>.
-        /// </summary>
-        /// <returns>Credentials</returns>
-        public virtual ICredentials GetCredentials()
-        {
-            return _securityConfig.GetCredentials();
-        }
-
-        /// <summary>
         /// Gets pool-size for internal ExecutorService which handles responses etc.
         /// </summary>
         public virtual int GetExecutorPoolSize()
@@ -156,15 +129,19 @@ namespace Hazelcast.Config
         {
             return _clusterName;
         }
-
-        /// <summary>
-        /// Gets the password of the cluster.
-        /// </summary>
-        /// <returns>The current cluster password.</returns>
-        public string GetClusterPassword()
+        
+        public ConnectionStrategyConfig GetConnectionStrategyConfig() 
         {
-            return _clusterPassword;
+            return _connectionStrategyConfig;
         }
+
+        public ClientConfig SetConnectionStrategyConfig(ConnectionStrategyConfig connectionStrategyConfig)
+        {
+            IsNotNull(connectionStrategyConfig, "connectionStrategyConfig");
+            _connectionStrategyConfig = connectionStrategyConfig;
+            return this;
+        }
+
 
         /// <summary>
         /// Gets list of configured <see cref="ListenerConfig"/>.
@@ -173,15 +150,6 @@ namespace Hazelcast.Config
         public virtual IList<ListenerConfig> GetListenerConfigs()
         {
             return _listenerConfigs;
-        }
-
-        /// <summary>
-        /// Gets <see cref="IManagedContext"/>.
-        /// </summary>
-        /// <returns><see cref="IManagedContext"/></returns>
-        public virtual IManagedContext GetManagedContext()
-        {
-            return _managedContext;
         }
 
         /// <summary>
@@ -210,15 +178,6 @@ namespace Hazelcast.Config
         public virtual ClientNetworkConfig GetNetworkConfig()
         {
             return _networkConfig;
-        }
-
-        /// <summary>
-        /// Gets <see cref="ProxyFactoryConfig"/>.
-        /// </summary>
-        /// <returns><see cref="ProxyFactoryConfig"/></returns>
-        public virtual IList<ProxyFactoryConfig> GetProxyFactoryConfigs()
-        {
-            return _proxyFactoryConfigs;
         }
 
         /// <summary>
@@ -251,17 +210,6 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Sets <see cref="ICredentials"/> object.
-        /// </summary>
-        /// <param name="credentials"><see cref="ICredentials"/> to be set</param>
-        /// <returns><see cref="ClientConfig"/> for chaining</returns>
-        public virtual ClientConfig SetCredentials(ICredentials credentials)
-        {
-            _securityConfig.SetCredentials(credentials);
-            return this;
-        }
-
-        /// <summary>
         /// Sets pool-size for internal ExecutorService which handles responses etc.
         /// </summary>
         /// <param name="executorPoolSize">executor pool size</param>
@@ -282,17 +230,6 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Sets the password of the cluster.
-        /// </summary>
-        /// <param name="password">The new password.</param>
-        /// <returns>The configuration object.</returns>
-        public ClientConfig SetClusterPassword(string password)
-        {
-            _clusterPassword = password ?? throw new ArgumentNullException(nameof(password));
-            return this;
-        }
-
-        /// <summary>
         /// Sets <see cref="ListenerConfig"/> object.
         /// </summary>
         /// <param name="listenerConfigs"><see cref="ListenerConfig"/> to be set</param>
@@ -300,17 +237,6 @@ namespace Hazelcast.Config
         public virtual ClientConfig SetListenerConfigs(IList<ListenerConfig> listenerConfigs)
         {
             _listenerConfigs = listenerConfigs;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets <see cref="IManagedContext"/> object.
-        /// </summary>
-        /// <param name="managedContext"><see cref="IManagedContext"/></param>
-        /// <returns><see cref="ClientConfig"/> for chaining</returns>
-        public virtual ClientConfig SetManagedContext(IManagedContext managedContext)
-        {
-            _managedContext = managedContext;
             return this;
         }
 
@@ -337,17 +263,6 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Sets <see cref="ProxyFactoryConfig"/>.
-        /// </summary>
-        /// <param name="proxyFactoryConfigs"><see cref="ProxyFactoryConfig"/></param>
-        /// <returns><see cref="ClientConfig"/> for chaining</returns>
-        public virtual ClientConfig SetProxyFactoryConfigs(IList<ProxyFactoryConfig> proxyFactoryConfigs)
-        {
-            _proxyFactoryConfigs = proxyFactoryConfigs;
-            return this;
-        }
-
-        /// <summary>
         /// Sets <see cref="SerializationConfig"/>.
         /// </summary>
         /// <param name="serializationConfig"><see cref="SerializationConfig"/></param>
@@ -367,6 +282,27 @@ namespace Hazelcast.Config
         {
             _securityConfig = securityConfig;
             return this;
+        }
+
+        public ClientConfig AddLabel(string label)
+        {
+            IsNotNull(label, "labels");        
+            Labels.Add(label);
+            return this;
+        }
+
+        private readonly ISet<string> _labels = new HashSet<string>();
+        private ConnectionStrategyConfig _connectionStrategyConfig = new ConnectionStrategyConfig();
+
+        public ISet<string> Labels
+        {
+            get => _labels;
+            set
+            {
+                IsNotNull(value, "labels");
+                _labels.Clear();
+                value.All(_labels.Add);
+            }
         }
 
         internal virtual ILoadBalancer GetLoadBalancer()

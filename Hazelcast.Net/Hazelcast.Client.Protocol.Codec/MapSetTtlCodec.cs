@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,58 +49,28 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapSetTtlCodec
     {
-        //hex: 0x014600
-        public const int RequestMessageType = 83456;
-        //hex: 0x014601
-        public const int ResponseMessageType = 83457;
+        //hex: 0x014300
+        public const int RequestMessageType = 82688;
+        //hex: 0x014301
+        public const int ResponseMessageType = 82689;
         private const int RequestTtlFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestTtlFieldOffset + LongSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Name of the map
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// Key for the map entry
-            ///</summary>
-            public IData Key;
-
-            /// <summary>
-            /// The duration in milliseconds after which this entry shall be deleted. O means infinite.
-            ///</summary>
-            public long Ttl;
-        }
 
         public static ClientMessage EncodeRequest(string name, IData key, long ttl)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.SetTtl";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame.Content, RequestTtlFieldOffset, ttl);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.Ttl =  DecodeLong(initialFrame.Content, RequestTtlFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
@@ -112,17 +82,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public bool Response;
         }
 
-        public static ClientMessage EncodeResponse(bool response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeBool(initialFrame.Content, ResponseResponseFieldOffset, response);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -131,5 +90,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = DecodeBool(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
         }
+
     }
 }

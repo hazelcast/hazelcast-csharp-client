@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Client.Connection;
+using Hazelcast.Client.Network;
 
 namespace Hazelcast.Config
 {

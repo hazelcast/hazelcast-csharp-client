@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
+using Hazelcast.Transaction;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -29,7 +30,7 @@ namespace Hazelcast.Client.Proxy
         {
             var keyData = ToData(key);
             var valueData = ToData(value);
-            var request = TransactionalMultiMapPutCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+            var request = TransactionalMultiMapPutCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId(),
                 keyData, valueData);
 
             return Invoke(request, m => TransactionalMultiMapPutCodec.DecodeResponse(m).Response);
@@ -38,7 +39,7 @@ namespace Hazelcast.Client.Proxy
         public virtual ICollection<TValue> Get(TKey key)
         {
             var keyData = ToData(key);
-            var request = TransactionalMultiMapGetCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+            var request = TransactionalMultiMapGetCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId(),
                 keyData);
             var list = Invoke(request, m => TransactionalMultiMapGetCodec.DecodeResponse(m).Response);
             return ToList<TValue>(list);
@@ -48,7 +49,7 @@ namespace Hazelcast.Client.Proxy
         {
             var keyData = ToData(key);
             var valueData = ToData(value);
-            var request = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(GetName(), GetTransactionId(),
+            var request = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(Name, GetTransactionId(),
                 GetThreadId(),
                 keyData, valueData);
 
@@ -58,7 +59,7 @@ namespace Hazelcast.Client.Proxy
         public virtual ICollection<TValue> Remove(object key)
         {
             var keyData = ToData(key);
-            var request = TransactionalMultiMapRemoveCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(),
+            var request = TransactionalMultiMapRemoveCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId(),
                 keyData);
 
             var result = Invoke(request, m => TransactionalMultiMapRemoveCodec.DecodeResponse(m).Response);
@@ -68,7 +69,7 @@ namespace Hazelcast.Client.Proxy
         public virtual int ValueCount(TKey key)
         {
             var keyData = ToData(key);
-            var request = TransactionalMultiMapValueCountCodec.EncodeRequest(GetName(), GetTransactionId(),
+            var request = TransactionalMultiMapValueCountCodec.EncodeRequest(Name, GetTransactionId(),
                 GetThreadId(),
                 keyData);
 
@@ -77,13 +78,13 @@ namespace Hazelcast.Client.Proxy
 
         public virtual int Size()
         {
-            var request = TransactionalMultiMapSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
+            var request = TransactionalMultiMapSizeCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId());
             return Invoke(request, m => TransactionalMultiMapSizeCodec.DecodeResponse(m).Response);
         }
 
-        public override string GetServiceName()
+        public override string ServiceName
         {
-            return ServiceNames.MultiMap;
+            get { return ServiceNames.MultiMap; }
         }
 
         internal override void OnDestroy()

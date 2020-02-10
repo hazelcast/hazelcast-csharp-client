@@ -26,12 +26,12 @@ namespace Hazelcast.Client.Proxy
 {
     internal abstract class AbstractClientCollectionProxy<T> : ClientProxy, IHCollection<T>
     {
-        protected AbstractClientCollectionProxy(string serviceName, string objectName) : base(serviceName, objectName)
+        protected AbstractClientCollectionProxy(string serviceName, string objectName, HazelcastClient client) : base(serviceName, objectName, client)
         {
         }
 
-        public abstract string AddItemListener(IItemListener<T> listener, bool includeValue);
-        public abstract bool RemoveItemListener(string registrationId);
+        public abstract Guid AddItemListener(IItemListener<T> listener, bool includeValue);
+        public abstract bool RemoveItemListener(Guid registrationId);
         public abstract int Size();
         public abstract bool IsEmpty();
         public abstract bool ContainsAll<TE>(ICollection<TE> c);
@@ -118,8 +118,8 @@ namespace Hazelcast.Client.Proxy
             var item = includeValue
                 ? ToObject<T>(itemData)
                 : default(T);
-            var member = GetContext().GetClusterService().GetMember(uuid);
-            var itemEvent = new ItemEvent<T>(GetName(), eventType, item, member);
+            var member = Client.ClusterService.GetMember(uuid);
+            var itemEvent = new ItemEvent<T>(Name, eventType, item, member);
             if (eventType == ItemEventType.Added)
             {
                 listener.ItemAdded(itemEvent);

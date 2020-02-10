@@ -17,7 +17,7 @@ using Hazelcast.Net.Ext;
 
 namespace Hazelcast.Util
 {
-    internal class RoundRobinLB : AbstractLoadBalancer
+    public class RoundRobinLB : AbstractLoadBalancer
     {
         private readonly AtomicInteger _index = new AtomicInteger(0);
 

@@ -24,40 +24,32 @@ using Hazelcast.IO.Serialization;
 using Hazelcast.Partition.Strategy;
 using Hazelcast.Util;
 
-#pragma warning disable CS1591
 namespace Hazelcast.Client.Spi
 {
     internal abstract class ClientProxy : IDistributedObject
     {
-        private readonly string _objectName;
-        private readonly string _serviceName;
-        private volatile ClientContext _context;
+        private readonly HazelcastClient _client;
 
 
-        protected ClientProxy(string serviceName, string objectName)
+        protected ClientProxy(string serviceName, string objectName, HazelcastClient client)
         {
-            _serviceName = serviceName;
-            _objectName = objectName;
+            _client = client;
+            ServiceName = serviceName;
+            Name = objectName;
         }
 
         public string GetPartitionKey()
         {
-            return StringPartitioningStrategy.GetPartitionKey(GetName());
+            return StringPartitioningStrategy.GetPartitionKey(Name);
         }
 
-        public string GetName()
-        {
-            return _objectName;
-        }
+        public string Name { get; }
 
-        public string GetServiceName()
-        {
-            return _serviceName;
-        }
+        public string ServiceName { get; }
 
         protected virtual Task<T> InvokeAsync<T>(ClientMessage request, object key, Func<ClientMessage, T> decodeResponse)
         {
-            var future = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
+            var future = Client.InvocationService.InvokeOnKeyOwner(request, key);
             var continueTask = future.ToTask().ContinueWith(t =>
             {
                 if (t.IsFaulted)
@@ -73,29 +65,31 @@ namespace Hazelcast.Client.Spi
 
         protected virtual IData ToData(object Object)
         {
-            return GetContext().GetSerializationService().ToData(Object);
+            return Client.SerializationService.ToData(Object);
         }
 
         protected virtual T ToObject<T>(object Object)
         {
-            return GetContext().GetSerializationService().ToObject<T>(Object);
+            return Client.SerializationService.ToObject<T>(Object);
         }
 
-        protected ClientContext GetContext()
+        protected HazelcastClient Client
         {
-            var ctx = _context;
-            if (ctx == null)
+            get
             {
-                throw new HazelcastInstanceNotActiveException();
+                var ctx = _client;
+                if (ctx == null)
+                {
+                    throw new HazelcastClientNotActiveException();
+                }
+                return ctx;
             }
-
-            return ctx;
         }
 
-        internal void SetContext(ClientContext context)
-        {
-            _context = context;
-        }
+        // internal void SetContext(HazelcastClient client)
+        // {
+        //     _client = client;
+        // }
 
         protected virtual ISet<KeyValuePair<TKey, TValue>> ToEntrySet<TKey, TValue>(
             ICollection<KeyValuePair<IData, IData>> entryCollection)
@@ -176,11 +170,11 @@ namespace Hazelcast.Client.Spi
             return valueSet;
         }
 
-        protected ClientMessage InvokeOnTarget(ClientMessage request, Address target)
+        protected ClientMessage InvokeOnTarget(ClientMessage request, Guid target)
         {
             try
             {
-                var task = GetContext().GetInvocationService().InvokeOnTarget(request, target);
+                var task = Client.InvocationService.InvokeOnTarget(request, target);
                 return ThreadUtil.GetResult(task);
             }
             catch (Exception e)
@@ -193,7 +187,7 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                var task = GetContext().GetInvocationService().InvokeOnKeyOwner(request, key);
+                var task = Client.InvocationService.InvokeOnKeyOwner(request, key);
                 return ThreadUtil.GetResult(task);
             }
             catch (Exception e)
@@ -218,7 +212,7 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                var task = GetContext().GetInvocationService().InvokeOnPartition(request, partitionId);
+                var task = Client.InvocationService.InvokeOnPartitionOwner(request, partitionId);
                 return ThreadUtil.GetResult(task);
             }
             catch (Exception e)
@@ -231,7 +225,7 @@ namespace Hazelcast.Client.Spi
         {
             try
             {
-                var task = GetContext().GetInvocationService().InvokeOnRandomTarget(request);
+                var task = Client.InvocationService.InvokeOnRandomTarget(request);
                 return ThreadUtil.GetResult(task);
             }
             catch (Exception e)
@@ -246,43 +240,49 @@ namespace Hazelcast.Client.Spi
             return decodeResponse(response);
         }
 
-        protected virtual string RegisterListener(ClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
+        protected virtual Guid RegisterListener(ClientMessage registrationMessage, DecodeRegisterResponse responseDecoder,
             EncodeDeregisterRequest encodeDeregisterRequest, DistributedEventHandler eventHandler)
         {
-            return _context.GetListenerService()
+            return Client.ListenerService
                 .RegisterListener(registrationMessage, responseDecoder, encodeDeregisterRequest, eventHandler);
         }
 
-        protected virtual bool DeregisterListener(string userRegistrationId)
+        protected virtual bool DeregisterListener(Guid userRegistrationId)
         {
-            return _context.GetListenerService().DeregisterListener(userRegistrationId);
+            return Client.ListenerService.DeregisterListener(userRegistrationId);
         }
 
         protected virtual bool IsSmart()
         {
-            return _context.GetClientConfig().GetNetworkConfig().IsSmartRouting();
+            return Client.ClientConfig.GetNetworkConfig().IsSmartRouting();
         }
 
-        public void Destroy()
+        public void Destroy() 
         {
-            OnDestroy();
-            _context.RemoveProxy(this);
-            var request = ClientDestroyProxyCodec.EncodeRequest(_objectName, GetServiceName());
-            Invoke(request);
-            PostDestroy();
-            _context = null;
+            _client.ProxyManager.DestroyProxy(this);
         }
-
-        internal void Init()
+        public void DestroyLocally()
         {
-            OnInitialize();
+            if (PreDestroy()) {
+                try {
+                    OnDestroy();
+                } finally {
+                    PostDestroy();
+                }
+            }
         }
 
-        protected virtual void OnInitialize()
+        public void DestroyRemotely()
+        {
+            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(Name, ServiceName);
+            Invoke(clientMessage);
+        }
+
+        protected internal virtual void OnInitialize()
         {
         }
 
-        protected virtual void OnDestroy()
+        protected internal virtual void OnDestroy()
         {
         }
 
@@ -290,7 +290,11 @@ namespace Hazelcast.Client.Spi
         {
         }
 
-        protected virtual void PostDestroy()
+        protected internal virtual bool PreDestroy() {
+            return true;
+        }
+
+        protected internal virtual void PostDestroy()
         {
         }
     }

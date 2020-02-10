@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,48 +33,31 @@ namespace Hazelcast.Client.Protocol.Codec
     // and regenerate it.
 
     /// <summary>
-    /// TODO DOC
+    /// Removes the specified distributed object listener. If there is no such listener added before, this call does no
+    /// change in the cluster and returns false.
     ///</summary>
     internal static class ClientRemoveDistributedObjectListenerCodec
     {
-        //hex: 0x000C00
-        public const int RequestMessageType = 3072;
-        //hex: 0x000C01
-        public const int ResponseMessageType = 3073;
+        //hex: 0x000A00
+        public const int RequestMessageType = 2560;
+        //hex: 0x000A01
+        public const int ResponseMessageType = 2561;
         private const int RequestRegistrationIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + GuidSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// The id assigned during the registration.
-            ///</summary>
-            public Guid RegistrationId;
-        }
 
         public static ClientMessage EncodeRequest(Guid registrationId)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Client.RemoveDistributedObjectListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeGuid(initialFrame.Content, RequestRegistrationIdFieldOffset, registrationId);
             clientMessage.Add(initialFrame);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.RegistrationId =  DecodeGuid(initialFrame.Content, RequestRegistrationIdFieldOffset);
-            return request;
         }
 
         public class ResponseParameters
@@ -86,17 +69,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public bool Response;
         }
 
-        public static ClientMessage EncodeResponse(bool response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeBool(initialFrame.Content, ResponseResponseFieldOffset, response);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -105,5 +77,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = DecodeBool(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
         }
+
     }
 }

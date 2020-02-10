@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,57 +39,28 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientDeployClassesCodec
     {
-        //hex: 0x000F00
-        public const int RequestMessageType = 3840;
-        //hex: 0x000F01
-        public const int ResponseMessageType = 3841;
+        //hex: 0x000D00
+        public const int RequestMessageType = 3328;
+        //hex: 0x000D01
+        public const int ResponseMessageType = 3329;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// list of class definitions
-            ///</summary>
-            public IList<KeyValuePair<string, byte[]>> ClassDefinitions;
-        }
-
-        public static ClientMessage EncodeRequest(IEnumerable<KeyValuePair<string, byte[]>> classDefinitions)
+        public static ClientMessage EncodeRequest(ICollection<KeyValuePair<string, byte[]>> classDefinitions)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Client.DeployClasses";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             EntryListCodec.Encode(clientMessage, classDefinitions, StringCodec.Encode, ByteArrayCodec.Encode);
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            //empty initial frame
-            iterator.Next();
-            request.ClassDefinitions = EntryListCodec.Decode(iterator, StringCodec.Decode, ByteArrayCodec.Decode);
-            return request;
-        }
-
         public class ResponseParameters
         {
-        }
-
-        public static ClientMessage EncodeResponse()
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -100,5 +71,6 @@ namespace Hazelcast.Client.Protocol.Codec
             iterator.Next();
             return response;
         }
+
     }
 }

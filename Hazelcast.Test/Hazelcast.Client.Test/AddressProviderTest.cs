@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using System.Linq;
-using Hazelcast.Client.Connection;
+using Hazelcast.Client.Network;
 using Hazelcast.Config;
 using Hazelcast.IO;
 using NUnit.Framework;
@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Test
             cfg.GetNetworkConfig().AddAddress("10.0.0.1:5701", "10.0.0.2:5702", "10.0.0.3:5703");
             cfg.GetNetworkConfig().GetCloudConfig().SetEnabled(true).SetDiscoveryToken("TOKEN");
 
-            Assert.Catch<ConfigurationException>(() =>
+            Assert.Catch<InvalidConfigurationException>(() =>
             {
                 var addressProvider = new AddressProvider(cfg);
                 addressProvider.GetAddresses();

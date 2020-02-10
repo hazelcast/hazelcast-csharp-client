@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Transaction;
+
 namespace Hazelcast.Core
 {
     /// <summary>Base interface for all distributed objects.</summary>
@@ -22,7 +24,7 @@ namespace Hazelcast.Core
     /// <seealso cref="ITopic{E}">ITopic&lt;E&gt;</seealso>
     /// <seealso cref="ILock">ILock</seealso>
     /// <seealso cref="IExecutorService">IExecutorService</seealso>
-    /// <seealso cref="ITransactionalMap{K,V}">ITransactionalMap&lt;K, V&gt;</seealso>
+    /// <seealso cref="ITransactionalMap{TKey,TValue}">ITransactionalMap&lt;K, V&gt;</seealso>
     /// <seealso cref="ITransactionalQueue{E}">ITransactionalQueue&lt;E&gt;</seealso>
     /// <seealso cref="ITransactionalMultiMap{K,V}">ITransactionalMultiMap&lt;K, V&gt;</seealso>
     public interface IDistributedObject
@@ -36,8 +38,8 @@ namespace Hazelcast.Core
 
         /// <summary>Returns the unique name for this IDistributedObject.</summary>
         /// <remarks>Returns the unique name for this IDistributedObject. Returned value will never be null.</remarks>
-        /// <returns>the unique name for this object.</returns>
-        string GetName();
+        /// <value>the unique name for this object.</value>
+        string Name { get; }
 
         /// <summary>Returns the key of partition this IDistributedObject is assigned to.</summary>
         /// <remarks>
@@ -50,6 +52,6 @@ namespace Hazelcast.Core
 
         /// <summary>Returns the service name for this object.</summary>
         /// <remarks>Returns the service name for this object.</remarks>
-        string GetServiceName();
+        string ServiceName { get; }
     }
 }

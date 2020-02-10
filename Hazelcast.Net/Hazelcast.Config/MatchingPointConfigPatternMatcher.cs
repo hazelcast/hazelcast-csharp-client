@@ -18,7 +18,7 @@ namespace Hazelcast.Config
 {
     internal class MatchingPointConfigPatternMatcher : IConfigPatternMatcher
     {
-        /// <exception cref="Hazelcast.Config.ConfigurationException" />
+        /// <exception cref="InvalidConfigurationException" />
         public virtual string Matches(IEnumerable<string> configPatterns, string itemName)
         {
             string candidate = null;
@@ -36,7 +36,8 @@ namespace Hazelcast.Config
             }
             if (duplicate != null)
             {
-                throw new ConfigurationException(itemName, candidate, duplicate);
+                throw new InvalidConfigurationException(
+                    $"Found ambiguous configurations for item \"{itemName}\": \"{candidate}\" vs. \"{duplicate}\"\nPlease specify your configuration.");
             }
             return candidate;
         }

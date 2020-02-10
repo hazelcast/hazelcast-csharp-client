@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,55 +33,32 @@ namespace Hazelcast.Client.Protocol.Codec
     // and regenerate it.
 
     /// <summary>
-    /// Removes the specified map partition lost listener. Returns silently if there is no such listener added before.
+    /// Removes the specified map partition lost listener. If there is no such listener added before, this call does no
+    /// change in the cluster and returns false.
     ///</summary>
     internal static class MapRemovePartitionLostListenerCodec
     {
-        //hex: 0x011D00
-        public const int RequestMessageType = 72960;
-        //hex: 0x011D01
-        public const int ResponseMessageType = 72961;
+        //hex: 0x011C00
+        public const int RequestMessageType = 72704;
+        //hex: 0x011C01
+        public const int ResponseMessageType = 72705;
         private const int RequestRegistrationIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + GuidSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// name of map
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// id of register
-            ///</summary>
-            public Guid RegistrationId;
-        }
 
         public static ClientMessage EncodeRequest(string name, Guid registrationId)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.RemovePartitionLostListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeGuid(initialFrame.Content, RequestRegistrationIdFieldOffset, registrationId);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.RegistrationId =  DecodeGuid(initialFrame.Content, RequestRegistrationIdFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
@@ -93,17 +70,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public bool Response;
         }
 
-        public static ClientMessage EncodeResponse(bool response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeBool(initialFrame.Content, ResponseResponseFieldOffset, response);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -112,5 +78,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = DecodeBool(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
         }
+
     }
 }

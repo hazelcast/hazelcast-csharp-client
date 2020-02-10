@@ -52,7 +52,7 @@ namespace Hazelcast.NearCache
         private readonly long _timeToLiveMillis;
 
         private long _lastCleanup;
-        protected string RegistrationId;
+        protected Guid RegistrationId;
 
         protected BaseNearCache(string name, HazelcastClient client, NearCacheConfig nearCacheConfig)
         {
@@ -104,7 +104,7 @@ namespace Hazelcast.NearCache
         {
             if (RegistrationId != null)
             {
-                Client.GetListenerService().DeregisterListener(RegistrationId);
+                Client.ListenerService.DeregisterListener(RegistrationId);
             }
             _records.Clear();
         }
@@ -113,8 +113,7 @@ namespace Hazelcast.NearCache
 
         public void Invalidate(IData key)
         {
-            Lazy<NearCacheRecord> removed;
-            if (_records.TryRemove(key, out removed))
+            if (_records.TryRemove(key, out _))
             {
                 _stat.DecrementOwnedEntryCount();
             }
@@ -217,8 +216,7 @@ namespace Hazelcast.NearCache
         {
             FireTtlCleanup();
             value = null;
-            Lazy<NearCacheRecord> lazyRecord;
-            if (_records.TryGetValue(keyData, out lazyRecord) && lazyRecord != null)
+            if (_records.TryGetValue(keyData, out var lazyRecord) && lazyRecord != null)
             {
                 var record = lazyRecord.Value;
                 if (IsStaleRead(keyData, record) || record.Value == null)
@@ -255,8 +253,8 @@ namespace Hazelcast.NearCache
         private object ConvertToRecordValue(object Object)
         {
             object value = _inMemoryFormat.Equals(InMemoryFormat.Binary)
-                ? Client.GetSerializationService().ToData(Object)
-                : Client.GetSerializationService().ToObject<object>(Object);
+                ? Client.SerializationService.ToData(Object)
+                : Client.SerializationService.ToObject<object>(Object);
             return value;
         }
 
@@ -267,7 +265,7 @@ namespace Hazelcast.NearCache
             {
                 try
                 {
-                    Client.GetClientExecutionService().Submit(FireEvictCacheFunc);
+                    Client.ExecutionService.Submit(FireEvictCacheFunc);
                 }
                 catch (Exception e)
                 {
@@ -320,7 +318,7 @@ namespace Hazelcast.NearCache
             {
                 try
                 {
-                    Client.GetClientExecutionService().Submit(FireTtlCleanupFunc);
+                    Client.ExecutionService.Submit(FireTtlCleanupFunc);
                 }
                 catch (Exception e)
                 {

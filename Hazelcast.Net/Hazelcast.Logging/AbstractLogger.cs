@@ -39,10 +39,7 @@ namespace Hazelcast.Logging
             Log(LogLevel.Finest, thrown.Message, thrown);
         }
 
-        public virtual bool IsFinestEnabled()
-        {
-            return IsLoggable(LogLevel.Finest);
-        }
+        public virtual bool IsFinestEnabled => IsLoggable(LogLevel.Finest);
 
         public virtual void Info(string message)
         {
@@ -84,6 +81,6 @@ namespace Hazelcast.Logging
         public abstract void Log(LogLevel arg1, string arg2);
 
         public abstract void Log(LogLevel arg1, string arg2, Exception arg3);
-        public abstract LogLevel GetLevel();
+        public abstract LogLevel LogLevel { get; }
     }
 }

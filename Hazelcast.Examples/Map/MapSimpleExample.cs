@@ -20,13 +20,13 @@ namespace Hazelcast.Examples.Map
 {
     internal class MapSimpleExample
     {
-        private static void Run(string[] args)
+        public static void Run(string[] args)
         {
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
             var config = new ClientConfig();
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
+            config.GetNetworkConfig().AddAddress("192.168.1.200");
             var client = HazelcastClient.NewHazelcastClient(config);
 
             var map = client.GetMap<string, string>("simple-example");

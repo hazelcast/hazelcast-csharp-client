@@ -17,19 +17,13 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Client
 {
-    /// <summary>
-    ///     <see cref="ILoadBalancer">ILoadBalancer</see>
-    ///     allows you to send operations to one of a number of endpoints(Members).
-    ///     It is up to the implementation to use different load balancing policies. If IClient is
-    ///     <see cref="ClientNetworkConfig.SetSmartRouting">is in smart routing mode</see>
-    ///     ,
-    ///     only the operations that are not key based will be router to the endpoint returned by the Load Balancer.
-    ///     If it is not
-    ///     <see cref="ClientNetworkConfig.SetSmartRouting">in smart routing mode</see>
-    ///     ,
-    ///     <see cref="ILoadBalancer">ILoadBalancer</see>
-    ///     will not be used.
-    /// </summary>
+    /// <summary>ILoadBalancer allows you to send operations to one of a number of Members.</summary>
+    /// <remarks>
+    /// It is up to the implementation to use different load balancing policies.
+    /// If IClient is in smart routing mode, only the operations that are not key based will be router to the member returned by
+    /// the Load Balancer.
+    /// If it is not in smart routing mode ILoadBalancer will not be used.
+    /// </remarks>
     public interface ILoadBalancer
     {
         /// <summary>

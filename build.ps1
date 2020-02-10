@@ -1,7 +1,7 @@
 param(
     [switch]$enterprise = $false,
     [switch]$netcore =  $false,
-    [string]$serverVersion = $(throw "-serverVersion is required."),
+    [string]$serverVersion = "4.0",
     [switch]$coverage = $false
 )
 
@@ -9,7 +9,7 @@ $hazelcastTestVersion=$serverVersion
 $hazelcastVersion=$serverVersion
 $hazelcastEnterpriseVersion=$serverVersion
 $hazelcastEnterpriseTestVersion=$serverVersion
-$hazelcastRCVersion="0.5-SNAPSHOT"
+$hazelcastRCVersion="0.6-SNAPSHOT"
 $snapshotRepo="https://oss.sonatype.org/content/repositories/snapshots"
 $releaseRepo="http://repo1.maven.apache.org/maven2"
 $enterpriseReleaseRepo="https://repository.hazelcast.com/release/"
@@ -100,9 +100,9 @@ if($testCategory.Length -gt 0) {
 }
 
 if (!$netcore) {
-	$nunitArgs += "--framework=v4.0"
+	$nunitArgs += "--framework=v4.5"
 	if($coverage) {
-		$dotCoverCmd=".\packages\JetBrains.dotCover.CommandLineTools.2019.1.2\tools\dotCover.exe"
+		$dotCoverCmd=".\packages\JetBrains.dotCover.CommandLineTools.2019.3.1\tools\dotCover.exe"
 		$dotCoverArgs=@("cover", "/Filters=-:Hazelcast.Test", "/TargetWorkingDir=.", "/Output=Coverage\index.html", "/ReportType=HTML", "/TargetExecutable=${nunitConsolePath}", "/TargetArguments=${nunitArgs}")
 		Write-Host "$dotCoverCmd" $dotCoverArgs
 		& "$dotCoverCmd" $dotCoverArgs

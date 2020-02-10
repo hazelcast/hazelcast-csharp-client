@@ -12,63 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Configuration;
-using Hazelcast.Config;
-using Hazelcast.Util;
-using ConfigurationException = Hazelcast.Config.ConfigurationException;
 
 namespace Hazelcast.Security
 {
     public class DefaultCredentialsFactory : ICredentialsFactory
     {
-        private readonly ICredentials credentials;
+        private static readonly ICredentials Credentials = new UsernamePasswordCredentials {Name = null, Password = null};
 
-        public DefaultCredentialsFactory(ClientSecurityConfig securityConfig, ClientConfig config)
-        {
-            credentials = InitCredentials(securityConfig, config);
-        }
-
-        private ICredentials InitCredentials(ClientSecurityConfig securityConfig, ClientConfig config)
-        {
-            var credentials = securityConfig.GetCredentials();
-            if (credentials == null)
-            {
-                var credentialsClassname = securityConfig.GetCredentialsClassName();
-                if (credentialsClassname != null)
-                {
-                    try
-                    {
-                        var type = Type.GetType(credentialsClassname, true, false);
-                        if (type != null)
-                        {
-                            credentials = Activator.CreateInstance(type) as ICredentials;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        throw ExceptionUtil.Rethrow(e);
-                    }
-                }
-            }
-            if (credentials == null)
-            {
-                credentials = new UsernamePasswordCredentials(null, null);
-            }
-            return credentials;
-        }
-
-        public void Configure(ClientConfig config, IDictionary<string, string> properties)
+        public void Init(IDictionary<string, string> properties)
         {
         }
 
         public ICredentials NewCredentials()
         {
-            return credentials;
+            return Credentials;
         }
 
-        public void Destroy()
+        public void Dispose()
         {
         }
     }

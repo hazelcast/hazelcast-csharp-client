@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,73 +35,41 @@ namespace Hazelcast.Client.Protocol.Codec
 
     /// <summary>
     /// Adds listener to map. This listener will be used to listen near cache invalidation events.
-    /// Eventually consistent client near caches should use this method to add invalidation listeners
-    /// instead of {@link #addNearCacheEntryListener(String, int, boolean)}
     ///</summary>
     internal static class MapAddNearCacheInvalidationListenerCodec
     {
-        //hex: 0x014200
-        public const int RequestMessageType = 82432;
-        //hex: 0x014201
-        public const int ResponseMessageType = 82433;
+        //hex: 0x013F00
+        public const int RequestMessageType = 81664;
+        //hex: 0x013F01
+        public const int ResponseMessageType = 81665;
         private const int RequestListenerFlagsFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestLocalOnlyFieldOffset = RequestListenerFlagsFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
         private const int EventIMapInvalidationSourceUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int EventIMapInvalidationPartitionUuidFieldOffset = EventIMapInvalidationSourceUuidFieldOffset + GuidSizeInBytes;
         private const int EventIMapInvalidationSequenceFieldOffset = EventIMapInvalidationPartitionUuidFieldOffset + GuidSizeInBytes;
         private const int EventIMapInvalidationInitialFrameSize = EventIMapInvalidationSequenceFieldOffset + LongSizeInBytes;
-        // hex: 0x014202
-        private const int EventIMapInvalidationMessageType = 82434;
+        // hex: 0x013F02
+        private const int EventIMapInvalidationMessageType = 81666;
         private const int EventIMapBatchInvalidationInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        // hex: 0x014203
-        private const int EventIMapBatchInvalidationMessageType = 82435;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// name of the map
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// flags of enabled listeners.
-            ///</summary>
-            public int ListenerFlags;
-
-            /// <summary>
-            /// if true fires events that originated from this node only, otherwise fires all events
-            ///</summary>
-            public bool LocalOnly;
-        }
+        // hex: 0x013F03
+        private const int EventIMapBatchInvalidationMessageType = 81667;
 
         public static ClientMessage EncodeRequest(string name, int listenerFlags, bool localOnly)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.AddNearCacheInvalidationListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame.Content, RequestListenerFlagsFieldOffset, listenerFlags);
             EncodeBool(initialFrame.Content, RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.ListenerFlags =  DecodeInt(initialFrame.Content, RequestListenerFlagsFieldOffset);
-            request.LocalOnly =  DecodeBool(initialFrame.Content, RequestLocalOnlyFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
@@ -113,17 +81,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public Guid Response;
         }
 
-        public static ClientMessage EncodeResponse(Guid response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeGuid(initialFrame.Content, ResponseResponseFieldOffset, response);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -131,34 +88,6 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             response.Response = DecodeGuid(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
-        }
-
-        public static ClientMessage EncodeIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[EventIMapInvalidationInitialFrameSize], UnfragmentedMessage);
-            initialFrame.Flags |= IsEventFlag;
-            EncodeInt(initialFrame.Content, TypeFieldOffset, EventIMapInvalidationMessageType);
-            EncodeGuid(initialFrame.Content, EventIMapInvalidationSourceUuidFieldOffset, sourceUuid);
-            EncodeGuid(initialFrame.Content, EventIMapInvalidationPartitionUuidFieldOffset, partitionUuid);
-            EncodeLong(initialFrame.Content, EventIMapInvalidationSequenceFieldOffset, sequence);
-            clientMessage.Add(initialFrame);
-            CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
-            return clientMessage;
-        }
-
-        public static ClientMessage EncodeIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids, IEnumerable<long> sequences)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[EventIMapBatchInvalidationInitialFrameSize], UnfragmentedMessage);
-            initialFrame.Flags |= IsEventFlag;
-            EncodeInt(initialFrame.Content, TypeFieldOffset, EventIMapBatchInvalidationMessageType);
-            clientMessage.Add(initialFrame);
-            ListMultiFrameCodec.Encode(clientMessage, keys, DataCodec.Encode);
-            ListUUIDCodec.Encode(clientMessage, sourceUuids);
-            ListUUIDCodec.Encode(clientMessage, partitionUuids);
-            ListLongCodec.Encode(clientMessage, sequences);
-            return clientMessage;
         }
 
         public static class EventHandler
@@ -189,7 +118,7 @@ namespace Hazelcast.Client.Protocol.Codec
                 Logger.GetLogger(typeof(EventHandler)).Finest("Unknown message type received on event handler :" + messageType);
             }
             public delegate void HandleIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence);
-            public delegate void HandleIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids, IEnumerable<long> sequences);
+            public delegate void HandleIMapBatchInvalidationEvent(ICollection<IData> keys, ICollection<Guid> sourceUuids, ICollection<Guid> partitionUuids, ICollection<long> sequences);
         }
     }
 }
