@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,38 +43,19 @@ namespace Hazelcast.Client.Protocol.Codec
         //hex: 0x020401
         public const int ResponseMessageType = 132097;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Name of the MultiMap
-            ///</summary>
-            public string Name;
-        }
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "MultiMap.KeySet";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            //empty initial frame
-            iterator.Next();
-            request.Name = StringCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
@@ -86,17 +67,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public IList<IData> Response;
         }
 
-        public static ClientMessage EncodeResponse(IEnumerable<IData> response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -106,5 +76,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;
         }
+
     }
 }

@@ -78,7 +78,7 @@ namespace Hazelcast.Net.Ext
             Interlocked.Exchange(ref _val, newValue);
         }
 
-        private bool CompareAndSet(int expect, int update)
+        public bool CompareAndSet(int expect, int update)
         {
             return Interlocked.CompareExchange(ref _val, update, expect) == expect;
         }

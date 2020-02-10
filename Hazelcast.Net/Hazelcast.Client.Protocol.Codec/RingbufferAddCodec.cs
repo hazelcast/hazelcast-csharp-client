@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,52 +53,22 @@ namespace Hazelcast.Client.Protocol.Codec
         public const int ResponseMessageType = 1508865;
         private const int RequestOverflowPolicyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestOverflowPolicyFieldOffset + IntSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + LongSizeInBytes;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Name of the Ringbuffer
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// the OverflowPolicy to use.
-            ///</summary>
-            public int OverflowPolicy;
-
-            /// <summary>
-            /// to item to add
-            ///</summary>
-            public IData Value;
-        }
-
-        public static ClientMessage EncodeRequest(string name, int overflowPolicy, IData value)
+        public static ClientMessage EncodeRequest(string name, int overflowPolicy, IData @value)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Ringbuffer.Add";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame.Content, RequestOverflowPolicyFieldOffset, overflowPolicy);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, @value);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.OverflowPolicy =  DecodeInt(initialFrame.Content, RequestOverflowPolicyFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
@@ -110,17 +80,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public long Response;
         }
 
-        public static ClientMessage EncodeResponse(long response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeLong(initialFrame.Content, ResponseResponseFieldOffset, response);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -129,5 +88,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.Response = DecodeLong(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
         }
+
     }
 }

@@ -124,11 +124,6 @@ namespace Hazelcast.IO.Serialization
             return _version;
         }
 
-        public IManagedContext GetManagedContext()
-        {
-            return _serializationService.GetManagedContext();
-        }
-
         public ByteOrder GetByteOrder()
         {
             return _serializationService.GetByteOrder();

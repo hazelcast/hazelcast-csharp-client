@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Util
 {
     internal sealed class HashUtil
@@ -91,5 +93,13 @@ namespace Hazelcast.Util
             h1 = MurmurHash3_fmix(h1);
             return h1;
         }
+        
+        public static int HashToIndex(int hash, int length) {
+            if (hash == int.MinValue) {
+                return 0;
+            }
+            return Math.Abs(hash) % length;
+        }
+
     }
 }

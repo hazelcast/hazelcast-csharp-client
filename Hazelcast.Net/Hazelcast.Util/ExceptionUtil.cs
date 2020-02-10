@@ -16,12 +16,14 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Client;
 using Hazelcast.Client.Protocol;
+using Hazelcast.Client.Protocol.Codec.BuiltIn;
 using Hazelcast.Client.Protocol.Codec.Custom;
 using Hazelcast.Core;
+using Hazelcast.Logging;
 
 namespace Hazelcast.Util
 {
-    internal sealed class ExceptionUtil
+    internal static class ExceptionUtil
     {
         private static readonly ClientExceptionFactory ExceptionFactory = new ClientExceptionFactory();
 
@@ -67,9 +69,32 @@ namespace Hazelcast.Util
             return t;
         }
 
-        public static Exception ToException(IEnumerable<ErrorHolder> error)
+        public static Exception Rethrow<Result>(Exception t, Func<Exception, Result> exceptionFactory) where Result : Exception
         {
-            return ExceptionFactory.CreateException(error);
+            if (t is NotImplementedException)
+            {
+                return t;
+            }
+            if (t.InnerException != null)
+            {
+                return Rethrow(t.InnerException, exceptionFactory);
+            }
+            if (t is AggregateException)
+            {
+                var readOnlyCollection = ((AggregateException) t).InnerExceptions;
+                foreach (var exception in readOnlyCollection)
+                {
+                    var cause =  Rethrow(exception);
+                    return Rethrow(cause, exceptionFactory);
+                }
+            }
+            return exceptionFactory.Invoke(t);
+        }
+
+        public static Exception ToException(this ClientMessage clientMessage)
+        {
+            var error = ErrorsCodec.Decode(clientMessage);
+            return ExceptionFactory.CreateException(error.GetEnumerator());
         }
     }
 }

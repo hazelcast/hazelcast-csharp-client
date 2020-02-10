@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Config;
@@ -50,7 +51,7 @@ namespace Hazelcast.Client.Test
 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+            config.SetClusterName(_cluster.Id);
         }
 
         protected override void ConfigureClient(ClientConfig config)
@@ -65,7 +66,7 @@ namespace Hazelcast.Client.Test
             var map = _client.GetMap<string, string>(TestSupport.RandomString());
 
             var keys = TestSupport.RandomArray(TestSupport.RandomString, 10);
-            var registrations = new List<string>();
+            var registrations = new List<Guid>();
             var tasks = new List<Task>();
             foreach (var key in keys)
             {
@@ -113,7 +114,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestPutWithNonSmartRouting()
         {
-            var cm  = ((HazelcastClientProxy) _client).GetClient().GetConnectionManager();
+            var cm = ((HazelcastClient) _client).ConnectionManager;
             var map = _client.GetMap<int, int>(TestSupport.RandomString());
             var n = 1000;
             for (var i = 0; i < n; i++)

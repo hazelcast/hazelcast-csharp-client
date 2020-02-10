@@ -58,18 +58,10 @@ namespace Hazelcast.Core
     {
         private static readonly KeyValuePair<int, KeyValuePair<object, object>> NullAnchor = new KeyValuePair<int, KeyValuePair<object, object>>(-1, new KeyValuePair<object, object>(null, null));
 
-        private IList<KeyValuePair<int, KeyValuePair<object, object>>> anchorList;
-        private readonly IPredicate predicate;
-        private IComparer<KeyValuePair<object, object>> comparer;
-        private int pageSize;
-        private int page;
-
-        private IterationType? iterationType;
-
-        public PagingPredicate()
+        internal PagingPredicate()
         {
         }
-        
+
         /// <summary>
         /// Creates a Paging predicate with provided page size and optional predicate and comparer.
         /// </summary>
@@ -82,17 +74,27 @@ namespace Hazelcast.Core
         {
             if (pageSize <= 0)
             {
-                throw new ArgumentOutOfRangeException("pageSize", "pageSize should be greater than 0 !!!");
+                throw new ArgumentOutOfRangeException(nameof(pageSize), @"pageSize should be greater than 0 !!!");
             }
-            this.pageSize = pageSize;
-            anchorList = new List<KeyValuePair<int, KeyValuePair<object, object>>>();
+            PageSize = pageSize;
             if (predicate is PagingPredicate)
             {
-                throw new ArgumentException("Nested PagingPredicate is not supported!!!", "predicate");
+                throw new ArgumentException(@"Nested PagingPredicate is not supported!!!", nameof(predicate));
             }
-            this.predicate = predicate;
-            this.comparer = comparer;
+            Predicate = predicate;
+            Comparer = comparer;
+            AnchorList = new List<KeyValuePair<int, KeyValuePair<object, object>>>();
         }
+
+        /// <summary>
+        /// Page size of each iteration
+        /// </summary>
+        public int PageSize { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IPredicate Predicate { get; }
 
         /// <summary>
         /// <c>IComparer&lt;KeyValuePair&lt;object, object&gt;&gt;</c>> implementation used to sort the result on client side.
@@ -101,53 +103,62 @@ namespace Hazelcast.Core
         /// <b>WARNING:</b> This comparer implementation should be hazelcast serializable and must have the same
         /// implementation on server side.
         /// </remarks>
-        public IComparer<KeyValuePair<object, object>> Comparer
-        {
-            get { return comparer; }
-            set { comparer = value; }
-        }
+        public IComparer<KeyValuePair<object, object>> Comparer { get; }
+
+        internal IList<KeyValuePair<int, KeyValuePair<object, object>>> AnchorList { get; set; }
 
         /// <summary>
         /// Current page index
         /// </summary>
-        public int Page
-        {
-            get { return page; }
-            set { page = value; }
-        }
-
-        /// <summary>
-        /// Page size of each iteration
-        /// </summary>
-        public int PageSize
-        {
-            get { return pageSize; }
-            set { pageSize = value; }
-        }
+        public int Page { get; set; }
 
         /// <summary>
         /// Iteration type this paging predicate: One of Key, Value or Entry
         /// </summary>
-        public IterationType? IterationType
+        public IterationType? IterationType { get; set; }
+
+        /// <summary>
+        /// resets for reuse
+        /// </summary>
+        public void Reset()
         {
-            get { return iterationType; }
-            set { iterationType = value; }
+            IterationType = null;
+            AnchorList.Clear();
+            Page = 0;
         }
 
-        public void ReadData(IObjectDataInput input)
+        /// <summary>
+        /// sets the page value to next page
+        /// </summary>
+        public void NextPage()
+        {
+            Page++;
+        }
+
+        /// <summary>
+        /// sets the page value to previous page
+        /// </summary>
+        public void PreviousPage()
+        {
+            if (Page != 0) {
+                Page--;
+            }
+        }
+     
+        void IIdentifiedDataSerializable.ReadData(IObjectDataInput input)
         {
             throw new NotSupportedException("Client should not need to use ReadData method.");
         }
 
-        public void WriteData(IObjectDataOutput output)
+        void IIdentifiedDataSerializable.WriteData(IObjectDataOutput output)
         {
-            output.WriteObject(predicate);
-            output.WriteObject(comparer);
-            output.WriteInt(page);
-            output.WriteInt(pageSize);
-            output.WriteUTF(iterationType.ToString().ToUpper());
-            output.WriteInt(anchorList.Count);
-            foreach (var anchor in anchorList)
+            output.WriteObject(Predicate);
+            output.WriteObject(Comparer);
+            output.WriteInt(Page);
+            output.WriteInt(PageSize);
+            output.WriteUTF(IterationType?.ToString().ToUpper());
+            output.WriteInt(AnchorList.Count);
+            foreach (var anchor in AnchorList)
             {
                 output.WriteInt(anchor.Key);
                 var anchorEntry = anchor.Value;
@@ -156,79 +167,15 @@ namespace Hazelcast.Core
             }
         }
 
-        public int GetFactoryId()
+        
+        int IIdentifiedDataSerializable.GetFactoryId()
         {
             return FactoryIds.PredicateFactoryId;
         }
 
-        public int GetId()
+        int IIdentifiedDataSerializable.GetId()
         {
             return PredicateDataSerializerHook.PagingPredicate;
-        }
-
-        internal void SetAnchor<TKey, TValue>(int nearestPage, TKey key, TValue value)
-        {
-            var anchorEntry =
-                new KeyValuePair<int, KeyValuePair<object, object>>(page, new KeyValuePair<object, object>(key, value));
-            int anchorCount = anchorList.Count;
-            if (page < anchorCount)
-            {
-                anchorList[page] = anchorEntry;
-            }
-            else if (page == anchorCount)
-            {
-                anchorList.Add(anchorEntry);
-            }
-            else
-            {
-                throw new ArgumentException("Anchor index is not correct, expected: " + page + " found: " +
-                                            anchorCount);
-            }
-        }
-
-        /// <summary>
-        /// After each query, an anchor entry is set for that page. <see cref="SetAnchor{TKey,TValue}"/>
-        /// For the next query user may set an arbitrary <see cref="Page"/>.
-        /// for example: user queried first 5 pages which means first 5 anchor is available
-        /// if the next query is for the 10th page then the nearest anchor belongs to page 5
-        /// but if the next query is for the 3nd page then the nearest anchor belongs to page 2
-        /// </summary>
-        /// <returns>nearest anchored entry for current page</returns>
-        public KeyValuePair<int, KeyValuePair<object, object>> GetNearestAnchorEntry() {
-            int anchorCount = anchorList.Count;
-            if (page == 0 || anchorCount == 0) {
-                return NullAnchor;
-            }
-
-            return page < anchorCount ? anchorList[page - 1] : anchorList[anchorCount - 1];
-        }
-
-        /// <summary>
-        /// resets for reuse
-        /// </summary>
-        public void Reset()
-        {
-            iterationType = null;
-            anchorList.Clear();
-            page = 0;
-        }
-
-        /// <summary>
-        /// sets the page value to next page
-        /// </summary>
-        public void NextPage()
-        {
-            page++;
-        }
-
-        /// <summary>
-        /// sets the page value to previous page
-        /// </summary>
-        public void PreviousPage()
-        {
-            if (page != 0) {
-                page--;
-            }
         }
     }
 }

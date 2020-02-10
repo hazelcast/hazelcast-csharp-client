@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Test
 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+            config.SetClusterName(_cluster.Id);
         }
 
         [Test]
@@ -102,33 +102,6 @@ namespace Hazelcast.Client.Test
             }
             Assert.IsTrue(map.RemoveEntryListener(regId));
             map.Destroy();
-        }
-
-        [Test]
-        public void TestPromoteToOwner()
-        {
-            var member1 = _remoteController.startMember(_cluster.Id);
-            var client = CreateClient();
-
-            var member2 = StartMemberAndWait(client, _remoteController, _cluster, 2);
-
-            var name = TestSupport.RandomString();
-            var map = client.GetMap<int, int>(name);
-
-            for (var i = 0; i < 1000; i++)
-            {
-                map.Put(i, i);
-            }
-
-            var clientDisconnected = TestSupport.WaitForClientState(client,
-                LifecycleEvent.LifecycleState.ClientDisconnected);
-            var clientConnected = TestSupport.WaitForClientState(client, LifecycleEvent.LifecycleState.ClientConnected);
-
-            _remoteController.shutdownMember(_cluster.Id, member1.Uuid);
-            
-            TestSupport.AssertCompletedEventually(clientDisconnected, taskName: "clientDisconnected");
-            TestSupport.AssertCompletedEventually(clientConnected, taskName: "clientConnected");
-            Assert.AreEqual(1000, map.Size());
         }
 
         [Test]

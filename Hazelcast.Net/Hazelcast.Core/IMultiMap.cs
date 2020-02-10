@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 
 namespace Hazelcast.Core
@@ -26,7 +27,7 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id.</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue);
 
         /// <summary>Adds the specified entry listener for the specified key.</summary>
         /// <param name="listener">entry listener</param>
@@ -36,7 +37,7 @@ namespace Hazelcast.Core
         ///     contain the value.
         /// </param>
         /// <returns>returns registration id.</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue);
 
         /// <summary>Clears the multimap.</summary>
         /// <remarks>Clears the multimap. Removes all key-value pairs.</remarks>
@@ -125,7 +126,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="registrationId">Id of listener registration</param>
         /// <returns>true if registration is removed, false otherwise</returns>
-        bool RemoveEntryListener(string registrationId);
+        bool RemoveEntryListener(Guid registrationId);
 
         /// <summary>Returns the number of key-value pairs in the multimap.</summary>
         /// <returns>the number of key-value pairs in the multimap.</returns>

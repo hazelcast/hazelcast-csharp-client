@@ -272,24 +272,6 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Not used
-        /// </summary>
-        [Obsolete("This configuration is not used in .net client")]
-        public virtual bool IsEnableCompression()
-        {
-            return _enableCompression;
-        }
-
-        /// <summary>
-        /// Not used
-        /// </summary>
-        [Obsolete("This configuration is not used in .net client")]
-        public virtual bool IsEnableSharedObject()
-        {
-            return _enableSharedObject;
-        }
-
-        /// <summary>
         /// 
         /// </summary>
         /// <returns><c>true</c> if serialization is configured to use native byte order of the underlying platform</returns>

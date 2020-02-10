@@ -45,9 +45,9 @@ namespace Hazelcast.Logging
             {
             }
 
-            public virtual bool IsFinestEnabled()
+            public virtual bool IsFinestEnabled
             {
-                return false;
+                get { return false; }
             }
 
             public virtual void Info(string message)
@@ -86,9 +86,9 @@ namespace Hazelcast.Logging
             {
             }
 
-            public virtual LogLevel GetLevel()
+            public virtual LogLevel LogLevel
             {
-                return LogLevel.Off;
+                get { return LogLevel.Off; }
             }
 
             public bool IsLoggable(LogLevel level)

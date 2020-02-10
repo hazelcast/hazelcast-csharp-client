@@ -107,8 +107,8 @@ namespace Hazelcast.Core
     ///  there is a probability that the listener may receive both expiration and eviction events for the same entry. 
     /// This is because, size-based-eviction removes entries regardless of whether entries expired or not.
     /// </remarks>
-    /// <typeparam name="TKey"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
+    /// <typeparam name="TKey">the type of key</typeparam>
+    /// <typeparam name="TValue">the type of value</typeparam>
     public interface EntryExpiredListener<TKey, TValue> : MapListener
     {
         /// <summary>
@@ -116,6 +116,26 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="event">event the event invoked when an entry is expired.</param>
         void EntryExpired(EntryEvent<TKey, TValue> @event);
+    }
+
+    /// <summary>
+    /// Invoked upon load of an entry.
+    /// </summary>
+    /// <remarks>
+    /// EntryLoadedListener is notified upon load of an entry by a <c>MapLoader</c> on Member.
+    /// By using this listener and <see cref="EntryAddedListener{TKey,TValue}"/> one can distinguish an application put from
+    /// map-loader load.
+    /// </remarks>
+    /// <typeparam name="TKey">the type of key.</typeparam>
+    /// <typeparam name="TValue">the type of value.</typeparam>
+    public interface EntryLoadedListener<TKey, TValue> : MapListener
+    {
+
+        /// <summary>
+        /// Invoked upon loaded of an entry.
+        /// </summary>
+        /// <param name="event">event the event invoked when an entry is loaded.</param>
+        void EntryLoaded(EntryEvent<TKey, TValue> @event);
     }
 
     /// <summary>

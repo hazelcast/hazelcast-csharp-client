@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using Hazelcast.Client.Spi;
+
 namespace Hazelcast.Core
 {
     internal sealed class TerminatedLifecycleService : ILifecycleService
@@ -29,14 +32,14 @@ namespace Hazelcast.Core
         {
         }
 
-        public string AddLifecycleListener(ILifecycleListener lifecycleListener)
+        public Guid AddLifecycleListener(ILifecycleListener lifecycleListener)
         {
-            throw new HazelcastInstanceNotActiveException();
+            throw new HazelcastClientNotActiveException();
         }
 
-        public bool RemoveLifecycleListener(string registrationId)
+        public bool RemoveLifecycleListener(Guid registrationId)
         {
-            throw new HazelcastInstanceNotActiveException();
+            throw new HazelcastClientNotActiveException();
         }
     }
 }

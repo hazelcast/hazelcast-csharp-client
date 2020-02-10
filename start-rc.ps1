@@ -1,5 +1,5 @@
 param(
-    [string]$serverVersion = "4.0-SNAPSHOT"
+    [string]$serverVersion = "4.0"
 )
 
 $hazelcastTestVersion=$serverVersion
@@ -35,7 +35,7 @@ if(Test-Path "hazelcast-${hazelcastTestVersion}-tests.jar") {
 }
 
 [string]$classpath="hazelcast-remote-controller-${hazelcastRCVersion}.jar;hazelcast-${hazelcastTestVersion}-tests.jar;"
-if("$env:HAZELCAST_ENTERPRISE_KEY" -ne $null){
+if("$env:HAZELCAST_ENTERPRISE_KEY"){
 	if(Test-Path "hazelcast-enterprise-${hazelcastEnterpriseVersion}.jar") {
 		Write-Host "hazelcast-enterprise-${hazelcastEnterpriseVersion}.jar already exist, not downloading from maven."
 	} else {
@@ -59,6 +59,6 @@ if("$env:HAZELCAST_ENTERPRISE_KEY" -ne $null){
 	$classpath += "hazelcast-${hazelcastVersion}.jar"
 }
 
-Write-Host "Starting hazelcast-remote-controller" 
+Write-Host "Starting hazelcast-remote-controller"
 
 . "java" "-Dhazelcast.enterprise.license.key=$env:HAZELCAST_ENTERPRISE_KEY" -cp "$classpath" "com.hazelcast.remotecontroller.Main"

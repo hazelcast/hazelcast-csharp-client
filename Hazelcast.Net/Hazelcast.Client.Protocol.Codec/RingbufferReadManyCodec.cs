@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,47 +51,18 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestMinCountFieldOffset = RequestStartSequenceFieldOffset + LongSizeInBytes;
         private const int RequestMaxCountFieldOffset = RequestMinCountFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestMaxCountFieldOffset + IntSizeInBytes;
-        private const int ResponseReadCountFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseReadCountFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseNextSeqFieldOffset = ResponseReadCountFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseNextSeqFieldOffset + LongSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Name of the Ringbuffer
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// the startSequence of the first item to read
-            ///</summary>
-            public long StartSequence;
-
-            /// <summary>
-            /// the minimum number of items to read.
-            ///</summary>
-            public int MinCount;
-
-            /// <summary>
-            /// the maximum number of items to read.
-            ///</summary>
-            public int MaxCount;
-
-            /// <summary>
-            /// Filter is allowed to be null, indicating there is no filter.
-            ///</summary>
-            public IData Filter;
-        }
 
         public static ClientMessage EncodeRequest(string name, long startSequence, int minCount, int maxCount, IData filter)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Ringbuffer.ReadMany";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame.Content, RequestStartSequenceFieldOffset, startSequence);
             EncodeInt(initialFrame.Content, RequestMinCountFieldOffset, minCount);
             EncodeInt(initialFrame.Content, RequestMaxCountFieldOffset, maxCount);
@@ -101,55 +72,28 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.StartSequence =  DecodeLong(initialFrame.Content, RequestStartSequenceFieldOffset);
-            request.MinCount =  DecodeInt(initialFrame.Content, RequestMinCountFieldOffset);
-            request.MaxCount =  DecodeInt(initialFrame.Content, RequestMaxCountFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            request.Filter = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-            return request;
-        }
-
         public class ResponseParameters
         {
 
             /// <summary>
-            /// TODO DOC
+            /// Number of items that have been read before filtering.
             ///</summary>
             public int ReadCount;
 
             /// <summary>
-            /// TODO DOC
+            /// List of items that have beee read.
             ///</summary>
             public IList<IData> Items;
 
             /// <summary>
-            /// TODO DOC
+            /// List of sequence numbers for the items that have been read.
             ///</summary>
             public long[] ItemSeqs;
 
             /// <summary>
-            /// TODO DOC
+            /// Sequence number of the item following the last read item.
             ///</summary>
             public long NextSeq;
-        }
-
-        public static ClientMessage EncodeResponse(int readCount, IEnumerable<IData> items, long[] itemSeqs, long nextSeq)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeInt(initialFrame.Content, ResponseReadCountFieldOffset, readCount);
-            EncodeLong(initialFrame.Content, ResponseNextSeqFieldOffset, nextSeq);
-            ListMultiFrameCodec.Encode(clientMessage, items, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, itemSeqs, LongArrayCodec.Encode);
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -163,5 +107,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.ItemSeqs = CodecUtil.DecodeNullable(iterator, LongArrayCodec.Decode);
             return response;
         }
+
     }
 }

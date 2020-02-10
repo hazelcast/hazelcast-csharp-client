@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,109 +38,55 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapFetchWithQueryCodec
     {
-        //hex: 0x014300
-        public const int RequestMessageType = 82688;
-        //hex: 0x014301
-        public const int ResponseMessageType = 82689;
-        private const int RequestTableIndexFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestBatchFieldOffset = RequestTableIndexFieldOffset + IntSizeInBytes;
+        //hex: 0x014000
+        public const int RequestMessageType = 81920;
+        //hex: 0x014001
+        public const int ResponseMessageType = 81921;
+        private const int RequestBatchFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestBatchFieldOffset + IntSizeInBytes;
-        private const int ResponseNextTableIndexToReadFromFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseNextTableIndexToReadFromFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Name of the map
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// The slot number (or index) to start the iterator
-            ///</summary>
-            public int TableIndex;
-
-            /// <summary>
-            /// The number of items to be batched
-            ///</summary>
-            public int Batch;
-
-            /// <summary>
-            /// projection to transform the entries with
-            ///</summary>
-            public IData Projection;
-
-            /// <summary>
-            /// predicate to filter the entries with
-            ///</summary>
-            public IData Predicate;
-        }
-
-        public static ClientMessage EncodeRequest(string name, int tableIndex, int batch, IData projection, IData predicate)
+        public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<int, int>> iterationPointers, int batch, IData projection, IData predicate)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.FetchWithQuery";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame.Content, RequestTableIndexFieldOffset, tableIndex);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame.Content, RequestBatchFieldOffset, batch);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            EntryListIntegerIntegerCodec.Encode(clientMessage, iterationPointers);
             DataCodec.Encode(clientMessage, projection);
             DataCodec.Encode(clientMessage, predicate);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.TableIndex =  DecodeInt(initialFrame.Content, RequestTableIndexFieldOffset);
-            request.Batch =  DecodeInt(initialFrame.Content, RequestBatchFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            request.Projection = DataCodec.Decode(iterator);
-            request.Predicate = DataCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
         {
 
             /// <summary>
-            /// TODO DOC
+            /// List of fetched entries.
             ///</summary>
             public IList<IData> Results;
 
             /// <summary>
-            /// TODO DOC
+            /// The index-size pairs that define the state of iteration
             ///</summary>
-            public int NextTableIndexToReadFrom;
-        }
-
-        public static ClientMessage EncodeResponse(IEnumerable<IData> results, int nextTableIndexToReadFrom)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeInt(initialFrame.Content, ResponseNextTableIndexToReadFromFieldOffset, nextTableIndexToReadFrom);
-            ListMultiFrameCodec.EncodeContainsNullable(clientMessage, results, DataCodec.Encode);
-            return clientMessage;
+            public IList<KeyValuePair<int, int>> IterationPointers;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
-            response.NextTableIndexToReadFrom = DecodeInt(initialFrame.Content, ResponseNextTableIndexToReadFromFieldOffset);
+            //empty initial frame
+            iterator.Next();
             response.Results = ListMultiFrameCodec.DecodeContainsNullable(iterator, DataCodec.Decode);
+            response.IterationPointers = EntryListIntegerIntegerCodec.Decode(iterator);
             return response;
         }
+
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Protocol.Codec
         private const int RequestIncludeValueFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestLocalOnlyFieldOffset = RequestIncludeValueFieldOffset + BoolSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
         private const int EventItemUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int EventItemEventTypeFieldOffset = EventItemUuidFieldOffset + GuidSizeInBytes;
@@ -53,49 +53,19 @@ namespace Hazelcast.Client.Protocol.Codec
         // hex: 0x050B02
         private const int EventItemMessageType = 330498;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Name of the List
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// Set to true if you want the event to contain the value.
-            ///</summary>
-            public bool IncludeValue;
-
-            /// <summary>
-            /// if true fires events that originated from this node only, otherwise fires all events
-            ///</summary>
-            public bool LocalOnly;
-        }
-
         public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "List.AddListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeBool(initialFrame.Content, RequestIncludeValueFieldOffset, includeValue);
             EncodeBool(initialFrame.Content, RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.IncludeValue =  DecodeBool(initialFrame.Content, RequestIncludeValueFieldOffset);
-            request.LocalOnly =  DecodeBool(initialFrame.Content, RequestLocalOnlyFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
@@ -107,17 +77,6 @@ namespace Hazelcast.Client.Protocol.Codec
             public Guid Response;
         }
 
-        public static ClientMessage EncodeResponse(Guid response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeGuid(initialFrame.Content, ResponseResponseFieldOffset, response);
-            return clientMessage;
-        }
-
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -125,19 +84,6 @@ namespace Hazelcast.Client.Protocol.Codec
             var initialFrame = iterator.Next();
             response.Response = DecodeGuid(initialFrame.Content, ResponseResponseFieldOffset);
             return response;
-        }
-
-        public static ClientMessage EncodeItemEvent(IData item, Guid uuid, int eventType)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[EventItemInitialFrameSize], UnfragmentedMessage);
-            initialFrame.Flags |= IsEventFlag;
-            EncodeInt(initialFrame.Content, TypeFieldOffset, EventItemMessageType);
-            EncodeGuid(initialFrame.Content, EventItemUuidFieldOffset, uuid);
-            EncodeInt(initialFrame.Content, EventItemEventTypeFieldOffset, eventType);
-            clientMessage.Add(initialFrame);
-            CodecUtil.EncodeNullable(clientMessage, item, DataCodec.Encode);
-            return clientMessage;
         }
 
         public static class EventHandler

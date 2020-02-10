@@ -22,13 +22,12 @@ namespace Hazelcast.Core
     public interface IPartition
     {
         /// <summary>Returns owner member of the partition.</summary>
-        /// <remarks>Returns owner member of the partition.</remarks>
         /// <returns>owner member of the partition</returns>
-        IMember GetOwner();
+        IMember PartitionOwner { get; }
 
         /// <summary>Returns id of the partition.</summary>
-        /// <remarks>Returns id of the partition.</remarks>
         /// <returns>id of the partition</returns>
-        int GetPartitionId();
+        int PartitionId { get; }
+
     }
 }

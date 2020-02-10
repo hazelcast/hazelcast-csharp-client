@@ -26,30 +26,30 @@ namespace Hazelcast.Security
     /// if username is omitted in the properties list then <see cref="ClientConfig.GetClusterName"/> will be used instead
     /// if password is omitted in the properties list then <see cref="ClientConfig.GetClusterPassword"/> will be used instead
     /// </remarks>
-    public class UsernamePasswordCredentialsFactory : ICredentialsFactory
-    {
-        private string _username;
-        private string _password;
-
-        public void Configure(ClientConfig groupConfig, IDictionary<string, string> properties)
-        {
-            if (!properties.TryGetValue("username", out _username))
-            {
-                _username = groupConfig.GetClusterName();
-            }
-            if(!properties.TryGetValue("password", out _password))
-            {
-                _password = groupConfig.GetClusterPassword();
-            }
-        }
-
-        public ICredentials NewCredentials()
-        {
-            return new UsernamePasswordCredentials(_username, _password);
-        }
-
-        public void Destroy()
-        {
-        }
-    }
+//    public class UsernamePasswordCredentialsFactory : ICredentialsFactory
+//    {
+//        private string _username;
+//        private string _password;
+//
+//        public void Configure(ClientConfig groupConfig, IDictionary<string, string> properties)
+//        {
+//            if (!properties.TryGetValue("username", out _username))
+//            {
+//                _username = groupConfig.GetClusterName();
+//            }
+//            if(!properties.TryGetValue("password", out _password))
+//            {
+//                _password = groupConfig.GetClusterPassword();
+//            }
+//        }
+//
+//        public ICredentials NewCredentials()
+//        {
+//            return new UsernamePasswordCredentials(_username, _password);
+//        }
+//
+//        public void Destroy()
+//        {
+//        }
+//    }
 }

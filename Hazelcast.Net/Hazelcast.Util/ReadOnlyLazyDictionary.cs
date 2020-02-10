@@ -21,10 +21,11 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Util
 {
-    internal class ReadOnlyLazyDictionary<TKey, TValue> : AbstractLazyDictionary<TKey, TValue>, IDictionary<TKey, TValue>
+    internal class ReadOnlyLazyDictionary<TKey, TValue, D> : AbstractLazyDictionary<TKey, TValue, D>, IDictionary<TKey, TValue>
+        where D : class
     {
-        public ReadOnlyLazyDictionary(ConcurrentQueue<KeyValuePair<IData, object>> contentQueue,
-            ISerializationService serializationService) : base(contentQueue, serializationService)
+        public ReadOnlyLazyDictionary(IList<KeyValuePair<IData, D>> content, ISerializationService serializationService) :
+            base(content, serializationService)
         {
         }
 
@@ -32,26 +33,20 @@ namespace Hazelcast.Util
         {
             get
             {
-                var keyDatas = _contentQueue.Select(pair => pair.Key).ToList();
+                var keyDatas = _content.Select(pair => pair.Key).ToList();
                 return new ReadOnlyLazyList<TKey, IData>(keyDatas, _serializationService);
             }
-            private set
-            {
-                throw new NotSupportedException("Readonly dictionary");
-            }
+            private set => throw new NotSupportedException("Readonly dictionary");
         }
 
         public ICollection<TValue> Values
         {
             get
             {
-                var valueDatas = _contentQueue.Select(pair => pair.Value).ToList();
-                return new ReadOnlyLazyList<TValue, object>(valueDatas, _serializationService);
+                var valueDatas = _content.Select(pair => pair.Value).ToList();
+                return new ReadOnlyLazyList<TValue, D>(valueDatas, _serializationService);
             }
-            private set
-            {
-                throw new NotSupportedException("Readonly dictionary");
-            }
+            private set => throw new NotSupportedException("Readonly dictionary");
         }
     }
 }

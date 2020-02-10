@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,95 +37,53 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapFetchEntriesCodec
     {
-        //hex: 0x013A00
-        public const int RequestMessageType = 80384;
-        //hex: 0x013A01
-        public const int ResponseMessageType = 80385;
-        private const int RequestTableIndexFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestBatchFieldOffset = RequestTableIndexFieldOffset + IntSizeInBytes;
+        //hex: 0x013800
+        public const int RequestMessageType = 79872;
+        //hex: 0x013801
+        public const int ResponseMessageType = 79873;
+        private const int RequestBatchFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestBatchFieldOffset + IntSizeInBytes;
-        private const int ResponseTableIndexFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseTableIndexFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Name of the map.
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// The slot number (or index) to start the iterator
-            ///</summary>
-            public int TableIndex;
-
-            /// <summary>
-            /// The number of items to be batched
-            ///</summary>
-            public int Batch;
-        }
-
-        public static ClientMessage EncodeRequest(string name, int tableIndex, int batch)
+        public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<int, int>> iterationPointers, int batch)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.FetchEntries";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame.Content, RequestTableIndexFieldOffset, tableIndex);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame.Content, RequestBatchFieldOffset, batch);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            EntryListIntegerIntegerCodec.Encode(clientMessage, iterationPointers);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.TableIndex =  DecodeInt(initialFrame.Content, RequestTableIndexFieldOffset);
-            request.Batch =  DecodeInt(initialFrame.Content, RequestBatchFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
         {
 
             /// <summary>
-            /// The slot number (or index) to start the iterator
+            /// The index-size pairs that define the state of iteration
             ///</summary>
-            public int TableIndex;
+            public IList<KeyValuePair<int, int>> IterationPointers;
 
             /// <summary>
-            /// TODO DOC
+            /// List of entries.
             ///</summary>
             public IList<KeyValuePair<IData, IData>> Entries;
-        }
-
-        public static ClientMessage EncodeResponse(int tableIndex, IEnumerable<KeyValuePair<IData, IData>> entries)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeInt(initialFrame.Content, ResponseTableIndexFieldOffset, tableIndex);
-            EntryListCodec.Encode(clientMessage, entries, DataCodec.Encode, DataCodec.Encode);
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
-            response.TableIndex = DecodeInt(initialFrame.Content, ResponseTableIndexFieldOffset);
+            //empty initial frame
+            iterator.Next();
+            response.IterationPointers = EntryListIntegerIntegerCodec.Decode(iterator);
             response.Entries = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
             return response;
         }
+
     }
 }

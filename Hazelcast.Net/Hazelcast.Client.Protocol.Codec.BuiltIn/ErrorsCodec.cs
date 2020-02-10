@@ -25,17 +25,17 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
         // So, it is safe to supply a custom message type for exceptions in
         // the range 0x000000 - 0x0000FF
         public const int ExceptionMessageType = 0;
-        private const int InitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        // private const int InitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
 
-        public static ClientMessage Encode(List<ErrorHolder> errorHolders)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[InitialFrameSize], UnfragmentedMessage);
-            clientMessage.Add(initialFrame);
-            clientMessage.MessageType = ExceptionMessageType;
-            ListMultiFrameCodec.Encode(clientMessage, errorHolders, ErrorHolderCodec.Encode);
-            return clientMessage;
-        }
+        // public static ClientMessage Encode(List<ErrorHolder> errorHolders)
+        // {
+        //     var clientMessage = CreateForEncode();
+        //     var initialFrame = new Frame(new byte[InitialFrameSize], UnfragmentedMessage);
+        //     clientMessage.Add(initialFrame);
+        //     clientMessage.MessageType = ExceptionMessageType;
+        //     ListMultiFrameCodec.Encode(clientMessage, errorHolders, ErrorHolderCodec.Encode);
+        //     return clientMessage;
+        // }
 
         public static List<ErrorHolder> Decode(ClientMessage clientMessage)
         {

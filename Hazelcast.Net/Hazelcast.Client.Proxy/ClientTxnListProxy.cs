@@ -14,6 +14,7 @@
 
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Core;
+using Hazelcast.Transaction;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -24,16 +25,16 @@ namespace Hazelcast.Client.Proxy
         {
         }
 
-        public override string GetServiceName()
+        public override string ServiceName
         {
-            return ServiceNames.List;
+            get { return ServiceNames.List; }
         }
 
         public virtual bool Add(T e)
         {
             ThrowExceptionIfNull(e);
             var value = ToData(e);
-            var request = TransactionalListAddCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), value);
+            var request = TransactionalListAddCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId(), value);
             return Invoke(request, m => TransactionalListAddCodec.DecodeResponse(m).Response);
         }
 
@@ -41,13 +42,13 @@ namespace Hazelcast.Client.Proxy
         {
             ThrowExceptionIfNull(e);
             var value = ToData(e);
-            var request = TransactionalListRemoveCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId(), value);
+            var request = TransactionalListRemoveCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId(), value);
             return Invoke(request, m => TransactionalListRemoveCodec.DecodeResponse(m).Response);
         }
 
         public virtual int Size()
         {
-            var request = TransactionalListSizeCodec.EncodeRequest(GetName(), GetTransactionId(), GetThreadId());
+            var request = TransactionalListSizeCodec.EncodeRequest(Name, GetTransactionId(), GetThreadId());
             return Invoke(request, m => TransactionalListSizeCodec.DecodeResponse(m).Response);
         }
     }

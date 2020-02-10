@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Hazelcast.Config;
 using Hazelcast.Logging;
 using Hazelcast.Remote;
+using Hazelcast.Transaction;
 using Hazelcast.Util;
 using NUnit.Framework;
 
@@ -55,13 +56,13 @@ namespace Hazelcast.Client.Test
 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+            config.SetClusterName(_cluster.Id);
         }
 
         [Test]
         public void TestClientTransactionRetry()
         {
-            Assert.Throws<InvalidOperationException>(() =>
+            Assert.Throws<TransactionException>(() =>
             {
                 var member = _remoteController.startMember(_cluster.Id);
                 var client = CreateClient();

@@ -21,6 +21,7 @@ namespace Hazelcast.Client.Protocol
     {
         Authenticated = 0,
         CredentialsFailed = 1,
-        SerializationVersionMismatch = 2
+        SerializationVersionMismatch = 2,
+        NotAllowedInCluster = 3
     }
 }

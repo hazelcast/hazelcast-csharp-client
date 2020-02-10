@@ -24,8 +24,8 @@ namespace Hazelcast.Util
         {
             var version = typeof(VersionUtil).Assembly.GetName().Version;
             var versionStr = version.Build == 0
-                ? string.Format("{0}.{1}", version.Major, version.Minor)
-                : string.Format("{0}.{1}.{2}", version.Major, version.Minor, version.Build);
+                ? $"{version.Major}.{version.Minor}"
+                : $"{version.Major}.{version.Minor}.{version.Build}";
             return versionStr;
         }
 

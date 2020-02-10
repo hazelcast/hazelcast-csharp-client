@@ -88,15 +88,7 @@ namespace Hazelcast.IO.Serialization
             var version = input.ReadInt();
             return CreateReader(input, factoryId, classId, version, version);
         }
-
-        /// <exception cref="System.IO.IOException"/>
-        internal IPortable ReadAndInitialize(IBufferObjectDataInput @in, int factoryId, int classId)
-        {
-            var p = Read(@in, factoryId, classId);
-            var managedContext = _context.GetManagedContext();
-            return managedContext != null ? (IPortable) managedContext.Initialize(p) : p;
-        }
-
+        
         /// <exception cref="System.IO.IOException"/>
         internal void WriteInternal(IBufferObjectDataOutput output, IPortable p)
         {
@@ -165,7 +157,7 @@ namespace Hazelcast.IO.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
-        private IPortable Read(IBufferObjectDataInput @in, int factoryId, int classId)
+        internal IPortable Read(IBufferObjectDataInput @in, int factoryId, int classId)
         {
             var version = @in.ReadInt();
             var portable = CreateNewPortableInstance(factoryId, classId);

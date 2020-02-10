@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using NUnit.Framework;
@@ -64,7 +65,7 @@ namespace Hazelcast.Client.Test.Serialization
 
             _bufferPoolThreadLocal.Dispose();
 
-            Assert.Throws<HazelcastInstanceNotActiveException>(() => _bufferPoolThreadLocal.Get());
+            Assert.Throws<HazelcastClientNotActiveException>(() => _bufferPoolThreadLocal.Get());
         }
 
         [Test]

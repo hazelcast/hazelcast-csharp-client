@@ -219,17 +219,10 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test, TestCaseSource("ByteOrders")]
-        public void TestJavaEnum(ByteOrder order)
-        {
-            var javaEnum = new JavaEnum(TestSupport.RandomString(), TestSupport.RandomString());
-            AssertSerialization(javaEnum, order);
-        }
-
-        [Test, TestCaseSource("ByteOrders")]
         public void TestJavaClass(ByteOrder order)
         {
-            var javaEnum = new JavaClass(TestSupport.RandomString());
-            AssertSerialization(javaEnum, order);
+            var javaClass = new JavaClass(TestSupport.RandomString());
+            AssertSerialization(javaClass, order);
         }
 
         [Serializable]

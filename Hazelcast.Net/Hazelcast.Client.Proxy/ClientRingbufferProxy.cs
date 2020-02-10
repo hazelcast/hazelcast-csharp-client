@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Proxy
 
         private long _capacity = -1;
 
-        public ClientRingbufferProxy(string serviceName, string objectName) : base(serviceName, objectName)
+        public ClientRingbufferProxy(string serviceName, string objectName, HazelcastClient client) : base(serviceName, objectName, client)
         {
         }
 
@@ -41,32 +41,32 @@ namespace Hazelcast.Client.Proxy
         {
             if (_capacity != -1) return _capacity;
 
-            var request = RingbufferCapacityCodec.EncodeRequest(GetName());
+            var request = RingbufferCapacityCodec.EncodeRequest(Name);
             return _capacity = Invoke(request, m =>
                 RingbufferCapacityCodec.DecodeResponse(m).Response);
         }
 
         public long Size()
         {
-            var request = RingbufferSizeCodec.EncodeRequest(GetName());
+            var request = RingbufferSizeCodec.EncodeRequest(Name);
             return Invoke(request, m => RingbufferSizeCodec.DecodeResponse(m).Response);
         }
 
         public long TailSequence()
         {
-            var request = RingbufferTailSequenceCodec.EncodeRequest(GetName());
+            var request = RingbufferTailSequenceCodec.EncodeRequest(Name);
             return Invoke(request, m => RingbufferTailSequenceCodec.DecodeResponse(m).Response);
         }
 
         public long HeadSequence()
         {
-            var request = RingbufferHeadSequenceCodec.EncodeRequest(GetName());
+            var request = RingbufferHeadSequenceCodec.EncodeRequest(Name);
             return Invoke(request, m => RingbufferHeadSequenceCodec.DecodeResponse(m).Response);
         }
 
         public long RemainingCapacity()
         {
-            var request = RingbufferRemainingCapacityCodec.EncodeRequest(GetName());
+            var request = RingbufferRemainingCapacityCodec.EncodeRequest(Name);
             return Invoke(request, m => RingbufferRemainingCapacityCodec.DecodeResponse(m).Response);
         }
 
@@ -74,7 +74,7 @@ namespace Hazelcast.Client.Proxy
         {
             ValidationUtil.ThrowExceptionIfNull(item, "Item cannot be null");
 
-            var request = RingbufferAddCodec.EncodeRequest(GetName(), (int) OverflowPolicy.Overwrite, ToData(item));
+            var request = RingbufferAddCodec.EncodeRequest(Name, (int) OverflowPolicy.Overwrite, ToData(item));
             return Invoke(request, m => RingbufferAddCodec.DecodeResponse(m).Response);
         }
 
@@ -82,7 +82,7 @@ namespace Hazelcast.Client.Proxy
         {
             ValidationUtil.ThrowExceptionIfNull(item, "Item cannot be null");
 
-            var request = RingbufferAddCodec.EncodeRequest(GetName(), (int) OverflowPolicy.Overwrite, ToData(item));
+            var request = RingbufferAddCodec.EncodeRequest(Name, (int) OverflowPolicy.Overwrite, ToData(item));
             return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddCodec.DecodeResponse(m).Response);
         }
 
@@ -90,7 +90,7 @@ namespace Hazelcast.Client.Proxy
         {
             CheckSequence(sequence);
 
-            var request = RingbufferReadOneCodec.EncodeRequest(GetName(), sequence);
+            var request = RingbufferReadOneCodec.EncodeRequest(Name, sequence);
             var response = Invoke(request, m => RingbufferReadOneCodec.DecodeResponse(m).Response);
             return ToObject<T>(response);
         }
@@ -100,7 +100,7 @@ namespace Hazelcast.Client.Proxy
             ValidationUtil.ThrowExceptionIfTrue(collection.Count == 0, "Collection cannot be empty");
 
             var valueList = ToDataList(collection);
-            var request = RingbufferAddAllCodec.EncodeRequest(GetName(), valueList, (int) overflowPolicy);
+            var request = RingbufferAddAllCodec.EncodeRequest(Name, valueList, (int) overflowPolicy);
             return InvokeAsync(request, GetPartitionKey(), m => RingbufferAddAllCodec.DecodeResponse(m).Response);
         }
 
@@ -112,7 +112,7 @@ namespace Hazelcast.Client.Proxy
             ValidationUtil.ThrowExceptionIfTrue(minCount > Capacity(), "the minCount should be smaller than or equal to the capacity");
             ValidationUtil.ThrowExceptionIfTrue(maxCount > MaxBatchSize, "maxCount can't be larger than " + MaxBatchSize);
 
-            var request = RingbufferReadManyCodec.EncodeRequest(GetName(), startSequence, minCount, maxCount, null);
+            var request = RingbufferReadManyCodec.EncodeRequest(Name, startSequence, minCount, maxCount, null);
 
             return InvokeAsync(request, GetPartitionKey(),
                 m => ToList<T>(RingbufferReadManyCodec.DecodeResponse(m).Items));

@@ -29,14 +29,13 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
         {
             var itemCount = collection.Count();
             var frame = new Frame(new byte[itemCount * EntrySizeInBytes]);
-
             var i = 0;
             foreach (var kvp in collection)
             {
                 EncodeGuid(frame.Content, i * EntrySizeInBytes, kvp.Key);
                 EncodeLong(frame.Content, i * EntrySizeInBytes + GuidSizeInBytes, kvp.Value);
+                i++;
             }
-
             clientMessage.Add(frame);
         }
 

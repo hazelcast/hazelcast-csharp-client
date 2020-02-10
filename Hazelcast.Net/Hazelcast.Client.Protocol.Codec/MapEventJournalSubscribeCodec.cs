@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,71 +39,40 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapEventJournalSubscribeCodec
     {
-        //hex: 0x014400
-        public const int RequestMessageType = 82944;
-        //hex: 0x014401
-        public const int ResponseMessageType = 82945;
+        //hex: 0x014100
+        public const int RequestMessageType = 82176;
+        //hex: 0x014101
+        public const int ResponseMessageType = 82177;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseOldestSequenceFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseOldestSequenceFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseNewestSequenceFieldOffset = ResponseOldestSequenceFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseNewestSequenceFieldOffset + LongSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// name of the map
-            ///</summary>
-            public string Name;
-        }
 
         public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.EventJournalSubscribe";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            //empty initial frame
-            iterator.Next();
-            request.Name = StringCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
         {
 
             /// <summary>
-            /// TODO DOC
+            /// Sequence id of the oldest event in the event journal.
             ///</summary>
             public long OldestSequence;
 
             /// <summary>
-            /// TODO DOC
+            /// Sequence id of the newest event in the event journal.
             ///</summary>
             public long NewestSequence;
-        }
-
-        public static ClientMessage EncodeResponse(long oldestSequence, long newestSequence)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeLong(initialFrame.Content, ResponseOldestSequenceFieldOffset, oldestSequence);
-            EncodeLong(initialFrame.Content, ResponseNewestSequenceFieldOffset, newestSequence);
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -115,5 +84,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.NewestSequence = DecodeLong(initialFrame.Content, ResponseNewestSequenceFieldOffset);
             return response;
         }
+
     }
 }

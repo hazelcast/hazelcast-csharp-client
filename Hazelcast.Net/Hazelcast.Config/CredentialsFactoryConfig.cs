@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Security;
 
@@ -20,100 +21,38 @@ namespace Hazelcast.Config
     /// <summary>
     /// Contains the configuration for Credentials Factory.
     /// </summary>
-    public class CredentialsFactoryConfig
+    public class CredentialsFactoryConfig : IIdentityConfig
     {
-        private string _className;
+        public string ClassName { get; set; }
 
-        private ICredentialsFactory _implementation;
+        public ICredentialsFactory Implementation { get; set; }
 
-        private Dictionary<string, string> _properties = new Dictionary<string, string>();
+        public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
 
-        public CredentialsFactoryConfig(string className =null)
+        public object Clone()
         {
-            _className = className;
+            return new CredentialsFactoryConfig {ClassName = ClassName, Implementation = Implementation, Properties = Properties};
         }
 
-        /// <summary>
-        /// Gets the configured class name of <see cref="ICredentialsFactory"/> implementation
-        /// </summary>
-        /// <returns>class name of <see cref="ICredentialsFactory"/> implementation</returns>
-        public string GetClassName() {
-            return _className;
-        }
-
-        /// <summary>
-        /// Sets the class name of <see cref="ICredentialsFactory"/> implementation that will be used to
-        /// instantiate the factory instance
-        /// </summary>
-        /// <param name="classname">the factory class name</param>
-        /// <returns>configured <see cref="CredentialsFactoryConfig"/> for chaining</returns>
-        public CredentialsFactoryConfig SetClassName(string classname) {
-            _className = classname;
-            return this;
-        }
-        
-        /// <summary>
-        /// Get the configured factory instance
-        /// </summary>
-        /// <returns>factory instance</returns>
-        public ICredentialsFactory GetImplementation()
+        public ICredentialsFactory AsCredentialsFactory()
         {
-            return _implementation;
-        }
-
-        /// <summary>
-        /// Set the factory instance
-        /// </summary>
-        /// <param name="factoryImpl">factory instance to be configured</param>
-        /// <returns>configured <see cref="CredentialsFactoryConfig"/> for chaining</returns>
-        public CredentialsFactoryConfig SetImplementation(ICredentialsFactory factoryImpl)
-        {
-            _implementation = factoryImpl;
-            return this;
-        }
-        
-        /// <summary>
-        /// Gets the dictionary of the properties that will be used in <see cref="ICredentialsFactory.Configure"/>
-        /// </summary>
-        /// <returns></returns>
-        public Dictionary<string, string> GetProperties()
-        {
-            return _properties;
-        }
-
-        /// <summary>
-        /// Sets the dictionary of the properties that will be used in <see cref="ICredentialsFactory.Configure"/>
-        /// </summary>
-        /// <param name="properites"></param>
-        /// <returns>configured <see cref="CredentialsFactoryConfig"/> for chaining</returns>
-        public CredentialsFactoryConfig SetProperties(Dictionary<string, string> properites)
-        {
-            _properties = properites;
-            return this;
-        }
-
-        /// <summary>
-        /// Gets the value of the configured key-value pair
-        /// </summary>
-        /// <param name="name">name of the pair</param>
-        /// <returns>value of the pair</returns>
-        public string GetProperty(string name)
-        {
-            string value;
-            _properties.TryGetValue(name, out value);
-            return value;
-        }
-
-        /// <summary>
-        /// Adds a key, value pair into the properties dictionary of this configuration if not exist
-        /// </summary>
-        /// <param name="name">name of the pair</param>
-        /// <param name="value">value of the pair</param>
-        /// <returns>configured <see cref="CredentialsFactoryConfig"/> for chaining</returns>
-        public CredentialsFactoryConfig SetProperty(string name, string value)
-        {
-            _properties.Add(name, value);
-            return this;
+            if (Implementation == null)
+            {
+                try
+                {
+                    var type = Type.GetType(ClassName, true, false);
+                    if (type != null)
+                    {
+                        Implementation = Activator.CreateInstance(type) as ICredentialsFactory;
+                        Implementation?.Init(Properties);
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException($"Could not create instance of '{ClassName}', cause: {e.Message}", e);
+                }
+            }
+            return Implementation;
         }
     }
 }

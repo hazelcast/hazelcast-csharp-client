@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,41 +37,22 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapLoadGivenKeysCodec
     {
-        //hex: 0x012200
-        public const int RequestMessageType = 74240;
-        //hex: 0x012201
-        public const int ResponseMessageType = 74241;
+        //hex: 0x012100
+        public const int RequestMessageType = 73984;
+        //hex: 0x012101
+        public const int ResponseMessageType = 73985;
         private const int RequestReplaceExistingValuesFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestReplaceExistingValuesFieldOffset + BoolSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// name of map
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// keys to load
-            ///</summary>
-            public IList<IData> Keys;
-
-            /// <summary>
-            /// when <code>true</code>, existing values in the Map will be replaced by those loaded from the MapLoader
-            ///</summary>
-            public bool ReplaceExistingValues;
-        }
-
-        public static ClientMessage EncodeRequest(string name, IEnumerable<IData> keys, bool replaceExistingValues)
+        public static ClientMessage EncodeRequest(string name, ICollection<IData> keys, bool replaceExistingValues)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.LoadGivenKeys";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeBool(initialFrame.Content, RequestReplaceExistingValuesFieldOffset, replaceExistingValues);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
@@ -79,29 +60,8 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.ReplaceExistingValues =  DecodeBool(initialFrame.Content, RequestReplaceExistingValuesFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            request.Keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
-            return request;
-        }
-
         public class ResponseParameters
         {
-        }
-
-        public static ClientMessage EncodeResponse()
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -112,5 +72,6 @@ namespace Hazelcast.Client.Protocol.Codec
             iterator.Next();
             return response;
         }
+
     }
 }

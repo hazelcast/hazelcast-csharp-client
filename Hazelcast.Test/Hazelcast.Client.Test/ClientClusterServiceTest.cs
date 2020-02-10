@@ -54,7 +54,7 @@ namespace Hazelcast.Client.Test
 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+            config.SetClusterName(_cluster.Id);
         }
 
         [Test]
@@ -63,7 +63,7 @@ namespace Hazelcast.Client.Test
             var reset = new ManualResetEventSlim();
 
             MembershipEvent memberAddedEvent = null;
-            _client.GetCluster().AddMembershipListener(new MembershipListener
+            _client.Cluster.AddMembershipListener(new MembershipListener
             {
                 OnMemberAdded = memberAdded =>
                 {
@@ -84,7 +84,7 @@ namespace Hazelcast.Client.Test
         public void MemberRemovedEvent()
         {
             var reset = new ManualResetEventSlim();
-            _client.GetCluster().AddMembershipListener(new MembershipListener
+            _client.Cluster.AddMembershipListener(new MembershipListener
             {
                 OnMemberAdded = memberAddedEvent => { reset.Set(); }
             });
@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Test
             reset.Reset();
 
             MembershipEvent memberRemovedEvent = null;
-            _client.GetCluster().AddMembershipListener(new MembershipListener
+            _client.Cluster.AddMembershipListener(new MembershipListener
             {
                 OnMemberRemoved = memberRemoved =>
                 {
@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Test
         public void TestInitialMembershipService()
         {
             var listener = new InitialMembershipListener();
-            _client.GetCluster().AddMembershipListener(listener);
+            _client.Cluster.AddMembershipListener(listener);
 
             var members = listener.MembershipEvent.GetMembers();
             Assert.AreEqual(1, members.Count);
@@ -152,11 +152,6 @@ namespace Hazelcast.Client.Test
             public void MemberRemoved(MembershipEvent membershipEvent)
             {
             }
-
-            public void MemberAttributeChanged(MemberAttributeEvent memberAttributeEvent)
-            {
-            }
-
             public void Init(InitialMembershipEvent membershipEvent)
             {
                 MembershipEvent = membershipEvent;

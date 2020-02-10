@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using Hazelcast.IO;
 using Hazelcast.Net.Ext;
 
@@ -25,26 +26,24 @@ namespace Hazelcast.Client.Protocol.Util
     {
         private const int IntMask = 0xffff;
         private const int InitialOffset = -1;
-
-        private readonly int _maxMessageLength;
-
         private int _readOffset = InitialOffset;
-        private int _sumUntrustedMessageLength;
+        private ClientMessage _message;
 
-        public ClientMessageReader(int maxMessageLength = int.MaxValue)
+        public ClientMessage Message => _message;
+
+        public void Reset()
         {
-            _maxMessageLength = maxMessageLength;
+            Interlocked.Exchange(ref _readOffset, InitialOffset);
+            Interlocked.Exchange(ref _message, null);
         }
 
-        public ClientMessage Message { get; private set; }
-
-        public bool ReadFrom(ByteBuffer src, bool trusted)
+        public bool ReadFrom(ByteBuffer src)
         {
-            for (; ; )
+            for (;;)
             {
-                if (ReadFrame(src, trusted))
+                if (ReadFrame(src))
                 {
-                    if (Message.Tail.IsFinal)
+                    if (_message.LastFrame.IsFinal)
                     {
                         return true;
                     }
@@ -54,40 +53,26 @@ namespace Hazelcast.Client.Protocol.Util
                 {
                     return false;
                 }
-
             }
         }
 
-        private bool ReadFrame(ByteBuffer src, bool trusted)
+        private bool ReadFrame(ByteBuffer src)
         {
             // init internal buffer
             var remaining = src.Remaining();
-
             if (remaining < ClientMessage.SizeOfFrameLengthAndFlags)
             {
                 // we don't have even the frame length and flags ready
                 return false;
             }
-
             if (_readOffset == InitialOffset)
             {
-                int frameLength = Bits.ReadIntL(src.Array(), src.Position);
+                var frameLength = Bits.ReadIntL(src.Array(), src.Position);
                 if (frameLength < ClientMessage.SizeOfFrameLengthAndFlags)
                 {
-                    throw new Exception($"The client message frame reported illegal length ({frameLength} bytes). Minimal length is the size of frame header ({ClientMessage.SizeOfFrameLengthAndFlags} bytes).");
+                    throw new Exception(
+                        $"The client message frame reported illegal length ({frameLength} bytes). Minimal length is the size of frame header ({ClientMessage.SizeOfFrameLengthAndFlags} bytes).");
                 }
-
-                if (!trusted)
-                {
-                    // check the message size overflow and message size limit
-                    if (int.MaxValue - frameLength < _sumUntrustedMessageLength
-                            || _sumUntrustedMessageLength + frameLength > _maxMessageLength)
-                    {
-                        throw new Exception($"The client message size ({_sumUntrustedMessageLength} + {frameLength}) exceeds the maximum allowed length ({_maxMessageLength})");
-                    }
-                    _sumUntrustedMessageLength += frameLength;
-                }
-
                 src.Position += Bits.IntSizeInBytes;
                 var flags = Bits.ReadShortL(src.Array(), src.Position) & IntMask;
                 src.Position += Bits.ShortSizeInBytes;
@@ -95,13 +80,13 @@ namespace Hazelcast.Client.Protocol.Util
                 var size = frameLength - ClientMessage.SizeOfFrameLengthAndFlags;
                 var bytes = new byte[size];
                 var frame = new ClientMessage.Frame(bytes, flags);
-                if (Message == null)
+                if (_message == null)
                 {
-                    Message = ClientMessage.CreateForDecode(frame);
+                    _message = ClientMessage.CreateForDecode(frame);
                 }
                 else
                 {
-                    Message.Add(frame);
+                    _message.Add(frame);
                 }
                 _readOffset = 0;
                 if (size == 0)
@@ -110,7 +95,7 @@ namespace Hazelcast.Client.Protocol.Util
                 }
             }
 
-            var tail = Message.Tail;
+            var tail = _message.LastFrame;
             return Accumulate(src, tail.Content, tail.Content.Length - _readOffset);
         }
 

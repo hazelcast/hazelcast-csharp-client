@@ -4,7 +4,6 @@
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
            http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd">
 
-    <management-center enabled="true">http://localhost:8083/mancenter</management-center>
     <network>
         <port auto-increment="true" port-count="100">5701</port>
         <outbound-ports>

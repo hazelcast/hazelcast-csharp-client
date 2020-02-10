@@ -12,37 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.IO;
 
 namespace Hazelcast.Core
 {
     /// <summary>Cluster member interface.</summary>
-    /// <remarks>
-    /// Cluster member interface. The default implementation violates the Serialization contract.
-    /// It should be serialized/deserialized by Hazelcast.
-    /// </remarks>
-    /// <seealso cref="ICluster">Cluster</seealso>
-    /// <seealso cref="IMembershipListener">MembershipListener</seealso>
-    public interface IMember : IEndpoint
+    /// <seealso cref="ICluster">ICluster</seealso>
+    /// <seealso cref="IMembershipListener">IMembershipListener</seealso>
+    public interface IMember
     {
-        // <summary>Returns true if this member is a lite member.</summary>
+        /// <summary>Returns true if this member is a lite member.</summary>
         /// <returns>
-        /// <tt>true</tt> if this member is a lite member, <tt>false</tt> otherwise.
+        /// <c>true</c> if this member is a lite member, <c>false</c> otherwise.
         /// Lite members do not own any partition.
         /// </returns>
         bool IsLiteMember { get; }
 
         Address Address { get; }
 
-        string GetAttribute(string key);
-
-        /// <summary>
-        /// Returns configured attributes for this member.<br/>
-        /// <b>This method might not be available on all native clients.</b>
-        /// </summary>
+        /// <summary>Returns configured attributes for this member</summary>
         /// <value>Attributes for this member.</value>
-        /// <since>3.2</since>
         IDictionary<string, string> Attributes { get; }
+        
+        /// <summary>
+        /// Returns the Hazelcast codebase version of this member
+        /// </summary>
+        MemberVersion Version { get; }
+
+
+        /// <summary>Returns unique uuid for this endpoint</summary>
+        /// <value>unique uuid for this endpoint</value>
+        Guid Uuid { get; }
     }
 }

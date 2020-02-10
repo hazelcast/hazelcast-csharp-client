@@ -14,9 +14,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using Hazelcast.Client.Network;
 using Hazelcast.Client.Spi;
+using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Transaction;
+using Hazelcast.Util;
 
 namespace Hazelcast.Client.Proxy
 {
@@ -28,22 +33,13 @@ namespace Hazelcast.Client.Proxy
         private readonly HazelcastClient _client;
         private readonly TransactionProxy _transaction;
 
-        internal readonly IMember TxnOwnerNode;
-
+        public Connection TxnConnection { get; }
+        
         public TransactionContextProxy(HazelcastClient client, TransactionOptions options)
         {
             _client = client;
-            var clusterService = (ClientClusterService) client.GetClientClusterService();
-
-            TxnOwnerNode = client.GetClientConfig().GetNetworkConfig().IsSmartRouting() ?
-                client.GetLoadBalancer().Next():
-                clusterService.GetMember(clusterService.GetOwnerConnectionAddress());
-
-            if (TxnOwnerNode == null)
-            {
-                throw new HazelcastException("Could not find matching member");
-            }
-            _transaction = new TransactionProxy(client, options, TxnOwnerNode);
+            TxnConnection = Connect();
+            _transaction = new TransactionProxy(client, options, TxnConnection);
         }
 
         public virtual Guid GetTxnId()
@@ -147,7 +143,33 @@ namespace Hazelcast.Client.Proxy
             var mgType = proxyType.MakeGenericType(genericTypeArguments);
             return Activator.CreateInstance(mgType, name, this) as ClientTxnProxy;
         }
+        
+        private Connection Connect()
+        {
+            _client.ConnectionManager.GetRandomConnection();
+            var invocationService = _client.InvocationService;
+            var startTimeMillis = Clock.CurrentTimeMillis();
+            var invocationTimeoutMillis = invocationService.InvocationTimeoutMillis;
+            while (_client.LifecycleService.IsRunning())
+            {
+                try {
+                    var connection = _client.ConnectionManager.GetRandomConnection();
+                    if (connection == null)
+                    {
+                        throw new InvalidOperationException("");
+                    }
+                    return connection;
+                } catch (Exception e) {
+                    if (Clock.CurrentTimeMillis() - startTimeMillis > invocationTimeoutMillis) {
+                        throw new TimeoutException("Creating transaction context timed out because exception occurred after client invocation timeout ", e);
+                    }
+                }
+                Thread.Sleep(invocationService.InvocationTimeoutMillis);
+            }
+            throw new HazelcastClientNotActiveException();
+        }
     }
+    
 
     internal class TransactionalObjectKey
     {

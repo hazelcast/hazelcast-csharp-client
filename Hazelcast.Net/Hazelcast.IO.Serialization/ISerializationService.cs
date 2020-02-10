@@ -29,7 +29,6 @@ namespace Hazelcast.IO.Serialization
         void Destroy();
         void DisposeData(IData data);
         ByteOrder GetByteOrder();
-        IManagedContext GetManagedContext();
         IPortableContext GetPortableContext();
         byte GetVersion();
         T ReadObject<T>(IObjectDataInput input);

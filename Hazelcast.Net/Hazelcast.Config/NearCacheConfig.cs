@@ -302,8 +302,7 @@ namespace Hazelcast.Config
             return sb.ToString();
         }
 
-#pragma warning disable CS1591
-        [Obsolete("This configuration is not used on client")]
+[Obsolete("This configuration is not used on client")]
         public virtual bool IsCacheLocalEntries()
         {
             return _cacheLocalEntries;

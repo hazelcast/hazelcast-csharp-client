@@ -14,7 +14,7 @@
 
 namespace Hazelcast.Core
 {
-    /// <summary>Listener object for lisntening lifecycle events of hazelcast instance</summary>
+    /// <summary>Listener object for listening lifecycle events of hazelcast instance</summary>
     /// <seealso cref="LifecycleEvent">LifecycleEvent</seealso>
     /// <seealso cref="IHazelcastInstance.GetLifecycleService()">IHazelcastInstance.GetLifecycleService()</seealso>
     public interface ILifecycleListener : IEventListener

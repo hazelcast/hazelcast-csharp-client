@@ -7,7 +7,7 @@
     <TargetFrameworks>net45;netcoreapp2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>7</LangVersion>
     <RootNamespace />
   </PropertyGroup>
   <PropertyGroup Label="sign">
@@ -24,7 +24,6 @@
       <HintPath>..\packages\ApacheThrift.0.9.3\lib\Thrift.dll</HintPath>
     </Reference>
     <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="PublicApiGenerator" Version="9.3.0" />
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
   </ItemGroup>
   <ItemGroup>

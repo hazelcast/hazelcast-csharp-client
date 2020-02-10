@@ -26,7 +26,7 @@ namespace Hazelcast.Config
     /// <p/>
     /// If no configuration is found by the matcher it should return <tt>null</tt>. In this case the default config will be used
     /// for this item then. If multiple configurations are found by the matcher a
-    /// <see cref="ConfigurationException"/>
+    /// <see cref="InvalidConfigurationException"/>
     /// should be thrown.
     /// <p/>
     /// Since Hazelcast 3.5 the default matcher is
@@ -39,8 +39,8 @@ namespace Hazelcast.Config
         /// <param name="configPatterns">list of configuration patterns</param>
         /// <param name="itemName">item name to match</param>
         /// <returns>a key of configPatterns which matches the item name or <tt>null</tt> if nothing matches</returns>
-        /// <exception cref="ConfigurationException">if ambiguous configurations are found</exception>
-        /// <exception cref="Hazelcast.Config.ConfigurationException"/>
+        /// <exception cref="InvalidConfigurationException">if ambiguous configurations are found</exception>
+        /// <exception cref="InvalidConfigurationException"/>
         string Matches(IEnumerable<string> configPatterns, string itemName);
     }
 }

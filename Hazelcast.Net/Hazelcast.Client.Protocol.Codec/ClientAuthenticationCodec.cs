@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace Hazelcast.Client.Protocol.Codec
     // and regenerate it.
 
     /// <summary>
-    /// TODO DOC
+    /// Makes an authentication request to the cluster.
     ///</summary>
     internal static class ClientAuthenticationCodec
     {
@@ -43,91 +43,25 @@ namespace Hazelcast.Client.Protocol.Codec
         public const int ResponseMessageType = 257;
         private const int RequestUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestSerializationVersionFieldOffset = RequestUuidFieldOffset + GuidSizeInBytes;
-        private const int RequestPartitionCountFieldOffset = RequestSerializationVersionFieldOffset + ByteSizeInBytes;
-        private const int RequestClusterIdFieldOffset = RequestPartitionCountFieldOffset + IntSizeInBytes;
-        private const int RequestInitialFrameSize = RequestClusterIdFieldOffset + GuidSizeInBytes;
-        private const int ResponseStatusFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
-        private const int ResponseUuidFieldOffset = ResponseStatusFieldOffset + ByteSizeInBytes;
-        private const int ResponseSerializationVersionFieldOffset = ResponseUuidFieldOffset + GuidSizeInBytes;
+        private const int RequestInitialFrameSize = RequestSerializationVersionFieldOffset + ByteSizeInBytes;
+        private const int ResponseStatusFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
+        private const int ResponseMemberUuidFieldOffset = ResponseStatusFieldOffset + ByteSizeInBytes;
+        private const int ResponseSerializationVersionFieldOffset = ResponseMemberUuidFieldOffset + GuidSizeInBytes;
         private const int ResponsePartitionCountFieldOffset = ResponseSerializationVersionFieldOffset + ByteSizeInBytes;
         private const int ResponseClusterIdFieldOffset = ResponsePartitionCountFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseClusterIdFieldOffset + GuidSizeInBytes;
+        private const int ResponseFailoverSupportedFieldOffset = ResponseClusterIdFieldOffset + GuidSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseFailoverSupportedFieldOffset + BoolSizeInBytes;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// Cluster name that client will connect to.
-            ///</summary>
-            public string ClusterName;
-
-            /// <summary>
-            /// Name of the user for authentication.
-            /// Used in case Client Identity Config, otherwise it should be passed null.
-            ///</summary>
-            public string Username;
-
-            /// <summary>
-            /// Password for the user.
-            /// Used in case Client Identity Config, otherwise it should be passed null.
-            ///</summary>
-            public string Password;
-
-            /// <summary>
-            /// Unique string identifying the connected client uniquely.
-            ///</summary>
-            public Guid Uuid;
-
-            /// <summary>
-            /// The type of the client. E.g. JAVA, CPP, CSHARP, etc.
-            ///</summary>
-            public string ClientType;
-
-            /// <summary>
-            /// client side supported version to inform server side
-            ///</summary>
-            public byte SerializationVersion;
-
-            /// <summary>
-            /// The Hazelcast version of the client. (e.g. 3.7.2)
-            ///</summary>
-            public string ClientHazelcastVersion;
-
-            /// <summary>
-            /// the name of the client instance
-            ///</summary>
-            public string ClientName;
-
-            /// <summary>
-            /// User defined labels of the client instance
-            ///</summary>
-            public IList<string> Labels;
-
-            /// <summary>
-            /// the expected partition count of the cluster. Checked on the server side when provided.
-            /// Authentication fails and 3:NOT_ALLOWED_IN_CLUSTER returned, in case of mismatch
-            ///</summary>
-            public int PartitionCount;
-
-            /// <summary>
-            /// the expected id of the cluster. Checked on the server side when provided.
-            /// Authentication fails and 3:NOT_ALLOWED_IN_CLUSTER returned, in case of mismatch
-            ///</summary>
-            public Guid ClusterId;
-        }
-
-        public static ClientMessage EncodeRequest(string clusterName, string username, string password, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, IEnumerable<string> labels, int partitionCount, Guid clusterId)
+        public static ClientMessage EncodeRequest(string clusterName, string username, string password, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, ICollection<string> labels)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Client.Authentication";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeGuid(initialFrame.Content, RequestUuidFieldOffset, uuid);
             EncodeByte(initialFrame.Content, RequestSerializationVersionFieldOffset, serializationVersion);
-            EncodeInt(initialFrame.Content, RequestPartitionCountFieldOffset, partitionCount);
-            EncodeGuid(initialFrame.Content, RequestClusterIdFieldOffset, clusterId);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, clusterName);
             CodecUtil.EncodeNullable(clientMessage, username, StringCodec.Encode);
@@ -139,42 +73,24 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.Uuid =  DecodeGuid(initialFrame.Content, RequestUuidFieldOffset);
-            request.SerializationVersion =  DecodeByte(initialFrame.Content, RequestSerializationVersionFieldOffset);
-            request.PartitionCount =  DecodeInt(initialFrame.Content, RequestPartitionCountFieldOffset);
-            request.ClusterId =  DecodeGuid(initialFrame.Content, RequestClusterIdFieldOffset);
-            request.ClusterName = StringCodec.Decode(iterator);
-            request.Username = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-            request.Password = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-            request.ClientType = StringCodec.Decode(iterator);
-            request.ClientHazelcastVersion = StringCodec.Decode(iterator);
-            request.ClientName = StringCodec.Decode(iterator);
-            request.Labels = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
-            return request;
-        }
-
         public class ResponseParameters
         {
 
             /// <summary>
-            /// TODO DOC
+            /// A byte that represents the authentication status. It can be AUTHENTICATED(0), CREDENTIALS_FAILED(1),
+            /// SERIALIZATION_VERSION_MISMATCH(2) or NOT_ALLOWED_IN_CLUSTER(3).
             ///</summary>
             public byte Status;
 
             /// <summary>
-            /// TODO DOC
+            /// Address of the Hazelcast member which sends the authentication response.
             ///</summary>
             public Hazelcast.IO.Address Address;
 
             /// <summary>
-            /// Unique string identifying the connected client uniquely.
+            /// UUID of the Hazelcast member which sends the authentication response.
             ///</summary>
-            public Guid Uuid;
+            public Guid MemberUuid;
 
             /// <summary>
             /// client side supported version to inform server side
@@ -182,38 +98,24 @@ namespace Hazelcast.Client.Protocol.Codec
             public byte SerializationVersion;
 
             /// <summary>
-            /// TODO DOC
+            /// Version of the Hazelcast member which sends the authentication response.
             ///</summary>
             public string ServerHazelcastVersion;
 
             /// <summary>
-            /// the expected partition count of the cluster. Checked on the server side when provided.
-            /// Authentication fails and 3:NOT_ALLOWED_IN_CLUSTER returned, in case of mismatch
+            /// Partition count of the cluster.
             ///</summary>
             public int PartitionCount;
 
             /// <summary>
-            /// the expected id of the cluster. Checked on the server side when provided.
-            /// Authentication fails and 3:NOT_ALLOWED_IN_CLUSTER returned, in case of mismatch
+            /// UUID of the cluster that the client authenticated.
             ///</summary>
             public Guid ClusterId;
-        }
 
-        public static ClientMessage EncodeResponse(byte status, Hazelcast.IO.Address address, Guid uuid, byte serializationVersion, string serverHazelcastVersion, int partitionCount, Guid clusterId)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeByte(initialFrame.Content, ResponseStatusFieldOffset, status);
-            EncodeGuid(initialFrame.Content, ResponseUuidFieldOffset, uuid);
-            EncodeByte(initialFrame.Content, ResponseSerializationVersionFieldOffset, serializationVersion);
-            EncodeInt(initialFrame.Content, ResponsePartitionCountFieldOffset, partitionCount);
-            EncodeGuid(initialFrame.Content, ResponseClusterIdFieldOffset, clusterId);
-            CodecUtil.EncodeNullable(clientMessage, address, AddressCodec.Encode);
-            StringCodec.Encode(clientMessage, serverHazelcastVersion);
-            return clientMessage;
+            /// <summary>
+            /// Returns true if server supports clients with failover feature.
+            ///</summary>
+            public bool FailoverSupported;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -222,13 +124,15 @@ namespace Hazelcast.Client.Protocol.Codec
             var response = new ResponseParameters();
             var initialFrame = iterator.Next();
             response.Status = DecodeByte(initialFrame.Content, ResponseStatusFieldOffset);
-            response.Uuid = DecodeGuid(initialFrame.Content, ResponseUuidFieldOffset);
+            response.MemberUuid = DecodeGuid(initialFrame.Content, ResponseMemberUuidFieldOffset);
             response.SerializationVersion = DecodeByte(initialFrame.Content, ResponseSerializationVersionFieldOffset);
             response.PartitionCount = DecodeInt(initialFrame.Content, ResponsePartitionCountFieldOffset);
             response.ClusterId = DecodeGuid(initialFrame.Content, ResponseClusterIdFieldOffset);
+            response.FailoverSupported = DecodeBool(initialFrame.Content, ResponseFailoverSupportedFieldOffset);
             response.Address = CodecUtil.DecodeNullable(iterator, AddressCodec.Decode);
             response.ServerHazelcastVersion = StringCodec.Decode(iterator);
             return response;
         }
+
     }
 }

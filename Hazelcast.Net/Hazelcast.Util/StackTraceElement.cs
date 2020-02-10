@@ -55,6 +55,6 @@ namespace Hazelcast.Util
                    string.Equals(FileName, other.FileName) && LineNumber == other.LineNumber;
         }
 
-        public override string ToString() => $"{FileName} : {ClassName} : {MethodName} : [{LineNumber}] ";
+        public override string ToString() => $"{ClassName}.{MethodName} in {FileName}:{LineNumber}";
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ namespace Hazelcast.Client.Protocol.Codec.Custom
             CodecUtil.EncodeNullable(clientMessage, errorHolder.Message, StringCodec.Encode);
             ListMultiFrameCodec.Encode(clientMessage, errorHolder.StackTraceElements, StackTraceElementCodec.Encode);
 
-            clientMessage.Add(EndFrame);
+            clientMessage.Add(EndFrame.Copy());
         }
 
         public static Hazelcast.Client.Protocol.ErrorHolder Decode(FrameIterator iterator)

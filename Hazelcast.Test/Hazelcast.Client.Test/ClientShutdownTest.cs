@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Remote;
@@ -47,7 +48,7 @@ namespace Hazelcast.Client.Test
 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+            config.SetClusterName(_cluster.Id);
         }
 
         //TODO: This test fails intermittently
@@ -89,7 +90,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestOperationAfterShutdown()
         {
-            Assert.Throws<HazelcastInstanceNotActiveException>(() =>
+            Assert.Throws<HazelcastClientNotActiveException>(() =>
             {
                 var member = _remoteController.startMember(_cluster.Id);
                 var client = CreateClient();
@@ -107,7 +108,7 @@ namespace Hazelcast.Client.Test
         [Test, Repeat(10)]
         public void TestOperationDuringClientShutdown()
         {
-            Assert.Throws<HazelcastException>(() =>
+            Assert.Throws<HazelcastClientNotActiveException>(() =>
             {
                 var member = _remoteController.startMember(_cluster.Id);
                 var client = CreateClient();

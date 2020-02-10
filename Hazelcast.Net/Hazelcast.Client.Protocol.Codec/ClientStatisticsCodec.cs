@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -193,41 +193,22 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class ClientStatisticsCodec
     {
-        //hex: 0x000E00
-        public const int RequestMessageType = 3584;
-        //hex: 0x000E01
-        public const int ResponseMessageType = 3585;
+        //hex: 0x000C00
+        public const int RequestMessageType = 3072;
+        //hex: 0x000C01
+        public const int ResponseMessageType = 3073;
         private const int RequestTimestampFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestTimestampFieldOffset + LongSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// The timestamp taken during statistics collection.
-            ///</summary>
-            public long Timestamp;
-
-            /// <summary>
-            /// The key=value pairs separated by the ',' character.
-            ///</summary>
-            public string ClientAttributes;
-
-            /// <summary>
-            /// Compressed byte array containing all metrics collected by the client.
-            ///</summary>
-            public byte[] MetricsBlob;
-        }
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(long timestamp, string clientAttributes, byte[] metricsBlob)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Client.Statistics";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame.Content, RequestTimestampFieldOffset, timestamp);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, clientAttributes);
@@ -235,29 +216,8 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.Timestamp =  DecodeLong(initialFrame.Content, RequestTimestampFieldOffset);
-            request.ClientAttributes = StringCodec.Decode(iterator);
-            request.MetricsBlob = ByteArrayCodec.Decode(iterator);
-            return request;
-        }
-
         public class ResponseParameters
         {
-        }
-
-        public static ClientMessage EncodeResponse()
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -268,5 +228,6 @@ namespace Hazelcast.Client.Protocol.Codec
             iterator.Next();
             return response;
         }
+
     }
 }

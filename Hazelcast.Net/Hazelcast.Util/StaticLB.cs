@@ -18,7 +18,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Util
 {
-    internal class StaticLB : ILoadBalancer
+    public class StaticLB : ILoadBalancer
     {
         private readonly IMember _member;
 

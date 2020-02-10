@@ -24,6 +24,18 @@ namespace Hazelcast.Logging
     /// </remarks>
     public interface ILogger
     {
+        /// <summary>Gets the logging Level.</summary>
+        /// <value>the logging Level.</value>
+        LogLevel LogLevel { get; }
+
+        /// <summary>
+        ///     Checks if the
+        ///     <see cref="LogLevel.Finest">LogLevel.Finest</see>
+        ///     is enabled.
+        /// </summary>
+        /// <value>true if enabled, false otherwise.</value>
+        bool IsFinestEnabled { get; }
+
         /// <summary>
         ///     Logs a message at
         ///     <see cref="LogLevel.Finest">LogLevel.Finest</see>
@@ -49,25 +61,12 @@ namespace Hazelcast.Logging
         /// <param name="thrown">the Throwable associated to the message.</param>
         void Finest(string message, Exception thrown);
 
-        /// <summary>Gets the logging Level.</summary>
-        /// <remarks>Gets the logging Level.</remarks>
-        /// <returns>the logging Level.</returns>
-        LogLevel GetLevel();
-
         /// <summary>
         ///     Logs a message at <see cref="LogLevel.Info">LogLevel.Info</see>
         ///     .
         /// </summary>
         /// <param name="message">the message to log.</param>
         void Info(string message);
-
-        /// <summary>
-        ///     Checks if the
-        ///     <see cref="LogLevel.Finest">LogLevel.Finest</see>
-        ///     is enabled.
-        /// </summary>
-        /// <returns>true if enabled, false otherwise.</returns>
-        bool IsFinestEnabled();
 
         /// <summary>Checks if a message at the provided level is going to be logged by this logger.</summary>
         /// <remarks>Checks if a message at the provided level is going to be logged by this logger.</remarks>

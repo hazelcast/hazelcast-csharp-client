@@ -45,12 +45,13 @@ namespace Hazelcast.Client.Test
         
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(_cluster.Id).SetClusterPassword(_cluster.Id);
+            config.SetClusterName(_cluster.Id);
         }
 
         protected override void ConfigureClient(ClientConfig config)
         {
             config.GetNetworkConfig().SetRedoOperation(true);
+            config.GetConnectionStrategyConfig().ConnectionRetryConfig.ClusterConnectTimeoutMillis = int.MaxValue;
             base.ConfigureClient(config);
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.timeout", "5000");
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", "1000");

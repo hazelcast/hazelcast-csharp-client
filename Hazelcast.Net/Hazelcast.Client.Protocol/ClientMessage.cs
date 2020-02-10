@@ -13,23 +13,28 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
-using Hazelcast.IO;
+using Hazelcast.Client.Protocol.Codec.BuiltIn;
 using static Hazelcast.IO.Bits;
 
 namespace Hazelcast.Client.Protocol
 {
-    public class ClientMessage //, IOutboundFrame
+    [DebuggerDisplay("")]
+    internal class ClientMessage
     {
         // All offsets here are offset of frame.content byte[]
         // Note that frames have frame length and flags before this byte[] content
         public const int TypeFieldOffset = 0;
         public const int CorrelationIdFieldOffset = TypeFieldOffset + IntSizeInBytes;
+        //backup acks field offset is used by response messages
         public const int ResponseBackupAcksFieldOffset = CorrelationIdFieldOffset + LongSizeInBytes;
+        //partition id field offset used by request and event messages
+        public const int PartitionIdFieldOffset = CorrelationIdFieldOffset + LongSizeInBytes;
+
         //offset valid for fragmentation frames only
         public const int FragmentationIdOffset = 0;
-        //optional fixed partition id field offset
-        public const int PartitionIdFieldOffset = CorrelationIdFieldOffset + LongSizeInBytes;
 
         public const int DefaultFlags = 0;
         public const int BeginFragmentFlag = 1 << 15;
@@ -40,6 +45,8 @@ namespace Hazelcast.Client.Protocol
         public const int EndDataStructureFlag = 1 << 11;
         public const int IsNullFlag = 1 << 10;
         public const int IsEventFlag = 1 << 9;
+        public const int BackupAwareFlag = 1 << 8;
+        public const int BackupEventFlag = 1 << 7;
 
         //frame length + flags
         public const int SizeOfFrameLengthAndFlags = IntSizeInBytes + ShortSizeInBytes;
@@ -47,84 +54,73 @@ namespace Hazelcast.Client.Protocol
         public static readonly Frame BeginFrame = new Frame(new byte[0], BeginDataStructureFlag);
         public static readonly Frame EndFrame = new Frame(new byte[0], EndDataStructureFlag);
 
-        private const long SerialVersionUid = 1L;
-
         public bool IsRetryable;
-        public bool AcquiresResource;
         public string OperationName;
+        public Frame FirstFrame { get; private set; }
+        public Frame LastFrame { get; private set; }
 
-        Frame _startFrame;
-        Frame _endFrame;
+        public int HeaderFlags => FirstFrame.Flags;
 
         private ClientMessage()
         {
         }
 
-        private ClientMessage(Frame startFrame)
+        //Constructs client message with single frame. StartFrame.next must be null.
+        private ClientMessage(Frame firstFrame)
         {
-            _startFrame = startFrame;
-            _endFrame = startFrame;
-            while (_endFrame.next != null)
-            {
-                _endFrame = _endFrame.next;
-            }
+            Debug.Assert(firstFrame.next == null);
+            FirstFrame = firstFrame;
+            LastFrame = firstFrame;
+        }
+        
+        private ClientMessage(Frame firstFrame, Frame lastFrame)
+        {
+            FirstFrame = firstFrame;
+            LastFrame = lastFrame;
         }
 
         public static ClientMessage CreateForEncode() => new ClientMessage();
 
-        public static ClientMessage CreateForDecode(Frame frame)
-        {
-            var message = new ClientMessage();
-            message.Add(frame);
-            return message;
-        }
+        public static ClientMessage CreateForDecode(Frame startFrame) => new ClientMessage(startFrame);
 
-        public Frame Head => _startFrame;
-        public int HeaderFlags => _startFrame.Flags;
-        public Frame Tail => _endFrame;
-
-        public ClientMessage Add(Frame frame)
+        public void Add(Frame frame)
         {
             frame.next = null;
-            if (_startFrame == null)
+            if (FirstFrame == null)
             {
-                _startFrame = frame;
-                _endFrame = frame;
-                return this;
+                FirstFrame = frame;
+                LastFrame = frame;
             }
-
-            _endFrame.next = frame;
-            _endFrame = frame;
-            return this;
+            else
+            {
+                LastFrame.next = frame;
+                LastFrame = frame;
+            }
         }
 
         public void Merge(ClientMessage fragment)
         {
             // ignore the first frame of the fragment since first frame marks the fragment
-            var fragmentMessageStartFrame = fragment._startFrame.next;
-            _endFrame.next = fragmentMessageStartFrame;
-            while (_endFrame.next != null)
-            {
-                _endFrame = _endFrame.next;
-            }
+            LastFrame.next = fragment.FirstFrame.next;
+            LastFrame = fragment.LastFrame;
         }
 
         public int MessageType
         {
-            get => Bits.ReadIntL(Head.Content, TypeFieldOffset);
-            set => Bits.WriteIntL(Head.Content, TypeFieldOffset, value);
+            get => ReadIntL(FirstFrame.Content, TypeFieldOffset);
+            set => WriteIntL(FirstFrame.Content, TypeFieldOffset, value);
         }
 
         public long CorrelationId
         {
-            get => Bits.ReadLongL(Head.Content, CorrelationIdFieldOffset);
-            set => Bits.WriteLongL(Head.Content, CorrelationIdFieldOffset, value);
+            get => ReadLongL(FirstFrame.Content, CorrelationIdFieldOffset);
+            set => WriteLongL(FirstFrame.Content, CorrelationIdFieldOffset, value);
         }
 
         public int PartitionId
         {
-            get => Bits.ReadIntL(Head.Content, PartitionIdFieldOffset);
-            set => Bits.WriteIntL(Head.Content, PartitionIdFieldOffset, value);
+            get => ReadIntL(FirstFrame.Content, PartitionIdFieldOffset);
+            set => WriteIntL(FirstFrame.Content, PartitionIdFieldOffset, value);
         }
 
         public static bool IsFlagSet(int flags, int flagMask)
@@ -133,73 +129,69 @@ namespace Hazelcast.Client.Protocol
             return i == flagMask;
         }
 
-        public int FrameLength
+        public bool IsBackupAware => IsFlagSet(HeaderFlags, BackupAwareFlag);
+
+        public bool IsBackupEvent => IsFlagSet(HeaderFlags, BackupEventFlag);
+
+        public bool IsEvent => IsFlagSet(HeaderFlags, IsEventFlag);
+
+        public bool IsExceptionType => MessageType == ErrorsCodec.ExceptionMessageType;
+
+
+        // public int FrameLength
+        // {
+        //     get
+        //     {
+        //         var frameLength = 0;
+        //         var currentFrame = FirstFrame;
+        //         while (currentFrame != null)
+        //         {
+        //             frameLength += currentFrame.Size;
+        //             currentFrame = currentFrame.next;
+        //         }
+        //         return frameLength;
+        //     }
+        // }
+
+        public ClientMessage CopyWithNewCorrelationId(long correlationId)
         {
-            get
+            var initialFrameCopy = FirstFrame.DeepCopy();
+            var newMessage = new ClientMessage(initialFrameCopy, LastFrame)
             {
-                int frameLength = 0;
-                Frame currentFrame = _startFrame;
-                while (currentFrame != null)
-                {
-                    frameLength += currentFrame.Size;
-                    currentFrame = currentFrame.next;
-                }
-                return frameLength;
-            }
+                CorrelationId = correlationId, IsRetryable = IsRetryable, OperationName = OperationName
+            };
+            return newMessage;
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder("ClientMessage{");
-            if (_startFrame != null)
+            if (FirstFrame != null)
             {
-                sb.Append("length=").Append(FrameLength);
+                // sb.Append("length=").Append(FrameLength);
                 sb.Append(", correlationId=").Append(CorrelationId);
                 sb.Append(", operation=").Append(OperationName);
-                sb.Append(", messageType=").Append(MessageType.ToString("X"));
+                sb.Append(", messageType=0x").Append(MessageType.ToString("X")).Append("(").Append(MessageType).Append(")");
                 sb.Append(", isRetryable=").Append(IsRetryable);
-                sb.Append(", isEvent=").Append(IsFlagSet(Head.Flags, IsEventFlag));
-                sb.Append(", isFragmented=").Append(!IsFlagSet(Head.Flags, UnfragmentedMessage));
+                sb.Append(", isEvent=").Append(IsFlagSet(FirstFrame.Flags, IsEventFlag));
+                sb.Append(", isFragmented=").Append(!IsFlagSet(FirstFrame.Flags, UnfragmentedMessage));
             }
             sb.Append('}');
             return sb.ToString();
         }
 
-        /**
-         * Copies the clientMessage efficiently with correlation id
-         * Only initialFrame is duplicated, rest of the frames are shared
-         *
-         * @param correlationId new id
-         * @return the copy message
-         */
-        public ClientMessage CopyWithNewCorrelationId(long correlationId)
-        {
-            var initialFrameCopy = _startFrame.DeepCopy();
+        public FrameIterator GetIterator() => new FrameIterator(FirstFrame);
 
-            var newMessage = new ClientMessage(initialFrameCopy)
-            {
-                CorrelationId = correlationId,
-                IsRetryable = IsRetryable,
-                AcquiresResource = AcquiresResource,
-                OperationName = OperationName
-            };
-
-            return newMessage;
-        }
-
-        public class Frame
+        internal class Frame
         {
             public readonly byte[] Content;
-            //begin-fragment end-fragment final begin-data-structure end-data-structure is-null is-event 9reserverd
-            public int Flags;
+
+            //begin-fragment end-fragment final begin-data-structure end-data-structure is-null is-event 9reserved
+            public readonly int Flags;
 
             internal Frame next;
 
-            public Frame(byte[] content): this(content, DefaultFlags)
-            {
-            }
-
-            public Frame(byte[] content, int flags)
+            public Frame(byte[] content, int flags = DefaultFlags)
             {
                 Content = content;
                 Flags = flags;
@@ -208,22 +200,15 @@ namespace Hazelcast.Client.Protocol
             // Shares the content bytes
             public Frame Copy()
             {
-                return new Frame(Content, Flags)
-                {
-                    next = next
-                };
+                return new Frame(Content, Flags) {next = next};
             }
 
             // Copies the content bytes
             public Frame DeepCopy()
             {
                 var newContent = new byte[Content.Length];
-                Array.Copy(Content, newContent, Content.Length);
-
-                return new Frame(newContent, Flags)
-                {
-                    next = next
-                };
+                Buffer.BlockCopy(Content, 0, newContent, 0, Content.Length);
+                return new Frame(newContent, Flags) {next = next};
             }
 
             public bool IsEndFrame => IsFlagSet(Flags, EndDataStructureFlag);
@@ -235,32 +220,51 @@ namespace Hazelcast.Client.Protocol
             public bool IsFinal => IsFlagSet(Flags, IsFinalFlag);
 
             public int Size => Content == null ? SizeOfFrameLengthAndFlags : SizeOfFrameLengthAndFlags + Content.Length;
-        }
 
-        public FrameIterator GetIterator() => new FrameIterator(_startFrame);
+            protected bool Equals(Frame other)
+            {
+                return Content.SequenceEqual(other.Content) && Flags == other.Flags;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Frame) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Content != null ? Content.GetHashCode() : 0) * 397) ^ Flags;
+                }
+            }
+        }
 
         public class FrameIterator
         {
-            private Frame nextFrame;
+            private Frame _nextFrame;
 
             internal FrameIterator(Frame start)
             {
-                nextFrame = start;
+                _nextFrame = start;
             }
 
             public Frame Next()
             {
-                var result = nextFrame;
-                if (nextFrame != null)
+                var result = _nextFrame;
+                if (_nextFrame != null)
                 {
-                    nextFrame = nextFrame.next;
+                    _nextFrame = _nextFrame.next;
                 }
                 return result;
             }
 
-            public bool HasNext => nextFrame != null;
-            
-            public Frame PeekNext() => nextFrame;
+            public bool HasNext => _nextFrame != null;
+
+            public Frame PeekNext() => _nextFrame;
         }
     }
 }

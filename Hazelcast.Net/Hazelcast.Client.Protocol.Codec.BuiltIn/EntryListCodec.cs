@@ -34,22 +34,22 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
                 encodeValueFunc(clientMessage, kvp.Value);
             }
 
-            clientMessage.Add(EndFrame);
+            clientMessage.Add(EndFrame.Copy());
         }
 
-        public static void EncodeNullable<TKey, TValue>(ClientMessage clientMessage, IEnumerable<KeyValuePair<TKey, TValue>> collection,
-                Action<ClientMessage, TKey> encodeKeyFunc,
-                Action<ClientMessage, TValue> encodeValueFunc)
-        {
-            if (collection == null)
-            {
-                clientMessage.Add(NullFrame.Copy());
-            }
-            else
-            {
-                Encode(clientMessage, collection, encodeKeyFunc, encodeValueFunc);
-            }
-        }
+        // public static void EncodeNullable<TKey, TValue>(ClientMessage clientMessage, IEnumerable<KeyValuePair<TKey, TValue>> collection,
+        //         Action<ClientMessage, TKey> encodeKeyFunc,
+        //         Action<ClientMessage, TValue> encodeValueFunc)
+        // {
+        //     if (collection == null)
+        //     {
+        //         clientMessage.Add(NullFrame.Copy());
+        //     }
+        //     else
+        //     {
+        //         Encode(clientMessage, collection, encodeKeyFunc, encodeValueFunc);
+        //     }
+        // }
 
         public static IList<KeyValuePair<TKey, TValue>> Decode<TKey, TValue>(FrameIterator iterator,
                                                           DecodeDelegate<TKey> decodeKeyFunc,

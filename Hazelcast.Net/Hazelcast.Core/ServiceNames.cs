@@ -26,17 +26,7 @@ namespace Hazelcast.Core
 
         public const string MultiMap = "hz:impl:multiMapService";
 
-        public const string Lock = "hz:impl:lockService";
-
-        public const string IdGenerator = "hz:impl:idGeneratorService";
-
-        public const string AtomicLong = "hz:impl:atomicLongService";
-
-        public const string CountDownLatch = "hz:impl:countDownLatchService";
-
         public const string PNCounter = "hz:impl:PNCounterService";
-
-        public const string Semaphore = "hz:impl:semaphoreService";
 
         public const string Cluster = "hz:impl:clusterService";
 
@@ -45,8 +35,6 @@ namespace Hazelcast.Core
         public const string Partition = "hz:impl:partitionService";
 
         public const string ClientEngine = "hz:impl:clientEngineService";
-
-        public const string DistributedExecutor = "hz:impl:distributedExecutorService";
 
         public const string Ringbuffer = "hz:impl:ringbufferService";
 

@@ -27,11 +27,7 @@ namespace Hazelcast.IO.Serialization
         ISerializationServiceBuilder SetByteOrder(ByteOrder byteOrder);
         ISerializationServiceBuilder SetCheckClassDefErrors(bool checkClassDefErrors);
         ISerializationServiceBuilder SetConfig(SerializationConfig config);
-        ISerializationServiceBuilder SetEnableCompression(bool enableCompression);
-        ISerializationServiceBuilder SetEnableSharedObject(bool enableSharedObject);
-        ISerializationServiceBuilder SetHazelcastInstance(IHazelcastInstance hazelcastInstance);
         ISerializationServiceBuilder SetInitialOutputBufferSize(int initialOutputBufferSize);
-        ISerializationServiceBuilder SetManagedContext(IManagedContext managedContext);
         ISerializationServiceBuilder SetPartitioningStrategy(IPartitioningStrategy partitionStrategy);
         ISerializationServiceBuilder SetPortableVersion(int version);
         ISerializationServiceBuilder SetUseNativeByteOrder(bool useNativeByteOrder);

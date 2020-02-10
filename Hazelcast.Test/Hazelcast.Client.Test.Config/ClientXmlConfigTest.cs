@@ -37,7 +37,6 @@ namespace Hazelcast.Client.Test.Config
         public void TestGroupConfig()
         {
             Assert.AreEqual("dev", _clientConfig.GetClusterName());
-            Assert.AreEqual("dev-pass", _clientConfig.GetClusterPassword());
         }
 
         [Test]
@@ -73,8 +72,6 @@ namespace Hazelcast.Client.Test.Config
             Assert.That(_clientConfig.GetNetworkConfig().GetAddresses(), Contains.Item("127.0.0.2"));
             Assert.That(_clientConfig.GetNetworkConfig().IsSmartRouting(), Is.True);
             Assert.That(_clientConfig.GetNetworkConfig().IsRedoOperation(), Is.True);
-            Assert.That(_clientConfig.GetNetworkConfig().GetConnectionAttemptLimit(), Is.EqualTo(2));
-            Assert.That(_clientConfig.GetNetworkConfig().GetConnectionAttemptPeriod(), Is.EqualTo(3000));
             Assert.That(_clientConfig.GetNetworkConfig().GetConnectionTimeout(), Is.EqualTo(60000));
 
             var socketInterceptorConfig = _clientConfig.GetNetworkConfig().GetSocketInterceptorConfig();
@@ -104,35 +101,35 @@ namespace Hazelcast.Client.Test.Config
             Assert.That(cloudConfig.GetDiscoveryToken(), Is.EqualTo("EXAMPLE_TOKEN"));
         }
 
-        [Test]
-        public void TestProxyFactoryConfig()
-        {
-            var proxyFactoryConfigs = _clientConfig.GetProxyFactoryConfigs();
-            Assert.That(proxyFactoryConfigs, Has.Count.EqualTo(3));
-
-            Assert.That(proxyFactoryConfigs[0].GetClassName(), Is.EqualTo("com.hazelcast.examples.ProxyXYZ1"));
-            Assert.That(proxyFactoryConfigs[1].GetClassName(), Is.EqualTo("com.hazelcast.examples.ProxyXYZ2"));
-            Assert.That(proxyFactoryConfigs[2].GetClassName(), Is.EqualTo("com.hazelcast.examples.ProxyXYZ3"));
-
-            Assert.That(proxyFactoryConfigs[0].GetService(), Is.EqualTo("sampleService1"));
-            Assert.That(proxyFactoryConfigs[1].GetService(), Is.EqualTo("sampleService2"));
-            Assert.That(proxyFactoryConfigs[2].GetService(), Is.EqualTo("sampleService3"));
-        }
-
-        [Test]
-        public void TestSecurity()
-        {
-            var credentialsClassName = _clientConfig.GetSecurityConfig().GetCredentialsClassName();
-            var factoryClassName = _clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig().GetClassName();
-            var properties = _clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig().GetProperties();
-            
-            Assert.That(credentialsClassName, Is.EqualTo("Hazelcast.Security.UsernamePasswordCredentials"));
-            Assert.That(factoryClassName, Is.EqualTo("Hazelcast.Security.DefaultCredentialsFactory"));
-
-            Assert.That(properties.Count, Is.EqualTo(2));
-            Assert.That(properties["username"], Is.EqualTo("dev-user"));
-            Assert.That(properties["password"], Is.EqualTo("pass123"));
-        }
+        // [Test]
+        // public void TestProxyFactoryConfig()
+        // {
+        //     var proxyFactoryConfigs = _clientConfig.GetProxyFactoryConfigs();
+        //     Assert.That(proxyFactoryConfigs, Has.Count.EqualTo(3));
+        //
+        //     Assert.That(proxyFactoryConfigs[0].GetClassName(), Is.EqualTo("com.hazelcast.examples.ProxyXYZ1"));
+        //     Assert.That(proxyFactoryConfigs[1].GetClassName(), Is.EqualTo("com.hazelcast.examples.ProxyXYZ2"));
+        //     Assert.That(proxyFactoryConfigs[2].GetClassName(), Is.EqualTo("com.hazelcast.examples.ProxyXYZ3"));
+        //
+        //     Assert.That(proxyFactoryConfigs[0].GetService(), Is.EqualTo("sampleService1"));
+        //     Assert.That(proxyFactoryConfigs[1].GetService(), Is.EqualTo("sampleService2"));
+        //     Assert.That(proxyFactoryConfigs[2].GetService(), Is.EqualTo("sampleService3"));
+        // }
+        //
+        // [Test]
+        // public void TestSecurity()
+        // {
+        //     var credentialsClassName = _clientConfig.GetSecurityConfig().GetCredentialsClassName();
+        //     var factoryClassName = _clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig().GetClassName();
+        //     var properties = _clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig().GetProperties();
+        //     
+        //     Assert.That(credentialsClassName, Is.EqualTo("Hazelcast.Security.UsernamePasswordCredentials"));
+        //     Assert.That(factoryClassName, Is.EqualTo("Hazelcast.Security.DefaultCredentialsFactory"));
+        //
+        //     Assert.That(properties.Count, Is.EqualTo(2));
+        //     Assert.That(properties["username"], Is.EqualTo("dev-user"));
+        //     Assert.That(properties["password"], Is.EqualTo("pass123"));
+        // }
 
         [Test]
         public void TestSerializationConfig()
@@ -160,8 +157,6 @@ namespace Hazelcast.Client.Test.Config
 
             Assert.AreEqual(ByteOrder.BigEndian, serializationConfig.GetByteOrder());
             Assert.AreEqual(true, serializationConfig.IsCheckClassDefErrors());
-            Assert.AreEqual(true, serializationConfig.IsEnableCompression());
-            Assert.AreEqual(true, serializationConfig.IsEnableSharedObject());
             Assert.AreEqual(true, serializationConfig.IsUseNativeByteOrder());
         }
     }

@@ -58,7 +58,7 @@ for i in xrange(0, {1}):
         protected Response PopulateMapWithRandomValueFromServer(string mapName, int mapSize)
         {
             var script = string.Format(@"
-from com.hazelcast.util import RandomPicker
+from  com.hazelcast.internal.util import RandomPicker
 map=instance_0.getMap('{0}')
 for i in xrange(0, {1}):
     map.put(i, RandomPicker.getInt( {1}))
@@ -73,7 +73,7 @@ from java.util import ArrayList
 map=instance_0.getMap('{0}')
 list= ArrayList()
 for i in xrange(0, {1}):
-    list.Add(map.get(i))
+    list.add(map.get(i))
 result=instance_0.getSerializationService().toBytes(list)
 ", mapName, mapSize);
             var response = RemoteController.executeOnController(HzCluster.Id, script, Lang.PYTHON);
@@ -82,7 +82,7 @@ result=instance_0.getSerializationService().toBytes(list)
                 throw new InvalidOperationException(response.ToString());
             }
             var data = new HeapData(response.Result);
-            return ClientInternal.GetSerializationService().ToObject<List<object>>(data);
+            return ClientInternal.SerializationService.ToObject<List<object>>(data);
         }
 
         protected Response DistortRandomPartitionUuid()
@@ -95,9 +95,9 @@ from com.hazelcast.map.impl import MapService
 from com.hazelcast.map.impl import MapServiceContext
 from com.hazelcast.map.impl.nearcache import MapNearCacheManager
 from com.hazelcast.spi.impl import NodeEngineImpl
-from com.hazelcast.instance import TestUtil
-from com.hazelcast.util import RandomPicker
-from com.hazelcast.util import UuidUtil
+from com.hazelcast.instance.impl import TestUtil
+from  com.hazelcast.internal.util import RandomPicker
+from com.hazelcast.internal.util import UuidUtil
 nodeEngineImpl = TestUtil.getNode(instance_0).nodeEngine
 partitionCount = nodeEngineImpl.getPartitionService().getPartitionCount()
 partitionId = RandomPicker.getInt(partitionCount)
@@ -121,8 +121,8 @@ from com.hazelcast.map.impl import MapService
 from com.hazelcast.map.impl import MapServiceContext
 from com.hazelcast.map.impl.nearcache import MapNearCacheManager
 from com.hazelcast.spi.impl import NodeEngineImpl
-from com.hazelcast.instance import TestUtil
-from com.hazelcast.util import RandomPicker
+from com.hazelcast.instance.impl import TestUtil
+from  com.hazelcast.internal.util import RandomPicker
 from com.hazelcast.internal.partition import InternalPartitionService
 from java.lang import Integer
 nodeEngineImpl = TestUtil.getNode(instance_0).nodeEngine

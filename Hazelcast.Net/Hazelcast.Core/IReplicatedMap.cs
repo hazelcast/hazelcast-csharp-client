@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 
 namespace Hazelcast.Core
@@ -38,7 +39,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="listener">entry listener</param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener);
 
         /// <summary>Adds the specified entry listener for the specified key.</summary>
         /// <remarks>
@@ -56,7 +57,7 @@ namespace Hazelcast.Core
         /// <param name="listener">entry listener</param>
         /// <param name="key">key to listen</param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
@@ -66,7 +67,7 @@ namespace Hazelcast.Core
         /// <param name="listener">entry listener</param>
         /// <param name="predicate">predicate for filtering entries</param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
@@ -77,7 +78,7 @@ namespace Hazelcast.Core
         /// <param name="predicate">predicate for filtering entries</param>
         /// <param name="key">key to listen</param>
         /// <returns>returns registration id</returns>
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key);
 
         /// <summary>
         /// The clear operation wipes data out of the replicated maps.
@@ -253,7 +254,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="id">ID of the registered entry listener.</param>
         /// <returns>true if registration is removed, false otherwise</returns>
-        bool RemoveEntryListener(string id);
+        bool RemoveEntryListener(Guid id);
 
         /// <summary>Returns the number of entries in this map.</summary>
         /// <remarks>Returns the number of entries in this map.</remarks>

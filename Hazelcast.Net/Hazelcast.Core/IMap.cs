@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Config;
 using Hazelcast.Map;
 
 namespace Hazelcast.Core
@@ -73,7 +74,7 @@ namespace Hazelcast.Core
         /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
         /// <returns>a registration Id which is used as a key to remove the listener.</returns>
         /// <exception cref="ArgumentNullException">the specified listener is null.</exception>      
-        string AddEntryListener(MapListener listener, bool includeValue);
+        Guid AddEntryListener(MapListener listener, bool includeValue);
 
         /// <summary>
         /// Adds a <see cref="MapListener"/> for the specified key, you should implement a corresponding 
@@ -92,7 +93,7 @@ namespace Hazelcast.Core
         /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
         /// <returns>a registration Id which is used as a key to remove the listener.</returns>
         /// <exception cref="ArgumentNullException">the specified listener or the key is null.</exception>      
-        string AddEntryListener(MapListener listener, TKey key, bool includeValue);
+        Guid AddEntryListener(MapListener listener, TKey key, bool includeValue);
 
         /// <summary>
         /// Adds a <see cref="MapListener"/> for the specified key, you should implement a corresponding 
@@ -108,7 +109,7 @@ namespace Hazelcast.Core
         /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
         /// <returns>a registration Id which is used as a key to remove the listener.</returns>
         /// <exception cref="ArgumentNullException">the specified listener, predicate or the key is null.</exception>      
-        string AddEntryListener(MapListener listener, IPredicate predicate, TKey key, bool includeValue);
+        Guid AddEntryListener(MapListener listener, IPredicate predicate, TKey key, bool includeValue);
 
         /// <summary>
         /// Adds a <see cref="MapListener"/> for this map.To receive an event, you should implement a corresponding 
@@ -123,7 +124,7 @@ namespace Hazelcast.Core
         /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
         /// <returns>a registration Id which is used as a key to remove the listener.</returns>
         /// <exception cref="ArgumentNullException">the specified listener or predicate is null.</exception>      
-        string AddEntryListener(MapListener listener, IPredicate predicate, bool includeValue);
+        Guid AddEntryListener(MapListener listener, IPredicate predicate, bool includeValue);
 
         /// <summary>
         ///     Adds an entry listener for this map.
@@ -135,7 +136,7 @@ namespace Hazelcast.Core
         /// <param name="includeValue"><c>true</c> if <c>EntryEvent</c> should contain the value.</param>
         /// <returns>returns registration id</returns>
         [Obsolete]
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener, bool includeValue);
 
         /// <summary>Adds the specified entry listener for the specified key.</summary>
         /// <remarks>
@@ -158,7 +159,7 @@ namespace Hazelcast.Core
         /// </param>
         /// <returns>returns registration id</returns>
         [Obsolete]
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key, bool includeValue);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
@@ -174,7 +175,7 @@ namespace Hazelcast.Core
         /// </param>
         /// <returns>returns registration id</returns>
         [Obsolete]
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key, bool includeValue);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key, bool includeValue);
 
         /// <summary>Adds an continuous entry listener for this map.</summary>
         /// <remarks>
@@ -189,46 +190,11 @@ namespace Hazelcast.Core
         /// </param>
         /// <returns>returns registration id</returns>
         [Obsolete]
-        string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, bool includeValue);
+        Guid AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, bool includeValue);
 
-        /// <summary>
-        ///     Adds an index to this map for the specified entries so
-        ///     that queries can run faster.
-        /// </summary>
-        /// <remarks>
-        ///     Adds an index to this map for the specified entries so
-        ///     that queries can run faster.
-        ///     <p />
-        ///     Let's say your map values are Employee objects.
-        ///     <code>
-        /// public class Employee :IPortable
-        /// {
-        ///     private bool active = false;
-        ///     private int age;
-        ///     private string name = null;
-        ///     // other fields.
-        ///     
-        /// }
-        /// </code>
-        ///     <p />
-        ///     If you are querying your values mostly based on age and active then
-        ///     you should consider indexing these fields.
-        ///     <code>
-        /// var imap = Hazelcast.GetMap("employees");
-        /// imap.AddIndex("age", true);        // ordered, since we have ranged queries for this field
-        /// imap.AddIndex("active", false);    // not ordered, because boolean field cannot have range
-        /// </code>
-        ///     <p />
-        ///     Index attribute should either have a getter method or be public.
-        ///     You should also make sure to Add the indexes before adding
-        ///     entries to this map.
-        /// </remarks>
-        /// <param name="attribute">attribute of value</param>
-        /// <param name="ordered">
-        ///     <c>true</c> if index should be ordered,
-        ///     <c>false</c> otherwise.
-        /// </param>
-        void AddIndex(string attribute, bool ordered);
+
+        void AddIndex(IndexType type, params string[] attributes);
+        void AddIndex(IndexConfig indexConfig);
 
         /// <summary>Adds an interceptor for this map.</summary>
         /// <remarks>
@@ -1008,7 +974,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="id">id of registered listener</param>
         /// <returns>true if registration is removed, false otherwise</returns>
-        bool RemoveEntryListener(string id);
+        bool RemoveEntryListener(Guid id);
 
         /// <summary>Removes the given interceptor for this map.</summary>
         /// <remarks>

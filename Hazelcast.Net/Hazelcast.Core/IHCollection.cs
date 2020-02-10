@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 
 namespace Hazelcast.Core
@@ -46,7 +47,7 @@ namespace Hazelcast.Core
         /// to the item listener, <TE>false</TE> otherwise.
         /// </param>
         /// <returns>returns registration id.</returns>
-        string AddItemListener(IItemListener<T> listener, bool includeValue);
+        Guid AddItemListener(IItemListener<T> listener, bool includeValue);
 
         /// <summary>
         /// Determines whether this collection contains all of the elements in the specified collection.
@@ -77,7 +78,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="registrationId">Id of listener registration.</param>
         /// <returns>true if registration is removed, false otherwise</returns>
-        bool RemoveItemListener(string registrationId);
+        bool RemoveItemListener(Guid registrationId);
 
         /// <summary>
         /// Retains only the elements in this collection that are contained in the specified collection (optional operation).

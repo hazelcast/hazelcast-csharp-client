@@ -18,8 +18,9 @@ using Hazelcast.IO.Serialization;
 
 namespace Hazelcast.Map
 {
-    internal class EntryListenerAdapter<TKey, TValue> : IEntryListener<TKey, TValue>,
-        EntryMergedListener<TKey, TValue>, EntryExpiredListener<TKey, TValue>
+    internal class EntryListenerAdapter<TKey, TValue> : EntryAddedListener<TKey, TValue>, EntryUpdatedListener<TKey, TValue>,
+        EntryRemovedListener<TKey, TValue>, EntryEvictedListener<TKey, TValue>, EntryLoadedListener<TKey, TValue>,
+        EntryMergedListener<TKey, TValue>, EntryExpiredListener<TKey, TValue>, MapClearedListener, MapEvictedListener
     {
         public ISerializationService SerializationService { get; set; }
         public EntryEventType ListenerFlags { get; set; }
@@ -30,48 +31,54 @@ namespace Hazelcast.Map
         public Action<EntryEvent<TKey, TValue>> Updated { get; set; }
         public Action<EntryEvent<TKey, TValue>> Merged { get; set; }
         public Action<EntryEvent<TKey, TValue>> Expired { get; set; }
+        public Action<EntryEvent<TKey, TValue>> Loaded { get; set; }
         public Action<MapEvent> EvictAll { get; set; }
         public Action<MapEvent> ClearAll { get; set; }
 
 
         public void EntryAdded(EntryEvent<TKey, TValue> entryEvent)
         {
-            if (Added != null) Added(entryEvent);
+            Added?.Invoke(entryEvent);
         }
 
         public void EntryRemoved(EntryEvent<TKey, TValue> entryEvent)
         {
-            if (Removed != null) Removed(entryEvent);
+            Removed?.Invoke(entryEvent);
         }
 
         public void EntryUpdated(EntryEvent<TKey, TValue> entryEvent)
         {
-            if (Updated != null) Updated(entryEvent);
+            Updated?.Invoke(entryEvent);
         }
 
         public void EntryEvicted(EntryEvent<TKey, TValue> entryEvent)
         {
-            if (Evicted != null) Evicted(entryEvent);
+            Evicted?.Invoke(entryEvent);
         }
 
         public void MapEvicted(MapEvent mapEvent)
         {
-            if (EvictAll != null) EvictAll(mapEvent);
+            EvictAll?.Invoke(mapEvent);
         }
 
         public void MapCleared(MapEvent mapEvent)
         {
-            if (ClearAll != null) ClearAll(mapEvent);
+            ClearAll?.Invoke(mapEvent);
         }
 
         public void EntryMerged(EntryEvent<TKey, TValue> entryEvent)
         {
-            if (Merged != null) Merged(entryEvent);
+            Merged?.Invoke(entryEvent);
         }
 
         public void EntryExpired(EntryEvent<TKey, TValue> entryEvent)
         {
-            if (Expired != null) Expired(entryEvent);
+            Expired?.Invoke(entryEvent);
+        }
+
+        public void EntryLoaded(EntryEvent<TKey, TValue> entryEvent)
+        {
+            Loaded?.Invoke(entryEvent);
         }
 
         public void OnEntryEvent(string source, IData keyData, IData valueData, IData oldValueData, IData mergingValue,
@@ -130,6 +137,11 @@ namespace Hazelcast.Map
                         EntryMerged(dataAwareEvent);
                         break;
                     }
+                    case EntryEventType.Loaded:
+                    {
+                        EntryLoaded(dataAwareEvent);
+                        break;
+                    }
                 }
             }
         }
@@ -160,6 +172,11 @@ namespace Hazelcast.Map
             {
                 adapter.ListenerFlags |= EntryEventType.Evicted;
                 adapter.Evicted = ((EntryEvictedListener<TKey, TValue>) mapListener).EntryEvicted;
+            }
+            if (mapListener is EntryLoadedListener<TKey, TValue>)
+            {
+                adapter.ListenerFlags |= EntryEventType.Loaded;
+                adapter.Loaded = ((EntryLoadedListener<TKey, TValue>) mapListener).EntryLoaded;
             }
             if (mapListener is MapEvictedListener)
             {

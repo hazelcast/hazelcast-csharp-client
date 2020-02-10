@@ -34,7 +34,7 @@ namespace Hazelcast.Client.Test
             HzCluster = CreateCluster(RemoteController, GetServerConfig());
             RemoteController.startMember(HzCluster.Id);
             Client = CreateClient();
-            ClientInternal = ((HazelcastClientProxy) Client).GetClient();
+            ClientInternal = (HazelcastClient) Client;
         }
 
         [OneTimeTearDown]
@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Test
                 
         protected override void ConfigureGroup(ClientConfig config)
         {
-            config.SetClusterName(HzCluster.Id).SetClusterPassword(HzCluster.Id);
+            config.SetClusterName(HzCluster.Id);
         }
     }
 }

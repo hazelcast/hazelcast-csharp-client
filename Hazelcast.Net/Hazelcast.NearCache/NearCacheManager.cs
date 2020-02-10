@@ -63,8 +63,7 @@ namespace Hazelcast.NearCache
 
         public void DestroyNearCache(string name)
         {
-            BaseNearCache nearCache;
-            if (_caches.TryRemove(name, out nearCache))
+            if (_caches.TryRemove(name, out var nearCache))
             {
                 nearCache.Destroy();
             }
@@ -77,20 +76,12 @@ namespace Hazelcast.NearCache
 
         public BaseNearCache GetOrCreateNearCache(string mapName)
         {
-            var nearCacheConfig = _client.GetClientConfig().GetNearCacheConfig(mapName);
+            var nearCacheConfig = _client.ClientConfig.GetNearCacheConfig(mapName);
             return nearCacheConfig == null
                 ? null
                 : _caches.GetOrAdd(mapName, newMapName =>
                 {
-                    BaseNearCache nearCache;
-                    if (SupportsRepairableNearCache())
-                    {
-                        nearCache = new NearCache(newMapName, _client, nearCacheConfig);
-                    }
-                    else
-                    {
-                        nearCache = new NearCachePre38(newMapName, _client, nearCacheConfig);
-                    }
+                    var nearCache = new NearCache(newMapName, _client, nearCacheConfig);
                     InitNearCache(nearCache);
                     return nearCache;
                 });
@@ -110,7 +101,7 @@ namespace Hazelcast.NearCache
             var maxToleratedMissCount =
                 EnvironmentUtil.ReadInt(MaxToleratedMissCountProperty) ?? MaxToleratedMissCountDefault;
             return ValidationUtil.CheckNotNegative(maxToleratedMissCount,
-                string.Format("max-tolerated-miss-count cannot be < 0 but found {0}", maxToleratedMissCount));
+                $"max-tolerated-miss-count cannot be < 0 but found {maxToleratedMissCount}");
         }
 
         private void DestroyAllNearCache()
@@ -140,14 +131,13 @@ namespace Hazelcast.NearCache
         private void FetchMetadataInternal(IList<string> names,
             Action<MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters> process)
         {
-            var dataMembers = _client.GetClientClusterService().GetMemberList().Where(member => !member.IsLiteMember);
+            var dataMembers = _client.ClusterService.DataMemberList;
             foreach (var member in dataMembers)
             {
-                var address = member.Address;
-                var request = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, address);
+                var request = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Uuid);
                 try
                 {
-                    var future = _client.GetInvocationService().InvokeOnTarget(request, address);
+                    var future = _client.InvocationService.InvokeOnTarget(request, member.Uuid);
                     var task = future.ToTask();
 
                     task.ContinueWith(t =>
@@ -165,8 +155,7 @@ namespace Hazelcast.NearCache
                 }
                 catch (Exception e)
                 {
-                    Logger.Warning(string.Format("Cant fetch invalidation meta-data from address:{0} [{1}]", address,
-                        e.Message));
+                    Logger.Warning($"Cant fetch invalidation meta-data from address:{member.Address} [{e.Message}]");
                 }
             }
         }
@@ -177,14 +166,8 @@ namespace Hazelcast.NearCache
             foreach (var baseNearCach in _caches.Values)
             {
                 var nc = baseNearCach as NearCache;
-                if (nc != null)
-                {
-                    var ncRepairingHandler = nc.RepairingHandler;
-                    if (ncRepairingHandler != null)
-                    {
-                        ncRepairingHandler.FixSequenceGap();
-                    }
-                }
+                var ncRepairingHandler = nc?.RepairingHandler;
+                ncRepairingHandler?.FixSequenceGap();
             }
         }
 
@@ -197,10 +180,10 @@ namespace Hazelcast.NearCache
             if (reconciliationIntervalSeconds < 0 || reconciliationIntervalSeconds > 0 &&
                 reconciliationIntervalSeconds < minReconciliationIntervalSeconds)
             {
-                var msg = string.Format(
-                    "Reconciliation interval can be at least {0} seconds if it is not zero, but {1} was configured." +
-                    " Note: Configuring a value of zero seconds disables the reconciliation task.",
-                    MinReconciliationIntervalSecondsDefault, reconciliationIntervalSeconds);
+                var msg =
+                    $"Reconciliation interval can be at least {MinReconciliationIntervalSecondsDefault} seconds if it is not zero," +
+                    $" but {reconciliationIntervalSeconds} was configured. Note: Configuring a value of zero seconds disables the " +
+                    $"reconciliation task.";
                 throw new ArgumentException(msg);
             }
             return reconciliationIntervalSeconds;
@@ -212,9 +195,8 @@ namespace Hazelcast.NearCache
             {
                 baseNearCache.Init();
                 var nearCache = baseNearCache as NearCache;
-                if (nearCache == null) return;
 
-                var repairingHandler = nearCache.RepairingHandler;
+                var repairingHandler = nearCache?.RepairingHandler;
                 if (repairingHandler == null) return;
 
                 var names = new List<string> {nearCache.Name};
@@ -249,9 +231,9 @@ namespace Hazelcast.NearCache
                 }
                 catch (Exception e)
                 {
-                    if (Logger.IsFinestEnabled())
+                    if (Logger.IsFinestEnabled)
                     {
-                        Logger.Finest("Reparing task failed", e);
+                        Logger.Finest("Repairing task failed", e);
                     }
                 }
                 finally
@@ -268,14 +250,8 @@ namespace Hazelcast.NearCache
                 foreach (var cache in _caches.Values)
                 {
                     var nc = cache as NearCache;
-                    if (nc != null)
-                    {
-                        var ncRepairingHandler = nc.RepairingHandler;
-                        if (ncRepairingHandler != null)
-                        {
-                            ncRepairingHandler.CheckOrRepairGuid(pair.Key, pair.Value);
-                        }
-                    }
+                    var ncRepairingHandler = nc?.RepairingHandler;
+                    ncRepairingHandler?.CheckOrRepairGuid(pair.Key, pair.Value);
                 }
             }
         }
@@ -287,18 +263,11 @@ namespace Hazelcast.NearCache
             {
                 foreach (var subPair in pair.Value)
                 {
-                    BaseNearCache cache;
-                    if (_caches.TryGetValue(pair.Key, out cache))
+                    if (_caches.TryGetValue(pair.Key, out var cache))
                     {
                         var nc = cache as NearCache;
-                        if (nc != null)
-                        {
-                            var ncRepairingHandler = nc.RepairingHandler;
-                            if (ncRepairingHandler != null)
-                            {
-                                ncRepairingHandler.CheckOrRepairSequence(subPair.Key, subPair.Value, true);
-                            }
-                        }
+                        var ncRepairingHandler = nc?.RepairingHandler;
+                        ncRepairingHandler?.CheckOrRepairSequence(subPair.Key, subPair.Value, true);
                     }
                 }
             }
@@ -317,12 +286,6 @@ namespace Hazelcast.NearCache
                 FetchMetadata();
                 _lastAntiEntropyRunMillis.Set(Clock.CurrentTimeMillis());
             }
-        }
-
-        private bool SupportsRepairableNearCache()
-        {
-            var serverVersion = ((ClientClusterService) _client.GetClientClusterService()).ServerVersion;
-            return serverVersion >= VersionUtil.Version38;
         }
     }
 }

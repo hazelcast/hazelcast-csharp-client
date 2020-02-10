@@ -78,7 +78,7 @@ namespace Hazelcast.NearCache.Test
             const string theKey = "key";
             _map.Put(theKey, "value1");
 
-            var partitionId = ClientInternal.GetClientPartitionService().GetPartitionId(theKey);
+            var partitionId = ClientInternal.PartitionService.GetPartitionId(theKey);
             var nc = GetNearCache(_map) as NearCache;
             var metaDataContainer = nc.RepairingHandler.GetMetaDataContainer(partitionId);
 
@@ -89,7 +89,7 @@ namespace Hazelcast.NearCache.Test
             });
             metaDataContainer.Sequence -= 2; //distort the sequence
 
-            RemoveKeyAtServer(_map.GetName(), theKey);
+            RemoveKeyAtServer(_map.Name, theKey);
 
             TestSupport.AssertTrueEventually(() =>
             {
@@ -105,12 +105,12 @@ namespace Hazelcast.NearCache.Test
             const string theKey = "key";
             _map.Put(theKey, "value");
 
-            var partitionId = ClientInternal.GetClientPartitionService().GetPartitionId(theKey);
+            var partitionId = ClientInternal.PartitionService.GetPartitionId(theKey);
             var nc = GetNearCache(_map) as NearCache;
             var metaDataContainer = nc.RepairingHandler.GetMetaDataContainer(partitionId);
             var initialSequence = metaDataContainer.Sequence;
 
-            RemoveKeyAtServer(_map.GetName(), theKey);
+            RemoveKeyAtServer(_map.Name, theKey);
 
             TestSupport.AssertTrueEventually(() =>
             {

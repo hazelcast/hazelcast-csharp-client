@@ -182,6 +182,8 @@ namespace Hazelcast.Config
                     case "near-cache":
                         HandleNearCache(node);
                         break;
+                    case "connection-strategy":
+                        throw new NotImplementedException();
                 }
             }
         }
@@ -198,7 +200,7 @@ namespace Hazelcast.Config
 
             if (password != null)
             {
-                _clientConfig.SetClusterPassword(password);
+                // _clientConfig.SetClusterPassword(password);
             }
         }
 
@@ -273,7 +275,6 @@ namespace Hazelcast.Config
                     case "cluster-members":
                         HandleClusterMembers(child);
                         break;
-
                     case "smart-routing":
                         clientNetworkConfig.SetSmartRouting(bool.Parse(GetTextContent(child)));
                         break;
@@ -282,12 +283,6 @@ namespace Hazelcast.Config
                         break;
                     case "connection-timeout":
                         clientNetworkConfig.SetConnectionTimeout(Convert.ToInt32(GetTextContent(child)));
-                        break;
-                    case "connection-attempt-period":
-                        clientNetworkConfig.SetConnectionAttemptPeriod(Convert.ToInt32(GetTextContent(child)));
-                        break;
-                    case "connection-attempt-limit":
-                        clientNetworkConfig.SetConnectionAttemptLimit(Convert.ToInt32(GetTextContent(child)));
                         break;
                     case "socket-options":
                         HandleSocketOptions(child, clientNetworkConfig);
@@ -323,8 +318,8 @@ namespace Hazelcast.Config
         {
             var service = GetAttribute(node, "service");
             var className = GetAttribute(node, "class-name");
-            var proxyFactoryConfig = new ProxyFactoryConfig(className, service);
-            _clientConfig.AddProxyFactoryConfig(proxyFactoryConfig);
+            // var proxyFactoryConfig = new ProxyFactoryConfig(className, service);
+            // _clientConfig.AddProxyFactoryConfig(proxyFactoryConfig);
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -337,7 +332,7 @@ namespace Hazelcast.Config
                 if ("credentials".Equals(nodeName))
                 {
                     var className = GetTextContent(child);
-                    clientSecurityConfig.SetCredentialsClassName(className);
+                    // clientSecurityConfig.SetCredentialsClassName(className);
                 }
                 else if ("credentials-factory".Equals(nodeName))
                 {
@@ -350,13 +345,13 @@ namespace Hazelcast.Config
         private void HandleCredentialsFactory(XmlNode node, ClientSecurityConfig clientSecurityConfig)
         {
             var className = GetAttribute(node, "class-name");
-            var credentialsFactoryConfig = new CredentialsFactoryConfig(className);
-            clientSecurityConfig.SetCredentialsFactoryConfig(credentialsFactoryConfig);
+            // var credentialsFactoryConfig = new CredentialsFactoryConfig(className);
+            // clientSecurityConfig.SetCredentialsFactoryConfig(credentialsFactoryConfig);
             foreach (XmlNode child in node.ChildNodes) {
                 var nodeName = CleanNodeName(child.Name);
                 if ("properties".Equals(nodeName))
                 {
-                    FillProperties(child, credentialsFactoryConfig.GetProperties());
+                    // FillProperties(child, credentialsFactoryConfig.GetProperties());
                     break;
                 }
             }

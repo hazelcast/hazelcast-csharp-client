@@ -27,122 +27,53 @@ namespace Hazelcast.Core
     /// <seealso cref="IDistributedObjectListener">IDistributedObjectListener</seealso>
     public class DistributedObjectEvent
     {
-        protected IDistributedObject DistributedObject;
+        public DistributedEventType EventType { get; }
 
-        private readonly string _eventType;
+        public string ServiceName { get; }
 
-        private readonly string _serviceName;
+        public string ObjectName { get; }
+        public Guid Source { get; }
 
-        private readonly string _objectName;
+        private IDistributedObject _distributedObject;
 
-        protected DistributedObjectEvent(string eventType, string serviceName, string objectName)
+        private readonly ProxyManager _proxyManager;
+
+        internal DistributedObjectEvent(DistributedEventType eventType, string serviceName, string objectName,
+            IDistributedObject distributedObject, Guid source, ProxyManager proxyManager)
         {
-            _eventType = eventType;
-            _serviceName = serviceName;
-            _objectName = objectName;
+            EventType = eventType;
+            ServiceName = serviceName;
+            ObjectName = objectName;
+            _distributedObject = distributedObject;
+            Source = source;
+            _proxyManager = proxyManager;
         }
 
-        /// <summary>Returns IDistributedObject instance</summary>
-        /// <returns>IDistributedObject</returns>
-        public virtual IDistributedObject GetDistributedObject()
+        public T GetDistributedObject<T>() where T : IDistributedObject
         {
-            return GetDistributedObject<IDistributedObject>();
-        }
-
-        /// <summary>Returns IDistributedObject instance</summary>
-        /// <returns>IDistributedObject</returns>
-        public virtual T GetDistributedObject<T>() where T : IDistributedObject
-        {
-            if (EventType.Destroyed.Equals(_eventType))
+            if (DistributedEventType.DESTROYED == EventType)
             {
                 throw new DistributedObjectDestroyedException();
             }
 
-            if (!(DistributedObject is T) )
+            if (!(_distributedObject is T))
             {
-                InitDistributedObject<T>();
+                _distributedObject = _proxyManager.GetOrCreateProxy<T>(ServiceName, ObjectName);
             }
 
-            return (T) DistributedObject;
-        }
-        
-        protected  virtual void InitDistributedObject<T>() where T : IDistributedObject
-        {
-            throw new NotImplementedException();
+            return (T) _distributedObject;
         }
 
-        /// <summary>
-        ///     Returns type of this event; one of
-        ///     <see cref="EventType.Created">EventType.Created</see>
-        ///     or
-        ///     <see cref="EventType.Destroyed">EventType.Destroyed</see>
-        /// </summary>
-        /// <returns>eventType</returns>
-        public string GetEventType()
-        {
-            return _eventType;
-        }
-
-        /// <summary>
-        /// Return name of the source distributed object
-        /// </summary>
-        /// <returns>distributed object name</returns>
-        public string GetObjectName()
-        {
-            return _objectName;
-        }
-
-        /// <summary>
-        /// Return service name of the source distributed object
-        /// </summary>
-        /// <returns>service name</returns>
-        public string GetServiceName()
-        {
-            return _serviceName;
-        }
-
-        /// <inheritdoc />
         public override string ToString()
         {
-            var sb = new StringBuilder("DistributedObjectEvent{");
-            sb.Append("eventType=").Append(_eventType);
-            sb.Append(", serviceName='").Append(_serviceName).Append('\'');
-            sb.Append(", objectName='").Append(_serviceName).Append('\'');
-            sb.Append(", distributedObject=").Append(DistributedObject);
-            sb.Append('}');
-            return sb.ToString();
+            return
+                $"DistributedObjectEvent{{ eventType={EventType}, serviceName='{ServiceName}',  objectName='{ObjectName}', source={Source}}}";
         }
 
-        /// <summary>
-        /// Event types class for event name constants
-        /// </summary>
-        public static class EventType
+        public enum DistributedEventType
         {
-            /// <summary>
-            /// Distributed Object Created Event
-            /// </summary>
-            public const string Created = "CREATED";
-
-            /// <summary>
-            /// Distributed Object Destroyed Event
-            /// </summary>
-            public const string Destroyed = "DESTROYED";
-        }
-    }
-
-    internal class LazyDistributedObjectEvent : DistributedObjectEvent
-    {
-        private readonly ProxyManager _proxyManager;
-
-        public LazyDistributedObjectEvent(string eventType, string serviceName, string name, ProxyManager proxyManager)
-            : base(eventType, serviceName, name)
-        {
-            _proxyManager = proxyManager;
-        }
-
-        protected override void InitDistributedObject<T>()
-        {
-            DistributedObject = _proxyManager.GetOrCreateProxy<T>(GetServiceName(), GetObjectName());
+            CREATED,
+            DESTROYED
         }
     }
 }

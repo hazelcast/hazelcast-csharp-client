@@ -37,21 +37,21 @@ namespace Hazelcast.Client.Proxy
         public void Destroy()
         {
             OnDestroy();
-            var request = ClientDestroyProxyCodec.EncodeRequest(ObjectName, GetServiceName());
+            var request = ClientDestroyProxyCodec.EncodeRequest(ObjectName, ServiceName);
             Invoke(request);
         }
 
         public virtual string GetPartitionKey()
         {
-            return StringPartitioningStrategy.GetPartitionKey(GetName());
+            return StringPartitioningStrategy.GetPartitionKey(Name);
         }
 
-        public virtual string GetName()
+        public virtual string Name
         {
-            return ObjectName;
+            get { return ObjectName; }
         }
 
-        public abstract string GetServiceName();
+        public abstract string ServiceName { get; }
 
         protected internal virtual IList<T> ToList<T>(ICollection<IData> dataList)
         {
@@ -85,15 +85,15 @@ namespace Hazelcast.Client.Proxy
 
         protected virtual ClientMessage Invoke(ClientMessage request)
         {
-            var rpc = Proxy.GetClient().GetInvocationService();
+            var rpc = Proxy.GetClient().InvocationService;
             try
             {
-                var task = rpc.InvokeOnMember(request, Proxy.TxnOwnerNode);
+                var task = rpc.InvokeOnConnection(request, Proxy.TxnConnection);
                 return ThreadUtil.GetResult(task);
             }
             catch (Exception e)
             {
-                throw ExceptionUtil.Rethrow(e);
+                throw ExceptionUtil.Rethrow(e, exception => new TransactionException(exception));
             }
         }
 
@@ -105,12 +105,12 @@ namespace Hazelcast.Client.Proxy
 
         protected virtual IData ToData(object obj)
         {
-            return Proxy.GetClient().GetSerializationService().ToData(obj);
+            return Proxy.GetClient().SerializationService.ToData(obj);
         }
 
         protected virtual TE ToObject<TE>(IData data)
         {
-            return Proxy.GetClient().GetSerializationService().ToObject<TE>(data);
+            return Proxy.GetClient().SerializationService.ToObject<TE>(data);
         }
 
         internal abstract void OnDestroy();

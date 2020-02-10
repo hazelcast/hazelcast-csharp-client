@@ -21,12 +21,12 @@ namespace Hazelcast.Util
 {
     internal class ReadOnlyLazyList<T, D> : IList<T> where D : class
     {
-        private readonly IList<D> list;
+        private readonly IList<D> _content;
         private readonly ISerializationService serializationService;
 
-        public ReadOnlyLazyList(IList<D> list, ISerializationService serializationService)
+        public ReadOnlyLazyList(IList<D> content, ISerializationService serializationService)
         {
-            this.list = list;
+            this._content = content;
             this.serializationService = serializationService;
         }
 
@@ -34,7 +34,7 @@ namespace Hazelcast.Util
 
         public IEnumerator<T> GetEnumerator()
         {
-            return new Enumerator(list, serializationService);
+            return DeserializeIterator(_content, serializationService);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -55,7 +55,7 @@ namespace Hazelcast.Util
         public bool Contains(T item)
         {
             var itemData = serializationService.ToData(item);
-            foreach (var dValue in list)
+            foreach (var dValue in _content)
             {
                 if (dValue is IData)
                 {
@@ -87,23 +87,17 @@ namespace Hazelcast.Util
             throw new NotSupportedException("Readonly list");
         }
 
-        public int Count
-        {
-            get { return list.Count; }
-        }
+        public int Count => _content.Count;
 
-        public bool IsReadOnly
-        {
-            get { return true; }
-        }
+        public bool IsReadOnly => true;
 
         public int IndexOf(T item)
         {
-            var ix = list.IndexOf(item as D);
+            var ix = _content.IndexOf(item as D);
             if (ix < 0)
             {
                 var data = serializationService.ToData(item);
-                return list.IndexOf(data as D);
+                return _content.IndexOf(data as D);
             }
             return ix;
         }
@@ -120,67 +114,17 @@ namespace Hazelcast.Util
 
         public T this[int index]
         {
-            get { return serializationService.ToObject<T>(list[index]); }
-            set { throw new NotSupportedException("Readonly list"); }
+            get => serializationService.ToObject<T>(_content[index]);
+            set => throw new NotSupportedException("Readonly list");
         }
 
         #endregion
-
-        internal struct Enumerator : IEnumerator<T>
+        
+        internal static IEnumerator<T> DeserializeIterator(IEnumerable source, ISerializationService ss)
         {
-            private readonly IList<D> _dataList;
-            private readonly ISerializationService _ss;
-            private int _nextIndex;
-            private D _current;
-
-            internal Enumerator(IList<D> dataList, ISerializationService ss)
+            foreach (var item in source)
             {
-                _dataList = dataList;
-                _ss = ss;
-                _nextIndex = 0;
-                _current = null;
-            }
-
-            object IEnumerator.Current
-            {
-                get
-                {
-                    if (_nextIndex == 0 || _nextIndex == _dataList.Count + 1)
-                    {
-                        throw new InvalidOperationException();
-                    }
-                    return Current;
-                }
-            }
-
-            public T Current
-            {
-                get { return _ss.ToObject<T>(_current); }
-            }
-
-            public void Dispose()
-            {
-            }
-
-            public bool MoveNext()
-            {
-                var localList = _dataList;
-
-                if ((uint) _nextIndex < (uint) localList.Count)
-                {
-                    _current = localList[_nextIndex];
-                    _nextIndex++;
-                    return true;
-                }
-                _nextIndex = _dataList.Count + 1;
-                _current = null;
-                return false;
-            }
-
-            void IEnumerator.Reset()
-            {
-                _nextIndex = 0;
-                _current = null;
+                yield return ss.ToObject<T>(item);
             }
         }
     }

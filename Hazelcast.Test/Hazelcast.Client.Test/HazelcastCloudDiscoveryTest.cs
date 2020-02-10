@@ -18,7 +18,7 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Hazelcast.Client.Connection;
+using Hazelcast.Client.Network;
 using Hazelcast.Client.Spi;
 using Hazelcast.Config;
 using Hazelcast.IO;

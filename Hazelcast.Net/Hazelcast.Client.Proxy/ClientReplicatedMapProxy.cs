@@ -29,15 +29,15 @@ namespace Hazelcast.Client.Proxy
         private static object _randomLock = new object();
         private int _targetPartitionId = -1;
         
-        public ClientReplicatedMapProxy(string serviceName, string name) : base(serviceName, name)
+        public ClientReplicatedMapProxy(string serviceName, string name, HazelcastClient client) : base(serviceName, name, client)
         {
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener)
+        public Guid AddEntryListener(IEntryListener<TKey, TValue> listener)
         {
             var listenerAdapter =
-                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
-            var request = ReplicatedMapAddEntryListenerCodec.EncodeRequest(GetName(), IsSmart());
+                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, Client.SerializationService);
+            var request = ReplicatedMapAddEntryListenerCodec.EncodeRequest(Name, IsSmart());
             DistributedEventHandler handler =
                 eventData => ReplicatedMapAddEntryListenerCodec.EventHandler.HandleEvent(eventData,
                     (key, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -46,15 +46,15 @@ namespace Hazelcast.Client.Proxy
                     });
             return RegisterListener(request,
                 message => ReplicatedMapAddEntryListenerCodec.DecodeResponse(message).Response,
-                id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
+                id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(Name, id), handler);
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key)
+        public Guid AddEntryListener(IEntryListener<TKey, TValue> listener, TKey key)
         {
             var keyData = ToData(key);
             var listenerAdapter =
-                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
-            var request = ReplicatedMapAddEntryListenerToKeyCodec.EncodeRequest(GetName(), keyData, IsSmart());
+                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, Client.SerializationService);
+            var request = ReplicatedMapAddEntryListenerToKeyCodec.EncodeRequest(Name, keyData, IsSmart());
             DistributedEventHandler handler =
                 eventData => ReplicatedMapAddEntryListenerToKeyCodec.EventHandler.HandleEvent(eventData,
                     (k, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -63,16 +63,16 @@ namespace Hazelcast.Client.Proxy
                     });
             return RegisterListener(request,
                 message => ReplicatedMapAddEntryListenerCodec.DecodeResponse(message).Response,
-                id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
+                id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(Name, id), handler);
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate)
+        public Guid AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate)
         {
             var predicateData = ToData(predicate);
             var listenerAdapter =
-                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
+                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, Client.SerializationService);
             var request =
-                ReplicatedMapAddEntryListenerWithPredicateCodec.EncodeRequest(GetName(), predicateData, IsSmart());
+                ReplicatedMapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, predicateData, IsSmart());
             DistributedEventHandler handler =
                 eventData => ReplicatedMapAddEntryListenerWithPredicateCodec.EventHandler.HandleEvent(eventData,
                     (k, value, oldValue, mergingValue, type, uuid, entries) =>
@@ -81,17 +81,17 @@ namespace Hazelcast.Client.Proxy
                     });
             return RegisterListener(request,
                 message => ReplicatedMapAddEntryListenerWithPredicateCodec.DecodeResponse(message).Response,
-                id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
+                id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(Name, id), handler);
         }
 
-        public string AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key)
+        public Guid AddEntryListener(IEntryListener<TKey, TValue> listener, IPredicate predicate, TKey key)
         {
             var keyData = ToData(key);
             var predicateData = ToData(predicate);
             var listenerAdapter =
-                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, GetContext().GetSerializationService());
+                EntryListenerAdapter<TKey, TValue>.CreateAdapter(listener, Client.SerializationService);
             var request =
-                ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(GetName(), keyData, predicateData,
+                ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, keyData, predicateData,
                     IsSmart());
             DistributedEventHandler handler =
                 eventData => ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.EventHandler.HandleEvent(eventData,
@@ -101,33 +101,33 @@ namespace Hazelcast.Client.Proxy
                     });
             return RegisterListener(request,
                 message => ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(message).Response,
-                id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(GetName(), id), handler);
+                id => ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(Name, id), handler);
         }
 
         public void Clear()
         {
-            var request = ReplicatedMapClearCodec.EncodeRequest(GetName());
+            var request = ReplicatedMapClearCodec.EncodeRequest(Name);
             Invoke(request);
         }
 
         public bool ContainsKey(object key)
         {
             var keyData = ToData(key);
-            var request = ReplicatedMapContainsKeyCodec.EncodeRequest(GetName(), keyData);
+            var request = ReplicatedMapContainsKeyCodec.EncodeRequest(Name, keyData);
             return Invoke(request, keyData, m => ReplicatedMapContainsKeyCodec.DecodeResponse(m).Response);
         }
 
         public bool ContainsValue(object value)
         {
             var valueData = ToData(value);
-            var request = ReplicatedMapContainsValueCodec.EncodeRequest(GetName(), valueData);
+            var request = ReplicatedMapContainsValueCodec.EncodeRequest(Name, valueData);
             return InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapContainsValueCodec.DecodeResponse(m).Response);
         }
 
         public TValue Get(object key)
         {
             var keyData = ToData(key);
-            var request = ReplicatedMapGetCodec.EncodeRequest(GetName(), keyData);
+            var request = ReplicatedMapGetCodec.EncodeRequest(Name, keyData);
             var result = Invoke(request, keyData);
             var value = ToObject<TValue>(ReplicatedMapGetCodec.DecodeResponse(result).Response);
             return value;
@@ -135,13 +135,13 @@ namespace Hazelcast.Client.Proxy
 
         public bool IsEmpty()
         {
-            var request = ReplicatedMapIsEmptyCodec.EncodeRequest(GetName());
+            var request = ReplicatedMapIsEmptyCodec.EncodeRequest(Name);
             return InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapIsEmptyCodec.DecodeResponse(m).Response);
         }
 
         public ISet<KeyValuePair<TKey, TValue>> EntrySet()
         {
-            var request = ReplicatedMapEntrySetCodec.EncodeRequest(GetName());
+            var request = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
             var entries = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapEntrySetCodec.DecodeResponse(m).Response);
             ISet<KeyValuePair<TKey, TValue>> entrySet = new HashSet<KeyValuePair<TKey, TValue>>();
             foreach (var entry in entries)
@@ -155,9 +155,9 @@ namespace Hazelcast.Client.Proxy
 
         public ISet<TKey> KeySet()
         {
-            var request = ReplicatedMapKeySetCodec.EncodeRequest(GetName());
+            var request = ReplicatedMapKeySetCodec.EncodeRequest(Name);
             var result = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapKeySetCodec.DecodeResponse(m).Response);
-            return new ReadOnlyLazySet<TKey>(result, GetContext().GetSerializationService());
+            return new ReadOnlyLazySet<TKey>(result, Client.SerializationService);
         }
 
         public TValue Put(TKey key, TValue value)
@@ -169,7 +169,7 @@ namespace Hazelcast.Client.Proxy
         {
             var keyData = ToData(key);
             var valueData = ToData(value);
-            var request = ReplicatedMapPutCodec.EncodeRequest(GetName(), keyData, valueData, timeunit.ToMillis(ttl));
+            var request = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, timeunit.ToMillis(ttl));
             var clientMessage = Invoke(request, keyData);
             var response = ReplicatedMapPutCodec.DecodeResponse(clientMessage).Response;
             return ToObject<TValue>(response);
@@ -184,49 +184,49 @@ namespace Hazelcast.Client.Proxy
                 var valueData = ToData(kvPair.Value);
                 dataEntries.Add(new KeyValuePair<IData, IData>(keyData, valueData));
             }
-            var request = ReplicatedMapPutAllCodec.EncodeRequest(GetName(), dataEntries);
+            var request = ReplicatedMapPutAllCodec.EncodeRequest(Name, dataEntries);
             Invoke(request);        
         }
 
         public TValue Remove(object key)
         {
             var keyData = ToData(key);
-            var request = ReplicatedMapRemoveCodec.EncodeRequest(GetName(), keyData);
+            var request = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
             var clientMessage = Invoke(request, keyData);
             return ToObject<TValue>(ReplicatedMapRemoveCodec.DecodeResponse(clientMessage).Response);
         }
 
-        public bool RemoveEntryListener(string registrationId)
+        public bool RemoveEntryListener(Guid registrationId)
         {
             return DeregisterListener(registrationId);
         }
 
         public int Size()
         {
-            var request = ReplicatedMapSizeCodec.EncodeRequest(GetName());
+            var request = ReplicatedMapSizeCodec.EncodeRequest(Name);
             return InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapSizeCodec.DecodeResponse(m).Response);
         }
 
         public ICollection<TValue> Values()
         {
-            var request = ReplicatedMapValuesCodec.EncodeRequest(GetName());
+            var request = ReplicatedMapValuesCodec.EncodeRequest(Name);
             var list = InvokeOnPartition(request, _targetPartitionId, m => ReplicatedMapValuesCodec.DecodeResponse(m).Response);
-            return new ReadOnlyLazyList<TValue, IData>(list, GetContext().GetSerializationService());
+            return new ReadOnlyLazyList<TValue, IData>(list, Client.SerializationService);
         }
 
         private void OnEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValue,
             int eventTypeInt, Guid uuid, int numberOfAffectedEntries,
             EntryListenerAdapter<TKey, TValue> listenerAdapter)
         {
-            var member = GetContext().GetClusterService().GetMember(uuid);
-            listenerAdapter.OnEntryEvent(GetName(), keyData, valueData, oldValueData, mergingValue,
+            var member = Client.ClusterService.GetMember(uuid);
+            listenerAdapter.OnEntryEvent(Name, keyData, valueData, oldValueData, mergingValue,
                 (EntryEventType) eventTypeInt, member,
                 numberOfAffectedEntries);
         }
 
-        protected override void OnInitialize()
+        protected internal override void OnInitialize()
         {
-            var partitionCount = GetContext().GetPartitionService().GetPartitionCount();
+            var partitionCount = Client.PartitionService.GetPartitionCount();
             lock (_randomLock)
             {
                 _targetPartitionId = _random.Next(partitionCount);

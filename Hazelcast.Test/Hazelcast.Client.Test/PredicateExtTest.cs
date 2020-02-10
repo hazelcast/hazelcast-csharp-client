@@ -83,7 +83,7 @@ namespace Hazelcast.Client.Test
         public virtual void TestPredicateExt_key_property()
         {
             var predicateProperty = Predicates.Key("id");
-            Assert.AreEqual(predicateProperty.Property, "__key#id");
+            Assert.AreEqual(predicateProperty.Property, "__key.id");
         }
 
         [Test]
@@ -97,7 +97,7 @@ namespace Hazelcast.Client.Test
         public virtual void TestPredicateExt_key_equal()
         {
             var predicate = Predicates.Key("name").Equal("value-1");
-            Assert.AreEqual(predicate, new EqualPredicate("__key#name", "value-1"));
+            Assert.AreEqual(predicate, new EqualPredicate("__key.name", "value-1"));
         }
 
         [Test]
@@ -112,7 +112,7 @@ namespace Hazelcast.Client.Test
         {
             var predicate = Predicates.Key("id").Equal("id-1").And(Predicates.Property("name").ILike("a%"));
 
-            var predicate2 = Predicates.And(Predicates.IsEqual("__key#id", "id-1"),
+            var predicate2 = Predicates.And(Predicates.IsEqual("__key.id", "id-1"),
                 Predicates.IsILike("name", "a%")
             );
             Assert.AreEqual(predicate, predicate2);

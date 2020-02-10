@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,54 +33,32 @@ namespace Hazelcast.Client.Protocol.Codec
     // and regenerate it.
 
     /// <summary>
-    /// TODO DOC
+    /// Queries the map based on the specified predicate and returns the matching entries. Specified predicate
+    /// runs on all members in parallel. The collection is NOT backed by the map, so changes to the map are NOT reflected
+    /// in the collection, and vice-versa. This method is always executed by a distributed query, so it may throw a
+    /// QueryResultSizeExceededException if query result size limit is configured.
     ///</summary>
     internal static class MapEntriesWithPagingPredicateCodec
     {
-        //hex: 0x013700
-        public const int RequestMessageType = 79616;
-        //hex: 0x013701
-        public const int ResponseMessageType = 79617;
+        //hex: 0x013600
+        public const int RequestMessageType = 79360;
+        //hex: 0x013601
+        public const int ResponseMessageType = 79361;
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// name of map
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// specified query criteria.
-            ///</summary>
-            public IData Predicate;
-        }
-
-        public static ClientMessage EncodeRequest(string name, IData predicate)
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Client.Protocol.PagingPredicateHolder predicate)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.EntriesWithPagingPredicate";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, predicate);
+            PagingPredicateHolderCodec.Encode(clientMessage, predicate);
             return clientMessage;
-        }
-
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            //empty initial frame
-            iterator.Next();
-            request.Name = StringCodec.Decode(iterator);
-            request.Predicate = DataCodec.Decode(iterator);
-            return request;
         }
 
         public class ResponseParameters
@@ -90,17 +68,11 @@ namespace Hazelcast.Client.Protocol.Codec
             /// key-value pairs for the query.
             ///</summary>
             public IList<KeyValuePair<IData, IData>> Response;
-        }
 
-        public static ClientMessage EncodeResponse(IEnumerable<KeyValuePair<IData, IData>> response)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EntryListCodec.Encode(clientMessage, response, DataCodec.Encode, DataCodec.Encode);
-            return clientMessage;
+            /// <summary>
+            /// The updated anchor list.
+            ///</summary>
+            public Hazelcast.Client.Protocol.AnchorDataListHolder AnchorDataList;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -110,7 +82,9 @@ namespace Hazelcast.Client.Protocol.Codec
             //empty initial frame
             iterator.Next();
             response.Response = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
+            response.AnchorDataList = AnchorDataListHolderCodec.Decode(iterator);
             return response;
         }
+
     }
 }

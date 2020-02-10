@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,60 +44,26 @@ namespace Hazelcast.Client.Protocol.Codec
     ///</summary>
     internal static class MapEventJournalReadCodec
     {
-        //hex: 0x014500
-        public const int RequestMessageType = 83200;
-        //hex: 0x014501
-        public const int ResponseMessageType = 83201;
+        //hex: 0x014200
+        public const int RequestMessageType = 82432;
+        //hex: 0x014201
+        public const int ResponseMessageType = 82433;
         private const int RequestStartSequenceFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestMinSizeFieldOffset = RequestStartSequenceFieldOffset + LongSizeInBytes;
         private const int RequestMaxSizeFieldOffset = RequestMinSizeFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestMaxSizeFieldOffset + IntSizeInBytes;
-        private const int ResponseReadCountFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseReadCountFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseNextSeqFieldOffset = ResponseReadCountFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseNextSeqFieldOffset + LongSizeInBytes;
-
-        public class RequestParameters
-        {
-
-            /// <summary>
-            /// name of the map
-            ///</summary>
-            public string Name;
-
-            /// <summary>
-            /// the startSequence of the first item to read
-            ///</summary>
-            public long StartSequence;
-
-            /// <summary>
-            /// the minimum number of items to read.
-            ///</summary>
-            public int MinSize;
-
-            /// <summary>
-            /// the maximum number of items to read.
-            ///</summary>
-            public int MaxSize;
-
-            /// <summary>
-            /// the predicate to apply before processing events
-            ///</summary>
-            public IData Predicate;
-
-            /// <summary>
-            /// the projection to apply to journal events
-            ///</summary>
-            public IData Projection;
-        }
 
         public static ClientMessage EncodeRequest(string name, long startSequence, int minSize, int maxSize, IData predicate, IData projection)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
-            clientMessage.AcquiresResource = false;
             clientMessage.OperationName = "Map.EventJournalRead";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame.Content, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame.Content, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame.Content, RequestStartSequenceFieldOffset, startSequence);
             EncodeInt(initialFrame.Content, RequestMinSizeFieldOffset, minSize);
             EncodeInt(initialFrame.Content, RequestMaxSizeFieldOffset, maxSize);
@@ -108,56 +74,28 @@ namespace Hazelcast.Client.Protocol.Codec
             return clientMessage;
         }
 
-        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
-        {
-            var iterator = clientMessage.GetIterator();
-            var request = new RequestParameters();
-            var initialFrame = iterator.Next();
-            request.StartSequence =  DecodeLong(initialFrame.Content, RequestStartSequenceFieldOffset);
-            request.MinSize =  DecodeInt(initialFrame.Content, RequestMinSizeFieldOffset);
-            request.MaxSize =  DecodeInt(initialFrame.Content, RequestMaxSizeFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            request.Predicate = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-            request.Projection = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-            return request;
-        }
-
         public class ResponseParameters
         {
 
             /// <summary>
-            /// TODO DOC
+            /// Number of items that have been read.
             ///</summary>
             public int ReadCount;
 
             /// <summary>
-            /// TODO DOC
+            /// List of items that have been read.
             ///</summary>
             public IList<IData> Items;
 
             /// <summary>
-            /// TODO DOC
+            /// Sequence numbers of items in the event journal.
             ///</summary>
             public long[] ItemSeqs;
 
             /// <summary>
-            /// TODO DOC
+            /// Sequence number of the item following the last read item.
             ///</summary>
             public long NextSeq;
-        }
-
-        public static ClientMessage EncodeResponse(int readCount, IEnumerable<IData> items, long[] itemSeqs, long nextSeq)
-        {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame.Content, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
-
-            EncodeInt(initialFrame.Content, ResponseReadCountFieldOffset, readCount);
-            EncodeLong(initialFrame.Content, ResponseNextSeqFieldOffset, nextSeq);
-            ListMultiFrameCodec.Encode(clientMessage, items, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, itemSeqs, LongArrayCodec.Encode);
-            return clientMessage;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
@@ -171,5 +109,6 @@ namespace Hazelcast.Client.Protocol.Codec
             response.ItemSeqs = CodecUtil.DecodeNullable(iterator, LongArrayCodec.Decode);
             return response;
         }
+
     }
 }

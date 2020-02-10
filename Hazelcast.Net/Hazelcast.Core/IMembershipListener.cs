@@ -29,13 +29,13 @@ namespace Hazelcast.Core
         /// <param name="membershipEvent">membership event</param>
         void MemberAdded(MembershipEvent membershipEvent);
 
-        /// <summary>Invoked when an attribute of a member was changed.</summary>
-        /// <param name="memberAttributeEvent">member attribute event</param>
-        void MemberAttributeChanged(MemberAttributeEvent memberAttributeEvent);
-
         /// <summary>Invoked when an existing member leaves the cluster.</summary>
         /// <remarks>Invoked when an existing member leaves the cluster.</remarks>
         /// <param name="membershipEvent">membership event</param>
         void MemberRemoved(MembershipEvent membershipEvent);
+    }
+
+    public interface IEventListener
+    {
     }
 }

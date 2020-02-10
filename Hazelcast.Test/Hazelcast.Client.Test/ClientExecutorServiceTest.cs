@@ -22,19 +22,18 @@ namespace Hazelcast.Client.Test
 {
     public class ClientExecutorServiceTest : HazelcastTestSupport
     {
-        ClientExecutionService _clientExecutionService;
+        private ExecutionService _executionService;
 
         [SetUp]
         public void Setup()
         {
-
-            _clientExecutionService = new ClientExecutionService("name", 10);
+            _executionService = new ExecutionService("", 10);
         }
 
         [TearDown]
         public void TearDown()
         {
-            _clientExecutionService.Shutdown();
+            _executionService.Shutdown();
         }
 
         [Test]
@@ -42,7 +41,7 @@ namespace Hazelcast.Client.Test
         {
             using (var cts = new CancellationTokenSource())
             {
-                var task = _clientExecutionService.Schedule(
+                var task = _executionService.Schedule(
                         () => throw new Exception("Should not execute"), TimeSpan.FromSeconds(2), cts.Token);
 
                 cts.Cancel();
@@ -56,7 +55,7 @@ namespace Hazelcast.Client.Test
         {
             var executed = new TaskCompletionSource<object>();
 
-            var task = _clientExecutionService
+            var task = _executionService
                 .Schedule(() => { executed.SetResult(executed); }, TimeSpan.FromSeconds(2), CancellationToken.None);
 
             await Task.WhenAll(executed.Task, task);

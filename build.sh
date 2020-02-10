@@ -17,7 +17,7 @@ usage() {
     echo "--server-version: server version to be used for unit tests, latest server will be used if left empty."
     echo "--enterprise:     Enterprise server will be used in unit tests if selected. If this option is selected, you should provide a license key."
     echo "--enterprise-key: Optional enterprise licence key for Hazelcast Enterprise server."
-    echo "                  As an alternative, you can set the license to  environment var HAZELCAST_ENTERPRISE_KEY"
+    echo "                  As an alternative, you can set the license to  environment var HAZELCAST_ENTERPRISE_KEY4"
     printf "\nSample usage for running unit tests with OSS server: \n\$build.sh --run-tests --server-version=LATEST\n"
 }
 
@@ -70,7 +70,7 @@ if [[ ${ENTERPRISE} ]]; then
         ENTERPRISE_KEY=${HAZELCAST_ENTERPRISE_KEY}
     fi
     if [[ -z ${ENTERPRISE_KEY} ]]; then
-        echo "Enterprise server selected but no licence key is provided. Either provide one with --enterprise-key or set to HAZELCAST_ENTERPRISE_KEY environment var."
+        echo "Enterprise server selected but no licence key is provided. Either provide one with --enterprise-key or set to HAZELCAST_ENTERPRISE_KEY4 environment var."
         exit 1
     fi
 fi
@@ -79,7 +79,7 @@ HAZELCAST_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_ENTERPRISE_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_VERSION=${HZ_VERSION}
 HAZELCAST_ENTERPRISE_VERSION=${HZ_VERSION}
-HAZELCAST_RC_VERSION="0.5-SNAPSHOT"
+HAZELCAST_RC_VERSION="0.6-SNAPSHOT"
 SNAPSHOT_REPO="https://oss.sonatype.org/content/repositories/snapshots"
 RELEASE_REPO="http://repo1.maven.apache.org/maven2"
 ENTERPRISE_RELEASE_REPO="https://repository.hazelcast.com/release/"

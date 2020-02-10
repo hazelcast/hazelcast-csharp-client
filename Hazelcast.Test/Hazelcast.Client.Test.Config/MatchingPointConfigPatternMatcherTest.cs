@@ -34,7 +34,7 @@ namespace Hazelcast.Client.Test.Config
         [Test]
         public void TestDuplicateConfig()
         {
-            Assert.Throws<ConfigurationException>(() =>
+            Assert.Throws<InvalidConfigurationException>(() =>
             {
                 var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast.*ap");
                 var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast*map");

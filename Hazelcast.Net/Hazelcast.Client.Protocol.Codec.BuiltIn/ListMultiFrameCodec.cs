@@ -30,7 +30,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
                 encodeFunction(clientMessage, item);
             }
 
-            clientMessage.Add(EndFrame);
+            clientMessage.Add(EndFrame.Copy());
         }
 
         public static void EncodeContainsNullable<T>(ClientMessage clientMessage, IEnumerable<T> collection, Action<ClientMessage, T> encodeFunction)
@@ -49,7 +49,7 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
                 }
             }
 
-            clientMessage.Add(EndFrame);
+            clientMessage.Add(EndFrame.Copy());
         }
 
         public static void EncodeNullable<T>(ClientMessage clientMessage, IEnumerable<T> collection, Action<ClientMessage, T> encodeFunction)
@@ -79,14 +79,14 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             return result;
         }
 
-        public static List<T> DecodeContainsNullable<T>(FrameIterator iterator, DecodeDelegate<T> decodeFunction)
+        public static List<T> DecodeContainsNullable<T>(FrameIterator iterator, DecodeDelegate<T> decodeFunction) where T : class
         {
             var result = new List<T>();
             //begin frame, list
             iterator.Next();
             while (!IsNextFrameIsDataStructureEndFrame(iterator))
             {
-                result.Add(IsNextFrameIsNullEndFrame(iterator) ? default : decodeFunction(iterator));
+                result.Add(IsNextFrameIsNullEndFrame(iterator) ? null : decodeFunction(iterator));
             }
 
             //end frame, list

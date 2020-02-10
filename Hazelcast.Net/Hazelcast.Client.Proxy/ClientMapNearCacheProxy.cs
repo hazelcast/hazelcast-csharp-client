@@ -17,6 +17,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hazelcast.Client.Spi;
 using Hazelcast.Core;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Map;
@@ -29,7 +30,7 @@ namespace Hazelcast.Client.Proxy
     {
         private BaseNearCache _nearCache;
 
-        public ClientMapNearCacheProxy(string serviceName, string name) : base(serviceName, name)
+        public ClientMapNearCacheProxy(string serviceName, string name, HazelcastClient client) : base(serviceName, name, client)
         {
         }
 
@@ -38,19 +39,19 @@ namespace Hazelcast.Client.Proxy
             get { return _nearCache; }
         }
 
-        protected override void OnInitialize()
+        protected internal override void OnInitialize()
         {
             base.OnInitialize();
 
-            var nearCacheManager = GetContext().GetNearCacheManager();
-            _nearCache = nearCacheManager.GetOrCreateNearCache(GetName());
+            var nearCacheManager = Client.NearCacheManager;
+            _nearCache = nearCacheManager.GetOrCreateNearCache(Name);
         }
 
-        protected override void PostDestroy()
+        protected internal override void PostDestroy()
         {
             try
             {
-                GetContext().GetNearCacheManager().DestroyNearCache(GetName());
+                Client.NearCacheManager.DestroyNearCache(Name);
             }
             finally
             {
@@ -62,7 +63,7 @@ namespace Hazelcast.Client.Proxy
         {
             try
             {
-                GetContext().GetNearCacheManager().DestroyNearCache(GetName());
+                Client.NearCacheManager.DestroyNearCache(Name);
             }
             finally
             {
@@ -258,22 +259,22 @@ namespace Hazelcast.Client.Proxy
             }
         }
 
-        protected override void GetAllInternal(ArrayList partitionToKeyData, ConcurrentQueue<KeyValuePair<IData, object>> resultingKeyValuePairs)
+        protected override void GetAllInternal(List<List<IData>> partitionToKeyData,
+            List<KeyValuePair<IData, object>> resultingKeyValuePairs)
         {
-            Parallel.For(0, partitionToKeyData.Count, partitionId =>
+            for (var partitionId = 0; partitionId < partitionToKeyData.Count; partitionId++)
             {
-                var keyList = (ArrayList)partitionToKeyData[partitionId];
-                for (int i = keyList.Count-1; i > -1; i--)
+                var keyList = partitionToKeyData[partitionId];
+                for (var i = keyList.Count-1; i > -1; i--)
                 {
-                    var keyData = (IData)keyList[i];
-                    object value;
-                    if (_nearCache.TryGetValue(keyData, out value))
+                    var keyData = keyList[i];
+                    if (_nearCache.TryGetValue(keyData, out var value))
                     {
                         keyList.RemoveAt(i);
-                        resultingKeyValuePairs.Enqueue(new KeyValuePair<IData, object>(keyData, value));
+                        resultingKeyValuePairs.Add(new KeyValuePair<IData, object>(keyData, value));
                     }
                 }
-            });
+            }
             base.GetAllInternal(partitionToKeyData, resultingKeyValuePairs);
             foreach (var kvp in resultingKeyValuePairs)
             {
@@ -302,7 +303,7 @@ namespace Hazelcast.Client.Proxy
         
         public override Task<TValue> GetAsync(TKey key)
         {
-            var task = GetContext().GetExecutionService().Submit(() => Get(key));
+            var task = Client.ExecutionService.Submit(() => Get(key));
             return task;
         }
 

@@ -32,9 +32,9 @@ namespace Hazelcast.NearCache
         private readonly NearCache _nearCache;
         private readonly int _partitionCount;
 
-        private readonly IClientPartitionService _partitionService;
+        private readonly PartitionService _partitionService;
 
-        public RepairingHandler(Guid localUuid, NearCache nearCache, IClientPartitionService partitionService)
+        public RepairingHandler(Guid localUuid, NearCache nearCache, PartitionService partitionService)
         {
             _localUuid = localUuid;
             _nearCache = nearCache;
@@ -59,7 +59,7 @@ namespace Hazelcast.NearCache
                 if (metaData.TrySetGuid(newUuid))
                 {
                     metaData.ResetAllSequences();
-                    if (Logger.IsFinestEnabled())
+                    if (Logger.IsFinestEnabled)
                     {
                         Logger.Finest(string.Format(
                             "Invalid UUID, lost remote partition data unexpectedly:[name={0},partition={1},prevUuid={2},newUuid={3}]",
@@ -96,7 +96,7 @@ namespace Hazelcast.NearCache
                         var missCount = viaAntiEntropy ? sequenceDiff : sequenceDiff - 1;
                         var totalMissCount = metaData.AddAndGetMissedSequenceCount(missCount);
 
-                        if (Logger.IsFinestEnabled())
+                        if (Logger.IsFinestEnabled)
                         {
                             Logger.Finest(string.Format(
                                 "Invalid sequence:[map={0},partition={1},currentSequence={2},nextSequence={3},totalMissCount={4}]",
@@ -234,7 +234,7 @@ namespace Hazelcast.NearCache
 
                 if (missCount > _maxToleratedMissCount)
                 {
-                    if (Logger.IsFinestEnabled())
+                    if (Logger.IsFinestEnabled)
                     {
                         Logger.Finest(string.Format(
                             "Above tolerated miss count:[map={0}, missCount={1}, maxToleratedMissCount={2}]",

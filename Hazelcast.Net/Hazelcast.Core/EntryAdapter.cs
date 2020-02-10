@@ -52,32 +52,32 @@ namespace Hazelcast.Core
 
         public void EntryAdded(EntryEvent<TKey, TValue> @event)
         {
-            if (Added != null) Added(@event);
+            Added?.Invoke(@event);
         }
 
         public void EntryRemoved(EntryEvent<TKey, TValue> @event)
         {
-            if (Removed != null) Removed(@event);
+            Removed?.Invoke(@event);
         }
 
         public void EntryUpdated(EntryEvent<TKey, TValue> @event)
         {
-            if (Updated != null) Updated(@event);
+            Updated?.Invoke(@event);
         }
 
         public void EntryEvicted(EntryEvent<TKey, TValue> @event)
         {
-            if (Evicted != null) Evicted(@event);
+            Evicted?.Invoke(@event);
         }
 
         public void MapEvicted(MapEvent @event)
         {
-            if (EvictAll != null) EvictAll(@event);
+            EvictAll?.Invoke(@event);
         }
 
         public void MapCleared(MapEvent @event)
         {
-            if (ClearAll != null) ClearAll(@event);
+            ClearAll?.Invoke(@event);
         }
     }
 }

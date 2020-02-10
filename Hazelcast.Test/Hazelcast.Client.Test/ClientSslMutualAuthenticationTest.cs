@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:null, 
                 clientCertificate:Resources.client1, 
                 certPassword:Password);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
 
         [Test]
@@ -53,7 +53,7 @@ namespace Hazelcast.Client.Test
                     certSubjectName:null, 
                     clientCertificate:null, 
                     certPassword:null);
-                Assert.True(Client.GetLifecycleService().IsRunning());
+                Assert.True(Client.LifecycleService.IsRunning());
             });
         }
 
@@ -70,7 +70,7 @@ namespace Hazelcast.Client.Test
                     certSubjectName:null, 
                     clientCertificate:Resources.client2, 
                     certPassword:Password);
-                Assert.True(Client.GetLifecycleService().IsRunning());
+                Assert.True(Client.LifecycleService.IsRunning());
             });
         }
 
@@ -85,7 +85,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:null, 
                 clientCertificate:Resources.client1, 
                 certPassword:Password);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
 
         [Test]
@@ -99,7 +99,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:null, 
                 clientCertificate:null, 
                 certPassword:null);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
 
         [Test]
@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Test
                     certSubjectName:null, 
                     clientCertificate:Resources.client2, 
                     certPassword:Password);
-                Assert.True(Client.GetLifecycleService().IsRunning());
+                Assert.True(Client.LifecycleService.IsRunning());
             });
         }
 
@@ -130,7 +130,7 @@ namespace Hazelcast.Client.Test
                 certSubjectName:null, 
                 clientCertificate:Resources.client1, 
                 certPassword:Password);
-            Assert.True(Client.GetLifecycleService().IsRunning());
+            Assert.True(Client.LifecycleService.IsRunning());
         }
 
     }

@@ -64,9 +64,9 @@ namespace Hazelcast.Client.Protocol.Codec.BuiltIn
             }
         }
 
-        public static T DecodeNullable<T>(ClientMessage.FrameIterator iterator, DecodeDelegate<T> decode)
+        public static T DecodeNullable<T>(ClientMessage.FrameIterator iterator, DecodeDelegate<T> decode) where T : class
         {
-            return IsNextFrameIsNullEndFrame(iterator) ? default : decode(iterator);
+            return IsNextFrameIsNullEndFrame(iterator) ? null : decode(iterator);
         }   
 
         public static bool IsNextFrameIsDataStructureEndFrame(ClientMessage.FrameIterator iterator)

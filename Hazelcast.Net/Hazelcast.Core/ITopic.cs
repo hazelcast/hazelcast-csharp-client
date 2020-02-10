@@ -42,7 +42,7 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="listener"></param>
         /// <returns>returns registration id.</returns>
-        string AddMessageListener(IMessageListener<T> listener);
+        Guid AddMessageListener(IMessageListener<T> listener);
 
         /// <summary>Subscribes to this topic.</summary>
         /// <remarks>
@@ -51,11 +51,11 @@ namespace Hazelcast.Core
         ///     added on one instance.
         /// </remarks>
         /// <param name="listener"></param>
-        string AddMessageListener(Action<Message<T>> listener);
+        Guid AddMessageListener(Action<Message<T>> listener);
 
-        /// <summary>Returns the name of this ITopic instance</summary>
-        /// <returns>name of this instance</returns>
-        new string GetName();
+//        /// <summary>Returns the name of this ITopic instance</summary>
+//        /// <returns>name of this instance</returns>
+//        new string GetName();
 
         /// <summary>Publishes the message to all subscribers of this topic</summary>
         /// <param name="message"></param>
@@ -68,6 +68,6 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <param name="registrationId">Id of listener registration.</param>
         /// <returns>true if registration is removed, false otherwise</returns>
-        bool RemoveMessageListener(string registrationId);
+        bool RemoveMessageListener(Guid registrationId);
     }
 }

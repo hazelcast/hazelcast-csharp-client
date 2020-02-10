@@ -23,23 +23,20 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ReadOnlyLazyEntrySetTest : AbstractLazyDictionaryTest
     {
-        private ReadOnlyLazyEntrySet<int, string> _testCollection;
+        private ReadOnlyLazyEntrySet<int, string, object> _testCollection;
+
+        internal override AbstractLazyDictionary<int, string, object> TestCollection => _testCollection;
 
         [SetUp]
         public void Init()
         {
             var _ss = new SerializationServiceBuilder().Build();
-            var dataList = new ConcurrentQueue<KeyValuePair<IData, object>>();
-            dataList.Enqueue(new KeyValuePair<IData, object>(_ss.ToData(0), "0"));
-            dataList.Enqueue(new KeyValuePair<IData, object>(_ss.ToData(1), _ss.ToData("1")));
-            dataList.Enqueue(new KeyValuePair<IData, object>(_ss.ToData(2), _ss.ToData("2")));
-            dataList.Enqueue(new KeyValuePair<IData, object>(_ss.ToData(3), "3"));
-            _testCollection = new ReadOnlyLazyEntrySet<int, string>(dataList, _ss);
-        }
-
-        internal override AbstractLazyDictionary<int, string> TestCollection
-        {
-            get { return _testCollection; }
+            var dataList = new List<KeyValuePair<IData, object>>();
+            dataList.Add(new KeyValuePair<IData, object>(_ss.ToData(0), "0"));
+            dataList.Add(new KeyValuePair<IData, object>(_ss.ToData(1), _ss.ToData("1")));
+            dataList.Add(new KeyValuePair<IData, object>(_ss.ToData(2), _ss.ToData("2")));
+            dataList.Add(new KeyValuePair<IData, object>(_ss.ToData(3), "3"));
+            _testCollection = new ReadOnlyLazyEntrySet<int, string, object>(dataList, _ss);
         }
 
         [Test]

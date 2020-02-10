@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
@@ -32,7 +33,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestSingleMember()
         {
-            string oldMemberUUID = null;
+            Guid? oldMemberUUID = null;
             SetupCluster(() =>
             {
                 oldMemberUUID = StartNewMember();
@@ -41,24 +42,24 @@ namespace Hazelcast.Client.Test
             var memberAdded = new CountdownEvent(1);
             var memberRemoved = new CountdownEvent(1);
 
-            string addedMemberReferenceUUID = null;
-            string removedMemberReferenceUUID = null;
+            Guid? addedMemberReferenceUUID = null;
+            Guid? removedMemberReferenceUUID = null;
 
-            Client.GetCluster().AddMembershipListener(new MembershipListener
+            Client.Cluster.AddMembershipListener(new MembershipListener
             {
                 OnMemberAdded = membershipEvent =>
                 {
-                    Interlocked.Exchange(ref addedMemberReferenceUUID, membershipEvent.GetMember().Uuid.ToString());
+                    addedMemberReferenceUUID = membershipEvent.GetMember().Uuid;
                     memberAdded.Signal();
                 },
                 OnMemberRemoved = membershipEvent =>
                 {
-                    Interlocked.Exchange(ref removedMemberReferenceUUID, membershipEvent.GetMember().Uuid.ToString());
+                    removedMemberReferenceUUID= membershipEvent.GetMember().Uuid;
                     memberRemoved.Signal();
                 }
             });
 
-            ShutdownMember(oldMemberUUID);
+            ShutdownMember(oldMemberUUID.Value);
             var newMemberUUID = StartNewMember();
 
             TestSupport.AssertOpenEventually(memberRemoved);
@@ -67,16 +68,16 @@ namespace Hazelcast.Client.Test
             TestSupport.AssertOpenEventually(memberAdded);
             Assert.AreEqual(newMemberUUID, addedMemberReferenceUUID);
 
-            var members = Client.GetCluster().GetMembers();
-            Assert.True(members.Any(member => member.Uuid.ToString() == newMemberUUID));
+            var members = Client.Cluster.Members;
+            Assert.True(members.Any(member => member.Uuid == newMemberUUID));
             Assert.AreEqual(1, members.Count);
         }
 
         [Test]
         public void TestMultiMember()
         {
-            string oldMemberUUID0 = null;
-            string oldMemberUUID1 = null;
+            Guid? oldMemberUUID0 = null;
+            Guid? oldMemberUUID1 = null;
             SetupCluster(() =>
             {
                 oldMemberUUID0 = StartNewMember();
@@ -86,19 +87,19 @@ namespace Hazelcast.Client.Test
             var memberAdded = new CountdownEvent(2);
             var memberRemoved = new CountdownEvent(2);
 
-            var addedMemberUUIDs = new ConcurrentBag<string>();
-            var removedMemberUUIDs = new ConcurrentBag<string>();
+            var addedMemberUUIDs = new ConcurrentBag<Guid>();
+            var removedMemberUUIDs = new ConcurrentBag<Guid>();
 
-            Client.GetCluster().AddMembershipListener(new MembershipListener
+            Client.Cluster.AddMembershipListener(new MembershipListener
             {
                 OnMemberAdded = membershipEvent =>
                 {
-                    addedMemberUUIDs.Add(membershipEvent.GetMember().Uuid.ToString());
+                    addedMemberUUIDs.Add(membershipEvent.GetMember().Uuid);
                     memberAdded.Signal();
                 },
                 OnMemberRemoved = membershipEvent =>
                 {
-                    removedMemberUUIDs.Add(membershipEvent.GetMember().Uuid.ToString());
+                    removedMemberUUIDs.Add(membershipEvent.GetMember().Uuid);
                     memberRemoved.Signal();
                 }
             });
@@ -119,10 +120,10 @@ namespace Hazelcast.Client.Test
             Assert.Contains(newMemberUUID0, addedMemberUUIDs);
             Assert.Contains(newMemberUUID1, addedMemberUUIDs);
 
-            var members = Client.GetCluster().GetMembers();
+            var members = Client.Cluster.Members;
             Assert.AreEqual(2, members.Count);
-            Assert.True(members.Any(member => member.Uuid.ToString() == newMemberUUID0));
-            Assert.True(members.Any(member => member.Uuid.ToString() == newMemberUUID1));
+            Assert.True(members.Any(member => member.Uuid == newMemberUUID0));
+            Assert.True(members.Any(member => member.Uuid == newMemberUUID1));
         }
     }
 }

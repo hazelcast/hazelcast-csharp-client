@@ -39,13 +39,9 @@ namespace Hazelcast.IO.Serialization
 
         private SerializationConfig _config;
 
-        private bool _enableCompression;
-
-        private bool _enableSharedObject;
         private IHazelcastInstance _hazelcastInstance;
 
         private int _initialOutputBufferSize = DefaultOutBufferSize;
-        private IManagedContext _managedContext;
 
         private IPartitioningStrategy _partitioningStrategy;
 
@@ -85,8 +81,6 @@ namespace Hazelcast.IO.Serialization
             _checkClassDefErrors = config.IsCheckClassDefErrors();
             _useNativeByteOrder = config.IsUseNativeByteOrder();
             _byteOrder = config.GetByteOrder();
-            _enableCompression = config.IsEnableCompression();
-            _enableSharedObject = config.IsEnableSharedObject();
             return this;
         }
 
@@ -114,12 +108,6 @@ namespace Hazelcast.IO.Serialization
             return this;
         }
 
-        public ISerializationServiceBuilder SetManagedContext(IManagedContext managedContext)
-        {
-            _managedContext = managedContext;
-            return this;
-        }
-
         public ISerializationServiceBuilder SetUseNativeByteOrder(bool useNativeByteOrder)
         {
             _useNativeByteOrder = useNativeByteOrder;
@@ -135,18 +123,6 @@ namespace Hazelcast.IO.Serialization
         public ISerializationServiceBuilder SetHazelcastInstance(IHazelcastInstance hazelcastInstance)
         {
             _hazelcastInstance = hazelcastInstance;
-            return this;
-        }
-
-        public ISerializationServiceBuilder SetEnableCompression(bool enableCompression)
-        {
-            _enableCompression = enableCompression;
-            return this;
-        }
-
-        public ISerializationServiceBuilder SetEnableSharedObject(bool enableSharedObject)
-        {
-            _enableSharedObject = enableSharedObject;
             return this;
         }
 
@@ -186,11 +162,8 @@ namespace Hazelcast.IO.Serialization
                 _portableFactories,
                 _classDefinitions,
                 _checkClassDefErrors,
-                _managedContext,
                 _partitioningStrategy,
-                _initialOutputBufferSize,
-                _enableCompression,
-                _enableSharedObject);
+                _initialOutputBufferSize);
             if (_config != null)
             {
                 if (_config.GetGlobalSerializerConfig() != null)
