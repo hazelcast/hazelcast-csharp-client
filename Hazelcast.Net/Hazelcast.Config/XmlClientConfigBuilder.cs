@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -119,7 +119,7 @@ namespace Hazelcast.Config
         }
 
         /// <summary>
-        /// Creates a <see cref="ClientConfig"/> using the XML content 
+        /// Creates a <see cref="ClientConfig"/> using the XML content
         /// </summary>
         /// <returns></returns>
         protected ClientConfig Init()
@@ -331,8 +331,7 @@ namespace Hazelcast.Config
                 var nodeName = CleanNodeName(child);
                 if ("credentials".Equals(nodeName))
                 {
-                    var className = GetTextContent(child);
-                    // clientSecurityConfig.SetCredentialsClassName(className);
+                    // TODO: obsolete that method, it is not supported
                 }
                 else if ("credentials-factory".Equals(nodeName))
                 {
@@ -344,14 +343,14 @@ namespace Hazelcast.Config
 
         private void HandleCredentialsFactory(XmlNode node, ClientSecurityConfig clientSecurityConfig)
         {
-            var className = GetAttribute(node, "class-name");
-            // var credentialsFactoryConfig = new CredentialsFactoryConfig(className);
-            // clientSecurityConfig.SetCredentialsFactoryConfig(credentialsFactoryConfig);
+            var credentialsFactoryConfig = clientSecurityConfig.CredentialsFactoryConfig;
+            credentialsFactoryConfig.ClassName = GetAttribute(node, "class-name");
+
             foreach (XmlNode child in node.ChildNodes) {
                 var nodeName = CleanNodeName(child.Name);
                 if ("properties".Equals(nodeName))
                 {
-                    // FillProperties(child, credentialsFactoryConfig.GetProperties());
+                    FillProperties(child, credentialsFactoryConfig.Properties);
                     break;
                 }
             }
@@ -403,7 +402,7 @@ namespace Hazelcast.Config
             var sslConfig = ParseSSLConfig(node);
             clientNetworkConfig.SetSSLConfig(sslConfig);
         }
-        
+
         private void HandleCloudConfig(XmlNode node, ClientNetworkConfig clientNetworkConfig) {
             var cloudConfig = clientNetworkConfig.GetCloudConfig();
 

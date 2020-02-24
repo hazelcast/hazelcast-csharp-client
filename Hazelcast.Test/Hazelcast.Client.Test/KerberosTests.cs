@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
 using Hazelcast.Config;
+using Hazelcast.IO;
+using Hazelcast.IO.Serialization;
 using Hazelcast.Security;
 using Hazelcast.Test;
 using NUnit.Framework;
@@ -31,6 +32,7 @@ namespace Hazelcast.Client.Test
     // - works on .NET Core
 
     [TestFixture]
+    [Explicit("Requires KDC and domain.")]
     public class KerberosTests : SingleMemberBaseTest
     {
         protected override void ConfigureClient(ClientConfig config)
@@ -42,28 +44,31 @@ namespace Hazelcast.Client.Test
                 .SetImplementation(new ZpqrtBnkTests.UserSerializer())
                 .SetTypeClass(typeof(ZpqrtBnkTests.User)));
 
-            // configure Kerberos credentials with the current Windows principal
-            // requires that the tests run as part of the domain
-            //config.ConfigureKerberosCredentials("hzimdg/server19.hz.local");
+            // configure Kerberos - 3 ways
 
-            // configure Kerberos credentials with a specified username and password
-            // which must correspond to a user in the domain
-            var credentialsFactoryConfig = config.GetSecurityConfig().CredentialsFactoryConfig = new CredentialsFactoryConfig();
-            credentialsFactoryConfig.Implementation = new KerberosCredentialsFactory();
-            // FIXME this is confusing, if we set the implementation then "properties" are not used?
-            credentialsFactoryConfig.Implementation.Init(new Dictionary<string, string>
-            {
-                ["spn"] = "hzimdg/server19.hz.local",
-                ["timeout"] = "0",
-                ["username"] = "Administrateur",
-                ["password"] = "kErb!55",
-                ["domain"] = "hz.local",
-            });
-            //credentialsFactoryConfig.Properties["spn"] = "hzimdg/server19.hz.local";
-            ////credentialsFactoryConfig.Properties["timeout"] = "0";
-            //credentialsFactoryConfig.Properties["username"] = "Administrateur";
-            //credentialsFactoryConfig.Properties["password"] = "kErb!55";
-            //credentialsFactoryConfig.Properties["domain"] = "hz.local";
+            // 1.
+            // configure Kerberos credentials via the config file
+            // <security>
+            //   <credentials-factory class-name="Hazelcast.Security.KerberosCredentialsFactory">
+            //     <properties>
+            //       <property name="spn">hzimdg/server19.hz.local</property>
+            //     </properties>
+            //   </credentials-factory>
+            // </security>
+
+            // 2.
+            // configure Kerberos credentials with the current Windows principal - requires
+            // that the tests run as part of the domain
+            //config.ConfigureSecurity(security
+            //    => security.ConfigureKerberosCredentials("hzimdg/server19.hz.local"));
+
+            // 3.
+            // configure Kerberos credentials manually with the specified user - when tests
+            // do not run as part of the domain
+            config.ConfigureSecurity(security =>
+                security.ConfigureCredentialsFactory(factory =>
+                    factory.Implementation = new KerberosCredentialsFactory("hzimdg/server19.hz.local",
+                        "Administrateur", "kErb!55", "hz.local")));
         }
 
         protected override string GetServerConfig()
@@ -78,11 +83,41 @@ namespace Hazelcast.Client.Test
             // do a normal IMap operation
             // expect it to work with Kerberos authentication / authorization
 
-            var user = new ZpqrtBnkTests.User { Name = "qsdf" };
-            var map = Client.GetMap<string, ZpqrtBnkTests.User>(TestSupport.RandomString());
+            var user = new User { Name = "qsdf" };
+            var map = Client.GetMap<string, User>(TestSupport.RandomString());
             map.Put("x", user);
             var mapUser = map.Get("x");
             Assert.AreEqual(user.Name, mapUser.Name);
+        }
+
+        public class User
+        {
+            public string Name { get; set; }
+        }
+
+        public class UserSerializer : IStreamSerializer<User>
+        {
+            public void Destroy()
+            {
+            }
+
+            public int GetTypeId()
+            {
+                return 123456;
+            }
+
+            public User Read(IObjectDataInput input)
+            {
+                return new User
+                {
+                    Name = input.ReadUTF()
+                };
+            }
+
+            public void Write(IObjectDataOutput output, User obj)
+            {
+                output.WriteUTF(obj.Name);
+            }
         }
     }
 }

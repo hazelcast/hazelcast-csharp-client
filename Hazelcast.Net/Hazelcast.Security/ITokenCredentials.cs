@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,14 @@
 
 namespace Hazelcast.Security
 {
+    /// <summary>
+    /// Defines an <see cref="ICredentials"/> that relies on a token.
+    /// </summary>
     public interface ITokenCredentials : ICredentials
     {
+        /// <summary>
+        /// Gets the token.
+        /// </summary>
         byte[] Token { get; }
     }
 }

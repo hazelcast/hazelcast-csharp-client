@@ -150,12 +150,5 @@ namespace Hazelcast.Client
             }
             Clients.Clear();
         }
-
-        private static ICredentialsFactory InitCredentialsFactory(ClientConfig config)
-        {
-            var securityConfig = config.GetSecurityConfig();
-            var credentialsFactory = securityConfig.AsCredentialsFactory();
-            return credentialsFactory ?? new DefaultCredentialsFactory();
-        }
     }
 }
