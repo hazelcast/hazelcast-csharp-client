@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,6 +43,55 @@ namespace Hazelcast.Security
         private string _password;
         private string _domain;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/> class.
+        /// </summary>
+        /// <remarks>The new instance needs to be fully initialized with the <see cref="Init"/> method.</remarks>
+        public KerberosCredentialsFactory()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/> class.
+        /// </summary>
+        /// <returns>The application will authenticate to the KDC as the current Windows user.</returns>
+        /// <param name="spn">The service principal name.</param>
+        /// <param name="timeoutSeconds">An optional timeout for communicating with the KDC.</param>
+        public KerberosCredentialsFactory(string spn, int timeoutSeconds = 0)
+        {
+            if (string.IsNullOrWhiteSpace(spn))
+                throw new ArgumentException("Value cannot be null nor empty.", nameof(spn));
+            _spn = spn;
+
+            if (timeoutSeconds < 0)
+                throw new ArgumentException("Invalid timeout value.", nameof(timeoutSeconds));
+            _timeout = TimeSpan.FromSeconds(timeoutSeconds > 0 ? timeoutSeconds : DefaultTimeoutSeconds);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/> class.
+        /// </summary>
+        /// <returns>The application will authenticate to the KDC as the specified domain user.</returns>
+        /// <param name="spn">The service principal name.</param>
+        /// <param name="username">A username.</param>
+        /// <param name="password">A password.</param>
+        /// <param name="domain">A domain.</param>
+        /// <param name="timeoutSeconds">An optional timeout for communicating with the KDC.</param>
+        public KerberosCredentialsFactory(string spn, string username, string password, string domain, int timeoutSeconds = 0)
+            : this(spn, timeoutSeconds)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("Value cannot be null nor empty.", nameof(username));
+            _username = username;
+
+            if (string.IsNullOrWhiteSpace(password))
+                throw new ArgumentException("Value cannot be null nor empty.", nameof(password));
+            _password = password;
+
+            if (string.IsNullOrWhiteSpace(domain))
+                throw new ArgumentException("Value cannot be null nor empty.", nameof(domain));
+            _domain = domain;
+        }
+
         /// <inheritdoc />
         public void Init(IDictionary<string, string> properties)
         {
@@ -84,6 +133,8 @@ namespace Hazelcast.Security
             // and... the Kerberos.NET library is netstandard-2.0, which requires
             // net-461 and we are still aiming at net-40 so we cannot use it here,
             // hence we have to have two different implementations
+
+            // FIXME but now that we have embedded Kerberos.NET maybe we can use it here too?
 
             var tokenProvider = _username == null
                 ? new KerberosSecurityTokenProvider(_spn, TokenImpersonationLevel.Identification)

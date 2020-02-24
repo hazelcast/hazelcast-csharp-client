@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,52 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Security;
-
 namespace Hazelcast.Config
 {
     /// <summary>
-    /// Contains the security configuration for a client.
+    /// Represents the security configuration for a client.
     /// </summary>
     public class ClientSecurityConfig
     {
-        private IIdentityConfig _identityConfig;
-        
-        public UsernamePasswordIdentityConfig UsernamePasswordIdentityConfig
-        {
-            get => _identityConfig as UsernamePasswordIdentityConfig;
-            set => _identityConfig = value;
-        }
-
-        public TokenIdentityConfig TokenIdentityConfig
-        {
-            get => _identityConfig as TokenIdentityConfig;
-            set => _identityConfig = value;
-        }
-
-        public CredentialsIdentityConfig CredentialsIdentityConfig
-        {
-            get => _identityConfig as CredentialsIdentityConfig;
-            set => _identityConfig = value;
-        }
-
-
-        public CredentialsFactoryConfig CredentialsFactoryConfig
-        {
-            get => _identityConfig as CredentialsFactoryConfig;
-            set => _identityConfig = value;
-        }
-
-        public bool HasIdentityConfig => _identityConfig != null;
-
-        public ICredentialsFactory AsCredentialsFactory()
-        {
-            return _identityConfig?.AsCredentialsFactory();
-        }
-
-        public ICredentials Credentials
-        {
-            set => _identityConfig = new CredentialsIdentityConfig{Credentials = value};
-        }
+        /// <summary>
+        /// Gets or sets the credentials factory configuration.
+        /// </summary>
+        public CredentialsFactoryConfig CredentialsFactoryConfig { get; set; } = new CredentialsFactoryConfig();
     }
 }

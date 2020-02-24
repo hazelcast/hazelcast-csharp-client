@@ -108,7 +108,7 @@ namespace Hazelcast.Client
             LockReferenceIdGenerator = new ClientLockReferenceIdGenerator();
             // Statistics = new Statistics(this);
             NearCacheManager = new NearCacheManager(this);
-            CredentialsFactory = InitCredentialsFactory(config);
+            CredentialsFactory = config.GetSecurityConfig().CredentialsFactoryConfig.GetCredentialsFactory();
         }
 
         private void Start()
