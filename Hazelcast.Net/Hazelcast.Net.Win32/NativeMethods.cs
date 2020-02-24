@@ -26,7 +26,6 @@ using System.Runtime.InteropServices;
 
 namespace Hazelcast.Net.Win32
 {
-#if NETSTANDARD
     internal unsafe class NativeMethods
     {
         private const string SECUR32 = "secur32.dll";
@@ -231,7 +230,11 @@ namespace Hazelcast.Net.Win32
             {
                 if (cBuffers <= 0)
                 {
+#if NETSTANDARD
                     return Array.Empty<byte>();
+#else
+                    return new byte[0];
+#endif
                 }
 
                 var bufferList = new List<byte[]>();
@@ -292,5 +295,4 @@ namespace Hazelcast.Net.Win32
             public void* sValue;
         }
     }
-#endif
 }

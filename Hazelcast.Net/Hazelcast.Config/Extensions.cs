@@ -37,12 +37,11 @@ namespace Hazelcast.Config
         /// </summary>
         /// <param name="config">The configuration.</param>
         /// <param name="spn">The service principal name of the Hazelcast cluster.</param>
-        /// <param name="timeout">The optional timeout for getting tickets from the KDC.</param>
         /// <returns>The configuration.</returns>
-        public static ClientSecurityConfig ConfigureKerberosCredentials(this ClientSecurityConfig config, string spn, int timeout = 0)
+        public static ClientSecurityConfig ConfigureKerberosCredentials(this ClientSecurityConfig config, string spn)
         {
             return config.ConfigureCredentialsFactory(x =>
-                x.Implementation = new KerberosCredentialsFactory(spn, timeout));
+                x.Implementation = new KerberosCredentialsFactory(spn));
         }
 
         /// <summary>
