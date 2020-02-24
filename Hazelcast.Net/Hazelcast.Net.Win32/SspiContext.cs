@@ -23,7 +23,6 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-#if NETSTANDARD
 namespace Hazelcast.Net.Win32
 {
     public class SspiContext : IDisposable
@@ -71,4 +70,3 @@ namespace Hazelcast.Net.Win32
         }
     }
 }
-#endif

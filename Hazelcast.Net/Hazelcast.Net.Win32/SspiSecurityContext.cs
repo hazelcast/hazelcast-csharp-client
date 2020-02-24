@@ -25,11 +25,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-#if NETSTANDARD
 using static Hazelcast.Net.Win32.NativeMethods;
-#endif
 
-#if NETSTANDARD
 namespace Hazelcast.Net.Win32
 {
     internal partial class SspiSecurityContext : IDisposable
@@ -359,4 +356,3 @@ namespace Hazelcast.Net.Win32
         }
     }
 }
-#endif
