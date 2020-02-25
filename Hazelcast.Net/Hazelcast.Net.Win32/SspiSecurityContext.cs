@@ -81,7 +81,7 @@ namespace Hazelcast.Net.Win32
 
         public unsafe string QueryContextAttributeAsString(SecurityContextAttribute attr)
         {
-            SecPkgContext_SecString pBuffer = default;
+            SecPkgContext_SecString pBuffer = default(SecPkgContext_SecString);
             SecStatus status;
             string strValue = null;
 
@@ -126,7 +126,7 @@ namespace Hazelcast.Net.Win32
 
             int tokenSize = 0;
 
-            SecBufferDesc clientToken = default;
+            SecBufferDesc clientToken = default(SecBufferDesc);
 
             try
             {
@@ -223,7 +223,7 @@ namespace Hazelcast.Net.Win32
             var pInput = new SecBufferDesc(clientRequest);
 
             var tokenSize = 0;
-            SecBufferDesc pOutput = default;
+            SecBufferDesc pOutput = default(SecBufferDesc);
 
             try
             {
