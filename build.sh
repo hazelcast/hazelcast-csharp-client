@@ -54,7 +54,7 @@ done
 
 #DOTNET BUILD
 
-dotnet build Hazelcast.Test/Hazelcast.Test.csproj --configuration Release --framework netcoreapp2.0
+dotnet build Hazelcast.Test/Hazelcast.Test.csproj --configuration Release --framework netcoreapp2.1
 
 if [[ -z "${RUN_TESTS}" ]]
 then
@@ -162,4 +162,4 @@ serverPid=$!
 
 sleep 15
 
-dotnet test Hazelcast.Test/Hazelcast.Test.csproj -c Release --no-build --no-restore -f netcoreapp2.0 -v n
+dotnet test Hazelcast.Test/Hazelcast.Test.csproj -c Release --no-build --no-restore -f netcoreapp2.1 -v n
