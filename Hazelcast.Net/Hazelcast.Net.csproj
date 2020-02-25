@@ -11,6 +11,7 @@
     </RootNamespace>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Hazelcast.Net.xml</DocumentationFile>
     <NoWarn>1701;1702;1591;1570</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Label="sign">
     <!--Condition=" '$(OS)' != 'Windows_NT' "-->
@@ -21,4 +22,11 @@
   <PropertyGroup Label="package">
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.IdentityModel.Selectors" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+  </ItemGroup>
 </Project>

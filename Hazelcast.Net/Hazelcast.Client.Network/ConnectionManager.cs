@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -310,6 +310,30 @@ namespace Hazelcast.Client.Network
 
         private void AuthenticateOnCluster(Connection connection)
         {
+            // try once
+            if (TryAuthenticateOnCluster(connection))
+                return;
+
+            // if it fails, maybe we need to reset the credential factory,
+            // which may be caching credentials, to restart it all?
+            if (_client.CredentialsFactory is IResettableCredentialsFactory resettableFactory)
+            {
+                // reset
+                resettableFactory.Reset();
+
+                // try again
+                if (TryAuthenticateOnCluster(connection))
+                    return;
+            }
+
+            // fail
+            var authException = new AuthenticationException("Invalid credentials!");
+            connection.Close("Failed to authenticate connection", authException);
+            throw authException;
+        }
+
+        private bool TryAuthenticateOnCluster(Connection connection)
+        {
             var request = EncodeAuthenticationRequest();
             var future = _client.InvocationService.InvokeOnConnection(request, connection);
             ClientAuthenticationCodec.ResponseParameters response;
@@ -330,11 +354,9 @@ namespace Hazelcast.Client.Network
             {
                 case AuthenticationStatus.Authenticated:
                     HandleSuccessfulAuth(connection, response);
-                    break;
+                    return true;
                 case AuthenticationStatus.CredentialsFailed:
-                    var authException = new AuthenticationException("Invalid credentials!");
-                    connection.Close("Failed to authenticate connection", authException);
-                    throw authException;
+                    return false; // we might want to try again?
                 case AuthenticationStatus.NotAllowedInCluster:
                     var notAllowedException = new ClientNotAllowedInClusterException("Client is not allowed in the cluster");
                     connection.Close("Failed to authenticate connection", notAllowedException);
@@ -483,23 +505,24 @@ namespace Hazelcast.Client.Network
 
             var dllVersion = VersionUtil.GetDllVersion();
             var clientGuid = _client.ClientGuid;
-            if (credentials is IPasswordCredentials passwordCredentials)
+
+            switch (credentials)
             {
-                return ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name,
-                    passwordCredentials.Password, clientGuid, ClientTypeCsharp, serializationVersion, dllVersion, _client.Name,
-                    _labels);
+                case IPasswordCredentials passwordCredentials:
+                    return ClientAuthenticationCodec.EncodeRequest(clusterName,
+                        passwordCredentials.Name, passwordCredentials.Password,
+                        clientGuid, ClientTypeCsharp, serializationVersion, dllVersion, _client.Name, _labels);
+
+                case ITokenCredentials tokenCredentials:
+                    return ClientAuthenticationCustomCodec.EncodeRequest(clusterName,
+                        tokenCredentials.Token,
+                        clientGuid, ClientTypeCsharp, serializationVersion, dllVersion, _client.Name, _labels);
+
+                default:
+                    return ClientAuthenticationCustomCodec.EncodeRequest(clusterName,
+                        serializationService.ToData(credentials).ToByteArray(),
+                        clientGuid, ClientTypeCsharp, serializationVersion, dllVersion, _client.Name, _labels);
             }
-            byte[] secretBytes;
-            if (credentials is ITokenCredentials tokenCredentials)
-            {
-                secretBytes = tokenCredentials.Token;
-            }
-            else
-            {
-                secretBytes = serializationService.ToData(credentials).ToByteArray();
-            }
-            return ClientAuthenticationCustomCodec.EncodeRequest(clusterName, secretBytes, clientGuid, ClientTypeCsharp,
-                serializationVersion, dllVersion, _client.Name, _labels);
         }
 
         private Connection CreateSocketConnection(Address address)
