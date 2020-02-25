@@ -68,7 +68,7 @@
                 <!-- relax flags check because .NET tokens have too many things -->
                 <property name="relaxFlagsCheck">true</property>
                 <!-- the SID of the group that controls access to the cluster -->
-                <property name="groupSid">S-1-5-21-1680733150-2422849858-4203206891-1114</property>
+                <property name="groupSid">S-1-5-21-1680733150-2422849858-4203206891-1129</property>
               </properties>
             </login-module>
           </jaas>
@@ -78,10 +78,10 @@
     <client-authentication realm="client-realm"/>
     <client-permissions>
       <!--
-          give all permissions to principal Administrateur@HZ.LOCAL, i.e. the
+          give all permissions to principal hzclient@HZ.LOCAL, i.e. the
           user which is running the .NET client application
       -->
-      <all-permissions principal="Administrateur@HZ.LOCAL" />
+      <all-permissions principal="hzclient@HZ.LOCAL" />
     </client-permissions>
   </security>
 
