@@ -24,6 +24,7 @@ namespace Hazelcast.Test
         public static string hazelcast_stat {get { return GetXmlResourceContent("hazelcast-stat"); }}
         public static string hazelcast_crdt_replication { get { return GetXmlResourceContent("hazelcast-crdt-replication"); } }
         public static string hazelcast_lite_member { get { return GetXmlResourceContent("hazelcast-lite-member"); } }
+        public static string hazelcast_kerberos { get { return GetXmlResourceContent("hazelcast-kerberos"); } }
 
         private static byte[] GetBytes(string name)
         {
