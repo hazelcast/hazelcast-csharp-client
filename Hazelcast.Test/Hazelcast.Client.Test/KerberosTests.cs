@@ -41,8 +41,8 @@ namespace Hazelcast.Client.Test
 
             // add serializer for User
             config.GetSerializationConfig().AddSerializerConfig(new SerializerConfig()
-                .SetImplementation(new ZpqrtBnkTests.UserSerializer())
-                .SetTypeClass(typeof(ZpqrtBnkTests.User)));
+                .SetImplementation(new UserSerializer())
+                .SetTypeClass(typeof(User)));
 
             // configure Kerberos - 3 ways
 
@@ -51,7 +51,7 @@ namespace Hazelcast.Client.Test
             // <security>
             //   <credentials-factory class-name="Hazelcast.Security.KerberosCredentialsFactory">
             //     <properties>
-            //       <property name="spn">hzimdg/server19.hz.local</property>
+            //       <property name="spn">hz/cluster1234</property>
             //     </properties>
             //   </credentials-factory>
             // </security>
@@ -60,15 +60,15 @@ namespace Hazelcast.Client.Test
             // configure Kerberos credentials with the current Windows principal - requires
             // that the tests run as part of the domain
             //config.ConfigureSecurity(security
-            //    => security.ConfigureKerberosCredentials("hzimdg/server19.hz.local"));
+            //    => security.ConfigureKerberosCredentials("hz/cluster1234"));
 
             // 3.
             // configure Kerberos credentials manually with the specified user - when tests
             // do not run as part of the domain
             config.ConfigureSecurity(security =>
                 security.ConfigureCredentialsFactory(factory =>
-                    factory.Implementation = new KerberosCredentialsFactory("hzimdg/server19.hz.local",
-                        "Administrateur", "kErb!55", "hz.local")));
+                    factory.Implementation = new KerberosCredentialsFactory("hz/cluster1234",
+                        "hzclient", "pAssw0rd", "hz.local")));
         }
 
         protected override string GetServerConfig()
