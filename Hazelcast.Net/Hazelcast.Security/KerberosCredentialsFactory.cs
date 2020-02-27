@@ -14,7 +14,13 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Net.Win32;
+#if !NETSTANDARD
+using System.IdentityModel.Selectors;
+using System.IdentityModel.Tokens;
+using System.Net;
+using System.Security;
+using System.Security.Principal;
+#endif
 
 namespace Hazelcast.Security
 {
@@ -25,9 +31,19 @@ namespace Hazelcast.Security
     {
         private string _spn;
         private ICredentials _credentials;
+
+#if NETSTANDARD
+// disable 'can be removed as value is never read' message
+#pragma warning disable IDE0052
         private string _username;
         private string _password;
         private string _domain;
+#pragma warning restore IDE0052
+#else
+        private string _username;
+        private string _password;
+        private string _domain;
+#endif
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/> class.
@@ -93,37 +109,36 @@ namespace Hazelcast.Security
             if (_credentials != null)
                 return _credentials;
 
-            // the original way (using KerberosSecurityTokenProvider) did not work with .NET Core,
-            // so we use code from the Kerberos.NET library - using SSPI to work with the current
-            // Windows user, as per 
+            // this is the default way to do Kerberos for the .NET Framework, which is
+            // CLS-compliant and safe, but is not supported by .NET Core - however,
+            // .NET Core methods require Win32 P/Invoke and/or a reference to an external
+            // library - so for the time being, we don't support Kerberos with .NET Core.
             //
-            // https://github.com/SteveSyfuhs/Kerberos.NET/issues/89
-            //
-            // "However, if you're looking to create a KerberosClient and just grab credentials
-            // off the currently logged on user in Windows then you should just use SSPI.
-            // There's no way to extract the credentials from Windows (by design) to use in the initial
-            // authentication of the client, and it's not intended to be a wrapper around SSPI."
-            //
-            // and that same code works both for .NET Framework and .NET Core
+            // (see the project git history for how to do it, though)
 
-            SspiContext context;
-            if (_username == null)
-            {
-                context = new SspiContext(_spn);
-            }
-            else
-            {
-                var credential = new SuppliedCredential(_username, _password, _domain);
-                context = new SspiContext(_spn, credential);
-            }
+#if NETSTANDARD
+            throw new NotSupportedException("Kerberos is not supported on .NET Core.");
+#else
+            var tokenProvider = _username == null
+                ? new KerberosSecurityTokenProvider(_spn, TokenImpersonationLevel.Identification)
+                : new KerberosSecurityTokenProvider(_spn, TokenImpersonationLevel.Identification, new NetworkCredential(_username, _password, _domain));
+
+            var timeout = TimeSpan.FromSeconds(30);
 
             byte[] tokenBytes;
-            using (context)
+            try
             {
-                tokenBytes = context.RequestToken();
+                if (!(tokenProvider.GetToken(timeout) is KerberosRequestorSecurityToken token))
+                    throw new InvalidOperationException("Token is not KerberosRequestorSecurityToken.");
+                tokenBytes = token.GetRequest();
+            }
+            catch (Exception e)
+            {
+                throw new SecurityException("Failed to get a Kerberos token.", e);
             }
 
             return _credentials = new KerberosCredentials(tokenBytes);
+#endif
         }
 
         /// <inheritdoc />
