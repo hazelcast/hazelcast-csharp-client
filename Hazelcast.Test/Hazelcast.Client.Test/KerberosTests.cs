@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,15 +21,12 @@ using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
 {
-    // NOTES
-    // this test requires that ...
+    // This test requires a complete environment with a KDC.
     //
-    // on .NET Core it also requires that the SRV record for the AD can be obtained
+    // On .NET Core it also requires that the SRV record for the AD can be obtained
     // via a DNS query, meaning that the DNS *has* to be the AD DC somehow
     //
-    // at the moment, it
-    // - works on .NET Framework
-    // - works on .NET Core
+    // Note that at the moment, we do not support Kerberos on .NET Core.
 
     [TestFixture]
     [Explicit("Requires KDC and domain.")]
