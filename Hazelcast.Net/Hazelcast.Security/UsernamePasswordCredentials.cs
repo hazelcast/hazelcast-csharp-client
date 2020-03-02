@@ -31,7 +31,7 @@ namespace Hazelcast.Security
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{nameof(UsernamePasswordCredentials)} (username='{Name}')";
+            return $"{nameof(UsernamePasswordCredentials)} (username='{Name ?? "<null>"}')";
         }
     }
 }
