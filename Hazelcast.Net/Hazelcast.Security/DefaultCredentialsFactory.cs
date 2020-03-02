@@ -24,11 +24,7 @@ namespace Hazelcast.Security
     public class DefaultCredentialsFactory : ICredentialsFactory
     {
         // by default, go with username+password
-        private static readonly ICredentials DefaultCredentials = new UsernamePasswordCredentials
-        {
-            Name = "default",
-            Password = ""
-        };
+        private static readonly ICredentials DefaultCredentials = new UsernamePasswordCredentials();
 
         /// <inheritdoc />
         public void Init(IDictionary<string, string> properties)
