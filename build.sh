@@ -75,6 +75,9 @@ if [[ ${ENTERPRISE} ]]; then
     fi
 fi
 
+# clear rogue environment variable
+FrameworkPathOverride=""
+
 HAZELCAST_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_ENTERPRISE_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_VERSION=${HZ_VERSION}
@@ -152,7 +155,7 @@ else
             echo "Failed download hazelcast jar com.hazelcast:hazelcast:${HAZELCAST_VERSION}"
             exit 1
         fi
-    fi    
+    fi
     CLASSPATH="hazelcast-${HAZELCAST_VERSION}.jar:"${CLASSPATH}
     echo "Starting Remote Controller ... oss ..."
 fi
