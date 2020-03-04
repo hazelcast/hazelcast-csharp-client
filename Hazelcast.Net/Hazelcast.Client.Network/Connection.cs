@@ -441,11 +441,24 @@ namespace Hazelcast.Client.Network
 
             try
             {
-                // close the stream + make sure it ends the reading operation properly
+                // close the stream
                 _stream.Close();
-                _stream.EndRead(_reading);
+
+                // give the stream a chance do end a read operation
+                // (helps avoid unobserved exception on Linux)
+                try
+                {
+                    _stream.EndRead(_reading);
+                }
+                catch
+                {
+                    // nothing
+                }
+
+                // and *then* dispose the stream
                 _stream.Dispose();
 
+                // and *then* kill the socket
                 _clientSocket.Shutdown(SocketShutdown.Both);
                 _clientSocket.Close();
             }
