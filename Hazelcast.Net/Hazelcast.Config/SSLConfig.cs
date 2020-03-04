@@ -138,7 +138,7 @@ namespace Hazelcast.Config
             {
 #if !NETSTANDARD
 
-                return SslProtocols.Tls;
+                return SslProtocols.Tls12;
 #else
                 return SslProtocols.None;
 #endif
