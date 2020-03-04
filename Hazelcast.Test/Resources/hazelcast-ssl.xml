@@ -31,12 +31,9 @@
         <property name="keyStorePassword">password</property>
         <property name="keyManagerAlgorithm">SunX509</property>
         <!--
-        if that property is specified then the server locks on that protocol only,
-        but if the property is missing then the server will accept whatever the JVM
-        supports, which is good, since different clients (Linux vs Windows) may use
-        different protocols
-        <property name="protocol">TLSv1</property>
+        must be aligned with what client uses - remove the property to use JVM-supported protocols
         -->
+        <property name="protocol">TLSv1.2</property>
       </properties>
     </ssl>
   </network>
