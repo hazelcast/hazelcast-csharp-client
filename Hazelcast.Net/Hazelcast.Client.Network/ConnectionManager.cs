@@ -13,12 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Client.Protocol;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
@@ -38,37 +40,35 @@ namespace Hazelcast.Client.Network
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ConnectionManager));
         private const string ClientTypeCsharp = "CSP";
 
+        private readonly CancellationTokenSource _cancelToken = new CancellationTokenSource();
+        private readonly AtomicInteger _connectionIdGen = new AtomicInteger();
+        
         private readonly HazelcastClient _client;
         private readonly ClientNetworkConfig _networkConfig;
 
-        private readonly ConcurrentDictionary<Guid, Connection> _connections = new ConcurrentDictionary<Guid, Connection>();
-
-        private readonly ConcurrentDictionary<Address, IPEndPoint> _inetSocketAddressCache =
+        private readonly ConcurrentDictionary<Address, IPEndPoint> _addressIPEndPointCache =
             new ConcurrentDictionary<Address, IPEndPoint>();
-
         private readonly ConcurrentDictionary<Address, bool> _connectingAddresses = new ConcurrentDictionary<Address, bool>();
-
         private readonly ConcurrentBag<IConnectionListener> _connectionListeners = new ConcurrentBag<IConnectionListener>();
-
         private readonly ILoadBalancer _loadBalancer;
         private readonly AtomicBoolean _isAlive = new AtomicBoolean(false);
-        private readonly object _clientStateMutex = new object();
 
-        private readonly CancellationTokenSource _cancelToken = new CancellationTokenSource();
 
-        private ISet<string> _labels;
-        private int _connectionTimeout;
+        private readonly ISet<string> _labels;
         private readonly HeartbeatManager _heartbeat;
-        private TimeSpan _authenticationTimeout;
+        private readonly TimeSpan _authenticationTimeout;
         private readonly bool _shuffleMemberList;
         private readonly WaitStrategy _waitStrategy;
-        private Guid? _clusterId;
-        private int _nextConnectionId;
-        private ClientState _clientState = ClientState.INITIAL;
         private readonly ReconnectMode _reconnectMode;
         private readonly bool _asyncStart;
-        private volatile bool _connectToClusterTaskSubmitted;
 
+        // following fields are updated inside synchronized(clientStateMutex)
+        private readonly object _clientStateMutex = new object();
+        private readonly ConcurrentDictionary<Guid, Connection> _connections = new ConcurrentDictionary<Guid, Connection>();
+        private Guid? _clusterId;
+        private ClientState _clientState = ClientState.Initial;
+        private volatile bool _connectToClusterTaskSubmitted;
+        
         public bool IsSmartRoutingEnabled { get; }
 
         public bool IsALive => _isAlive.Get();
@@ -85,9 +85,6 @@ namespace Hazelcast.Client.Network
             _networkConfig = config.GetNetworkConfig();
             IsSmartRoutingEnabled = _networkConfig.IsSmartRouting();
             _labels = client.ClientConfig.Labels;
-
-            var connectionTimeout = _networkConfig.GetConnectionTimeout();
-            _connectionTimeout = connectionTimeout == 0 ? int.MaxValue : connectionTimeout;
 
             //TODO outboundPorts
             // this.networking = initNetworking();
@@ -237,7 +234,7 @@ namespace Hazelcast.Client.Network
                         }
                         finally
                         {
-                            _connectingAddresses.TryAdd(address, true);
+                            _connectingAddresses.TryRemove(address, out _);
                         }
                     });
                 }
@@ -394,20 +391,18 @@ namespace Hazelcast.Client.Network
                 }
 
                 _connections.TryAdd(response.MemberUuid, connection);
-                Interlocked.Increment(ref _nextConnectionId);
 
                 if (hasNoConnectionToCluster)
                 {
                     _clusterId = newClusterId;
                     if (changedCluster)
                     {
-                        //TODO cluster state????
-                        _clientState = ClientState.CONNECTED_TO_CLUSTER;
+                        _clientState = ClientState.ConnectedToCluster;
                         _client.ExecutionService.Submit(() => InitializeClientOnCluster(newClusterId));
                     }
                     else
                     {
-                        _clientState = ClientState.INITIALIZED_ON_CLUSTER;
+                        _clientState = ClientState.InitializedOnCluster;
                         _client.LifecycleService.FireLifecycleEvent(LifecycleEvent.LifecycleState.ClientConnected);
                     }
                 }
@@ -436,8 +431,9 @@ namespace Hazelcast.Client.Network
                 {
                     if (!targetClusterId.Equals(_clusterId))
                     {
-                        Logger.Warning("Won't send client state to cluster: " + targetClusterId +
-                                       " Because switched to a new cluster: " + _clusterId);
+                        Logger.Warning(string.Format(
+                            "Won't send client state to cluster: {0} Because switched to a new cluster: {1}", targetClusterId,
+                            _clusterId));
                         return;
                     }
                 }
@@ -450,17 +446,16 @@ namespace Hazelcast.Client.Network
                     {
                         if (Logger.IsFinestEnabled)
                         {
-                            Logger.Finest("Client state is sent to cluster: " + targetClusterId);
+                            Logger.Finest($"Client state is sent to cluster: {targetClusterId}");
                         }
-
-                        _clientState = ClientState.INITIALIZED_ON_CLUSTER;
+                        _clientState = ClientState.InitializedOnCluster;
                         _client.LifecycleService.FireLifecycleEvent(LifecycleEvent.LifecycleState.ClientConnected);
                     }
                     else if (Logger.IsFinestEnabled)
                     {
-                        Logger.Warning("Cannot set client state to " + ClientState.INITIALIZED_ON_CLUSTER +
-                                       " because current cluster id: " + _clusterId + " is different than expected cluster id: " +
-                                       targetClusterId);
+                        Logger.Warning(string.Format(
+                            "Cannot set client state to {0} because current cluster id: {1} is different than expected cluster id: {2}",
+                            ClientState.InitializedOnCluster, _clusterId, targetClusterId));
                     }
                 }
             }
@@ -474,8 +469,7 @@ namespace Hazelcast.Client.Network
                     {
                         if (Logger.IsFinestEnabled)
                         {
-                            Logger.Warning("Retrying sending state to the cluster: " + targetClusterId + ", name: " +
-                                           clusterName);
+                            Logger.Warning($"Retrying sending state to the cluster:{targetClusterId}, name:{clusterName}");
                         }
                         _client.ExecutionService.Submit(() => InitializeClientOnCluster(targetClusterId));
                     }
@@ -527,7 +521,7 @@ namespace Hazelcast.Client.Network
 
         private Connection CreateSocketConnection(Address address)
         {
-            var conn = new Connection(this, _client.InvocationService, _nextConnectionId, address, _networkConfig);
+            var conn = new Connection(this, _client.InvocationService, _connectionIdGen.IncrementAndGet(), address, _networkConfig);
             conn.NetworkInit();
             return conn;
         }
@@ -554,7 +548,7 @@ namespace Hazelcast.Client.Network
 
         private IPEndPoint ResolveAddress(Address target)
         {
-            return _inetSocketAddressCache.GetOrAdd(target, address =>
+            return _addressIPEndPointCache.GetOrAdd(target, address =>
             {
                 try
                 {
@@ -636,7 +630,7 @@ namespace Hazelcast.Client.Network
                 if (Logger.IsFinestEnabled)
                 {
                     Logger.Finest(
-                        $"Destroying {connection} , but it has end-point set to null -> not removing it from a connection dict.");
+                        $"Destroying {connection} , but it has end-point set to null, not removing it from a connection dict.");
                 }
                 return;
             }
@@ -649,7 +643,7 @@ namespace Hazelcast.Client.Network
                     Logger.Info($"Removed connection to endpoint: {endpoint}:{memberUuid}, connection: {connection}");
                     if (_connections.IsEmpty)
                     {
-                        if (_clientState == ClientState.INITIALIZED_ON_CLUSTER)
+                        if (_clientState == ClientState.InitializedOnCluster)
                         {
                             _client.LifecycleService.FireLifecycleEvent(LifecycleEvent.LifecycleState.ClientDisconnected);
                         }
@@ -659,10 +653,13 @@ namespace Hazelcast.Client.Network
 
                     FireConnectionRemovedEvent(connection);
                 }
-                if (Logger.IsFinestEnabled)
+                else
                 {
-                    Logger.Finest(
-                        $"Destroying a connection, but there is no mapping {endpoint}:{memberUuid} -> {connection}  in the connection dict.");
+                    if (Logger.IsFinestEnabled)
+                    {
+                        Logger.Finest(
+                            $"Destroying a connection, but there is no mapping {endpoint}:{memberUuid} -> {connection}  in the connection dict.");
+                    }
                 }
             }
         }
@@ -675,14 +672,13 @@ namespace Hazelcast.Client.Network
                 ShutdownWithExternalThread();
                 return;
             }
-
             if (_client.LifecycleService.IsRunning())
             {
                 try
                 {
                     SubmitConnectToClusterTask();
                 }
-                catch (Exception r)
+                catch (TaskSchedulerException)
                 {
                     ShutdownWithExternalThread();
                 }
@@ -747,14 +743,14 @@ namespace Hazelcast.Client.Network
          * {@link #CONNECTED_TO_CLUSTER} because on startup a client has no
          * local state to send to the cluster.
          */
-            INITIAL,
+            Initial,
 
             /**
          * When a client switches to a new cluster, it moves to this state.
          * It means that the client has connected to a new cluster but not sent
          * its local state to the new cluster yet.
          */
-            CONNECTED_TO_CLUSTER,
+            ConnectedToCluster,
 
             /**
          * When a client sends its local state to the cluster it has connected,
@@ -764,7 +760,7 @@ namespace Hazelcast.Client.Network
          * <p>
          * Invocations are allowed in this state.
          */
-            INITIALIZED_ON_CLUSTER
+            InitializedOnCluster
         }
     }
 }

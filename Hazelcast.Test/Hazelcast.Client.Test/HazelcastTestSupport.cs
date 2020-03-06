@@ -61,12 +61,8 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public void BaseTearDown()
         {
-            //TODO remove the check after resolving the linux SSL connection issue
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             var failed = false;
             foreach (var exceptionEventArg in _unobservedExceptions)
             {

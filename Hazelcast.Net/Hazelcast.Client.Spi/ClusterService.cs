@@ -265,17 +265,31 @@ namespace Hazelcast.Client.Spi
 
         private void FireEvents(List<MembershipEvent> events)
         {
-            foreach (var @event in events)
+            foreach (var membershipEvent in events)
             {
+                if (Logger.IsFinestEnabled)
+                {
+                    Logger.Finest($"Fire Event:{membershipEvent}");
+                }
                 foreach (var listener in _listeners.Values)
                 {
-                    if (@event.GetEventType() == MembershipEvent.MemberAdded)
+                    try
                     {
-                        listener.MemberAdded(@event);
+                        if (membershipEvent.GetEventType() == MembershipEvent.MemberAdded)
+                        {
+                            listener.MemberAdded(membershipEvent);
+                        }
+                        else
+                        {
+                            listener.MemberRemoved(membershipEvent);
+                        }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        listener.MemberRemoved(@event);
+                        if (Logger.IsFinestEnabled)
+                        {
+                            Logger.Finest("Exception occured during membership listener callback.", e);
+                        }
                     }
                 }
             }

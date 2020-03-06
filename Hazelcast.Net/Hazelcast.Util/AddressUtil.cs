@@ -145,7 +145,7 @@ namespace Hazelcast.Util
             IPAddress ipAddress = null;
             try
             {
-                ipAddress = Address.GetAddressByName(scopedAddress);
+                ipAddress = GetAddressByName(scopedAddress);
             }
             catch (Exception)
             {
@@ -201,7 +201,7 @@ namespace Hazelcast.Util
                 : addressHolder.Address;
             try
             {
-                var ipAddress = Address.GetAddressByName(scopedAddress);
+                var ipAddress = GetAddressByName(scopedAddress);
                 return new Address(scopedAddress, ipAddress, addressHolder.Port);
             }
             catch (Exception)
@@ -224,6 +224,17 @@ namespace Hazelcast.Util
             public InvalidAddressException(string s) : base("Illegal IP address format: " + s)
             {
             }
+        }
+
+        public static IPAddress GetAddressByName(string name)
+        {
+            if (name == "0.0.0.0")
+            {
+                return IPAddress.Any;
+            }
+            var addresses = DnsUtil.GetHostAddresses(name);
+            var ipv4 = addresses.FirstOrDefault(m => m.AddressFamily == AddressFamily.InterNetwork);
+            return ipv4 ?? addresses.FirstOrDefault();
         }
     }
 }

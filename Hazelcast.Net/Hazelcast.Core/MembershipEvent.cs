@@ -31,7 +31,6 @@ namespace Hazelcast.Core
     {
         public const int MemberAdded = 1;
         public const int MemberRemoved = 2;
-        public const int MemberAttributeChanged = 5;
 
         private readonly int _eventType;
         private readonly IMember _member;

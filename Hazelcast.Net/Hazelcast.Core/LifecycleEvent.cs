@@ -38,8 +38,6 @@ namespace Hazelcast.Core
             Started,
             ShuttingDown,
             Shutdown,
-            Merging,
-            Merged,
             ClientConnected,
             ClientDisconnected
         }
