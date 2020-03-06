@@ -103,6 +103,10 @@ namespace Hazelcast.Client.Spi
         public void Shutdown()
         {
             _isShutDown = true;
+            foreach (var invocation in _invocations.Values)
+            {
+                HandleInvocationException(invocation, new HazelcastClientNotActiveException());
+            }
         }
 
         internal void HandleClientMessage(ClientMessage message)
@@ -204,7 +208,7 @@ namespace Hazelcast.Client.Spi
             try
             {
                 invocation.IncrementCounter();
-                if (_isShutDown)
+                if (!_client.LifecycleService.IsRunning())
                 {
                     throw new HazelcastClientNotActiveException("Client is shut down.");
                 }
@@ -297,7 +301,7 @@ namespace Hazelcast.Client.Spi
                 Logger.Finest($"Invocation got an exception! {invocation}, ", exception);
             }
 
-            if (_isShutDown)
+            if (!_client.LifecycleService.IsRunning())
             {
                 CompleteInvocationWithException(invocation,
                     new HazelcastClientNotActiveException("Client is shutting down", exception));

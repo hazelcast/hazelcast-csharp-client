@@ -35,12 +35,23 @@ namespace Hazelcast.Client.Spi
             }
             set
             {
-                Monitor.Enter(_lock);
-                _taskSource.SetException(value);
-                //is there a better way to handle TaskCompletionSource's unobserved exception???
-                _taskSource.Task.IgnoreExceptions();
-                Notify();
-                Monitor.Exit(_lock);
+                for (;;)
+                {
+                    if (Monitor.TryEnter(_lock))
+                    {
+                        _taskSource.SetException(value);
+                        //is there a better way to handle TaskCompletionSource's unobserved exception???
+                        _taskSource.Task.IgnoreExceptions();
+                        NotifyAll();
+                        Monitor.Exit(_lock);
+                        return;
+                    }
+                    if (IsComplete)
+                    {
+                        //already completed
+                        return;
+                    }
+                }
             }
         }
 
@@ -56,15 +67,12 @@ namespace Hazelcast.Client.Spi
                 Monitor.Enter(_lock);
                 _taskSource.SetResult(value);
                 _taskSource.Task.Wait();
-                Notify();
+                NotifyAll();
                 Monitor.Exit(_lock);
             }
         }
 
-        public bool IsComplete
-        {
-            get { return _taskSource.Task.IsCompleted; }
-        }
+        public bool IsComplete => _taskSource.Task.IsCompleted;
 
         public Task<T> ToTask()
         {
@@ -132,7 +140,7 @@ namespace Hazelcast.Client.Spi
             }
         }
 
-        private void Notify()
+        private void NotifyAll()
         {
             Monitor.PulseAll(_lock);
         }

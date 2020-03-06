@@ -39,7 +39,7 @@ namespace Hazelcast.IO
         {
         }
 
-        public Address(string host, int port) : this(host, GetAddressByName(host), port)
+        public Address(string host, int port) : this(host, AddressUtil.GetAddressByName(host), port)
         {
         }
 
@@ -79,17 +79,6 @@ namespace Hazelcast.IO
             return obj is Address && Equals((Address) obj);
         }
 
-        public static IPAddress GetAddressByName(string name)
-        {
-            if (name == "0.0.0.0")
-            {
-                return IPAddress.Any;
-            }
-            var addresses = DnsUtil.GetHostAddresses(name);
-            var ipv4 = addresses.FirstOrDefault(m => m.AddressFamily == AddressFamily.InterNetwork);
-            return ipv4 ?? addresses.FirstOrDefault();
-        }
-
         public override int GetHashCode()
         {
             unchecked
@@ -107,7 +96,7 @@ namespace Hazelcast.IO
 
         public IPAddress GetInetAddress()
         {
-            return GetAddressByName(GetScopedHost());
+            return AddressUtil.GetAddressByName(GetScopedHost());
         }
 
         public IPEndPoint GetInetSocketAddress()
