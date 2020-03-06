@@ -93,7 +93,7 @@ namespace Hazelcast.Client.Spi
                 }
                 if (!connection.IsAlive)
                 {
-                    Exception ex = new TargetDisconnectedException(connection.CloseReason, connection.CloseCause);
+                    Exception ex = new TargetDisconnectedException(connection.CloseReason, connection.CloseException);
                     HandleInvocationException(invocation, ex);
                     return;
                 }
@@ -241,7 +241,7 @@ namespace Hazelcast.Client.Spi
             if (!TryRegisterInvocation(correlationId, invocation)) return false;
 
             //enqueue to write queue
-            if (connection.TryAdd(invocation.Request))
+            if (connection.TryQueue(invocation.Request))
             {
                 invocation.SentConnection = connection;
                 return true;
