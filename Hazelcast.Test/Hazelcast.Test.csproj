@@ -9,16 +9,13 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace />
     <IsTestProject>true</IsTestProject>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <PropertyGroup Label="sign">
     <SignAssembly>true</SignAssembly>
     <PublicSign>true</PublicSign>
     <AssemblyOriginatorKeyFile>..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='netcoreapp2.0'">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ApacheThrift" Version="0.13.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />

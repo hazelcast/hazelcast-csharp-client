@@ -12,6 +12,7 @@
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Hazelcast.Net.xml</DocumentationFile>
     <NoWarn>1701;1702;1591;1570</NoWarn>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <PropertyGroup Label="sign">
     <!--Condition=" '$(OS)' != 'Windows_NT' "-->
