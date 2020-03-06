@@ -35,7 +35,7 @@ namespace Hazelcast.Client.Test
         protected const string Password = "password";
 
         protected IHazelcastInstance Client { get; set; }
-        protected RemoteController.Client RemoteController { get; set; }
+        protected IRemoteController RemoteController { get; set; }
 
         [OneTimeTearDown]
         public void OneTimeTearDown()

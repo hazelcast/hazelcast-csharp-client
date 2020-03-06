@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Test
 {
     public class ClientTxnNonSmartTest: HazelcastTestSupport
     {
-        private RemoteController.Client _remoteController;
+        private IRemoteController _remoteController;
         private Cluster _cluster;
         private IHazelcastInstance _client;
 

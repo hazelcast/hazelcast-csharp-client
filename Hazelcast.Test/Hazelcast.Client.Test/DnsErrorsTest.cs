@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class DnsErrorsTest : HazelcastTestSupport
     {
-        private RemoteController.Client _remoteController;
+        private IRemoteController _remoteController;
         private Cluster _cluster;
 
         [SetUp]

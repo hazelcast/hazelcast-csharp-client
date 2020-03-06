@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test.Config
     public class ClientListenerConfigTest : HazelcastTestSupport
     {
         
-        private RemoteController.Client _remoteController;
+        private IRemoteController _remoteController;
         private Cluster _cluster;
         private readonly HazelcastClientFactory _clientFactory = new HazelcastClientFactory();
 

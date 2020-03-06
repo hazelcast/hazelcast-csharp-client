@@ -44,7 +44,7 @@ namespace Hazelcast.Client.Test
             StopRemoteController(_remoteController);
         }
 
-        private RemoteController.Client _remoteController;
+        private IRemoteController _remoteController;
         private Cluster _cluster;
 
         private static void AssertClientWithAddress(string address)

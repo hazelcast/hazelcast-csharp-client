@@ -26,7 +26,7 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientPartitionTest : HazelcastTestSupport
     {
-        private RemoteController.Client _remoteController;
+        private IRemoteController _remoteController;
         private Cluster _cluster;
         private IHazelcastInstance _client;
 

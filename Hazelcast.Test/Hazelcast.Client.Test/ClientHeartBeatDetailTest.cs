@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Test
     [TestFixture]
     public class ClientHeartBeatDetailTest : HazelcastTestSupport
     {
-        private RemoteController.Client _remoteController;
+        private IRemoteController _remoteController;
         private Cluster _cluster;
 
         [SetUp]

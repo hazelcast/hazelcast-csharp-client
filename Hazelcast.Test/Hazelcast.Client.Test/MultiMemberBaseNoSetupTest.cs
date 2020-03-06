@@ -28,13 +28,13 @@ namespace Hazelcast.Client.Test
     {
         protected IHazelcastInstance Client { get; private set; }
         protected HazelcastClient ClientInternal { get; private set; }
-        protected ThreadSafeRemoteController RemoteController { get; private set; }
+        protected IRemoteController RemoteController { get; private set; }
         protected Cluster HzCluster { get; private set; }
         private readonly ConcurrentDictionary<Guid, Remote.Member> MemberList = new ConcurrentDictionary<Guid, Remote.Member>();
 
         public virtual void SetupCluster(Action initMembers)
         {
-            RemoteController = (ThreadSafeRemoteController)CreateRemoteController();
+            RemoteController = CreateRemoteController();
             HzCluster = CreateCluster(RemoteController, GetServerConfig());
             initMembers();
             Client = CreateClient();

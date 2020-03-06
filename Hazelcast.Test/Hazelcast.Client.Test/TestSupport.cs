@@ -33,8 +33,8 @@ namespace Hazelcast.Client.Test
             Assert.IsTrue(task.Wait(timeoutSeconds * 1000),
                 "Task " + taskName + " did not complete in " + timeoutSeconds + " seconds");
         }
-
-        public static void AssertOpenEventually(CountdownEvent latch, int timeoutSeconds = TimeoutSeconds, string message = null)
+        
+        public static void AssertOpenEventually(CountdownEvent latch,  string message = null, int timeoutSeconds = TimeoutSeconds)
         {
             var completed = latch.Wait(timeoutSeconds * 1000);
             if (message == null)
@@ -68,7 +68,7 @@ namespace Hazelcast.Client.Test
             Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds");
         }
 
-        public static void AssertTrueEventually(Action asserAction, int timeoutSeconds = TimeoutSeconds, string assertion = null)
+        public static void AssertTrueEventually(Action assertAction, int timeoutSeconds = TimeoutSeconds, string assertion = null)
         {
             Exception last = null;
             var startTimeMillis = Clock.CurrentTimeMillis();
@@ -79,7 +79,7 @@ namespace Hazelcast.Client.Test
                 {
                     try
                     {
-                        asserAction();
+                        assertAction();
                         return;
                     }
                     catch (AssertionException e)
