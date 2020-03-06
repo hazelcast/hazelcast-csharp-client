@@ -15,19 +15,17 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Config;
 using Hazelcast.Core;
-using Hazelcast.IO;
 using Hazelcast.Logging;
 using Hazelcast.Remote;
 using Hazelcast.Test;
 using Hazelcast.Util;
 using NUnit.Framework;
-using Thrift.Protocol;
-using Thrift.Transport;
-using Member = Hazelcast.Remote.Member;
 
 namespace Hazelcast.Client.Test
 {
@@ -35,18 +33,20 @@ namespace Hazelcast.Client.Test
     {
         protected readonly ILogger _logger;
 
-        private readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions = new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
+        private readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions =
+            new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
 
         public HazelcastTestSupport()
         {
-#if DEBUG
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "trace");
+// #if DEBUG
+            // Environment.SetEnvironmentVariable("hazelcast.logging.type", "trace");
 
-#else
+// #else
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
-#endif
+// #endif
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "finest");
             _logger = Logger.GetLogger(GetType().Name);
+            _logger.Info("LOGGER ACTIVE");
 
             TaskScheduler.UnobservedTaskException += UnobservedTaskException;
         }
@@ -61,11 +61,22 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public void BaseTearDown()
         {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            //TODO remove the check after resolving the linux SSL connection issue
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+            var failed = false;
             foreach (var exceptionEventArg in _unobservedExceptions)
             {
-                Assert.Fail("UnobservedTaskException occured. {0}", exceptionEventArg.Exception.Flatten().InnerException.StackTrace);
+                var innerException = exceptionEventArg.Exception.Flatten().InnerException;
+                _logger.Warning($"{innerException.Message} {innerException.StackTrace}");
+                failed = true;
+            }
+            if (failed)
+            {
+                Assert.Fail("UnobservedTaskException occured.");
             }
         }
 
@@ -111,7 +122,7 @@ namespace Hazelcast.Client.Test
             return client;
         }
 
-        protected virtual Cluster CreateCluster(RemoteController.Client remoteController)
+        protected virtual Cluster CreateCluster(IRemoteController remoteController)
         {
             _logger.Info("Creating cluster");
             var cluster = remoteController.createCluster(null, Resources.hazelcast);
@@ -119,7 +130,7 @@ namespace Hazelcast.Client.Test
             return cluster;
         }
 
-        protected virtual Cluster CreateCluster(RemoteController.Client remoteController, string xmlconfig)
+        protected virtual Cluster CreateCluster(IRemoteController remoteController, string xmlconfig)
         {
             _logger.Info("Creating cluster using custom config...");
             var cluster = remoteController.createCluster(null, xmlconfig);
@@ -127,26 +138,46 @@ namespace Hazelcast.Client.Test
             return cluster;
         }
 
-        protected RemoteController.Client CreateRemoteController()
+        protected IRemoteController CreateRemoteController()
         {
-            
-            TTransport transport = new TFramedTransport(new TSocket("localhost", 9701));
-            transport.Open();
-            TProtocol protocol = new TBinaryProtocol(transport);
-            return new ThreadSafeRemoteController(protocol);
+            try
+            {
+#if NETFRAMEWORK
+                var transport = new Thrift.Transport.TFramedTransport(new Thrift.Transport.TSocket("localhost", 9701));
+                transport.Open();
+                var protocol = new Thrift.Protocol.TBinaryProtocol(transport);
+                return new ThreadSafeRemoteController(protocol);
+#else
+                var rcHostAddress = AddressUtil.GetAddressByName("localhost");
+                var tSocketTransport = new Thrift.Transport.Client.TSocketTransport(rcHostAddress, 9701);
+                var transport = new Thrift.Transport.TFramedTransport(tSocketTransport);
+                if (!transport.IsOpen)
+                {
+                    transport.OpenAsync().Wait();
+                }
+                var protocol = new Thrift.Protocol.TBinaryProtocol(transport);
+                return new ThreadSafeRemoteController(protocol);
+#endif
+            }
+            catch (Exception e)
+            {
+                _logger.Finest("Cannot start Remote Controller", e);
+                _logger.Finest(e.StackTrace);
+                throw new AssertionException("Cannot start Remote Controller", e);
+            }
         }
 
-        protected void StopRemoteController(RemoteController.Client client)
+        protected void StopRemoteController(IRemoteController client)
         {
-            client.exit();
-            client.InputProtocol.Transport.Close();
+            client?.exit();
+            ((RemoteController.Client) client)?.InputProtocol?.Transport?.Close();
         }
 
         protected int GetUniquePartitionOwnerCount(IHazelcastInstance client)
         {
             //trigger partition table create
             client.GetMap<object, object>("default").Get(new object());
-            
+
             var clientInternal = ((HazelcastClient) client);
             var partitionService = clientInternal.PartitionService;
             var count = partitionService.GetPartitionCount();
@@ -154,48 +185,44 @@ namespace Hazelcast.Client.Test
             for (var i = 0; i < count; i++)
             {
                 var partitionOwner = partitionService.GetPartitionOwner(i);
-                if(partitionOwner!= null) owners.Add(partitionOwner.Value);
+                if (partitionOwner != null) owners.Add(partitionOwner.Value);
             }
             return owners.Count;
         }
 
-        protected virtual void ResumeMember(RemoteController.Client remoteController, Cluster cluster, Member member)
+        protected virtual void ResumeMember(IRemoteController remoteController, Cluster cluster, Member member)
         {
             remoteController.resumeMember(cluster.Id, member.Uuid);
         }
 
-        protected virtual Member StartMember(RemoteController.Client remoteController, Cluster cluster)
+        protected virtual Member StartMember(IRemoteController remoteController, Cluster cluster)
         {
             _logger.Info("Starting new member");
             return remoteController.startMember(cluster.Id);
         }
 
-        protected Member StartMemberAndWait(IHazelcastInstance client, RemoteController.Client remoteController,
-            Cluster cluster, int expectedSize)
+        protected Member StartMemberAndWait(IHazelcastInstance client, IRemoteController remoteController, Cluster cluster,
+            int expectedSize)
         {
             var resetEvent = new ManualResetEventSlim();
-            var regId = client.Cluster.AddMembershipListener(new MembershipListener
-            {
-                OnMemberAdded = @event => resetEvent.Set()
-            });
+            var regId = client.Cluster.AddMembershipListener(new MembershipListener {OnMemberAdded = @event => resetEvent.Set()});
             var member = StartMember(remoteController, cluster);
-            Assert.IsTrue(resetEvent.Wait(120*1000), "The member did not get added in 120 seconds");
+            Assert.IsTrue(resetEvent.Wait(120 * 1000), "The member did not get added in 120 seconds");
             Assert.IsTrue(client.Cluster.RemoveMembershipListener(regId));
 
             // make sure partitions are updated
-            TestSupport.AssertTrueEventually(
-                () => { Assert.AreEqual(expectedSize, GetUniquePartitionOwnerCount(client)); },
-                60, "The partition list did not contain " + expectedSize + " partitions.");
+            TestSupport.AssertTrueEventually(() => { Assert.AreEqual(expectedSize, GetUniquePartitionOwnerCount(client)); }, 60,
+                "The partition list did not contain " + expectedSize + " partitions.");
 
             return member;
         }
 
-        protected virtual bool StopCluster(RemoteController.Client remoteController, Cluster cluster)
+        protected virtual bool StopCluster(IRemoteController remoteController, Cluster cluster)
         {
             return remoteController.shutdownCluster(cluster.Id);
         }
 
-        protected void ShutdownCluster(RemoteController.Client remoteController, Cluster cluster)
+        protected void ShutdownCluster(IRemoteController remoteController, Cluster cluster)
         {
             while (!StopCluster(remoteController, cluster))
             {
@@ -203,26 +230,24 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        protected virtual void StopMember(RemoteController.Client remoteController, Cluster cluster, Member member)
+        protected virtual void StopMember(IRemoteController remoteController, Cluster cluster, Member member)
         {
             _logger.Info("Shutting down  member " + member.Uuid);
             remoteController.shutdownMember(cluster.Id, member.Uuid);
         }
 
-        protected void StopMemberAndWait(IHazelcastInstance client, RemoteController.Client remoteController,
-            Cluster cluster, Member member)
+        protected void StopMemberAndWait(IHazelcastInstance client, IRemoteController remoteController, Cluster cluster,
+            Member member)
         {
             var resetEvent = new ManualResetEventSlim();
-            var regId = client.Cluster.AddMembershipListener(new MembershipListener
-            {
-                OnMemberRemoved = @event => resetEvent.Set()
-            });
+            var regId = client.Cluster.AddMembershipListener(
+                new MembershipListener {OnMemberRemoved = @event => resetEvent.Set()});
             StopMember(remoteController, cluster, member);
-            Assert.IsTrue(resetEvent.Wait(120*1000), "The member did not get removed in 120 seconds");
+            Assert.IsTrue(resetEvent.Wait(120 * 1000), "The member did not get removed in 120 seconds");
             Assert.IsTrue(client.Cluster.RemoveMembershipListener(regId));
         }
 
-        protected virtual void SuspendMember(RemoteController.Client remoteController,  Cluster cluster, Member member)
+        protected virtual void SuspendMember(IRemoteController remoteController, Cluster cluster, Member member)
         {
             remoteController.suspendMember(cluster.Id, member.Uuid);
         }
@@ -230,9 +255,11 @@ namespace Hazelcast.Client.Test
         protected object GenerateKeyForPartition(IHazelcastInstance client, int partitionId)
         {
             var partitionService = ((HazelcastClient) client).PartitionService;
-            while (true) {
+            while (true)
+            {
                 var randomKey = TestSupport.RandomString();
-                if (partitionService.GetPartitionId(randomKey) == partitionId) {
+                if (partitionService.GetPartitionId(randomKey) == partitionId)
+                {
                     return randomKey;
                 }
             }

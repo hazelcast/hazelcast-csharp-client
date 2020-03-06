@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Test
     {
         private IHazelcastInstance _client;
         private Cluster _cluster;
-        private RemoteController.Client _remoteController;
+        private IRemoteController _remoteController;
         private InitialMembershipListener _initialMembershipListener;
 
         [SetUp]

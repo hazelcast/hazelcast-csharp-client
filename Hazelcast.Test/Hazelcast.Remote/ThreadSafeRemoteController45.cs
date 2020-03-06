@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if !NETFRAMEWORK
+#if NETFRAMEWORK
 using System;
 using System.Threading;
 using Thrift.Protocol;
@@ -33,72 +33,72 @@ namespace Hazelcast.Remote
 
         bool IRemoteController.ping()
         {
-            return ThreadSafeCall(() => pingAsync().Result);
+            return ThreadSafeCall(ping);
         }
 
         bool IRemoteController.clean()
         {
-            return ThreadSafeCall(() => cleanAsync().Result);
+            return ThreadSafeCall(clean);
         }
 
         bool IRemoteController.exit()
         {
-            return ThreadSafeCall(() => exitAsync().Result);
+            return ThreadSafeCall(exit);
         }
 
         Cluster IRemoteController.createCluster(string hzVersion, string xmlconfig)
         {
-            return ThreadSafeCall(() => createClusterAsync(hzVersion, xmlconfig).Result);
+            return ThreadSafeCall(() => createCluster(hzVersion, xmlconfig));
         }
 
         Member IRemoteController.startMember(string clusterId)
         {
-            return ThreadSafeCall(() => startMemberAsync(clusterId).Result);
+            return ThreadSafeCall(() => startMember(clusterId));
         }
 
         bool IRemoteController.shutdownMember(string clusterId, string memberId)
         {
-            return ThreadSafeCall(() => shutdownMemberAsync(clusterId, memberId).Result);
+            return ThreadSafeCall(() => base.shutdownMember(clusterId, memberId));
         }
 
         bool IRemoteController.terminateMember(string clusterId, string memberId)
         {
-            return ThreadSafeCall(() => terminateMemberAsync(clusterId, memberId).Result);
+            return ThreadSafeCall(() => base.terminateMember(clusterId, memberId));
         }
 
         bool IRemoteController.suspendMember(string clusterId, string memberId)
         {
-            return ThreadSafeCall(() => suspendMemberAsync(clusterId, memberId).Result);
+            return ThreadSafeCall(() => base.suspendMember(clusterId, memberId));
         }
 
         bool IRemoteController.resumeMember(string clusterId, string memberId)
         {
-            return ThreadSafeCall(() => resumeMemberAsync(clusterId, memberId).Result);
+            return ThreadSafeCall(() => base.resumeMember(clusterId, memberId));
         }
 
         bool IRemoteController.shutdownCluster(string clusterId)
         {
-            return ThreadSafeCall(() => shutdownClusterAsync(clusterId).Result);
+            return ThreadSafeCall(() => base.shutdownCluster(clusterId));
         }
 
         bool IRemoteController.terminateCluster(string clusterId)
         {
-            return ThreadSafeCall(() => terminateClusterAsync(clusterId).Result);
+            return ThreadSafeCall(() => base.terminateCluster(clusterId));
         }
 
         Cluster IRemoteController.splitMemberFromCluster(string memberId)
         {
-            return ThreadSafeCall(() => splitMemberFromClusterAsync(memberId).Result);
+            return ThreadSafeCall(() => base.splitMemberFromCluster(memberId));
         }
 
         Cluster IRemoteController.mergeMemberToCluster(string clusterId, string memberId)
         {
-            return ThreadSafeCall(() => mergeMemberToClusterAsync(clusterId, memberId).Result);
+            return ThreadSafeCall(() => base.mergeMemberToCluster(clusterId, memberId));
         }
 
         Response IRemoteController.executeOnController(string clusterId, string script, Lang lang)
         {
-            return ThreadSafeCall(() => executeOnControllerAsync(clusterId, script, lang).Result);
+            return ThreadSafeCall(() => base.executeOnController(clusterId, script, lang));
         }
 
         private T ThreadSafeCall<T>(Func<T> func)

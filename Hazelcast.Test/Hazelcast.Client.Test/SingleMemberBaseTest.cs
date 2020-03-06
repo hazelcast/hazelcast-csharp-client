@@ -24,7 +24,7 @@ namespace Hazelcast.Client.Test
     {
         protected IHazelcastInstance Client { get; private set; }
         protected HazelcastClient ClientInternal { get; private set; }
-        protected RemoteController.Client RemoteController { get; private set; }
+        protected IRemoteController RemoteController { get; private set; }
         protected Cluster HzCluster { get; private set; }
 
         [OneTimeSetUp]
