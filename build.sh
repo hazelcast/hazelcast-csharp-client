@@ -21,8 +21,10 @@ usage() {
     printf "\nSample usage for running unit tests with OSS server: \n\$build.sh --run-tests --server-version=LATEST\n"
 }
 
+# initialize
 HZ_VERSION="LATEST"
 
+# process command line
 for i in "$@"
 do
 	case $i in
@@ -52,8 +54,32 @@ do
 	esac
 done
 
-#DOTNET BUILD
+# configure
+HAZELCAST_TEST_VERSION=${HZ_VERSION}
+HAZELCAST_ENTERPRISE_TEST_VERSION=${HZ_VERSION}
+HAZELCAST_VERSION=${HZ_VERSION}
+HAZELCAST_ENTERPRISE_VERSION=${HZ_VERSION}
+HAZELCAST_RC_VERSION="0.7-SNAPSHOT"
+SNAPSHOT_REPO="https://oss.sonatype.org/content/repositories/snapshots"
+RELEASE_REPO="http://repo1.maven.apache.org/maven2"
+ENTERPRISE_RELEASE_REPO="https://repository.hazelcast.com/release/"
+ENTERPRISE_SNAPSHOT_REPO="https://repository.hazelcast.com/snapshot/"
 
+# clear rogue environment variable
+FrameworkPathOverride=""
+
+# determine code repositories
+if [[ ${HZ_VERSION} == *-SNAPSHOT ]]
+then
+	REPO=${SNAPSHOT_REPO}
+	ENTERPRISE_REPO=${ENTERPRISE_SNAPSHOT_REPO}
+else
+	REPO=${RELEASE_REPO}
+	ENTERPRISE_REPO=${ENTERPRISE_RELEASE_REPO}
+fi
+
+# build the solution
+echo "Build solution..."
 dotnet build Hazelcast.Test/Hazelcast.Test.csproj --configuration Release --framework netcoreapp2.1
 
 if [[ -z "${RUN_TESTS}" ]]
@@ -75,28 +101,7 @@ if [[ ${ENTERPRISE} ]]; then
     fi
 fi
 
-# clear rogue environment variable
-FrameworkPathOverride=""
-
-HAZELCAST_TEST_VERSION=${HZ_VERSION}
-HAZELCAST_ENTERPRISE_TEST_VERSION=${HZ_VERSION}
-HAZELCAST_VERSION=${HZ_VERSION}
-HAZELCAST_ENTERPRISE_VERSION=${HZ_VERSION}
-HAZELCAST_RC_VERSION="0.7-SNAPSHOT"
-SNAPSHOT_REPO="https://oss.sonatype.org/content/repositories/snapshots"
-RELEASE_REPO="http://repo1.maven.apache.org/maven2"
-ENTERPRISE_RELEASE_REPO="https://repository.hazelcast.com/release/"
-ENTERPRISE_SNAPSHOT_REPO="https://repository.hazelcast.com/snapshot/"
-
-if [[ ${HZ_VERSION} == *-SNAPSHOT ]]
-then
-	REPO=${SNAPSHOT_REPO}
-	ENTERPRISE_REPO=${ENTERPRISE_SNAPSHOT_REPO}
-else
-	REPO=${RELEASE_REPO}
-	ENTERPRISE_REPO=${ENTERPRISE_RELEASE_REPO}
-fi
-
+# ensure we have the remote controller jar
 if [ -f "hazelcast-remote-controller-${HAZELCAST_RC_VERSION}.jar" ]; then
     echo "remote controller already exist, not downloading from maven."
 else
@@ -108,6 +113,7 @@ else
     fi
 fi
 
+# ensure we have the hazelcast test jar
 if [ -f "hazelcast-${HAZELCAST_TEST_VERSION}-tests.jar" ]; then
     echo "hazelcast-test.jar already exists, not downloading from maven."
 else
@@ -122,6 +128,8 @@ fi
 CLASSPATH="hazelcast-remote-controller-${HAZELCAST_RC_VERSION}.jar:hazelcast-${HAZELCAST_TEST_VERSION}-tests.jar:test/javaclasses"
 
 if [ -n "${ENTERPRISE_KEY}" ]; then
+
+    # ensure we have the hazelcast jar
     if [ -f "hazelcast-enterprise-${HAZELCAST_ENTERPRISE_VERSION}.jar" ]; then
         echo "hazelcast-enterprise.jar already exists, not downloading from maven."
     else
@@ -132,6 +140,8 @@ if [ -n "${ENTERPRISE_KEY}" ]; then
             exit 1
         fi
     fi
+
+    # ensure we have the hazelcast enterprise test jar
     if [ -f "hazelcast-enterprise-${HAZELCAST_ENTERPRISE_TEST_VERSION}-tests.jar" ]; then
         echo "hazelcast-enterprise-test.jar already exists, not downloading from maven."
     else
@@ -146,6 +156,8 @@ if [ -n "${ENTERPRISE_KEY}" ]; then
     CLASSPATH="hazelcast-enterprise-${HAZELCAST_ENTERPRISE_VERSION}.jar:hazelcast-enterprise-${HAZELCAST_ENTERPRISE_TEST_VERSION}-tests.jar:"${CLASSPATH}
     echo "Starting Remote Controller ... enterprise ..."
 else
+
+    # ensure we have the hazelcast jar
     if [ -f "hazelcast-${HAZELCAST_VERSION}.jar" ]; then
         echo "hazelcast.jar already exists, not downloading from maven."
     else
@@ -156,13 +168,27 @@ else
             exit 1
         fi
     fi
+
     CLASSPATH="hazelcast-${HAZELCAST_VERSION}.jar:"${CLASSPATH}
-    echo "Starting Remote Controller ... oss ..."
 fi
 
+# start the remote controller
+echo "Starting Remote Controller..."
 java -Dhazelcast.enterprise.license.key=${ENTERPRISE_KEY} -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main>rc_stdout.log 2>rc_stderr.log &
 serverPid=$!
+echo "Started remote controller with pid=${serverPid}"
 
+# give time to the controller to be ready
 sleep 15
 
+# run unit tests
+echo "Run tests..."
 dotnet test Hazelcast.Test/Hazelcast.Test.csproj -c Release --no-build --no-restore -f netcoreapp2.1 -v n
+
+# stop the remote Controller
+echo "Stopping remote controller..."
+cleanup
+
+echo "Done."
+
+# eof

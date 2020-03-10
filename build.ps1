@@ -15,6 +15,7 @@ $snapshotRepo="https://oss.sonatype.org/content/repositories/snapshots"
 $releaseRepo="http://repo1.maven.apache.org/maven2"
 $enterpriseReleaseRepo="https://repository.hazelcast.com/release/"
 $enterpriseSnapshotRepo="https://repository.hazelcast.com/snapshot/"
+$configuration="Release"
 
 # these must match what the tests project installs!
 $nunitVersion = "3.10.0"
@@ -197,7 +198,7 @@ else {
 
 # build the solution
 Write-Host "Build solution..."
-&$msBuild Hazelcast.Test\Hazelcast.Test.csproj /p:Configuration=Release /p:TargetFramework=$targetFramework /target:"Restore;Build"
+&$msBuild Hazelcast.Test\Hazelcast.Test.csproj /p:Configuration=$configuration /p:TargetFramework=$targetFramework /target:"Restore;Build"
 
 # if it failed, we can stop here
 if ($LASTEXITCODE) {
@@ -207,6 +208,9 @@ if ($LASTEXITCODE) {
 
 # prepare
 Write-Host "Prepare for tests..."
+
+# ensure we have the required NuGet packages
+&$nuget restore build.proj
 
 # ensure we have the remote controller jar
 if(Test-Path "hazelcast-remote-controller-${hazelcastRCVersion}.jar") {
@@ -261,6 +265,7 @@ if($enterprise){
 function StartRemoteController() {
 
 	# start the remote controller
+	Write-Host "Starting Remote Controller..."
 	$p = Start-Process -FilePath java -ArgumentList ( "-Dhazelcast.enterprise.license.key=$env:HAZELCAST_ENTERPRISE_KEY","-cp", "$classpath", "com.hazelcast.remotecontroller.Main" ) -RedirectStandardOutput "rc_stdout.log" -RedirectStandardError "rc_stderr.log" -PassThru
 	Write-Host "Started remote controller with pid=$($p.Id)"
 	return $p
@@ -280,16 +285,16 @@ function RunDotNetCoreTests() {
 	#   on some machines (??) MSBuild does not copy the NUnit adapter to the bin directory,
 	#   but the 'dotnet test' command does copy it, provided that we don't use the --no-build
 	#   option - it does not do a full build anyways - just sets tests up
-    dotnet test Hazelcast.Test\Hazelcast.Test.csproj -c Release --no-restore -f netcoreapp2.1 -v n
+    dotnet test Hazelcast.Test\Hazelcast.Test.csproj -c $configuration --no-restore -f netcoreapp2.1 -v n
 }
 
 function RunDotNetFrameworkTests() {
 
 	# run .NET Framework unit tests
-	$testDLL=".\Hazelcast.Test\bin\Release\${targetFramework}\Hazelcast.Test.dll"
+	$testDLL=".\Hazelcast.Test\bin\${configuration}\${targetFramework}\Hazelcast.Test.dll"
 
 	$nunit = "$($env:USERPROFILE)\.nuget\packages\nunit.consolerunner\$nunitVersion\tools\nunit3-console.exe"
-	$nunitArgs=@("`"${testDLL}`"", "--labels=All", "--result=console-text.xml;format=nunit2")
+	$nunitArgs=@("`"${testDLL}`"", "--labels=All", "--result=console-text.xml")
 
 	if($testCategory.Length -gt 0) {
 		$nunitArgs += @("--where=`"${testCategory}`"")
@@ -318,9 +323,10 @@ function RunDotNetFrameworkTests() {
 }
 
 # run tests
-Write-Host "Run tests..."
 try {
 	$remoteController = StartRemoteController
+
+	Write-Host "Run tests..."
 	if ($netcore) {
 		RunDotNetCoreTests
 	}
@@ -333,3 +339,5 @@ finally {
 }
 
 Write-Host "Done."
+
+# eof

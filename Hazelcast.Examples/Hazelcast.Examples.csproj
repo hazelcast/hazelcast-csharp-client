@@ -6,6 +6,7 @@
     <RootNamespace>Hazelcast.Examples</RootNamespace>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <OutputType>Exe</OutputType>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
