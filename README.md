@@ -1280,6 +1280,43 @@ sslConfig.SetProperty(SSLConfig.CertificatePassword, "client pfx password");
 The provided certificate file should be a PFX file that has private and public keys. The file path should be set with `SSLConfig.CertificateFilePath`.
 If you choose to set a password to it, you need to provide it to the configuration using the `SSLConfig.CertificatePassword` option.
 
+### 6.2 Active Directory (Kerberos)
+
+The .NET Client supports Active Directory (Kerberos) authentication when running on the Microsoft .NET Framework. 
+
+>NOTE: Kerberos is not yet supported on .NET Core, neither on Windows nor on Linux.
+
+#### Active Directory Environment
+
+The .NET Client needs to run on a machine that has joined a domain (e.g. `DOMAIN.COM`), and under the identity of a user of that domain (e.g. `hzuser55@DOMAIN.COM`). In addition, the domain must define a Service Principal Name representing the cluster (e.g. `hz/cluster12@DOMAIN.COM`).
+
+The user is automatically authenticated in the domain, for the purpose of accessing the cluster identified by the Service Principal Name, and that authentication is passed on to the server in the form of a Kerberos token. The server validates the token and grants access to the client.
+
+For all permission matters, the client is known to the server by its domain identity (`hzuser@DOMAIN.COM`), which can be used as a principal name in the server configuration. How the server actually *authorizes* the authenticated client depends on the login module that has been configured on the server. Refer to the server documentation for more details.
+
+#### Kerberos Configuration
+
+You can configure Kerberos authentication declaratively (XML) or programmatically (API). In order to configure Kerberos, you need to know the Service Principal Name of the cluster.
+
+For programmatic configuration of Kerberos authentication, instantiate a `ClientConfig` and configure the desired aspects. An example is shown below.
+
+```c#
+var clientConfig = new ClientConfig();
+clientConfig.ConfigureSecurity(security =>
+    security.ConfigureKerberosCredentials("hz/cluster12@DOMAIN.COM"));
+```
+
+For declarative configuration, add the corresponding section to the XML configuration file (refer to [Section 3](#3-configuration-overview) for a genereal overview of XML configuration) . An example is shown below.
+
+```xml
+<security>
+  <credentials-factory class-name="Hazelcast.Security.KerberosCredentialsFactory">
+    <properties>
+      <property name="spn">hz/cluster12@DOMAIN.COM</property>
+    </properties>
+  </credentials-factory>
+</security>
+```
 
 # 7. Using .NET Client with Hazelcast IMDG
 
@@ -2310,7 +2347,7 @@ tweak the implementation to your application's needs, you can follow the steps i
 
 ## 8.1. Building and Using Client From Sources
 
-You can build the source by calling the batch file `build.bat`.
+You can build the source by calling the PowerShell script file `build.ps1`.
 
 **Strong name generation**
 
