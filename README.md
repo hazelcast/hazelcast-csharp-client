@@ -40,6 +40,7 @@
     * [6.1.1. TLS/SSL for Hazelcast Members](#611-tlsssl-for-hazelcast-members)
     * [6.1.2. TLS/SSL for Hazelcast .NET Clients](#612-tlsssl-for-hazelcast-net-clients)
     * [6.1.3. Mutual Authentication](#613-mutual-authentication)
+  * [6.2. Active Directory (Kerberos)](#62-active-directory-kerberos)
 * [7. Using .NET Client with Hazelcast IMDG](#7-using-net-client-with-hazelcast-imdg)
   * [7.1. .NET Client API Overview](#71-net-client-api-overview)
   * [7.2. .NET Client Operation Modes](#72-net-client-operation-modes)
