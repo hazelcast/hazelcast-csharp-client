@@ -1,11 +1,11 @@
-// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,6 +49,11 @@ namespace Hazelcast.Client.Test
 
         private HttpListener _httpListener;
 
+        private readonly Dictionary<string, string> _responses = new Dictionary<string, string>
+        {
+            { DiscoveryToken, JsonResponse }
+        };
+
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
@@ -65,28 +70,26 @@ namespace Hazelcast.Client.Test
                 var listener = (HttpListener) asyncResult.AsyncState;
                 var context = listener.EndGetContext(asyncResult);
                 var request=context.Request;
-                if (request.Url.PathAndQuery.Equals("/cluster/discovery?token=" + DiscoveryToken))
+                var token = request.Url.PathAndQuery.Substring("/cluster/discovery?token=".Length);
+
+                var response = context.Response;
+
+                byte[] buffer;
+                string jsonText;
+                if (_responses.TryGetValue(token, out jsonText))
                 {
-                    var response = context.Response;
-                    var buffer = System.Text.Encoding.UTF8.GetBytes(JsonResponse);
-    
-                    response.ContentLength64 = buffer.Length;
-                    var output = response.OutputStream;
-                    output.Write(buffer, 0, buffer.Length);
-                    output.Close();
+                    buffer = System.Text.Encoding.UTF8.GetBytes(jsonText);
                 }
                 else
                 {
-                    var response = context.Response;
-                    response.StatusCode = (int) HttpStatusCode.NotFound;
-                    var buffer = System.Text.Encoding.UTF8.GetBytes(JsonErrorResponse);
-    
-                    response.ContentLength64 = buffer.Length;
-                    var output = response.OutputStream;
-                    output.Write(buffer, 0, buffer.Length);
-                    output.Close();
-
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                    buffer = System.Text.Encoding.UTF8.GetBytes(JsonErrorResponse);
                 }
+
+                response.ContentLength64 = buffer.Length;
+                var output = response.OutputStream;
+                output.Write(buffer, 0, buffer.Length);
+                output.Close();
             }, _httpListener);
         }
 
@@ -137,6 +140,52 @@ namespace Hazelcast.Client.Test
                 Assert.True(Addresses.ContainsKey(key));
                 Assert.AreEqual(addressProvider.TranslateToPublic(key), Addresses[key]);
             }
+        }
+
+        [Test]
+        public void TestParseResponse_DefaultPort()
+        {
+            const string jsonText = "[{\"private-address\":\"100.96.5.1\",\"public-address\":\"10.113.44.139:31115\"},"
+                                   + "{\"private-address\":\"100.96.4.2\",\"public-address\":\"10.113.44.130:31115\"} ]";
+
+            _responses["SomeToken"] = jsonText;
+
+            var cloudDiscovery = new HazelcastCloudDiscovery("SomeToken", int.MaxValue, LocalTestBaseUrl);
+            var nodes = cloudDiscovery.DiscoverNodes();
+            Assert.IsNotNull(nodes);
+            Assert.AreEqual(2, nodes.Count);
+
+            foreach (var node in nodes)
+                Console.WriteLine("{0} -> {1}", node.Key, node.Value);
+
+            Address a1, a2;
+            Assert.IsTrue(nodes.TryGetValue(new Address("100.96.5.1", 31115), out a1));
+            Assert.IsTrue(a1 == new Address("10.113.44.139", 31115));
+            Assert.IsTrue(nodes.TryGetValue(new Address("100.96.4.2", 31115), out a2));
+            Assert.IsTrue(a2 == new Address("10.113.44.130", 31115));
+        }
+
+        [Test]
+        public void TestParseResponse_DifferentPort()
+        {
+            const string jsonText = " [{\"private-address\":\"100.96.5.1:5701\",\"public-address\":\"10.113.44.139:31115\"},"
+                                    + "{\"private-address\":\"100.96.4.2:5701\",\"public-address\":\"10.113.44.130:31115\"} ]";
+
+            _responses["SomeToken"] = jsonText;
+
+            var cloudDiscovery = new HazelcastCloudDiscovery("SomeToken", int.MaxValue, LocalTestBaseUrl);
+            var nodes = cloudDiscovery.DiscoverNodes();
+            Assert.IsNotNull(nodes);
+            Assert.AreEqual(2, nodes.Count);
+
+            foreach (var node in nodes)
+                Console.WriteLine("{0} -> {1}", node.Key, node.Value);
+
+            Address a1, a2;
+            Assert.IsTrue(nodes.TryGetValue(new Address("100.96.5.1", 5701), out a1));
+            Assert.IsTrue(a1 == new Address("10.113.44.139", 31115));
+            Assert.IsTrue(nodes.TryGetValue(new Address("100.96.4.2", 5701), out a2));
+            Assert.IsTrue(a2 == new Address("10.113.44.130", 31115));
         }
     }
 }
