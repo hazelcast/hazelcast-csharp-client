@@ -96,6 +96,8 @@ if($testCategory.Length -gt 0) {
   $nunitArgs += @("--where", "\`"${testCategory}\`"")
 }
 
+mkdir build.out >$null 2>&1
+
 if (!$netcore) {
 	$nunitArgs += "--framework=v4.0"
 	if($coverage) {
@@ -109,7 +111,7 @@ if (!$netcore) {
 }
 else
 {
-    dotnet test Hazelcast.Test\Hazelcast.Test.csproj -c Release --no-build --no-restore -f netcoreapp2.0 -v n
+    dotnet test Hazelcast.Test\Hazelcast.Test.csproj -s Hazelcast.Test\test.runsettings -c Release --no-build --no-restore -f netcoreapp2.0 -v n
 }
 
 Stop-Process -Force -Id $remoteControllerApp.Id

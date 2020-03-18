@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,17 +71,19 @@ namespace Hazelcast.Client.Spi
             return null;
         }
 
-        private string ReadFromResponse(WebResponse webResponse)
+        private static string ReadFromResponse(WebResponse webResponse)
         {
             var responseStream = webResponse.GetResponseStream();
+            if (responseStream == null)
+                throw new InvalidOperationException("Internal error: could not get response stream.");
             var sr = new StreamReader(responseStream, Encoding.UTF8);
             var resp = sr.ReadToEnd();
             responseStream.Close();
             webResponse.Close();
             return resp;
         }
-        
-        private Dictionary<Address, Address> ParseResponse(string jsonResult)
+
+        private static Dictionary<Address, Address> ParseResponse(string jsonResult)
         {
             var regexPrivate = new Regex(RegexPrivateStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
             var regexPublic = new Regex(RegexPublicStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -89,13 +91,18 @@ namespace Hazelcast.Client.Spi
             var matchesPublic = regexPublic.Matches(jsonResult);
 
             var privateToPublicAddresses = new Dictionary<Address, Address>();
-            for (int i = 0; i < matchesPrivate.Count; i++)
+            for (var i = 0; i < matchesPrivate.Count; i++)
             {
                 var privateAddressStr = matchesPrivate[i].Value;
                 var publicAddressStr = matchesPublic[i].Value;
 
+                var privateAddress = AddressUtil.ParseSocketAddress(privateAddressStr);
                 var publicAddress = AddressUtil.ParseSocketAddress(publicAddressStr);
-                privateToPublicAddresses.Add(new Address(privateAddressStr, publicAddress.GetPort()), publicAddress);
+
+                if (privateAddress.GetPort() < 0)
+                    privateAddress = new Address(privateAddress.GetHost(), publicAddress.GetPort());
+
+                privateToPublicAddresses.Add(privateAddress, publicAddress);
             }
             return privateToPublicAddresses;
         }

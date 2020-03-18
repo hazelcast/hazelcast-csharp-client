@@ -162,4 +162,4 @@ serverPid=$!
 
 sleep 15
 
-dotnet test Hazelcast.Test/Hazelcast.Test.csproj -c Release --no-build --no-restore -f netcoreapp2.0 -v n
+dotnet test Hazelcast.Test/Hazelcast.Test.csproj -s $HOME/Hazelcast.Test/test.runsettings -c Release --no-build --no-restore -f netcoreapp2.0 -v n
