@@ -71,9 +71,11 @@ namespace Hazelcast.Client.Spi
             return null;
         }
 
-        private string ReadFromResponse(WebResponse webResponse)
+        private static string ReadFromResponse(WebResponse webResponse)
         {
             var responseStream = webResponse.GetResponseStream();
+            if (responseStream == null) 
+                throw new InvalidOperationException("Internal error: could not get response stream.");
             var sr = new StreamReader(responseStream, Encoding.UTF8);
             var resp = sr.ReadToEnd();
             responseStream.Close();
@@ -81,7 +83,7 @@ namespace Hazelcast.Client.Spi
             return resp;
         }
         
-        private Dictionary<Address, Address> ParseResponse(string jsonResult)
+        private static Dictionary<Address, Address> ParseResponse(string jsonResult)
         {
             var regexPrivate = new Regex(RegexPrivateStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
             var regexPublic = new Regex(RegexPublicStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -89,13 +91,18 @@ namespace Hazelcast.Client.Spi
             var matchesPublic = regexPublic.Matches(jsonResult);
 
             var privateToPublicAddresses = new Dictionary<Address, Address>();
-            for (int i = 0; i < matchesPrivate.Count; i++)
+            for (var i = 0; i < matchesPrivate.Count; i++)
             {
                 var privateAddressStr = matchesPrivate[i].Value;
                 var publicAddressStr = matchesPublic[i].Value;
 
+                var privateAddress = AddressUtil.ParseSocketAddress(privateAddressStr);
                 var publicAddress = AddressUtil.ParseSocketAddress(publicAddressStr);
-                privateToPublicAddresses.Add(new Address(privateAddressStr, publicAddress.Port), publicAddress);
+
+                if (privateAddress.Port < 0)
+                    privateAddress = new Address(privateAddress.Host, publicAddress.Port);
+
+                privateToPublicAddresses.Add(privateAddress, publicAddress);
             }
             return privateToPublicAddresses;
         }
