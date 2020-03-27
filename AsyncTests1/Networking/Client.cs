@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Net;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
@@ -15,104 +14,48 @@ namespace AsyncTests1.Networking
         private readonly int _port;
         private readonly string _eom;
 
-        private Socket _socket;
-        private TaskCompletionSource<Message> _completion;
+        private readonly IConnection _connection;
+        private int _messageId;
+        private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
 
         public Client(string hostname, int port, string eom = "/")
         {
             _hostname = hostname;
             _port = port;
             _eom = eom;
+
+            _connection = new Connection3(_hostname, _port, _eom);
+            _connection.OnReceivedMessage = OnReceivedMessage;
+            _connection.Open();
         }
 
-        public void Open()
+        private void OnReceivedMessage(Message response)
         {
-            var host = Dns.GetHostEntry(_hostname);
-            var ipAddress = host.AddressList[0];
-            var endpoint = new IPEndPoint(ipAddress, _port);
+            Log.WriteLine($"Received response {response.Id}");
+            if (!_completions.TryGetValue(response.Id, out var completion))
+                return; // ignore?
 
-            _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            Log.WriteLine("Connect to server");
-            _socket.Connect(endpoint); // fixme async?
-
-            Log.WriteLine("Listening...");
-            var state = new StateObject { Socket = _socket };
-            _socket.BeginReceive(state.Buffer, 0, StateObject.BufferSize, SocketFlags.None, ReadCallback, state);
+            _completions.Remove(response.Id);
+            completion.SetResult(response);
         }
 
-        public void ReadCallback(IAsyncResult result)
+        public async Task<Message> SendAsync(Message message)
         {
-            Log.WriteLine("Read data");
-
-            // retrieve the state object and the handler socket
-            // from the asynchronous state object
-            var state = (StateObject) result.AsyncState;
-            var handler = state.Socket;
-
-            // read data from the client socket
-            int bytesRead;
-            try
-            {
-                // may throw if the socket is not connected anymore
-                bytesRead = handler.EndReceive(result);
-                if (bytesRead <= 0)
-                    return;
-            }
-            catch (Exception e)
-            {
-                Log.WriteLine("Abort read");
-                Log.WriteLine(e);
-                return;
-            }
-
-            // there might be more data, so store the data received so far
-            state.Text.Append(Encoding.ASCII.GetString(state.Buffer, 0, bytesRead));
-
-            // check for end tag, if it is not there, read more data
-            var content = state.Text.ToString();
-            if (content.IndexOf(_eom, StringComparison.Ordinal) > -1)
-            {
-                // all the data has been read from the client
-                Log.WriteLine($"Read {content.Length} bytes from socket \n\tData: {content}");
-
-                var text = content.Substring(0, content.Length - _eom.Length);
-                var response = Message.Parse(text);
-                HandleResponse(response);
-            }
-            else
-            {
-                // not all data received, get more
-                handler.BeginReceive(state.Buffer, 0, StateObject.BufferSize, SocketFlags.None, ReadCallback, state);
-            }
+            message.Id = _messageId++;
+            Log.WriteLine($"Send \"{message}\"");
+            var completion = new TaskCompletionSource<Message>();
+            _completions[message.Id] = completion;
+            await _connection.SendAsync(message);
+            Log.WriteLine("Wait for response...");
+            return await completion.Task;
         }
 
-        private void HandleResponse(Message response)
+        public async Task CloseAsync()
         {
-            _completion.SetResult(response);
-        }
-
-        public async ValueTask<Message> SendAsync(Message message)
-        {
-            // note - look at how SendAsync is implemented, we may get closer to metal
-
-            Log.WriteLine($"Send \"{message}\" ({message.ToString().Length} bytes)");
-            var bytes = message.ToBytes();
-            var count = await _socket.SendAsync(bytes, SocketFlags.None, CancellationToken.None);
-            Log.WriteLine($"Sent {count} bytes");
-            await _socket.SendAsync(Encoding.UTF8.GetBytes(_eom), SocketFlags.None, CancellationToken.None);
-            Log.WriteLine("Sent EOM");
-
-            _completion = new TaskCompletionSource<Message>();
-            return await _completion.Task;
-        }
-
-        public async ValueTask CloseAsync()
-        {
-            Log.WriteLine("Send empty message");
-            Log.WriteLine("Sent 0 bytes");
-            await _socket.SendAsync(Encoding.UTF8.GetBytes(_eom), SocketFlags.None, CancellationToken.None);
-            Log.WriteLine("Sent EOM");
+            Log.WriteLine("Closing");
+            await _connection.CloseAsync();
+            foreach (var completion in _completions.Values)
+                completion.SetException(new Exception("shutdown"));
         }
     }
 }
