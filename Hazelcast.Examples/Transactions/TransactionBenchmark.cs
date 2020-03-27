@@ -26,11 +26,12 @@ namespace Hazelcast.Examples.Transactions
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var config = new ClientConfig();
-            //TODO fix here
-            // config.SetClusterName("dev").SetClusterPassword("dev-pass");
-            config.GetNetworkConfig().AddAddress("127.0.0.1:5701")
-                .SetSmartRouting(false);
+            var config = new Configuration {ClusterName = "dev"};
+            config.ConfigureNetwork(networkConfig =>
+            {
+                networkConfig.SmartRouting = false;
+                networkConfig.Addresses.Add("127.0.0.1:5701");
+            });
 
             var client = HazelcastClient.NewHazelcastClient(config);
             var map = client.GetMap<int, string>("test");

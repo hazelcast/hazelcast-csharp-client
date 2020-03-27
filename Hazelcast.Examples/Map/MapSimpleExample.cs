@@ -25,8 +25,8 @@ namespace Hazelcast.Examples.Map
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var config = new ClientConfig();
-            config.GetNetworkConfig().AddAddress("192.168.1.200");
+            var config = new Configuration();
+            config.NetworkConfig.AddAddress("192.168.1.200");
             var client = HazelcastClient.NewHazelcastClient(config);
 
             var map = client.GetMap<string, string>("simple-example");

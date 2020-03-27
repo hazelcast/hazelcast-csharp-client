@@ -46,12 +46,12 @@ namespace Hazelcast.Client.Test
 
         protected virtual string GetServerConfig()
         {
-            return Resources.hazelcast;
+            return Resources.Hazelcast;
         }
                 
-        protected override void ConfigureGroup(ClientConfig config)
+        protected override void ConfigureGroup(Configuration config)
         {
-            config.SetClusterName(HzCluster.Id);
+            config.ClusterName = HzCluster.Id;
         }
     }
 }

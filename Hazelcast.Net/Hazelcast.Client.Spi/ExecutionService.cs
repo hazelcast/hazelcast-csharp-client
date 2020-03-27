@@ -25,7 +25,7 @@ namespace Hazelcast.Client.Spi
     {
         private readonly AtomicBoolean _live = new AtomicBoolean(true);
 
-        public ExecutionService(string instanceName, int executorPoolSize)
+        public ExecutionService(string instanceName)
         {
         }
 

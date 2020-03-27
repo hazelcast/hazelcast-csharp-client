@@ -26,16 +26,15 @@ namespace Hazelcast.Examples.Map
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var config = new ClientConfig();
+            var config = new Configuration();
 
-            var nearCacheConfig = new NearCacheConfig();
-            nearCacheConfig.SetMaxSize(1000)
-                .SetInvalidateOnChange(true)
-                .SetEvictionPolicy("Lru")
-                .SetInMemoryFormat(InMemoryFormat.Binary);
+            var nearCacheConfig = new NearCacheConfig
+            {
+                MaxSize = 1000, InvalidateOnChange = true, EvictionPolicy = EvictionPolicy.Lru, InMemoryFormat = InMemoryFormat.Binary
+            };
 
-            config.AddNearCacheConfig("nearcache-map-*", nearCacheConfig);
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
+            config.NearCacheConfigs.Add("nearcache-map-*", nearCacheConfig);
+            config.NetworkConfig.Addresses.Add("127.0.0.1");
 
             var client = HazelcastClient.NewHazelcastClient(config);
 

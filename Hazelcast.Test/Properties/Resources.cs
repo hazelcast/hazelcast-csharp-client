@@ -7,23 +7,23 @@ namespace Hazelcast.Test
     internal static class Resources
     {
         //Binary files
-        public static byte[] client1 {get { return GetBytes("Resources.client1.pfx"); }}
-        public static byte[] client2 {get { return GetBytes("Resources.client2.pfx"); }}
+        public static byte[] Client1 => GetBytes("Resources.client1.pfx");
+        public static byte[] Client2 => GetBytes("Resources.client2.pfx");
 
         //Text files
-        public static string hazelcast_config_full {get { return GetXmlResourceContent("hazelcast-client-full"); }}
-        public static string hazelcast {get { return GetXmlResourceContent("hazelcast"); }}
-        public static string hazelcast_delay {get { return GetXmlResourceContent("hazelcast-delay"); }}
-        public static string hazelcast_hb {get { return GetXmlResourceContent("hazelcast-hb"); }}
-        public static string hazelcast_ipv6 {get { return GetXmlResourceContent("hazelcast-ipv6"); }}
-        public static string hazelcast_ma_required {get { return GetXmlResourceContent("hazelcast-ma-required"); }}
-        public static string hazelcast_ma_optional {get { return GetXmlResourceContent("hazelcast-ma-optional"); }}
-        public static string hazelcast_nearcache {get { return GetXmlResourceContent("hazelcast-nearcache"); }}
-        public static string hazelcast_ssl_signed {get { return GetXmlResourceContent("hazelcast-ssl-signed"); }}
-        public static string hazelcast_ssl {get { return GetXmlResourceContent("hazelcast-ssl"); }}
-        public static string hazelcast_stat {get { return GetXmlResourceContent("hazelcast-stat"); }}
-        public static string hazelcast_crdt_replication { get { return GetXmlResourceContent("hazelcast-crdt-replication"); } }
-        public static string hazelcast_lite_member { get { return GetXmlResourceContent("hazelcast-lite-member"); } }
+        public static string HazelcastConfigFull => GetXmlResourceContent("hazelcast-client-full");
+        public static string Hazelcast => GetXmlResourceContent("hazelcast");
+        public static string HazelcastDelay => GetXmlResourceContent("hazelcast-delay");
+        public static string HazelcastHb => GetXmlResourceContent("hazelcast-hb");
+        public static string HazelcastIpv6 => GetXmlResourceContent("hazelcast-ipv6");
+        public static string HazelcastMaRequired => GetXmlResourceContent("hazelcast-ma-required");
+        public static string HazelcastMaOptional => GetXmlResourceContent("hazelcast-ma-optional");
+        public static string HazelcastNearCache => GetXmlResourceContent("hazelcast-nearcache");
+        public static string HazelcastSslSigned => GetXmlResourceContent("hazelcast-ssl-signed");
+        public static string HazelcastSsl => GetXmlResourceContent("hazelcast-ssl");
+        public static string HazelcastStat => GetXmlResourceContent("hazelcast-stat");
+        public static string HazelcastCrdtReplication => GetXmlResourceContent("hazelcast-crdt-replication");
+        public static string HazelcastLiteMember => GetXmlResourceContent("hazelcast-lite-member");
         public static string hazelcast_kerberos { get { return GetXmlResourceContent("hazelcast-kerberos"); } }
 
         private static byte[] GetBytes(string name)

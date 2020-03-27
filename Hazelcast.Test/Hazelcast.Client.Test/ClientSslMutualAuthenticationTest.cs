@@ -29,13 +29,13 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestSSLEnabled_mutualAuthRequired_Server1KnowsClient1()
         {
-            Setup(serverXml:Resources.hazelcast_ma_required,
+            Setup(serverXml:Resources.HazelcastMaRequired,
                 isSslEnabled:true,
                 validateCertificateChain:true, 
                 validateCertificateName:null, 
                 checkCertificateRevocation:null, 
                 certSubjectName:null, 
-                clientCertificate:Resources.client1, 
+                clientCertificate:Resources.Client1, 
                 certPassword:Password);
             Assert.True(Client.LifecycleService.IsRunning());
         }
@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Test
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                Setup(serverXml:Resources.hazelcast_ma_required,
+                Setup(serverXml:Resources.HazelcastMaRequired,
                     isSslEnabled:true,
                     validateCertificateChain:true, 
                     validateCertificateName:null, 
@@ -62,13 +62,13 @@ namespace Hazelcast.Client.Test
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                Setup(serverXml:Resources.hazelcast_ma_required,
+                Setup(serverXml:Resources.HazelcastMaRequired,
                     isSslEnabled:true,
                     validateCertificateChain:true, 
                     validateCertificateName:null, 
                     checkCertificateRevocation:null, 
                     certSubjectName:null, 
-                    clientCertificate:Resources.client2, 
+                    clientCertificate:Resources.Client2, 
                     certPassword:Password);
                 Assert.True(Client.LifecycleService.IsRunning());
             });
@@ -77,13 +77,13 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1()
         {
-            Setup(serverXml:Resources.hazelcast_ma_optional,
+            Setup(serverXml:Resources.HazelcastMaOptional,
                 isSslEnabled:true,
                 validateCertificateChain:true, 
                 validateCertificateName:null, 
                 checkCertificateRevocation:null, 
                 certSubjectName:null, 
-                clientCertificate:Resources.client1, 
+                clientCertificate:Resources.Client1, 
                 certPassword:Password);
             Assert.True(Client.LifecycleService.IsRunning());
         }
@@ -91,7 +91,7 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1_clientDoesNotProvideCerts()
         {
-            Setup(serverXml:Resources.hazelcast_ma_optional,
+            Setup(serverXml:Resources.HazelcastMaOptional,
                 isSslEnabled:true,
                 validateCertificateChain:true, 
                 validateCertificateName:null, 
@@ -107,13 +107,13 @@ namespace Hazelcast.Client.Test
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                Setup(serverXml:Resources.hazelcast_ma_optional,
+                Setup(serverXml:Resources.HazelcastMaOptional,
                     isSslEnabled:true,
                     validateCertificateChain:true, 
                     validateCertificateName:null, 
                     checkCertificateRevocation:null, 
                     certSubjectName:null, 
-                    clientCertificate:Resources.client2, 
+                    clientCertificate:Resources.Client2, 
                     certPassword:Password);
                 Assert.True(Client.LifecycleService.IsRunning());
             });
@@ -122,13 +122,13 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestSSLEnabled_mutualAuthDisabled_Client1()
         {
-            Setup(serverXml:Resources.hazelcast_ssl_signed,
+            Setup(serverXml:Resources.HazelcastSslSigned,
                 isSslEnabled:true,
                 validateCertificateChain:true, 
                 validateCertificateName:null, 
                 checkCertificateRevocation:null, 
                 certSubjectName:null, 
-                clientCertificate:Resources.client1, 
+                clientCertificate:Resources.Client1, 
                 certPassword:Password);
             Assert.True(Client.LifecycleService.IsRunning());
         }

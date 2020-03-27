@@ -226,9 +226,9 @@ namespace Hazelcast.Client.Test.Serialization
         {
             int portableVersion = 1;
             var serializationConfig = new SerializationConfig();
-            serializationConfig.AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID,
+            serializationConfig.PortableFactories.Add(TestSerializationConstants.PORTABLE_FACTORY_ID,
                 new TestPortableFactory());
-            serializationConfig.SetPortableVersion(portableVersion);
+            serializationConfig.PortableVersion=portableVersion;
             serializationConfig
                 .AddClassDefinition(
                     new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID,
@@ -260,9 +260,9 @@ namespace Hazelcast.Client.Test.Serialization
         {
             int portableVersion = 1;
             var serializationConfig = new SerializationConfig();
-            serializationConfig.AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID,
+            serializationConfig.PortableFactories.Add(TestSerializationConstants.PORTABLE_FACTORY_ID,
                 new TestPortableFactory());
-            serializationConfig.SetPortableVersion(1);
+            serializationConfig.PortableVersion=1;
             serializationConfig.AddClassDefinition(
                 new ClassDefinitionBuilder(TestSerializationConstants.PORTABLE_FACTORY_ID,
                         TestSerializationConstants.RAW_DATA_PORTABLE, 1)
@@ -284,7 +284,7 @@ namespace Hazelcast.Client.Test.Serialization
 
             // -- OR --
 
-            serializationConfig.SetCheckClassDefErrors(false);
+            serializationConfig.CheckClassDefErrors =false;
             new SerializationServiceBuilder().SetConfig(serializationConfig).Build();
         }
 
@@ -414,7 +414,7 @@ namespace Hazelcast.Client.Test.Serialization
             var sc = new SerializerConfig()
                 .SetImplementation(new CustomSerializer())
                 .SetTypeClass(typeof(CustomSerializableType));
-            config.AddSerializerConfig(sc);
+            config.SerializerConfigs.Add(sc);
             var serializationService =
                 new SerializationServiceBuilder().SetPortableVersion(1)
                     .AddPortableFactory(TestSerializationConstants.PORTABLE_FACTORY_ID, new TestPortableFactory())

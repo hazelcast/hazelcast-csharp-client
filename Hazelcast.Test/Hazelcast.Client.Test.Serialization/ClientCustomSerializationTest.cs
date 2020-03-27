@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Test.Serialization
                 .SetImplementation(new CustomSerializer())
                 .SetTypeClass(typeof (CustomSerializableType));
 
-            config.AddSerializerConfig(sc);
+            config.SerializerConfigs.Add(sc);
             var ss = new SerializationServiceBuilder().SetConfig(config).Build();
 
             var foo = new CustomSerializableType {Value = "fooooo"};
@@ -52,13 +52,11 @@ namespace Hazelcast.Client.Test.Serialization
         public void TestGlobalSerializer()
         {
             var config = new SerializationConfig();
-            var globalConfig = new GlobalSerializerConfig();
-
-            globalConfig.SetClassName(typeof (GlobalSerializer).AssemblyQualifiedName);
-            config.SetGlobalSerializerConfig(globalConfig);
-
+            config.ConfigureGlobalSerializer(gs =>
+            {
+                gs.TypeName = typeof (GlobalSerializer).AssemblyQualifiedName;
+            });
             var ss = new SerializationServiceBuilder().SetConfig(config).Build();
-
             var foo = new CustomSerializableType {Value = "fooooo"};
 
             var d = ss.ToData(foo);
@@ -71,14 +69,14 @@ namespace Hazelcast.Client.Test.Serialization
         public void TestGlobalSerializerOverride()
         {
             var config = new SerializationConfig();
-            var globalConfig = new GlobalSerializerConfig();
-
+            
             var globalListSerializer = new GlobalListSerializer();
-            globalConfig.SetImplementation(globalListSerializer).SetOverrideClrSerialization(true);
-            config.SetGlobalSerializerConfig(globalConfig);
-
+            config.ConfigureGlobalSerializer(gs =>
+            {
+                gs.Implementation = globalListSerializer;
+                gs.OverrideClrSerialization = true;
+            });
             var ss = new SerializationServiceBuilder().SetConfig(config).Build();
-
 
             var list = new List<string> {"foo", "bar"};
 

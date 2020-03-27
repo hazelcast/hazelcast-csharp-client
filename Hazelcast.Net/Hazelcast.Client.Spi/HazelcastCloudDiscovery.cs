@@ -29,8 +29,8 @@ namespace Hazelcast.Client.Spi
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(HazelcastCloudDiscovery));
 
-        internal const string CloudUrlBaseProperty = "hazelcast.client.cloud.url";
-        internal const string CloudUrlBase = "https://coordinator.hazelcast.cloud";
+        // internal const string CloudUrlBaseProperty = "hazelcast.client.cloud.url";
+        // internal const string CloudUrlBase = "https://coordinator.hazelcast.cloud";
         private const string CloudUrlPath = "/cluster/discovery?token=";
         private const string RegexErrorStr = "(?<=message\":\").*?(?=\")";
         private const string RegexPrivateStr = "(?<=private-address\":\").*?(?=\")";

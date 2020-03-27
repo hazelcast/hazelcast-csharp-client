@@ -50,8 +50,11 @@ namespace Hazelcast.Client.Test.Config
 
             var client = _clientFactory.CreateClient(clientConfig =>
             {
-                clientConfig.SetClusterName(_cluster.Id);
-                clientConfig.AddListenerConfig(new ListenerConfig(typeof(SimpleLifecycleListener).AssemblyQualifiedName));
+                clientConfig.ClusterName = _cluster.Id;
+                clientConfig.ConfigureListeners(listeners =>
+                {
+                    listeners.Add(new ListenerConfig(typeof(SimpleLifecycleListener).AssemblyQualifiedName));
+                });
             });
 
             Assert.True(client.LifecycleService.IsRunning());
@@ -64,9 +67,12 @@ namespace Hazelcast.Client.Test.Config
             StartMember(_remoteController, _cluster);
             var client = _clientFactory.CreateClient(clientConfig =>
             {
-                // clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
-                clientConfig.SetClusterName(_cluster.Id);
-                clientConfig.AddListenerConfig(new ListenerConfig(typeof(SimpleMembershipListener).AssemblyQualifiedName));
+                // clientConfig.NetworkConfig.SetConnectionAttemptLimit(1000);
+                clientConfig.ClusterName = _cluster.Id;
+                clientConfig.ConfigureListeners(listeners =>
+                {
+                    listeners.Add(new ListenerConfig(typeof(SimpleMembershipListener).AssemblyQualifiedName));
+                });
             });
             StartMember(_remoteController, _cluster);
 

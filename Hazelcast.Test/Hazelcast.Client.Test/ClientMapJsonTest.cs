@@ -37,7 +37,7 @@ namespace Hazelcast.Client.Test
             _map.Clear();
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
         }

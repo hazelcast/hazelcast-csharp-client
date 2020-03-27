@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using Hazelcast.Core;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -21,21 +22,21 @@ using System.Collections.Generic;
 namespace Hazelcast.Client.Test
 {
     [TestFixture]
-    [Category("3.10")]
     public class VectorClockTest
     {
+        private static readonly Guid[] _guids = {Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()};
         private VectorClock _inst;
 
         [SetUp]
         public void Init()
         {
-            var initList = new List<KeyValuePair<string, long>>()
+            var initList = new List<KeyValuePair<Guid, long>>()
             {
-                new KeyValuePair<string, long>("node-1", 10),
-                new KeyValuePair<string, long>("node-2", 20),
-                new KeyValuePair<string, long>("node-3", 30),
-                new KeyValuePair<string, long>("node-4", 40),
-                new KeyValuePair<string, long>("node-5", 50)
+                new KeyValuePair<Guid, long>(_guids[0], 10),
+                new KeyValuePair<Guid, long>(_guids[1], 20),
+                new KeyValuePair<Guid, long>(_guids[2], 30),
+                new KeyValuePair<Guid, long>(_guids[3], 40),
+                new KeyValuePair<Guid, long>(_guids[4], 50)
             };
 
             _inst = new VectorClock(initList);
@@ -51,13 +52,13 @@ namespace Hazelcast.Client.Test
         public void NewerTSDetectedOnNewSet()
         {
             // Arrange
-            var newList = new List<KeyValuePair<string, long>>()
+            var newList = new List<KeyValuePair<Guid, long>>()
             {
-                new KeyValuePair<string, long>("node-1", 100),
-                new KeyValuePair<string, long>("node-2", 20),
-                new KeyValuePair<string, long>("node-3", 30),
-                new KeyValuePair<string, long>("node-4", 40),
-                new KeyValuePair<string, long>("node-5", 50)
+                new KeyValuePair<Guid, long>(_guids[0], 100),
+                new KeyValuePair<Guid, long>(_guids[1], 20),
+                new KeyValuePair<Guid, long>(_guids[2], 30),
+                new KeyValuePair<Guid, long>(_guids[3], 40),
+                new KeyValuePair<Guid, long>(_guids[4], 50)
             };
 
             var newVector = new VectorClock(newList);
@@ -73,10 +74,10 @@ namespace Hazelcast.Client.Test
         public void SmallerListOnNewSet()
         {
             // Arrange
-            var newList = new List<KeyValuePair<string, long>>()
+            var newList = new List<KeyValuePair<Guid, long>>()
             {
-                new KeyValuePair<string, long>("node-1", 10),
-                new KeyValuePair<string, long>("node-2", 20)
+                new KeyValuePair<Guid, long>(_guids[0], 10),
+                new KeyValuePair<Guid, long>(_guids[1], 20)
             };
 
             var newVector = new VectorClock(newList);
@@ -92,10 +93,10 @@ namespace Hazelcast.Client.Test
         public void SmallerListWithNewerItemOnNewSet()
         {
             // Arrange
-            var newList = new List<KeyValuePair<string, long>>()
+            var newList = new List<KeyValuePair<Guid, long>>()
             {
-                new KeyValuePair<string, long>("node-1", 100),
-                new KeyValuePair<string, long>("node-2", 20)
+                new KeyValuePair<Guid, long>(_guids[0], 100),
+                new KeyValuePair<Guid, long>(_guids[1], 20)
             };
 
             var newVector = new VectorClock(newList);

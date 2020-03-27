@@ -52,10 +52,12 @@ namespace Hazelcast.Examples.Org.Website.Samples
     {
         public static void Run(string[] args)
         {
-            var clientConfig = new ClientConfig();
-            clientConfig.GetSerializationConfig().SetGlobalSerializerConfig(
-                new GlobalSerializerConfig().SetImplementation(new GlobalSerializer())
-            );
+            var clientConfig = new Configuration();
+            clientConfig.SerializationConfig.ConfigureGlobalSerializer(gs =>
+            {
+                gs.Implementation = new GlobalSerializer();
+            });
+            
             // Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
             var hz = HazelcastClient.NewHazelcastClient(clientConfig);
             

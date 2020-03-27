@@ -27,7 +27,7 @@ namespace Hazelcast.Util
             _member = member;
         }
 
-        public virtual void Init(ICluster cluster, ClientConfig config)
+        public virtual void Init(ICluster cluster, Configuration config)
         {
         }
 

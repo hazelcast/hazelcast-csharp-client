@@ -65,34 +65,37 @@ namespace Hazelcast.Client.Test
             RemoteController = CreateRemoteController();
             var cluster = CreateCluster(RemoteController, serverXml);
             RemoteController.startMember(cluster.Id);
-            var clientConfig = new ClientConfig();
-            clientConfig.GetNetworkConfig().AddAddress("localhost:5701");
-            clientConfig.GetNetworkConfig().SetSSLConfig(CreateSslConfig(isSslEnabled, validateCertificateChain,
-                validateCertificateName, checkCertificateRevocation, certSubjectName, clientCertificate, certPassword));
-            clientConfig.SetClusterName(cluster.Id);
+            var clientConfig = new Configuration();
+            clientConfig.NetworkConfig.AddAddress("localhost:5701");
+            clientConfig.NetworkConfig.ConfigureSSL(sslConfig =>
+            {
+                ConfigSslConfig(sslConfig, isSslEnabled, validateCertificateChain,
+                    validateCertificateName, checkCertificateRevocation, certSubjectName, clientCertificate, certPassword);
+            });
+            clientConfig.ClusterName = cluster.Id;
             Client = HazelcastClient.NewHazelcastClient(clientConfig);
         }
 
-        private static SSLConfig CreateSslConfig(bool isSslEnabled, bool? validateCertificateChain, bool? validateCertificateName,
-            bool? checkCertificateRevocation, string certSubjectName, byte[] clientCertificate, string certPassword)
+        private static SSLConfig ConfigSslConfig(SSLConfig sslConfig, bool isSslEnabled, bool? validateCertificateChain,
+            bool? validateCertificateName, bool? checkCertificateRevocation, string certSubjectName, byte[] clientCertificate,
+            string certPassword)
         {
-            var sslConfig = new SSLConfig();
-            sslConfig.SetEnabled(isSslEnabled);
+            sslConfig.Enabled = isSslEnabled;
             if (clientCertificate != null)
             {
                 var certFilePath = CreateTmpFile(clientCertificate);
-                sslConfig.SetProperty(SSLConfig.CertificateFilePath, certFilePath);
+                sslConfig.CertificateFilePath = certFilePath;
                 if (certPassword != null)
-                    sslConfig.SetProperty(SSLConfig.CertificatePassword, certPassword);
+                    sslConfig.CertificatePassword = certPassword;
             }
             if (validateCertificateChain != null)
-                sslConfig.SetProperty(SSLConfig.ValidateCertificateChain, validateCertificateChain.ToString());
+                sslConfig.ValidateCertificateChain = validateCertificateChain.Value;
             if (validateCertificateName != null)
-                sslConfig.SetProperty(SSLConfig.ValidateCertificateName, validateCertificateName.ToString());
+                sslConfig.ValidateCertificateName = validateCertificateName.Value;
             if (certSubjectName != null)
-                sslConfig.SetProperty(SSLConfig.CertificateName, certSubjectName);
+                sslConfig.CertificateName = certSubjectName;
             if (checkCertificateRevocation != null)
-                sslConfig.SetProperty(SSLConfig.CheckCertificateRevocation, checkCertificateRevocation.ToString());
+                sslConfig.CheckCertificateRevocation = checkCertificateRevocation.Value;
             return sslConfig;
         }
 

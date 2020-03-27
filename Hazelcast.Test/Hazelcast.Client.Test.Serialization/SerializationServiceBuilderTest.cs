@@ -28,7 +28,7 @@ namespace Hazelcast.Client.Test.Serialization
             var data = service1.ToData(new DataSerializableBasicType());
 
             var config = new SerializationConfig();
-            config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
+            config.DataSerializableFactories.Add(1, new MyDataSerializableFactory());
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
 
             var obj = service.ToObject<object>(data);
@@ -43,7 +43,7 @@ namespace Hazelcast.Client.Test.Serialization
             var data = service1.ToData(new DataSerializableBasicType());
 
             var config = new SerializationConfig();
-            config.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
+            config.AddDataSerializableFactoryClass(1, typeof(MyDataSerializableFactory));
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
 
             var obj = service.ToObject<object>(data);
@@ -63,50 +63,50 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-		public void TestAddDataSerializableFactoryClassWithDuplicateId()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void TestAddDataSerializableFactoryClassWithDuplicateId()
         {
-            var config = new SerializationConfig();
-            config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
-            config.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
-            var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
+                config.AddDataSerializableFactoryClass(1, typeof(MyDataSerializableFactory));
+                var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            });
+        }
 
         [Test]
-		public void TestAddDataSerializableFactoryClassWithNoEmptyConstructor()
-		{
-			Assert.Throws<HazelcastSerializationException>(() =>
+        public void TestAddDataSerializableFactoryClassWithNoEmptyConstructor()
         {
-            var config = new SerializationConfig();
-            config.AddDataSerializableFactoryClass(1, typeof (SerializableFactory));
-            var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        });
-		}
+            Assert.Throws<HazelcastSerializationException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.AddDataSerializableFactoryClass(1, typeof(SerializableFactory));
+                var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            });
+        }
 
         [Test]
-		public void TestAddDataSerializableFactoryWitDuplicateId()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void TestAddDataSerializableFactoryWitDuplicateId()
         {
-            var config = new SerializationConfig();
-            config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
-            var service = new SerializationServiceBuilder().SetConfig(config).
-                AddDataSerializableFactory(1, new MyDataSerializableFactory()).Build();
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.DataSerializableFactories.Add(1, new MyDataSerializableFactory());
+                var service = new SerializationServiceBuilder().SetConfig(config)
+                    .AddDataSerializableFactory(1, new MyDataSerializableFactory()).Build();
+            });
+        }
 
         [Test]
-		public void TestAddDataSerializableFactoryWithBadId()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void TestAddDataSerializableFactoryWithBadId()
         {
-            var config = new SerializationConfig();
-            config.AddDataSerializableFactory(-1, new MyDataSerializableFactory());
-            var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.DataSerializableFactories.Add(-1, new MyDataSerializableFactory());
+                var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            });
+        }
 
         [Test]
         public void TestAddPortableFactory()
@@ -115,7 +115,7 @@ namespace Hazelcast.Client.Test.Serialization
             var data = service1.ToData(new KitchenSinkPortable());
 
             var config = new SerializationConfig();
-            config.AddPortableFactory(1, new KitchenSinkPortableFactory());
+            config.PortableFactories.Add(1, new KitchenSinkPortableFactory());
 
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
 
@@ -130,7 +130,7 @@ namespace Hazelcast.Client.Test.Serialization
             var data = service1.ToData(new KitchenSinkPortable());
 
             var config = new SerializationConfig();
-            config.AddPortableFactoryClass(1, typeof (KitchenSinkPortableFactory));
+            config.AddPortableFactoryClass(1, typeof(KitchenSinkPortableFactory));
 
             var service = new SerializationServiceBuilder().SetConfig(config).Build();
 
@@ -139,83 +139,78 @@ namespace Hazelcast.Client.Test.Serialization
         }
 
         [Test]
-		public void TestAddPortableFactoryClassWhichDoesNotImplementPortableFactory()
-		{
-			Assert.Throws<HazelcastSerializationException>(() =>
+        public void TestAddPortableFactoryClassWhichDoesNotImplementPortableFactory()
         {
-            var config = new SerializationConfig();
-            config.AddPortableFactoryClass(1, typeof (SerializableFactory));
+            Assert.Throws<HazelcastSerializationException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.AddPortableFactoryClass(1, typeof(SerializableFactory));
 
-            var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        });
-		}
-
-        [Test]
-		public void TestAddPortableFactoryClassWithBadId()
-		{
-			Assert.Throws<ArgumentException>(() =>
-        {
-            var config = new SerializationConfig();
-            config.AddPortableFactoryClass(-1, typeof (KitchenSinkPortableFactory));
-
-            var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        });
-		}
-
-        [Test]
-		public void TestAddPortableFactoryClassWithDuplicateId()
-		{
-			Assert.Throws<ArgumentException>(() =>
-        {
-            var config = new SerializationConfig();
-            config.AddPortableFactory(1, new KitchenSinkPortableFactory());
-            config.AddPortableFactoryClass(1, typeof (KitchenSinkPortableFactory));
-
-            var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        });
-		}
-
-        [Test]
-		public void TestAddPortableFactoryClassWithNoEmptyConstructor()
-		{
-			Assert.Throws<MissingMethodException>(() =>
-        {
-            var config = new SerializationConfig();
-            config.AddPortableFactoryClass(1, typeof (PortableFactory));
-
-            var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        });
-		}
-
-        [Test]
-		public void TestAddPortableFactoryWithBadId()
-		{
-			Assert.Throws<ArgumentException>(() =>
-        {
-            var config = new SerializationConfig();
-            config.AddPortableFactory(-1, new KitchenSinkPortableFactory());
-
-            var service = new SerializationServiceBuilder().SetConfig(config).Build();
-        });
-		}
-
-        [Test]
-		public void TestAddPortableFactoryWithDuplicateId()
-		{
-			Assert.Throws<ArgumentException>(() =>
-        {
-            var config = new SerializationConfig();
-            config.AddPortableFactory(1, new KitchenSinkPortableFactory());
-
-            var service = new SerializationServiceBuilder().AddPortableFactory(1,
-                new KitchenSinkPortableFactory()).SetConfig(config).Build();
-        });
-		}
-
-        public void TestHazelcastInstanceAware()
-        {
+                var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            });
         }
 
+        [Test]
+        public void TestAddPortableFactoryClassWithBadId()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.AddPortableFactoryClass(-1, typeof(KitchenSinkPortableFactory));
+
+                var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            });
+        }
+
+        [Test]
+        public void TestAddPortableFactoryClassWithDuplicateId()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.AddPortableFactory(1, new KitchenSinkPortableFactory());
+                config.AddPortableFactoryClass(1, typeof(KitchenSinkPortableFactory));
+
+                var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            });
+        }
+
+        [Test]
+        public void TestAddPortableFactoryClassWithNoEmptyConstructor()
+        {
+            Assert.Throws<MissingMethodException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.AddPortableFactoryClass(1, typeof(PortableFactory));
+
+                var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            });
+        }
+
+        [Test]
+        public void TestAddPortableFactoryWithBadId()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.PortableFactories.Add(-1, new KitchenSinkPortableFactory());
+
+                var service = new SerializationServiceBuilder().SetConfig(config).Build();
+            });
+        }
+
+        [Test]
+        public void TestAddPortableFactoryWithDuplicateId()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var config = new SerializationConfig();
+                config.PortableFactories.Add(1, new KitchenSinkPortableFactory());
+
+                var service = new SerializationServiceBuilder().AddPortableFactory(1, new KitchenSinkPortableFactory())
+                    .SetConfig(config).Build();
+            });
+        }
 
         private class SerializableFactory : IDataSerializableFactory
         {

@@ -78,13 +78,15 @@ namespace Hazelcast.NearCache.Test
             //no op
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
             Environment.SetEnvironmentVariable("hazelcast.invalidation.max.tolerated.miss.count", "0");
-            var defaultConfig = new NearCacheConfig().SetInvalidateOnChange(true).SetEvictionPolicy("None")
-                .SetInMemoryFormat(InMemoryFormat.Binary);
-            config.AddNearCacheConfig("nearCachedMap*", defaultConfig);
+            var defaultConfig = new NearCacheConfig
+            {
+                InvalidateOnChange = true, EvictionPolicy = EvictionPolicy.None, InMemoryFormat = InMemoryFormat.Binary
+            };
+            config.NearCacheConfigs.Add("nearCachedMap*", defaultConfig);
         }
 
         [Test]

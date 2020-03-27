@@ -65,9 +65,9 @@ namespace Hazelcast.Examples.Org.Website.Samples
     {
         public static void Run(string[] args)
         {
-            var clientConfig = new ClientConfig();
-            clientConfig.GetSerializationConfig()
-                .AddDataSerializableFactory(SampleDataSerializableFactory.FactoryId,
+            var clientConfig = new Configuration();
+            clientConfig.SerializationConfig
+                .DataSerializableFactories.Add(SampleDataSerializableFactory.FactoryId,
                     new SampleDataSerializableFactory());
             // Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
             var hz = HazelcastClient.NewHazelcastClient(clientConfig);

@@ -28,26 +28,25 @@ namespace Hazelcast.Client.Test.Config
         [SetUp]
         public void ReadConfig()
         {
-            _clientConfig = XmlClientConfigBuilder.Build(new StringReader(Resources.hazelcast_config_full));
+            _clientConfig = XmlClientConfigBuilder.Build(new StringReader(Resources.HazelcastConfigFull));
         }
 
-        private ClientConfig _clientConfig;
+        private Configuration _clientConfig;
 
         [Test]
-        public void TestGroupConfig()
+        public void TestClusterName()
         {
-            Assert.AreEqual("dev", _clientConfig.GetClusterName());
+            Assert.AreEqual("dev", _clientConfig.ClusterName);
         }
 
         [Test]
         public void TestListenerConfig()
         {
-            var listenerConfigs = _clientConfig.GetListenerConfigs();
+            var listenerConfigs = _clientConfig.ListenerConfigs;
 
-            Assert.That(listenerConfigs, Has.Count.EqualTo(3));
-            Assert.That(listenerConfigs[0].GetClassName(), Is.EqualTo("Hazelcast.Examples.MembershipListener"));
-            Assert.That(listenerConfigs[1].GetClassName(), Is.EqualTo("Hazelcast.Examples.InstanceListener"));
-            Assert.That(listenerConfigs[2].GetClassName(), Is.EqualTo("Hazelcast.Examples.MigrationListener"));
+            Assert.That(listenerConfigs, Has.Count.EqualTo(2));
+            Assert.That(listenerConfigs[0].TypeName, Is.EqualTo("Hazelcast.Examples.MembershipListener"));
+            Assert.That(listenerConfigs[1].TypeName, Is.EqualTo("Hazelcast.Examples.MigrationListener"));
         }
 
         [Test]
@@ -56,49 +55,49 @@ namespace Hazelcast.Client.Test.Config
             var nearCacheConfig = _clientConfig.GetNearCacheConfig("asd");
             Assert.That(nearCacheConfig, Is.Not.Null);
 
-            Assert.That(nearCacheConfig.GetName(), Is.EqualTo("asd"));
-            Assert.That(nearCacheConfig.GetMaxSize(), Is.EqualTo(2000));
-            Assert.That(nearCacheConfig.GetTimeToLiveSeconds(), Is.EqualTo(100));
-            Assert.That(nearCacheConfig.GetMaxIdleSeconds(), Is.EqualTo(100));
-            Assert.That(nearCacheConfig.GetEvictionPolicy(), Is.EqualTo("LFU"));
-            Assert.That(nearCacheConfig.IsInvalidateOnChange(), Is.True);
-            Assert.That(nearCacheConfig.GetInMemoryFormat(), Is.EqualTo(InMemoryFormat.Object));
+            Assert.That(nearCacheConfig.Name, Is.EqualTo("asd"));
+            Assert.That(nearCacheConfig.MaxSize, Is.EqualTo(2000));
+            Assert.That(nearCacheConfig.TimeToLiveSeconds, Is.EqualTo(100));
+            Assert.That(nearCacheConfig.MaxIdleSeconds, Is.EqualTo(100));
+            Assert.That(nearCacheConfig.EvictionPolicy, Is.EqualTo(EvictionPolicy.Lfu));
+            Assert.That(nearCacheConfig.InvalidateOnChange, Is.True);
+            Assert.That(nearCacheConfig.InMemoryFormat, Is.EqualTo(InMemoryFormat.Object));
         }
 
         [Test]
         public void TestNetworkConfig()
         {
-            Assert.That(_clientConfig.GetNetworkConfig().GetAddresses(), Contains.Item("127.0.0.1"));
-            Assert.That(_clientConfig.GetNetworkConfig().GetAddresses(), Contains.Item("127.0.0.2"));
-            Assert.That(_clientConfig.GetNetworkConfig().IsSmartRouting(), Is.True);
-            Assert.That(_clientConfig.GetNetworkConfig().IsRedoOperation(), Is.True);
-            Assert.That(_clientConfig.GetNetworkConfig().GetConnectionTimeout(), Is.EqualTo(60000));
+            Assert.That(_clientConfig.NetworkConfig.Addresses, Contains.Item("127.0.0.1"));
+            Assert.That(_clientConfig.NetworkConfig.Addresses, Contains.Item("127.0.0.2"));
+            Assert.That(_clientConfig.NetworkConfig.SmartRouting, Is.True);
+            Assert.That(_clientConfig.NetworkConfig.RedoOperation, Is.True);
+            Assert.That(_clientConfig.NetworkConfig.ConnectionTimeout, Is.EqualTo(60000));
 
-            var socketInterceptorConfig = _clientConfig.GetNetworkConfig().GetSocketInterceptorConfig();
-            Assert.That(socketInterceptorConfig, Is.Not.Null);
-            Assert.That(socketInterceptorConfig.IsEnabled(), Is.True);
-            Assert.That(socketInterceptorConfig.GetClassName(), Is.EqualTo("com.hazelcast.examples.MySocketInterceptor"));
-            Assert.That(socketInterceptorConfig.GetProperty("foo"), Is.EqualTo("bar"));
+            //TODO remove socket interceptor
+            // var socketInterceptorConfig = _clientConfig.NetworkConfig.SocketInterceptorConfig;
+            // Assert.That(socketInterceptorConfig, Is.Not.Null);
+            // Assert.That(socketInterceptorConfig.IsEnabled(), Is.True);
+            // Assert.That(socketInterceptorConfig.GetClassName(), Is.EqualTo("Hazelcast.Examples.MySocketInterceptor"));
+            // Assert.That(socketInterceptorConfig.GetProperty("foo"), Is.EqualTo("bar"));
 
-            var socketOptions = _clientConfig.GetNetworkConfig().GetSocketOptions();
+            var socketOptions = _clientConfig.NetworkConfig.SocketOptions;
 
             Assert.That(socketOptions, Is.Not.Null);
-            Assert.That(socketOptions.GetTimeout(), Is.EqualTo(-1));
-            Assert.That(socketOptions.GetLingerSeconds(), Is.EqualTo(3));
-            Assert.That(socketOptions.GetBufferSize(), Is.EqualTo(32));
-            Assert.That(socketOptions.IsKeepAlive(), Is.True);
-            Assert.That(socketOptions.IsTcpNoDelay(), Is.False);
-            Assert.That(socketOptions.IsReuseAddress(), Is.True);
+            Assert.That(socketOptions.LingerSeconds, Is.EqualTo(3));
+            Assert.That(socketOptions.BufferSize, Is.EqualTo(128));
+            Assert.That(socketOptions.KeepAlive, Is.True);
+            Assert.That(socketOptions.TcpNoDelay, Is.False);
+            Assert.That(socketOptions.ReuseAddress, Is.True);
         }
 
         
         [Test]
         public void TestCloudConfig() 
         {
-            var cloudConfig = _clientConfig.GetNetworkConfig().GetCloudConfig();
+            var cloudConfig = _clientConfig.NetworkConfig.HazelcastCloudConfig;
             Assert.That(cloudConfig, Is.Not.Null);
-            Assert.That(cloudConfig.IsEnabled(), Is.False);
-            Assert.That(cloudConfig.GetDiscoveryToken(), Is.EqualTo("EXAMPLE_TOKEN"));
+            Assert.That(cloudConfig.Enabled, Is.False);
+            Assert.That(cloudConfig.DiscoveryToken, Is.EqualTo("EXAMPLE_TOKEN"));
         }
 
         // [Test]
@@ -107,9 +106,9 @@ namespace Hazelcast.Client.Test.Config
         //     var proxyFactoryConfigs = _clientConfig.GetProxyFactoryConfigs();
         //     Assert.That(proxyFactoryConfigs, Has.Count.EqualTo(3));
         //
-        //     Assert.That(proxyFactoryConfigs[0].GetClassName(), Is.EqualTo("com.hazelcast.examples.ProxyXYZ1"));
-        //     Assert.That(proxyFactoryConfigs[1].GetClassName(), Is.EqualTo("com.hazelcast.examples.ProxyXYZ2"));
-        //     Assert.That(proxyFactoryConfigs[2].GetClassName(), Is.EqualTo("com.hazelcast.examples.ProxyXYZ3"));
+        //     Assert.That(proxyFactoryConfigs[0].GetClassName(), Is.EqualTo("Hazelcast.Examples.ProxyXYZ1"));
+        //     Assert.That(proxyFactoryConfigs[1].GetClassName(), Is.EqualTo("Hazelcast.Examples.ProxyXYZ2"));
+        //     Assert.That(proxyFactoryConfigs[2].GetClassName(), Is.EqualTo("Hazelcast.Examples.ProxyXYZ3"));
         //
         //     Assert.That(proxyFactoryConfigs[0].GetService(), Is.EqualTo("sampleService1"));
         //     Assert.That(proxyFactoryConfigs[1].GetService(), Is.EqualTo("sampleService2"));
@@ -134,30 +133,30 @@ namespace Hazelcast.Client.Test.Config
         [Test]
         public void TestSerializationConfig()
         {
-            var serializationConfig = _clientConfig.GetSerializationConfig();
-            Assert.That(serializationConfig.GetPortableVersion(), Is.EqualTo(3));
+            var serializationConfig = _clientConfig.SerializationConfig;
+            Assert.That(serializationConfig.PortableVersion, Is.EqualTo(3));
 
-            var dsClasses = serializationConfig.GetDataSerializableFactoryClasses();
+            var dsClasses = serializationConfig.DataSerializableFactoryClasses;
             Assert.That(dsClasses, Has.Count.EqualTo(1));
-            Assert.That(dsClasses[1], Is.EqualTo("com.hazelcast.examples.DataSerializableFactory"));
+            Assert.That(dsClasses[1], Is.EqualTo("Hazelcast.Examples.DataSerializableFactory"));
 
-            var pfClasses = serializationConfig.GetPortableFactoryClasses();
+            var pfClasses = serializationConfig.PortableFactoryClasses;
             Assert.That(pfClasses, Has.Count.EqualTo(1));
-            Assert.That(pfClasses[1], Is.EqualTo("com.hazelcast.examples.PortableFactory"));
+            Assert.That(pfClasses[1], Is.EqualTo("Hazelcast.Examples.PortableFactory"));
 
-            var serializerConfigs = serializationConfig.GetSerializerConfigs();
+            var serializerConfigs = serializationConfig.SerializerConfigs;
             Assert.That(serializerConfigs, Has.Count.EqualTo(1));
             var serializerConfig = serializerConfigs.First();
 
-            Assert.AreEqual("com.hazelcast.examples.DummyType", serializerConfig.GetTypeClassName());
-            Assert.AreEqual("com.hazelcast.examples.SerializerFactory", serializerConfig.GetClassName());
+            Assert.AreEqual("Hazelcast.Examples.DummyType", serializerConfig.GetTypeClassName());
+            Assert.AreEqual("Hazelcast.Examples.SerializerFactory", serializerConfig.GetClassName());
 
-            var globalSerializerConfig = serializationConfig.GetGlobalSerializerConfig();
-            Assert.AreEqual("com.hazelcast.examples.GlobalSerializerFactory", globalSerializerConfig.GetClassName());
+            var globalSerializerConfig = serializationConfig.GlobalSerializerConfig;
+            Assert.AreEqual("Hazelcast.Examples.GlobalSerializerFactory", globalSerializerConfig.TypeName);
 
-            Assert.AreEqual(ByteOrder.BigEndian, serializationConfig.GetByteOrder());
-            Assert.AreEqual(true, serializationConfig.IsCheckClassDefErrors());
-            Assert.AreEqual(true, serializationConfig.IsUseNativeByteOrder());
+            Assert.AreEqual(ByteOrder.BigEndian, serializationConfig.ByteOrder);
+            Assert.AreEqual(true, serializationConfig.CheckClassDefErrors);
+            Assert.AreEqual(true, serializationConfig.UseNativeByteOrder);
         }
     }
 }

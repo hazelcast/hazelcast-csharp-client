@@ -34,25 +34,27 @@ namespace Hazelcast.Client.Test
 
         protected override string GetServerConfig()
         {
-            return Resources.hazelcast_stat;
+            return Resources.HazelcastStat;
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             Environment.SetEnvironmentVariable("hazelcast.client.statistics.enabled", "true");
             base.ConfigureClient(config);
-            
-            var nearCacheConfig = new NearCacheConfig()
-                .SetInvalidateOnChange(false)
-                .SetInMemoryFormat(InMemoryFormat.Object)
-                .SetEvictionPolicy("LRU")
-                .SetMaxIdleSeconds(1)
-                .SetMaxSize(1000);
-            config.AddNearCacheConfig("nearCachedMap*", nearCacheConfig);
 
-            config.GetSerializationConfig().AddPortableFactory(1, new PortableFactory());
-            config.GetSerializationConfig()
-                .AddDataSerializableFactory(IdentifiedFactory.FactoryId, new IdentifiedFactory());
+            var nearCacheConfig = new NearCacheConfig
+            {
+                InvalidateOnChange = false,
+                InMemoryFormat = InMemoryFormat.Object,
+                EvictionPolicy = EvictionPolicy.Lru,
+                MaxIdleSeconds = 1,
+                MaxSize = 1000
+            };
+            config.NearCacheConfigs.Add("nearCachedMap*", nearCacheConfig);
+
+            config.SerializationConfig.PortableFactories.Add(1, new PortableFactory());
+            config.SerializationConfig
+                .DataSerializableFactories.Add(IdentifiedFactory.FactoryId, new IdentifiedFactory());
         }
 
         [Test]

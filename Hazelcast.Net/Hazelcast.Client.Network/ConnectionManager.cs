@@ -44,7 +44,7 @@ namespace Hazelcast.Client.Network
         private readonly AtomicInteger _connectionIdGen = new AtomicInteger();
         
         private readonly HazelcastClient _client;
-        private readonly ClientNetworkConfig _networkConfig;
+        private readonly NetworkConfig _networkConfig;
 
         private readonly ConcurrentDictionary<Address, IPEndPoint> _addressIPEndPointCache =
             new ConcurrentDictionary<Address, IPEndPoint>();
@@ -81,10 +81,10 @@ namespace Hazelcast.Client.Network
             _client = client;
             _loadBalancer = client.LoadBalancer;
             //
-            var config = client.ClientConfig;
-            _networkConfig = config.GetNetworkConfig();
-            IsSmartRoutingEnabled = _networkConfig.IsSmartRouting();
-            _labels = client.ClientConfig.Labels;
+            var config = client.Configuration;
+            _networkConfig = config.NetworkConfig;
+            IsSmartRoutingEnabled = _networkConfig.SmartRouting;
+            _labels = client.Configuration.Labels;
 
             //TODO outboundPorts
             // this.networking = initNetworking();
@@ -95,16 +95,16 @@ namespace Hazelcast.Client.Network
 
             _authenticationTimeout = _heartbeat.HeartbeatTimeout;
             _shuffleMemberList = EnvironmentUtil.ReadBool("hazelcast.client.shuffle.member.list") ?? false;
-            _waitStrategy = InitializeWaitStrategy(client.ClientConfig);
+            _waitStrategy = InitializeWaitStrategy(client.Configuration);
 
-            var connectionStrategyConfig = client.ClientConfig.GetConnectionStrategyConfig();
+            var connectionStrategyConfig = client.Configuration.ConnectionStrategyConfig;
             _asyncStart = connectionStrategyConfig.AsyncStart;
             _reconnectMode = connectionStrategyConfig.ReconnectMode;
         }
 
-        private WaitStrategy InitializeWaitStrategy(ClientConfig clientConfig)
+        private WaitStrategy InitializeWaitStrategy(Configuration clientConfig)
         {
-            var connectionStrategyConfig = clientConfig.GetConnectionStrategyConfig();
+            var connectionStrategyConfig = clientConfig.ConnectionStrategyConfig;
             var expoRetryConfig = connectionStrategyConfig.ConnectionRetryConfig;
             return new WaitStrategy(expoRetryConfig.InitialBackoffMillis, expoRetryConfig.MaxBackoffMillis,
                 expoRetryConfig.Multiplier, expoRetryConfig.ClusterConnectTimeoutMillis, expoRetryConfig.Jitter);
@@ -165,7 +165,7 @@ namespace Hazelcast.Client.Network
 
             // notify when no succeeded cluster connection is found
             var msg =
-                $"Unable to connect to any address from the cluster with name:{_client.ClientConfig.GetClusterName()}. The following addresses were tried: {string.Join(", ", triedAddresses)}";
+                $"Unable to connect to any address from the cluster with name:{_client.Configuration.ClusterName}. The following addresses were tried: {string.Join(", ", triedAddresses)}";
 
             throw new InvalidOperationException(msg, new AggregateException(exceptions));
         }
@@ -495,7 +495,7 @@ namespace Hazelcast.Client.Network
             var serializationVersion = serializationService.GetVersion();
 
             var credentials = _client.CredentialsFactory.NewCredentials();
-            var clusterName = _client.ClientConfig.GetClusterName();
+            var clusterName = _client.Configuration.ClusterName;
 
             var dllVersion = VersionUtil.GetDllVersion();
             var clientGuid = _client.ClientGuid;

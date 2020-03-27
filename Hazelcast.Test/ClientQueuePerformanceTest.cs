@@ -37,8 +37,8 @@ namespace Hazelcast.Client.Test
         /// <exception cref="System.Exception"></exception>
         public static void Mainwq(string[] args)
         {
-            var config = new ClientConfig();
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
+            var config = new Configuration();
+            config.NetworkConfig.Addresses.Add("127.0.0.1");
             var client = HazelcastClient.NewHazelcastClient(config);
 
             q = client.GetQueue<object>("test");

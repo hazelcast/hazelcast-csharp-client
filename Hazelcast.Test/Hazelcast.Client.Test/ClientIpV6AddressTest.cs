@@ -29,7 +29,7 @@ namespace Hazelcast.Client.Test
         public void Setup()
         {
             _remoteController = CreateRemoteController();
-            var configStr = Resources.hazelcast_ipv6;
+            var configStr = Resources.HazelcastIpv6;
             configStr=configStr.Replace("PUBLIC_IP", GetLocalIpV6Address());
 
             _cluster = CreateCluster(_remoteController, configStr);
@@ -50,7 +50,7 @@ namespace Hazelcast.Client.Test
         private static void AssertClientWithAddress(string address)
         {
             var client =
-                new HazelcastClientFactory().CreateClient(config => { config.GetNetworkConfig().AddAddress(address); });
+                new HazelcastClientFactory().CreateClient(config => { config.NetworkConfig.AddAddress(address); });
 
             var map = client.GetMap<string, string>("ipv6");
             map.Put("key", "val");

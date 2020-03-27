@@ -57,9 +57,9 @@ namespace Hazelcast.Examples.Org.Website.Samples
     {
         public static void Run(string[] args)
         {
-            var clientConfig = new ClientConfig();
-            clientConfig.GetSerializationConfig()
-                .AddSerializerConfig(new SerializerConfig()
+            var clientConfig = new Configuration();
+            clientConfig.SerializationConfig
+                .SerializerConfigs.Add(new SerializerConfig()
                     .SetImplementation(new CustomSerializer())
                     .SetTypeClass(typeof(CustomSerializableType)));
             

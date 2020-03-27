@@ -30,16 +30,15 @@ namespace Hazelcast.Examples.Client
             //set the statistics send period, default value is 3 seconds
             Environment.SetEnvironmentVariable("hazelcast.client.statistics.period.seconds", "3");
 
-            var config = new ClientConfig();
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
+            var config = new Configuration();
+            config.NetworkConfig.AddAddress("127.0.0.1");
 
-            var nearCacheConfig = new NearCacheConfig();
-            nearCacheConfig.SetMaxSize(1000)
-                .SetInvalidateOnChange(true)
-                .SetEvictionPolicy("Lru")
-                .SetInMemoryFormat(InMemoryFormat.Binary);
+            var nearCacheConfig = new NearCacheConfig
+            {
+                MaxSize = 1000, InvalidateOnChange = true, EvictionPolicy = EvictionPolicy.Lru, InMemoryFormat = InMemoryFormat.Binary
+            };
 
-            config.AddNearCacheConfig("myMap", nearCacheConfig);
+            config.NearCacheConfigs.Add("myMap", nearCacheConfig);
 
             var client = HazelcastClient.NewHazelcastClient(config);
 

@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Client.Network;
 using Hazelcast.Client.Protocol;
+using Hazelcast.Config;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Util;
@@ -29,9 +30,6 @@ namespace Hazelcast.Client.Spi
     internal class ListenerService : IConnectionListener, IDisposable
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(ListenerService));
-
-        private const int DefaultEventThreadCount = 3;
-        private const int DefaultEventQueueCapacity = 1000000;
 
         private readonly HazelcastClient _client;
 
@@ -48,14 +46,13 @@ namespace Hazelcast.Client.Spi
         {
             _client = client;
             _connectionManager = client.ConnectionManager;
-            var eventTreadCount = EnvironmentUtil.ReadInt("hazelcast.client.event.thread.count") ?? DefaultEventThreadCount;
-            var eventQueueCapacity =
-                EnvironmentUtil.ReadInt("hazelcast.client.event.queue.capacity") ?? DefaultEventQueueCapacity;
+            var eventTreadCount = client.HazelcastProperties.IntValue(HazelcastProperties.EventThreadCount);
+            var eventQueueCapacity = client.HazelcastProperties.IntValue(HazelcastProperties.EventQueueCapacity);
             _eventExecutor = new StripedTaskScheduler(eventTreadCount, eventQueueCapacity, client.Name + ".event");
             _registrationScheduler = new StripedTaskScheduler(1, eventQueueCapacity, client.Name + ".eventRegistration");
             _registrations = new ConcurrentDictionary<Guid, ListenerRegistration>();
             _eventHandlers = new ConcurrentDictionary<long, DistributedEventHandler>();
-            RegisterLocalOnly = client.ClientConfig.GetNetworkConfig().IsSmartRouting();
+            RegisterLocalOnly = client.Configuration.NetworkConfig.SmartRouting;
         }
 
         public void Start()

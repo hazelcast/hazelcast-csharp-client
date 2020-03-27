@@ -25,23 +25,26 @@ namespace Hazelcast.Examples.Ssl
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var clientConfig = new ClientConfig();
-            var clientNetworkConfig = clientConfig.GetNetworkConfig();
+            var clientConfig = new Configuration();
+            var clientNetworkConfig = clientConfig.NetworkConfig;
 
             //replace with your actual server host/ip and port
             clientNetworkConfig.AddAddress("127.0.0.1:5701");
 
+            
             //Server certificate will be validated by OS,
             //signed certificates will just work,
             //self-signed certificates should be registered by OS depended way and allowed.
-            clientNetworkConfig.GetSSLConfig().SetEnabled(true);
-
-            //in order to disable certificate validating uncomment below line
-            //clientNetworkConfig.GetSSLConfig().SetProperty(SSLConfig.ValidateCertificateChain, "false");
-
-            //in order to validate the server certificate name use below
-            //clientNetworkConfig.GetSSLConfig().SetProperty(SSLConfig.ValidateCertificateName, "true");
-            //clientNetworkConfig.GetSSLConfig().SetProperty(SSLConfig.CertificateName, "CERTIFICATE CN OR SAN VALUE HERE");
+            clientNetworkConfig.ConfigureSSL(sslConfig =>
+            {
+                sslConfig.Enabled = true;
+                //in order to disable certificate validating uncomment below line
+                // sslConfig.ValidateCertificateChain = false;
+                
+                //in order to validate the server certificate name use below
+                // sslConfig.ValidateCertificateName = true;
+                // sslConfig.CertificateName = "CERTIFICATE CN OR SAN VALUE HERE";
+            });
 
             var client = HazelcastClient.NewHazelcastClient(clientConfig);
 

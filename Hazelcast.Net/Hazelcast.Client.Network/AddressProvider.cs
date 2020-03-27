@@ -35,27 +35,28 @@ namespace Hazelcast.Client.Network
         private readonly bool _canTranslate;
 
 
-        public AddressProvider(ClientConfig clientConfig)
+        internal AddressProvider(Configuration config) : this(config.NetworkConfig, new HazelcastProperties(config.Properties))
         {
-            var networkConfig = clientConfig.GetNetworkConfig();
-            var configAddressList = networkConfig.GetAddresses();
-            var cloudConfig = networkConfig.GetCloudConfig();
+        }
+        public AddressProvider(NetworkConfig networkConfig, HazelcastProperties properties)
+        {
+            var configAddressList = networkConfig.Addresses;
+            var cloudConfig = networkConfig.HazelcastCloudConfig;
 
             //Fail fast validate multiple setup
-            if (configAddressList.Count > 0 && cloudConfig != null && cloudConfig.IsEnabled())
+            if (configAddressList.Count > 0 && cloudConfig != null && cloudConfig.Enabled)
             {
                 throw new InvalidConfigurationException("Only one address configuration method can be enabled at a time.");
             }
 
-            if (cloudConfig != null && cloudConfig.IsEnabled())
+            if (cloudConfig != null && cloudConfig.Enabled)
             {
-                var token = cloudConfig.GetDiscoveryToken();
-                var connectionTimeoutInMillis = networkConfig.GetConnectionTimeout();
+                var token = cloudConfig.DiscoveryToken;
+                var connectionTimeoutInMillis = networkConfig.ConnectionTimeout;
                 connectionTimeoutInMillis = connectionTimeoutInMillis == 0 ? int.MaxValue : connectionTimeoutInMillis;
-                    
-                var urlBase = Environment.GetEnvironmentVariable(HazelcastCloudDiscovery.CloudUrlBaseProperty);
-                
-                _hzCloudDiscovery = new HazelcastCloudDiscovery(token, connectionTimeoutInMillis, urlBase??HazelcastCloudDiscovery.CloudUrlBase);
+
+                var urlBase = properties.StringValue(HazelcastProperties.CloudUrlBase);
+                _hzCloudDiscovery = new HazelcastCloudDiscovery(token, connectionTimeoutInMillis, urlBase);
                 _addressProviderFn = GetHzCloudConfigAddresses;
                 _canTranslate = true;
             }
