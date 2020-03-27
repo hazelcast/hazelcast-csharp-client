@@ -7,6 +7,7 @@
     <title>Hazelcast .Net Client</title>
     <Description>Open source .NET client for Hazelcast, the open source in memory distributed computing platform.</Description>
     <OutputType>Library</OutputType>
+    <LangVersion>7.3</LangVersion>
     <RootNamespace>
     </RootNamespace>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\Hazelcast.Net.xml</DocumentationFile>

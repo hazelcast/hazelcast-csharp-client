@@ -25,12 +25,14 @@ namespace Hazelcast.Examples.Cloud
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var clientConfig = new ClientConfig();
-            var clientNetworkConfig = clientConfig.GetNetworkConfig();
+            var clientConfig = new Configuration();
+            var clientNetworkConfig = clientConfig.NetworkConfig;
 
-            clientNetworkConfig.GetCloudConfig()
-                .SetEnabled(true)
-                .SetDiscoveryToken("DISCOVERY_TOKEN_HASH");//Discovery token copied from Cloud console
+            clientNetworkConfig.ConfigureHazelcastCloud(hzCloudConfig =>
+            {
+                hzCloudConfig.Enabled = true; 
+                hzCloudConfig.DiscoveryToken = "DISCOVERY_TOKEN_HASH";//Discovery token copied from Cloud console
+            });
 
             var client = HazelcastClient.NewHazelcastClient(clientConfig);
 

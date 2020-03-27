@@ -80,9 +80,9 @@ namespace Hazelcast.Examples.Org.Website.Samples
         public static void Run(string[] args)
         {
             // Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-            var clientConfig = new ClientConfig();
-            clientConfig.GetSerializationConfig()
-                .AddPortableFactory(PortableFactory.FactoryId, new PortableFactory());
+            var clientConfig = new Configuration();
+            clientConfig.SerializationConfig
+                .PortableFactories.Add(PortableFactory.FactoryId, new PortableFactory());
             var hz = HazelcastClient.NewHazelcastClient(clientConfig);
             // Get a Distributed Map called "users"
             var users = hz.GetMap<string, User>("users");

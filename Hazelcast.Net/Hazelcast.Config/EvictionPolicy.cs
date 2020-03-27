@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,11 @@
 
 namespace Hazelcast.Config
 {
-    /// <summary>
-    /// Represents the security configuration for a client.
-    /// </summary>
-    public class ClientSecurityConfig
+    public enum EvictionPolicy
     {
-        /// <summary>
-        /// Gets or sets the credentials factory configuration.
-        /// </summary>
-        public CredentialsFactoryConfig CredentialsFactoryConfig { get; set; } = new CredentialsFactoryConfig();
+        None,
+        Lru,
+        Lfu,
+        Random
     }
 }

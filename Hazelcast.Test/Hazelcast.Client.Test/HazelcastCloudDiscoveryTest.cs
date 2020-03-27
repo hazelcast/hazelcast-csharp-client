@@ -99,7 +99,7 @@ namespace Hazelcast.Client.Test
         [TearDown]
         public void Teardown()
         {
-            Environment.SetEnvironmentVariable(HazelcastCloudDiscovery.CloudUrlBaseProperty, null);
+            // Environment.SetEnvironmentVariable(HazelcastProperties.CloudUrlBase.Name, null);
         }
 
         [Test]
@@ -125,9 +125,13 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestHzCloudAddressProvider()
         {
-            Environment.SetEnvironmentVariable(HazelcastCloudDiscovery.CloudUrlBaseProperty, LocalTestBaseUrl);
-            var cfg = new ClientConfig();
-            cfg.GetNetworkConfig().GetCloudConfig().SetEnabled(true).SetDiscoveryToken(DiscoveryToken);
+            Environment.SetEnvironmentVariable(HazelcastProperties.CloudUrlBase.Name, LocalTestBaseUrl);
+            var cfg = new Configuration();
+            cfg.NetworkConfig.ConfigureHazelcastCloud(hzCloudCfg =>
+            {
+                hzCloudCfg.Enabled = true;
+                hzCloudCfg.DiscoveryToken = DiscoveryToken;
+            });
 
             var addressProvider = new AddressProvider(cfg);
             var providedAddresses = addressProvider.GetAddresses().ToList();

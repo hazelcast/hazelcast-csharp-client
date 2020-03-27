@@ -25,11 +25,13 @@ namespace Hazelcast.NearCache
 {
     internal class NearCache : BaseNearCache
     {
+        private readonly int _maxToleratedMissCount;
         private RepairingHandler _repairingHandler;
 
         public NearCache(string name, HazelcastClient client, NearCacheConfig nearCacheConfig) : base(name, client,
             nearCacheConfig)
         {
+            _maxToleratedMissCount = GetMaxToleratedMissCount(client);
         }
 
         public RepairingHandler RepairingHandler => _repairingHandler;
@@ -38,7 +40,7 @@ namespace Hazelcast.NearCache
         {
             if (InvalidateOnChange)
             {
-                _repairingHandler = new RepairingHandler(Client.ClientGuid, this, Client.PartitionService);
+                _repairingHandler = new RepairingHandler(Client.ClientGuid, this, Client.PartitionService, _maxToleratedMissCount);
                 RegisterInvalidateListener();
             }
         }
@@ -106,5 +108,13 @@ namespace Hazelcast.NearCache
                 Logger.Severe("-----------------\n Near Cache is not initialized!!! \n-----------------", e);
             }
         }
+        
+        private static int GetMaxToleratedMissCount(HazelcastClient client)
+        {
+            var maxToleratedMissCount = client.HazelcastProperties.IntValue(HazelcastProperties.MaxToleratedMissCountProperty);
+            return ValidationUtil.CheckNotNegative(maxToleratedMissCount,
+                $"max-tolerated-miss-count cannot be < 0 but found {maxToleratedMissCount}");
+        }
+
     }
 }

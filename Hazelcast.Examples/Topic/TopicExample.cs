@@ -27,8 +27,8 @@ namespace Hazelcast.Examples.Topic
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var config = new ClientConfig();
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
+            var config = new Configuration();
+            config.NetworkConfig.AddAddress("127.0.0.1");
             var client = HazelcastClient.NewHazelcastClient(config);
 
             var topic = client.GetTopic<string>("topic-example");

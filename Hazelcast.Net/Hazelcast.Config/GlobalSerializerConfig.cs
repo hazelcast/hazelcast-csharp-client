@@ -21,49 +21,16 @@ namespace Hazelcast.Config
     /// </summary>
     public class GlobalSerializerConfig
     {
-        private string _className;
+        public string TypeName { get; set; }
 
-        private ISerializer _implementation;
-        private bool _overrideClrSerialization;
-
-        public virtual string GetClassName()
-        {
-            return _className;
-        }
-
-        public virtual ISerializer GetImplementation()
-        {
-            return _implementation;
-        }
-
-        public virtual GlobalSerializerConfig SetClassName(string className)
-        {
-            _className = className;
-            return this;
-        }
-
-        public virtual GlobalSerializerConfig SetImplementation<T>(IStreamSerializer<T> implementation)
-        {
-            _implementation = implementation;
-            return this;
-        }
-
-        public GlobalSerializerConfig SetOverrideClrSerialization(bool overrideClrSerialization)
-        {
-            _overrideClrSerialization = overrideClrSerialization;
-            return this;
-        }
-
-        public bool GetOverrideClrSerialization()
-        {
-            return _overrideClrSerialization;
-        }
+        public ISerializer Implementation { get; set; }
+        public bool OverrideClrSerialization { get; set; }
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return string.Format("ClassName: {0}, Implementation: {1}, OverrideClrSerialization: {2}",
-                _className, _implementation, _overrideClrSerialization);
+            return
+                $"TypeName: {TypeName}, Implementation: {Implementation}, OverrideClrSerialization: {OverrideClrSerialization}";
         }
     }
 }

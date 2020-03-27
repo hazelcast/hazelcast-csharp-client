@@ -31,7 +31,7 @@ namespace Hazelcast.Util
             private set => Interlocked.Exchange(ref _members, value);
         }
 
-        public void Init(ICluster cluster, ClientConfig config)
+        public void Init(ICluster cluster, Configuration config)
         {
             Volatile.Write(ref _cluster, cluster);
             SetMembersFromCluster();

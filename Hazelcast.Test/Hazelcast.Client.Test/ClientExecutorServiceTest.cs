@@ -27,7 +27,7 @@ namespace Hazelcast.Client.Test
         [SetUp]
         public void Setup()
         {
-            _executionService = new ExecutionService("", 10);
+            _executionService = new ExecutionService("");
         }
 
         [TearDown]

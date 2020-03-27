@@ -28,16 +28,16 @@ namespace Hazelcast.Examples.Map
     {
         public static void Run(string[] args)
         {
-            var clientConfig = new ClientConfig();
-            clientConfig.GetNetworkConfig().AddAddress("127.0.0.1");
-            //clientConfig.GetNetworkConfig().AddAddress("10.0.0.2:5702");
+            var clientConfig = new Configuration();
+            clientConfig.NetworkConfig.AddAddress("127.0.0.1");
+            //clientConfig.NetworkConfig.AddAddress("10.0.0.2:5702");
 
             var sc = new SerializerConfig()
                 .SetImplementation(new CustomSerializer())
                 .SetTypeClass(typeof(Person));
 
             //Custom Serialization setup up for Person Class.
-            clientConfig.GetSerializationConfig().AddSerializerConfig(sc);
+            clientConfig.SerializationConfig.SerializerConfigs.Add(sc);
 
 
             IHazelcastInstance client = HazelcastClient.NewHazelcastClient(clientConfig);

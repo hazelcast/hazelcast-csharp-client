@@ -55,11 +55,11 @@ namespace Hazelcast.Client.Spi
         public ClusterService(HazelcastClient client)
         {
             _client = client;
-            _labels = new ReadOnlyCollection<string>(_client.ClientConfig.Labels.ToList());
+            _labels = new ReadOnlyCollection<string>(_client.Configuration.Labels.ToList());
             _connectionManager = _client.ConnectionManager;
             _partitionService = client.PartitionService;
             _clientInvocationService = client.InvocationService;
-            ClusterName = _client.ClientConfig.GetClusterName();
+            ClusterName = _client.Configuration.ClusterName;
         }
 
         public IMember GetMember(Guid guid)
@@ -73,8 +73,7 @@ namespace Hazelcast.Client.Spi
         public int Count => Members.Count;
 
         public IEnumerable<IMember> DataMemberList =>
-            _memberListSnapshot.Get().Members.Values.Where(member => member.IsLiteMember);
-
+            _memberListSnapshot.Get().Members.Values.Where(member => !member.IsLiteMember);
 
         public long ClusterTime => Clock.CurrentTimeMillis();
 

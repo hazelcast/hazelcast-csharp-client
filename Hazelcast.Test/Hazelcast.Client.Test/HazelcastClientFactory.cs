@@ -23,9 +23,9 @@ namespace Hazelcast.Client.Test
     {
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof (HazelcastClientFactory));
 
-        public IHazelcastInstance CreateClient(Action<ClientConfig> configure)
+        public IHazelcastInstance CreateClient(Action<Configuration> configure)
         {
-            var config = new ClientConfig();
+            var config = new Configuration();
             configure(config);
             return HazelcastClient.NewHazelcastClient(config);
         }

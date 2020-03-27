@@ -31,7 +31,7 @@ namespace Hazelcast.Client
         /// </summary>
         /// <param name="cluster">the Cluster this LoadBalancer uses to select members from</param>
         /// <param name="config">the ClientConfig</param>
-        void Init(ICluster cluster, ClientConfig config);
+        void Init(ICluster cluster, Configuration config);
 
         /// <summary>Returns the next member to route to</summary>
         /// <returns>Returns the next member or null if no member is available</returns>

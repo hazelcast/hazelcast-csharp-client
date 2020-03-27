@@ -46,14 +46,14 @@ namespace Hazelcast.Client.Test
             StopRemoteController(_remoteController);
         }
 
-        protected override void ConfigureGroup(ClientConfig config)
+        protected override void ConfigureGroup(Configuration config)
         {
-            config.SetClusterName(_cluster.Id);
+            config.ClusterName = _cluster.Id;
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
-            config.GetNetworkConfig().SetRedoOperation(true);
+            config.NetworkConfig.RedoOperation = true;
             base.ConfigureClient(config);
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.timeout", "5000");
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", "1000");
@@ -68,7 +68,7 @@ namespace Hazelcast.Client.Test
 
         private string GetServerConfig()
         {
-            return Resources.hazelcast_hb;
+            return Resources.HazelcastHb;
         }
 
         [Test]

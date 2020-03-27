@@ -76,11 +76,11 @@ namespace Hazelcast.IO.Serialization
             _config = config;
             if (_portableVersion < 0)
             {
-                _portableVersion = config.GetPortableVersion();
+                _portableVersion = config.PortableVersion;
             }
-            _checkClassDefErrors = config.IsCheckClassDefErrors();
-            _useNativeByteOrder = config.IsUseNativeByteOrder();
-            _byteOrder = config.GetByteOrder();
+            _checkClassDefErrors = config.CheckClassDefErrors;
+            _useNativeByteOrder = config.UseNativeByteOrder;
+            _byteOrder = config.ByteOrder;
             return this;
         }
 
@@ -152,7 +152,7 @@ namespace Hazelcast.IO.Serialization
             {
                 AddConfigDataSerializableFactories(_dataSerializableFactories, _config);
                 AddConfigPortableFactories(_portableFactories, _config);
-                _classDefinitions = _classDefinitions.Union(_config.GetClassDefinitions()).ToList();
+                _classDefinitions = _classDefinitions.Union(_config.ClassDefinitions).ToList();
             }
             //TODO: Add support for multiple versions
             var ss = new SerializationService(
@@ -166,15 +166,15 @@ namespace Hazelcast.IO.Serialization
                 _initialOutputBufferSize);
             if (_config != null)
             {
-                if (_config.GetGlobalSerializerConfig() != null)
+                if (_config.GlobalSerializerConfig != null)
                 {
-                    var globalSerializerConfig = _config.GetGlobalSerializerConfig();
-                    var serializer = globalSerializerConfig.GetImplementation();
+                    var globalSerializerConfig = _config.GlobalSerializerConfig;
+                    var serializer = globalSerializerConfig.Implementation;
                     if (serializer == null)
                     {
                         try
                         {
-                            var className = globalSerializerConfig.GetClassName();
+                            var className = globalSerializerConfig.TypeName;
                             var type = Type.GetType(className);
                             if (type != null)
                             {
@@ -191,9 +191,9 @@ namespace Hazelcast.IO.Serialization
                     {
                         aware.SetHazelcastInstance(_hazelcastInstance);
                     }
-                    ss.RegisterGlobal(serializer, globalSerializerConfig.GetOverrideClrSerialization());
+                    ss.RegisterGlobal(serializer, globalSerializerConfig.OverrideClrSerialization);
                 }
-                var typeSerializers = _config.GetSerializerConfigs();
+                var typeSerializers = _config.SerializerConfigs;
                 foreach (var serializerConfig in typeSerializers)
                 {
                     var serializer = serializerConfig.GetImplementation();
@@ -240,7 +240,7 @@ namespace Hazelcast.IO.Serialization
         private void AddConfigDataSerializableFactories(
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories, SerializationConfig config)
         {
-            foreach (var entry in config.GetDataSerializableFactories())
+            foreach (var entry in config.DataSerializableFactories)
             {
                 var factoryId = entry.Key;
                 var factory = entry.Value;
@@ -255,7 +255,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 dataSerializableFactories.Add(factoryId, factory);
             }
-            foreach (var entry in config.GetDataSerializableFactoryClasses())
+            foreach (var entry in config.DataSerializableFactoryClasses)
             {
                 var factoryId = entry.Key;
                 var factoryClassName = entry.Value;
@@ -297,7 +297,7 @@ namespace Hazelcast.IO.Serialization
         private void AddConfigPortableFactories(IDictionary<int, IPortableFactory> portableFactories,
             SerializationConfig config)
         {
-            foreach (var entry in config.GetPortableFactories())
+            foreach (var entry in config.PortableFactories)
             {
                 var factoryId = entry.Key;
                 var factory = entry.Value;
@@ -312,7 +312,7 @@ namespace Hazelcast.IO.Serialization
                 }
                 portableFactories.Add(factoryId, factory);
             }
-            foreach (var entry in config.GetPortableFactoryClasses())
+            foreach (var entry in config.PortableFactoryClasses)
             {
                 var factoryId = entry.Key;
                 var factoryClassName = entry.Value;

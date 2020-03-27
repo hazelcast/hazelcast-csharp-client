@@ -58,19 +58,18 @@ namespace Hazelcast.NearCache
         {
             _name = name;
             Client = client;
-            _maxSize = nearCacheConfig.GetMaxSize();
-            _maxIdleMillis = nearCacheConfig.GetMaxIdleSeconds() * 1000;
-            _inMemoryFormat = nearCacheConfig.GetInMemoryFormat();
-            _timeToLiveMillis = nearCacheConfig.GetTimeToLiveSeconds() * 1000;
-            _evictionPolicy =
-                (EvictionPolicy) Enum.Parse(typeof(EvictionPolicy), nearCacheConfig.GetEvictionPolicy(), true);
+            _maxSize = nearCacheConfig.MaxSize;
+            _maxIdleMillis = nearCacheConfig.MaxIdleSeconds * 1000;
+            _inMemoryFormat = nearCacheConfig.InMemoryFormat;
+            _timeToLiveMillis = nearCacheConfig.TimeToLiveSeconds * 1000;
+            _evictionPolicy = nearCacheConfig.EvictionPolicy;
             _records = new ConcurrentDictionary<IData, Lazy<NearCacheRecord>>();
             _canCleanUp = new AtomicBoolean(true);
             _canEvict = new AtomicBoolean(true);
             _lastCleanup = Clock.CurrentTimeMillis();
             _selectedComparer = GetComparer(_evictionPolicy);
             _stat = new NearCacheStatistics();
-            InvalidateOnChange = nearCacheConfig.IsInvalidateOnChange();
+            InvalidateOnChange = nearCacheConfig.InvalidateOnChange;
         }
 
         public ConcurrentDictionary<IData, Lazy<NearCacheRecord>> Records
@@ -395,13 +394,6 @@ namespace Hazelcast.NearCache
             {
                 return x.Value.Key.GetHashCode().CompareTo(y.Value.Key.GetHashCode());
             }
-        }
-
-        private enum EvictionPolicy
-        {
-            None,
-            Lru,
-            Lfu
         }
     }
 }

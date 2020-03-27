@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Client.Network;
 using Hazelcast.Config;
@@ -31,10 +32,10 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestConfigAddressProvider()
         {
-            var cfg = new ClientConfig();
-            cfg.GetNetworkConfig().AddAddress("10.0.0.1:5701", "10.0.0.2:5702", "10.0.0.3:5703");
+            var cfg = new Configuration();
+            cfg.NetworkConfig.AddAddress("10.0.0.1:5701", "10.0.0.2:5702", "10.0.0.3:5703");
 
-            var addressProvider = new AddressProvider(cfg);
+            var addressProvider = new AddressProvider(cfg.NetworkConfig, new HazelcastProperties(new Dictionary<string, string>()));
             var addresses = addressProvider.GetAddresses().ToList();
             Assert.AreEqual(addresses[0], new Address("10.0.0.1", 5701));
             Assert.AreEqual(addresses[1], new Address("10.0.0.2", 5702));
@@ -44,9 +45,9 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestConfigAddressProvider_emptyAddress()
         {
-            var cfg = new ClientConfig();
+            var cfg = new Configuration();
 
-            var addressProvider = new AddressProvider(cfg);
+            var addressProvider = new AddressProvider(cfg.NetworkConfig, new HazelcastProperties(new Dictionary<string, string>()));
             var addresses = addressProvider.GetAddresses().ToList();
             Assert.AreEqual(addresses[0], new Address("localhost", 5701));
             Assert.AreEqual(addresses[1], new Address("localhost", 5702));
@@ -56,13 +57,18 @@ namespace Hazelcast.Client.Test
         [Test]
         public void TestMultipleAddressProvider()
         {
-            var cfg = new ClientConfig();
-            cfg.GetNetworkConfig().AddAddress("10.0.0.1:5701", "10.0.0.2:5702", "10.0.0.3:5703");
-            cfg.GetNetworkConfig().GetCloudConfig().SetEnabled(true).SetDiscoveryToken("TOKEN");
+            var cfg = new Configuration();
+            cfg.NetworkConfig.AddAddress("10.0.0.1:5701", "10.0.0.2:5702", "10.0.0.3:5703");
+            cfg.NetworkConfig.ConfigureHazelcastCloud(hazelcastCloudConfig =>
+            {
+                hazelcastCloudConfig.Enabled = true;
+                hazelcastCloudConfig.DiscoveryToken = "TOKEN";
+            });
+            
 
             Assert.Catch<InvalidConfigurationException>(() =>
             {
-                var addressProvider = new AddressProvider(cfg);
+                var addressProvider = new AddressProvider(cfg.NetworkConfig, new HazelcastProperties(new Dictionary<string, string>()));
                 addressProvider.GetAddresses();
             });
         }

@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Hazelcast.Client;
 using Hazelcast.Client.Protocol.Codec;
 using Hazelcast.Client.Spi;
+using Hazelcast.Config;
 using Hazelcast.Logging;
 using Hazelcast.Net.Ext;
 using Hazelcast.Util;
@@ -29,17 +30,6 @@ namespace Hazelcast.NearCache
 {
     internal class NearCacheManager
     {
-        private const string ReconciliationIntervalSecondsProperty =
-            "hazelcast.invalidation.reconciliation.interval.seconds";
-
-        private const string MinReconciliationIntervalSecondsProperty =
-            "hazelcast.invalidation.min.reconciliation.interval.seconds";
-
-        private const string MaxToleratedMissCountProperty = "hazelcast.invalidation.max.tolerated.miss.count";
-
-        private const int ReconciliationIntervalSecondsDefault = 60;
-        private const int MinReconciliationIntervalSecondsDefault = 30;
-        private const int MaxToleratedMissCountDefault = 10;
         private const int AsyncResultWaitTimeoutMillis = 1 * 60 * 1000;
 
         private static readonly ILogger Logger = Logging.Logger.GetLogger(typeof(NearCacheManager));
@@ -76,7 +66,7 @@ namespace Hazelcast.NearCache
 
         public BaseNearCache GetOrCreateNearCache(string mapName)
         {
-            var nearCacheConfig = _client.ClientConfig.GetNearCacheConfig(mapName);
+            var nearCacheConfig = _client.Configuration.GetNearCacheConfig(mapName);
             return nearCacheConfig == null
                 ? null
                 : _caches.GetOrAdd(mapName, newMapName =>
@@ -94,14 +84,6 @@ namespace Hazelcast.NearCache
                 _repairingTask.Wait(TimeSpan.FromSeconds(120));
             }
             DestroyAllNearCache();
-        }
-
-        internal static int GetMaxToleratedMissCount()
-        {
-            var maxToleratedMissCount =
-                EnvironmentUtil.ReadInt(MaxToleratedMissCountProperty) ?? MaxToleratedMissCountDefault;
-            return ValidationUtil.CheckNotNegative(maxToleratedMissCount,
-                $"max-tolerated-miss-count cannot be < 0 but found {maxToleratedMissCount}");
         }
 
         private void DestroyAllNearCache()
@@ -171,17 +153,16 @@ namespace Hazelcast.NearCache
             }
         }
 
-        private static int GetReconciliationIntervalSeconds()
+        private int GetReconciliationIntervalSeconds()
         {
-            var reconciliationIntervalSeconds = EnvironmentUtil.ReadInt(ReconciliationIntervalSecondsProperty) ??
-                                                ReconciliationIntervalSecondsDefault;
-            var minReconciliationIntervalSeconds = EnvironmentUtil.ReadInt(MinReconciliationIntervalSecondsProperty) ??
-                                                   MinReconciliationIntervalSecondsDefault;
+            var reconciliationIntervalSeconds =
+                _client.HazelcastProperties.IntValue(HazelcastProperties.ReconciliationIntervalSecondsProperty);
+            var minReconciliationIntervalSeconds = _client.HazelcastProperties.IntValue(HazelcastProperties.MinReconciliationIntervalSecondsProperty);
             if (reconciliationIntervalSeconds < 0 || reconciliationIntervalSeconds > 0 &&
                 reconciliationIntervalSeconds < minReconciliationIntervalSeconds)
             {
                 var msg =
-                    $"Reconciliation interval can be at least {MinReconciliationIntervalSecondsDefault} seconds if it is not zero," +
+                    $"Reconciliation interval can be at least {HazelcastProperties.MinReconciliationIntervalSecondsProperty.DefaultValue} seconds if it is not zero," +
                     $" but {reconciliationIntervalSeconds} was configured. Note: Configuring a value of zero seconds disables the " +
                     $"reconciliation task.";
                 throw new ArgumentException(msg);

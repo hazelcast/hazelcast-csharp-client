@@ -45,7 +45,7 @@ namespace Hazelcast.Client.Spi
         internal PartitionService(HazelcastClient client)
         {
             _client = client;
-            _isSmart = client.ClientConfig.GetNetworkConfig().IsSmartRouting();
+            _isSmart = client.Configuration.NetworkConfig.SmartRouting;
         }
 
         internal void Start()

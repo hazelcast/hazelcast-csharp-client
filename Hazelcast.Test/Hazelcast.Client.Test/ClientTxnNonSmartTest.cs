@@ -46,15 +46,15 @@ namespace Hazelcast.Client.Test
             StopRemoteController(_remoteController);
         }
 
-        protected override void ConfigureGroup(ClientConfig config)
+        protected override void ConfigureGroup(Configuration config)
         {
-            config.SetClusterName(_cluster.Id);
+            config.ClusterName = _cluster.Id;
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
-            config.GetNetworkConfig().SetSmartRouting(false);
+            config.NetworkConfig.SmartRouting = false;
         }
 
         [Test]

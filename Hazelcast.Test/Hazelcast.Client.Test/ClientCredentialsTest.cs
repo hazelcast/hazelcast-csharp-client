@@ -169,7 +169,7 @@ namespace Hazelcast.Client.Test
     //
     //         var client = _clientFactory.CreateClient(clientConfig =>
     //         {
-    //             clientConfig.SetClusterName(_cluster.Id);
+    //             clientConfig.ClusterName = _cluster.Id;
     //             clientConfig.GetSecurityConfig().GetCredentialsFactoryConfig()
     //                 .SetImplementation(new UsernamePasswordCredentialsFactory());
     //         });
@@ -237,10 +237,10 @@ namespace Hazelcast.Client.Test
     //
     // internal class DummyCredentialFactory : ICredentialsFactory
     // {
-    //     internal ClientConfig config;
+    //     internal Configuration config;
     //     internal IDictionary<string, string> properties;
     //
-    //     public void Configure(ClientConfig config, IDictionary<string, string> properties)
+    //     public void Configure(Configuration config, IDictionary<string, string> properties)
     //     {
     //         this.config = config;
     //         this.properties = properties;

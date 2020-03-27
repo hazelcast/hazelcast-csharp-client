@@ -75,20 +75,20 @@ namespace Hazelcast.Client.Network
         public Exception CloseCause { get; private set; }
 
         public Connection(ConnectionManager connectionManager, InvocationService invocationService, int id, Address address,
-            ClientNetworkConfig clientNetworkConfig)
+            NetworkConfig clientNetworkConfig)
         {
             _connectionManager = connectionManager;
             _id = id;
 
             var isa = address.GetInetSocketAddress();
-            var socketOptions = clientNetworkConfig.GetSocketOptions();
+            var socketOptions = clientNetworkConfig.SocketOptions;
             try
             {
                 _clientSocket = new Socket(isa.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-                if (socketOptions.GetLingerSeconds() > 0)
+                if (socketOptions.LingerSeconds > 0)
                 {
-                    var lingerOption = new LingerOption(true, socketOptions.GetLingerSeconds());
+                    var lingerOption = new LingerOption(true, socketOptions.LingerSeconds);
                     _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lingerOption);
                 }
                 else
@@ -96,10 +96,9 @@ namespace Hazelcast.Client.Network
                     var lingerOption = new LingerOption(true, 0);
                     _clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, lingerOption);
                 }
-                _clientSocket.NoDelay = socketOptions.IsTcpNoDelay();
-                _clientSocket.ReceiveTimeout = socketOptions.GetTimeout() > 0 ? socketOptions.GetTimeout() : -1;
+                _clientSocket.NoDelay = socketOptions.TcpNoDelay;
 
-                var bufferSize = socketOptions.GetBufferSize() * 1024;
+                var bufferSize = socketOptions.BufferSize * 1024;
                 if (bufferSize < 0)
                 {
                     bufferSize = BufferSize;
@@ -108,8 +107,8 @@ namespace Hazelcast.Client.Network
                 _clientSocket.SendBufferSize = bufferSize;
                 _clientSocket.ReceiveBufferSize = bufferSize;
 
-                var connectionTimeout = clientNetworkConfig.GetConnectionTimeout() > -1
-                    ? clientNetworkConfig.GetConnectionTimeout()
+                var connectionTimeout = clientNetworkConfig.ConnectionTimeout > -1
+                    ? clientNetworkConfig.ConnectionTimeout
                     : ConnectionTimeout;
                 var socketResult = _clientSocket.BeginConnect(address.GetInetAddress(), address.Port, null, null);
 
@@ -125,20 +124,18 @@ namespace Hazelcast.Client.Network
                 _decoder = new ClientMessageDecoder(invocationService.HandleClientMessage);
 
                 var networkStream = new NetworkStream(_clientSocket, false);
-                var sslConfig = clientNetworkConfig.GetSSLConfig();
-                if (sslConfig.IsEnabled())
+                var sslConfig = clientNetworkConfig.SslConfig;
+                if (sslConfig.Enabled)
                 {
                     var sslStream = new SslStream(networkStream, false,
                         (sender, certificate, chain, sslPolicyErrors) =>
                             RemoteCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors, clientNetworkConfig),
                         null);
-                    var certificateName = sslConfig.GetCertificateName() ?? "";
-                    var cerPath = sslConfig.GetCertificateFilePath();
-                    var enabledSslProtocols = sslConfig.GetSslProtocol();
-                    var checkCertificateRevocation = sslConfig.IsCheckCertificateRevocation();
-
+                    var certificateName = sslConfig.CertificateName ?? "";
+                    var cerPath = sslConfig.CertificateFilePath;
+                    var enabledSslProtocols = sslConfig.SslProtocol;
+                    var checkCertificateRevocation = sslConfig.CheckCertificateRevocation;
                     var clientCertificates = GetClientCertificatesOrDefault(cerPath, sslConfig);
-
                     sslStream.AuthenticateAsClient(certificateName, clientCertificates, enabledSslProtocols,
                         checkCertificateRevocation);
 
@@ -175,7 +172,7 @@ namespace Hazelcast.Client.Network
             var clientCertificates = new X509Certificate2Collection();
             try
             {
-                clientCertificates.Import(cerPath, sslConfig.GetCertificatePassword(), X509KeyStorageFlags.DefaultKeySet);
+                clientCertificates.Import(cerPath, sslConfig.CertificatePassword, X509KeyStorageFlags.DefaultKeySet);
             }
             catch (Exception)
             {
@@ -187,7 +184,7 @@ namespace Hazelcast.Client.Network
         }
 
         private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain,
-            SslPolicyErrors sslPolicyErrors, ClientNetworkConfig clientNetworkConfig)
+            SslPolicyErrors sslPolicyErrors, NetworkConfig clientNetworkConfig)
         {
             if (sslPolicyErrors == SslPolicyErrors.None)
             {
@@ -198,7 +195,7 @@ namespace Hazelcast.Client.Network
 
             if (sslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateChainErrors))
             {
-                var isValidateChain = clientNetworkConfig.GetSSLConfig().IsValidateCertificateChain();
+                var isValidateChain = clientNetworkConfig.SslConfig.ValidateCertificateChain;
                 if (isValidateChain)
                 {
                     Logger.Warning("Certificate error:" + sslPolicyErrors);
@@ -215,7 +212,7 @@ namespace Hazelcast.Client.Network
             }
             if (sslPolicyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
             {
-                var isValidateName = clientNetworkConfig.GetSSLConfig().IsValidateCertificateName();
+                var isValidateName = clientNetworkConfig.SslConfig.ValidateCertificateName;
                 if (isValidateName)
                 {
                     Logger.Warning("Certificate error:" + sslPolicyErrors);

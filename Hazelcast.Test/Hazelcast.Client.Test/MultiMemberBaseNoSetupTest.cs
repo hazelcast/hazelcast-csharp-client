@@ -59,12 +59,12 @@ namespace Hazelcast.Client.Test
 
         protected virtual string GetServerConfig()
         {
-            return Hazelcast.Test.Resources.hazelcast;
+            return Hazelcast.Test.Resources.Hazelcast;
         }
 
-        protected override void ConfigureGroup(ClientConfig config)
+        protected override void ConfigureGroup(Configuration config)
         {
-            config.SetClusterName(HzCluster.Id);
+            config.ClusterName = HzCluster.Id;
         }
 
         protected Guid StartNewMember()

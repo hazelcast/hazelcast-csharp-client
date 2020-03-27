@@ -12,13 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Net.Sockets;
+using Hazelcast.Security;
 
-namespace Hazelcast.Client.Network
+namespace Hazelcast.Config
 {
-    public interface ISocketFactory
+    public class UsernamePasswordIdentityConfig :IIdentityConfig
     {
-        /// <exception cref="System.IO.IOException"></exception>
-        Socket CreateSocket();
+        public string Username { get; set; }
+        public string Password { get; set; }
+        
+        public object Clone()
+        {
+            return new UsernamePasswordIdentityConfig{Username = Username, Password = Password};
+        }
+
+        public ICredentialsFactory AsCredentialsFactory()
+        {
+            return new StaticCredentialsFactory(new UsernamePasswordCredentials{Name = Username, Password = Password});
+        }
     }
 }

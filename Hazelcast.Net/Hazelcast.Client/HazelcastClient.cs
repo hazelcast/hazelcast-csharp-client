@@ -94,12 +94,12 @@ namespace Hazelcast.Client
         /// <param name="config">The configuration.</param>
         /// <returns>IHazelcastInstance.</returns>
         /// <code>
-        ///     var clientConfig = new ClientConfig();
-        ///     //configure clientConfig ...
-        ///     var hazelcastInstance = Hazelcast.NewHazelcastClient(clientConfig);
+        ///     var configuration = new Configuration();
+        ///     //configure configuration ...
+        ///     var hazelcastInstance = Hazelcast.NewHazelcastClient(configuration);
         ///     var myMap = hazelcastInstance.GetMap("myMap");
         /// </code>
-        public static IHazelcastInstance NewHazelcastClient(ClientConfig config)
+        public static IHazelcastInstance NewHazelcastClient(Configuration config)
         {
             if (config == null)
             {
@@ -149,6 +149,13 @@ namespace Hazelcast.Client
                 }
             }
             Clients.Clear();
+        }
+
+        private static ICredentialsFactory InitCredentialsFactory(Configuration config)
+        {
+            var securityConfig = config.SecurityConfig;
+            var credentialsFactory = securityConfig.AsCredentialsFactory();
+            return credentialsFactory ?? new DefaultCredentialsFactory();
         }
     }
 }

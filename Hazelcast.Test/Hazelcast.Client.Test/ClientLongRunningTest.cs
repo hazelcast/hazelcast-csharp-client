@@ -41,7 +41,7 @@ namespace Hazelcast.Client.Test
 
         protected override string GetServerConfig()
         {
-            return Resources.hazelcast_delay;
+            return Resources.HazelcastDelay;
         }
 
         private void FillMap()

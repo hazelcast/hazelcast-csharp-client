@@ -4,105 +4,119 @@
                   xsi:schemaLocation="http://www.hazelcast.com/schema/client-config
                   http://www.hazelcast.com/schema/client-config/hazelcast-client-config-4.0.xsd">
 
-  <cluster name="dev" password="dev-pass"/>
+    <cluster-name>dev</cluster-name>
 
-  <network>
-    <cluster-members>
-      <Address>127.0.0.1</Address>
-      <Address>127.0.0.2</Address>
-    </cluster-members>
-    <smart-routing>true</smart-routing>
-    <redo-operation>true</redo-operation>
-    <connection-timeout>60000</connection-timeout>
-    <connection-attempt-period>3000</connection-attempt-period>
-    <connection-attempt-limit>2</connection-attempt-limit>
-    <socket-interceptor enabled="true">
-      <class-name>com.hazelcast.examples.MySocketInterceptor</class-name>
-      <properties>
-        <property name="foo">bar</property>
-      </properties>
-    </socket-interceptor>
-    <socket-options>
-      <tcp-no-delay>false</tcp-no-delay>
-      <keep-alive>true</keep-alive>
-      <reuse-Address>true</reuse-Address>
-      <linger-seconds>3</linger-seconds>
-      <timeout>-1</timeout>
-      <buffer-size>32</buffer-size>
-    </socket-options>
-    <ssl enabled="false">
-      <properites>
-        <property name="CertificateServerName">CERT_NAME</property>
-        <property name="ValidateCertificateChain">true</property>
-        <property name="ValidateCertificateName">false</property>
-        <property name="CheckCertificateRevocation">false</property>
-        <property name="CertificateFilePath">CLIENT_CERT_PATH</property>
-        <property name="CertificatePassword">CLIENT_CERT_PASSWORD</property>
-        <property name="SslProtocol">Tls</property>
-      </properites>
-    </ssl>
-    <hazelcast-cloud enabled="false">
-      <discovery-token>EXAMPLE_TOKEN</discovery-token>
-    </hazelcast-cloud>
-  </network>
+    <instance-name>CLIENT_NAME</instance-name>
+    <properties>
+        <property name="hazelcast.client.shuffle.member.list">true</property>
+        <property name="hazelcast.client.heartbeat.timeout">60000</property>
+        <property name="hazelcast.client.heartbeat.interval">5000</property>
+        <property name="hazelcast.client.event.thread.count">5</property>
+        <property name="hazelcast.client.event.queue.capacity">1000000</property>
+        <property name="hazelcast.client.invocation.timeout.seconds">120</property>
+    </properties>
+    <client-labels>
+        <label>admin</label>
+        <label>foo</label>
+    </client-labels>
 
-  <executor-pool-size>40</executor-pool-size>
+    <backup-ack-to-client-enabled>false</backup-ack-to-client-enabled>
 
-  <security>
-    <credentials>Hazelcast.Security.UsernamePasswordCredentials</credentials>
-    <credentials-factory class-name="Hazelcast.Security.DefaultCredentialsFactory">
-      <properties>
-        <property name="username">dev-user</property>
-        <property name="password">pass123</property>
-      </properties>
-    </credentials-factory>
-  </security>
+    <network>
+        <cluster-members>
+            <address>127.0.0.1</address>
+            <address>127.0.0.2</address>
+        </cluster-members>
+        <outbound-ports>
+            <ports>34600</ports>
+            <ports>34700-34710</ports>
+        </outbound-ports>
+        <smart-routing>true</smart-routing>
+        <redo-operation>true</redo-operation>
+        <connection-timeout>60000</connection-timeout>
+        <socket-options>
+            <tcp-no-delay>false</tcp-no-delay>
+            <keep-alive>true</keep-alive>
+            <reuse-address>true</reuse-address>
+            <linger-seconds>3</linger-seconds>
+            <buffer-size>128</buffer-size>
+        </socket-options>
+        <ssl enabled="false">
+            <properties>
+                <property name="CertificateServerName">CERT_NAME</property>
+                <property name="ValidateCertificateChain">true</property>
+                <property name="ValidateCertificateName">false</property>
+                <property name="CheckCertificateRevocation">false</property>
+                <property name="CertificateFilePath">CLIENT_CERT_PATH</property>
+                <property name="CertificatePassword">CLIENT_CERT_PASSWORD</property>
+                <property name="SslProtocol">Tls</property>
+            </properties>
+        </ssl>
+        <hazelcast-cloud enabled="false">
+            <discovery-token>EXAMPLE_TOKEN</discovery-token>
+        </hazelcast-cloud>
+    </network>
 
-  <listeners>
-    <listener>Hazelcast.Examples.MembershipListener</listener>
-    <listener>Hazelcast.Examples.InstanceListener</listener>
-    <listener>Hazelcast.Examples.MigrationListener</listener>
-  </listeners>
+    <security>
+        <credentials-factory class-name="com.hazelcast.examples.MyCredentialsFactory">
+            <properties>
+                <property name="property">value</property>
+            </properties>
+        </credentials-factory>
+        <!--
+        <security>
+            <credentials-factory class-name="Hazelcast.Security.KerberosCredentialsFactory">
+                <properties>
+                    <property name="spn">hz/cluster1234</property>
+                </properties>
+            </credentials-factory>
+        </security>
+        <username-password username="client1" password="s3crEt"/>
+        <token encoding="base64">SGF6ZWxjYXN0</token>
+         -->
+    </security>
 
-  <serialization>
-    <portable-version>3</portable-version>
-    <use-native-byte-order>true</use-native-byte-order>
-    <byte-order>BIG_ENDIAN</byte-order>
-    <enable-shared-object>true</enable-shared-object>
-    <check-class-def-errors>true</check-class-def-errors>
-    <enable-compression>true</enable-compression>>
-    <data-serializable-factories>
-      <data-serializable-factory factory-id="1">com.hazelcast.examples.DataSerializableFactory</data-serializable-factory>
-    </data-serializable-factories>
-    <portable-factories>
-      <portable-factory factory-id="1">com.hazelcast.examples.PortableFactory</portable-factory>
-    </portable-factories>
-    <serializers>
-      <global-serializer>com.hazelcast.examples.GlobalSerializerFactory</global-serializer>
-      <serializer type-class="com.hazelcast.examples.DummyType">com.hazelcast.examples.SerializerFactory</serializer>
-    </serializers>
-    <check-class-def-errors>true</check-class-def-errors>
-  </serialization>
+    <listeners>
+        <listener>Hazelcast.Examples.MembershipListener</listener>
+        <listener>Hazelcast.Examples.MigrationListener</listener>
+    </listeners>
 
-  <proxy-factories>
-    <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ1" service="sampleService1" />
-    <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ2" service="sampleService2" />
-    <proxy-factory class-name="com.hazelcast.examples.ProxyXYZ3" service="sampleService3" />
+    <serialization>
+        <portable-version>3</portable-version>
+        <use-native-byte-order>true</use-native-byte-order>
+        <byte-order>BIG_ENDIAN</byte-order>
+        <check-class-def-errors>true</check-class-def-errors>
+        <data-serializable-factories>
+            <data-serializable-factory factory-id="1">Hazelcast.Examples.DataSerializableFactory</data-serializable-factory>
+        </data-serializable-factories>
+        <portable-factories>
+            <portable-factory factory-id="1">Hazelcast.Examples.PortableFactory</portable-factory>
+        </portable-factories>
+        <serializers>
+            <global-serializer>Hazelcast.Examples.GlobalSerializerFactory</global-serializer>
+            <serializer type-class="Hazelcast.Examples.DummyType">Hazelcast.Examples.SerializerFactory</serializer>
+        </serializers>
+        <check-class-def-errors>true</check-class-def-errors>
+    </serialization>
 
-  </proxy-factories>
+    <load-balancer type="random"/>
 
-  <load-balancer type="random"></load-balancer>
+    <near-cache name="asd">
+        <max-size>2000</max-size>
+        <time-to-live-seconds>100</time-to-live-seconds>
+        <max-idle-seconds>100</max-idle-seconds>
+        <eviction-policy>LFU</eviction-policy>
+        <invalidate-on-change>true</invalidate-on-change>
+        <in-memory-format>OBJECT</in-memory-format>
+    </near-cache>
 
-  <near-cache name="asd">
-    <max-size>2000</max-size>
-    <time-to-live-seconds>100</time-to-live-seconds>
-    <max-idle-seconds>100</max-idle-seconds>
-    <eviction-policy>LFU</eviction-policy>
-    <invalidate-on-change>true</invalidate-on-change>
-    <in-memory-format>OBJECT</in-memory-format>
-  </near-cache>
-
-  <license-key>ENTERPRISE_KEY</license-key>
-
-
+    <connection-strategy async-start="true" reconnect-mode="ASYNC">
+        <connection-retry>
+            <initial-backoff-millis>2000</initial-backoff-millis>
+            <max-backoff-millis>60000</max-backoff-millis>
+            <multiplier>3</multiplier>
+            <cluster-connect-timeout-millis>5000</cluster-connect-timeout-millis>
+            <jitter>0.5</jitter>
+        </connection-retry>
+    </connection-strategy>
 </hazelcast-client>

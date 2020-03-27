@@ -27,7 +27,7 @@ namespace Hazelcast.Client.Test
     {
         protected override string GetServerConfig()
         {
-            return Resources.hazelcast_hb;
+            return Resources.HazelcastHb;
         }
 
         [OneTimeTearDown]
@@ -36,7 +36,7 @@ namespace Hazelcast.Client.Test
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", null);
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
             Environment.SetEnvironmentVariable("hazelcast.client.heartbeat.interval", "1000");

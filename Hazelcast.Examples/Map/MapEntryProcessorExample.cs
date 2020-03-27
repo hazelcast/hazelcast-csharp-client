@@ -27,11 +27,11 @@ namespace Hazelcast.Examples.Map
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var config = new ClientConfig();
+            var config = new Configuration();
 
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
-            config.GetSerializationConfig()
-                .AddDataSerializableFactory(EntryProcessorDataSerializableFactory.FactoryId,
+            config.NetworkConfig.AddAddress("127.0.0.1");
+            config.SerializationConfig
+                .DataSerializableFactories.Add(EntryProcessorDataSerializableFactory.FactoryId,
                     new EntryProcessorDataSerializableFactory());
 
             var client = HazelcastClient.NewHazelcastClient(config);

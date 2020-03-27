@@ -42,10 +42,10 @@ namespace Hazelcast.Client.Test
             map.Clear();
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
-            config.GetSerializationConfig().AddPortableFactory(1, new SimplePortableFactory());
+            config.SerializationConfig.PortableFactories.Add(1, new SimplePortableFactory());
         }
 
         private class SimplePortableFactory : IPortableFactory

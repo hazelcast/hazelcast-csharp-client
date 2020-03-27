@@ -665,7 +665,7 @@ The last step is to register the `IDataSerializableFactory` to the `Serializatio
 ```c#
 var clientConfig = new ClientConfig();
 clientConfig.GetSerializationConfig()
-    .AddDataSerializableFactory(SampleDataSerializableFactory.FactoryId,
+    .DataSerializableFactories.Add(SampleDataSerializableFactory.FactoryId,
     new Hazelcast.Examples.SampleDataSerializableFactory());
 ```
 
@@ -756,7 +756,7 @@ The last step is to register the `IPortableFactory` to the `SerializationConfig`
 ```c#
 var clientConfig = new ClientConfig();
 clientConfig.GetSerializationConfig()
-    .AddPortableFactory(SamplePortableFactory.FactoryId,
+    .PortableFactories.Add(SamplePortableFactory.FactoryId,
     new Hazelcast.Examples.SamplePortableFactory());
 ```
 
@@ -825,7 +825,7 @@ Now the last required step is to register the `CustomSerializer` to the configur
 ```c#
 var clientConfig = new ClientConfig();
 clientConfig.GetSerializationConfig()
-    .AddSerializerConfig(new SerializerConfig()
+    .SerializerConfigs.Add(new SerializerConfig()
         .SetImplementation(new CustomSerializer())
         .SetTypeClass(typeof(CustomSerializableType)));
 ```

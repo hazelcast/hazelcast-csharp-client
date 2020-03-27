@@ -43,7 +43,7 @@ namespace Hazelcast.Client
         internal Guid ClientGuid { get; } = Guid.NewGuid();
         internal ClusterService ClusterService { get; }
 
-        internal ClientConfig ClientConfig { get; }
+        internal Configuration Configuration { get; }
 
         internal ExecutionService ExecutionService { get; }
 
@@ -71,9 +71,12 @@ namespace Hazelcast.Client
 
         internal ILoadBalancer LoadBalancer { get; }
 
-        private HazelcastClient(ClientConfig config)
+        internal HazelcastProperties HazelcastProperties { get; }
+
+        private HazelcastClient(Configuration config)
         {
-            ClientConfig = config;
+            Configuration = config;
+            HazelcastProperties = new HazelcastProperties(config.Properties);
             if (config.InstanceName != null)
             {
                 _instanceName = config.InstanceName;
@@ -87,7 +90,7 @@ namespace Hazelcast.Client
             {
                 //TODO make partition strategy parametric                
                 var partitioningStrategy = new DefaultPartitioningStrategy();
-                SerializationService = new SerializationServiceBuilder().SetConfig(config.GetSerializationConfig())
+                SerializationService = new SerializationServiceBuilder().SetConfig(config.SerializationConfig)
                     .SetPartitioningStrategy(partitioningStrategy)
                     .SetVersion(IO.Serialization.SerializationService.SerializerVersion).Build();
             }
@@ -97,10 +100,10 @@ namespace Hazelcast.Client
             }
             ProxyManager = new ProxyManager(this);
             //TODO EXECUTION SERVICE
-            ExecutionService = new ExecutionService(_instanceName, config.GetExecutorPoolSize());
-            LoadBalancer = config.GetLoadBalancer() ?? new RoundRobinLB();
+            ExecutionService = new ExecutionService(_instanceName);
+            LoadBalancer = config.LoadBalancer ?? new RoundRobinLB();
             PartitionService = new PartitionService(this);
-            AddressProvider = new AddressProvider(ClientConfig);
+            AddressProvider = new AddressProvider(Configuration.NetworkConfig, HazelcastProperties);
             ConnectionManager = new ConnectionManager(this);
             InvocationService = new InvocationService(this);
             ListenerService = new ListenerService(this);
@@ -108,7 +111,8 @@ namespace Hazelcast.Client
             LockReferenceIdGenerator = new ClientLockReferenceIdGenerator();
             // Statistics = new Statistics(this);
             NearCacheManager = new NearCacheManager(this);
-            CredentialsFactory = config.GetSecurityConfig().CredentialsFactoryConfig.GetCredentialsFactory();
+            CredentialsFactory = config.SecurityConfig.AsCredentialsFactory() ??
+                                 new StaticCredentialsFactory(new UsernamePasswordCredentials());
         }
 
         private void Start()
@@ -123,8 +127,8 @@ namespace Hazelcast.Client
                 ClusterService.WaitInitialMemberListFetched();
                 ConnectionManager.ConnectToAllClusterMembers();
                 ListenerService.Start();
-                ProxyManager.Init(ClientConfig);
-                LoadBalancer.Init(((IHazelcastInstance) this).Cluster, ClientConfig);
+                ProxyManager.Init(Configuration);
+                LoadBalancer.Init(((IHazelcastInstance) this).Cluster, Configuration);
                 // Statistics.Start();
                 AddClientConfigAddedListeners(configuredListeners);
             }
@@ -189,16 +193,16 @@ namespace Hazelcast.Client
         private ICollection<IEventListener> InstantiateConfiguredListenerObjects()
         {
             var listeners = new List<IEventListener>();
-            var listenerConfigs = ClientConfig.GetListenerConfigs();
+            var listenerConfigs = Configuration.ListenerConfigs;
             foreach (var listenerConfig in listenerConfigs)
             {
-                var listener = listenerConfig.GetImplementation();
+                var listener = listenerConfig.Implementation;
                 if (listener == null)
                 {
                     try
                     {
-                        var className = listenerConfig.GetClassName();
-                        var type = Type.GetType(className);
+                        var typeName = listenerConfig.TypeName;
+                        var type = Type.GetType(typeName);
                         if (type != null)
                         {
                             listener = Activator.CreateInstance(type) as IEventListener;

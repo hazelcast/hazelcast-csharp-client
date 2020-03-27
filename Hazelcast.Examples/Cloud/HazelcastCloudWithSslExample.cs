@@ -25,21 +25,26 @@ namespace Hazelcast.Examples.Cloud
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var clientConfig = new ClientConfig();
-            var clientNetworkConfig = clientConfig.GetNetworkConfig();
+            var clientConfig = new Configuration();
+            var clientNetworkConfig = clientConfig.NetworkConfig;
 
-            clientNetworkConfig.GetCloudConfig()
-                .SetEnabled(true)
-                .SetDiscoveryToken("DISCOVERY_TOKEN_HASH");//Discovery token copied from Cloud console
-
+            clientNetworkConfig.ConfigureHazelcastCloud(hzCloudConfig =>
+            {
+                hzCloudConfig.Enabled = true; 
+                hzCloudConfig.DiscoveryToken = "DISCOVERY_TOKEN_HASH";//Discovery token copied from Cloud console
+            });
+            
             //Server certificate will be validated by OS,
             //Download and register the server trust store to your OS 
-            clientNetworkConfig.GetSSLConfig().SetEnabled(true);
-            //in order to disable certificate validating uncomment below line
-            //clientNetworkConfig.GetSSLConfig().SetProperty(SSLConfig.ValidateCertificateChain, "false");
-
-            //Client certificate file path downloaded from cloud console
-            clientNetworkConfig.GetSSLConfig().SetProperty(SSLConfig.CertificateFilePath, "CLIENT_PFX_CERTIFICATE_PATH");
+            clientNetworkConfig.ConfigureSSL(sslConfig =>
+            {
+                sslConfig.Enabled = true;
+                //in order to disable certificate validating uncomment below line
+                // sslConfig.ValidateCertificateChain = false;
+                
+                //Client certificate file path downloaded from cloud console
+                sslConfig.CertificateFilePath  = "CLIENT_PFX_CERTIFICATE_PATH";
+            });
 
             var client = HazelcastClient.NewHazelcastClient(clientConfig);
 

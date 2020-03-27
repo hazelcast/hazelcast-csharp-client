@@ -20,14 +20,14 @@ namespace Hazelcast.Client.Test.Config
     [TestFixture]
     public class MatchingPointConfigPatternMatcherTest
     {
-        public virtual void TestMapConfigWildcardMultipleAmbiguousConfigs()
+        public void TestMapConfigWildcardMultipleAmbiguousConfigs()
         {
-            var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast*");
-            var nearCacheConfig2 = new NearCacheConfig().SetName("*com.hazelcast");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig1);
-            config.AddNearCacheConfig(nearCacheConfig2);
+            const string pattern1 = "com.hazelcast*";
+            const string pattern2 = "com.hazelcast*";
+            var config = new Configuration {ConfigPatternMatcher = new MatchingPointConfigPatternMatcher()};
+            config.ConfigureNearCache(pattern1, ncCfg => { });
+            config.ConfigureNearCache(pattern2, ncCfg => { });
+
             config.GetNearCacheConfig("com.hazelcast");
         }
 
@@ -36,58 +36,35 @@ namespace Hazelcast.Client.Test.Config
         {
             Assert.Throws<InvalidConfigurationException>(() =>
             {
-                var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast.*ap");
-                var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast*map");
-                var config = new ClientConfig();
-                config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-                config.AddNearCacheConfig(nearCacheConfig1);
-                config.AddNearCacheConfig(nearCacheConfig2);
+                const string pattern1 = "com.hazelcast.*ap";
+                const string pattern2 = "com.hazelcast*map";
+                var config = new Configuration {ConfigPatternMatcher = new MatchingPointConfigPatternMatcher()};
+                config.ConfigureNearCache(pattern1, ncCfg => { });
+                config.ConfigureNearCache(pattern2, ncCfg => { });
 
                 config.GetNearCacheConfig("com.hazelcast.map");
             });
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcard1()
+        public void TestNearCacheConfigWildcard(
+            [Values("*hazelcast.test.myNearCache", "com.hazelcast.*.myNearCache", "com.hazelcast.test.*")]
+            string pattern1)
         {
-            var nearCacheConfig = new NearCacheConfig().SetName("*hazelcast.test.myNearCache");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig);
-            Assert.AreEqual(nearCacheConfig, config.GetNearCacheConfig("com.hazelcast.test.myNearCache"));
+            var nearCacheConfig = new NearCacheConfig {Name = pattern1};
+
+            var config = new Configuration {ConfigPatternMatcher = new MatchingPointConfigPatternMatcher()};
+            config.ConfigureNearCache(pattern1, ncCfg => { });
+            Assert.IsTrue(Equals(nearCacheConfig, config.GetNearCacheConfig("com.hazelcast.test.myNearCache")));
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcard2()
+        public void TestNearCacheConfigWildcardMatchingPointEndsWith()
         {
-            var nearCacheConfig = new NearCacheConfig().SetName("com.hazelcast.*.myNearCache");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig);
-            Assert.AreEqual(nearCacheConfig, config.GetNearCacheConfig("com.hazelcast.test.myNearCache"));
-        }
-
-        [Test]
-        public virtual void TestNearCacheConfigWildcard3()
-        {
-            var nearCacheConfig = new NearCacheConfig().SetName("com.hazelcast.test.*");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig);
-            Assert.AreEqual(nearCacheConfig, config.GetNearCacheConfig("com.hazelcast.test.myNearCache"));
-        }
-
-        [Test]
-        public virtual void TestNearCacheConfigWildcardMatchingPointEndsWith()
-        {
-            var nearCacheConfig1 = new NearCacheConfig().SetName("*.sub");
-            var nearCacheConfig2 = new NearCacheConfig().SetName("*.test.sub");
-            var nearCacheConfig3 = new NearCacheConfig().SetName("*.hazelcast.test.sub");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig1);
-            config.AddNearCacheConfig(nearCacheConfig2);
-            config.AddNearCacheConfig(nearCacheConfig3);
+            var config = new Configuration {ConfigPatternMatcher = new MatchingPointConfigPatternMatcher()};
+            config.ConfigureNearCache("*.sub", ncCfg => { });
+            config.ConfigureNearCache("*.test.sub", ncCfg => { });
+            config.ConfigureNearCache("*.hazelcast.test.sub", ncCfg => { });
             // we should not match any of the configs (endsWith)
             Assert.AreEqual(null, config.GetNearCacheConfig("com.hazelFast.Fast.sub.myNearCache"));
             Assert.AreEqual(null, config.GetNearCacheConfig("hazelFast.test.sub.myNearCache"));
@@ -95,16 +72,12 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcardMatchingPointStartsWith()
+        public void TestNearCacheConfigWildcardMatchingPointStartsWith()
         {
-            var nearCacheConfig1 = new NearCacheConfig().SetName("hazelcast.*");
-            var nearCacheConfig2 = new NearCacheConfig().SetName("hazelcast.test.*");
-            var nearCacheConfig3 = new NearCacheConfig().SetName("hazelcast.test.sub.*");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig1);
-            config.AddNearCacheConfig(nearCacheConfig2);
-            config.AddNearCacheConfig(nearCacheConfig3);
+            var config = new Configuration {ConfigPatternMatcher = new MatchingPointConfigPatternMatcher()};
+            config.ConfigureNearCache("hazelcast.*", ncCfg => { });
+            config.ConfigureNearCache("hazelcast.test.*", ncCfg => { });
+            config.ConfigureNearCache("hazelcast.test.sub.*", ncCfg => { });
             // we should not match any of the configs (startsWith)
             Assert.AreEqual(null, config.GetNearCacheConfig("com.hazelcast.myNearCache"));
             Assert.AreEqual(null, config.GetNearCacheConfig("com.hazelcast.test.myNearCache"));
@@ -112,16 +85,15 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcardMultipleConfigs()
+        public void TestNearCacheConfigWildcardMultipleConfigs()
         {
-            var nearCacheConfig1 = new NearCacheConfig().SetName("com.hazelcast.*");
-            var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast.test.*");
-            var nearCacheConfig3 = new NearCacheConfig().SetName("com.hazelcast.test.sub.*");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig1);
-            config.AddNearCacheConfig(nearCacheConfig2);
-            config.AddNearCacheConfig(nearCacheConfig3);
+            var nearCacheConfig1 = new NearCacheConfig {Name = "com.hazelcast.*"};
+            var nearCacheConfig2 = new NearCacheConfig {Name = "com.hazelcast.test.*"};
+            var nearCacheConfig3 = new NearCacheConfig {Name = "com.hazelcast.test.sub.*"};
+            var config = new Configuration {ConfigPatternMatcher = new MatchingPointConfigPatternMatcher()};
+            config.NearCacheConfigs.Add(nearCacheConfig1.Name, nearCacheConfig1);
+            config.NearCacheConfigs.Add(nearCacheConfig2.Name, nearCacheConfig2);
+            config.NearCacheConfigs.Add(nearCacheConfig3.Name, nearCacheConfig3);
             // we should get the best matching result
             Assert.AreEqual(nearCacheConfig1, config.GetNearCacheConfig("com.hazelcast.myNearCache"));
             Assert.AreEqual(nearCacheConfig2, config.GetNearCacheConfig("com.hazelcast.test.myNearCache"));
@@ -129,40 +101,47 @@ namespace Hazelcast.Client.Test.Config
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcardOnly()
+        public void TestNearCacheConfigWildcardOnly()
         {
-            var nearCacheConfig = new NearCacheConfig().SetName("*");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig);
+            var nearCacheConfig = new NearCacheConfig {Name = "*"};
+            var config = new Configuration {ConfigPatternMatcher = new MatchingPointConfigPatternMatcher()};
+            config.NearCacheConfigs.Add(nearCacheConfig.Name, nearCacheConfig);
             Assert.AreEqual(nearCacheConfig, config.GetNearCacheConfig("com.hazelcast.myNearCache"));
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWildcardOnlyMultipleConfigs()
+        public void TestNearCacheConfigWildcardOnlyMultipleConfigs()
         {
-            var nearCacheConfig1 = new NearCacheConfig().SetName("*");
-            var nearCacheConfig2 = new NearCacheConfig().SetName("com.hazelcast.*");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig1);
-            config.AddNearCacheConfig(nearCacheConfig2);
+            var nearCacheConfig1 = new NearCacheConfig {Name = "*"};
+            var nearCacheConfig2 = new NearCacheConfig {Name = "com.hazelcast.*"};
+            var config = new Configuration {ConfigPatternMatcher = new MatchingPointConfigPatternMatcher()};
+            config.NearCacheConfigs.Add(nearCacheConfig1.Name, nearCacheConfig1);
+            config.NearCacheConfigs.Add(nearCacheConfig2.Name, nearCacheConfig2);
             // we should get the best matching result
             Assert.AreEqual(nearCacheConfig2, config.GetNearCacheConfig("com.hazelcast.myNearCache"));
         }
 
         [Test]
-        public virtual void TestNearCacheConfigWithoutWildcard()
+        public void TestNearCacheConfigWithoutWildcard()
         {
-            var nearCacheConfig = new NearCacheConfig().SetName("someNearCache");
-            var config = new ClientConfig();
-            config.SetConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
-            config.AddNearCacheConfig(nearCacheConfig);
+            var nearCacheConfig = new NearCacheConfig {Name = "someNearCache"};
+            var config = new Configuration {ConfigPatternMatcher = new MatchingPointConfigPatternMatcher()};
+
+            config.NearCacheConfigs.Add(nearCacheConfig.Name, nearCacheConfig);
             Assert.AreEqual(nearCacheConfig, config.GetNearCacheConfig("someNearCache"));
             // non-matching name
             Assert.AreNotEqual(nearCacheConfig, config.GetNearCacheConfig("doesNotExist"));
             // non-matching case
             Assert.AreNotEqual(nearCacheConfig, config.GetNearCacheConfig("SomeNearCache"));
         }
+        
+        private static bool Equals(NearCacheConfig first, NearCacheConfig other)
+        {
+            return first.EvictionPolicy == other.EvictionPolicy && first.InMemoryFormat == other.InMemoryFormat &&
+                   first.MaxIdleSeconds == other.MaxIdleSeconds && first.MaxSize == other.MaxSize && first.Name == other.Name &&
+                   first.TimeToLiveSeconds == other.TimeToLiveSeconds && first.InvalidateOnChange == other.InvalidateOnChange &&
+                   first.SerializeKeys == other.SerializeKeys;
+        }
+
     }
 }

@@ -25,19 +25,25 @@ namespace Hazelcast.Examples.Ssl
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var clientConfig = new ClientConfig();
-            var clientNetworkConfig = clientConfig.GetNetworkConfig();
-
-            //replace with your actual server host/ip and port
-            clientNetworkConfig.AddAddress("127.0.0.1:5701");
+            var clientConfig = new Configuration();
+            clientConfig.ConfigureNetwork(networkConfig =>
+            {
+                //replace with your actual server host/ip and port
+                networkConfig.Addresses.Add("127.0.0.1:5701");
+            });
 
             //Server certificate will be validated by OS,
             //signed certificates will just work,
             //self-signed certificates should be registered by OS depended way and allowed.
-            clientNetworkConfig.GetSSLConfig().SetEnabled(true);
-
-            //Providing a client pfx certificate will enable mutual authenticating if server also configured mutual auth.
-            clientNetworkConfig.GetSSLConfig().SetProperty(SSLConfig.CertificateFilePath, "CLIENT_PFX_CERTIFICATE_PATH");
+            clientConfig.NetworkConfig.ConfigureSSL(sslConfig =>
+            {
+                sslConfig.Enabled = true;
+                //in order to disable certificate validating uncomment below line
+                // sslConfig.ValidateCertificateChain = false;
+                
+                //Providing a client pfx certificate will enable mutual authenticating if server also configured mutual auth.
+                // sslConfig.CertificateFilePath = "CLIENT_PFX_CERTIFICATE_PATH";
+            });
 
             var client = HazelcastClient.NewHazelcastClient(clientConfig);
 

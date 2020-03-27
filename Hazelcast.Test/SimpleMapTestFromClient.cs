@@ -150,9 +150,9 @@ namespace Hazelcast.Test
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "Info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var clientConfig = new ClientConfig();
-            clientConfig.GetNetworkConfig().AddAddress("192.168.2.50:5701");
-            // clientConfig.GetNetworkConfig().SetConnectionAttemptLimit(1000);
+            var clientConfig = new Configuration();
+            clientConfig.NetworkConfig.Addresses.Add("192.168.2.50:5701");
+            // clientConfig.NetworkConfig.SetConnectionAttemptLimit(1000);
             hazelcast = HazelcastClient.NewHazelcastClient(clientConfig);
 
             Console.WriteLine("Client Ready to go");

@@ -82,17 +82,19 @@ namespace Hazelcast.Client.Test
             HazelcastClient.ShutdownAll();
         }
 
-        protected virtual void ConfigureClient(ClientConfig config)
+        protected virtual void ConfigureClient(Configuration config)
         {
-            config.GetNetworkConfig().AddAddress("localhost:5701");
-            var cs = config.GetConnectionStrategyConfig();
-            cs.AsyncStart = false;
-            cs.ReconnectMode = ReconnectMode.ON;
-            cs.ConnectionRetryConfig.ClusterConnectTimeoutMillis = 60000;
-            cs.ConnectionRetryConfig.InitialBackoffMillis = 2000;
+            config.ConfigureNetwork(networkConfig => { networkConfig.Addresses.Add("localhost:5701"); })
+                .ConfigureConnectionStrategy(cs =>
+                {
+                    cs.AsyncStart = false;
+                    cs.ReconnectMode = ReconnectMode.ON;
+                    cs.ConnectionRetryConfig.ClusterConnectTimeoutMillis = 60000;
+                    cs.ConnectionRetryConfig.InitialBackoffMillis = 2000;
+                });
         }
 
-        protected virtual void ConfigureGroup(ClientConfig config)
+        protected virtual void ConfigureGroup(Configuration config)
         {
         }
 
@@ -121,7 +123,7 @@ namespace Hazelcast.Client.Test
         protected virtual Cluster CreateCluster(IRemoteController remoteController)
         {
             _logger.Info("Creating cluster");
-            var cluster = remoteController.createCluster(null, Resources.hazelcast);
+            var cluster = remoteController.createCluster(null, Resources.Hazelcast);
             _logger.Info("Created cluster");
             return cluster;
         }

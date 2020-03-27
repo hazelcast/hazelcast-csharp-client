@@ -32,12 +32,12 @@ namespace Hazelcast.Client.Test
     [Explicit("Requires KDC and domain.")]
     public class KerberosTests : SingleMemberBaseTest
     {
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
 
             // add serializer for User
-            config.GetSerializationConfig().AddSerializerConfig(new SerializerConfig()
+            config.SerializationConfig.SerializerConfigs.Add(new SerializerConfig()
                 .SetImplementation(new UserSerializer())
                 .SetTypeClass(typeof(User)));
 
@@ -56,16 +56,12 @@ namespace Hazelcast.Client.Test
             // 2.
             // configure Kerberos credentials with the current Windows principal - requires
             // that the tests run as part of the domain
-            //config.ConfigureSecurity(security
-            //    => security.ConfigureKerberosCredentials("hz/cluster1234"));
+            // config.SecurityConfig.ConfigureKerberosIdentity("hz/cluster1234"));
 
             // 3.
             // configure Kerberos credentials manually with the specified user - when tests
             // do not run as part of the domain
-            config.ConfigureSecurity(security =>
-                security.ConfigureCredentialsFactory(factory =>
-                    factory.Implementation = new KerberosCredentialsFactory("hz/cluster1234",
-                        "hzclient", "pAssw0rd", "hz.local")));
+            config.SecurityConfig.ConfigureKerberosIdentity("hz/cluster1234", "hzclient", "pAssw0rd", "hz.local");
         }
 
         protected override string GetServerConfig()

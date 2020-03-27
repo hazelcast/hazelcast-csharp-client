@@ -60,7 +60,7 @@ namespace Hazelcast.Client.Spi
         public InvocationService(HazelcastClient client)
         {
             _client = client;
-            _redoOperations = client.ClientConfig.GetNetworkConfig().IsRedoOperation();
+            _redoOperations = client.Configuration.NetworkConfig.RedoOperation;
             InvocationTimeoutMillis =
                 (EnvironmentUtil.ReadInt("hazelcast.client.invocation.timeout.seconds") ?? DefaultInvocationTimeout) * 1000;
 

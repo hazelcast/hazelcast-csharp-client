@@ -26,9 +26,9 @@ namespace Hazelcast.Examples.Map
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            var config = new ClientConfig();
-            config.GetSerializationConfig().AddPortableFactory(1, new ExamplePortableFactory());
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
+            var config = new Configuration();
+            config.SerializationConfig.PortableFactories.Add(1, new ExamplePortableFactory());
+            config.NetworkConfig.AddAddress("127.0.0.1");
             var client = HazelcastClient.NewHazelcastClient(config);
 
             var map = client.GetMap<int, Customer>("portable-example");

@@ -254,7 +254,7 @@ namespace Hazelcast.Client.Spi
 
         protected virtual bool IsSmart()
         {
-            return Client.ClientConfig.GetNetworkConfig().IsSmartRouting();
+            return Client.Configuration.NetworkConfig.SmartRouting;
         }
 
         public void Destroy() 

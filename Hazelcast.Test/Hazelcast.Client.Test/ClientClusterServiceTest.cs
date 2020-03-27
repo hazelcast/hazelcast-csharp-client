@@ -46,15 +46,18 @@ namespace Hazelcast.Client.Test
             StopRemoteController(_remoteController);
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
-            config.AddListenerConfig(new ListenerConfig(_initialMembershipListener));
+            config.ConfigureListeners(listeners =>
+            {
+                listeners.Add(new ListenerConfig(_initialMembershipListener));
+            });
         }
 
-        protected override void ConfigureGroup(ClientConfig config)
+        protected override void ConfigureGroup(Configuration config)
         {
-            config.SetClusterName(_cluster.Id);
+            config.ClusterName = _cluster.Id;
         }
 
         [Test]

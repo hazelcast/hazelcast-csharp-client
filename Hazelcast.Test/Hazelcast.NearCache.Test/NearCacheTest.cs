@@ -47,30 +47,30 @@ namespace Hazelcast.NearCache.Test
             _map.Destroy();
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
 
-            var defaultConfig = new NearCacheConfig().SetInvalidateOnChange(false)
-                .SetInMemoryFormat(InMemoryFormat.Object).SetEvictionPolicy("None").SetMaxSize(MaxSize);
-            config.AddNearCacheConfig("nearCachedMap*", defaultConfig);
+            var defaultConfig = new NearCacheConfig
+            {
+                InvalidateOnChange = false, InMemoryFormat = InMemoryFormat.Object, EvictionPolicy = EvictionPolicy.None, MaxSize = MaxSize
+            };
+            config.NearCacheConfigs.Add("nearCachedMap*", defaultConfig);
 
-            var invalidateConfig = new NearCacheConfig().SetInvalidateOnChange(true);
-            config.AddNearCacheConfig("nearCacheMapInvalidate*", invalidateConfig);
+            var invalidateConfig = new NearCacheConfig {InvalidateOnChange = true};
+            config.NearCacheConfigs.Add("nearCacheMapInvalidate*", invalidateConfig);
 
-            var lruConfig = new NearCacheConfig().SetEvictionPolicy("Lru").SetInvalidateOnChange(false)
-                .SetMaxSize(MaxSize);
-            config.AddNearCacheConfig("nearCacheMapLru*", lruConfig);
+            var lruConfig = new NearCacheConfig {EvictionPolicy = EvictionPolicy.Lru, InvalidateOnChange=false, MaxSize=MaxSize};
+            config.NearCacheConfigs.Add("nearCacheMapLru*", lruConfig);
 
-            var lfuConfig = new NearCacheConfig().SetEvictionPolicy("Lfu").SetInvalidateOnChange(false)
-                .SetMaxSize(MaxSize);
-            config.AddNearCacheConfig("nearCacheMapLfu*", lfuConfig);
+            var lfuConfig = new NearCacheConfig {EvictionPolicy = EvictionPolicy.Lfu, InvalidateOnChange = false, MaxSize=MaxSize};
+            config.NearCacheConfigs.Add("nearCacheMapLfu*", lfuConfig);
 
-            var ttlConfig = new NearCacheConfig().SetInvalidateOnChange(false).SetTimeToLiveSeconds(1);
-            config.AddNearCacheConfig("nearCacheTtl*", ttlConfig);
+            var ttlConfig = new NearCacheConfig {InvalidateOnChange = false, TimeToLiveSeconds = 1};
+            config.NearCacheConfigs.Add("nearCacheTtl*", ttlConfig);
 
-            var idleConfig = new NearCacheConfig().SetInvalidateOnChange(false).SetMaxIdleSeconds(1);
-            config.AddNearCacheConfig("nearCacheIdle*", idleConfig);
+            var idleConfig = new NearCacheConfig {InvalidateOnChange = false, MaxIdleSeconds = 1};
+            config.NearCacheConfigs.Add("nearCacheIdle*", idleConfig);
         }
 
         [Test]

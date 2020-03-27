@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,33 +21,37 @@ namespace Hazelcast.Config
     /// <summary>
     /// Contains the configuration for Credentials Factory.
     /// </summary>
-    public class CredentialsFactoryConfig
+    public class CredentialsFactoryConfig : IIdentityConfig
     {
-        public string ClassName { get; set; }
+        public string TypeName { get; set; }
 
         public ICredentialsFactory Implementation { get; set; }
 
-        public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
+        public IDictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
 
-        public ICredentialsFactory GetCredentialsFactory()
+        public object Clone()
         {
-            if (Implementation != null) 
-                return Implementation;
+            return new CredentialsFactoryConfig {TypeName = TypeName, Implementation = Implementation, Properties = Properties};
+        }
 
-            if (string.IsNullOrWhiteSpace(ClassName))
-                return Implementation = new DefaultCredentialsFactory();
-
-            try
+        public ICredentialsFactory AsCredentialsFactory()
+        {
+            if (Implementation == null)
             {
-                var type = Type.GetType(ClassName, true, false);
-                Implementation = Activator.CreateInstance(type) as ICredentialsFactory;
-                Implementation?.Init(Properties);
+                try
+                {
+                    var type = Type.GetType(TypeName, true, false);
+                    if (type != null)
+                    {
+                        Implementation = Activator.CreateInstance(type) as ICredentialsFactory;
+                        Implementation?.Init(Properties);
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException($"Could not create instance of '{TypeName}', cause: {e.Message}", e);
+                }
             }
-            catch (Exception e)
-            {
-                throw new ArgumentException($"Could not create instance of '{ClassName}', cause: {e.Message}", e);
-            }
-
             return Implementation;
         }
     }

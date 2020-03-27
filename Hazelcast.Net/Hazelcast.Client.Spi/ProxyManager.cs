@@ -47,7 +47,7 @@ namespace Hazelcast.Client.Spi
             _client = client;
         }
 
-        public void Init(ClientConfig config)
+        public void Init(Configuration config)
         {
             // register defaults
             Register(ServiceNames.Map, CreateClientMapProxyFactory);
@@ -56,15 +56,15 @@ namespace Hazelcast.Client.Spi
             Register(List, typeof(ClientListProxy<>));
             Register(Set, typeof(ClientSetProxy<>));
             Register(Topic, typeof(ClientTopicProxy<>));
-//            Register(ServiceNames.PNCounter, typeof(ClientPNCounterProxy));
+            // Register(ServiceNames.PNCounter, typeof(ClientPNCounterProxy));
             Register(Ringbuffer, typeof(ClientRingbufferProxy<>));
             Register(ReplicatedMap, typeof(ClientReplicatedMapProxy<,>));
         }
 
         private ClientProxy CreateClientMapProxyFactory(string id, Type type)
         {
-            var clientConfig = _client.ClientConfig;
-            var nearCacheConfig = clientConfig.GetNearCacheConfig(id);
+            var configuration = _client.Configuration;
+            var nearCacheConfig = configuration.GetNearCacheConfig(id);
             var proxyType = nearCacheConfig != null ? typeof(ClientMapNearCacheProxy<,>) : typeof(ClientMapProxy<,>);
             return InstantiateClientProxy(proxyType, type, ServiceNames.Map, id, _client);
         }
@@ -139,7 +139,7 @@ namespace Hazelcast.Client.Spi
                 return Activator.CreateInstance(typeWithParams, name, id, client) as ClientProxy;
             }
 
-            return Activator.CreateInstance(proxyType, name, id) as ClientProxy;
+            return Activator.CreateInstance(proxyType, name, id, client) as ClientProxy;
         }
 
         private static Type GetTypeWithParameters(Type proxyType, Type interfaceType)

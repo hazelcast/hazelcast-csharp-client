@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.IO;
 using Hazelcast.Config;
 using Hazelcast.Test;
@@ -22,22 +23,6 @@ namespace Hazelcast.Client.Test.Config
     [TestFixture]
     public class ClientXmlTest
     {
-        //[Test]
-        public virtual void TestConfig()
-        {
-            var config = new ClientConfig();
-            var networkConfig = new ClientNetworkConfig();
-            networkConfig.SetAddresses(new[] {"127.0.0.1:5701"});
-            config.SetNetworkConfig(networkConfig);
-            config.SetClusterName("mike-local");
-            var _client = HazelcastClient.NewHazelcastClient(config);
-
-
-            Assert.NotNull(_client);
-
-            _client.Shutdown();
-        }
-
         [Test]
         public virtual void TestXmlParserDefault()
         {
@@ -49,8 +34,9 @@ namespace Hazelcast.Client.Test.Config
         [Test]
         public virtual void TestXmlParserWithConfigFile()
         {
-            var clientConfig =
-                XmlClientConfigBuilder.Build(@"..\..\..\Hazelcast.Net\Resources\hazelcast-client-full.xml");
+            var xmlFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "Resources",
+                "hazelcast-client-full.xml");
+            var clientConfig = XmlClientConfigBuilder.Build(xmlFile);
 
             Assert.NotNull(clientConfig);
         }
@@ -58,7 +44,7 @@ namespace Hazelcast.Client.Test.Config
         [Test]
         public virtual void TestXmlParserWithReader()
         {
-            var clientConfig = XmlClientConfigBuilder.Build(new StringReader(Resources.hazelcast_config_full));
+            var clientConfig = XmlClientConfigBuilder.Build(new StringReader(Resources.HazelcastConfigFull));
             Assert.NotNull(clientConfig);
         }
     }

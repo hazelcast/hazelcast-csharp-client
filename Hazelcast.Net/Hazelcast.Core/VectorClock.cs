@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
-using TimeStampIList = System.Collections.Generic.IList<System.Collections.Generic.KeyValuePair<string, long>>;
 
 namespace Hazelcast.Core
 {
     internal class VectorClock
     {
-        private readonly Dictionary<string, long> _timeStampDictionary = new Dictionary<string, long>();
-        private readonly TimeStampIList _timeStampList = new List<KeyValuePair<string, long>>();
+        private readonly Dictionary<Guid, long> _timeStampDictionary = new Dictionary<Guid, long>();
 
         public VectorClock()
         {
         }
 
-        public VectorClock(TimeStampIList timeStampList)
+        public VectorClock(IList<KeyValuePair<Guid, long>> timeStampList)
         {
-            _timeStampList = timeStampList;
             foreach (var pair in timeStampList)
             {
                 _timeStampDictionary.Add(pair.Key, pair.Value);
@@ -44,8 +42,7 @@ namespace Hazelcast.Core
             {
                 var replicaId = otherEntry.Key;
                 var otherReplicaTimestamp = otherEntry.Value;
-                long localReplicaTimestamp;
-                if (!_timeStampDictionary.TryGetValue(replicaId, out localReplicaTimestamp) || localReplicaTimestamp < otherReplicaTimestamp)
+                if (!_timeStampDictionary.TryGetValue(replicaId, out var localReplicaTimestamp) || localReplicaTimestamp < otherReplicaTimestamp)
                 {
                     return false;
                 }
@@ -59,9 +56,9 @@ namespace Hazelcast.Core
         }
 
         // Returns a set of replica logical timestamps for this vector clock.
-        public IList<KeyValuePair<string, long>> EntrySet()
+        public ICollection<KeyValuePair<Guid, long>> EntrySet()
         {
-            return _timeStampList;
+            return _timeStampDictionary;
         }
     }
 }

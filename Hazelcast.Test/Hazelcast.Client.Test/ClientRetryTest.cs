@@ -48,15 +48,15 @@ namespace Hazelcast.Client.Test
         private Cluster _cluster;
         private readonly int Count = 1000;
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
-            config.GetNetworkConfig().SetRedoOperation(true);
+            config.NetworkConfig.RedoOperation = true;
         }
 
-        protected override void ConfigureGroup(ClientConfig config)
+        protected override void ConfigureGroup(Configuration config)
         {
-            config.SetClusterName(_cluster.Id);
+            config.ClusterName = _cluster.Id;
         }
 
         [Test]

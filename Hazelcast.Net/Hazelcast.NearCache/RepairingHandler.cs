@@ -16,8 +16,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Hazelcast.Client.Spi;
+using Hazelcast.Config;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Logging;
+using Hazelcast.Util;
 
 namespace Hazelcast.NearCache
 {
@@ -34,14 +36,14 @@ namespace Hazelcast.NearCache
 
         private readonly PartitionService _partitionService;
 
-        public RepairingHandler(Guid localUuid, NearCache nearCache, PartitionService partitionService)
+        public RepairingHandler(Guid localUuid, NearCache nearCache, PartitionService partitionService, int maxToleratedMissCount)
         {
             _localUuid = localUuid;
             _nearCache = nearCache;
             _partitionService = partitionService;
             _partitionCount = partitionService.GetPartitionCount();
             _metaDataContainers = CreateMetadataContainers(_partitionCount);
-            _maxToleratedMissCount = NearCacheManager.GetMaxToleratedMissCount();
+            _maxToleratedMissCount = maxToleratedMissCount;
         }
 
         // multiple threads can concurrently call this method: one is anti-entropy, other one is event service thread

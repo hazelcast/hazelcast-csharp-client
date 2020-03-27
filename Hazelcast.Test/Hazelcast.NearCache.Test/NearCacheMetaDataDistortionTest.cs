@@ -41,7 +41,7 @@ namespace Hazelcast.NearCache.Test
         
         protected override string GetServerConfig()
         {
-            return Resources.hazelcast_nearcache;
+            return Resources.HazelcastNearCache;
         }
 
         [OneTimeTearDown]
@@ -50,16 +50,18 @@ namespace Hazelcast.NearCache.Test
             Environment.SetEnvironmentVariable("hazelcast.invalidation.max.tolerated.miss.count", null);
         }
 
-        protected override void ConfigureClient(ClientConfig config)
+        protected override void ConfigureClient(Configuration config)
         {
             base.ConfigureClient(config);
             Environment.SetEnvironmentVariable("hazelcast.invalidation.max.tolerated.miss.count", "0");
-            var defaultConfig = new NearCacheConfig()
-                .SetMaxSize(int.MaxValue)
-                .SetInvalidateOnChange(true)
-                .SetEvictionPolicy("None")
-                .SetInMemoryFormat(InMemoryFormat.Binary);
-            config.AddNearCacheConfig("nearCachedMap*", defaultConfig);
+            var defaultConfig = new NearCacheConfig
+            {
+                MaxSize = int.MaxValue,
+                InvalidateOnChange = true,
+                EvictionPolicy = EvictionPolicy.None,
+                InMemoryFormat = InMemoryFormat.Binary
+            };
+            config.NearCacheConfigs.Add("nearCachedMap*", defaultConfig);
         }
 
         [Test]
