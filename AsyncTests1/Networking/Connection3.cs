@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipelines;
 using System.Net;
@@ -8,10 +7,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncTests1.Networking;
 
-namespace AsyncTests1
+namespace AsyncTests1.Networking
 {
+    // same as 2 but with streams
+
     public class Connection3 : IConnection
     {
         // see https://devblogs.microsoft.com/dotnet/system-io-pipelines-high-performance-io-in-net/
@@ -183,7 +183,8 @@ namespace AsyncTests1
             var count = bytes.Length;
 
             Log.WriteLine($"Sent {count} bytes");
-            await _socket.SendAsync(Encoding.UTF8.GetBytes(_eom), SocketFlags.None, CancellationToken.None);
+            //await _socket.SendAsync(Encoding.UTF8.GetBytes(_eom), SocketFlags.None, CancellationToken.None);
+            await _stream.WriteAsync(Encoding.UTF8.GetBytes(_eom), 0, 1, CancellationToken.None);
             Log.WriteLine("Sent EOM");
 
             _semaphore.Release();

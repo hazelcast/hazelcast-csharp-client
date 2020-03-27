@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 
 namespace AsyncTests1.Networking
@@ -26,7 +27,17 @@ namespace AsyncTests1.Networking
             _name = name;
         }
 
-        private string Prefix => $"{_name}:{Thread.CurrentThread.ManagedThreadId:00} ";
+        private string Prefix => $"{Indent}{_name}:{Thread.CurrentThread.ManagedThreadId:00} ";
+
+        private string Indent => _name switch
+        {
+            "TST" => "",
+            "CLT" => "    ",
+            ClientConnection.LogName => "        ",
+            SocketConnection.LogName => "            ",
+            "SVR" => "                ",
+            _ => ""
+        };
 
         public void WriteLine(string text) => Console.WriteLine(Prefix + text);
 

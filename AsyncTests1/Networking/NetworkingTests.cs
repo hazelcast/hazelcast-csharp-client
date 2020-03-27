@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Buffers;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -44,6 +46,7 @@ namespace AsyncTests1.Networking
         // TODO: understand the schedulers in HZ code
 
         [Test]
+        [Timeout(10_000)]
         public async Task Test()
         {
             var log = new Log("TST");
@@ -55,10 +58,17 @@ namespace AsyncTests1.Networking
 
             log.WriteLine("Start client");
             var client = new Client("localhost", 11000);
+            client.Open();
 
             log.WriteLine("Send message");
             var message = new Message("ping");
             var response = await client.SendAsync(message);
+
+            log.WriteLine("Got response: " + response.Text);
+
+            log.WriteLine("Send message");
+            message = new Message("foo");
+            response = await client.SendAsync(message);
 
             log.WriteLine("Got response: " + response.Text);
 
@@ -71,6 +81,60 @@ namespace AsyncTests1.Networking
 
             log.WriteLine("End");
             await Task.Delay(100);
+        }
+
+        [Test]
+        public void Sequences1()
+        {
+            var origin = 1234;
+
+            var o = origin;
+            var bytes = new byte[4];
+            for (var i = 3; i >= 0; i--)
+            {
+                Console.WriteLine($"{i}: {(byte) o}");
+                bytes[i] = (byte) o;
+                o >>= 8;
+            }
+
+            var buffer = new ReadOnlySequence<byte>(bytes);
+
+            var value = 0;
+            var e = buffer.GetEnumerator();
+            var j = 0;
+            while (j < 4)
+            {
+                e.MoveNext();
+                var m = e.Current;
+                var k = 0;
+                var l = m.Span.Length;
+                while (k < l && j < 4)
+                {
+                    value <<= 8;
+                    Console.WriteLine(m.Span[k]);
+                    value |= m.Span[k++];
+                    j++;
+                }
+            }
+
+            Assert.AreEqual(origin, value);
+        }
+
+        [Test]
+        public void Sequences2()
+        {
+            var origin = 1234;
+
+            var bytes = new byte[4];
+            for (var i = 0; i < 4; i++)
+            {
+                bytes[i] = (byte)origin;
+                origin >>= 8;
+            }
+
+            var buffer = new ReadOnlySequence<byte>(bytes);
+            var value = buffer.ReadInt32();
+            Assert.AreEqual(origin, value);
         }
     }
 }

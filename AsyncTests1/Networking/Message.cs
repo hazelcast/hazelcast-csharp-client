@@ -36,6 +36,25 @@ namespace AsyncTests1.Networking
 
         public byte[] ToBytes() => Encoding.UTF8.GetBytes(ToString());
 
+        public byte[] ToPrefixedBytes()
+        {
+            var bytes1 = Encoding.UTF8.GetBytes(ToString());
+            var bytes2 = new byte[bytes1.Length + 4];
+
+            var length = bytes1.Length;
+
+            for (var i = 3; i >= 0; i--)
+            {
+                bytes2[i] = (byte) length;
+                length >>= 8;
+            }
+
+            bytes1.CopyTo(bytes2, 4);
+            return bytes2;
+        }
+
+        private string ToPrefixedString() => $"{33}:{Id:0000}:{Text}";
+
         public override string ToString() => $"{Id:0000}:{Text}";
     }
 }

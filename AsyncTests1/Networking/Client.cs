@@ -1,31 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
 {
+    // the Client is used by the user, it handles messages
+    // it manages the ClientConnection
+    // it deals with correlating calls and responses
+    //
     public class Client
     {
         private static readonly Log Log = new Log("CLT");
 
+        private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
         private readonly string _hostname;
         private readonly int _port;
-        private readonly string _eom;
 
-        private readonly IConnection _connection;
+        private ClientConnection _connection;
         private int _messageId;
-        private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
 
-        public Client(string hostname, int port, string eom = "/")
+        public Client(string hostname, int port)
         {
             _hostname = hostname;
             _port = port;
-            _eom = eom;
+        }
 
-            _connection = new Connection3(_hostname, _port, _eom);
-            _connection.OnReceivedMessage = OnReceivedMessage;
+        public void Open()
+        {
+            _connection = new ClientConnection(_hostname, _port) { OnReceivedMessage = OnReceivedMessage };
             _connection.Open();
         }
 
@@ -35,17 +37,24 @@ namespace AsyncTests1.Networking
             if (!_completions.TryGetValue(response.Id, out var completion))
                 return; // ignore?
 
+            // signal the completion source
             _completions.Remove(response.Id);
             completion.SetResult(response);
         }
 
         public async Task<Message> SendAsync(Message message)
         {
+            // assign a unique identifier to the message
+            // create a corresponding completion source
             message.Id = _messageId++;
-            Log.WriteLine($"Send \"{message}\"");
             var completion = new TaskCompletionSource<Message>();
             _completions[message.Id] = completion;
+
+            // send the message
+            Log.WriteLine($"Send \"{message}\"");
             await _connection.SendAsync(message);
+
+            // wait for the response
             Log.WriteLine("Wait for response...");
             return await completion.Task;
         }
@@ -54,6 +63,8 @@ namespace AsyncTests1.Networking
         {
             Log.WriteLine("Closing");
             await _connection.CloseAsync();
+
+            // shutdown all operations
             foreach (var completion in _completions.Values)
                 completion.SetException(new Exception("shutdown"));
         }

@@ -13,6 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
+using System.IO;
+using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -123,10 +126,117 @@ namespace AsyncTests1.Networking
                 return;
             }
 
-            // create the state object
-            var state = new StateObject { Socket = handler };
-            handler.BeginReceive(state.Buffer, 0, StateObject.BufferSize, SocketFlags.None, ReadCallback, state);
-            Log.WriteLine("Listening...");
+            var pipe = new Pipe();
+            var reading = ReadAsync(handler, pipe.Reader);
+            var writing = WriteAsync(handler, pipe.Writer);
+        }
+
+        // reads from socket and writes to the pipe
+        async Task WriteAsync(Socket handler, PipeWriter writer)
+        {
+            const int minimumBufferSize = 512;
+
+            while (true)
+            {
+                // allocate at least 512 bytes from the PipeWriter
+                var memory = writer.GetMemory(minimumBufferSize);
+                try
+                {
+                    int bytesRead = await handler.ReceiveAsync(memory, SocketFlags.None, CancellationToken.None);
+                    if (bytesRead == 0)
+                    {
+                        break;
+                    }
+                    // Tell the PipeWriter how much was read from the Socket
+                    writer.Advance(bytesRead);
+                }
+                catch (Exception ex)
+                {
+                    Log.WriteLine("ERROR!");
+                    Log.WriteLine(ex);
+                    break;
+                }
+
+                // make the data available to the PipeReader
+                var result = await writer.FlushAsync();
+
+                if (result.IsCompleted)
+                {
+                    break;
+                }
+            }
+
+            // Tell the PipeReader that there's no more data coming
+            Log.WriteLine("Complete writer");
+            writer.Complete();
+        }
+
+        // reads from the pipe and processes lines
+        async Task ReadAsync(Socket handler, PipeReader reader)
+        {
+            var expected = -1;
+
+            // loop reading data from the pipe
+            while (true)
+            {
+                Log.WriteLine("Wait for data");
+                var result = await reader.ReadAsync();
+                var buffer = result.Buffer;
+
+                Log.WriteLine($"Buffer: {buffer.Length}");
+
+                // whenever we get data,
+                // loop processing messages
+                var position = 0;
+                while (true)
+                {
+                    Log.WriteLine("Look for message");
+                    if (expected < 0)
+                    {
+                        // not enough data, read more data
+                        if (buffer.Length < 4)
+                            break;
+
+                        // get message length
+                        // expected = deserialize 4 bytes
+                        expected = buffer.ReadInt32();
+                        if (expected == 0)
+                        {
+                            Log.WriteLine($"Received zero-length message");
+                            break;
+                        }
+                        Log.WriteLine($"Expecting message with size {expected} bytes");
+                        buffer = buffer.Slice(4);
+                        position += 4;
+                    }
+
+                    // not enough data, read more data
+                    if (buffer.Length < expected)
+                        break;
+
+                    Log.WriteLine("Handle message");
+                    var message = Message.Parse(buffer.Slice(0, expected).ToArray());
+                    await ProcessMessage(handler, message);
+                    buffer = buffer.Slice(expected);
+                    position += expected;
+                    expected = -1;
+                }
+
+                // tell the PipeReader how much of the buffer we have consumed
+                reader.AdvanceTo(buffer.Start, buffer.End);
+
+                // stop reading (FIXME and what else?) on message
+                if (expected == 0)
+                    break;
+
+                // stop reading if there's no more data coming
+                if (result.IsCompleted)
+                    break;
+            }
+
+            // mark the PipeReader as complete
+            Log.WriteLine("Complete reader");
+            reader.Complete();
         }
 
         public void ReadCallback(IAsyncResult result)
@@ -205,6 +315,15 @@ namespace AsyncTests1.Networking
             handler.BeginReceive(state.Buffer, 0, StateObject.BufferSize, SocketFlags.None, ReadCallback, state);
         }
 
+        private async Task ProcessMessage(Socket socket, Message message)
+        {
+            Log.WriteLine("Handling message: " + message);
+
+            // respond to client
+            var response = new Message("pong:" + message.Text) { Id = message.Id };
+            await SendAsync(socket, response);
+        }
+
         private void HandleMessage(Socket socket, Message message)
         {
             // note: in real life, the server may queue the operation,
@@ -215,37 +334,29 @@ namespace AsyncTests1.Networking
             Log.WriteLine("Handling message: " + message);
 
             // respond to client
-            var response = new Message("pong:" + message.Text + _eom) { Id = message.Id };
-            Send(socket, response.ToString());
+            var response = new Message("pong:" + message.Text) { Id = message.Id };
+            SendAsync(socket, response);
         }
 
-        private static void Send(Socket handler, string data)
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+
+        public async ValueTask SendAsync(Socket socket, Message message)
         {
-            // convert the string data to byte data using ASCII encoding
-            var byteData = Encoding.ASCII.GetBytes(data);
+            // note - look at how SendAsync is implemented, we may get closer to metal
 
-            // begin sending the data to the remote device
-            handler.BeginSend(byteData, 0, byteData.Length, SocketFlags.None, SendCallback, handler);
-        }
+            await _semaphore.WaitAsync();
 
-        private static void SendCallback(IAsyncResult result)
-        {
-            try
-            {
-                // retrieve the socket from the state object
-                var handler = (Socket) result.AsyncState;
+            Log.WriteLine($"Send \"{message}\"");
+            var bytes = message.ToPrefixedBytes();
 
-                // complete sending the data to the remote device
-                var bytesSent = handler.EndSend(result);
-                Log.WriteLine($"Sent {bytesSent} bytes", bytesSent);
+            foreach (var b in bytes)
+                Console.Write($"{b:x2} ");
+            Console.WriteLine();
 
-                //handler.Shutdown(SocketShutdown.Both);
-                //handler.Close();
-            }
-            catch (Exception e)
-            {
-                Log.WriteLine(e.ToString());
-            }
+            await socket.SendAsync(bytes, SocketFlags.None);
+            Log.WriteLine($"Sent {bytes.Length} bytes");
+
+            _semaphore.Release();
         }
 
         public async Task StopAsync()
