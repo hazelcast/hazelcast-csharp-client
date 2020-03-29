@@ -56,24 +56,34 @@ namespace AsyncTests1.Networking
             var server = new Server("localhost", 11000);
             await server.StartAsync();
 
-            log.WriteLine("Start client");
-            var client = new Client("localhost", 11000);
-            client.Open();
+            log.WriteLine("Start client 1");
+            var client1 = new Client("localhost", 11000);
+            client1.Open();
 
-            log.WriteLine("Send message");
+            log.WriteLine("Send message 1 to client 1");
             var message = new Message("ping");
-            var response = await client.SendAsync(message);
+            var response = await client1.SendAsync(message);
 
             log.WriteLine("Got response: " + response.Text);
 
-            log.WriteLine("Send message");
+            log.WriteLine("Start client 2");
+            var client2 = new Client("localhost", 11000);
+            client2.Open();
+
+            log.WriteLine("Send message 1 to client 2");
+            message = new Message("a");
+            response = await client2.SendAsync(message);
+
+            log.WriteLine("Got response: " + response.Text);
+
+            log.WriteLine("Send message 2 to client 1");
             message = new Message("foo");
-            response = await client.SendAsync(message);
+            response = await client1.SendAsync(message);
 
             log.WriteLine("Got response: " + response.Text);
 
             log.WriteLine("Stop client");
-            await client.CloseAsync();
+            await client1.CloseAsync();
 
             log.WriteLine("Stop server");
             await server.StopAsync();

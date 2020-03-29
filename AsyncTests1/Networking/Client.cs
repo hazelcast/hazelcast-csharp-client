@@ -16,7 +16,9 @@ namespace AsyncTests1.Networking
         private readonly string _hostname;
         private readonly int _port;
 
-        private ClientConnection _connection;
+        //private ClientConnection _connection;
+        private ClientSocketConnection _socketConnection;
+        private MessageConnection _connection;
         private int _messageId;
 
         public Client(string hostname, int port)
@@ -27,8 +29,30 @@ namespace AsyncTests1.Networking
 
         public void Open()
         {
-            _connection = new ClientConnection(_hostname, _port) { OnReceivedMessage = OnReceivedMessage };
-            _connection.Open();
+            // TODO message connection is just a wrapper around a true socket connection
+            // FIXME but this ctor structure is convoluted
+
+            _connection = new MessageConnection(onReceiveBytes 
+                => _socketConnection = new ClientSocketConnection(_hostname, _port, onReceiveBytes), OnReceiveMessage);
+
+            _socketConnection.OpenAsync().AsTask().Wait();
+
+            //_connection = new ClientConnection(_hostname, _port) { OnReceivedMessage = OnReceivedMessage };
+            //_connection.Open();
+        }
+
+        private ValueTask OnReceiveMessage(MessageConnection connection, Message response)
+        {
+            Log.WriteLine($"Received response {response.Id}");
+
+            if (_completions.TryGetValue(response.Id, out var completion))
+            {
+                // signal the completion source
+                _completions.Remove(response.Id);
+                completion.SetResult(response);
+            }
+
+            return new ValueTask();
         }
 
         private void OnReceivedMessage(Message response)
@@ -62,7 +86,7 @@ namespace AsyncTests1.Networking
         public async Task CloseAsync()
         {
             Log.WriteLine("Closing");
-            await _connection.CloseAsync();
+            await _socketConnection.CloseAsync();
 
             // shutdown all operations
             foreach (var completion in _completions.Values)
