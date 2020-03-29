@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -37,15 +36,9 @@ namespace AsyncTests1.Networking
         /// </summary>
         /// <param name="hostname">The server hostname.</param>
         /// <param name="port">The server port.</param>
-        /// <param name="onReceiveMessageBytes">An action to execute when receiving a message.</param>
         /// <param name="multithread">Whether this connection should manage multi-threading.</param>
-        /// <remarks>
-        /// <para>The <paramref name="onReceiveMessageBytes"/> action must process the content of the
-        /// bytes sequence before it returns. The memory associated with the sequence is not
-        /// guaranteed to remain available after the action has returned.</para>
-        /// </remarks>
-        public ClientSocketConnection(string hostname, int port, Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> onReceiveMessageBytes, bool multithread = true)
-            : base(onReceiveMessageBytes, multithread)
+        public ClientSocketConnection(string hostname, int port, bool multithread = true)
+            : base(multithread)
         {
             if (string.IsNullOrWhiteSpace(hostname))
                 throw new ArgumentException("Value cannot be null nor empty.", nameof(hostname));
@@ -60,9 +53,16 @@ namespace AsyncTests1.Networking
         /// Opens the connection.
         /// </summary>
         /// <returns>A task that will complete when the connection has been opened.</returns>
+        /// <remarks>
+        /// <para>The connection can only be opened after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
+        /// has been set. If the handler has not been set, an exception is thrown.</para>
+        /// </remarks>
         public async ValueTask OpenAsync()
         {
             Log.WriteLine("Open");
+
+            if (OnReceiveMessageBytes == null)
+                throw new InvalidOperationException("No message bytes handler has been configured.");
 
             // create the socket
             // TODO: directly work with IPs

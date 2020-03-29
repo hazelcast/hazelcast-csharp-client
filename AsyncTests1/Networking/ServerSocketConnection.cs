@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,111 +28,39 @@ namespace AsyncTests1.Networking
     /// </remarks>
     public class ServerSocketConnection : SocketConnection
     {
-        /*
-        private readonly ManualResetEvent _accepted = new ManualResetEvent(false);
+        private readonly Socket _socket;
 
-        private CancellationTokenSource _cancellationTokenSource;
-        private Task _task;
-        */
-
-        public ServerSocketConnection(Socket socket, Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> onReceiveMessageBytes)
-            : base(onReceiveMessageBytes)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServerSocketConnection"/> class.
+        /// </summary>
+        /// <param name="socket">The underlying network socket.</param>
+        public ServerSocketConnection(Socket socket)
         {
+            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+        }
+
+        /// <summary>
+        /// Opens the connection.
+        /// </summary>
+        /// <remarks>
+        /// <para>The connection can only be opened after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
+        /// has been set. If the handler has not been set, an exception is thrown.</para>
+        /// </remarks>
+        public void Accept()
+        {
+            Log.WriteLine("Accept");
+
+            if (OnReceiveMessageBytes == null)
+                throw new InvalidOperationException("No message bytes handler has been configured.");
+
             // use a stream, because we may use SSL and require an SslStream
             // TODO: implement SSL or provide a Func<Stream, Stream>
-            var stream = new NetworkStream(socket, false);
+            var stream = new NetworkStream(_socket, false);
 
             // wire the pipe
-            OpenPipe(socket, stream);
+            OpenPipe(_socket, stream);
+
+            Log.WriteLine("Accepted");
         }
-
-        /*
-        public override ValueTask OpenAsync()
-        {
-            Log.WriteLine("Start server");
-
-            var host = Dns.GetHostEntry(Hostname);
-            var ipAddress = host.AddressList[0];
-
-            Log.WriteLine("Create listener socket");
-            _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            var endpoint = new IPEndPoint(ipAddress, Port);
-            _socket.Bind(endpoint);
-            _socket.Listen(10);
-
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            _task = Task.Run(() =>
-            {
-                Log.WriteLine("Start listening");
-                while (true)
-                {
-                    // Set the event to non-signaled state.
-                    _accepted.Reset();
-
-                    // Start an asynchronous socket to listen for connections.
-                    Log.WriteLine("Waiting for a connection...");
-                    _socket.BeginAccept(AcceptCallback, _socket);
-
-                    // wait until a connection is made before continuing
-                    // (or, for the server to be stopped)
-                    var n = WaitHandle.WaitAny(new[] { _accepted, _cancellationTokenSource.Token.WaitHandle });
-                    if (n == 1) break;
-                }
-                Log.WriteLine("Stop listening");
-
-                Log.WriteLine("Shutdown socket");
-                //_socket.Shutdown(SocketShutdown.Both);
-                _socket.Close();
-                _socket.Dispose();
-
-            }, CancellationToken.None);
-
-            return new ValueTask();
-        }
-
-        private void AcceptCallback(IAsyncResult result)
-        {
-            Log.WriteLine("Accept connection");
-
-            // signal the main thread to continue
-            _accepted.Set();
-
-            // get the socket that handles the client request
-            var listener = (Socket) result.AsyncState;
-
-            Socket handler;
-            Stream stream;
-            try
-            {
-                // may throw if the socket is not connected anymore
-                // also when the server is stopping
-                handler = listener.EndAccept(result);
-
-                // use a stream, because we may use SSL and require an SslStream
-                // TODO: implement SSL or provide a Func<Stream, Stream>
-                stream = new NetworkStream(_socket, false);
-            }
-            catch (Exception e)
-            {
-                if (_cancellationTokenSource.IsCancellationRequested)
-                {
-                    Log.WriteLine("Abort connection (server is stopping)");
-                }
-                else
-                {
-                    Log.WriteLine("Abort connection");
-                    Log.WriteLine(e);
-                }
-                // do something with listener?
-                return;
-            }
-
-            var pipe = new Pipe();
-            var reading = ReadAsync(stream, pipe.Reader);
-            var writing = WriteAsync(stream, pipe.Writer);
-        }
-        */
     }
 }

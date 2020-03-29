@@ -33,7 +33,7 @@ namespace AsyncTests1.Networking
         {
             "TST" => "",
             "CLT" => "    ",
-            ClientConnection.LogName => "        ",
+            MessageConnection.LogName => "        ",
             SocketConnection.LogName => "            ",
             "SVR" => "                ",
             _ => ""

@@ -12,15 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Pipelines;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
@@ -50,7 +42,7 @@ namespace AsyncTests1.Networking
         {
             Log.WriteLine("Start server");
 
-            _listener = new ServerSocketListener(_hostname, _port, AcceptConnection);
+            _listener = new ServerSocketListener(_hostname, _port) { OnAcceptConnection = AcceptConnection };
             await _listener.StartAsync();
 
             Log.WriteLine("Server started");
@@ -65,15 +57,14 @@ namespace AsyncTests1.Networking
             Log.WriteLine("Server stopped");
         }
 
-        private void AcceptConnection(Socket socket)
+        private void AcceptConnection(ServerSocketConnection serverConnection)
         {
-            // FIXME we should receive a connection already, not the raw socket?
+            // the connection we receive is not wired yet
+            // must wire it properly before accepting
 
-            var messageConnection = new MessageConnection(onReceiveBytes
-                => new ServerSocketConnection(socket, onReceiveBytes), ReceiveMessage);
-
-            var connection = new ServerSocketConnection(socket, ReceiveMessageBytes);
-            _connections[_connections.Count] = connection;
+            var messageConnection = new MessageConnection(serverConnection) { OnReceiveMessage = ReceiveMessage };
+            serverConnection.Accept();
+            _connections[_connections.Count] = serverConnection;
         }
 
         // TODO
@@ -90,19 +81,6 @@ namespace AsyncTests1.Networking
             };
             var response = new Message(responseText) { Id = message.Id };
             await connection.SendAsync(response);
-        }
-
-        private static async ValueTask ReceiveMessageBytes(SocketConnection connection, ReadOnlySequence<byte> bytes)
-        {
-            var message = Message.Parse(bytes.ToArray());
-            var responseText = message.Text switch
-            {
-                "a" => "alpha",
-                "b" => "bravo",
-                _ => "wut?"
-            };
-            var response = new Message(responseText) { Id = message.Id };
-            await connection.SendAsync(response.ToPrefixedBytes());
         }
     }
 }

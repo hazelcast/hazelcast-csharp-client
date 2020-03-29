@@ -32,11 +32,10 @@ namespace AsyncTests1.Networking
         private static readonly byte[] ZeroBytes4 = new byte[4];
 
         private readonly SemaphoreSlim _writer;
-        private readonly Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceiveMessageBytes;
 
+        private Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceiveMessageBytes;
         private Socket _socket;
         private Stream _stream;
-
         private Task _writing, _reading;
 
         /// <summary>
@@ -51,12 +50,23 @@ namespace AsyncTests1.Networking
         /// <para>Classes inheriting <see cref="SocketConnection"/> are expected to assign <see cref="_socket"/>
         /// and <see cref="_stream"/> before allowing operations.</para>
         /// </remarks>
-        protected SocketConnection(Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> onReceiveMessageBytes, bool multithread = true)
+        protected SocketConnection(bool multithread = true)
         {
-            _onReceiveMessageBytes = onReceiveMessageBytes ?? throw new ArgumentNullException(nameof(onReceiveMessageBytes));
-
             if (multithread)
                 _writer = new SemaphoreSlim(1);
+        }
+
+        /// <summary>
+        /// Gets or sets the function that handles message bytes.
+        /// </summary>
+        public Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> OnReceiveMessageBytes
+        {
+            get => _onReceiveMessageBytes;
+            set
+            {
+                if (true) // no open already
+                    _onReceiveMessageBytes = value ?? throw new ArgumentNullException(nameof(value));
+            }
         }
 
         /// <summary>

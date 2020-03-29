@@ -58,7 +58,7 @@ namespace AsyncTests1.Networking
 
             log.WriteLine("Start client 1");
             var client1 = new Client("localhost", 11000);
-            client1.Open();
+            await client1.OpenAsync();
 
             log.WriteLine("Send message 1 to client 1");
             var message = new Message("ping");
@@ -68,7 +68,7 @@ namespace AsyncTests1.Networking
 
             log.WriteLine("Start client 2");
             var client2 = new Client("localhost", 11000);
-            client2.Open();
+            await client2.OpenAsync();
 
             log.WriteLine("Send message 1 to client 2");
             message = new Message("a");

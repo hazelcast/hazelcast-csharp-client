@@ -16,7 +16,6 @@ namespace AsyncTests1.Networking
         private readonly string _hostname;
         private readonly int _port;
 
-        //private ClientConnection _connection;
         private ClientSocketConnection _socketConnection;
         private MessageConnection _connection;
         private int _messageId;
@@ -27,21 +26,17 @@ namespace AsyncTests1.Networking
             _port = port;
         }
 
-        public void Open()
+        public async ValueTask OpenAsync()
         {
-            // TODO message connection is just a wrapper around a true socket connection
-            // FIXME but this ctor structure is convoluted
+            // MessageConnection is just a wrapper around a true SocketConnection
+            // the SocketConnection must be open *after* everything has been wired
 
-            _connection = new MessageConnection(onReceiveBytes 
-                => _socketConnection = new ClientSocketConnection(_hostname, _port, onReceiveBytes), OnReceiveMessage);
-
-            _socketConnection.OpenAsync().AsTask().Wait();
-
-            //_connection = new ClientConnection(_hostname, _port) { OnReceivedMessage = OnReceivedMessage };
-            //_connection.Open();
+            _socketConnection = new ClientSocketConnection(_hostname, _port);
+            _connection = new MessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
+            await _socketConnection.OpenAsync();
         }
 
-        private ValueTask OnReceiveMessage(MessageConnection connection, Message response)
+        private ValueTask ReceiveMessage(MessageConnection connection, Message response)
         {
             Log.WriteLine($"Received response {response.Id}");
 
@@ -53,17 +48,6 @@ namespace AsyncTests1.Networking
             }
 
             return new ValueTask();
-        }
-
-        private void OnReceivedMessage(Message response)
-        {
-            Log.WriteLine($"Received response {response.Id}");
-            if (!_completions.TryGetValue(response.Id, out var completion))
-                return; // ignore?
-
-            // signal the completion source
-            _completions.Remove(response.Id);
-            completion.SetResult(response);
         }
 
         public async Task<Message> SendAsync(Message message)

@@ -28,10 +28,10 @@ namespace AsyncTests1.Networking
 
         private readonly string _hostname;
         private readonly int _port;
-        private readonly Action<Socket> _onAcceptConnection;
 
         private Socket _socket;
         private CancellationTokenSource _cancellationTokenSource;
+        private Action<ServerSocketConnection> _onAcceptConnection;
         private Task _task;
 
         /// <summary>
@@ -39,12 +39,23 @@ namespace AsyncTests1.Networking
         /// </summary>
         /// <param name="hostname"></param>
         /// <param name="port">The port to listen to.</param>
-        /// <param name="onAcceptConnection">An action to execute when accepting a connection.</param>
-        public ServerSocketListener(string hostname, int port, Action<Socket> onAcceptConnection)
+        public ServerSocketListener(string hostname, int port)
         {
             _hostname = hostname;
             _port = port;
-            _onAcceptConnection = onAcceptConnection;
+        }
+
+        /// <summary>
+        /// Gets or sets the function that accepts connections.
+        /// </summary>
+        public Action<ServerSocketConnection> OnAcceptConnection
+        {
+            get => _onAcceptConnection;
+            set
+            {
+                if (true) // not whatever yet
+                    _onAcceptConnection = value ?? throw new ArgumentNullException(nameof(value));
+            }
         }
 
         /// <summary>
@@ -54,6 +65,9 @@ namespace AsyncTests1.Networking
         public Task StartAsync()
         {
             Log.WriteLine("Start listener");
+
+            if (_onAcceptConnection == null)
+                throw new InvalidOperationException("No connection handler has been configured.");
 
             var host = Dns.GetHostEntry(_hostname);
             var ipAddress = host.AddressList[0];
@@ -132,8 +146,8 @@ namespace AsyncTests1.Networking
                 var handler = listener.EndAccept(result);
 
                 // we now have a connection
-                // TODO: create the connection here
-                _onAcceptConnection(handler);
+                var serverConnection = new ServerSocketConnection(handler);
+                _onAcceptConnection(serverConnection);
             }
             catch (Exception e)
             {
