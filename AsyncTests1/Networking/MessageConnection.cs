@@ -87,14 +87,14 @@ namespace AsyncTests1.Networking
         /// </summary>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been sent.</returns>
-        public async Task SendAsync(Message message)
+        public async ValueTask<bool> SendAsync(Message message)
         {
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection
 
             Log.WriteLine($"Send \"{message}\"");
             var bytes = message.ToPrefixedBytes();
-            await _connection.SendAsync(bytes);
+            return await _connection.SendAsync(bytes);
         }
 
         // temp de-serialization stuff

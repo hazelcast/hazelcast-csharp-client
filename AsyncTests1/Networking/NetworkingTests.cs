@@ -58,7 +58,7 @@ namespace AsyncTests1.Networking
 
             log.WriteLine("Start client 1");
             var client1 = new Client("localhost", 11000);
-            await client1.OpenAsync();
+            await client1.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 1");
             var message = new Message("ping");
@@ -68,7 +68,7 @@ namespace AsyncTests1.Networking
 
             log.WriteLine("Start client 2");
             var client2 = new Client("localhost", 11000);
-            await client2.OpenAsync();
+            await client2.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 2");
             message = new Message("a");
@@ -83,11 +83,44 @@ namespace AsyncTests1.Networking
             log.WriteLine("Got response: " + response.Text);
 
             log.WriteLine("Stop client");
-            await client1.CloseAsync();
+            await client1.ShutdownAsync();
 
             log.WriteLine("Stop server");
             await server.StopAsync();
             await Task.Delay(1000);
+
+            log.WriteLine("End");
+            await Task.Delay(100);
+        }
+
+        [Test]
+        [Timeout(10_000)]
+        public async Task ServerShutdown()
+        {
+            var log = new Log("TST");
+            log.WriteLine("Begin");
+
+            log.WriteLine("Start server");
+            var server = new Server("localhost", 11000);
+            await server.StartAsync();
+
+            log.WriteLine("Start client 1");
+            var client1 = new Client("localhost", 11000);
+            await client1.ConnectAsync();
+
+            log.WriteLine("Send message 1 to client 1");
+            var message = new Message("ping");
+            var response = await client1.SendAsync(message);
+
+            log.WriteLine("Got response: " + response.Text);
+
+            log.WriteLine("Stop server");
+            await server.StopAsync();
+            await Task.Delay(1000);
+
+            log.WriteLine("Send message 2 to client 1");
+            message = new Message("ping");
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await client1.SendAsync(message));
 
             log.WriteLine("End");
             await Task.Delay(100);

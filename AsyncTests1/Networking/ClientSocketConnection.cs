@@ -33,24 +33,25 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientSocketConnection"/> class.
         /// </summary>
+        /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="endpoint">The socket endpoint.</param>
         /// <param name="multithread">Whether this connection should manage multi-threading.</param>
-        public ClientSocketConnection(IPEndPoint endpoint, bool multithread = true)
-            : base(multithread)
+        public ClientSocketConnection(int id, IPEndPoint endpoint, bool multithread = true)
+            : base(id, multithread)
         {
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
-            Log.Prefix = "                CLT.CON";
+            Log.Prefix = $"                CLT.CON[{id}]";
         }
 
         /// <summary>
-        /// Opens the connection.
+        /// Connect to the server.
         /// </summary>
-        /// <returns>A task that will complete when the connection has been opened.</returns>
+        /// <returns>A task that will complete when the connection has been established.</returns>
         /// <remarks>
-        /// <para>The connection can only be opened after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
+        /// <para>The connection can only be established after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
         /// has been set. If the handler has not been set, an exception is thrown.</para>
         /// </remarks>
-        public async ValueTask OpenAsync()
+        public async ValueTask ConnectAsync()
         {
             Log.WriteLine("Open");
 

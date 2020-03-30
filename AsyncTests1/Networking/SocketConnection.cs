@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.IO;
 using System.IO.Pipelines;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,29 +17,37 @@ namespace AsyncTests1.Networking
     /// </remarks>
     public abstract class SocketConnection
     {
-        // TODO - better exception handling
-        // TODO - report when closed, either by remote or by failure
-
         private static readonly byte[] ZeroBytes4 = new byte[4];
 
+        private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
         public readonly Log Log = new Log();
         private readonly SemaphoreSlim _writer;
 
         private Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceiveMessageBytes;
+        private Func<SocketConnection, ValueTask> _onShutdown;
+        private Task _pipeWriter, _pipeReader, _pipeWriterShutdown, _pipeReaderShutdown;
         private Socket _socket;
         private Stream _stream;
-        private Task _writing, _reading;
-        private int _isOpen;
+        private int _isActive;
+        private int _isShutdown;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SocketConnection"/> class.
         /// </summary>
+        /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="multithread">Whether this connection should manage multi-threading.</param>
-        protected SocketConnection(bool multithread = true)
+        protected SocketConnection(int id, bool multithread = true)
         {
+            Id = id;
+
             if (multithread)
                 _writer = new SemaphoreSlim(1);
         }
+
+        /// <summary>
+        /// Gets the unique identifier of the socket.
+        /// </summary>
+        public int Id { get; }
 
         /// <summary>
         /// Gets or sets the function that handles message bytes.
@@ -47,17 +56,67 @@ namespace AsyncTests1.Networking
         /// <para>The function must process the content of the bytes sequence before it completes.
         /// The memory associated with the sequence is not guaranteed to remain available after the
         /// function has returned.</para>
-        /// <para>The function must be set before <see cref="OpenPipe"/> is invoked.</para>
+        /// <para>The function must be set before the connection is established.</para>
         /// </remarks>
         public Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> OnReceiveMessageBytes
         {
             get => _onReceiveMessageBytes;
             set
             {
-                if (true) // no open already
-                    _onReceiveMessageBytes = value ?? throw new ArgumentNullException(nameof(value));
+                if (_isActive == 1)
+                    throw new InvalidOperationException("Cannot set the property once the connection is active.");
+
+                _onReceiveMessageBytes = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
+
+        /// <summary>
+        /// Gets or sets the function that handle shutdowns.
+        /// </summary>
+        /// <remarks>
+        /// <para>The function must be set before the connection is established.</para>
+        /// </remarks>
+        public Func<SocketConnection, ValueTask> OnShutdown
+        {
+            get => _onShutdown;
+            set
+            {
+                if (_isActive == 1)
+                    throw new InvalidOperationException("Cannot set the property once the connection is active.");
+
+                _onShutdown = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the connection is active.
+        /// </summary>
+        public bool IsActive => _isActive == 1;
+
+        /// <summary>
+        /// Gets the date and time when the connection was created.
+        /// </summary>
+        public DateTime CreateTime { get; private set; }
+
+        /// <summary>
+        /// Gets the date and time when bytes were last written by the connection.
+        /// </summary>
+        public DateTime LastWriteTime { get; private set; }
+
+        /// <summary>
+        /// Gets the date and time when bytes were last read by the connection.
+        /// </summary>
+        public DateTime LastReadTime { get; private set; }
+
+        /// <summary>
+        /// Gets the remote endpoint of the connection.
+        /// </summary>
+        public EndPoint RemotEndPoint => _socket?.RemoteEndPoint;
+
+        /// <summary>
+        /// Gets the local endpoint of the connection.
+        /// </summary>
+        public EndPoint LocalEndPoint => _socket?.LocalEndPoint;
 
         /// <summary>
         /// Opens the pipe.
@@ -70,15 +129,52 @@ namespace AsyncTests1.Networking
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
+            // _onShutdown is not mandatory, but validate _onReceiveMessageBytes
             if (_onReceiveMessageBytes == null)
                 throw new InvalidOperationException("Missing message bytes handler.");
 
-            Interlocked.Exchange(ref _isOpen, 1);
+            Interlocked.Exchange(ref _isActive, 1);
+
+            CreateTime = DateTime.Now;
 
             // wire the pipe
             var pipe = new Pipe();
-            _writing = WriteAsync(_stream, pipe.Writer);
-            _reading = ReadAsync(pipe.Reader);
+            _pipeWriter = WritePipeAsync(_stream, pipe.Writer);
+            _pipeWriterShutdown = _pipeWriter.ContinueWith(ShutdownInternal);
+            _pipeReader = ReadPipeAsync(pipe.Reader);
+            _pipeReaderShutdown = _pipeReader.ContinueWith(ShutdownInternal);
+        }
+
+        /// <summary>
+        /// Shuts the connection down after a task has completed.
+        /// </summary>
+        /// <param name="task">The completed task.</param>
+        /// <returns>A task that will complete when the connection is down.</returns>
+        private async ValueTask ShutdownInternal(Task task = null)
+        {
+            // only once
+            if (Interlocked.CompareExchange(ref _isShutdown, 1, 0) == 1)
+                return;
+
+            Interlocked.Exchange(ref _isActive, 0);
+
+            // ensure everything is down by awaiting the other task
+            await (task == _pipeReader ? _pipeWriter : _pipeReader);
+
+            // kill socket and stream
+            try
+            {
+                _socket.Shutdown(SocketShutdown.Both);
+                _socket.Close();
+                _stream.Close();
+            }
+            catch { /* ignore */ }
+
+            Log.WriteLine("Connection is down");
+
+            // notify
+            if (_onShutdown != null)
+                await _onShutdown(this);
         }
 
         /// <summary>
@@ -91,13 +187,14 @@ namespace AsyncTests1.Networking
         /// bytes that will represent the length of the message, and are filled by this
         /// method.</para>
         /// </remarks>
-        public async ValueTask SendAsync(byte[] bytes)
+        public async ValueTask<bool> SendAsync(byte[] bytes)
         {
             if (bytes.Length < 4)
                 throw new ArgumentException("Must be at least 4 bytes.", nameof(bytes));
 
-            // TODO: manage a flag to determine whether we're open
-            //
+            if (_isActive == 0)
+                return false;
+
             // set message length, using a fast-enough yet avoiding 'unsafe' code
             var length = bytes.Length - 4;
             unchecked
@@ -116,15 +213,51 @@ namespace AsyncTests1.Networking
             try
             {
                 await _stream.WriteAsync(bytes, 0, bytes.Length, CancellationToken.None);
+                LastWriteTime = DateTime.Now;
             }
-            catch
+            catch (Exception e)
             {
-                // fixme what shall we do?
-                // or should it be TrySendAsync?
+                // on error, shutdown and report
+                Log.WriteLine("SendAsync:ERROR");
+                Log.WriteLine(e);
+                _streamReadCancellationTokenSource.Cancel();
+                return false;
             }
             _writer?.Release();
 
             Log.WriteLine($"Sent {bytes.Length} bytes");
+            return true;
+        }
+
+        /// <summary>
+        /// Sends raw bytes.
+        /// </summary>
+        /// <param name="bytes">The bytes to send.</param>
+        /// <returns>A task that will complete when the message bytes have been sent.</returns>
+        public async ValueTask<bool> SendRawAsync(byte[] bytes)
+        {
+            if (_isActive == 0)
+                return false;
+
+            // send bytes, serialize sending via semaphore
+            if (_writer != null) await _writer.WaitAsync();
+            try
+            {
+                await _stream.WriteAsync(bytes, 0, bytes.Length, CancellationToken.None);
+                LastWriteTime = DateTime.Now;
+            }
+            catch (Exception e)
+            {
+                // on error, shutdown and report
+                Log.WriteLine("SendRawAsync:ERROR");
+                Log.WriteLine(e);
+                _streamReadCancellationTokenSource.Cancel();
+                return false;
+            }
+            _writer?.Release();
+
+            Log.WriteLine($"Sent {bytes.Length} raw bytes");
+            return true;
         }
 
         /// <summary>
@@ -133,8 +266,10 @@ namespace AsyncTests1.Networking
         /// <returns>A task that will complete when the connection has closed.</returns>
         public async ValueTask ShutdownAsync()
         {
-            // send empty message to signal the other end
-            // (ignore errors)
+            if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
+                return;
+
+            // notify other end with an empty message
             Log.WriteLine("Send empty message");
             if (_writer != null) await _writer.WaitAsync();
             try
@@ -144,15 +279,13 @@ namespace AsyncTests1.Networking
             catch { /* ignore */ }
             _writer?.Release();
 
-            // shutdown
-            _socket.Shutdown(SocketShutdown.Both);
-            _socket.Close();
-            _stream.Close();
+            // requests that the pipe stops processing
+            Log.WriteLine("Cancel pipe");
+            _streamReadCancellationTokenSource.Cancel();
 
-            // wait until the pipe is down, too
-            // TODO can this throw?
-            await _reading;
-            await _writing;
+            // wait for everything to be down
+            await _pipeWriterShutdown;
+            await _pipeReaderShutdown;
         }
 
         /// <summary>
@@ -162,7 +295,7 @@ namespace AsyncTests1.Networking
         /// <param name="writer">The <see cref="PipeWriter"/> to write to.</param>
         /// <returns>A task representing the write loop, that completes when the stream
         /// is closed, or when an error occurs.</returns>
-        protected async Task WriteAsync(Stream stream, PipeWriter writer)
+        protected async Task WritePipeAsync(Stream stream, PipeWriter writer)
         {
             const int minimumBufferSize = 512;
 
@@ -170,32 +303,47 @@ namespace AsyncTests1.Networking
             {
                 // allocate at least 512 bytes from the PipeWriter
                 var memory = writer.GetMemory(minimumBufferSize);
+                int bytesRead;
                 try
                 {
-                    var bytesRead = await stream.ReadAsync(memory, CancellationToken.None);
+                    bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token);
                     if (bytesRead == 0)
+                    {
+                        Log.WriteLine("Pipe writer received no data");
                         break;
+                    }
 
-                    // tell the PipeWriter how much was read from the network
-                    writer.Advance(bytesRead);
+                    LastReadTime = DateTime.Now;
+                }
+                catch (OperationCanceledException)
+                {
+                    // expected - just break
+                    Log.WriteLine("Pipe writer has been cancelled");
+                    break;
                 }
                 catch (Exception ex)
                 {
-                    // TODO: better error handling
-                    Log.WriteLine("ERROR!");
+                    // on error, shutdown and break, this will complete the reader
+                    Log.WriteLine("Pipe writer:ERROR");
                     Log.WriteLine(ex);
                     break;
                 }
+
+                // tell the PipeWriter how much was read from the network
+                writer.Advance(bytesRead);
 
                 // make the data available to the PipeReader
                 var result = await writer.FlushAsync();
 
                 if (result.IsCompleted)
+                {
+                    Log.WriteLine("Pipe is completed (in writer)");
                     break;
+                }
             }
 
             // tell the PipeReader that there's no more data coming
-            Log.WriteLine("Writer completing");
+            Log.WriteLine("Pipe writer completing");
             writer.Complete();
         }
 
@@ -205,7 +353,7 @@ namespace AsyncTests1.Networking
         /// <param name="reader">The <see cref="PipeReader"/> to read from.</param>
         /// <returns>A task representing the read loop, that completes when an empty message
         /// is received, or when there is no more data coming (writer completed).</returns>
-        protected async Task ReadAsync(PipeReader reader)
+        protected async Task ReadPipeAsync(PipeReader reader)
         {
             // expected message length
             // -1 means we don't know yet
@@ -215,42 +363,65 @@ namespace AsyncTests1.Networking
             while (true)
             {
                 // await data from the pipe
-                Log.WriteLine("Await data from the pipe");
+                Log.WriteLine("Pipe reader awaits data from the pipe");
                 var result = await reader.ReadAsync();
                 var buffer = result.Buffer;
 
-                Log.WriteLine($"Received data, buffer size is {buffer.Length} bytes");
+
+                // no data means it's over
+                if (buffer.Length == 0)
+                {
+                    Log.WriteLine("Pipe reader received no data");
+                    break;
+                }
+
+                Log.WriteLine($"Pipe reader received data, buffer size is {buffer.Length} bytes");
 
                 // process data
                 while (true)
                 {
-                    Log.WriteLine("Process data");
+                    Log.WriteLine("Pipe reader processes data");
                     if (expected < 0)
                     {
                         // we need at least 4 bytes to figure out the expected
                         // message length - otherwise, just keep reading
                         if (buffer.Length < 4)
+                        {
+                            Log.WriteLine("Pipe reader has not enough data");
                             break;
+                        }
 
                         // deserialize expected message length (4 bytes)
                         expected = buffer.ReadInt32();
                         buffer = buffer.Slice(4);
                         if (expected == 0)
                         {
-                            Log.WriteLine("Zero-length message, break");
+                            Log.WriteLine("Pipe reader received zero-length message, shutdown");
                             break;
                         }
 
-                        Log.WriteLine($"Expecting message with size {expected} bytes");
+                        Log.WriteLine($"Pipe reader expecting message with size {expected} bytes");
                     }
 
                     // not enough data, keep reading
                     if (buffer.Length < expected)
+                    {
+                        Log.WriteLine("Pipe reader has not enough data");
                         break;
+                    }
 
                     // we have a message, handle it
-                    Log.WriteLine("Message complete, handle");
-                    await _onReceiveMessageBytes(this, buffer.Slice(0, expected));
+                    Log.WriteLine("Pipe reader has complete message, handle");
+                    try
+                    {
+                        await _onReceiveMessageBytes(this, buffer.Slice(0, expected));
+                    }
+                    catch (Exception e)
+                    {
+                        // error while processing, report
+                        Log.WriteLine("Pipe reader:ERROR");
+                        Log.WriteLine(e);
+                    }
                     buffer = buffer.Slice(expected);
                     expected = -1;
                 }
@@ -259,26 +430,20 @@ namespace AsyncTests1.Networking
                 reader.AdvanceTo(buffer.Start, buffer.End);
 
                 // shutdown on empty message
-                // TODO signal!
                 if (expected == 0)
                     break;
 
                 // stop reading if there's no more data coming
                 if (result.IsCompleted)
+                {
+                    Log.WriteLine("Pipe is completed (in reader)");
                     break;
+                }
             }
 
             // mark the PipeReader as complete
-            Log.WriteLine("Reader completing.");
+            Log.WriteLine("Pipe reader completing");
             reader.Complete();
-        }
-
-        // TODO: implement IDisposable?
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            _socket?.Dispose();
-            _stream?.Dispose();
         }
     }
 }

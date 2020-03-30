@@ -5,29 +5,42 @@ using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
 {
-    // the Client is used by the user, it handles messages
-    // it manages the ClientConnection
-    // it deals with correlating calls and responses
-    //
+    /// <summary>
+    /// Represents a client.
+    /// </summary>
     public class Client
     {
         public readonly Log Log = new Log { Prefix = "    CLT" };
 
+        private readonly byte[] _clientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
+
         private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
+        private readonly object _isConnectedLock = new object();
         private readonly string _hostname;
         private readonly int _port;
 
         private ClientSocketConnection _socketConnection;
         private MessageConnection _connection;
         private int _messageId;
+        private static int _connectionIds; // FIXME - implement proper correlation id
+        private bool _isConnected;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Client"/> class.
+        /// </summary>
+        /// <param name="hostname">The server hostname.</param>
+        /// <param name="port">The server port.</param>
         public Client(string hostname, int port)
         {
             _hostname = hostname;
             _port = port;
         }
 
-        public async ValueTask OpenAsync()
+        /// <summary>
+        /// Connects the client to the server.
+        /// </summary>
+        /// <returns>A task that will complete when the client is connected.</returns>
+        public async ValueTask ConnectAsync()
         {
             // MessageConnection is just a wrapper around a true SocketConnection
             // the SocketConnection must be open *after* everything has been wired
@@ -36,12 +49,38 @@ namespace AsyncTests1.Networking
             var ipAddress = host.AddressList[0];
             var endpoint = new IPEndPoint(ipAddress, _port);
 
-            _socketConnection = new ClientSocketConnection(endpoint);
+            _socketConnection = new ClientSocketConnection(_connectionIds++, endpoint) { OnShutdown = SocketShutdown };
             _connection = new MessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
-            _connection.Log.Prefix = "            CLT.MSG";
-            await _socketConnection.OpenAsync();
+            _connection.Log.Prefix = "            CLT.MSG" + _socketConnection.Id;
+
+            await _socketConnection.ConnectAsync();
+
+            // FIXME implement protocol bytes
+            //if (!await _socketConnection.SendRawAsync(_clientProtocolInitBytes))
+            //    throw new InvalidOperationException("Failed to open.");
+
+            lock (_isConnectedLock) _isConnected = true;
         }
 
+        /// <summary>
+        /// Handles connection shutdown.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <returns>A task that will complete when the shutdown has been handled.</returns>
+        private ValueTask SocketShutdown(SocketConnection connection)
+        {
+            foreach (var completion in _completions.Values)
+                completion.SetException(new Exception("shutdown"));
+
+            return new ValueTask();
+        }
+
+        /// <summary>
+        /// Handles response messages..
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="response">The response message.</param>
+        /// <returns>A task that will complete when the response message has been handled.</returns>
         private ValueTask ReceiveMessage(MessageConnection connection, Message response)
         {
             Log.WriteLine($"Received response {response.Id}");
@@ -56,29 +95,63 @@ namespace AsyncTests1.Networking
             return new ValueTask();
         }
 
+        /// <summary>
+        /// Sends a message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         public async Task<Message> SendAsync(Message message)
         {
+            lock (_isConnectedLock)
+            {
+                if (!_isConnected)
+                    throw new InvalidOperationException("Not connected.");
+            }
+
             // assign a unique identifier to the message
             // create a corresponding completion source
             message.Id = _messageId++;
-            var completion = new TaskCompletionSource<Message>();
-            _completions[message.Id] = completion;
 
             // send the message
             Log.WriteLine($"Send \"{message}\"");
-            await _connection.SendAsync(message);
+            var success = await _connection.SendAsync(message);
+
+            if (!success)
+                throw new InvalidOperationException("Failed to send message.");
 
             // wait for the response
-            Log.WriteLine("Wait for response...");
+            var completion = new TaskCompletionSource<Message>();
+            lock (_isConnectedLock)
+            {
+                // only return the completion task if we are still connected
+                // to ensure that should we disconnect, it would be handled
+                if (!_isConnected)
+                    throw new InvalidOperationException("Not connected.");
+
+                Log.WriteLine("Wait for response...");
+                _completions[message.Id] = completion;
+            }
             return await completion.Task;
         }
 
-        public async Task CloseAsync()
+        /// <summary>
+        /// Shuts the client down.
+        /// </summary>
+        /// <returns>A task that will complete when the client has shut down.</returns>
+        public async Task ShutdownAsync()
         {
-            Log.WriteLine("Closing");
+            Log.WriteLine("Shutdown");
+
+            lock (_isConnectedLock)
+            {
+                if (!_isConnected) return;
+                _isConnected = false;
+            }
+
+            // shutdown the connection
             await _socketConnection.ShutdownAsync();
 
-            // shutdown all operations
+            // shutdown all pending operations
             foreach (var completion in _completions.Values)
                 completion.SetException(new Exception("shutdown"));
         }

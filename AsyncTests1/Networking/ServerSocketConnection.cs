@@ -31,23 +31,25 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Initializes a new instance of the <see cref="ServerSocketConnection"/> class.
         /// </summary>
+        /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="socket">The underlying network socket.</param>
-        public ServerSocketConnection(Socket socket)
+        public ServerSocketConnection(int id, Socket socket)
+            : base(id)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-            Log.Prefix = "                                SVR.CON";
+            Log.Prefix = $"                                SVR.CON[{id}]";
         }
 
         /// <summary>
-        /// Accepts the connection.
+        /// Connects to the client.
         /// </summary>
         /// <remarks>
-        /// <para>The connection can only be accepted after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
+        /// <para>The connection can only be established after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
         /// has been set. If the handler has not been set, an exception is thrown.</para>
         /// </remarks>
         public void Accept()
         {
-            Log.WriteLine("Accept");
+            Log.WriteLine("Connect");
 
             if (OnReceiveMessageBytes == null)
                 throw new InvalidOperationException("No message bytes handler has been configured.");
@@ -59,7 +61,7 @@ namespace AsyncTests1.Networking
             // wire the pipe
             OpenPipe(_socket, stream);
 
-            Log.WriteLine("Accepted");
+            Log.WriteLine("Connected");
         }
     }
 }

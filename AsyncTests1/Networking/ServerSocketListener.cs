@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,9 @@ using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
 {
+    /// <summary>
+    /// Represents a server listener.
+    /// </summary>
     public class ServerSocketListener
     {
         public readonly Log Log = new Log();
@@ -33,6 +36,7 @@ namespace AsyncTests1.Networking
         private CancellationTokenSource _cancellationTokenSource;
         private Action<ServerSocketConnection> _onAcceptConnection;
         private Task _task;
+        private int _connectionIds; // FIXME - implement proper connection IDs
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServerSocketListener"/> class.
@@ -146,7 +150,7 @@ namespace AsyncTests1.Networking
                 var handler = listener.EndAccept(result);
 
                 // we now have a connection
-                var serverConnection = new ServerSocketConnection(handler);
+                var serverConnection = new ServerSocketConnection(_connectionIds++, handler);
                 _onAcceptConnection(serverConnection);
             }
             catch (Exception e)
@@ -161,7 +165,7 @@ namespace AsyncTests1.Networking
                     Log.WriteLine(e);
                 }
 
-                // TODO: do something with listener?
+                // FIXME - should report to the server
             }
         }
     }
