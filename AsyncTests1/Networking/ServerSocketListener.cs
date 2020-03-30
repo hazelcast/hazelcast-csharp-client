@@ -28,6 +28,7 @@ namespace AsyncTests1.Networking
         public readonly Log Log = new Log();
 
         private readonly ManualResetEvent _accepted = new ManualResetEvent(false);
+        private readonly ISequence<int> _connectionIdSequence = new Int32Sequence();
 
         private readonly string _hostname;
         private readonly int _port;
@@ -36,7 +37,6 @@ namespace AsyncTests1.Networking
         private CancellationTokenSource _cancellationTokenSource;
         private Action<ServerSocketConnection> _onAcceptConnection;
         private Task _task;
-        private int _connectionIdSequence;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServerSocketListener"/> class.
@@ -61,11 +61,6 @@ namespace AsyncTests1.Networking
                     _onAcceptConnection = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
-
-        /// <summary>
-        /// Gets the next connection unique identifier.
-        /// </summary>
-        private int NextConnectionId => Interlocked.Increment(ref _connectionIdSequence);
 
         /// <summary>
         /// Starts listening.
@@ -156,7 +151,7 @@ namespace AsyncTests1.Networking
                 var handler = listener.EndAccept(result);
 
                 // we now have a connection
-                var serverConnection = new ServerSocketConnection(NextConnectionId, handler);
+                var serverConnection = new ServerSocketConnection(_connectionIdSequence.Next, handler);
                 _onAcceptConnection(serverConnection);
             }
             catch (Exception e)

@@ -1,36 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
 {
-    // FIXME move these class + use in listener + tests
-
-    /// <summary>
-    /// Defines a sequence of elements.
-    /// </summary>
-    /// <typeparam name="T">The type of the sequence.</typeparam>
-    public interface ISequence<out T>
-    {
-        /// <summary>
-        /// Gets the next element of the sequence.
-        /// </summary>
-        T Next { get; }
-    }
-
-    /// <summary>
-    /// Implements an <see cref="ISequence{Int32}" />.
-    /// </summary>
-    public class Int32Sequence : ISequence<int>
-    {
-        private int _value;
-
-        /// <inheritdoc />
-        public int Next => Interlocked.Increment(ref _value);
-    }
-
     /// <summary>
     /// Represents a client.
     /// </summary>
@@ -71,7 +45,7 @@ namespace AsyncTests1.Networking
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public Client(string hostname, int port, ISequence<int> connectionIdSequence)
+        public Client(string hostname, int port, ISequence<int> connectionIdSequence) // FIXME should accept an endpoint
         {
             _hostname = hostname;
             _port = port;
