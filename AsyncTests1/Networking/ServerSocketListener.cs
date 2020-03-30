@@ -36,7 +36,7 @@ namespace AsyncTests1.Networking
         private CancellationTokenSource _cancellationTokenSource;
         private Action<ServerSocketConnection> _onAcceptConnection;
         private Task _task;
-        private int _connectionIds; // FIXME - implement proper connection IDs
+        private int _connectionIdSequence;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServerSocketListener"/> class.
@@ -61,6 +61,11 @@ namespace AsyncTests1.Networking
                     _onAcceptConnection = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
+
+        /// <summary>
+        /// Gets the next connection unique identifier.
+        /// </summary>
+        private int NextConnectionId => Interlocked.Increment(ref _connectionIdSequence);
 
         /// <summary>
         /// Starts listening.
@@ -151,7 +156,7 @@ namespace AsyncTests1.Networking
                 var handler = listener.EndAccept(result);
 
                 // we now have a connection
-                var serverConnection = new ServerSocketConnection(_connectionIds++, handler);
+                var serverConnection = new ServerSocketConnection(NextConnectionId, handler);
                 _onAcceptConnection(serverConnection);
             }
             catch (Exception e)

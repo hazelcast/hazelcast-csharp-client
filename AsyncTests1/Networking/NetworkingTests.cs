@@ -56,8 +56,10 @@ namespace AsyncTests1.Networking
             var server = new Server("localhost", 11000);
             await server.StartAsync();
 
+            var sequence = new Int32Sequence();
+
             log.WriteLine("Start client 1");
-            var client1 = new Client("localhost", 11000);
+            var client1 = new Client("localhost", 11000, sequence);
             await client1.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 1");
@@ -67,7 +69,7 @@ namespace AsyncTests1.Networking
             log.WriteLine("Got response: " + response.Text);
 
             log.WriteLine("Start client 2");
-            var client2 = new Client("localhost", 11000);
+            var client2 = new Client("localhost", 11000, sequence);
             await client2.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 2");

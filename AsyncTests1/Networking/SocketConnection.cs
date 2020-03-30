@@ -355,138 +355,135 @@ namespace AsyncTests1.Networking
         /// is received, or when there is no more data coming (writer completed).</returns>
         protected async Task ReadPipeAsync(PipeReader reader)
         {
-            // expected message length
-            // -1 means we don't know yet
-            var expected = -1;
-
             // loop reading data from the pipe
-            while (true)
-            {
-                // await data from the pipe
-                Log.WriteLine("Pipe reader awaits data from the pipe");
-                var result = await reader.ReadAsync();
-                var buffer = result.Buffer;
-
-                // no data means it's over
-                if (buffer.Length == 0)
-                {
-                    Log.WriteLine("Pipe reader received no data");
-                    break;
-                }
-
-                Log.WriteLine($"Pipe reader received data, buffer size is {buffer.Length} bytes");
-
-                // process data
-                while (await ReadPipeAsyncLoop1()) { }
-
-                // tell the PipeReader how much of the buffer we have consumed
-                reader.AdvanceTo(buffer.Start, buffer.End);
-
-                // shutdown on empty message
-                if (expected == 0)
-                    break;
-
-                // stop reading if there's no more data coming
-                if (result.IsCompleted)
-                {
-                    Log.WriteLine("Pipe is completed (in reader)");
-                    break;
-                }
-            }
+            var state = new ReadPipeState { Reader = reader };
+            while (await ReadPipeLoop0(state)) { }
 
             // mark the PipeReader as complete
             Log.WriteLine("Pipe reader completing");
             reader.Complete();
+        }
 
-            // --- loop body ---
+        /// <summary>
+        /// Reads from the pipe, and processes data.
+        /// </summary>
+        /// <param name="state">The reading state.</param>
+        /// <returns>A task that will complete when data has been read and processed,
+        /// and represents whether to continue reading.</returns>
+        private async ValueTask<bool> ReadPipeLoop0(ReadPipeState state)
+        {
+            // await data from the pipe
+            Log.WriteLine("Pipe reader awaits data from the pipe");
+            var result = await state.Reader.ReadAsync();
+            state.Buffer = result.Buffer;
 
-            async ValueTask<bool> ReadPipeAsyncLoop1()
+            // no data means it's over
+            if (state.Buffer.Length == 0)
             {
-                // await data from the pipe
-                Log.WriteLine("Pipe reader awaits data from the pipe");
-                var result = await reader.ReadAsync();
-                var buffer = result.Buffer;
-
-                // no data means it's over
-                if (buffer.Length == 0)
-                {
-                    Log.WriteLine("Pipe reader received no data");
-                    return false;
-                }
-
-                Log.WriteLine($"Pipe reader received data, buffer size is {buffer.Length} bytes");
-
-                // process data
-                while (await ReadPipeAsyncLoop2()) { }
-
-                // tell the PipeReader how much of the buffer we have consumed
-                reader.AdvanceTo(buffer.Start, buffer.End);
-
-                // shutdown on empty message
-                if (expected == 0)
-                    return false;
-
-                // stop reading if there's no more data coming
-                if (result.IsCompleted)
-                {
-                    Log.WriteLine("Pipe is completed (in reader)");
-                    return false;
-                }
-
-                return true;
-
-                // --- loop body ---
-
-                async ValueTask<bool> ReadPipeAsyncLoop2()
-                {
-                    Log.WriteLine("Pipe reader processes data");
-                    if (expected < 0)
-                    {
-                        // we need at least 4 bytes to figure out the expected
-                        // message length - otherwise, just keep reading
-                        if (buffer.Length < 4)
-                        {
-                            Log.WriteLine("Pipe reader has not enough data");
-                            return false;
-                        }
-
-                        // deserialize expected message length (4 bytes)
-                        expected = buffer.ReadInt32();
-                        buffer = buffer.Slice(4);
-                        if (expected == 0)
-                        {
-                            Log.WriteLine("Pipe reader received zero-length message, shutdown");
-                            return false;
-                        }
-
-                        Log.WriteLine($"Pipe reader expecting message with size {expected} bytes");
-                    }
-
-                    // not enough data, keep reading
-                    if (buffer.Length < expected)
-                    {
-                        Log.WriteLine("Pipe reader has not enough data");
-                        return false;
-                    }
-
-                    // we have a message, handle it
-                    Log.WriteLine("Pipe reader has complete message, handle");
-                    try
-                    {
-                        await _onReceiveMessageBytes(this, buffer.Slice(0, expected));
-                    }
-                    catch (Exception e)
-                    {
-                        // error while processing, report
-                        Log.WriteLine("Pipe reader:ERROR");
-                        Log.WriteLine(e);
-                    }
-                    buffer = buffer.Slice(expected);
-                    expected = -1;
-
-                    return true;
-                }
+                Log.WriteLine("Pipe reader received no data");
+                return false;
             }
+
+            Log.WriteLine($"Pipe reader received data, buffer size is {state.Buffer.Length} bytes");
+
+            // process data
+            while (await ReadPipeLoop1(state)) { }
+
+            // tell the PipeReader how much of the buffer we have consumed
+            state.Reader.AdvanceTo(state.Buffer.Start, state.Buffer.End);
+
+            // shutdown on empty message
+            if (state.Expected == 0)
+                return false;
+
+            // stop reading if there's no more data coming
+            if (result.IsCompleted)
+            {
+                Log.WriteLine("Pipe is completed (in reader)");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Processes data from the pipe.
+        /// </summary>
+        /// <param name="state">The reading state.</param>
+        /// <returns>A task that will complete when data has been processed,
+        /// and represents whether to continue processing.</returns>
+        private async ValueTask<bool> ReadPipeLoop1(ReadPipeState state)
+        {
+            Log.WriteLine("Pipe reader processes data");
+            if (state.Expected < 0)
+            {
+                // we need at least 4 bytes to figure out the expected
+                // message length - otherwise, just keep reading
+                if (state.Buffer.Length < 4)
+                {
+                    Log.WriteLine("Pipe reader has not enough data");
+                    return false;
+                }
+
+                // deserialize expected message length (4 bytes)
+                state.Expected = state.Buffer.ReadInt32();
+                state.Buffer = state.Buffer.Slice(4);
+                if (state.Expected == 0)
+                {
+                    Log.WriteLine("Pipe reader received zero-length message, shutdown");
+                    return false;
+                }
+
+                Log.WriteLine($"Pipe reader expecting message with size {state.Expected} bytes");
+            }
+
+            // not enough data, keep reading
+            if (state.Buffer.Length < state.Expected)
+            {
+                Log.WriteLine("Pipe reader has not enough data");
+                return false;
+            }
+
+            // we have a message, handle it
+            Log.WriteLine("Pipe reader has complete message, handle");
+            try
+            {
+                await _onReceiveMessageBytes(this, state.Buffer.Slice(0, state.Expected));
+            }
+            catch (Exception e)
+            {
+                // error while processing, report
+                Log.WriteLine("Pipe reader:ERROR");
+                Log.WriteLine(e);
+            }
+            state.Buffer = state.Buffer.Slice(state.Expected);
+            state.Expected = -1;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Represents the state of the reading loop.
+        /// </summary>
+        private class ReadPipeState
+        {
+            /// <summary>
+            /// Gets or sets the pipe reader.
+            /// </summary>
+            public PipeReader Reader;
+
+            /// <summary>
+            /// Gets or sets the current buffer.
+            /// </summary>
+            public ReadOnlySequence<byte> Buffer;
+
+            /// <summary>
+            /// Gets or sets the expected message length.
+            /// </summary>
+            /// <remarks>
+            /// <para>A value of -1 means that we do not know yet.</para>
+            /// </remarks>
+            public int Expected = -1;
         }
     }
 }

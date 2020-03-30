@@ -1,10 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
 {
+    // FIXME move these class + use in listener + tests
+
+    /// <summary>
+    /// Defines a sequence of elements.
+    /// </summary>
+    /// <typeparam name="T">The type of the sequence.</typeparam>
+    public interface ISequence<out T>
+    {
+        /// <summary>
+        /// Gets the next element of the sequence.
+        /// </summary>
+        T Next { get; }
+    }
+
+    /// <summary>
+    /// Implements an <see cref="ISequence{Int32}" />.
+    /// </summary>
+    public class Int32Sequence : ISequence<int>
+    {
+        private int _value;
+
+        /// <inheritdoc />
+        public int Next => Interlocked.Increment(ref _value);
+    }
+
     /// <summary>
     /// Represents a client.
     /// </summary>
@@ -16,13 +42,13 @@ namespace AsyncTests1.Networking
 
         private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
         private readonly object _isConnectedLock = new object();
+        private readonly ISequence<int> _connectionIdSequence;
         private readonly string _hostname;
         private readonly int _port;
 
         private ClientSocketConnection _socketConnection;
         private MessageConnection _connection;
         private int _messageId;
-        private static int _connectionIds; // FIXME - implement proper correlation id
         private bool _isConnected;
 
         /// <summary>
@@ -31,9 +57,25 @@ namespace AsyncTests1.Networking
         /// <param name="hostname">The server hostname.</param>
         /// <param name="port">The server port.</param>
         public Client(string hostname, int port)
+            : this(hostname, port, new Int32Sequence())
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Client"/> class.
+        /// </summary>
+        /// <param name="hostname">The server hostname.</param>
+        /// <param name="port">The server port.</param>
+        /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
+        /// <remarks>
+        /// <para>The <paramref name="connectionIdSequence"/> parameter can be used to supply a
+        /// sequence of unique connection identifiers. This can be convenient for tests, where
+        /// using unique identifiers across all clients can simplify debugging.</para>
+        /// </remarks>
+        public Client(string hostname, int port, ISequence<int> connectionIdSequence)
         {
             _hostname = hostname;
             _port = port;
+            _connectionIdSequence = connectionIdSequence;
         }
 
         /// <summary>
@@ -49,7 +91,7 @@ namespace AsyncTests1.Networking
             var ipAddress = host.AddressList[0];
             var endpoint = new IPEndPoint(ipAddress, _port);
 
-            _socketConnection = new ClientSocketConnection(_connectionIds++, endpoint) { OnShutdown = SocketShutdown };
+            _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, endpoint) { OnShutdown = SocketShutdown };
             _connection = new MessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
             _connection.Log.Prefix = "            CLT.MSG" + _socketConnection.Id;
 
@@ -99,8 +141,9 @@ namespace AsyncTests1.Networking
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message.</param>
+        /// <param name="timeoutMilliseconds">The maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public async Task<Message> SendAsync(Message message)
+        public async Task<Message> SendAsync(Message message, int timeoutMilliseconds = 0)
         {
             lock (_isConnectedLock)
             {
@@ -131,7 +174,14 @@ namespace AsyncTests1.Networking
                 Log.WriteLine("Wait for response...");
                 _completions[message.Id] = completion;
             }
-            return await completion.Task;
+
+            if (timeoutMilliseconds <= 0)
+                return await completion.Task;
+
+            var timeoutTask = Task.Delay(timeoutMilliseconds);
+            await Task.WhenAny(completion.Task, timeoutTask);
+            if (completion.Task.IsCompletedSuccessfully) return await completion.Task;
+            throw new TimeoutException();
         }
 
         /// <summary>
