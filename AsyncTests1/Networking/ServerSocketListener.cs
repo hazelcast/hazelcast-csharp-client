@@ -88,6 +88,7 @@ namespace AsyncTests1.Networking
             _task = Task.Run(() =>
             {
                 Log.WriteLine("Start listening");
+                var waitHandles = new[] { _accepted, _cancellationTokenSource.Token.WaitHandle };
                 while (true)
                 {
                     // set the event to non-signaled state
@@ -98,7 +99,7 @@ namespace AsyncTests1.Networking
                     _socket.BeginAccept(AcceptCallback, _socket);
 
                     // wait until a connection is accepted or listening is cancelled
-                    var n = WaitHandle.WaitAny(new[] { _accepted, _cancellationTokenSource.Token.WaitHandle });
+                    var n = WaitHandle.WaitAny(waitHandles);
                     if (n == 1) break;
                 }
                 Log.WriteLine("Stop listening");

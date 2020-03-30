@@ -367,7 +367,6 @@ namespace AsyncTests1.Networking
                 var result = await reader.ReadAsync();
                 var buffer = result.Buffer;
 
-
                 // no data means it's over
                 if (buffer.Length == 0)
                 {
@@ -378,53 +377,7 @@ namespace AsyncTests1.Networking
                 Log.WriteLine($"Pipe reader received data, buffer size is {buffer.Length} bytes");
 
                 // process data
-                while (true)
-                {
-                    Log.WriteLine("Pipe reader processes data");
-                    if (expected < 0)
-                    {
-                        // we need at least 4 bytes to figure out the expected
-                        // message length - otherwise, just keep reading
-                        if (buffer.Length < 4)
-                        {
-                            Log.WriteLine("Pipe reader has not enough data");
-                            break;
-                        }
-
-                        // deserialize expected message length (4 bytes)
-                        expected = buffer.ReadInt32();
-                        buffer = buffer.Slice(4);
-                        if (expected == 0)
-                        {
-                            Log.WriteLine("Pipe reader received zero-length message, shutdown");
-                            break;
-                        }
-
-                        Log.WriteLine($"Pipe reader expecting message with size {expected} bytes");
-                    }
-
-                    // not enough data, keep reading
-                    if (buffer.Length < expected)
-                    {
-                        Log.WriteLine("Pipe reader has not enough data");
-                        break;
-                    }
-
-                    // we have a message, handle it
-                    Log.WriteLine("Pipe reader has complete message, handle");
-                    try
-                    {
-                        await _onReceiveMessageBytes(this, buffer.Slice(0, expected));
-                    }
-                    catch (Exception e)
-                    {
-                        // error while processing, report
-                        Log.WriteLine("Pipe reader:ERROR");
-                        Log.WriteLine(e);
-                    }
-                    buffer = buffer.Slice(expected);
-                    expected = -1;
-                }
+                while (await ReadPipeAsyncLoop1()) { }
 
                 // tell the PipeReader how much of the buffer we have consumed
                 reader.AdvanceTo(buffer.Start, buffer.End);
@@ -444,6 +397,96 @@ namespace AsyncTests1.Networking
             // mark the PipeReader as complete
             Log.WriteLine("Pipe reader completing");
             reader.Complete();
+
+            // --- loop body ---
+
+            async ValueTask<bool> ReadPipeAsyncLoop1()
+            {
+                // await data from the pipe
+                Log.WriteLine("Pipe reader awaits data from the pipe");
+                var result = await reader.ReadAsync();
+                var buffer = result.Buffer;
+
+                // no data means it's over
+                if (buffer.Length == 0)
+                {
+                    Log.WriteLine("Pipe reader received no data");
+                    return false;
+                }
+
+                Log.WriteLine($"Pipe reader received data, buffer size is {buffer.Length} bytes");
+
+                // process data
+                while (await ReadPipeAsyncLoop2()) { }
+
+                // tell the PipeReader how much of the buffer we have consumed
+                reader.AdvanceTo(buffer.Start, buffer.End);
+
+                // shutdown on empty message
+                if (expected == 0)
+                    return false;
+
+                // stop reading if there's no more data coming
+                if (result.IsCompleted)
+                {
+                    Log.WriteLine("Pipe is completed (in reader)");
+                    return false;
+                }
+
+                return true;
+
+                // --- loop body ---
+
+                async ValueTask<bool> ReadPipeAsyncLoop2()
+                {
+                    Log.WriteLine("Pipe reader processes data");
+                    if (expected < 0)
+                    {
+                        // we need at least 4 bytes to figure out the expected
+                        // message length - otherwise, just keep reading
+                        if (buffer.Length < 4)
+                        {
+                            Log.WriteLine("Pipe reader has not enough data");
+                            return false;
+                        }
+
+                        // deserialize expected message length (4 bytes)
+                        expected = buffer.ReadInt32();
+                        buffer = buffer.Slice(4);
+                        if (expected == 0)
+                        {
+                            Log.WriteLine("Pipe reader received zero-length message, shutdown");
+                            return false;
+                        }
+
+                        Log.WriteLine($"Pipe reader expecting message with size {expected} bytes");
+                    }
+
+                    // not enough data, keep reading
+                    if (buffer.Length < expected)
+                    {
+                        Log.WriteLine("Pipe reader has not enough data");
+                        return false;
+                    }
+
+                    // we have a message, handle it
+                    Log.WriteLine("Pipe reader has complete message, handle");
+                    try
+                    {
+                        await _onReceiveMessageBytes(this, buffer.Slice(0, expected));
+                    }
+                    catch (Exception e)
+                    {
+                        // error while processing, report
+                        Log.WriteLine("Pipe reader:ERROR");
+                        Log.WriteLine(e);
+                    }
+                    buffer = buffer.Slice(expected);
+                    expected = -1;
+
+                    return true;
+                }
+            }
         }
     }
 }
