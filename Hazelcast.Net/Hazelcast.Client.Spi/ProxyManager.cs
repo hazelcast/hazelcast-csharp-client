@@ -56,7 +56,7 @@ namespace Hazelcast.Client.Spi
             Register(List, typeof(ClientListProxy<>));
             Register(Set, typeof(ClientSetProxy<>));
             Register(Topic, typeof(ClientTopicProxy<>));
-            // Register(ServiceNames.PNCounter, typeof(ClientPNCounterProxy));
+            Register(ServiceNames.PNCounter, typeof(ClientPNCounterProxy));
             Register(Ringbuffer, typeof(ClientRingbufferProxy<>));
             Register(ReplicatedMap, typeof(ClientReplicatedMapProxy<,>));
         }

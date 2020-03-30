@@ -367,6 +367,16 @@ namespace Hazelcast.Client.Spi
             {
                 return false;
             }
+
+            if (invocation.TargetUuid != null && exception is TargetNotMemberException &&
+                _client.ClusterService.GetMember(invocation.TargetUuid.Value) == null)
+            {
+                //when invocation send over address
+                //if exception is target not member and
+                //address is not available in member list , don't retry
+                return false;
+            }
+            
             if (exception is IOException || exception is SocketException || exception is HazelcastInstanceNotActiveException ||
                 exception is IRetryableException)
             {
