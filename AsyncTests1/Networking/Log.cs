@@ -13,36 +13,28 @@
 // limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Threading;
 
 namespace AsyncTests1.Networking
 {
     public class Log
     {
-        private readonly string _name;
+        public Log()
+        { }
 
-        public Log(string name)
+        public Log(string prefix)
         {
-            _name = name;
+            Prefix = prefix;
         }
 
-        private string Prefix => $"{Indent}{_name}:{Thread.CurrentThread.ManagedThreadId:00} ";
+        public string Prefix { get; set; }
 
-        private string Indent => _name switch
-        {
-            "TST" => "",
-            "CLT" => "    ",
-            MessageConnection.LogName => "        ",
-            SocketConnection.LogName => "            ",
-            "SVR" => "                ",
-            _ => ""
-        };
+        private string FullPrefix => $"{Prefix}:{Thread.CurrentThread.ManagedThreadId:00} ";
 
-        public void WriteLine(string text) => Console.WriteLine(Prefix + text);
+        public void WriteLine(string text) => Console.WriteLine(FullPrefix + text);
 
-        public void WriteLine(string format, params object[] args) => Console.WriteLine(Prefix + format, args);
+        public void WriteLine(string format, params object[] args) => Console.WriteLine(FullPrefix + format, args);
 
-        public void WriteLine(object o) => Console.WriteLine(Prefix + o);
+        public void WriteLine(object o) => Console.WriteLine(FullPrefix + o);
     }
 }

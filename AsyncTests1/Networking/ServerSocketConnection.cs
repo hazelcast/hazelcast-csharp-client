@@ -13,9 +13,7 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
 {
@@ -37,13 +35,14 @@ namespace AsyncTests1.Networking
         public ServerSocketConnection(Socket socket)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            Log.Prefix = "                                SVR.CON";
         }
 
         /// <summary>
-        /// Opens the connection.
+        /// Accepts the connection.
         /// </summary>
         /// <remarks>
-        /// <para>The connection can only be opened after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
+        /// <para>The connection can only be accepted after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
         /// has been set. If the handler has not been set, an exception is thrown.</para>
         /// </remarks>
         public void Accept()

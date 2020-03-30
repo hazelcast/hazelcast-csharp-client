@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Text;
 
 namespace AsyncTests1.Networking
@@ -38,22 +39,14 @@ namespace AsyncTests1.Networking
 
         public byte[] ToPrefixedBytes()
         {
-            var bytes1 = Encoding.UTF8.GetBytes(ToString());
-            var bytes2 = new byte[bytes1.Length + 4];
-
-            var length = bytes1.Length;
-
-            for (var i = 3; i >= 0; i--)
-            {
-                bytes2[i] = (byte) length;
-                length >>= 8;
-            }
-
-            bytes1.CopyTo(bytes2, 4);
-            return bytes2;
+            var s = ToString();
+            var byteCount = Encoding.UTF8.GetByteCount(s);
+            var bytes = new byte[byteCount + 4];
+            var recvdCount = Encoding.UTF8.GetBytes(s, 0, s.Length, bytes, 4);
+            if (recvdCount != byteCount)
+                throw new Exception("Panic");
+            return bytes;
         }
-
-        private string ToPrefixedString() => $"{33}:{Id:0000}:{Text}";
 
         public override string ToString() => $"{Id:0000}:{Text}";
     }

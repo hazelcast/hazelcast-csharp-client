@@ -12,44 +12,28 @@ namespace AsyncTests1.Networking
     /// Represents a socket connection.
     /// </summary>
     /// <remarks>
-    /// <para>The socket connection handle message bytes, and manages the network
-    /// socket. It is used by the client connection.</para>
+    /// <para>The socket connection handle message bytes, and manages the network socket.</para>
     /// </remarks>
     public abstract class SocketConnection
     {
-        // see https://devblogs.microsoft.com/dotnet/system-io-pipelines-high-performance-io-in-net/
-        //  https://habr.com/en/post/466137/
-        // see https://www.stevejgordon.co.uk/an-introduction-to-sequencereader
-
-        // a pipe is a "big" enough thing that should last,
-        // so we should not constantly create them
-
         // TODO - better exception handling
         // TODO - report when closed, either by remote or by failure
 
-        public const string LogName = "SCN";
-        protected static readonly Log Log = new Log(LogName);
         private static readonly byte[] ZeroBytes4 = new byte[4];
 
+        public readonly Log Log = new Log();
         private readonly SemaphoreSlim _writer;
 
         private Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceiveMessageBytes;
         private Socket _socket;
         private Stream _stream;
         private Task _writing, _reading;
+        private int _isOpen;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SocketConnection"/> class.
         /// </summary>
-        /// <param name="onReceiveMessageBytes">An action to execute when receiving a message.</param>
         /// <param name="multithread">Whether this connection should manage multi-threading.</param>
-        /// <remarks>
-        /// <para>The <paramref name="onReceiveMessageBytes"/> action must process the content of the
-        /// bytes sequence before it returns. The memory associated with the sequence is not
-        /// guaranteed to remain available after the action has returned.</para>
-        /// <para>Classes inheriting <see cref="SocketConnection"/> are expected to assign <see cref="_socket"/>
-        /// and <see cref="_stream"/> before allowing operations.</para>
-        /// </remarks>
         protected SocketConnection(bool multithread = true)
         {
             if (multithread)
@@ -59,6 +43,12 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Gets or sets the function that handles message bytes.
         /// </summary>
+        /// <remarks>
+        /// <para>The function must process the content of the bytes sequence before it completes.
+        /// The memory associated with the sequence is not guaranteed to remain available after the
+        /// function has returned.</para>
+        /// <para>The function must be set before <see cref="OpenPipe"/> is invoked.</para>
+        /// </remarks>
         public Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> OnReceiveMessageBytes
         {
             get => _onReceiveMessageBytes;
@@ -72,10 +62,18 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Opens the pipe.
         /// </summary>
+        /// <remarks>
+        /// <para>The <see cref="OnReceiveMessageBytes"/> function must be set before this function is invoked.</para>
+        /// </remarks>
         protected void OpenPipe(Socket socket, Stream stream)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+
+            if (_onReceiveMessageBytes == null)
+                throw new InvalidOperationException("Missing message bytes handler.");
+
+            Interlocked.Exchange(ref _isOpen, 1);
 
             // wire the pipe
             var pipe = new Pipe();
@@ -86,44 +84,44 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Sends a message.
         /// </summary>
-        /// <param name="bytes">The message bytes.</param>
+        /// <param name="bytes">The complete message bytes buffer.</param>
         /// <returns>A task that will complete when the message bytes have been sent.</returns>
+        /// <remarks>
+        /// <para>The complete message bytes buffer must include provision for 4 trailing
+        /// bytes that will represent the length of the message, and are filled by this
+        /// method.</para>
+        /// </remarks>
         public async ValueTask SendAsync(byte[] bytes)
         {
-            // TODO: manage a flag to determine whether we're open
+            if (bytes.Length < 4)
+                throw new ArgumentException("Must be at least 4 bytes.", nameof(bytes));
 
-            // TODO: should the message length be handled here?
-            // TODO don't do it here, sends 2 network packets
+            // TODO: manage a flag to determine whether we're open
             //
-            var bytes4 = new byte[4]; // TODO benchmark pooling
-            var length = bytes.Length;
+            // set message length, using a fast-enough yet avoiding 'unsafe' code
+            var length = bytes.Length - 4;
             unchecked
             {
-                bytes4[3] = (byte) length;
+                bytes[3] = (byte) length;
                 length >>= 8;
-                bytes4[2] = (byte) length;
+                bytes[2] = (byte) length;
                 length >>= 8;
-                bytes4[1] = (byte) length;
+                bytes[1] = (byte) length;
                 length >>= 8;
-                bytes4[0] = (byte) length;
+                bytes[0] = (byte) length;
             }
-
-            // avoid slower method (and unsafe methods)
-            /*
-            for (var i = 3; i >= 0; i--)
-            {
-                bytes4[i] = (byte)length;
-                length >>= 8;
-            }
-            */
 
             // send bytes, serialize sending via semaphore
             if (_writer != null) await _writer.WaitAsync();
-
-            // TODO is _stream buffering the bytes? will this create 2 packets?
-            //await _stream.WriteAsync(bytes4, 0, 4, CancellationToken.None);
-            await _stream.WriteAsync(bytes, 0, bytes.Length, CancellationToken.None);
-
+            try
+            {
+                await _stream.WriteAsync(bytes, 0, bytes.Length, CancellationToken.None);
+            }
+            catch
+            {
+                // fixme what shall we do?
+                // or should it be TrySendAsync?
+            }
             _writer?.Release();
 
             Log.WriteLine($"Sent {bytes.Length} bytes");
@@ -133,12 +131,17 @@ namespace AsyncTests1.Networking
         /// Closes the connection.
         /// </summary>
         /// <returns>A task that will complete when the connection has closed.</returns>
-        public async ValueTask CloseAsync()
+        public async ValueTask ShutdownAsync()
         {
             // send empty message to signal the other end
+            // (ignore errors)
             Log.WriteLine("Send empty message");
             if (_writer != null) await _writer.WaitAsync();
-            await _stream.WriteAsync(ZeroBytes4, 0, 4, CancellationToken.None);
+            try
+            {
+                await _stream.WriteAsync(ZeroBytes4, 0, 4, CancellationToken.None);
+            }
+            catch { /* ignore */ }
             _writer?.Release();
 
             // shutdown
@@ -147,6 +150,7 @@ namespace AsyncTests1.Networking
             _stream.Close();
 
             // wait until the pipe is down, too
+            // TODO can this throw?
             await _reading;
             await _writing;
         }
@@ -158,7 +162,7 @@ namespace AsyncTests1.Networking
         /// <param name="writer">The <see cref="PipeWriter"/> to write to.</param>
         /// <returns>A task representing the write loop, that completes when the stream
         /// is closed, or when an error occurs.</returns>
-        protected static async Task WriteAsync(Stream stream, PipeWriter writer)
+        protected async Task WriteAsync(Stream stream, PipeWriter writer)
         {
             const int minimumBufferSize = 512;
 
@@ -269,6 +273,8 @@ namespace AsyncTests1.Networking
             reader.Complete();
         }
 
+        // TODO: implement IDisposable?
+        /// <inheritdoc />
         public void Dispose()
         {
             _socket?.Dispose();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
@@ -10,7 +11,7 @@ namespace AsyncTests1.Networking
     //
     public class Client
     {
-        private static readonly Log Log = new Log("CLT");
+        public readonly Log Log = new Log { Prefix = "    CLT" };
 
         private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
         private readonly string _hostname;
@@ -31,8 +32,13 @@ namespace AsyncTests1.Networking
             // MessageConnection is just a wrapper around a true SocketConnection
             // the SocketConnection must be open *after* everything has been wired
 
-            _socketConnection = new ClientSocketConnection(_hostname, _port);
+            var host = Dns.GetHostEntry(_hostname);
+            var ipAddress = host.AddressList[0];
+            var endpoint = new IPEndPoint(ipAddress, _port);
+
+            _socketConnection = new ClientSocketConnection(endpoint);
             _connection = new MessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
+            _connection.Log.Prefix = "            CLT.MSG";
             await _socketConnection.OpenAsync();
         }
 
@@ -70,7 +76,7 @@ namespace AsyncTests1.Networking
         public async Task CloseAsync()
         {
             Log.WriteLine("Closing");
-            await _socketConnection.CloseAsync();
+            await _socketConnection.ShutdownAsync();
 
             // shutdown all operations
             foreach (var completion in _completions.Values)

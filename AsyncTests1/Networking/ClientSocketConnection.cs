@@ -28,25 +28,18 @@ namespace AsyncTests1.Networking
     /// </remarks>
     public class ClientSocketConnection : SocketConnection
     {
-        private readonly string _hostname;
-        private readonly int _port;
+        private readonly IPEndPoint _endpoint;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientSocketConnection"/> class.
         /// </summary>
-        /// <param name="hostname">The server hostname.</param>
-        /// <param name="port">The server port.</param>
+        /// <param name="endpoint">The socket endpoint.</param>
         /// <param name="multithread">Whether this connection should manage multi-threading.</param>
-        public ClientSocketConnection(string hostname, int port, bool multithread = true)
+        public ClientSocketConnection(IPEndPoint endpoint, bool multithread = true)
             : base(multithread)
         {
-            if (string.IsNullOrWhiteSpace(hostname))
-                throw new ArgumentException("Value cannot be null nor empty.", nameof(hostname));
-            _hostname = hostname;
-
-            if (port <= 0)
-                throw new ArgumentOutOfRangeException(nameof(port), "Value must be greater than zero.");
-            _port = port;
+            _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
+            Log.Prefix = "                CLT.CON";
         }
 
         /// <summary>
@@ -65,15 +58,11 @@ namespace AsyncTests1.Networking
                 throw new InvalidOperationException("No message bytes handler has been configured.");
 
             // create the socket
-            // TODO: directly work with IPs
-            var host = Dns.GetHostEntry(_hostname);
-            var ipAddress = host.AddressList[0];
-            var socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            var socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             // connect to server
             Log.WriteLine("Connect to server");
-            var endpoint = new IPEndPoint(ipAddress, _port);
-            await socket.ConnectAsync(endpoint);
+            await socket.ConnectAsync(_endpoint);
             Log.WriteLine("Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream

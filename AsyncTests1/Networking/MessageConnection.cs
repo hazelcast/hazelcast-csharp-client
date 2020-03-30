@@ -33,9 +33,7 @@ namespace AsyncTests1.Networking
     /// </remarks>
     public class MessageConnection
     {
-        public const string LogName = "CCN";
-        private static readonly Log Log = new Log(LogName);
-
+        public readonly Log Log = new Log();
         private readonly SocketConnection _connection;
 
         private Func<MessageConnection, Message, ValueTask> _onReceiveMessage;
@@ -100,7 +98,7 @@ namespace AsyncTests1.Networking
         }
 
         // temp de-serialization stuff
-        private string GetAsciiString(ReadOnlySequence<byte> buffer)
+        private static string GetAsciiString(ReadOnlySequence<byte> buffer)
         {
             if (buffer.IsSingleSegment)
             {

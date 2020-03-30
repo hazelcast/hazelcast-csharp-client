@@ -22,7 +22,7 @@ namespace AsyncTests1.Networking
 {
     public class ServerSocketListener
     {
-        private static readonly Log Log = new Log("SVR");
+        public readonly Log Log = new Log();
 
         private readonly ManualResetEvent _accepted = new ManualResetEvent(false);
 

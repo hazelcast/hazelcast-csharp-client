@@ -23,7 +23,7 @@ namespace AsyncTests1.Networking
     //
     public class Server
     {
-        private static readonly Log Log = new Log("SVR");
+        public readonly Log Log = new Log { Prefix = "                        SVR" };
 
         private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
 
@@ -43,6 +43,7 @@ namespace AsyncTests1.Networking
             Log.WriteLine("Start server");
 
             _listener = new ServerSocketListener(_hostname, _port) { OnAcceptConnection = AcceptConnection };
+            _listener.Log.Prefix = "                          LST";
             await _listener.StartAsync();
 
             Log.WriteLine("Server started");
@@ -63,6 +64,7 @@ namespace AsyncTests1.Networking
             // must wire it properly before accepting
 
             var messageConnection = new MessageConnection(serverConnection) { OnReceiveMessage = ReceiveMessage };
+            messageConnection.Log.Prefix = "                            SVR.MSG";
             serverConnection.Accept();
             _connections[_connections.Count] = serverConnection;
         }
@@ -71,8 +73,9 @@ namespace AsyncTests1.Networking
         // we should get notified when a connection closes
         // we should have a way to notify each connection we're shutting down (?)
 
-        private static async ValueTask ReceiveMessage(MessageConnection connection, Message message)
+        private async ValueTask ReceiveMessage(MessageConnection connection, Message message)
         {
+            Log.WriteLine("Respond");
             var responseText = message.Text switch
             {
                 "a" => "alpha",
@@ -81,6 +84,7 @@ namespace AsyncTests1.Networking
             };
             var response = new Message(responseText) { Id = message.Id };
             await connection.SendAsync(response);
+            Log.WriteLine("Responded");
         }
     }
 }

@@ -1,0 +1,6 @@
+        // see https://devblogs.microsoft.com/dotnet/system-io-pipelines-high-performance-io-in-net/
+        //  https://habr.com/en/post/466137/
+        // see https://www.stevejgordon.co.uk/an-introduction-to-sequencereader
+
+        // a pipe is a "big" enough thing that should last,
+        // so we should not constantly create them
