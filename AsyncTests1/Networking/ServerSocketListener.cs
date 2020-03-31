@@ -30,23 +30,20 @@ namespace AsyncTests1.Networking
         private readonly ManualResetEvent _accepted = new ManualResetEvent(false);
         private readonly ISequence<int> _connectionIdSequence = new Int32Sequence();
 
-        private readonly string _hostname;
-        private readonly int _port;
+        private readonly IPEndPoint _endpoint;
 
         private Socket _socket;
         private CancellationTokenSource _cancellationTokenSource;
         private Action<ServerSocketConnection> _onAcceptConnection;
-        private Task _task;
+        private Task _listening;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServerSocketListener"/> class.
         /// </summary>
-        /// <param name="hostname"></param>
-        /// <param name="port">The port to listen to.</param>
-        public ServerSocketListener(string hostname, int port)
+        /// <param name="endpoint">The socket endpoint.</param>
+        public ServerSocketListener(IPEndPoint endpoint)
         {
-            _hostname = hostname;
-            _port = port;
+            _endpoint = endpoint;
         }
 
         /// <summary>
@@ -73,19 +70,15 @@ namespace AsyncTests1.Networking
             if (_onAcceptConnection == null)
                 throw new InvalidOperationException("No connection handler has been configured.");
 
-            var host = Dns.GetHostEntry(_hostname);
-            var ipAddress = host.AddressList[0];
-            var endpoint = new IPEndPoint(ipAddress, _port);
-
             Log.WriteLine("Create listener socket");
-            _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            _socket.Bind(endpoint);
+            _socket.Bind(_endpoint);
             _socket.Listen(10);
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _task = Task.Run(() =>
+            _listening = Task.Run(() =>
             {
                 Log.WriteLine("Start listening");
                 var waitHandles = new[] { _accepted, _cancellationTokenSource.Token.WaitHandle };
@@ -125,7 +118,7 @@ namespace AsyncTests1.Networking
             Log.WriteLine("Stop listener");
 
             _cancellationTokenSource.Cancel();
-            await _task;
+            await _listening;
 
             Log.WriteLine("Stopped listener");
         }

@@ -17,8 +17,7 @@ namespace AsyncTests1.Networking
         private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
         private readonly object _isConnectedLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
-        private readonly string _hostname;
-        private readonly int _port;
+        private readonly IPEndPoint _endpoint;
 
         private ClientSocketConnection _socketConnection;
         private MessageConnection _connection;
@@ -28,27 +27,24 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
-        /// <param name="hostname">The server hostname.</param>
-        /// <param name="port">The server port.</param>
-        public Client(string hostname, int port)
-            : this(hostname, port, new Int32Sequence())
+        /// <param name="endpoint">The socket endpoint.</param>
+        public Client(IPEndPoint endpoint)
+            : this(endpoint, new Int32Sequence())
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
-        /// <param name="hostname">The server hostname.</param>
-        /// <param name="port">The server port.</param>
+        /// <param name="endpoint">The socket endpoint.</param>
         /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
         /// <remarks>
         /// <para>The <paramref name="connectionIdSequence"/> parameter can be used to supply a
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public Client(string hostname, int port, ISequence<int> connectionIdSequence) // FIXME should accept an endpoint
+        public Client(IPEndPoint endpoint, ISequence<int> connectionIdSequence)
         {
-            _hostname = hostname;
-            _port = port;
+            _endpoint = endpoint;
             _connectionIdSequence = connectionIdSequence;
         }
 
@@ -61,11 +57,7 @@ namespace AsyncTests1.Networking
             // MessageConnection is just a wrapper around a true SocketConnection
             // the SocketConnection must be open *after* everything has been wired
 
-            var host = Dns.GetHostEntry(_hostname);
-            var ipAddress = host.AddressList[0];
-            var endpoint = new IPEndPoint(ipAddress, _port);
-
-            _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, endpoint) { OnShutdown = SocketShutdown };
+            _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, _endpoint) { OnShutdown = SocketShutdown };
             _connection = new MessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
             _connection.Log.Prefix = "            CLT.MSG" + _socketConnection.Id;
 

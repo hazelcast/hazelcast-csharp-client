@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
@@ -26,20 +27,17 @@ namespace AsyncTests1.Networking
 
         private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
 
-        private readonly string _hostname;
-        private readonly int _port;
+        private readonly IPEndPoint _endpoint;
 
         private ServerSocketListener _listener;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Server"/> class.
         /// </summary>
-        /// <param name="hostname"></param> FIXME - should accept an endpoint
-        /// <param name="port">The port to listen to.</param>
-        public Server(string hostname, int port)
+        /// <param name="endpoint">The socket endpoint.</param>
+        public Server(IPEndPoint endpoint)
         {
-            _hostname = hostname;
-            _port = port;
+            _endpoint = endpoint;
         }
 
         /// <summary>
@@ -50,7 +48,7 @@ namespace AsyncTests1.Networking
         {
             Log.WriteLine("Start server");
 
-            _listener = new ServerSocketListener(_hostname, _port) { OnAcceptConnection = AcceptConnection };
+            _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection };
             _listener.Log.Prefix = "                          LST";
             await _listener.StartAsync();
 

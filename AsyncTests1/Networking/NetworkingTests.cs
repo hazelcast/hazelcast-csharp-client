@@ -14,6 +14,7 @@
 
 using System;
 using System.Buffers;
+using System.Net;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -49,17 +50,23 @@ namespace AsyncTests1.Networking
         [Timeout(10_000)]
         public async Task Test()
         {
+            //var host = Dns.GetHostEntry(_hostname);
+            //var ipAddress = host.AddressList[0];
+            //var endpoint = new IPEndPoint(ipAddress, _port);
+
+            var endpoint = IPEndPoint.Parse("127.0.0.1:11000");
+
             var log = new Log("TST");
             log.WriteLine("Begin");
 
             log.WriteLine("Start server");
-            var server = new Server("localhost", 11000);
+            var server = new Server(endpoint);
             await server.StartAsync();
 
             var sequence = new Int32Sequence();
 
             log.WriteLine("Start client 1");
-            var client1 = new Client("localhost", 11000, sequence);
+            var client1 = new Client(endpoint, sequence);
             await client1.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 1");
@@ -69,7 +76,7 @@ namespace AsyncTests1.Networking
             log.WriteLine("Got response: " + response.Text);
 
             log.WriteLine("Start client 2");
-            var client2 = new Client("localhost", 11000, sequence);
+            var client2 = new Client(endpoint, sequence);
             await client2.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 2");
@@ -99,15 +106,17 @@ namespace AsyncTests1.Networking
         [Timeout(10_000)]
         public async Task ServerShutdown()
         {
+            var endpoint = IPEndPoint.Parse("127.0.0.1:11000");
+
             var log = new Log("TST");
             log.WriteLine("Begin");
 
             log.WriteLine("Start server");
-            var server = new Server("localhost", 11000);
+            var server = new Server(endpoint);
             await server.StartAsync();
 
             log.WriteLine("Start client 1");
-            var client1 = new Client("localhost", 11000);
+            var client1 = new Client(endpoint);
             await client1.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 1");
