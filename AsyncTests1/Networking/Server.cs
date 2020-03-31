@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -92,9 +93,16 @@ namespace AsyncTests1.Networking
 
             var messageConnection = new MessageConnection(serverConnection) { OnReceiveMessage = ReceiveMessage };
             messageConnection.Log.Prefix = "                            SVR.MSG";
-            serverConnection.OnShutdown += SocketShutdown;
+            serverConnection.OnShutdown = SocketShutdown;
+            serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
             serverConnection.Accept();
             _connections[serverConnection.Id] = serverConnection;
+        }
+
+        private ValueTask ReceivePrefixBytes(SocketConnection connection, ReadOnlySequence<byte> bytes)
+        {
+            // do nothing for now - just accept them
+            return new ValueTask();
         }
 
         /// <summary>

@@ -35,9 +35,10 @@ namespace AsyncTests1.Networking
         /// </summary>
         /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="endpoint">The socket endpoint.</param>
+        /// <param name="prefixLength">An optional prefix length.</param>
         /// <param name="multithread">Whether this connection should manage multi-threading.</param>
-        public ClientSocketConnection(int id, IPEndPoint endpoint, bool multithread = true)
-            : base(id, multithread)
+        public ClientSocketConnection(int id, IPEndPoint endpoint, int prefixLength = 0, bool multithread = true)
+            : base(id, prefixLength, multithread)
         {
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
             Log.Prefix = $"                CLT.CON[{id}]";

@@ -24,21 +24,26 @@ namespace AsyncTests1.Networking
         private readonly SemaphoreSlim _writer;
 
         private Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceiveMessageBytes;
+        private Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
         private Func<SocketConnection, ValueTask> _onShutdown;
         private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
         private Socket _socket;
         private Stream _stream;
         private int _isActive;
         private int _isShutdown;
+        private int _prefixLength;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SocketConnection"/> class.
         /// </summary>
         /// <param name="id">The unique identifier of the connection.</param>
+        /// <param name="prefixLength">An optional prefix length.</param>
         /// <param name="multithread">Whether this connection should manage multi-threading.</param>
-        protected SocketConnection(int id, bool multithread = true)
+        protected SocketConnection(int id, int prefixLength = 0, bool multithread = true)
         {
             Id = id;
+
+            _prefixLength = prefixLength;
 
             if (multithread)
                 _writer = new SemaphoreSlim(1);
@@ -68,6 +73,38 @@ namespace AsyncTests1.Networking
 
                 _onReceiveMessageBytes = value ?? throw new ArgumentNullException(nameof(value));
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the function that handles prefix bytes.
+        /// </summary>
+        /// <remarks>
+        /// <para>The function must process the content of the bytes sequence before it completes.
+        /// The memory associated with the sequence is not guaranteed to remain available after the
+        /// function has returned.</para>
+        /// <para>The function must be set before the connection is established.</para>
+        /// </remarks>
+        public Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> OnReceivePrefixBytes
+        {
+            get => _onReceivePrefixBytes;
+            set
+            {
+                if (_isActive == 1)
+                    throw new InvalidOperationException("Cannot set the property once the connection is active.");
+
+                _onReceivePrefixBytes = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// <summary>
+        /// Specifies that the connection should expect prefix bytes.
+        /// </summary>
+        /// <param name="prefixLength">The prefix length.</param>
+        /// <param name="onReceivePrefixBytes">The function that handles prefix bytes.</param>
+        public void ExpectPrefixBytes(int prefixLength, Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> onReceivePrefixBytes)
+        {
+            _prefixLength = prefixLength;
+            _onReceivePrefixBytes = onReceivePrefixBytes;
         }
 
         /// <summary>
@@ -132,6 +169,8 @@ namespace AsyncTests1.Networking
             // _onShutdown is not mandatory, but validate _onReceiveMessageBytes
             if (_onReceiveMessageBytes == null)
                 throw new InvalidOperationException("Missing message bytes handler.");
+            if (_prefixLength > 0 && _onReceivePrefixBytes == null)
+                throw new InvalidOperationException("Missing prefix bytes handler.");
 
             Interlocked.Exchange(ref _isActive, 1);
 
@@ -415,6 +454,35 @@ namespace AsyncTests1.Networking
         private async ValueTask<bool> ReadPipeLoop1(ReadPipeState state)
         {
             Log.WriteLine("Pipe reader processes data");
+
+            if (_prefixLength > 0)
+            {
+                if (state.Buffer.Length < _prefixLength)
+                {
+                    Log.WriteLine("Pipe reader has not enough data");
+                    return false;
+                }
+
+                // we have a prefix, handle lit
+                try
+                {
+                    Log.WriteLine("Pipe reader received prefix");
+                    await _onReceivePrefixBytes(this, state.Buffer.Slice(0, _prefixLength));
+                    state.Buffer = state.Buffer.Slice(_prefixLength);
+                    _prefixLength = 0;
+                }
+                catch (Exception e)
+                {
+                    // error while processing, report and shutdown
+                    Log.WriteLine("Pipe reader encountered an exception while handling the prefix (shutdown)");
+                    Log.WriteLine(e);
+                    state.Expected = 0;
+                    return false;
+                }
+
+                Log.WriteLine("Pipe reader processes data");
+            }
+
             if (state.Expected < 0)
             {
                 // we need at least 4 bytes to figure out the expected
@@ -453,7 +521,7 @@ namespace AsyncTests1.Networking
             catch (Exception e)
             {
                 // error while processing, report
-                Log.WriteLine("Pipe reader:ERROR");
+                Log.WriteLine("Pipe reader encountered an exception while handling a message (skip)");
                 Log.WriteLine(e);
             }
             state.Buffer = state.Buffer.Slice(state.Expected);

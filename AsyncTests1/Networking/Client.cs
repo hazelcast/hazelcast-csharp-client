@@ -63,9 +63,8 @@ namespace AsyncTests1.Networking
 
             await _socketConnection.ConnectAsync();
 
-            // FIXME implement protocol bytes
-            //if (!await _socketConnection.SendRawAsync(_clientProtocolInitBytes))
-            //    throw new InvalidOperationException("Failed to open.");
+            if (!await _socketConnection.SendRawAsync(_clientProtocolInitBytes))
+                throw new InvalidOperationException("Failed to send protocol bytes.");
 
             lock (_isConnectedLock) _isConnected = true;
         }
