@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,7 +60,9 @@ namespace Hazelcast.Client.Test.Serialization
         public void Get_whenCleared()
         {
             // forces the creation of a bufferpool.
-            _bufferPoolThreadLocal.Get();
+            // don't get it directly, else the GC/JIT may decide to keep it around
+            //_bufferPoolThreadLocal.Get();
+            GetFromBufferPoolThreadLocal(_bufferPoolThreadLocal);
 
             // we kill all strong references.
             _bufferPoolThreadLocal.Dispose();
@@ -68,6 +70,7 @@ namespace Hazelcast.Client.Test.Serialization
             TestSupport.AssertTrueEventually(() =>
             {
                 GC.Collect();
+                GC.WaitForPendingFinalizers();
                 try
                 {
                     _bufferPoolThreadLocal.Get();
@@ -77,6 +80,11 @@ namespace Hazelcast.Client.Test.Serialization
                 {
                 }
             });
+        }
+
+        private static void GetFromBufferPoolThreadLocal(BufferPoolThreadLocal bptl)
+        {
+            bptl.Get();
         }
 
         [Test]
@@ -93,7 +101,9 @@ namespace Hazelcast.Client.Test.Serialization
         public void ThreadLocal_Dispose()
         {
             // store the pool in a weak reference since we don't want to force a strong reference ourselves.
-            var poolRef = new WeakReference(_bufferPoolThreadLocal.Get());
+            // don't get it directly, else the GC/JIT may decide to keep it around
+            //var poolRef = new WeakReference(_bufferPoolThreadLocal.Get());
+            var poolRef = GetWeakReference(_bufferPoolThreadLocal);
 
             // call clear; kills the strong references.
             _bufferPoolThreadLocal.Dispose();
@@ -101,8 +111,14 @@ namespace Hazelcast.Client.Test.Serialization
             TestSupport.AssertTrueEventually(() =>
             {
                 GC.Collect();
-                Assert.Null(poolRef.Target);
+                GC.WaitForPendingFinalizers();
+                Assert.IsFalse(poolRef.IsAlive);
             });
+        }
+
+        private static WeakReference GetWeakReference(BufferPoolThreadLocal bptl)
+        {
+            return new WeakReference(bptl.Get());
         }
     }
 }
