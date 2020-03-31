@@ -160,9 +160,9 @@ namespace Hazelcast.Client.Test
 
             Address a1, a2;
             Assert.IsTrue(nodes.TryGetValue(new Address("100.96.5.1", 31115), out a1));
-            Assert.IsTrue(a1 == new Address("10.113.44.139", 31115));
+            Assert.IsTrue(a1.Equals(new Address("10.113.44.139", 31115)));
             Assert.IsTrue(nodes.TryGetValue(new Address("100.96.4.2", 31115), out a2));
-            Assert.IsTrue(a2 == new Address("10.113.44.130", 31115));
+            Assert.IsTrue(a2.Equals(new Address("10.113.44.130", 31115)));
         }
 
         [Test]
@@ -183,9 +183,9 @@ namespace Hazelcast.Client.Test
 
             Address a1, a2;
             Assert.IsTrue(nodes.TryGetValue(new Address("100.96.5.1", 5701), out a1));
-            Assert.IsTrue(a1 == new Address("10.113.44.139", 31115));
+            Assert.IsTrue(a1.Equals(new Address("10.113.44.139", 31115)));
             Assert.IsTrue(nodes.TryGetValue(new Address("100.96.4.2", 5701), out a2));
-            Assert.IsTrue(a2 == new Address("10.113.44.130", 31115));
+            Assert.IsTrue(a2.Equals(new Address("10.113.44.130", 31115)));
         }
     }
 }
