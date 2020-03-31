@@ -25,7 +25,7 @@ namespace AsyncTests1.Networking
 
         private Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceiveMessageBytes;
         private Func<SocketConnection, ValueTask> _onShutdown;
-        private Task _pipeWriter, _pipeReader, _pipeWriterShutdown, _pipeReaderShutdown;
+        private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
         private Socket _socket;
         private Stream _stream;
         private int _isActive;
@@ -139,10 +139,10 @@ namespace AsyncTests1.Networking
 
             // wire the pipe
             var pipe = new Pipe();
-            _pipeWriter = WritePipeAsync(_stream, pipe.Writer);
-            _pipeWriterShutdown = _pipeWriter.ContinueWith(ShutdownInternal);
-            _pipeReader = ReadPipeAsync(pipe.Reader);
-            _pipeReaderShutdown = _pipeReader.ContinueWith(ShutdownInternal);
+            _pipeWriting = WritePipeAsync(_stream, pipe.Writer);
+            _pipeWritingThenShutdown = _pipeWriting.ContinueWith(ShutdownInternal);
+            _pipeReading = ReadPipeAsync(pipe.Reader);
+            _pipeReadingThenShutdown = _pipeReading.ContinueWith(ShutdownInternal);
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace AsyncTests1.Networking
         /// </summary>
         /// <param name="task">The completed task.</param>
         /// <returns>A task that will complete when the connection is down.</returns>
-        private async ValueTask ShutdownInternal(Task task = null)
+        private async ValueTask ShutdownInternal(Task task)
         {
             // only once
             if (Interlocked.CompareExchange(ref _isShutdown, 1, 0) == 1)
@@ -159,7 +159,7 @@ namespace AsyncTests1.Networking
             Interlocked.Exchange(ref _isActive, 0);
 
             // ensure everything is down by awaiting the other task
-            await (task == _pipeReader ? _pipeWriter : _pipeReader);
+            await (task == _pipeReading ? _pipeWriting : _pipeReading);
 
             // kill socket and stream
             try
@@ -284,8 +284,8 @@ namespace AsyncTests1.Networking
             _streamReadCancellationTokenSource.Cancel();
 
             // wait for everything to be down
-            await _pipeWriterShutdown;
-            await _pipeReaderShutdown;
+            await _pipeWritingThenShutdown;
+            await _pipeReadingThenShutdown;
         }
 
         /// <summary>

@@ -30,6 +30,7 @@ namespace AsyncTests1.Networking
         private readonly IPEndPoint _endpoint;
 
         private ServerSocketListener _listener;
+        private Task _listening;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Server"/> class.
@@ -48,11 +49,22 @@ namespace AsyncTests1.Networking
         {
             Log.WriteLine("Start server");
 
-            _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection };
+            _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
             _listener.Log.Prefix = "                          LST";
             await _listener.StartAsync();
 
             Log.WriteLine("Server started");
+        }
+
+        private async ValueTask ListenerShutdown(ServerSocketListener arg)
+        {
+            Log.WriteLine("Listener is down");
+
+            // shutdown all existing connections
+            foreach (var connection in _connections.Values)
+                await connection.ShutdownAsync();
+
+            Log.WriteLine("Connections are down");
         }
 
         /// <summary>
@@ -65,10 +77,6 @@ namespace AsyncTests1.Networking
 
             // stop accepting new connections
             await _listener.StopAsync();
-
-            // shutdown all existing connections
-            foreach (var connection in _connections.Values)
-                await connection.ShutdownAsync();
 
             Log.WriteLine("Server stopped");
         }
@@ -94,7 +102,7 @@ namespace AsyncTests1.Networking
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns>A task that will complete when the connection shutdown has been handled.</returns>
-        private ValueTask SocketShutdown(SocketConnection connection) // FIXME does it need to be async?
+        private ValueTask SocketShutdown(SocketConnection connection)
         {
             Log.WriteLine("Removing connection " + connection.Id);
             _connections.Remove(connection.Id);

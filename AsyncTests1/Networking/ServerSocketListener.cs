@@ -35,7 +35,9 @@ namespace AsyncTests1.Networking
         private Socket _socket;
         private CancellationTokenSource _cancellationTokenSource;
         private Action<ServerSocketConnection> _onAcceptConnection;
-        private Task _listening;
+        private Func<ServerSocketListener, ValueTask> _onShutdown;
+        private Task _listeningThenShutdown;
+        private int _isActive;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServerSocketListener"/> class.
@@ -51,11 +53,27 @@ namespace AsyncTests1.Networking
         /// </summary>
         public Action<ServerSocketConnection> OnAcceptConnection
         {
+            // note: this action is not async
+
             get => _onAcceptConnection;
             set
             {
-                if (true) // not whatever yet
-                    _onAcceptConnection = value ?? throw new ArgumentNullException(nameof(value));
+                if (_isActive == 1)
+                    throw new InvalidOperationException("Cannot set the property once the listener is active.");
+
+                _onAcceptConnection = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        public Func<ServerSocketListener, ValueTask> OnShutdown
+        {
+            get => _onShutdown;
+            set
+            {
+                if (_isActive == 1)
+                    throw new InvalidOperationException("Cannot set the property once the listener is active.");
+
+                _onShutdown = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -78,9 +96,10 @@ namespace AsyncTests1.Networking
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _listening = Task.Run(() =>
+            _listeningThenShutdown = Task.Run(() =>
             {
                 Log.WriteLine("Start listening");
+                Interlocked.Exchange(ref _isActive, 1);
                 var waitHandles = new[] { _accepted, _cancellationTokenSource.Token.WaitHandle };
                 while (true)
                 {
@@ -91,22 +110,41 @@ namespace AsyncTests1.Networking
                     Log.WriteLine("Listening");
                     _socket.BeginAccept(AcceptCallback, _socket);
 
+                    // TODO - consider doing things differently (low)
+                    // we could do this and remain purely async, and then onAcceptConnection
+                    // could be async too, etc - and we'd need to benchmark to see what is
+                    // faster...
+                    //var handler = _socket.AcceptAsync();
+                    // ...
+
                     // wait until a connection is accepted or listening is cancelled
                     var n = WaitHandle.WaitAny(waitHandles);
                     if (n == 1) break;
                 }
                 Log.WriteLine("Stop listening");
 
-                Log.WriteLine("Shutdown socket");
-                //_socket.Shutdown(SocketShutdown.Both);
-                _socket.Close();
-                _socket.Dispose();
-
-            }, CancellationToken.None);
+            }, CancellationToken.None).ContinueWith(ShutdownInternal);
 
             Log.WriteLine("Started listener");
 
             return Task.CompletedTask;
+        }
+
+        private async Task ShutdownInternal(Task task)
+        {
+            if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
+                return;
+
+            Log.WriteLine("Shutdown socket");
+            //_socket.Shutdown(SocketShutdown.Both);
+            _socket.Close();
+            _socket.Dispose();
+
+            Log.WriteLine("Listener is down");
+
+            // notify
+            if (_onShutdown != null)
+                await _onShutdown(this);
         }
 
         /// <summary>
@@ -118,7 +156,7 @@ namespace AsyncTests1.Networking
             Log.WriteLine("Stop listener");
 
             _cancellationTokenSource.Cancel();
-            await _listening;
+            await _listeningThenShutdown;
 
             Log.WriteLine("Stopped listener");
         }
@@ -137,29 +175,52 @@ namespace AsyncTests1.Networking
             // get the socket that handles the client request
             var listener = (Socket) result.AsyncState;
 
+            Socket handler;
             try
             {
                 // may throw if the socket is not connected anymore
                 // also when the server is stopping
-                var handler = listener.EndAccept(result);
+                handler = listener.EndAccept(result);
+            }
+            catch (Exception e)
+            {
+                if (_isActive == 0)
+                {
+                    Log.WriteLine("Ignore exception (listener is down)");
+                }
+                else if (_cancellationTokenSource.IsCancellationRequested)
+                {
+                    Log.WriteLine("Abort connection (listened is shutting down)");
+                }
+                else
+                {
+                    _cancellationTokenSource.Cancel();
+                    Log.WriteLine("Abort connection");
+                }
+                Log.WriteLine(e);
+                return;
+            }
 
+            try
+            {
                 // we now have a connection
                 var serverConnection = new ServerSocketConnection(_connectionIdSequence.Next, handler);
                 _onAcceptConnection(serverConnection);
             }
             catch (Exception e)
             {
+                Log.WriteLine("Failed to accept a connection");
+                Log.WriteLine(e);
                 if (_cancellationTokenSource.IsCancellationRequested)
                 {
                     Log.WriteLine("Abort connection (server is stopping)");
+                    Log.WriteLine(e);
                 }
                 else
                 {
                     Log.WriteLine("Abort connection");
                     Log.WriteLine(e);
                 }
-
-                // FIXME - should report to the server
             }
         }
     }
