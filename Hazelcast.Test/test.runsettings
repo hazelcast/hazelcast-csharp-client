@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- https://github.com/nunit/docs/wiki/Tips-And-Tricks -->
+  <NUnit>
+    
+    <!-- file name is the test assembly filename without extension, plus .xml -->
+    <!-- so Hazelcast.Test.xml or Hazelcast.Tests.xml -->
+    <!-- at the moment, format is hard-coded to nunit3 -->
+    <TestOutputXml>../../../../build.out</TestOutputXml>
+    
+  </NUnit>
+</RunSettings>
