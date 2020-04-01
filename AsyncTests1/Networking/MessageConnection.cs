@@ -14,8 +14,11 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 
 namespace AsyncTests1.Networking
 {

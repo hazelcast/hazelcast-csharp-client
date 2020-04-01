@@ -97,9 +97,14 @@ namespace AsyncTests1
             // implicit cast of Maybe.None to Maybe.None<T>?
         }
 
-        public Maybe<int> GetMaybeInt()
+        public Maybe<int> GetMaybeInt1()
         {
             return 3;
+        }
+
+        public Maybe<int> GetMaybeInt2()
+        {
+            return Maybe.None;
         }
     }
 }
