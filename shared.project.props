@@ -1,9 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup Label="build">
-        <Version>3.12.1</Version>
+        <Version>3.12.2</Version>
         <Product>Hazelcast</Product>
         <Company>Hazelcast Inc.</Company>
-        <Copyright>Copyright (c) 2008-2019, Hazelcast, Inc</Copyright>
+        <Copyright>Copyright (c) 2008-2020, Hazelcast, Inc</Copyright>
         <Authors>Hazelcast</Authors>
         <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
         <PackageIconUrl>https://s3.amazonaws.com/hazelcast/logo/HazelcastLogo-Orange_Dark_NoText_200w.png</PackageIconUrl>
