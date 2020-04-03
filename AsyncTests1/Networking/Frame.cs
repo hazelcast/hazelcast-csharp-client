@@ -21,7 +21,9 @@ namespace AsyncTests1.Networking
     /// Represents a message frame.
     /// </summary>
     /// <remarks>
-    /// <para>There are different type of frames... FIXME elaborate</para>
+    /// <para>There are different type of frames...
+    /// TODO properly document frames
+    /// </para>
     /// <para>length (int) | flags (ushort) | ...</para>
     /// <para>Frames are a linked list.</para>
     /// </remarks>

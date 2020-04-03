@@ -78,7 +78,7 @@ namespace AsyncTests1.Networking
 
                 var frameBytes = _bytesLength == 0
                     ? Array.Empty<byte>()
-                    : new byte[_bytesLength]; // TODO postpone alloc?
+                    : new byte[_bytesLength]; // TODO can we avoid allocating the byte array at all?
 
                 _currentFrame = new Frame(flags, frameBytes);
                 XConsole.WriteLine(this, $"Add frame ({_currentFrame.Length} bytes)");
@@ -88,8 +88,9 @@ namespace AsyncTests1.Networking
                     _currentMessage.Append(_currentFrame);
             }
 
-            // should we keep buffering in the pipe, or consume here?
-            // FIXME doing it asap is probably nice!
+            // TODO consider buffering here
+            // at the moment we are buffering in the pipe, but we have already
+            // created the byte array, so ... might be nicer to copy now
             if (bytes.Length < _bytesLength)
                 return false;
 
@@ -103,9 +104,9 @@ namespace AsyncTests1.Networking
                 var message = _currentMessage;
                 _currentMessage = null;
                 XConsole.WriteLine(this, "Handle message");
-                // FIXME don't do this it's here already
-                //message.CorrelationId = message.FirstFrame.Next.GetCorrelationId();
-                //_onReceiveMessage(this, message); // FIXME async?! no because ref bytes?!
+                // FIXME consider async?
+                // this method cannot be async because of the ref bytes, and then
+                // should onReceiveMessage be async or not?
                 Task.Run(async () => await _onReceiveMessage(this, message));
             }
 
@@ -131,7 +132,7 @@ namespace AsyncTests1.Networking
                 if (!await SendFrameAsync(frame))
                     return false;
 
-                // FIXME what happens if we've sent some frames?
+                // FIXME what happens if we've sent some frames already?
 
                 frame = frame.Next;
             } while (frame != null);

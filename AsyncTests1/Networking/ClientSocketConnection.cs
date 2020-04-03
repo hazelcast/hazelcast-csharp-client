@@ -68,7 +68,7 @@ namespace AsyncTests1.Networking
             XConsole.WriteLine(this, "Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream
-            // TODO: implement SSL or provide a Func<Stream, Stream>
+            // TODO implement SSL or provide a Func<Stream, Stream>
             var stream = new NetworkStream(socket, false);
 
             // wire the pipe

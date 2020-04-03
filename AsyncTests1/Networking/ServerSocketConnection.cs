@@ -55,7 +55,7 @@ namespace AsyncTests1.Networking
                 throw new InvalidOperationException("No message bytes handler has been configured.");
 
             // use a stream, because we may use SSL and require an SslStream
-            // TODO: implement SSL or provide a Func<Stream, Stream>
+            // TODO implement SSL or provide a Func<Stream, Stream>
             var stream = new NetworkStream(_socket, false);
 
             // wire the pipe

@@ -117,7 +117,7 @@ namespace AsyncTests1.Networking
                     XConsole.WriteLine(this, "Listening");
                     _socket.BeginAccept(AcceptCallback, _socket);
 
-                    // TODO - consider doing things differently (low)
+                    // TODO consider doing things differently (low)
                     // we could do this and remain purely async, and then onAcceptConnection
                     // could be async too, etc - and we'd need to benchmark to see what is
                     // faster...

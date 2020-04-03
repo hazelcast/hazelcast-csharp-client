@@ -12,14 +12,14 @@ namespace AsyncTests1.Networking
     {
         private readonly byte[] _clientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
-        private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
+        private readonly Dictionary<long, TaskCompletionSource<Message>> _completions = new Dictionary<long, TaskCompletionSource<Message>>();
         private readonly object _isConnectedLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
+        private readonly ISequence<long> _correlationIdSequence = new Int64Sequence();
         private readonly IPEndPoint _endpoint;
 
         private ClientSocketConnection _socketConnection;
         private MessageConnection _connection;
-        private int _messageId;
         private bool _isConnected;
 
         /// <summary>
@@ -91,10 +91,10 @@ namespace AsyncTests1.Networking
         {
             XConsole.WriteLine(this, $"Received response ID:{response.CorrelationId}");
 
-            if (_completions.TryGetValue((int) response.CorrelationId, out var completion)) // fixme id size
+            if (_completions.TryGetValue(response.CorrelationId, out var completion))
             {
                 // signal the completion source
-                _completions.Remove((int) response.CorrelationId); // FIXME id size
+                _completions.Remove(response.CorrelationId);
                 completion.SetResult(response);
             }
             else
@@ -121,7 +121,7 @@ namespace AsyncTests1.Networking
 
             // assign a unique identifier to the message
             // create a corresponding completion source
-            message.CorrelationId = _messageId++;
+            message.CorrelationId = _correlationIdSequence.Next;
 
             // send the message
             XConsole.WriteLine(this, $"Send message ID:{message.CorrelationId}");
@@ -140,7 +140,7 @@ namespace AsyncTests1.Networking
                     throw new InvalidOperationException("Not connected.");
 
                 XConsole.WriteLine(this, "Wait for response...");
-                _completions[(int) message.CorrelationId] = completion; // FIXME id size
+                _completions[message.CorrelationId] = completion;
             }
 
             if (timeoutMilliseconds <= 0)

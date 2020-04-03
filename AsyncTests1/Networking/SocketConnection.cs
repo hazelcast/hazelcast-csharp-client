@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Buffers;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -357,6 +357,18 @@ namespace AsyncTests1.Networking
             var state = new ReadPipeState { Reader = reader };
             while (await ReadPipeLoop0(state)) { }
 
+            // exception?
+            if (state.Failed)
+            {
+                if (state.Exception != null)
+                {
+                    // TODO what shall we do with the exception?
+                    Console.WriteLine("ERROR");
+                    Console.WriteLine(state.Exception.SourceException);
+                }
+
+            }
+
             // mark the PipeReader as complete
             XConsole.WriteLine(this, "Pipe reader completing");
             reader.Complete();
@@ -392,11 +404,6 @@ namespace AsyncTests1.Networking
 
             // shutdown on crash
             if (state.Failed)
-                return false;
-
-            // shutdown on empty message
-            // FIXME what is the new way to shutdown? if it's not EMPTY MESSAGE anymore?
-            if (state.Expected == 0)
                 return false;
 
             // stop reading if there's no more data coming
@@ -440,7 +447,7 @@ namespace AsyncTests1.Networking
                     // error while processing, report and shutdown
                     XConsole.WriteLine(this, "Pipe reader encountered an exception while handling the prefix (shutdown)");
                     XConsole.WriteLine(this, e);
-                    state.Failed = true; // FIXME carry the exception?
+                    state.CaptureExceptionAndFail(e);
                     return false;
                 }
 
@@ -458,7 +465,7 @@ namespace AsyncTests1.Networking
                 // error while processing, report
                 XConsole.WriteLine(this, "Pipe reader encountered an exception while handling message bytes");
                 XConsole.WriteLine(this, e);
-                state.Failed = true; // FIXME carry the exception?
+                state.CaptureExceptionAndFail(e);
                 return false;
             }
         }
@@ -479,14 +486,28 @@ namespace AsyncTests1.Networking
             public ReadOnlySequence<byte> Buffer;
 
             /// <summary>
-            /// Gets or sets the expected message length.
+            /// Determines whether reading has failed.
             /// </summary>
-            /// <remarks>
-            /// <para>A value of -1 means that we do not know yet.</para>
-            /// </remarks>
-            public int Expected = -1; // FIXME kill
+            public bool Failed { get; private set; }
 
-            public bool Failed;
+            /// <summary>
+            /// Gets the optional exception that caused the failure.
+            /// </summary>
+            public ExceptionDispatchInfo Exception { get; private set; }
+
+            /// <summary>
+            /// Captures an exception and registers the failure.
+            /// </summary>
+            /// <param name="e">The exception.</param>
+            public void CaptureExceptionAndFail(Exception e)
+            {
+                // this should never happen, and we cannot do much about it
+                if (Exception != null)
+                    return;
+
+                Failed = true;
+                Exception = ExceptionDispatchInfo.Capture(e);
+            }
         }
     }
 }

@@ -20,7 +20,9 @@ namespace AsyncTests1.Networking
     /// Represents a message.
     /// </summary>
     /// <remarks>
-    /// <para>A message is composed of frames FIXME elaborate</para>
+    /// <para>A message is composed of frames
+    /// TODO properly document messages & frames
+    /// </para>
     /// <para>Frames are a linked list.</para>
     /// </remarks>
     public class Message
@@ -36,12 +38,12 @@ namespace AsyncTests1.Networking
         }
 
         /// <summary>
-        /// Gets or sets FIXME document
+        /// Gets or sets FIXME document IsRetryable
         /// </summary>
         public bool IsRetryable { get; set; }
 
         /// <summary>
-        /// Gets or sets FIXME document
+        /// Gets or sets FIXME document OperationName
         /// </summary>
         public string OperationName { get; set; }
 
@@ -158,6 +160,6 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Determines whether the message carries an exception.
         /// </summary>
-        public bool IsException => MessageType == 0; // FIXME values, consts ???
+        public bool IsException => MessageType == 0; // FIXME message type constants?
     }
 }

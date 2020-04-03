@@ -131,14 +131,14 @@ namespace AsyncTests1.Networking
             {
                 "a" => "alpha",
                 "b" => "bravo",
-                _ => "wut?"
+                _ => "??"
             };
 
+            // FIXME what is the proper structure of a message?
+            // the 64-bytes header is nonsense etc
             var response = new Message()
-                //.Append(Frame2.Begin)
                 .Append(new Frame(FrameFlags.Begin, new byte[64])) // header stuff
                 .Append(new Frame(FrameFlags.End | FrameFlags.Final, Encoding.UTF8.GetBytes(responseText)));
-            //.Append(Frame2.End); // FIXME is it final too?
 
             response.CorrelationId = message.CorrelationId;
 
