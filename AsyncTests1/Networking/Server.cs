@@ -123,7 +123,7 @@ namespace AsyncTests1.Networking
         /// <param name="connection">The connection receiving the message.</param>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been handled.</returns>
-        private async ValueTask ReceiveMessage(MessageConnection connection, Message2 message)
+        private async ValueTask ReceiveMessage(MessageConnection connection, Message message)
         {
             XConsole.WriteLine(this, "Respond");
             var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
@@ -134,10 +134,10 @@ namespace AsyncTests1.Networking
                 _ => "wut?"
             };
 
-            var response = new Message2()
+            var response = new Message()
                 //.Append(Frame2.Begin)
-                .Append(new Frame2(FrameFlags2.Begin, new byte[64])) // header stuff
-                .Append(new Frame2(FrameFlags2.End | FrameFlags2.Final, Encoding.UTF8.GetBytes(responseText)));
+                .Append(new Frame(FrameFlags.Begin, new byte[64])) // header stuff
+                .Append(new Frame(FrameFlags.End | FrameFlags.Final, Encoding.UTF8.GetBytes(responseText)));
             //.Append(Frame2.End); // FIXME is it final too?
 
             response.CorrelationId = message.CorrelationId;

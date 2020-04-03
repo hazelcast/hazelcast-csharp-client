@@ -17,7 +17,7 @@ using System;
 namespace AsyncTests1.Networking
 {
     [Flags]
-    public enum MessageFlags2 : ushort
+    public enum MessageFlags : ushort
     {
         Default = 0,
         BeginFragment = 1 << 15,
@@ -30,7 +30,7 @@ namespace AsyncTests1.Networking
 
     public static class MessageFlags2Extensions
     {
-        public static bool Has(this MessageFlags2 value, MessageFlags2 flag)
+        public static bool Has(this MessageFlags value, MessageFlags flag)
             => value.HasFlag(flag);
     }
 }

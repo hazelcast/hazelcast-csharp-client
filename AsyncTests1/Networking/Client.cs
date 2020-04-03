@@ -12,7 +12,7 @@ namespace AsyncTests1.Networking
     {
         private readonly byte[] _clientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
-        private readonly Dictionary<int, TaskCompletionSource<Message2>> _completions = new Dictionary<int, TaskCompletionSource<Message2>>();
+        private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
         private readonly object _isConnectedLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly IPEndPoint _endpoint;
@@ -87,7 +87,7 @@ namespace AsyncTests1.Networking
         /// <param name="connection">The connection.</param>
         /// <param name="response">The response message.</param>
         /// <returns>A task that will complete when the response message has been handled.</returns>
-        private ValueTask ReceiveMessage(MessageConnection connection, Message2 response)
+        private ValueTask ReceiveMessage(MessageConnection connection, Message response)
         {
             XConsole.WriteLine(this, $"Received response ID:{response.CorrelationId}");
 
@@ -111,7 +111,7 @@ namespace AsyncTests1.Networking
         /// <param name="message">The message.</param>
         /// <param name="timeoutMilliseconds">The maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public async Task<Message2> SendAsync(Message2 message, int timeoutMilliseconds = 0)
+        public async Task<Message> SendAsync(Message message, int timeoutMilliseconds = 0)
         {
             lock (_isConnectedLock)
             {
@@ -131,7 +131,7 @@ namespace AsyncTests1.Networking
                 throw new InvalidOperationException("Failed to send message.");
 
             // wait for the response
-            var completion = new TaskCompletionSource<Message2>();
+            var completion = new TaskCompletionSource<Message>();
             lock (_isConnectedLock)
             {
                 // only return the completion task if we are still connected

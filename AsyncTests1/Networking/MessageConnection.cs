@@ -35,10 +35,10 @@ namespace AsyncTests1.Networking
     {
         private readonly SocketConnection _connection;
 
-        private Func<MessageConnection, Message2, ValueTask> _onReceiveMessage;
+        private Func<MessageConnection, Message, ValueTask> _onReceiveMessage;
         private int _bytesLength = -1;
-        private Frame2 _currentFrame;
-        private Message2 _currentMessage;
+        private Frame _currentFrame;
+        private Message _currentMessage;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageConnection"/> class.
@@ -53,7 +53,7 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Gets or sets the function that handles messages.
         /// </summary>
-        public Func<MessageConnection, Message2, ValueTask> OnReceiveMessage
+        public Func<MessageConnection, Message, ValueTask> OnReceiveMessage
         {
             get => _onReceiveMessage;
             set
@@ -69,21 +69,21 @@ namespace AsyncTests1.Networking
 
             if (_bytesLength < 0)
             {
-                if (bytes.Length < Frame2.SizeOf.LengthAndFlags)
+                if (bytes.Length < Frame.SizeOf.LengthAndFlags)
                     return false;
 
-                var frameLength = Frame2.ReadLength(ref bytes);
-                var flags = Frame2.ReadFlags(ref bytes);
-                _bytesLength = frameLength - Frame2.SizeOf.LengthAndFlags;
+                var frameLength = Frame.ReadLength(ref bytes);
+                var flags = Frame.ReadFlags(ref bytes);
+                _bytesLength = frameLength - Frame.SizeOf.LengthAndFlags;
 
                 var frameBytes = _bytesLength == 0
                     ? Array.Empty<byte>()
                     : new byte[_bytesLength]; // TODO postpone alloc?
 
-                _currentFrame = new Frame2(flags, frameBytes);
+                _currentFrame = new Frame(flags, frameBytes);
                 XConsole.WriteLine(this, $"Add frame ({_currentFrame.Length} bytes)");
                 if (_currentMessage == null)
-                    _currentMessage = new Message2(_currentFrame);
+                    _currentMessage = new Message(_currentFrame);
                 else
                     _currentMessage.Append(_currentFrame);
             }
@@ -117,7 +117,7 @@ namespace AsyncTests1.Networking
         /// </summary>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been sent.</returns>
-        public async ValueTask<bool> SendAsync(Message2 message)
+        public async ValueTask<bool> SendAsync(Message message)
         {
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection
@@ -139,7 +139,7 @@ namespace AsyncTests1.Networking
             return true;
         }
 
-        private async ValueTask<bool> SendFrameAsync(Frame2 frame)
+        private async ValueTask<bool> SendFrameAsync(Frame frame)
         {
             var header = ArrayPool<byte>.Shared.Rent(6);
             frame.WriteLengthAndFlags(header);

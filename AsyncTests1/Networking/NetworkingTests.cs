@@ -48,7 +48,7 @@ namespace AsyncTests1.Networking
         // TODO: understand the schedulers in HZ code
 
 
-        private Message2 CreateMessage(string text)
+        private Message CreateMessage(string text)
         {
             //return new Message2(text);
 
@@ -58,15 +58,15 @@ namespace AsyncTests1.Networking
             // first frame has message type, correlation id and partition id - what else?
             // which frame is Begin, End, Final?
 
-            var message = new Message2()
+            var message = new Message()
                 //.Append(Frame2.Begin)
-                .Append(new Frame2(FrameFlags2.Begin, new byte[64])) // header stuff
-                .Append(new Frame2(FrameFlags2.End | FrameFlags2.Final, Encoding.UTF8.GetBytes(text)));
+                .Append(new Frame(FrameFlags.Begin, new byte[64])) // header stuff
+                .Append(new Frame(FrameFlags.End | FrameFlags.Final, Encoding.UTF8.GetBytes(text)));
                 //.Append(Frame2.End); // FIXME is it final too?
             return message;
         }
 
-        private string GetText(Message2 message)
+        private string GetText(Message message)
             => Encoding.UTF8.GetString(message.FirstFrame.Next.Bytes);
 
         [Test]

@@ -13,7 +13,7 @@ namespace AsyncTests1
         // https://stackoverflow.com/questions/19481964/calling-taskcompletionsource-setresult-in-a-non-blocking-manner
         // http://blog.stephencleary.com/2012/12/dont-block-in-asynchronous-code.html
 
-        // taskCompletionSource.SetResult() scheduled with .ExecuteSynchronously = duh
+        // taskCompletionSource.SetResult() scheduled with .ExecuteSynchronously = duh, beware!
 
         [Test]
         public async Task Test1()
