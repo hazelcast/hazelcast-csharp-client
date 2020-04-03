@@ -22,6 +22,8 @@ namespace AsyncTests1.Networking
 {
     public static class BytesExtensions
     {
+        public const bool BigEndian = false;
+
         private static class ExceptionMessage
         {
             public const string NotEnoughBytes = "Not enough bytes.";
@@ -39,7 +41,7 @@ namespace AsyncTests1.Networking
             return prefix + string.Join(" ", a.Take(length > 0 ? length : (int) bytes.Length).Select(x => $"{x:x2}"));
         }
 
-        public static int ReadInt32(ref ReadOnlySequence<byte> bytes, bool bigEndian = false)
+        public static int ReadInt32(ref ReadOnlySequence<byte> bytes, bool bigEndian = BigEndian)
         {
             if (bytes.Length < 4)
                 throw new ArgumentException(ExceptionMessage.NotEnoughBytes, nameof(bytes));
@@ -62,7 +64,7 @@ namespace AsyncTests1.Networking
             return value;
         }
 
-        public static ushort ReadUInt16(ref ReadOnlySequence<byte> bytes, bool bigEndian = false)
+        public static ushort ReadUInt16(ref ReadOnlySequence<byte> bytes, bool bigEndian = BigEndian)
         {
             const byte length = sizeof(ushort);
 
@@ -87,7 +89,7 @@ namespace AsyncTests1.Networking
             return value;
         }
 
-        public static int ReadInt32(this ReadOnlySpan<byte> bytes, bool bigEndian = false)
+        public static int ReadInt32(this ReadOnlySpan<byte> bytes, bool bigEndian = BigEndian)
         {
             const byte length = sizeof(int);
 
@@ -100,7 +102,7 @@ namespace AsyncTests1.Networking
                 : bytes[0] | bytes[1] << 8 | bytes[2] << 16 | bytes[3] << 24;
         }
 
-        public static ushort ReadUInt16(this ReadOnlySpan<byte> bytes, bool bigEndian = false)
+        public static ushort ReadUInt16(this ReadOnlySpan<byte> bytes, bool bigEndian = BigEndian)
         {
             const byte length = sizeof(ushort);
 
@@ -116,7 +118,7 @@ namespace AsyncTests1.Networking
             }
         }
 
-        public static int ReadInt32(this byte[] bytes, int position, bool bigEndian = false)
+        public static int ReadInt32(this byte[] bytes, int position, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -133,7 +135,7 @@ namespace AsyncTests1.Networking
             }
         }
 
-        public static long ReadInt64(this byte[] bytes, int position, bool bigEndian = false)
+        public static long ReadInt64(this byte[] bytes, int position, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -154,7 +156,7 @@ namespace AsyncTests1.Networking
             }
         }
 
-        public static void WriteUInt16(this byte[] bytes, int position, ushort value, bool bigEndian = false)
+        public static void WriteUInt16(this byte[] bytes, int position, ushort value, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(ushort))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -176,7 +178,7 @@ namespace AsyncTests1.Networking
             }
         }
 
-        public static void WriteInt32(this byte[] bytes, int position, int value, bool bigEndian = false)
+        public static void WriteInt32(this byte[] bytes, int position, int value, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -202,7 +204,7 @@ namespace AsyncTests1.Networking
             }
         }
 
-        public static void WriteInt64(this byte[] bytes, int position, long value, bool bigEndian = false)
+        public static void WriteInt64(this byte[] bytes, int position, long value, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));

@@ -103,7 +103,7 @@ namespace AsyncTests1.Networking
         /// <param name="bytes">The sequence of bytes.</param>
         /// <param name="bigEndian">Whether to write using big-endian or not.</param>
         /// <returns>The length of the frame.</returns>
-        public static int ReadLength(ref ReadOnlySequence<byte> bytes, bool bigEndian = false)
+        public static int ReadLength(ref ReadOnlySequence<byte> bytes, bool bigEndian = BytesExtensions.BigEndian)
             => BytesExtensions.ReadInt32(ref bytes, bigEndian);
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace AsyncTests1.Networking
         /// <param name="bytes">The sequence of bytes.</param>
         /// <param name="bigEndian">Whether to write using big-endian or not.</param>
         /// <returns>The flags of the frame.</returns>
-        public static FrameFlags ReadFlags(ref ReadOnlySequence<byte> bytes, bool bigEndian = false)
+        public static FrameFlags ReadFlags(ref ReadOnlySequence<byte> bytes, bool bigEndian = BytesExtensions.BigEndian)
             => (FrameFlags) BytesExtensions.ReadUInt16(ref bytes, bigEndian);
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace AsyncTests1.Networking
         /// </summary>
         /// <param name="bytes">An array of bytes.</param>
         /// <param name="bigEndian">Whether to write using big-endian or not.</param>
-        public void WriteLengthAndFlags(byte[] bytes, bool bigEndian = false)
+        public void WriteLengthAndFlags(byte[] bytes, bool bigEndian = BytesExtensions.BigEndian)
         {
             bytes.WriteInt32(0, Length, bigEndian);
             bytes.WriteUInt16(SizeOf.Length, (ushort) Flags, bigEndian);
