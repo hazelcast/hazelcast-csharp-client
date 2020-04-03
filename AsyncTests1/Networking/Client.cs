@@ -10,8 +10,6 @@ namespace AsyncTests1.Networking
     /// </summary>
     public class Client
     {
-        public readonly Log Log = new Log { Prefix = "    CLT" };
-
         private readonly byte[] _clientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
         private readonly Dictionary<int, TaskCompletionSource<Message2>> _completions = new Dictionary<int, TaskCompletionSource<Message2>>();
@@ -46,6 +44,7 @@ namespace AsyncTests1.Networking
         {
             _endpoint = endpoint;
             _connectionIdSequence = connectionIdSequence;
+            XConsole.Setup(this, 4, "CLT");
         }
 
         /// <summary>
@@ -59,7 +58,7 @@ namespace AsyncTests1.Networking
 
             _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, _endpoint) { OnShutdown = SocketShutdown };
             _connection = new MessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
-            _connection.Log.Prefix = "            CLT.MSG" + _socketConnection.Id;
+            XConsole.Setup(_connection, 12, $"CLT.MSG({_socketConnection.Id})");
 
             await _socketConnection.ConnectAsync();
 
@@ -90,7 +89,7 @@ namespace AsyncTests1.Networking
         /// <returns>A task that will complete when the response message has been handled.</returns>
         private ValueTask ReceiveMessage(MessageConnection connection, Message2 response)
         {
-            Log.WriteLine($"Received response ID:{response.CorrelationId}");
+            XConsole.WriteLine(this, $"Received response ID:{response.CorrelationId}");
 
             if (_completions.TryGetValue((int) response.CorrelationId, out var completion)) // fixme id size
             {
@@ -100,7 +99,7 @@ namespace AsyncTests1.Networking
             }
             else
             {
-                Log.WriteLine($"No completion for ID:{response.CorrelationId}");
+                XConsole.WriteLine(this, $"No completion for ID:{response.CorrelationId}");
             }
 
             return new ValueTask();
@@ -125,7 +124,7 @@ namespace AsyncTests1.Networking
             message.CorrelationId = _messageId++;
 
             // send the message
-            Log.WriteLine($"Send message ID:{message.CorrelationId}");
+            XConsole.WriteLine(this, $"Send message ID:{message.CorrelationId}");
             var success = await _connection.SendAsync(message);
 
             if (!success)
@@ -140,7 +139,7 @@ namespace AsyncTests1.Networking
                 if (!_isConnected)
                     throw new InvalidOperationException("Not connected.");
 
-                Log.WriteLine("Wait for response...");
+                XConsole.WriteLine(this, "Wait for response...");
                 _completions[(int) message.CorrelationId] = completion; // FIXME id size
             }
 
@@ -159,7 +158,7 @@ namespace AsyncTests1.Networking
         /// <returns>A task that will complete when the client has shut down.</returns>
         public async Task ShutdownAsync()
         {
-            Log.WriteLine("Shutdown");
+            XConsole.WriteLine(this, "Shutdown");
 
             lock (_isConnectedLock)
             {

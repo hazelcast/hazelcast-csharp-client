@@ -6,6 +6,10 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;_XCONSOLE</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="NuGet.Versioning" Version="5.4.0" />
     <PackageReference Include="nunit" Version="3.12.0" />

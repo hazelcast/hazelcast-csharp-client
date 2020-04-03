@@ -25,8 +25,6 @@ namespace AsyncTests1.Networking
     /// </summary>
     public class Server
     {
-        public readonly Log Log = new Log { Prefix = "                        SVR" };
-
         private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
 
         private readonly IPEndPoint _endpoint;
@@ -41,6 +39,7 @@ namespace AsyncTests1.Networking
         public Server(IPEndPoint endpoint)
         {
             _endpoint = endpoint;
+            XConsole.Setup(this, 20, "SVR");
         }
 
         /// <summary>
@@ -49,24 +48,24 @@ namespace AsyncTests1.Networking
         /// <returns>A task that will complete when the server has started.</returns>
         public async Task StartAsync()
         {
-            Log.WriteLine("Start server");
+            XConsole.WriteLine(this, "Start server");
 
             _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
-            _listener.Log.Prefix = "                          LST";
+            XConsole.Setup(_listener, 24, "LST");
             await _listener.StartAsync();
 
-            Log.WriteLine("Server started");
+            XConsole.WriteLine(this, "Server started");
         }
 
         private async ValueTask ListenerShutdown(ServerSocketListener arg)
         {
-            Log.WriteLine("Listener is down");
+            XConsole.WriteLine(this, "Listener is down");
 
             // shutdown all existing connections
             foreach (var connection in _connections.Values)
                 await connection.ShutdownAsync();
 
-            Log.WriteLine("Connections are down");
+            XConsole.WriteLine(this, "Connections are down");
         }
 
         /// <summary>
@@ -75,12 +74,12 @@ namespace AsyncTests1.Networking
         /// <returns>A task that will complete when the server has stopped.</returns>
         public async Task StopAsync()
         {
-            Log.WriteLine("Stop server");
+            XConsole.WriteLine(this, "Stop server");
 
             // stop accepting new connections
             await _listener.StopAsync();
 
-            Log.WriteLine("Server stopped");
+            XConsole.WriteLine(this, "Server stopped");
         }
 
         /// <summary>
@@ -93,7 +92,7 @@ namespace AsyncTests1.Networking
             // must wire it properly before accepting
 
             var messageConnection = new MessageConnection(serverConnection) { OnReceiveMessage = ReceiveMessage };
-            messageConnection.Log.Prefix = "                            SVR.MSG";
+            XConsole.Setup(messageConnection, 28, "SVR.MSG");
             serverConnection.OnShutdown = SocketShutdown;
             serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
             serverConnection.Accept();
@@ -113,7 +112,7 @@ namespace AsyncTests1.Networking
         /// <returns>A task that will complete when the connection shutdown has been handled.</returns>
         private ValueTask SocketShutdown(SocketConnection connection)
         {
-            Log.WriteLine("Removing connection " + connection.Id);
+            XConsole.WriteLine(this, "Removing connection " + connection.Id);
             _connections.Remove(connection.Id);
             return new ValueTask();
         }
@@ -126,7 +125,7 @@ namespace AsyncTests1.Networking
         /// <returns>A task that will complete when the message has been handled.</returns>
         private async ValueTask ReceiveMessage(MessageConnection connection, Message2 message)
         {
-            Log.WriteLine("Respond");
+            XConsole.WriteLine(this, "Respond");
             var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
             var responseText = text switch
             {
@@ -144,7 +143,7 @@ namespace AsyncTests1.Networking
             response.CorrelationId = message.CorrelationId;
 
             await connection.SendAsync(response);
-            Log.WriteLine("Responded");
+            XConsole.WriteLine(this, "Responded");
         }
     }
 }

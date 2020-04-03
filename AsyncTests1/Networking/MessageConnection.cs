@@ -33,7 +33,6 @@ namespace AsyncTests1.Networking
     /// </remarks>
     public class MessageConnection
     {
-        public readonly Log Log = new Log();
         private readonly SocketConnection _connection;
 
         private Func<MessageConnection, Message2, ValueTask> _onReceiveMessage;
@@ -66,7 +65,7 @@ namespace AsyncTests1.Networking
 
         private bool ReceiveMessageBytes(SocketConnection connection, ref ReadOnlySequence<byte> bytes)
         {
-            Log.WriteLine($"Received {bytes.Length} bytes");
+            XConsole.WriteLine(this, $"Received {bytes.Length} bytes");
 
             if (_bytesLength < 0)
             {
@@ -82,7 +81,7 @@ namespace AsyncTests1.Networking
                     : new byte[_bytesLength]; // TODO postpone alloc?
 
                 _currentFrame = new Frame2(flags, frameBytes);
-                Log.WriteLine($"Add frame ({_currentFrame.Length} bytes)");
+                XConsole.WriteLine(this, $"Add frame ({_currentFrame.Length} bytes)");
                 if (_currentMessage == null)
                     _currentMessage = new Message2(_currentFrame);
                 else
@@ -103,7 +102,7 @@ namespace AsyncTests1.Networking
             {
                 var message = _currentMessage;
                 _currentMessage = null;
-                Log.WriteLine("Handle message");
+                XConsole.WriteLine(this, "Handle message");
                 // FIXME don't do this it's here already
                 //message.CorrelationId = message.FirstFrame.Next.GetCorrelationId();
                 //_onReceiveMessage(this, message); // FIXME async?! no because ref bytes?!
@@ -123,12 +122,12 @@ namespace AsyncTests1.Networking
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection
 
-            Log.WriteLine("Send message");
+            XConsole.WriteLine(this, "Send message");
 
             var frame = message.FirstFrame;
             do
             {
-                Log.WriteLine($"Send frame ({frame.Length} bytes)");
+                XConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
                 if (!await SendFrameAsync(frame))
                     return false;
 

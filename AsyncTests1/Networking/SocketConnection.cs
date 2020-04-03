@@ -29,7 +29,6 @@ namespace AsyncTests1.Networking
         public delegate bool MessageBytesHandler(SocketConnection connection, ref ReadOnlySequence<byte> bytes);
 
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
-        public readonly Log Log = new Log();
         private readonly SemaphoreSlim _writer;
 
         private MessageBytesHandler _onReceiveMessageBytes;
@@ -218,7 +217,7 @@ namespace AsyncTests1.Networking
             }
             catch { /* ignore */ }
 
-            Log.WriteLine("Connection is down");
+            XConsole.WriteLine(this, "Connection is down");
 
             // notify
             if (_onShutdown != null)
@@ -248,14 +247,14 @@ namespace AsyncTests1.Networking
             catch (Exception e)
             {
                 // on error, shutdown and report
-                Log.WriteLine("SendAsync:ERROR");
-                Log.WriteLine(e);
+                XConsole.WriteLine(this, "SendAsync:ERROR");
+                XConsole.WriteLine(this, e);
                 _streamReadCancellationTokenSource.Cancel();
                 return false;
             }
             _writer?.Release();
 
-            Log.WriteLine($"Sent {count} bytes" + bytes.Dump("\n> ", count));
+            XConsole.WriteLine(this, $"Sent {count} bytes" + bytes.Dump("\n> ", count));
             return true;
         }
 
@@ -269,7 +268,7 @@ namespace AsyncTests1.Networking
                 return;
 
             // notify other end with an empty message
-            Log.WriteLine("Send empty message");
+            XConsole.WriteLine(this, "Send empty message");
             if (_writer != null) await _writer.WaitAsync();
             try
             {
@@ -279,7 +278,7 @@ namespace AsyncTests1.Networking
             _writer?.Release();
 
             // requests that the pipe stops processing
-            Log.WriteLine("Cancel pipe");
+            XConsole.WriteLine(this, "Cancel pipe");
             _streamReadCancellationTokenSource.Cancel();
 
             // wait for everything to be down
@@ -308,7 +307,7 @@ namespace AsyncTests1.Networking
                     bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token);
                     if (bytesRead == 0)
                     {
-                        Log.WriteLine("Pipe writer received no data");
+                        XConsole.WriteLine(this, "Pipe writer received no data");
                         break;
                     }
 
@@ -317,14 +316,14 @@ namespace AsyncTests1.Networking
                 catch (OperationCanceledException)
                 {
                     // expected - just break
-                    Log.WriteLine("Pipe writer has been cancelled");
+                    XConsole.WriteLine(this, "Pipe writer has been cancelled");
                     break;
                 }
                 catch (Exception ex)
                 {
                     // on error, shutdown and break, this will complete the reader
-                    Log.WriteLine("Pipe writer:ERROR");
-                    Log.WriteLine(ex);
+                    XConsole.WriteLine(this, "Pipe writer:ERROR");
+                    XConsole.WriteLine(this, ex);
                     break;
                 }
 
@@ -336,13 +335,13 @@ namespace AsyncTests1.Networking
 
                 if (result.IsCompleted)
                 {
-                    Log.WriteLine("Pipe is completed (in writer)");
+                    XConsole.WriteLine(this, "Pipe is completed (in writer)");
                     break;
                 }
             }
 
             // tell the PipeReader that there's no more data coming
-            Log.WriteLine("Pipe writer completing");
+            XConsole.WriteLine(this, "Pipe writer completing");
             writer.Complete();
         }
 
@@ -359,7 +358,7 @@ namespace AsyncTests1.Networking
             while (await ReadPipeLoop0(state)) { }
 
             // mark the PipeReader as complete
-            Log.WriteLine("Pipe reader completing");
+            XConsole.WriteLine(this, "Pipe reader completing");
             reader.Complete();
         }
 
@@ -372,18 +371,18 @@ namespace AsyncTests1.Networking
         private async ValueTask<bool> ReadPipeLoop0(ReadPipeState state)
         {
             // await data from the pipe
-            Log.WriteLine("Pipe reader awaits data from the pipe");
+            XConsole.WriteLine(this, "Pipe reader awaits data from the pipe");
             var result = await state.Reader.ReadAsync();
             state.Buffer = result.Buffer;
 
             // no data means it's over
             if (state.Buffer.Length == 0)
             {
-                Log.WriteLine("Pipe reader received no data");
+                XConsole.WriteLine(this, "Pipe reader received no data");
                 return false;
             }
 
-            Log.WriteLine($"Pipe reader received data, buffer size is {state.Buffer.Length} bytes");
+            XConsole.WriteLine(this, $"Pipe reader received data, buffer size is {state.Buffer.Length} bytes");
 
             // process data
             while (await ReadPipeLoop1(state)) { }
@@ -403,7 +402,7 @@ namespace AsyncTests1.Networking
             // stop reading if there's no more data coming
             if (result.IsCompleted)
             {
-                Log.WriteLine("Pipe is completed (in reader)");
+                XConsole.WriteLine(this, "Pipe is completed (in reader)");
                 return false;
             }
 
@@ -418,20 +417,20 @@ namespace AsyncTests1.Networking
         /// and represents whether to continue processing.</returns>
         private async ValueTask<bool> ReadPipeLoop1(ReadPipeState state)
         {
-            Log.WriteLine("Pipe reader processes data" + state.Buffer.Dump("\n< "));
+            XConsole.WriteLine(this, "Pipe reader processes data" + state.Buffer.Dump("\n< "));
 
             if (_prefixLength > 0)
             {
                 if (state.Buffer.Length < _prefixLength)
                 {
-                    Log.WriteLine("Pipe reader has not enough data");
+                    XConsole.WriteLine(this, "Pipe reader has not enough data");
                     return false;
                 }
 
                 // we have a prefix, handle lit
                 try
                 {
-                    Log.WriteLine("Pipe reader received prefix");
+                    XConsole.WriteLine(this, "Pipe reader received prefix");
                     await _onReceivePrefixBytes(this, state.Buffer.Slice(0, _prefixLength));
                     state.Buffer = state.Buffer.Slice(_prefixLength);
                     _prefixLength = 0;
@@ -439,16 +438,16 @@ namespace AsyncTests1.Networking
                 catch (Exception e)
                 {
                     // error while processing, report and shutdown
-                    Log.WriteLine("Pipe reader encountered an exception while handling the prefix (shutdown)");
-                    Log.WriteLine(e);
+                    XConsole.WriteLine(this, "Pipe reader encountered an exception while handling the prefix (shutdown)");
+                    XConsole.WriteLine(this, e);
                     state.Failed = true; // FIXME carry the exception?
                     return false;
                 }
 
-                Log.WriteLine("Pipe reader processes data");
+                XConsole.WriteLine(this, "Pipe reader processes data");
             }
 
-            Log.WriteLine("Handle message bytes" + state.Buffer.Dump("\n< "));
+            XConsole.WriteLine(this, "Handle message bytes" + state.Buffer.Dump("\n< "));
             try
             {
                 // handle the bytes (and slice the buffer accordingly)
@@ -457,8 +456,8 @@ namespace AsyncTests1.Networking
             catch (Exception e)
             {
                 // error while processing, report
-                Log.WriteLine("Pipe reader encountered an exception while handling message bytes");
-                Log.WriteLine(e);
+                XConsole.WriteLine(this, "Pipe reader encountered an exception while handling message bytes");
+                XConsole.WriteLine(this, e);
                 state.Failed = true; // FIXME carry the exception?
                 return false;
             }

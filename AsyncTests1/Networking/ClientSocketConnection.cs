@@ -41,7 +41,7 @@ namespace AsyncTests1.Networking
             : base(id, prefixLength, multithread)
         {
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
-            Log.Prefix = $"                CLT.CON[{id}]";
+            XConsole.Setup(this, 16, "CLT.CON({id})");
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace AsyncTests1.Networking
         /// </remarks>
         public async ValueTask ConnectAsync()
         {
-            Log.WriteLine("Open");
+            XConsole.WriteLine(this, "Open");
 
             if (OnReceiveMessageBytes == null)
                 throw new InvalidOperationException("No message bytes handler has been configured.");
@@ -63,9 +63,9 @@ namespace AsyncTests1.Networking
             var socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             // connect to server
-            Log.WriteLine("Connect to server");
+            XConsole.WriteLine(this, "Connect to server");
             await socket.ConnectAsync(_endpoint);
-            Log.WriteLine("Connected to server");
+            XConsole.WriteLine(this, "Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream
             // TODO: implement SSL or provide a Func<Stream, Stream>
@@ -74,7 +74,7 @@ namespace AsyncTests1.Networking
             // wire the pipe
             OpenPipe(socket, stream);
 
-            Log.WriteLine("Opened");
+            XConsole.WriteLine(this, "Opened");
         }
     }
 }

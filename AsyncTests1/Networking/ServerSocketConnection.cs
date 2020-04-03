@@ -37,7 +37,7 @@ namespace AsyncTests1.Networking
             : base(id)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-            Log.Prefix = $"                                SVR.CON[{id}]";
+            XConsole.Setup(this, 32, "SVR.CON({id})");
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace AsyncTests1.Networking
         /// </remarks>
         public void Accept()
         {
-            Log.WriteLine("Connect");
+            XConsole.WriteLine(this, "Connect");
 
             if (OnReceiveMessageBytes == null)
                 throw new InvalidOperationException("No message bytes handler has been configured.");
@@ -61,7 +61,7 @@ namespace AsyncTests1.Networking
             // wire the pipe
             OpenPipe(_socket, stream);
 
-            Log.WriteLine("Connected");
+            XConsole.WriteLine(this, "Connected");
         }
     }
 }

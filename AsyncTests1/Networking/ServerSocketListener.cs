@@ -25,8 +25,6 @@ namespace AsyncTests1.Networking
     /// </summary>
     public class ServerSocketListener
     {
-        public readonly Log Log = new Log();
-
         private readonly ManualResetEvent _accepted = new ManualResetEvent(false);
         private readonly ISequence<int> _connectionIdSequence = new Int32Sequence();
 
@@ -83,12 +81,12 @@ namespace AsyncTests1.Networking
         /// <returns>A task that will complete when the listener has started listening.</returns>
         public Task StartAsync()
         {
-            Log.WriteLine("Start listener");
+            XConsole.WriteLine(this, "Start listener");
 
             if (_onAcceptConnection == null)
                 throw new InvalidOperationException("No connection handler has been configured.");
 
-            Log.WriteLine("Create listener socket");
+            XConsole.WriteLine(this, "Create listener socket");
             _socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             try
@@ -98,8 +96,8 @@ namespace AsyncTests1.Networking
             }
             catch (Exception e)
             {
-                Log.WriteLine("Failed to bind socket");
-                Log.WriteLine(e);
+                XConsole.WriteLine(this, "Failed to bind socket");
+                XConsole.WriteLine(this, e);
                 // FIXME server should then terminate
             }
 
@@ -107,7 +105,7 @@ namespace AsyncTests1.Networking
 
             _listeningThenShutdown = Task.Run(() =>
             {
-                Log.WriteLine("Start listening");
+                XConsole.WriteLine(this, "Start listening");
                 Interlocked.Exchange(ref _isActive, 1);
                 var waitHandles = new[] { _accepted, _cancellationTokenSource.Token.WaitHandle };
                 while (true)
@@ -116,7 +114,7 @@ namespace AsyncTests1.Networking
                     _accepted.Reset();
 
                     // start an asynchronous socket to listen for connections
-                    Log.WriteLine("Listening");
+                    XConsole.WriteLine(this, "Listening");
                     _socket.BeginAccept(AcceptCallback, _socket);
 
                     // TODO - consider doing things differently (low)
@@ -130,11 +128,11 @@ namespace AsyncTests1.Networking
                     var n = WaitHandle.WaitAny(waitHandles);
                     if (n == 1) break;
                 }
-                Log.WriteLine("Stop listening");
+                XConsole.WriteLine(this, "Stop listening");
 
             }, CancellationToken.None).ContinueWith(ShutdownInternal);
 
-            Log.WriteLine("Started listener");
+            XConsole.WriteLine(this, "Started listener");
 
             return Task.CompletedTask;
         }
@@ -144,12 +142,12 @@ namespace AsyncTests1.Networking
             if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
                 return;
 
-            Log.WriteLine("Shutdown socket");
+            XConsole.WriteLine(this, "Shutdown socket");
             //_socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
             _socket.Dispose();
 
-            Log.WriteLine("Listener is down");
+            XConsole.WriteLine(this, "Listener is down");
 
             // notify
             if (_onShutdown != null)
@@ -162,12 +160,12 @@ namespace AsyncTests1.Networking
         /// <returns>A task that will complete when the listener has stopped listening.</returns>
         public async ValueTask StopAsync()
         {
-            Log.WriteLine("Stop listener");
+            XConsole.WriteLine(this, "Stop listener");
 
             _cancellationTokenSource.Cancel();
             await _listeningThenShutdown;
 
-            Log.WriteLine("Stopped listener");
+            XConsole.WriteLine(this, "Stopped listener");
         }
 
         /// <summary>
@@ -176,7 +174,7 @@ namespace AsyncTests1.Networking
         /// <param name="result">The status of the asynchronous listening.</param>
         private void AcceptCallback(IAsyncResult result)
         {
-            Log.WriteLine("Accept connection");
+            XConsole.WriteLine(this, "Accept connection");
 
             // signal the main thread to continue
             _accepted.Set();
@@ -195,18 +193,18 @@ namespace AsyncTests1.Networking
             {
                 if (_isActive == 0)
                 {
-                    Log.WriteLine("Ignore exception (listener is down)");
+                    XConsole.WriteLine(this, "Ignore exception (listener is down)");
                 }
                 else if (_cancellationTokenSource.IsCancellationRequested)
                 {
-                    Log.WriteLine("Abort connection (listened is shutting down)");
+                    XConsole.WriteLine(this, "Abort connection (listened is shutting down)");
                 }
                 else
                 {
                     _cancellationTokenSource.Cancel();
-                    Log.WriteLine("Abort connection");
+                    XConsole.WriteLine(this, "Abort connection");
                 }
-                Log.WriteLine(e);
+                XConsole.WriteLine(this, e);
                 return;
             }
 
@@ -218,18 +216,11 @@ namespace AsyncTests1.Networking
             }
             catch (Exception e)
             {
-                Log.WriteLine("Failed to accept a connection");
-                Log.WriteLine(e);
-                if (_cancellationTokenSource.IsCancellationRequested)
-                {
-                    Log.WriteLine("Abort connection (server is stopping)");
-                    Log.WriteLine(e);
-                }
-                else
-                {
-                    Log.WriteLine("Abort connection");
-                    Log.WriteLine(e);
-                }
+                XConsole.WriteLine(this, "Failed to accept a connection");
+                XConsole.WriteLine(this, e);
+                XConsole.WriteLine(this, _cancellationTokenSource.IsCancellationRequested
+                    ? "Abort connection (server is stopping)"
+                    : "Abort connection");
             }
         }
     }

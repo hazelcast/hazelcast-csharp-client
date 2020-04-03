@@ -79,49 +79,49 @@ namespace AsyncTests1.Networking
 
             var endpoint = IPEndPoint.Parse("127.0.0.1:11001");
 
-            var log = new Log("TST");
-            log.WriteLine("Begin");
+            XConsole.Setup(this, 0, "TST");
+            XConsole.WriteLine(this, "Begin");
 
-            log.WriteLine("Start server");
+            XConsole.WriteLine(this, "Start server");
             var server = new Server(endpoint);
             await server.StartAsync();
 
             var sequence = new Int32Sequence();
 
-            log.WriteLine("Start client 1");
+            XConsole.WriteLine(this, "Start client 1");
             var client1 = new Client(endpoint, sequence);
             await client1.ConnectAsync();
 
-            log.WriteLine("Send message 1 to client 1");
+            XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
             var response = await client1.SendAsync(message);
 
-            log.WriteLine("Got response: " + GetText(response));
+            XConsole.WriteLine(this, "Got response: " + GetText(response));
 
-            log.WriteLine("Start client 2");
+            XConsole.WriteLine(this, "Start client 2");
             var client2 = new Client(endpoint, sequence);
             await client2.ConnectAsync();
 
-            log.WriteLine("Send message 1 to client 2");
+            XConsole.WriteLine(this, "Send message 1 to client 2");
             message = CreateMessage("a");
             response = await client2.SendAsync(message);
 
-            log.WriteLine("Got response: " + GetText(response));
+            XConsole.WriteLine(this, "Got response: " + GetText(response));
 
-            log.WriteLine("Send message 2 to client 1");
+            XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("foo");
             response = await client1.SendAsync(message);
 
-            log.WriteLine("Got response: " + GetText(response));
+            XConsole.WriteLine(this, "Got response: " + GetText(response));
 
-            log.WriteLine("Stop client");
+            XConsole.WriteLine(this, "Stop client");
             await client1.ShutdownAsync();
 
-            log.WriteLine("Stop server");
+            XConsole.WriteLine(this, "Stop server");
             await server.StopAsync();
             await Task.Delay(1000);
 
-            log.WriteLine("End");
+            XConsole.WriteLine(this, "End");
             await Task.Delay(100);
         }
 
@@ -131,32 +131,32 @@ namespace AsyncTests1.Networking
         {
             var endpoint = IPEndPoint.Parse("127.0.0.1:11000");
 
-            var log = new Log("TST");
-            log.WriteLine("Begin");
+            XConsole.Setup(this, 0, "TST");
+            XConsole.WriteLine(this, "Begin");
 
-            log.WriteLine("Start server");
+            XConsole.WriteLine(this, "Start server");
             var server = new Server(endpoint);
             await server.StartAsync();
 
-            log.WriteLine("Start client 1");
+            XConsole.WriteLine(this, "Start client 1");
             var client1 = new Client(endpoint);
             await client1.ConnectAsync();
 
-            log.WriteLine("Send message 1 to client 1");
+            XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
             var response = await client1.SendAsync(message);
 
-            log.WriteLine("Got response: " + GetText(response));
+            XConsole.WriteLine(this, "Got response: " + GetText(response));
 
-            log.WriteLine("Stop server");
+            XConsole.WriteLine(this, "Stop server");
             await server.StopAsync();
             await Task.Delay(1000);
 
-            log.WriteLine("Send message 2 to client 1");
+            XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
             Assert.ThrowsAsync<InvalidOperationException>(async () => await client1.SendAsync(message));
 
-            log.WriteLine("End");
+            XConsole.WriteLine(this, "End");
             await Task.Delay(100);
         }
 
