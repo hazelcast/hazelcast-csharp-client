@@ -14,11 +14,8 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 
 namespace AsyncTests1.Networking
 {
@@ -39,7 +36,10 @@ namespace AsyncTests1.Networking
         public readonly Log Log = new Log();
         private readonly SocketConnection _connection;
 
-        private Func<MessageConnection, Message, ValueTask> _onReceiveMessage;
+        private Func<MessageConnection, Message2, ValueTask> _onReceiveMessage;
+        private int _bytesLength = -1;
+        private Frame2 _currentFrame;
+        private Message2 _currentMessage;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageConnection"/> class.
@@ -54,7 +54,7 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Gets or sets the function that handles messages.
         /// </summary>
-        public Func<MessageConnection, Message, ValueTask> OnReceiveMessage
+        public Func<MessageConnection, Message2, ValueTask> OnReceiveMessage
         {
             get => _onReceiveMessage;
             set
@@ -64,25 +64,53 @@ namespace AsyncTests1.Networking
             }
         }
 
-        /// <summary>
-        /// Handles message bytes.
-        /// </summary>
-        /// <param name="connection">The underlying <see cref="SocketConnection"/>.</param>
-        /// <param name="bytes">The message bytes.</param>
-        /// <returns>A task that will complete when the bytes have been processed.</returns>
-        private async ValueTask ReceiveMessageBytes(SocketConnection connection, ReadOnlySequence<byte> bytes)
+        private bool ReceiveMessageBytes(SocketConnection connection, ref ReadOnlySequence<byte> bytes)
         {
-            // deserialize the bytes into a message,
-            // and then pass that message to the upper layer
+            Log.WriteLine($"Received {bytes.Length} bytes");
 
-            Log.WriteLine($"Received {bytes.Length} bytes message");
-            var text = GetAsciiString(bytes);
-            var message = Message.Parse(text);
+            if (_bytesLength < 0)
+            {
+                if (bytes.Length < Frame2.SizeOf.LengthAndFlags)
+                    return false;
 
-            if (_onReceiveMessage == null)
-                throw new InvalidOperationException("No message handler has been configured.");
+                var frameLength = Frame2.ReadLength(ref bytes);
+                var flags = Frame2.ReadFlags(ref bytes);
+                _bytesLength = frameLength - Frame2.SizeOf.LengthAndFlags;
 
-            await _onReceiveMessage(this, message);
+                var frameBytes = _bytesLength == 0
+                    ? Array.Empty<byte>()
+                    : new byte[_bytesLength]; // TODO postpone alloc?
+
+                _currentFrame = new Frame2(flags, frameBytes);
+                Log.WriteLine($"Add frame ({_currentFrame.Length} bytes)");
+                if (_currentMessage == null)
+                    _currentMessage = new Message2(_currentFrame);
+                else
+                    _currentMessage.Append(_currentFrame);
+            }
+
+            // should we keep buffering in the pipe, or consume here?
+            // FIXME doing it asap is probably nice!
+            if (bytes.Length < _bytesLength)
+                return false;
+
+            bytes.Fill(_currentFrame.Bytes);
+            bytes = bytes.Slice(_bytesLength);
+            _bytesLength = -1;
+
+            // we now have a fully assembled message
+            if (_currentFrame.IsFinal)
+            {
+                var message = _currentMessage;
+                _currentMessage = null;
+                Log.WriteLine("Handle message");
+                // FIXME don't do this it's here already
+                //message.CorrelationId = message.FirstFrame.Next.GetCorrelationId();
+                //_onReceiveMessage(this, message); // FIXME async?! no because ref bytes?!
+                Task.Run(async () => await _onReceiveMessage(this, message));
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -90,14 +118,42 @@ namespace AsyncTests1.Networking
         /// </summary>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been sent.</returns>
-        public async ValueTask<bool> SendAsync(Message message)
+        public async ValueTask<bool> SendAsync(Message2 message)
         {
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection
 
-            Log.WriteLine($"Send \"{message}\"");
-            var bytes = message.ToPrefixedBytes();
-            return await _connection.SendAsync(bytes);
+            Log.WriteLine("Send message");
+
+            var frame = message.FirstFrame;
+            do
+            {
+                Log.WriteLine($"Send frame ({frame.Length} bytes)");
+                if (!await SendFrameAsync(frame))
+                    return false;
+
+                // FIXME what happens if we've sent some frames?
+
+                frame = frame.Next;
+            } while (frame != null);
+
+            return true;
+        }
+
+        private async ValueTask<bool> SendFrameAsync(Frame2 frame)
+        {
+            var header = ArrayPool<byte>.Shared.Rent(6);
+            frame.WriteLengthAndFlags(header);
+
+            if (!await _connection.SendAsync(header, 6))
+                return false;
+
+            ArrayPool<byte>.Shared.Return(header);
+
+            if (!await _connection.SendAsync(frame.Bytes))
+                return false;
+
+            return true;
         }
 
         // temp de-serialization stuff

@@ -15,6 +15,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace AsyncTests1.Networking
@@ -123,16 +124,25 @@ namespace AsyncTests1.Networking
         /// <param name="connection">The connection receiving the message.</param>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been handled.</returns>
-        private async ValueTask ReceiveMessage(MessageConnection connection, Message message)
+        private async ValueTask ReceiveMessage(MessageConnection connection, Message2 message)
         {
             Log.WriteLine("Respond");
-            var responseText = message.Text switch
+            var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
+            var responseText = text switch
             {
                 "a" => "alpha",
                 "b" => "bravo",
                 _ => "wut?"
             };
-            var response = new Message(responseText) { Id = message.Id };
+
+            var response = new Message2()
+                //.Append(Frame2.Begin)
+                .Append(new Frame2(FrameFlags2.Begin, new byte[64])) // header stuff
+                .Append(new Frame2(FrameFlags2.End | FrameFlags2.Final, Encoding.UTF8.GetBytes(responseText)));
+            //.Append(Frame2.End); // FIXME is it final too?
+
+            response.CorrelationId = message.CorrelationId;
+
             await connection.SendAsync(response);
             Log.WriteLine("Responded");
         }

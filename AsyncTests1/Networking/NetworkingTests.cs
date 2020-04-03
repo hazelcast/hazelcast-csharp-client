@@ -15,6 +15,7 @@
 using System;
 using System.Buffers;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -46,6 +47,28 @@ namespace AsyncTests1.Networking
         //
         // TODO: understand the schedulers in HZ code
 
+
+        private Message2 CreateMessage(string text)
+        {
+            //return new Message2(text);
+
+            // FIXME tons of frames = tons of packet unless we can write a sequence?
+            // FIXME what is the structure of a message, frame-wise?
+
+            // first frame has message type, correlation id and partition id - what else?
+            // which frame is Begin, End, Final?
+
+            var message = new Message2()
+                //.Append(Frame2.Begin)
+                .Append(new Frame2(FrameFlags2.Begin, new byte[64])) // header stuff
+                .Append(new Frame2(FrameFlags2.End | FrameFlags2.Final, Encoding.UTF8.GetBytes(text)));
+                //.Append(Frame2.End); // FIXME is it final too?
+            return message;
+        }
+
+        private string GetText(Message2 message)
+            => Encoding.UTF8.GetString(message.FirstFrame.Next.Bytes);
+
         [Test]
         [Timeout(10_000)]
         public async Task Test()
@@ -54,7 +77,7 @@ namespace AsyncTests1.Networking
             //var ipAddress = host.AddressList[0];
             //var endpoint = new IPEndPoint(ipAddress, _port);
 
-            var endpoint = IPEndPoint.Parse("127.0.0.1:11000");
+            var endpoint = IPEndPoint.Parse("127.0.0.1:11001");
 
             var log = new Log("TST");
             log.WriteLine("Begin");
@@ -70,26 +93,26 @@ namespace AsyncTests1.Networking
             await client1.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 1");
-            var message = new Message("ping");
+            var message = CreateMessage("ping");
             var response = await client1.SendAsync(message);
 
-            log.WriteLine("Got response: " + response.Text);
+            log.WriteLine("Got response: " + GetText(response));
 
             log.WriteLine("Start client 2");
             var client2 = new Client(endpoint, sequence);
             await client2.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 2");
-            message = new Message("a");
+            message = CreateMessage("a");
             response = await client2.SendAsync(message);
 
-            log.WriteLine("Got response: " + response.Text);
+            log.WriteLine("Got response: " + GetText(response));
 
             log.WriteLine("Send message 2 to client 1");
-            message = new Message("foo");
+            message = CreateMessage("foo");
             response = await client1.SendAsync(message);
 
-            log.WriteLine("Got response: " + response.Text);
+            log.WriteLine("Got response: " + GetText(response));
 
             log.WriteLine("Stop client");
             await client1.ShutdownAsync();
@@ -120,17 +143,17 @@ namespace AsyncTests1.Networking
             await client1.ConnectAsync();
 
             log.WriteLine("Send message 1 to client 1");
-            var message = new Message("ping");
+            var message = CreateMessage("ping");
             var response = await client1.SendAsync(message);
 
-            log.WriteLine("Got response: " + response.Text);
+            log.WriteLine("Got response: " + GetText(response));
 
             log.WriteLine("Stop server");
             await server.StopAsync();
             await Task.Delay(1000);
 
             log.WriteLine("Send message 2 to client 1");
-            message = new Message("ping");
+            message = CreateMessage("ping");
             Assert.ThrowsAsync<InvalidOperationException>(async () => await client1.SendAsync(message));
 
             log.WriteLine("End");

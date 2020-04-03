@@ -13,24 +13,54 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 
 namespace AsyncTests1.Networking
 {
     public class Frame2
     {
-        private static class SizeOf
+        /// <summary>
+        /// Defines constants representing the size of frame elements.
+        /// </summary>
+        public static class SizeOf
         {
+            /// <summary>
+            /// Gets the size of the length field.
+            /// </summary>
             public const int Length = sizeof(int);
+
+            /// <summary>
+            /// Gets the size of the flags field.
+            /// </summary>
             public const int Flags = sizeof(ushort);
+
+            /// <summary>
+            /// Gets the size of the length+flags fields.
+            /// </summary>
+            public const int LengthAndFlags = Length + Flags;
         }
 
-        private static class Offset
+        /// <summary>
+        /// Defines constants representing the offset of frame elements.
+        /// </summary>
+        public static class Offset
         {
             // structure is
             // length (int) | flags (ushort) | ...
 
+            /// <summary>
+            /// Gets the offset of the length field.
+            /// </summary>
             public const int Length = 0;
+
+            /// <summary>
+            /// Gets the offset of the flags field.
+            /// </summary>
             public const int Flags = SizeOf.Length;
+
+            /// <summary>
+            /// Gets the offset of the bytes array.
+            /// </summary>
             public const int Bytes = Flags + SizeOf.Flags;
         }
 
@@ -45,6 +75,18 @@ namespace AsyncTests1.Networking
         public static readonly Frame2 Begin = new Frame2(FrameFlags2.Begin, Array.Empty<byte>());
 
         public static readonly Frame2 End = new Frame2(FrameFlags2.End, Array.Empty<byte>());
+
+        public static int ReadLength(ref ReadOnlySequence<byte> bytes)
+            => BytesExtensions.ReadInt32(ref bytes);
+
+        public static FrameFlags2 ReadFlags(ref ReadOnlySequence<byte> bytes)
+            => (FrameFlags2) BytesExtensions.ReadUInt16(ref bytes);
+
+        public void WriteLengthAndFlags(byte[] bytes, bool bigEndian = false)
+        {
+            bytes.WriteInt32(0, Length, bigEndian);
+            bytes.WriteUInt16(SizeOf.Length, (ushort) Flags, bigEndian);
+        }
 
         public FrameFlags2 Flags { get; }
 

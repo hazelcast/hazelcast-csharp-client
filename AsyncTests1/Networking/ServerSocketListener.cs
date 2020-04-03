@@ -91,8 +91,17 @@ namespace AsyncTests1.Networking
             Log.WriteLine("Create listener socket");
             _socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            _socket.Bind(_endpoint);
-            _socket.Listen(10);
+            try
+            {
+                _socket.Bind(_endpoint);
+                _socket.Listen(10);
+            }
+            catch (Exception e)
+            {
+                Log.WriteLine("Failed to bind socket");
+                Log.WriteLine(e);
+                // FIXME server should then terminate
+            }
 
             _cancellationTokenSource = new CancellationTokenSource();
 

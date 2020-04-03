@@ -14,7 +14,7 @@ namespace AsyncTests1.Networking
 
         private readonly byte[] _clientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
-        private readonly Dictionary<int, TaskCompletionSource<Message>> _completions = new Dictionary<int, TaskCompletionSource<Message>>();
+        private readonly Dictionary<int, TaskCompletionSource<Message2>> _completions = new Dictionary<int, TaskCompletionSource<Message2>>();
         private readonly object _isConnectedLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly IPEndPoint _endpoint;
@@ -63,7 +63,7 @@ namespace AsyncTests1.Networking
 
             await _socketConnection.ConnectAsync();
 
-            if (!await _socketConnection.SendRawAsync(_clientProtocolInitBytes))
+            if (!await _socketConnection.SendAsync(_clientProtocolInitBytes))
                 throw new InvalidOperationException("Failed to send protocol bytes.");
 
             lock (_isConnectedLock) _isConnected = true;
@@ -88,15 +88,19 @@ namespace AsyncTests1.Networking
         /// <param name="connection">The connection.</param>
         /// <param name="response">The response message.</param>
         /// <returns>A task that will complete when the response message has been handled.</returns>
-        private ValueTask ReceiveMessage(MessageConnection connection, Message response)
+        private ValueTask ReceiveMessage(MessageConnection connection, Message2 response)
         {
-            Log.WriteLine($"Received response {response.Id}");
+            Log.WriteLine($"Received response ID:{response.CorrelationId}");
 
-            if (_completions.TryGetValue(response.Id, out var completion))
+            if (_completions.TryGetValue((int) response.CorrelationId, out var completion)) // fixme id size
             {
                 // signal the completion source
-                _completions.Remove(response.Id);
+                _completions.Remove((int) response.CorrelationId); // FIXME id size
                 completion.SetResult(response);
+            }
+            else
+            {
+                Log.WriteLine($"No completion for ID:{response.CorrelationId}");
             }
 
             return new ValueTask();
@@ -108,7 +112,7 @@ namespace AsyncTests1.Networking
         /// <param name="message">The message.</param>
         /// <param name="timeoutMilliseconds">The maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public async Task<Message> SendAsync(Message message, int timeoutMilliseconds = 0)
+        public async Task<Message2> SendAsync(Message2 message, int timeoutMilliseconds = 0)
         {
             lock (_isConnectedLock)
             {
@@ -118,17 +122,17 @@ namespace AsyncTests1.Networking
 
             // assign a unique identifier to the message
             // create a corresponding completion source
-            message.Id = _messageId++;
+            message.CorrelationId = _messageId++;
 
             // send the message
-            Log.WriteLine($"Send \"{message}\"");
+            Log.WriteLine($"Send message ID:{message.CorrelationId}");
             var success = await _connection.SendAsync(message);
 
             if (!success)
                 throw new InvalidOperationException("Failed to send message.");
 
             // wait for the response
-            var completion = new TaskCompletionSource<Message>();
+            var completion = new TaskCompletionSource<Message2>();
             lock (_isConnectedLock)
             {
                 // only return the completion task if we are still connected
@@ -137,7 +141,7 @@ namespace AsyncTests1.Networking
                     throw new InvalidOperationException("Not connected.");
 
                 Log.WriteLine("Wait for response...");
-                _completions[message.Id] = completion;
+                _completions[(int) message.CorrelationId] = completion; // FIXME id size
             }
 
             if (timeoutMilliseconds <= 0)

@@ -18,18 +18,10 @@ namespace AsyncTests1.Networking
 {
     public class Message2
     {
-        public Message2(Frame2 firstFrame = null, Frame2 lastFrame = null)
+        public Message2(Frame2 firstFrame = null)
         {
-            if (firstFrame == null)
-            {
-                if (lastFrame != null)
-                    throw new ArgumentException("Value cannot be non-null if firstFrame is null.", nameof(lastFrame));
-            }
-            else
-            {
-                FirstFrame = firstFrame;
-                firstFrame.Next = LastFrame = lastFrame;
-            }
+            FirstFrame = LastFrame = firstFrame;
+            if (firstFrame != null) firstFrame.Next = null;
         }
 
         // ???
@@ -40,26 +32,39 @@ namespace AsyncTests1.Networking
 
         public Frame2 LastFrame { get; private set; }
 
-        // TODO test it returns Default whe no frames
+        // TODO test it returns Default when no frames
         public MessageFlags2 Flags => (MessageFlags2) FirstFrame?.Flags;
 
-        public void Append(Frame2 frame)
+        public Message2 Append(Frame2 frame)
         {
+            if (frame == null) throw new ArgumentNullException(nameof(frame));
+
             frame.Next = null;
 
             if (FirstFrame == null)
+            {
                 FirstFrame = LastFrame = frame;
+            }
             else
+            {
                 LastFrame.Next = frame;
+                LastFrame = frame;
+            }
+
+            return this;
         }
 
-        public void Append(Message2 fragment)
+        public Message2 Append(Message2 fragment)
         {
+            if (fragment == null) throw new ArgumentNullException(nameof(fragment));
+
             // skip the first frame of the fragment,
             // the first frame is just an empty Begin frame marking the segment
 
             LastFrame.Next = fragment.FirstFrame.Next;
             LastFrame = fragment.LastFrame;
+
+            return this;
         }
 
         public bool IsBackupAware => Flags.Has(MessageFlags2.BackupAware);

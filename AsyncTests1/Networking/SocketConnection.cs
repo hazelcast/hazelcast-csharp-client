@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipelines;
 using System.Net;
@@ -19,11 +20,19 @@ namespace AsyncTests1.Networking
     {
         private static readonly byte[] ZeroBytes4 = new byte[4];
 
+        /// <summary>
+        /// Handles bytes
+        /// </summary>
+        /// <param name="connection">The originating connection.</param>
+        /// <param name="bytes">The bytes to handle.</param>
+        /// <returns>Whether to continue handling the available bytes. Otherwise, wait for more bytes.</returns>
+        public delegate bool MessageBytesHandler(SocketConnection connection, ref ReadOnlySequence<byte> bytes);
+
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
         public readonly Log Log = new Log();
         private readonly SemaphoreSlim _writer;
 
-        private Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceiveMessageBytes;
+        private MessageBytesHandler _onReceiveMessageBytes;
         private Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
         private Func<SocketConnection, ValueTask> _onShutdown;
         private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
@@ -63,7 +72,7 @@ namespace AsyncTests1.Networking
         /// function has returned.</para>
         /// <para>The function must be set before the connection is established.</para>
         /// </remarks>
-        public Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> OnReceiveMessageBytes
+        public MessageBytesHandler OnReceiveMessageBytes
         {
             get => _onReceiveMessageBytes;
             set
@@ -217,41 +226,23 @@ namespace AsyncTests1.Networking
         }
 
         /// <summary>
-        /// Sends a message.
+        /// Sends bytes.
         /// </summary>
-        /// <param name="bytes">The complete message bytes buffer.</param>
+        /// <param name="bytes">The bytes to send.</param>
+        /// <param name="length">The number of bytes to send, or zero to send everything.</param>
         /// <returns>A task that will complete when the message bytes have been sent.</returns>
-        /// <remarks>
-        /// <para>The complete message bytes buffer must include provision for 4 trailing
-        /// bytes that will represent the length of the message, and are filled by this
-        /// method.</para>
-        /// </remarks>
-        public async ValueTask<bool> SendAsync(byte[] bytes)
+        public async ValueTask<bool> SendAsync(byte[] bytes, int length = 0)
         {
-            if (bytes.Length < 4)
-                throw new ArgumentException("Must be at least 4 bytes.", nameof(bytes));
-
             if (_isActive == 0)
                 return false;
 
-            // set message length, using a fast-enough yet avoiding 'unsafe' code
-            var length = bytes.Length - 4;
-            unchecked
-            {
-                bytes[3] = (byte) length;
-                length >>= 8;
-                bytes[2] = (byte) length;
-                length >>= 8;
-                bytes[1] = (byte) length;
-                length >>= 8;
-                bytes[0] = (byte) length;
-            }
+            var count = length <= 0 ? bytes.Length : length;
 
             // send bytes, serialize sending via semaphore
             if (_writer != null) await _writer.WaitAsync();
             try
             {
-                await _stream.WriteAsync(bytes, 0, bytes.Length, CancellationToken.None);
+                await _stream.WriteAsync(bytes, 0, count, CancellationToken.None);
                 LastWriteTime = DateTime.Now;
             }
             catch (Exception e)
@@ -264,38 +255,7 @@ namespace AsyncTests1.Networking
             }
             _writer?.Release();
 
-            Log.WriteLine($"Sent {bytes.Length} bytes");
-            return true;
-        }
-
-        /// <summary>
-        /// Sends raw bytes.
-        /// </summary>
-        /// <param name="bytes">The bytes to send.</param>
-        /// <returns>A task that will complete when the message bytes have been sent.</returns>
-        public async ValueTask<bool> SendRawAsync(byte[] bytes)
-        {
-            if (_isActive == 0)
-                return false;
-
-            // send bytes, serialize sending via semaphore
-            if (_writer != null) await _writer.WaitAsync();
-            try
-            {
-                await _stream.WriteAsync(bytes, 0, bytes.Length, CancellationToken.None);
-                LastWriteTime = DateTime.Now;
-            }
-            catch (Exception e)
-            {
-                // on error, shutdown and report
-                Log.WriteLine("SendRawAsync:ERROR");
-                Log.WriteLine(e);
-                _streamReadCancellationTokenSource.Cancel();
-                return false;
-            }
-            _writer?.Release();
-
-            Log.WriteLine($"Sent {bytes.Length} raw bytes");
+            Log.WriteLine($"Sent {count} bytes" + bytes.Dump("\n> ", count));
             return true;
         }
 
@@ -431,7 +391,12 @@ namespace AsyncTests1.Networking
             // tell the PipeReader how much of the buffer we have consumed
             state.Reader.AdvanceTo(state.Buffer.Start, state.Buffer.End);
 
+            // shutdown on crash
+            if (state.Failed)
+                return false;
+
             // shutdown on empty message
+            // FIXME what is the new way to shutdown? if it's not EMPTY MESSAGE anymore?
             if (state.Expected == 0)
                 return false;
 
@@ -453,7 +418,7 @@ namespace AsyncTests1.Networking
         /// and represents whether to continue processing.</returns>
         private async ValueTask<bool> ReadPipeLoop1(ReadPipeState state)
         {
-            Log.WriteLine("Pipe reader processes data");
+            Log.WriteLine("Pipe reader processes data" + state.Buffer.Dump("\n< "));
 
             if (_prefixLength > 0)
             {
@@ -476,58 +441,27 @@ namespace AsyncTests1.Networking
                     // error while processing, report and shutdown
                     Log.WriteLine("Pipe reader encountered an exception while handling the prefix (shutdown)");
                     Log.WriteLine(e);
-                    state.Expected = 0;
+                    state.Failed = true; // FIXME carry the exception?
                     return false;
                 }
 
                 Log.WriteLine("Pipe reader processes data");
             }
 
-            if (state.Expected < 0)
-            {
-                // we need at least 4 bytes to figure out the expected
-                // message length - otherwise, just keep reading
-                if (state.Buffer.Length < 4)
-                {
-                    Log.WriteLine("Pipe reader has not enough data");
-                    return false;
-                }
-
-                // deserialize expected message length (4 bytes)
-                state.Expected = state.Buffer.ReadInt32();
-                state.Buffer = state.Buffer.Slice(4);
-                if (state.Expected == 0)
-                {
-                    Log.WriteLine("Pipe reader received zero-length message, shutdown");
-                    return false;
-                }
-
-                Log.WriteLine($"Pipe reader expecting message with size {state.Expected} bytes");
-            }
-
-            // not enough data, keep reading
-            if (state.Buffer.Length < state.Expected)
-            {
-                Log.WriteLine("Pipe reader has not enough data");
-                return false;
-            }
-
-            // we have a message, handle it
-            Log.WriteLine("Pipe reader has complete message, handle");
+            Log.WriteLine("Handle message bytes" + state.Buffer.Dump("\n< "));
             try
             {
-                await _onReceiveMessageBytes(this, state.Buffer.Slice(0, state.Expected));
+                // handle the bytes (and slice the buffer accordingly)
+                return _onReceiveMessageBytes(this, ref state.Buffer);
             }
             catch (Exception e)
             {
                 // error while processing, report
-                Log.WriteLine("Pipe reader encountered an exception while handling a message (skip)");
+                Log.WriteLine("Pipe reader encountered an exception while handling message bytes");
                 Log.WriteLine(e);
+                state.Failed = true; // FIXME carry the exception?
+                return false;
             }
-            state.Buffer = state.Buffer.Slice(state.Expected);
-            state.Expected = -1;
-
-            return true;
         }
 
         /// <summary>
@@ -551,7 +485,9 @@ namespace AsyncTests1.Networking
             /// <remarks>
             /// <para>A value of -1 means that we do not know yet.</para>
             /// </remarks>
-            public int Expected = -1;
+            public int Expected = -1; // FIXME kill
+
+            public bool Failed;
         }
     }
 }

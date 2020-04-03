@@ -29,7 +29,7 @@ namespace AsyncTests1.Networking
 
         public string Prefix { get; set; }
 
-        private string FullPrefix => $"{Prefix}:{Thread.CurrentThread.ManagedThreadId:00} ";
+        private string FullPrefix => $"[{Thread.CurrentThread.ManagedThreadId:00}] {Prefix}: ";
 
         public void WriteLine(string text) => Console.WriteLine(FullPrefix + text);
 
