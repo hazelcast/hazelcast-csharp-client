@@ -475,17 +475,17 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Represents the state of the reading loop.
         /// </summary>
-        private class ReadPipeState
+        private sealed class ReadPipeState
         {
             /// <summary>
             /// Gets or sets the pipe reader.
             /// </summary>
-            public PipeReader Reader;
+            public PipeReader Reader { get; set; }
 
             /// <summary>
             /// Gets or sets the current buffer.
             /// </summary>
-            public ReadOnlySequence<byte> Buffer;
+            public ReadOnlySequence<byte> Buffer { get; set; }
 
             /// <summary>
             /// Determines whether reading has failed.

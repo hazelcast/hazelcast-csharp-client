@@ -14,9 +14,8 @@ namespace AsyncTests1.HazelcastServerVersion
     /// method is ignored.</para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class ServerConditionAttribute : Attribute, IApplyToTest
+    public sealed class ServerConditionAttribute : Attribute, IApplyToTest
     {
-        private static NuGetVersion _serverVersion;
         private readonly VersionRange _range;
 
         /// <summary>

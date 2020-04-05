@@ -102,7 +102,7 @@ namespace AsyncTests1.Server
             _connections[serverConnection.Id] = serverConnection;
         }
 
-        private ValueTask ReceivePrefixBytes(SocketConnection connection, ReadOnlySequence<byte> bytes)
+        private static ValueTask ReceivePrefixBytes(SocketConnection connection, ReadOnlySequence<byte> bytes)
         {
             // do nothing for now - just accept them
             return new ValueTask();

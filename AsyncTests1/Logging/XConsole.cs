@@ -36,7 +36,7 @@ namespace AsyncTests1.Logging
         private static readonly ConditionalWeakTable<object, SourceInfo> _prefixes
             = new ConditionalWeakTable<object, SourceInfo>();
 
-        private class SourceInfo
+        private sealed class SourceInfo
         {
             public SourceInfo(int indent, string prefix)
             {
@@ -46,9 +46,9 @@ namespace AsyncTests1.Logging
 
             public static readonly SourceInfo Default = new SourceInfo(0, "");
 
-            public readonly int Indent;
+            public int Indent { get; }
 
-            public readonly string Prefix;
+            public string Prefix { get; }
         }
 #endif
 

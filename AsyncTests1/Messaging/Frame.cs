@@ -93,6 +93,8 @@ namespace AsyncTests1.Messaging
             Bytes = bytes ?? Array.Empty<byte>();
         }
 
+        // TODO this is annoying because Frame is not immutable - could it be?
+
         /// <summary>
         /// Gets the null frame.
         /// </summary>

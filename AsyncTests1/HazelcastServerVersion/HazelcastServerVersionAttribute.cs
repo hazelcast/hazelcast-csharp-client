@@ -12,10 +12,21 @@ namespace AsyncTests1.HazelcastServerVersion
     /// environment variable. Use this attribute to force the version.</para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Assembly)]
-    public class HazelcastServerVersionAttribute : Attribute
+    public sealed class HazelcastServerVersionAttribute : Attribute
     {
         private static NuGetVersion _staticServerVersion;
         private readonly NuGetVersion _serverVersion;
+
+        /// <summary>
+        /// Initializes the <see cref="HazelcastServerVersionAttribute"/> class.
+        /// </summary>
+        static HazelcastServerVersionAttribute()
+        {
+            // FIXME executing, really? or?
+            var attribute = Assembly.GetExecutingAssembly().GetCustomAttribute<HazelcastServerVersionAttribute>();
+            if (attribute != null)
+                _staticServerVersion = attribute._serverVersion;
+        }
 
         /// <summary>
         /// Marks the assembly to force the Hazelcast server version.
@@ -36,10 +47,6 @@ namespace AsyncTests1.HazelcastServerVersion
             {
                 if (_staticServerVersion != null)
                     return _staticServerVersion;
-
-                var attribute = Assembly.GetExecutingAssembly().GetCustomAttribute<HazelcastServerVersionAttribute>();
-                if (attribute != null)
-                    return _staticServerVersion = attribute._serverVersion;
 
                 var env = Environment.GetEnvironmentVariable("HAZELCAST_SERVER_VERSION");
                 if (NuGetVersion.TryParse(env, out _staticServerVersion))
