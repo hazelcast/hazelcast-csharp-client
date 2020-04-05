@@ -14,16 +14,16 @@
 
 using System.Threading;
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Core
 {
     /// <summary>
-    /// Implements an <see cref="ISequence{Int32}" />.
+    /// Implements an <see cref="ISequence{Int64}" />.
     /// </summary>
-    public class Int32Sequence : ISequence<int>
+    public class Int64Sequence : ISequence<long>
     {
-        private int _value;
+        private long _value;
 
         /// <inheritdoc />
-        public int Next => Interlocked.Increment(ref _value);
+        public long Next => Interlocked.Increment(ref _value);
     }
 }

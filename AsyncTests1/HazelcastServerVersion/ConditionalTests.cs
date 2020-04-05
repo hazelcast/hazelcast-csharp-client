@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using AsyncTests1;
+using AsyncTests1.HazelcastServerVersion;
 using NuGet.Versioning;
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
-using NUnit.Framework.Internal;
 
 // this allows overriding whatever server version we're using
 [assembly:HazelcastServerVersion("4.1")]
 
-namespace AsyncTests1
+namespace AsyncTests1.HazelcastServerVersion
 {
     public static class ConditionAssert
     {

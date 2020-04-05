@@ -16,24 +16,49 @@ using System;
 using System.Buffers;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Core
 {
+    /// <summary>
+    /// Provides extension methods to byte buffers.
+    /// </summary>
     public static class BytesExtensions
     {
+        /// <summary>
+        /// Determines whether the default endian-ness is big-endian.
+        /// </summary>
         public const bool BigEndian = false;
 
+        /// <summary>
+        /// Defines exception messages.
+        /// </summary>
         private static class ExceptionMessage
         {
             public const string NotEnoughBytes = "Not enough bytes.";
         }
 
+        /// <summary>
+        /// Dumps an array of bytes into a readable string.
+        /// </summary>
+        /// <param name="bytes">The array of bytes.</param>
+        /// <param name="prefix">A prefix.</param>
+        /// <param name="length">The number of bytes to dump, or zero to dump all bytes in the array.</param>
+        /// <returns>A readable string representation of the array of bytes.</returns>
         public static string Dump(this byte[] bytes, string prefix, int length = 0)
         {
+            if (length > bytes.Length)
+                throw new InvalidOperationException(ExceptionMessage.NotEnoughBytes);
+
             return prefix + string.Join(" ", bytes.Take(length > 0 ? length : bytes.Length).Select(x => $"{x:x2}"));
         }
 
+        /// <summary>
+        /// Dumps an sequence of bytes into a readable string.
+        /// </summary>
+        /// <param name="bytes">The sequence of bytes.</param>
+        /// <param name="prefix">A prefix.</param>
+        /// <param name="length">The number of bytes to dump, or zero to dump all bytes in the sequence.</param>
+        /// <returns>A readable string representation of the sequence of bytes.</returns>
         public static string Dump(this ReadOnlySequence<byte> bytes, string prefix, int length = 0)
         {
             var a = new byte[bytes.Length];
@@ -41,6 +66,12 @@ namespace AsyncTests1.Networking
             return prefix + string.Join(" ", a.Take(length > 0 ? length : (int) bytes.Length).Select(x => $"{x:x2}"));
         }
 
+        /// <summary>
+        /// Reads an <see cref="Int32"/> (int) value from a sequence of bytes, and slices the sequence accordingly.
+        /// </summary>
+        /// <param name="bytes">The sequence of bytes to read from.</param>
+        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <returns>The value.</returns>
         public static int ReadInt32(ref ReadOnlySequence<byte> bytes, bool bigEndian = BigEndian)
         {
             if (bytes.Length < 4)
@@ -64,6 +95,12 @@ namespace AsyncTests1.Networking
             return value;
         }
 
+        /// <summary>
+        /// Reads an <see cref="UInt16"/> (ushort) value from a sequence of bytes, and slices the sequence accordingly.
+        /// </summary>
+        /// <param name="bytes">The sequence of bytes to read from.</param>
+        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <returns>The value.</returns>
         public static ushort ReadUInt16(ref ReadOnlySequence<byte> bytes, bool bigEndian = BigEndian)
         {
             const byte length = sizeof(ushort);
@@ -89,6 +126,12 @@ namespace AsyncTests1.Networking
             return value;
         }
 
+        /// <summary>
+        /// Reads an <see cref="Int32"/> (int) value from a span of bytes.
+        /// </summary>
+        /// <param name="bytes">The span of bytes to read from.</param>
+        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <returns>The value.</returns>
         public static int ReadInt32(this ReadOnlySpan<byte> bytes, bool bigEndian = BigEndian)
         {
             const byte length = sizeof(int);
@@ -102,6 +145,12 @@ namespace AsyncTests1.Networking
                 : bytes[0] | bytes[1] << 8 | bytes[2] << 16 | bytes[3] << 24;
         }
 
+        /// <summary>
+        /// Reads an <see cref="UInt16"/> (ushort) value from a span of bytes.
+        /// </summary>
+        /// <param name="bytes">The span of bytes to read from.</param>
+        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <returns>The value.</returns>
         public static ushort ReadUInt16(this ReadOnlySpan<byte> bytes, bool bigEndian = BigEndian)
         {
             const byte length = sizeof(ushort);
@@ -118,6 +167,12 @@ namespace AsyncTests1.Networking
             }
         }
 
+        /// <summary>
+        /// Reads an <see cref="Int32"/> (int) value from an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <returns>The value.</returns>
         public static int ReadInt32(this byte[] bytes, int position, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(int))
@@ -135,6 +190,12 @@ namespace AsyncTests1.Networking
             }
         }
 
+        /// <summary>
+        /// Reads an <see cref="Int64"/> (long) value from an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <returns>The value.</returns>
         public static long ReadInt64(this byte[] bytes, int position, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(long))
@@ -156,6 +217,13 @@ namespace AsyncTests1.Networking
             }
         }
 
+        /// <summary>
+        /// Writes an <see cref="UInt16"/> (ushort) value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="bigEndian">Whether to use big-endian.</param>
         public static void WriteUInt16(this byte[] bytes, int position, ushort value, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(ushort))
@@ -178,6 +246,13 @@ namespace AsyncTests1.Networking
             }
         }
 
+        /// <summary>
+        /// Writes an <see cref="Int32"/> (int) value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="bigEndian">Whether to use big-endian.</param>
         public static void WriteInt32(this byte[] bytes, int position, int value, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(int))
@@ -204,6 +279,13 @@ namespace AsyncTests1.Networking
             }
         }
 
+        /// <summary>
+        /// Writes an <see cref="Int64"/> (long) value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="bigEndian">Whether to use big-endian.</param>
         public static void WriteInt64(this byte[] bytes, int position, long value, bool bigEndian = BigEndian)
         {
             if (bytes.Length < position + sizeof(long))
@@ -239,10 +321,16 @@ namespace AsyncTests1.Networking
         }
 
         /// <summary>
-        /// Copy the <see cref="ReadOnlySequence{T}"/> to the specified <see cref="Span{Byte}"/>.
+        /// Copies a sequence of <typeparamref name="T"/> to a span of <typeparamref name="T"/>.
         /// </summary>
-        /// <param name="source">The source <see cref="ReadOnlySequence{T}"/>.</param>
-        /// <param name="destination">The destination <see cref="Span{Byte}"/>.</param>
+        /// <typeparam name="T">The type of the items in the sequence and span.</typeparam>
+        /// <param name="source">The sequence of <typeparamref name="T"/> to copy from.</param>
+        /// <param name="destination">The span of <typeparamref name="T"/> to copy to.</param>
+        /// <remarks>
+        /// <para>There must be enough items in the sequence to fill the span. There can be more
+        /// items in the sequence than in the span, and extra items will be ignored.</para>
+        /// FIXME should advance the sequence
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Fill<T>(in this ReadOnlySequence<T> source, Span<T> destination)
         {
@@ -258,18 +346,24 @@ namespace AsyncTests1.Networking
             }
             else
             {
-                CopyToMultiSegment(source, destination);
+                FillMultiSegment(source, destination);
             }
         }
 
-        private static void CopyToMultiSegment<T>(in ReadOnlySequence<T> sequence, Span<T> destination)
+        /// <summary>
+        /// Copies a multi-segment sequence of <typeparamref name="T"/> to a span of <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the items in the sequence and span.</typeparam>
+        /// <param name="source">The sequence of <typeparamref name="T"/> to copy from.</param>
+        /// <param name="destination">The span of <typeparamref name="T"/> to copy to.</param>
+        private static void FillMultiSegment<T>(in ReadOnlySequence<T> source, Span<T> destination)
         {
             //if (sequence.Length < destination.Length)
             //    throw new ArgumentOutOfRangeException(ExceptionMessage.NotEnoughBytes, nameof(sequence));
 
-            var position = sequence.Start;
+            var position = source.Start;
             var byteCount = destination.Length;
-            while (sequence.TryGet(ref position, out var memory))
+            while (source.TryGet(ref position, out var memory))
             {
                 var span = memory.Span;
                 if (span.Length > byteCount)

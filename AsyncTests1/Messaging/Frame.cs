@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,18 +14,19 @@
 
 using System;
 using System.Buffers;
+using AsyncTests1.Core;
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Messaging
 {
     /// <summary>
     /// Represents a message frame.
     /// </summary>
     /// <remarks>
-    /// <para>There are different type of frames...
-    /// TODO properly document frames
-    /// </para>
-    /// <para>length (int) | flags (ushort) | ...</para>
-    /// <para>Frames are a linked list.</para>
+    /// <para>A frame is composed of its length (int), its flags (ushort), and its payload (byte[]). What
+    /// the payload contains depend on the type of the frame and of the <see cref="Message"/> containing
+    /// the frame.</para>
+    /// <para>Frames form a linked list through their <see cref="Next"/> property, with the
+    /// <see cref="Message"/> keeping track of the first and last frame of the list.</para>
     /// </remarks>
     public class Frame
     {
@@ -72,11 +73,21 @@ namespace AsyncTests1.Networking
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Frame"/> class.
+        /// Initializes a new instance of the <see cref="Frame"/> class representing an empty frame.
         /// </summary>
         /// <param name="flags">The frame flags.</param>
+        public Frame(FrameFlags flags = FrameFlags.Default)
+        {
+            Flags = flags;
+            Bytes = Array.Empty<byte>();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Frame"/> class.
+        /// </summary>
         /// <param name="bytes">The frame bytes.</param>
-        public Frame(FrameFlags flags, byte[] bytes)
+        /// <param name="flags">The frame flags.</param>
+        public Frame(byte[] bytes, FrameFlags flags = FrameFlags.Default)
         {
             Flags = flags;
             Bytes = bytes ?? Array.Empty<byte>();
@@ -85,17 +96,17 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Gets the null frame.
         /// </summary>
-        public static readonly Frame Null = new Frame(FrameFlags.Null, Array.Empty<byte>());
+        public static readonly Frame Null = new Frame(FrameFlags.Null);
 
         /// <summary>
-        /// Gets the begin frame.
+        /// Gets the structure begin frame.
         /// </summary>
-        public static readonly Frame Begin = new Frame(FrameFlags.Begin, Array.Empty<byte>());
+        public static readonly Frame BeginStruct = new Frame(FrameFlags.BeginStruct);
 
         /// <summary>
-        /// Gets the end frame.
+        /// Gets the structure end frame.
         /// </summary>
-        public static readonly Frame End = new Frame(FrameFlags.End, Array.Empty<byte>());
+        public static readonly Frame EndStruct = new Frame(FrameFlags.EndStruct);
 
         /// <summary>
         /// Reads the length of the frame from a sequence of bytes, and slice the sequence accordingly.
@@ -127,9 +138,12 @@ namespace AsyncTests1.Networking
         }
 
         /// <summary>
-        /// Gets the frame flags.
+        /// Gets or sets the frame flags.
         /// </summary>
-        public FrameFlags Flags { get; }
+        /// <remarks>
+        /// <para>Message flags and Frame flags are carried by the same field.</para>
+        /// </remarks>
+        public FrameFlags Flags { get; set;  }
 
         /// <summary>
         /// Gets the frame bytes.
@@ -147,14 +161,14 @@ namespace AsyncTests1.Networking
         public int Length => SizeOf.Length + SizeOf.Flags + (Bytes?.Length ?? 0);
 
         /// <summary>
-        /// Determines whether the frame is an end frame.
+        /// Determines whether the frame is a structure end frame.
         /// </summary>
-        public bool IsEnd => Flags.Has(FrameFlags.End);
+        public bool IsEndStruct => Flags.Has(FrameFlags.EndStruct);
 
         /// <summary>
-        /// Determines whether the frame is a begin frame.
+        /// Determines whether the frame is a structure begin frame.
         /// </summary>
-        public bool IsBegin => Flags.Has(FrameFlags.Begin);
+        public bool IsBeginStruct => Flags.Has(FrameFlags.BeginStruct);
 
         /// <summary>
         /// Determines whether the frame is a null frame.
@@ -173,7 +187,7 @@ namespace AsyncTests1.Networking
         /// <remarks>
         /// <para>The shallow clone of a frame shares the byte array.</para>
         /// </remarks>
-        public Frame ShallowClone() => new Frame(Flags, Bytes);
+        public Frame ShallowClone() => new Frame(Bytes, Flags);
 
         /// <summary>
         /// Deep clone the frame.
@@ -186,7 +200,7 @@ namespace AsyncTests1.Networking
         {
             var bytes = new byte[Bytes.Length];
             Buffer.BlockCopy(Bytes, 0, bytes, 0, bytes.Length);
-            return new Frame(Flags, bytes);
+            return new Frame(bytes, Flags);
         }
     }
 }

@@ -12,23 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Threading;
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Core
 {
-    [Flags]
-    public enum FrameFlags : ushort
+    /// <summary>
+    /// Implements an <see cref="ISequence{Int32}" />.
+    /// </summary>
+    public class Int32Sequence : ISequence<int>
     {
-        Default = 0,
-        Final = 1 << 13,
-        Begin = 1 << 12,
-        End = 1 << 11,
-        Null = 1 << 10
-    }
+        private int _value;
 
-    public static class FrameFlags2Extensions
-    {
-        public static bool Has(this FrameFlags value, FrameFlags flag)
-            => value.HasFlag(flag);
+        /// <inheritdoc />
+        public int Next => Interlocked.Increment(ref _value);
     }
 }

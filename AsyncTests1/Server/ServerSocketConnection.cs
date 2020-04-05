@@ -14,8 +14,10 @@
 
 using System;
 using System.Net.Sockets;
+using AsyncTests1.Logging;
+using AsyncTests1.Networking;
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Server
 {
     /// <summary>
     /// Represents a server socket connection.

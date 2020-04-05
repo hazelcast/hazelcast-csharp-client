@@ -2,7 +2,7 @@
 using NuGet.Versioning;
 using NUnit.Framework;
 
-namespace AsyncTests1
+namespace AsyncTests1.HazelcastServerVersion
 {
     /// <summary>
     /// Provides static methods to execute code depending on the Hazelcast server version.

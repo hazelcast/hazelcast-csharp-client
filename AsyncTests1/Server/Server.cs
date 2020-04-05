@@ -17,8 +17,11 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using AsyncTests1.Logging;
+using AsyncTests1.Messaging;
+using AsyncTests1.Networking;
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Server
 {
     /// <summary>
     /// Represents a server.
@@ -137,8 +140,8 @@ namespace AsyncTests1.Networking
             // FIXME what is the proper structure of a message?
             // the 64-bytes header is nonsense etc
             var response = new Message()
-                .Append(new Frame(FrameFlags.Begin, new byte[64])) // header stuff
-                .Append(new Frame(FrameFlags.End | FrameFlags.Final, Encoding.UTF8.GetBytes(responseText)));
+                .Append(new Frame(new byte[64])) // header stuff
+                .Append(new Frame(Encoding.UTF8.GetBytes(responseText)));
 
             response.CorrelationId = message.CorrelationId;
 

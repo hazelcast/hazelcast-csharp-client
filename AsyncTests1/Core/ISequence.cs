@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
-
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Core
 {
     /// <summary>
-    /// Implements an <see cref="ISequence{Int64}" />.
+    /// Defines a sequence of elements.
     /// </summary>
-    public class Int64Sequence : ISequence<long>
+    /// <typeparam name="T">The type of the sequence.</typeparam>
+    public interface ISequence<out T>
     {
-        private long _value;
-
-        /// <inheritdoc />
-        public long Next => Interlocked.Increment(ref _value);
+        /// <summary>
+        /// Gets the next element of the sequence.
+        /// </summary>
+        T Next { get; }
     }
 }

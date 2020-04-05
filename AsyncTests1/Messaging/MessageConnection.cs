@@ -14,16 +14,15 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using AsyncTests1.Core;
+using AsyncTests1.Logging;
+using AsyncTests1.Networking;
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Messaging
 {
-    // the ClientConnection is used by the Client, it handles messages
-    // it manages a SocketConnection which handles bytes
-    // it deals with serialization and de-serialization
-    //
-
     /// <summary>
     /// Represents a message connection.
     /// </summary>
@@ -33,6 +32,7 @@ namespace AsyncTests1.Networking
     /// </remarks>
     public class MessageConnection
     {
+        private readonly Dictionary<long, Message> _messages = new Dictionary<long, Message>();
         private readonly SocketConnection _connection;
 
         private Func<MessageConnection, Message, ValueTask> _onReceiveMessage;
@@ -58,8 +58,9 @@ namespace AsyncTests1.Networking
             get => _onReceiveMessage;
             set
             {
-                if (true) // not open already
-                    _onReceiveMessage = value ?? throw new ArgumentNullException(nameof(value));
+                if (_connection.IsActive)
+                    throw new InvalidOperationException("Cannot set the property once the connection is active.");
+                _onReceiveMessage = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -80,7 +81,7 @@ namespace AsyncTests1.Networking
                     ? Array.Empty<byte>()
                     : new byte[_bytesLength]; // TODO can we avoid allocating the byte array at all?
 
-                _currentFrame = new Frame(flags, frameBytes);
+                _currentFrame = new Frame(frameBytes, flags);
                 XConsole.WriteLine(this, $"Add frame ({_currentFrame.Length} bytes)");
                 if (_currentMessage == null)
                     _currentMessage = new Message(_currentFrame);
@@ -95,7 +96,7 @@ namespace AsyncTests1.Networking
                 return false;
 
             bytes.Fill(_currentFrame.Bytes);
-            bytes = bytes.Slice(_bytesLength);
+            bytes = bytes.Slice(_bytesLength); // FIXME should fill also slice?
             _bytesLength = -1;
 
             // we now have a fully assembled message
@@ -103,14 +104,71 @@ namespace AsyncTests1.Networking
             {
                 var message = _currentMessage;
                 _currentMessage = null;
+                XConsole.WriteLine(this, "Handle fragment");
+                HandleFragment(message);
+            }
+
+            return true;
+        }
+
+        private void HandleFragment(Message fragment)
+        {
+            if (fragment.Flags.Has(MessageFlags.Unfragmented))
+            {
                 XConsole.WriteLine(this, "Handle message");
                 // FIXME consider async?
                 // this method cannot be async because of the ref bytes, and then
                 // should onReceiveMessage be async or not?
-                Task.Run(async () => await _onReceiveMessage(this, message));
+                Task.Run(async () => await _onReceiveMessage(this, fragment));
+                return;
             }
 
-            return true;
+            // handle a fragmented message
+            // TODO what shall we do with weird cases?!
+
+            var fragmentId = fragment.FirstFrame.ReadFragmentId();
+
+            if (fragment.Flags.Has(MessageFlags.BeginFragment))
+            {
+                // new message
+                if (_messages.TryGetValue(fragmentId, out var message))
+                {
+                    // receiving a duplicate fragment begin, ignoring
+                    return;
+                }
+
+                // start accumulating
+                _messages[fragmentId] = new Message().AppendFragment(fragment.FirstFrame.Next, fragment.LastFrame);
+            }
+            else if (fragment.Flags.Has(MessageFlags.EndFragment))
+            {
+                // completed message
+                if (!_messages.TryGetValue(fragmentId, out var message))
+                {
+                    // receiving a fragment end for an unknown message, ignoring
+                    return;
+                }
+
+                // end
+                message.AppendFragment(fragment.FirstFrame.Next, fragment.LastFrame);
+                _messages.Remove(fragmentId);
+
+                // handle the message
+                XConsole.WriteLine(this, "Handle message");
+                Task.Run(async () => await _onReceiveMessage(this, message));
+            }
+            else
+            {
+                // continuing
+                if (!_messages.TryGetValue(fragmentId, out var message))
+                {
+                    // receiving a fragment for an unknown message, ignoring
+                    return;
+                }
+
+                // continue accumulating
+                message.AppendFragment(fragment.FirstFrame.Next, fragment.LastFrame);
+            }
         }
 
         /// <summary>
@@ -140,7 +198,7 @@ namespace AsyncTests1.Networking
             return true;
         }
 
-        private async ValueTask<bool> SendFrameAsync(Frame frame)
+        internal async ValueTask<bool> SendFrameAsync(Frame frame)
         {
             var header = ArrayPool<byte>.Shared.Rent(6);
             frame.WriteLengthAndFlags(header);
@@ -154,25 +212,6 @@ namespace AsyncTests1.Networking
                 return false;
 
             return true;
-        }
-
-        // temp de-serialization stuff
-        private static string GetAsciiString(ReadOnlySequence<byte> buffer)
-        {
-            if (buffer.IsSingleSegment)
-            {
-                return Encoding.ASCII.GetString(buffer.First.Span);
-            }
-
-            return string.Create((int)buffer.Length, buffer, (span, sequence) =>
-            {
-                foreach (var segment in sequence)
-                {
-                    Encoding.ASCII.GetChars(segment.Span, span);
-
-                    span = span.Slice(segment.Length);
-                }
-            });
         }
     }
 }

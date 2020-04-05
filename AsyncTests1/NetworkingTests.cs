@@ -17,9 +17,14 @@ using System.Buffers;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using AsyncTests1.Core;
+using AsyncTests1.Logging;
+using AsyncTests1.Messaging;
+using AsyncTests1.Networking;
 using NUnit.Framework;
+using Assert = AsyncTests1.HazelcastServerVersion.Assert;
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1
 {
     [TestFixture]
     public class NetworkingTests
@@ -59,10 +64,8 @@ namespace AsyncTests1.Networking
             // which frame is Begin, End, Final?
 
             var message = new Message()
-                //.Append(Frame2.Begin)
-                .Append(new Frame(FrameFlags.Begin, new byte[64])) // header stuff
-                .Append(new Frame(FrameFlags.End | FrameFlags.Final, Encoding.UTF8.GetBytes(text)));
-                //.Append(Frame2.End); // FIXME is it final too?
+                .Append(new Frame(new byte[64])) // header stuff
+                .Append(new Frame(Encoding.UTF8.GetBytes(text)));
             return message;
         }
 
@@ -83,13 +86,13 @@ namespace AsyncTests1.Networking
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server(endpoint);
+            var server = new Server.Server(endpoint);
             await server.StartAsync();
 
             var sequence = new Int32Sequence();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client(endpoint, sequence);
+            var client1 = new Client.Client(endpoint, sequence);
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -99,7 +102,7 @@ namespace AsyncTests1.Networking
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Start client 2");
-            var client2 = new Client(endpoint, sequence);
+            var client2 = new Client.Client(endpoint, sequence);
             await client2.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 2");
@@ -135,11 +138,11 @@ namespace AsyncTests1.Networking
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server(endpoint);
+            var server = new Server.Server(endpoint);
             await server.StartAsync();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client(endpoint);
+            var client1 = new Client.Client(endpoint);
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -158,6 +161,62 @@ namespace AsyncTests1.Networking
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
+        }
+
+        [Test]
+        [Timeout(10_000)]
+        [Ignore("poison-safe!")]
+        public async Task PoisonTest()
+        {
+            // must hit an actual server...
+            // but: that does not poison the server as there is a max message size
+            // so we'd need to do it in a fragmented way, not with frames
+            // well, even with fragments... still seems to limit message size...
+            // ah, and fragmented segments are not allowed before auth - safe
+
+            /*
+
+HAZELCAST_VERSION="4.0"
+HAZELCAST_TEST_VERSION="4.0"
+HAZELCAST_LIB=build/temp/lib
+
+CLASSPATH="$HAZELCAST_LIB/hazelcast-enterprise-${HAZELCAST_VERSION}.jar;$HAZELCAST_LIB/hazelcast-enterprise-${HAZELCAST_TEST_VERSION}-tests.jar;$HAZELCAST_LIB/hazelcast-${HAZELCAST_TEST_VERSION}-tests.jar"
+LICENSE="-Dhazelcast.enterprise.license.key=UNLIMITED_LICENSE#99Nodes#VuE0OIH7TbfKwAUNmSj1JlyFkr6a53911000199920009119011112151009"
+CMD_CONFIGS="-Dhazelcast.config=src/Hazelcast.Tests/Resources/hazelcast.xml -Xms2g -Xmx2g -Dhazelcast.multicast.group=224.206.1.1 -Djava.net.preferIPv4Stack=true"
+
+java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.HazelcastMemberStarter >build/temp/hazelcast-${HAZELCAST_VERSION}-out.log 2>build/temp/hazelcast-${HAZELCAST_VERSION}-err.log &
+
+            */
+
+            // connect to real server
+            var endpoint = IPEndPoint.Parse("127.0.0.1:5701");
+            var client1 = new Client.Client(endpoint);
+            await client1.ConnectAsync();
+            /*
+            // send poison
+            var message = new Message(new Frame(new byte[12]));
+            message.CorrelationId = 0;
+            message.MessageType = 0000;
+            message.Flags |= MessageFlags.BeginFragment;
+            await client1._connection.SendFrameAsync(message.FirstFrame);
+
+            var bytes = new byte[512];
+            message = new Message(new Frame(bytes));
+            await client1._connection.SendFrameAsync(message.FirstFrame);
+
+            while (true)
+            {
+                message = new Message(new Frame(new byte[12]));
+                message.CorrelationId = 0;
+                message.MessageType = 0000;
+                await client1._connection.SendFrameAsync(message.FirstFrame);
+
+                message = new Message(new Frame(bytes));
+                await client1._connection.SendFrameAsync(message.FirstFrame);
+
+                // never send the EndFragment nor IsFinal frame?
+            }
+            */
         }
 
         [Test]

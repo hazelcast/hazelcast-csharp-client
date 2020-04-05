@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace AsyncTests1.Networking
+using AsyncTests1.Core;
+
+namespace AsyncTests1.Messaging
 {
     /// <summary>
     /// Provides extension methods to the <see cref="Frame"/> class.
@@ -22,12 +24,17 @@ namespace AsyncTests1.Networking
         /// <summary>
         /// Defines constants representing the size of frame elements.
         /// </summary>
-        private static class SizeOf
+        public static class SizeOf
         {
             /// <summary>
             /// Gets the size of the message type field.
             /// </summary>
             public const int MessageType = sizeof(int);
+
+            /// <summary>
+            /// Gets the size of the fragment id field.
+            /// </summary>
+            public const int FragmentId = sizeof(long);
 
             /// <summary>
             /// Gets the size of the correlation id field.
@@ -42,13 +49,13 @@ namespace AsyncTests1.Networking
             /// <summary>
             /// Gets the size of the response backup acknowledgement field.
             /// </summary>
-            public const int ResponseBackupAcks = sizeof(int); // ???
+            public const int ResponseBackupAcks = sizeof(byte);
         }
 
         /// <summary>
         /// Defines constants representing the offset of frame elements.
         /// </summary>
-        private static class Offset
+        public static class Offset
         {
             // structure is
             // type (int) | correlationId (long) | partitionId (int)
@@ -128,5 +135,21 @@ namespace AsyncTests1.Networking
         /// <param name="partionId">The partition id.</param>
         public static void WritePartitionId(this Frame frame, int partionId)
             => frame.Bytes.WriteInt32(Offset.PartitionId, partionId);
+
+        /// <summary>
+        /// Reads the fragment id.
+        /// </summary>
+        /// <param name="frame">The frame.</param>
+        /// <returns>The fragment id.</returns>
+        public static long ReadFragmentId(this Frame frame)
+            => frame.Bytes.ReadInt64(Offset.FragmentId);
+
+        /// <summary>
+        /// Writes the fragment id.
+        /// </summary>
+        /// <param name="frame">The frame.</param>
+        /// <param name="fragmentId">The fragment id.</param>
+        public static void WriteFragmentId(this Frame frame, long fragmentId)
+            => frame.Bytes.WriteInt64(Offset.FragmentId, fragmentId);
     }
 }

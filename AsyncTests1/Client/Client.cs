@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using AsyncTests1.Core;
+using AsyncTests1.Logging;
+using AsyncTests1.Messaging;
+using AsyncTests1.Networking;
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Client
 {
     /// <summary>
     /// Represents a client.

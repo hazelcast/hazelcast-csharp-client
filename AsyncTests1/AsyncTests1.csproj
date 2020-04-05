@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;_XCONSOLE</DefineConstants>
+    <DefineConstants>TRACE;XCONSOLE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

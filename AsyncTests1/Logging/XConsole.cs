@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Diagnostics;
-
-#if XCONSOLE
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
+#if XCONSOLE
+
 #endif
 
-namespace AsyncTests1.Networking
+namespace AsyncTests1.Logging
 {
     /// <summary>
     /// Provides a console for troubleshooting.

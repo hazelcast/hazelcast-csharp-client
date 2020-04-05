@@ -2,7 +2,7 @@
 using System.Reflection;
 using NuGet.Versioning;
 
-namespace AsyncTests1
+namespace AsyncTests1.HazelcastServerVersion
 {
     /// <summary>
     /// Marks an assembly to force the Hazelcast server version.

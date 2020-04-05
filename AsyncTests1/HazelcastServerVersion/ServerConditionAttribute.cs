@@ -3,7 +3,7 @@ using NuGet.Versioning;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 
-namespace AsyncTests1
+namespace AsyncTests1.HazelcastServerVersion
 {
     /// <summary>
     /// Marks a class or a method as depending on the server version being within a specific versions range.
