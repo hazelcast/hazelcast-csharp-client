@@ -26,10 +26,10 @@ namespace AsyncTests1.Messaging
     /// </summary>
     /// <remarks>
     /// <para>A frame is composed of its length (int), its flags (ushort), and its payload (byte[]). What
-    /// the payload contains depend on the type of the frame and of the <see cref="Message"/> containing
+    /// the payload contains depend on the type of the frame and of the <see cref="ClientMessage"/> containing
     /// the frame.</para>
     /// <para>Frames form a linked list through their <see cref="Next"/> property, with the
-    /// <see cref="Message"/> keeping track of the first and last frame of the list.</para>
+    /// <see cref="ClientMessage"/> keeping track of the first and last frame of the list.</para>
     /// </remarks>
     public class Frame
     {

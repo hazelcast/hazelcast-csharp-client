@@ -53,7 +53,7 @@ namespace AsyncTests1
         // TODO: understand the schedulers in HZ code
 
 
-        private Message CreateMessage(string text)
+        private ClientMessage CreateMessage(string text)
         {
             //return new Message2(text);
 
@@ -63,13 +63,13 @@ namespace AsyncTests1
             // first frame has message type, correlation id and partition id - what else?
             // which frame is Begin, End, Final?
 
-            var message = new Message()
+            var message = new ClientMessage()
                 .Append(new Frame(new byte[64])) // header stuff
                 .Append(new Frame(Encoding.UTF8.GetBytes(text)));
             return message;
         }
 
-        private string GetText(Message message)
+        private string GetText(ClientMessage message)
             => Encoding.UTF8.GetString(message.FirstFrame.Next.Bytes);
 
         [Test]

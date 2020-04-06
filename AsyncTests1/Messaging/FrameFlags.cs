@@ -52,19 +52,4 @@ namespace AsyncTests1.Messaging
         /// </summary>
         Null        = 0b0000_0100_0000_0000,
     }
-
-    /// <summary>
-    /// Provides extension methods to the <see cref="FrameFlags"/> enumeration.
-    /// </summary>
-    public static class FrameFlagsExtensions
-    {
-        /// <summary>
-        /// Determines whether one or more flags are set in the current instance.
-        /// </summary>
-        /// <param name="value">The instance.</param>
-        /// <param name="flags">The flags</param>
-        /// <returns>True if ???</returns> FIXME ALL OR ANY?
-        public static bool Has(this FrameFlags value, FrameFlags flags)
-            => value.HasFlag(flags);
-    }
 }

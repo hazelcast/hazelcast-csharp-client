@@ -17,7 +17,7 @@ using System;
 namespace AsyncTests1.Messaging
 {
     [Flags]
-    public enum MessageFlags : ushort
+    public enum ClientMessageFlags : ushort
     {
         /// <summary>
         /// Default value (all flags).
@@ -58,20 +58,5 @@ namespace AsyncTests1.Messaging
         /// Flags an event message.
         /// </summary>
         BackupEvent   = 0b0000_0000_1000_0000
-    }
-
-    /// <summary>
-    /// Provides extension methods to the <see cref="MessageFlags"/> enumeration.
-    /// </summary>
-    public static class MessageFlagsExtensions
-    {
-        /// <summary>
-        /// Determines whether one or more flags are set in the current instance.
-        /// </summary>
-        /// <param name="value">The instance.</param>
-        /// <param name="flags">The flags</param>
-        /// <returns>True if ???</returns> FIXME ALL OR ANY?
-        public static bool Has(this MessageFlags value, MessageFlags flags)
-            => value.HasFlag(flags);
     }
 }

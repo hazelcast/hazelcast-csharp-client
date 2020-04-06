@@ -94,7 +94,7 @@ namespace AsyncTests1.Server
             // the connection we receive is not wired yet
             // must wire it properly before accepting
 
-            var messageConnection = new MessageConnection(serverConnection) { OnReceiveMessage = ReceiveMessage };
+            var messageConnection = new ClientMessageConnection(serverConnection) { OnReceiveMessage = ReceiveMessage };
             XConsole.Setup(messageConnection, 28, "SVR.MSG");
             serverConnection.OnShutdown = SocketShutdown;
             serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
@@ -126,7 +126,7 @@ namespace AsyncTests1.Server
         /// <param name="connection">The connection receiving the message.</param>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been handled.</returns>
-        private async ValueTask ReceiveMessage(MessageConnection connection, Message message)
+        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
             XConsole.WriteLine(this, "Respond");
             var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
@@ -139,7 +139,7 @@ namespace AsyncTests1.Server
 
             // FIXME what is the proper structure of a message?
             // the 64-bytes header is nonsense etc
-            var response = new Message()
+            var response = new ClientMessage()
                 .Append(new Frame(new byte[64])) // header stuff
                 .Append(new Frame(Encoding.UTF8.GetBytes(responseText)));
 

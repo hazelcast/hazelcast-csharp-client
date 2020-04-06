@@ -29,21 +29,21 @@ namespace AsyncTests1.Messaging
     /// <para>A message connection wraps a socket connection and provides a
     /// message-level communication channel.</para>
     /// </remarks>
-    public class MessageConnection
+    public class ClientMessageConnection
     {
-        private readonly Dictionary<long, Message> _messages = new Dictionary<long, Message>();
+        private readonly Dictionary<long, ClientMessage> _messages = new Dictionary<long, ClientMessage>();
         private readonly SocketConnection _connection;
 
-        private Func<MessageConnection, Message, ValueTask> _onReceiveMessage;
+        private Func<ClientMessageConnection, ClientMessage, ValueTask> _onReceiveMessage;
         private int _bytesLength = -1;
         private Frame _currentFrame;
-        private Message _currentMessage;
+        private ClientMessage _currentMessage;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MessageConnection"/> class.
+        /// Initializes a new instance of the <see cref="ClientMessageConnection"/> class.
         /// </summary>
         /// <param name="connection">The underlying <see cref="SocketConnection"/>.</param>
-        public MessageConnection(SocketConnection connection)
+        public ClientMessageConnection(SocketConnection connection)
         {
             _connection = connection;
             _connection.OnReceiveMessageBytes = ReceiveMessageBytes;
@@ -52,7 +52,7 @@ namespace AsyncTests1.Messaging
         /// <summary>
         /// Gets or sets the function that handles messages.
         /// </summary>
-        public Func<MessageConnection, Message, ValueTask> OnReceiveMessage
+        public Func<ClientMessageConnection, ClientMessage, ValueTask> OnReceiveMessage
         {
             get => _onReceiveMessage;
             set
@@ -83,7 +83,7 @@ namespace AsyncTests1.Messaging
                 _currentFrame = new Frame(frameBytes, flags);
                 XConsole.WriteLine(this, $"Add frame ({_currentFrame.Length} bytes)");
                 if (_currentMessage == null)
-                    _currentMessage = new Message(_currentFrame);
+                    _currentMessage = new ClientMessage(_currentFrame);
                 else
                     _currentMessage.Append(_currentFrame);
             }
@@ -110,9 +110,9 @@ namespace AsyncTests1.Messaging
             return true;
         }
 
-        private void HandleFragment(Message fragment)
+        private void HandleFragment(ClientMessage fragment)
         {
-            if (fragment.Flags.Has(MessageFlags.Unfragmented))
+            if (fragment.Flags.Has(ClientMessageFlags.Unfragmented))
             {
                 XConsole.WriteLine(this, "Handle message");
                 // FIXME consider async?
@@ -127,7 +127,7 @@ namespace AsyncTests1.Messaging
 
             var fragmentId = fragment.FirstFrame.ReadFragmentId();
 
-            if (fragment.Flags.Has(MessageFlags.BeginFragment))
+            if (fragment.Flags.Has(ClientMessageFlags.BeginFragment))
             {
                 // new message
                 if (_messages.TryGetValue(fragmentId, out var message))
@@ -137,9 +137,9 @@ namespace AsyncTests1.Messaging
                 }
 
                 // start accumulating
-                _messages[fragmentId] = new Message().AppendFragment(fragment.FirstFrame.Next, fragment.LastFrame);
+                _messages[fragmentId] = new ClientMessage().AppendFragment(fragment.FirstFrame.Next, fragment.LastFrame);
             }
-            else if (fragment.Flags.Has(MessageFlags.EndFragment))
+            else if (fragment.Flags.Has(ClientMessageFlags.EndFragment))
             {
                 // completed message
                 if (!_messages.TryGetValue(fragmentId, out var message))
@@ -175,7 +175,7 @@ namespace AsyncTests1.Messaging
         /// </summary>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been sent.</returns>
-        public async ValueTask<bool> SendAsync(Message message)
+        public async ValueTask<bool> SendAsync(ClientMessage message)
         {
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection

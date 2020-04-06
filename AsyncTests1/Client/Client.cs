@@ -16,14 +16,14 @@ namespace AsyncTests1.Client
     {
         private readonly byte[] _clientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
-        private readonly Dictionary<long, TaskCompletionSource<Message>> _completions = new Dictionary<long, TaskCompletionSource<Message>>();
+        private readonly Dictionary<long, TaskCompletionSource<ClientMessage>> _completions = new Dictionary<long, TaskCompletionSource<ClientMessage>>();
         private readonly object _isConnectedLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence = new Int64Sequence();
         private readonly IPEndPoint _endpoint;
 
         private ClientSocketConnection _socketConnection;
-        private MessageConnection _connection;
+        private ClientMessageConnection _connection;
         private bool _isConnected;
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace AsyncTests1.Client
             // the SocketConnection must be open *after* everything has been wired
 
             _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, _endpoint) { OnShutdown = SocketShutdown };
-            _connection = new MessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
+            _connection = new ClientMessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
             XConsole.Setup(_connection, 12, $"CLT.MSG({_socketConnection.Id})");
 
             await _socketConnection.ConnectAsync();
@@ -91,7 +91,7 @@ namespace AsyncTests1.Client
         /// <param name="connection">The connection.</param>
         /// <param name="response">The response message.</param>
         /// <returns>A task that will complete when the response message has been handled.</returns>
-        private ValueTask ReceiveMessage(MessageConnection connection, Message response)
+        private ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage response)
         {
             XConsole.WriteLine(this, $"Received response ID:{response.CorrelationId}");
 
@@ -115,7 +115,7 @@ namespace AsyncTests1.Client
         /// <param name="message">The message.</param>
         /// <param name="timeoutMilliseconds">The maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public async Task<Message> SendAsync(Message message, int timeoutMilliseconds = 0)
+        public async Task<ClientMessage> SendAsync(ClientMessage message, int timeoutMilliseconds = 0)
         {
             lock (_isConnectedLock)
             {
@@ -135,7 +135,7 @@ namespace AsyncTests1.Client
                 throw new InvalidOperationException("Failed to send message.");
 
             // wait for the response
-            var completion = new TaskCompletionSource<Message>();
+            var completion = new TaskCompletionSource<ClientMessage>();
             lock (_isConnectedLock)
             {
                 // only return the completion task if we are still connected

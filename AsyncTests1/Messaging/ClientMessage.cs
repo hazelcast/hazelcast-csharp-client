@@ -25,23 +25,23 @@ namespace AsyncTests1.Messaging
     /// or backup acknowledgement count (1 byte), and more fixed data fields. The other frames
     /// contain more data fields.</para>
     /// <para>A message can be fragmented when being carried over the network, see
-    /// <see cref="MessageFragmentingExtensions"/> for details on the structure of a fragmented
-    /// message. Fragments are assembled back by the <see cref="MessageConnection"/>.</para>
+    /// <see cref="ClientMessageFragmentingExtensions"/> for details on the structure of a fragmented
+    /// message. Fragments are assembled back by the <see cref="ClientMessageConnection"/>.</para>
     /// <para>Frames are a linked list controlled by <see cref="FirstFrame"/> and
     /// <see cref="LastFrame"/>. The last frame always has the <see cref="FrameFlags.Final"/>
     /// flag set.</para>
     /// </remarks>
-    public class Message
+    public class ClientMessage
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Message"/> class.
+        /// Initializes a new instance of the <see cref="ClientMessage"/> class.
         /// </summary>
         /// <param name="firstFrame">An optional first frame.</param>
         /// <remarks>
         /// <para>Only the single specified frame is added to the message, regardless
         /// of whether it is part of a linked list and has a next frame.</para>
         /// </remarks>
-        public Message(Frame firstFrame = null)
+        public ClientMessage(Frame firstFrame = null)
         {
             FirstFrame = LastFrame = firstFrame;
             if (firstFrame != null)
@@ -83,9 +83,9 @@ namespace AsyncTests1.Messaging
         /// <para>Getting or setting this property requires that the message has the appropriate first frame.</para>
         /// <para>Message flags and Frame flags are carried by the same field.</para>
         /// </remarks>
-        public MessageFlags Flags
+        public ClientMessageFlags Flags
         {
-            get => (MessageFlags) FirstFrameOrThrow.Flags;
+            get => (ClientMessageFlags) FirstFrameOrThrow.Flags;
             set => FirstFrameOrThrow.Flags = (FrameFlags) value;
         }
 
@@ -98,7 +98,7 @@ namespace AsyncTests1.Messaging
         /// <para>Only the single specified frame is appended to the message, regardless
         /// of whether it is part of a linked list and has a next frame.</para>
         /// </remarks>
-        public Message Append(Frame frame)
+        public ClientMessage Append(Frame frame)
         {
             if (frame == null) throw new ArgumentNullException(nameof(frame));
 
@@ -131,7 +131,7 @@ namespace AsyncTests1.Messaging
         /// <para>If <paramref name="trustable"/> is true, it is assumed that <see cref="lastFrame"/>
         /// can be reached from <see cref="firstFrame"/> and is already marked as final.</para>
         /// </remarks>
-        public Message AppendFragment(Frame firstFrame, Frame lastFrame, bool trustable = false)
+        public ClientMessage AppendFragment(Frame firstFrame, Frame lastFrame, bool trustable = false)
         {
             if (firstFrame == null) throw new ArgumentNullException(nameof(firstFrame));
 
@@ -160,17 +160,17 @@ namespace AsyncTests1.Messaging
         /// <summary>
         /// Determines whether the message is backup-aware.
         /// </summary>
-        public bool IsBackupAware => Flags.Has(MessageFlags.BackupAware);
+        public bool IsBackupAware => Flags.Has(ClientMessageFlags.BackupAware);
 
         /// <summary>
         /// Determines whether the message carries a backup event.
         /// </summary>
-        public bool IsBackupEvent => Flags.Has(MessageFlags.BackupEvent);
+        public bool IsBackupEvent => Flags.Has(ClientMessageFlags.BackupEvent);
 
         /// <summary>
         /// Determines whether the message carries an event.
         /// </summary>
-        public bool IsEvent => Flags.Has(MessageFlags.Event);
+        public bool IsEvent => Flags.Has(ClientMessageFlags.Event);
 
         /// <summary>
         /// Gets or sets the message type.

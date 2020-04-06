@@ -5,7 +5,7 @@ using AsyncTests1.Core;
 namespace AsyncTests1.Messaging
 {
     /// <summary>
-    /// Provides extension methods to the <see cref="Message"/> class for fragmenting messages.
+    /// Provides extension methods to the <see cref="ClientMessage"/> class for fragmenting messages.
     /// </summary>
     /// <remarks>
     /// <para>When a message is fragmented, it is sent</para>
@@ -14,7 +14,7 @@ namespace AsyncTests1.Messaging
     /// MF1(final) then FF1, MF2, MF3 then FF2(end), MF4, MF5(final) with the fragmentation
     /// frames (FF) containing the fragment identifier.</para>
     /// </remarks>
-    public static class MessageFragmentingExtensions
+    public static class ClientMessageFragmentingExtensions
     {
         // we can use one single static sequence of fragment identifiers
         // Java uses a static CallIdSequenceWithoutBackPressure
@@ -25,7 +25,7 @@ namespace AsyncTests1.Messaging
         /// </summary>
         /// <param name="frame">The first frame of the fragment.</param>
         /// <returns>The new fragment.</returns>
-        private static Message NewFragment(Frame frame)
+        private static ClientMessage NewFragment(Frame frame)
         {
             // TODO control allocations?
             // here we are allocating a small byte array which could come from an ArrayPool
@@ -36,7 +36,7 @@ namespace AsyncTests1.Messaging
 
             var f = new Frame(new byte[FrameFields.SizeOf.FragmentId]);
             f.WriteFragmentId(FragmentIdSequence.Next);
-            return new Message(f).Append(frame.ShallowClone());
+            return new ClientMessage(f).Append(frame.ShallowClone());
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace AsyncTests1.Messaging
         /// message contains frames large than <paramref name="maxSize"/>, which cannot be
         /// fragmented.</para>
         /// </remarks>
-        public static IEnumerable<Message> Fragment(this Message message, int maxSize)
+        public static IEnumerable<ClientMessage> Fragment(this ClientMessage message, int maxSize)
         {
             var size = 0;
             for (var frame = message.FirstFrame; frame != null; frame = frame.Next)
@@ -64,8 +64,8 @@ namespace AsyncTests1.Messaging
                 yield break;
             }
 
-            Message ready = null;
-            Message current = null;
+            ClientMessage ready = null;
+            ClientMessage current = null;
             size = 0;
 
             // whether when creating a new fragment, or appending to an existing fragment,
@@ -123,7 +123,7 @@ namespace AsyncTests1.Messaging
             }
 
             var last = current ?? ready;
-            if (last != null) last.Flags |= MessageFlags.EndFragment;
+            if (last != null) last.Flags |= ClientMessageFlags.EndFragment;
 
             if (ready != null) yield return ready;
             if (current != null) yield return current;
