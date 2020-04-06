@@ -12,40 +12,26 @@ namespace AsyncTests1
 
     public static class Maybe
     {
-        public static Maybe<T> Some<T>(T value) => new Maybe<T>.Some(value);
+        public static Maybe<T> Some<T>(T value) => new Some<T>(value);
 
         //public static Maybe<T> None<T>() => new Maybe<T>.None();
 
-        public class MaybeNone
-        { }
-
-        public static MaybeNone None { get; } = new MaybeNone();
+        public static None None { get; } = new None();
     }
+
+    public sealed class None
+    { }
 
     public abstract class Maybe<T>
     {
-        private Maybe()
+        protected Maybe()
         { }
 
-        public sealed class Some : Maybe<T>
-        {
-            public Some(T value) => Value = value;
-
-            public T Value { get; }
-
-            public override T ValueOr(T value) => Value;
-        }
-
-        public sealed class MaybeNone : Maybe<T>
-        {
-            public override T ValueOr(T value)=> value;
-        }
-
-        public static MaybeNone None { get; } = new MaybeNone();
+        public static None<T> None { get; } = new None<T>();
 
         public bool TryGetValue(out T value)
         {
-            if (this is Some some)
+            if (this is Some<T> some)
             {
                 value = some.Value;
                 return true;
@@ -55,7 +41,7 @@ namespace AsyncTests1
             return false;
         }
 
-        public static implicit operator Maybe<T>(Maybe.MaybeNone _)
+        public static implicit operator Maybe<T>(None _)
             => None;
 
         public static implicit operator Maybe<T>(T value)
@@ -65,25 +51,40 @@ namespace AsyncTests1
             // is 'null' always the None value?
             if (value == null)
                 return None;
-            return new Some(value);
+            return new Some<T>(value);
         }
 
         public Maybe<T1> Map<T1>(Func<T, T1> map)
         {
-            return this is Some some
+            return this is Some<T> some
                 ? Maybe.Some(map(some.Value))
                 : Maybe.None;
         }
 
         public Maybe<T1> Bind<T1>(Func<T, Maybe<T1>> bind)
         {
-            return this is Some some
+            return this is Some<T> some
                 ? bind(some.Value)
                 : Maybe.None;
         }
 
         public abstract T ValueOr(T value);
     }
+
+    public sealed class Some<T> : Maybe<T>
+    {
+        public Some(T value) => Value = value;
+
+        public T Value { get; }
+
+        public override T ValueOr(T value) => Value;
+    }
+
+    public sealed class None<T> : Maybe<T>
+    {
+        public override T ValueOr(T value) => value;
+    }
+
 
     public class TestClass
     {

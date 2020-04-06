@@ -34,7 +34,7 @@ namespace AsyncTests1.Messaging
             // at the right time - which would be... when? should we make messages and
             // frames disposable then to avoid memory leaks?
 
-            var f = new Frame(new byte[FrameExtensions.SizeOf.FragmentId]);
+            var f = new Frame(new byte[FrameFields.SizeOf.FragmentId]);
             f.WriteFragmentId(FragmentIdSequence.Next);
             return new Message(f).Append(frame.ShallowClone());
         }

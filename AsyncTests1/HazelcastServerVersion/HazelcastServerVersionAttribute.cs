@@ -14,7 +14,7 @@ namespace AsyncTests1.HazelcastServerVersion
     [AttributeUsage(AttributeTargets.Assembly)]
     public sealed class HazelcastServerVersionAttribute : Attribute
     {
-        private static NuGetVersion _staticServerVersion;
+        private static readonly NuGetVersion _staticServerVersion;
         private readonly NuGetVersion _serverVersion;
 
         /// <summary>

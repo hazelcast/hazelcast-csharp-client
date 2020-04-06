@@ -16,6 +16,9 @@ using System;
 using System.Buffers;
 using AsyncTests1.Core;
 
+namespace AsyncTests1.Messaging.FrameFields
+{}
+
 namespace AsyncTests1.Messaging
 {
     /// <summary>
@@ -30,48 +33,6 @@ namespace AsyncTests1.Messaging
     /// </remarks>
     public class Frame
     {
-        /// <summary>
-        /// Defines constants representing the size of frame elements.
-        /// </summary>
-        public static class SizeOf
-        {
-            /// <summary>
-            /// Gets the size of the length field.
-            /// </summary>
-            public const int Length = sizeof(int);
-
-            /// <summary>
-            /// Gets the size of the flags field.
-            /// </summary>
-            public const int Flags = sizeof(ushort);
-
-            /// <summary>
-            /// Gets the size of the length+flags fields.
-            /// </summary>
-            public const int LengthAndFlags = Length + Flags;
-        }
-
-        /// <summary>
-        /// Defines constants representing the offset of frame elements.
-        /// </summary>
-        public static class Offset
-        {
-            /// <summary>
-            /// Gets the offset of the length field.
-            /// </summary>
-            public const int Length = 0;
-
-            /// <summary>
-            /// Gets the offset of the flags field.
-            /// </summary>
-            public const int Flags = SizeOf.Length;
-
-            /// <summary>
-            /// Gets the offset of the bytes array.
-            /// </summary>
-            public const int Bytes = Flags + SizeOf.Flags;
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Frame"/> class representing an empty frame.
         /// </summary>
@@ -93,22 +54,21 @@ namespace AsyncTests1.Messaging
             Bytes = bytes ?? Array.Empty<byte>();
         }
 
-        // TODO this is annoying because Frame is not immutable - could it be?
+        /// <summary>
+        /// Creates a new null frame.
+        /// </summary>
+        /// <returns></returns>
+        public static Frame CreateNull() => new Frame(FrameFlags.Null);
 
         /// <summary>
-        /// Gets the null frame.
+        /// Creates a new structure begin frame.
         /// </summary>
-        public static readonly Frame Null = new Frame(FrameFlags.Null);
+        public static Frame CreateBeginStruct() => new Frame(FrameFlags.BeginStruct);
 
         /// <summary>
-        /// Gets the structure begin frame.
+        /// Creates a new structure end frame.
         /// </summary>
-        public static readonly Frame BeginStruct = new Frame(FrameFlags.BeginStruct);
-
-        /// <summary>
-        /// Gets the structure end frame.
-        /// </summary>
-        public static readonly Frame EndStruct = new Frame(FrameFlags.EndStruct);
+        public static Frame CreateEndStruct() => new Frame(FrameFlags.EndStruct);
 
         /// <summary>
         /// Reads the length of the frame from a sequence of bytes, and slice the sequence accordingly.
@@ -136,7 +96,7 @@ namespace AsyncTests1.Messaging
         public void WriteLengthAndFlags(byte[] bytes, bool bigEndian = BytesExtensions.BigEndian)
         {
             bytes.WriteInt32(0, Length, bigEndian);
-            bytes.WriteUInt16(SizeOf.Length, (ushort) Flags, bigEndian);
+            bytes.WriteUInt16(FrameFields.SizeOf.Length, (ushort) Flags, bigEndian);
         }
 
         /// <summary>
@@ -160,7 +120,7 @@ namespace AsyncTests1.Messaging
         /// <summary>
         /// Gets the frame length (including length and flags fields).
         /// </summary>
-        public int Length => SizeOf.Length + SizeOf.Flags + (Bytes?.Length ?? 0);
+        public int Length => FrameFields.SizeOf.Length + FrameFields.SizeOf.Flags + (Bytes?.Length ?? 0);
 
         /// <summary>
         /// Determines whether the frame is a structure end frame.

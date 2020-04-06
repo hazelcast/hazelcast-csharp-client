@@ -15,7 +15,6 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using AsyncTests1.Core;
 using AsyncTests1.Logging;
@@ -70,12 +69,12 @@ namespace AsyncTests1.Messaging
 
             if (_bytesLength < 0)
             {
-                if (bytes.Length < Frame.SizeOf.LengthAndFlags)
+                if (bytes.Length < FrameFields.SizeOf.LengthAndFlags)
                     return false;
 
                 var frameLength = Frame.ReadLength(ref bytes);
                 var flags = Frame.ReadFlags(ref bytes);
-                _bytesLength = frameLength - Frame.SizeOf.LengthAndFlags;
+                _bytesLength = frameLength - FrameFields.SizeOf.LengthAndFlags;
 
                 var frameBytes = _bytesLength == 0
                     ? Array.Empty<byte>()

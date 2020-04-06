@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Pipelines;
 using System.Net;
@@ -485,7 +486,9 @@ namespace AsyncTests1.Networking
             /// <summary>
             /// Gets or sets the current buffer.
             /// </summary>
-            public ReadOnlySequence<byte> Buffer { get; set; }
+            [SuppressMessage("NDepend", "ND1805:FieldsShouldBeDeclaredAsPrivate", Justification =
+                "Has to be a field so we can pass it as a 'ref' to avoid copying the struct.")]
+            public ReadOnlySequence<byte> Buffer;
 
             /// <summary>
             /// Determines whether reading has failed.

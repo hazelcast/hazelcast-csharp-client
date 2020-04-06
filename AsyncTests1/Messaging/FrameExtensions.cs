@@ -22,79 +22,12 @@ namespace AsyncTests1.Messaging
     public static class FrameExtensions
     {
         /// <summary>
-        /// Defines constants representing the size of frame elements.
-        /// </summary>
-        public static class SizeOf
-        {
-            /// <summary>
-            /// Gets the size of the message type field.
-            /// </summary>
-            public const int MessageType = sizeof(int);
-
-            /// <summary>
-            /// Gets the size of the fragment id field.
-            /// </summary>
-            public const int FragmentId = sizeof(long);
-
-            /// <summary>
-            /// Gets the size of the correlation id field.
-            /// </summary>
-            public const int CorrelationId = sizeof(long);
-
-            /// <summary>
-            /// Gets the size of the partition id field.
-            /// </summary>
-            public const int PartitionId = sizeof(int);
-
-            /// <summary>
-            /// Gets the size of the response backup acknowledgement field.
-            /// </summary>
-            public const int ResponseBackupAcks = sizeof(byte);
-        }
-
-        /// <summary>
-        /// Defines constants representing the offset of frame elements.
-        /// </summary>
-        public static class Offset
-        {
-            // structure is
-            // type (int) | correlationId (long) | partitionId (int)
-            //                                   | responseBackupAcks (???)
-            // fragmentId (???)
-
-            /// <summary>
-            /// Gets the offset of the message type field.
-            /// </summary>
-            public const int MessageType = 0;
-
-            /// <summary>
-            /// Gets the offset of the fragment id field.
-            /// </summary>
-            public const int FragmentId = 0;
-
-            /// <summary>
-            /// Gets the offset of the correlation id field.
-            /// </summary>
-            public const int CorrelationId = SizeOf.MessageType;
-
-            /// <summary>
-            /// Gets the offset of the partition id field.
-            /// </summary>
-            public const int PartitionId = CorrelationId + SizeOf.CorrelationId;
-
-            /// <summary>
-            /// Gets the offset of the response backup acknowledgement field.
-            /// </summary>
-            public const int ResponseBackupAcks = CorrelationId + SizeOf.CorrelationId;
-        }
-
-        /// <summary>
         /// Reads the message type.
         /// </summary>
         /// <param name="frame">The frame.</param>
         /// <returns>The message type.</returns>
         public static int ReadMessageType(this Frame frame)
-            => frame.Bytes.ReadInt32(Offset.MessageType);
+            => frame.Bytes.ReadInt32(FrameFields.Offset.MessageType);
 
         /// <summary>
         /// Writes the message type.
@@ -102,7 +35,7 @@ namespace AsyncTests1.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="type">The message type.</param>
         public static void WriteMessageType(this Frame frame, int type)
-            => frame.Bytes.WriteInt32(Offset.MessageType, type);
+            => frame.Bytes.WriteInt32(FrameFields.Offset.MessageType, type);
 
         /// <summary>
         /// Reads the correlation id.
@@ -110,7 +43,7 @@ namespace AsyncTests1.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The correlation id.</returns>
         public static long ReadCorrelationId(this Frame frame)
-            => frame.Bytes.ReadInt64(Offset.CorrelationId);
+            => frame.Bytes.ReadInt64(FrameFields.Offset.CorrelationId);
 
         /// <summary>
         /// Writes the correlation id.
@@ -118,7 +51,7 @@ namespace AsyncTests1.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="correlationId">The correlation id.</param>
         public static void WriteCorrelationId(this Frame frame, long correlationId)
-            => frame.Bytes.WriteInt64(Offset.CorrelationId, correlationId);
+            => frame.Bytes.WriteInt64(FrameFields.Offset.CorrelationId, correlationId);
 
         /// <summary>
         /// Reads the partition id.
@@ -126,7 +59,7 @@ namespace AsyncTests1.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The partition id.</returns>
         public static int ReadPartitionId(this Frame frame)
-            => frame.Bytes.ReadInt32(Offset.PartitionId);
+            => frame.Bytes.ReadInt32(FrameFields.Offset.PartitionId);
 
         /// <summary>
         /// Writes the partition id.
@@ -134,7 +67,7 @@ namespace AsyncTests1.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="partionId">The partition id.</param>
         public static void WritePartitionId(this Frame frame, int partionId)
-            => frame.Bytes.WriteInt32(Offset.PartitionId, partionId);
+            => frame.Bytes.WriteInt32(FrameFields.Offset.PartitionId, partionId);
 
         /// <summary>
         /// Reads the fragment id.
@@ -142,7 +75,7 @@ namespace AsyncTests1.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The fragment id.</returns>
         public static long ReadFragmentId(this Frame frame)
-            => frame.Bytes.ReadInt64(Offset.FragmentId);
+            => frame.Bytes.ReadInt64(FrameFields.Offset.FragmentId);
 
         /// <summary>
         /// Writes the fragment id.
@@ -150,6 +83,6 @@ namespace AsyncTests1.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="fragmentId">The fragment id.</param>
         public static void WriteFragmentId(this Frame frame, long fragmentId)
-            => frame.Bytes.WriteInt64(Offset.FragmentId, fragmentId);
+            => frame.Bytes.WriteInt64(FrameFields.Offset.FragmentId, fragmentId);
     }
 }
