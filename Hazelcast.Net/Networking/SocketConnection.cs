@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
@@ -306,6 +308,7 @@ namespace Hazelcast.Networking
                 try
                 {
                     bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token);
+
                     if (bytesRead == 0)
                     {
                         XConsole.WriteLine(this, "Pipe writer received no data");

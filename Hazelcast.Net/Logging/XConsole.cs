@@ -63,7 +63,10 @@ namespace Hazelcast.Logging
         public static void Setup(object source, int indent, string prefix)
         {
 #if XCONSOLE
-            _prefixes.AddOrUpdate(source, new SourceInfo(indent, " " + prefix));
+            // this is netstandard 2.1
+            //_prefixes.AddOrUpdate(source, new SourceInfo(indent, " " + prefix));
+
+            _prefixes.Add(source, new SourceInfo(indent, " " + prefix));
 #endif
         }
 

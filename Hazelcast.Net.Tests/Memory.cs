@@ -70,7 +70,7 @@ namespace Hazelcast.Tests
             var slice = bytes.Slice(bytes.Start, 4); // slice the required bytes
             if (slice.IsSingleSegment)
             {
-                var span = slice.FirstSpan;
+                var span = slice.FirstSpan();
                 // and we can read from the span
             }
             else
@@ -94,7 +94,7 @@ namespace Hazelcast.Tests
             int value;
             if (slice.IsSingleSegment)
             {
-                var span = slice.FirstSpan;
+                var span = slice.FirstSpan();
                 value = span.ReadInt32();
             }
             else
@@ -120,7 +120,7 @@ namespace Hazelcast.Tests
             int value;
             if (slice.IsSingleSegment)
             {
-                var span = slice.FirstSpan;
+                var span = slice.FirstSpan();
                 value = span.ReadInt32();
             }
             else
@@ -144,7 +144,7 @@ namespace Hazelcast.Tests
             int value;
             if (slice.IsSingleSegment)
             {
-                var span = slice.FirstSpan;
+                var span = slice.FirstSpan();
                 value = span.ReadInt32();
             }
             else

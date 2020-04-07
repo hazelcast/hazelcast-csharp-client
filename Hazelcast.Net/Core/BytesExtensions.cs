@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -80,7 +81,7 @@ namespace Hazelcast.Core
             int value;
             if (slice.IsSingleSegment)
             {
-                var span = slice.FirstSpan;
+                var span = slice.FirstSpan();
                 value = span.ReadInt32(bigEndian);
             }
             else
@@ -111,7 +112,7 @@ namespace Hazelcast.Core
             ushort value;
             if (slice.IsSingleSegment)
             {
-                var span = slice.FirstSpan;
+                var span = slice.FirstSpan();
                 value = span.ReadUInt16(bigEndian);
             }
             else

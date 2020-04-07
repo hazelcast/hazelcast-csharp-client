@@ -9,4 +9,8 @@
     <DefineConstants>TRACE;XCONSOLE</DefineConstants>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.IO.Pipelines" Version="4.7.1" />
+  </ItemGroup>
+
 </Project>

@@ -180,7 +180,9 @@ namespace Hazelcast.Networking
             if ((brket2 < 0 && colon2 > 0 && colon1 == colon2) ||
                 (brket2 > 0 && colon2 > brket2))
             {
-                if (!int.TryParse(span.Slice(colon2 + 1), out port))
+                // this is netstandard2.1
+                //if (!int.TryParse(span.Slice(colon2 + 1), out port))
+                if (!int.TryParse(span.Slice(colon2 + 1).ToString(), out port))
                     return false;
             }
 
@@ -208,7 +210,9 @@ namespace Hazelcast.Networking
 
             string hostNameString;
 
-            if (IPAddress.TryParse(hostName, out var ipAddress))
+            // this is netstandard2.1
+            //if (IPAddress.TryParse(hostName, out var ipAddress))
+            if (IPAddress.TryParse(hostName.ToString(), out var ipAddress))
             {
                 // if the hostname parses to an ip address, fine
                 hostNameString = ipAddress.ToString();

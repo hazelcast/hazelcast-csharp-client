@@ -180,7 +180,7 @@ namespace Hazelcast.Client
 
             var timeoutTask = Task.Delay(timeoutMilliseconds);
             await Task.WhenAny(completion.Task, timeoutTask);
-            if (completion.Task.IsCompletedSuccessfully) return await completion.Task;
+            if (completion.Task.IsCompletedSuccessfully()) return await completion.Task;
             throw new TimeoutException();
         }
 

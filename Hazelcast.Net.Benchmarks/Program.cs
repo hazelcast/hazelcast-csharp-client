@@ -77,18 +77,12 @@ namespace AsyncTests1.Benchmark
             var slice = bytes.Slice(bytes.Start, 4); // slice the required bytes
             int value;
             if (slice.IsSingleSegment)
-            {
                 throw new NotSupportedException(); // just to be sure
-                var span = slice.FirstSpan;
-                value = span.ReadInt32();
-            }
-            else
-            {
-                // copy to a temp buffer
-                Span<byte> stackSpan = stackalloc byte[4];
-                slice.CopyTo(stackSpan);
-                value = ((ReadOnlySpan<byte>)stackSpan).ReadInt32();
-            }
+
+            // copy to a temp buffer
+            Span<byte> stackSpan = stackalloc byte[4];
+            slice.CopyTo(stackSpan);
+            value = ((ReadOnlySpan<byte>)stackSpan).ReadInt32();
 
             // consume the slice
             bytes = bytes.Slice(slice.End);
@@ -104,16 +98,10 @@ namespace AsyncTests1.Benchmark
             var slice = bytes.Slice(bytes.Start, 4); // slice the required bytes
             int value;
             if (slice.IsSingleSegment)
-            {
                 throw new NotSupportedException(); // just to be sure
-                var span = slice.FirstSpan;
-                value = span.ReadInt32();
-            }
-            else
-            {
-                // enumerate sequence
-                value = bytes.ReadInt32();
-            }
+
+            // enumerate sequence
+            value = bytes.ReadInt32();
 
             // consume the slice
             bytes = bytes.Slice(slice.End);
@@ -129,17 +117,11 @@ namespace AsyncTests1.Benchmark
             var slice = bytes.Slice(bytes.Start, 4); // slice the required bytes
             int value;
             if (slice.IsSingleSegment)
-            {
                 throw new NotSupportedException(); // just to be sure
-                var span = slice.FirstSpan;
-                value = span.ReadInt32();
-            }
-            else
-            {
-                // use a reader
-                var reader = new SequenceReader<byte>(bytes);
-                reader.TryReadLittleEndian(out value);
-            }
+
+            // use a reader
+            var reader = new SequenceReader<byte>(bytes);
+            reader.TryReadLittleEndian(out value);
 
             // consume the slice
             bytes = bytes.Slice(slice.End);

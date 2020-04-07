@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
@@ -128,7 +129,7 @@ namespace Hazelcast.Cluster
             {
                 // connect for real
 
-                IAuthenticator authenticator; // should be static + client.AuthenticateAsync(authenticator)?
+                IAuthenticator authenticator = null; // should be static + client.AuthenticateAsync(authenticator)?
 
                 SemaphoreSlim s = null;
                 try
@@ -189,7 +190,8 @@ namespace Hazelcast.Cluster
             var request = new ClientMessage();
             var responseMessage = await client.SendAsync(request);
             // decode, etc...
-            var response = Decode(responseMessage);
+            //var response = Decode(responseMessage);
+            return false;
         }
     }
 

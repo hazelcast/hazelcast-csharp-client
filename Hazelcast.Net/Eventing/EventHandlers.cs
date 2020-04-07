@@ -25,7 +25,7 @@ namespace Hazelcast.Eventing
         public Guid Add(IEventHandler<TEvent> listener)
         {
             var id = Guid.NewGuid();
-            _listeners.AddOrUpdate(id, id => listener, (id, _) => listener);
+            _listeners.AddOrUpdate(id, listener, (_, __) => listener);
             return id;
         }
 

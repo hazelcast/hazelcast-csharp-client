@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using Hazelcast.Core;
 
 namespace Hazelcast.Messaging
