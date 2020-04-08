@@ -93,7 +93,19 @@ namespace Hazelcast
                 // TODO optimize?
                 // of course this is sub-optimal :(
                 bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
-                var count = await stream.ReadAsync(bytes, 0, bytes.Length, cancellationToken);
+
+                // stream.ReadAsync for network streams *ignores* the cancellation token 
+                // see https://github.com/dotnet/runtime/issues/24093
+                // hences this... workaround
+                //
+                var reading = stream.ReadAsync(bytes, 0, bytes.Length, cancellationToken);
+                var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken));
+
+                if (completed != reading)
+                    throw new TaskCanceledException();
+
+                var count = await reading;
+
                 new ReadOnlySpan<byte>(bytes).Slice(0, count).CopyTo(memory.Span);
                 return count;
             }

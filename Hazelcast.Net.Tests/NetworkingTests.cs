@@ -14,7 +14,6 @@
 
 using System;
 using System.Buffers;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -221,55 +220,12 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
         [Test]
         public void Sequences1()
         {
-            var origin = 1234;
-
-            var o = origin;
+            const int origin = 1234;
             var bytes = new byte[4];
-            for (var i = 3; i >= 0; i--)
-            {
-                Console.WriteLine($"{i}: {(byte) o}");
-                bytes[i] = (byte) o;
-                o >>= 8;
-            }
-
+            bytes.WriteInt32(0, origin);
             var buffer = new ReadOnlySequence<byte>(bytes);
-
-            var value = 0;
-            var e = buffer.GetEnumerator();
-            var j = 0;
-            while (j < 4)
-            {
-                e.MoveNext();
-                var m = e.Current;
-                var k = 0;
-                var l = m.Span.Length;
-                while (k < l && j < 4)
-                {
-                    value <<= 8;
-                    Console.WriteLine(m.Span[k]);
-                    value |= m.Span[k++];
-                    j++;
-                }
-            }
-
-            XAssert.AreEqual(origin, value);
-        }
-
-        [Test]
-        public void Sequences2()
-        {
-            var origin = 1234;
-
-            var bytes = new byte[4];
-            for (var i = 0; i < 4; i++)
-            {
-                bytes[i] = (byte)origin;
-                origin >>= 8;
-            }
-
-            var buffer = new ReadOnlySequence<byte>(bytes);
-            var value = buffer.ReadInt32();
-            XAssert.AreEqual(origin, value);
+            var value = BytesExtensions.ReadInt32(ref buffer);
+            Assert.AreEqual(origin, value);
         }
     }
 }
