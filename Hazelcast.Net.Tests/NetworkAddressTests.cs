@@ -1,7 +1,7 @@
 ﻿using Hazelcast.Networking;
 using NUnit.Framework;
 
-namespace AsyncTests1
+namespace Hazelcast.Tests
 {
     [TestFixture]
     public class NetworkAddressTests

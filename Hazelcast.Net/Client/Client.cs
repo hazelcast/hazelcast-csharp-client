@@ -120,12 +120,14 @@ namespace Hazelcast.Client
             if (message.IsException)
             {
                 // TODO handle exception
-                completion.SetException(new Exception()); // TODO try/catch this too
+                XConsole.WriteLine(this, "Message is an exception, report.");
+                 completion.SetException(new Exception()); // TODO try/catch this too
                 return new ValueTask();
             }
 
             try
             {
+                XConsole.WriteLine(this, "Message is ok, report.");
                 completion.SetResult(message);
             }
             catch
@@ -154,6 +156,9 @@ namespace Hazelcast.Client
             // assign a unique identifier to the message
             // create a corresponding completion source
             message.CorrelationId = _correlationIdSequence.Next;
+
+            // send in one fragment, set flags
+            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // send the message
             XConsole.WriteLine(this, $"Send message ID:{message.CorrelationId}");

@@ -259,7 +259,34 @@ namespace Hazelcast.Networking
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            return obj is NetworkAddress other && other.IPEndPoint == IPEndPoint;
+            return obj is NetworkAddress other && Equals(this, other);
         }
+
+        /// <summary>
+        /// Compares two instances for equality.
+        /// </summary>
+        private static bool Equals(NetworkAddress a1, NetworkAddress a2)
+        {
+            // return true if both are null or both are the same instance
+            if (ReferenceEquals(a1, a2)) return true;
+
+            // return false if a1 is null since a2 cannot be null here
+            if (ReferenceEquals(a1, null)) return false;
+
+            // actual comparison
+            return a1.IPEndPoint.Equals(a2.IPEndPoint);
+        }
+
+        /// <summary>
+        /// Overrides the == operator.
+        /// </summary>
+        public static bool operator ==(NetworkAddress a1, NetworkAddress a2)
+            => Equals(a1, a2);
+
+        /// <summary>
+        /// Overrides the != operator.
+        /// </summary>
+        public static bool operator !=(NetworkAddress a1, NetworkAddress a2)
+            => !(a1 == a2);
     }
 }

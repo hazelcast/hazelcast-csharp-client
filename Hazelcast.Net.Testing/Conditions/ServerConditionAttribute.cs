@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using NuGet.Versioning;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
@@ -47,7 +48,17 @@ namespace Hazelcast.Testing.Conditions
             if (test.RunState == RunState.NotRunnable)
                 return;
 
-            var serverVersion = ServerVersion.Version;
+            var methodInfo = test.Method;
+            var fixtureInfo = test.TypeInfo;
+
+            NuGetVersion serverVersion = null;
+
+            if (methodInfo != null)
+                serverVersion = methodInfo.GetCustomAttributes<ServerVersionAttribute>(true).FirstOrDefault()?.Version;
+            if (serverVersion == null && fixtureInfo != null)
+                serverVersion = fixtureInfo.GetCustomAttributes<ServerVersionAttribute>(true).FirstOrDefault()?.Version;
+            if (serverVersion == null)
+                serverVersion = ServerVersion.GetVersion();
 
             if (_range.Satisfies(serverVersion))
                 return;

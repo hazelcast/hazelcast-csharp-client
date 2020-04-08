@@ -135,6 +135,7 @@ namespace Hazelcast.Tests
             return value;
         }
 
+#if NETCOREAPP3_1 // SequenceReader is n/a in 2.1
         private int ReadInt32C(ref ReadOnlySequence<byte> bytes)
         {
             if (bytes.Length < 4)
@@ -159,6 +160,7 @@ namespace Hazelcast.Tests
 
             return value;
         }
+#endif
     }
 
     public static class Extensions

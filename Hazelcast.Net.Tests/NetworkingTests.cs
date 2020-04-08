@@ -79,7 +79,7 @@ namespace Hazelcast.Tests
             //var ipAddress = host.AddressList[0];
             //var endpoint = new IPEndPoint(ipAddress, _port);
 
-            var endpoint = IPEndPoint.Parse("127.0.0.1:11001");
+            var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:11001");
 
             XConsole.Setup(this, 0, "TST");
             XConsole.WriteLine(this, "Begin");
@@ -131,7 +131,7 @@ namespace Hazelcast.Tests
         [Timeout(10_000)]
         public async Task ServerShutdown()
         {
-            var endpoint = IPEndPoint.Parse("127.0.0.1:11000");
+            var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:11000");
 
             XConsole.Setup(this, 0, "TST");
             XConsole.WriteLine(this, "Begin");
@@ -188,7 +188,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             */
 
             // connect to real server
-            var endpoint = IPEndPoint.Parse("127.0.0.1:5701");
+            var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:5701");
             var client1 = new Client.Client(endpoint);
             await client1.ConnectAsync();
             /*

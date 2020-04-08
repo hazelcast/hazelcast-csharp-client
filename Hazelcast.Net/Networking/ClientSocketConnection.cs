@@ -42,7 +42,7 @@ namespace Hazelcast.Networking
             : base(id, prefixLength, multithread)
         {
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
-            XConsole.Setup(this, 16, "CLT.CON({id})");
+            XConsole.Setup(this, 16, $"CLT.CON({id})");
         }
 
         /// <summary>

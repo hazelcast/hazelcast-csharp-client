@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Net;
+using System.Threading.Tasks;
+
+#if NETSTANDARD2_0
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
+#endif
 
 namespace Hazelcast
 {
@@ -13,6 +18,7 @@ namespace Hazelcast
     /// </summary>
     public static class NetStandardCompatibility
     {
+#if NETSTANDARD2_0
         /// <summary>
         /// Deconstructs a <see cref="KeyValuePair{TKey,TValue}"/>.
         /// </summary>
@@ -28,6 +34,7 @@ namespace Hazelcast
         {
             (key, value) = keyValuePair;
         }
+#endif
 
         /// <summary>
         /// Gets the first span of a sequence.
@@ -40,7 +47,12 @@ namespace Hazelcast
         /// </remarks>
         public static ReadOnlySpan<T> FirstSpan<T>(this ReadOnlySequence<T> sequence)
         {
+#if NETSTANDARD2_0
             return sequence.First.Span;
+#endif
+#if NETSTANDARD2_1
+            return sequence.FirstSpan;
+#endif
         }
 
         /// <summary>
@@ -53,9 +65,15 @@ namespace Hazelcast
         /// </remarks>
         public static bool IsCompletedSuccessfully(this Task task)
         {
+#if NETSTANDARD2_0
             return task.IsCompleted && !(task.IsFaulted || task.IsCanceled);
+#endif
+#if NETSTANDARD2_1
+            return task.IsCompletedSuccessfully;
+#endif
         }
 
+#if NETSTANDARD2_0
         /// <summary>
         /// Reads from a stream.
         /// </summary>
@@ -76,7 +94,7 @@ namespace Hazelcast
                 // of course this is sub-optimal :(
                 bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
                 var count = await stream.ReadAsync(bytes, 0, bytes.Length, cancellationToken);
-                bytes.CopyTo(memory);
+                new ReadOnlySpan<byte>(bytes).Slice(0, count).CopyTo(memory.Span);
                 return count;
             }
             finally
@@ -89,7 +107,9 @@ namespace Hazelcast
             // but... memory.GetUnderlyingArray().Array is for readonly memory only
             // cannot work in our case?
         }
+#endif
 
+        /*
         private static ArraySegment<byte> GetUnderlyingArray(this Memory<byte> bytes) => GetUnderlyingArray((ReadOnlyMemory<byte>)bytes);
 
         private static ArraySegment<byte> GetUnderlyingArray(this ReadOnlyMemory<byte> bytes)
@@ -97,5 +117,101 @@ namespace Hazelcast
             if (!MemoryMarshal.TryGetArray(bytes, out var arraySegment)) throw new NotSupportedException("This Memory does not support exposing the underlying array.");
             return arraySegment;
         }
+        */
+
+        // ReSharper disable once InconsistentNaming
+        public static class IPEndPoint
+        {
+            // this code is directly copied from .NET Core runtime, with minor adjustments
+            // ReSharper disable all
+
+            public static bool TryParse(string s, /*[NotNullWhen(true)]*/ out System.Net.IPEndPoint result)
+            {
+                return TryParse(s.AsSpan(), out result);
+            }
+
+            public static bool TryParse(ReadOnlySpan<char> s, /*[NotNullWhen(true)]*/ out System.Net.IPEndPoint result)
+            {
+                int addressLength = s.Length;  // If there's no port then send the entire string to the address parser
+                int lastColonPos = s.LastIndexOf(':');
+
+                // Look to see if this is an IPv6 address with a port.
+                if (lastColonPos > 0)
+                {
+                    if (s[lastColonPos - 1] == ']')
+                    {
+                        addressLength = lastColonPos;
+                    }
+                    // Look to see if this is IPv4 with a port (IPv6 will have another colon)
+                    else if (s.Slice(0, lastColonPos).LastIndexOf(':') == -1)
+                    {
+                        addressLength = lastColonPos;
+                    }
+                }
+
+#if NETSTANDARD2_0
+                if (IPAddress.TryParse(s.Slice(0, addressLength).ToString(), out IPAddress address))
+                {
+                    uint port = 0;
+                    if (addressLength == s.Length ||
+                        (uint.TryParse(s.Slice(addressLength + 1).ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out port) && port <= System.Net.IPEndPoint.MaxPort))
+
+                    {
+                        result = new System.Net.IPEndPoint(address, (int)port);
+                        return true;
+                    }
+                }
+#endif
+#if NETSTANDARD2_1
+                if (IPAddress.TryParse(s.Slice(0, addressLength), out IPAddress address))
+                {
+                    uint port = 0;
+                    if (addressLength == s.Length ||
+                        (uint.TryParse(s.Slice(addressLength + 1), NumberStyles.None, CultureInfo.InvariantCulture, out port) && port <= System.Net.IPEndPoint.MaxPort))
+
+                    {
+                        result = new System.Net.IPEndPoint(address, (int)port);
+                        return true;
+                    }
+                }
+#endif
+
+                result = null;
+                return false;
+            }
+
+            /// <summary>
+            /// Converts an IP network endpoint (address and port) represented as a string to an IPEndPoint instance.
+            /// </summary>
+            /// <param name="s">The string.</param>
+            /// <returns>An IP network endpoint.</returns>
+            public static System.Net.IPEndPoint Parse(string s)
+            {
+                if (s == null)
+                {
+                    throw new ArgumentNullException(nameof(s));
+                }
+
+                return Parse(s.AsSpan());
+            }
+
+            public static System.Net.IPEndPoint Parse(ReadOnlySpan<char> s)
+            {
+                if (TryParse(s, out System.Net.IPEndPoint result))
+                {
+                    return result;
+                }
+
+                throw new FormatException("Invalid format.");
+            }
+
+            // ReSharper restore all
+        }
+
+        #region RuntimeCode
+
+
+
+        #endregion
     }
 }

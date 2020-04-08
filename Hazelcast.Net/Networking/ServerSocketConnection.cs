@@ -38,7 +38,7 @@ namespace Hazelcast.Networking
             : base(id)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-            XConsole.Setup(this, 32, "SVR.CON({id})");
+            XConsole.Setup(this, 32, $"SVR.CON({id})");
         }
 
         /// <summary>

@@ -130,14 +130,20 @@ namespace Hazelcast.Server
         {
             XConsole.WriteLine(this, "Respond");
             var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
-            //var responseText = text switch
-            //{
-            //    "a" => "alpha",
-            //    "b" => "bravo",
-            //    _ => "??"
-            //};
-            var responseText = "boo";
-
+#if NETSTANDARD2_0
+            var responseText =
+                text == "a" ? "alpha" :
+                text == "b" ? "bravo" :
+                "??";
+#endif
+#if NETSTANDARD2_1
+            var responseText = text switch
+            {
+                "a" => "alpha",
+                "b" => "bravo",
+                _ => "??"
+            };
+#endif
             // FIXME what is the proper structure of a message?
             // the 64-bytes header is nonsense etc
             var response = new ClientMessage()
@@ -145,6 +151,10 @@ namespace Hazelcast.Server
                 .Append(new Frame(Encoding.UTF8.GetBytes(responseText)));
 
             response.CorrelationId = message.CorrelationId;
+            response.MessageType = 0x1; // 0x00 means exception
+
+            // send in one fragment, set flags
+            response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             await connection.SendAsync(response);
             XConsole.WriteLine(this, "Responded");

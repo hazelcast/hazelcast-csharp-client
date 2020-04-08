@@ -271,6 +271,8 @@ namespace Hazelcast.Networking
                 return;
 
             // notify other end with an empty message
+            // FIXME sending an empty message is non-standard, what is the proper way?
+            // also this should be a true message and happen higher in the stack
             XConsole.WriteLine(this, "Send empty message");
             if (_writer != null) await _writer.WaitAsync();
             try
@@ -286,7 +288,9 @@ namespace Hazelcast.Networking
 
             // wait for everything to be down
             await _pipeWritingThenShutdown;
+            XConsole.WriteLine(this, "Pipe writing is down");
             await _pipeReadingThenShutdown;
+            XConsole.WriteLine(this, "Pipe reading is down");
         }
 
         /// <summary>

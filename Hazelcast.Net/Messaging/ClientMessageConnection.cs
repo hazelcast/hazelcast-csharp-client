@@ -37,6 +37,7 @@ namespace Hazelcast.Messaging
         private Func<ClientMessageConnection, ClientMessage, ValueTask> _onReceiveMessage;
         private int _bytesLength = -1;
         private Frame _currentFrame;
+        private bool _finalFrame;
         private ClientMessage _currentMessage;
 
         /// <summary>
@@ -80,12 +81,21 @@ namespace Hazelcast.Messaging
                     ? Array.Empty<byte>()
                     : new byte[_bytesLength]; // TODO can we avoid allocating the byte array at all?
 
+                // create a frame
+                // preserve the isFinal status, as adding the frame to a message messes it
                 _currentFrame = new Frame(frameBytes, flags);
-                XConsole.WriteLine(this, $"Add frame ({_currentFrame.Length} bytes)");
+                _finalFrame = _currentFrame.IsFinal;
+
                 if (_currentMessage == null)
+                {
+                    XConsole.WriteLine(this, $"Add frame (0x{(ushort)_currentFrame.Flags:x2}, {_currentFrame.Length} bytes) to new fragment");
                     _currentMessage = new ClientMessage(_currentFrame);
+                }
                 else
+                {
+                    XConsole.WriteLine(this, $"Add frame (0x{(ushort)_currentFrame.Flags:x2}, {_currentFrame.Length} bytes) to current fragment");
                     _currentMessage.Append(_currentFrame);
+                }
             }
 
             // TODO consider buffering here
@@ -97,10 +107,13 @@ namespace Hazelcast.Messaging
             bytes.Fill(_currentFrame.Bytes);
             bytes = bytes.Slice(_bytesLength); // FIXME should fill also slice?
             _bytesLength = -1;
+            XConsole.WriteLine(this, $"Frame is complete");
 
             // we now have a fully assembled message
-            if (_currentFrame.IsFinal)
+            // don't test _currentFrame.IsFinal, adding the frame to a message has messed it
+            if (_finalFrame)
             {
+                XConsole.WriteLine(this, "Frame is final");
                 var message = _currentMessage;
                 _currentMessage = null;
                 XConsole.WriteLine(this, "Handle fragment");
