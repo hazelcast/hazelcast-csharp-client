@@ -21,7 +21,7 @@ using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 
-namespace Hazelcast.Server
+namespace Hazelcast.Testing.TestServer
 {
     /// <summary>
     /// Represents a server.
@@ -51,7 +51,7 @@ namespace Hazelcast.Server
         /// <returns>A task that will complete when the server has started.</returns>
         public async Task StartAsync()
         {
-            XConsole.WriteLine(this, "Start server");
+            XConsole.WriteLine(this, $"Start server at {_endpoint}");
 
             _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
             XConsole.Setup(_listener, 24, "LST");

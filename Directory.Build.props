@@ -1,0 +1,7 @@
+<Project>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>XCONSOLE</DefineConstants>
+  </PropertyGroup>
+
+</Project>

@@ -37,6 +37,9 @@ namespace Hazelcast.Tests
         {
             Assert.AreEqual(new NetworkAddress("127.0.0.1"), new NetworkAddress("127.0.0.1"));
             Assert.AreEqual(new NetworkAddress("127.0.0.1").GetHashCode(), new NetworkAddress("127.0.0.1").GetHashCode());
+
+            // ReSharper disable once EqualExpressionComparison
+            Assert.IsTrue(new NetworkAddress("127.0.0.1") == new NetworkAddress("127.0.0.1"));
         }
     }
 }

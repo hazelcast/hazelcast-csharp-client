@@ -100,7 +100,7 @@ namespace Hazelcast.Networking
             {
                 XConsole.WriteLine(this, "Failed to bind socket");
                 XConsole.WriteLine(this, e);
-                // FIXME server should then terminate
+                throw;
             }
 
             _cancellationTokenSource = new CancellationTokenSource();

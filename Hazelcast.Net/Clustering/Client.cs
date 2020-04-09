@@ -7,7 +7,7 @@ using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 
-namespace Hazelcast.Client
+namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Represents a client.

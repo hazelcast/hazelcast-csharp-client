@@ -16,9 +16,12 @@ using System;
 using System.Buffers;
 using System.Text;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
+using Hazelcast.Networking;
+using Hazelcast.Testing.TestServer;
 using Hazelcast.Tests.Testing;
 using NUnit.Framework;
 
@@ -84,13 +87,13 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server.Server(endpoint);
+            var server = new Server(endpoint);
             await server.StartAsync();
 
             var sequence = new Int32Sequence();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client.Client(endpoint, sequence);
+            var client1 = new Client(endpoint, sequence);
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -100,7 +103,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Start client 2");
-            var client2 = new Client.Client(endpoint, sequence);
+            var client2 = new Client(endpoint, sequence);
             await client2.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 2");
@@ -136,11 +139,11 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server.Server(endpoint);
+            var server = new Server(endpoint);
             await server.StartAsync();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client.Client(endpoint);
+            var client1 = new Client(endpoint);
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -156,6 +159,31 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
             XAssert.ThrowsAsync<InvalidOperationException>(async () => await client1.SendAsync(message));
+
+            XConsole.WriteLine(this, "End");
+            await Task.Delay(100);
+        }
+
+        [Test]
+        [Timeout(10_000)]
+        public async Task Cluster()
+        {
+            var endpoint = NetworkAddress.Parse("127.0.0.1").IPEndPoint;
+
+            XConsole.Setup(this, 0, "TST");
+            XConsole.WriteLine(this, "Begin");
+
+            XConsole.WriteLine(this, "Start server");
+            var server = new Server(endpoint);
+            await server.StartAsync();
+
+            XConsole.WriteLine(this, "Cluster?");
+            var cluster = new Cluster();
+            await cluster.Connect();
+
+            XConsole.WriteLine(this, "Stop server");
+            await server.StopAsync();
+            await Task.Delay(1000);
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
@@ -188,7 +216,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
 
             // connect to real server
             var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:5701");
-            var client1 = new Client.Client(endpoint);
+            var client1 = new Client(endpoint);
             await client1.ConnectAsync();
             /*
             // send poison

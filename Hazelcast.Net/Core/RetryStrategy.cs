@@ -53,6 +53,8 @@ namespace Hazelcast.Core
             _multiplier = multiplier;
             _timeout = timeout;
             _jitter = jitter;
+
+            Restart();
         }
 
         /// <summary>
@@ -87,7 +89,7 @@ namespace Hazelcast.Core
             var delay = (int) (_currentBackOff * (1 - _jitter * (1 - Random.NextDouble())));
             delay = Math.Min(delay, _timeout - elapsed);
 
-            XConsole.WriteLine(this, $"Unable to connect to cluster after {_attempts} attempts, retrying in {delay} ms");
+            XConsole.WriteLine(this, $"Unable to connect to cluster after {_attempts} attempts and {elapsed} ms, retrying in {delay} ms");
 
             try
             {

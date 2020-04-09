@@ -8,7 +8,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 
-namespace Hazelcast.Cluster
+namespace Hazelcast.Clustering
 {
     public class Cluster
     {
@@ -45,6 +45,13 @@ namespace Hazelcast.Cluster
 
         public void Invoke(ClientMessage message) { }
 
+        private readonly ClusterConnections _connections = new ClusterConnections();
+
+        public async ValueTask Connect()
+        {
+            await _connections.ConnectToCluster();
+        }
+
         private class ClusterConnections // aka ConnectionManager?
         {
             // implement connect-to-cluster
@@ -56,11 +63,11 @@ namespace Hazelcast.Cluster
             {
                 // we probably could try to connect in parallel?
 
-                // arguments come from the configuration
-                var retryStrategy = new RetryStrategy(100, 100, 1, 2000, 0);
-
-                var tried = new HashSet<NetworkAddress>(); // must implement hash on address!
+                var tried = new HashSet<NetworkAddress>();
                 var exceptions = new List<Exception>();
+
+                // arguments come from the configuration
+                var retryStrategy = new RetryStrategy(100, 100, 1, 4000, 0);
 
                 do
                 {
@@ -125,11 +132,11 @@ namespace Hazelcast.Cluster
                 return s;
             }
 
-            private async ValueTask<Client.Client> ConnectAsync(NetworkAddress address)
+            private async ValueTask<Client> ConnectAsync(NetworkAddress address)
             {
                 // connect for real
 
-                IAuthenticator authenticator = null; // should be static + client.AuthenticateAsync(authenticator)?
+                IAuthenticator authenticator = new Authenticator(); // should be static
 
                 SemaphoreSlim s = null;
                 try
@@ -141,7 +148,7 @@ namespace Hazelcast.Cluster
                     // + de-duplicate them somehow
                     // fixme: IPEndPoint is lazily dns-resolved each time! not cached!
 
-                    var client = new Client.Client(address.IPEndPoint);
+                    var client = new Client(address.IPEndPoint);
                     await client.ConnectAsync(); // may throw
                     await authenticator.AuthenticateAsync(client); // may throw
                     return client;
@@ -152,8 +159,8 @@ namespace Hazelcast.Cluster
                 }
             }
 
-            private readonly ConcurrentDictionary<NetworkAddress, Client.Client> _clients
-                 = new ConcurrentDictionary<NetworkAddress, Client.Client>();
+            private readonly ConcurrentDictionary<NetworkAddress, Client> _clients
+                 = new ConcurrentDictionary<NetworkAddress, Client>();
 
             // rename GetAddresses gets the address to try to connect to
             public IEnumerable<NetworkAddress> GetPossibleMemberAddresses()
@@ -175,18 +182,22 @@ namespace Hazelcast.Cluster
 
     public interface IAuthenticator
     {
-        ValueTask AuthenticateAsync(Client.Client client);
+        ValueTask AuthenticateAsync(Client client);
     }
 
     public class Authenticator : IAuthenticator
     {
-        public async ValueTask AuthenticateAsync(Client.Client client)
+        public async ValueTask AuthenticateAsync(Client client)
         {
-            await TryAuthenticateAsync(client);
+            var authenticated = await TryAuthenticateAsync(client);
+            // but maybe we want to capture an exception here?
+            if (!authenticated) throw new Exception("Failed to authenticated.");
         }
 
-        private async ValueTask<bool> TryAuthenticateAsync(Client.Client client)
+        private async ValueTask<bool> TryAuthenticateAsync(Client client)
         {
+            // pretend it's all right
+            return true;
             var request = new ClientMessage();
             var responseMessage = await client.SendAsync(request);
             // decode, etc...

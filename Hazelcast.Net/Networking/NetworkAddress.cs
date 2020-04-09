@@ -150,6 +150,17 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
+        /// Parses a string into a <see cref="NetworkAddress"/>.
+        /// </summary>
+        /// <param name="s">The string.</param>
+        /// <returns>The network address.</returns>
+        public static NetworkAddress Parse(string s)
+        {
+            if (TryParse(s, out var address)) return address;
+            throw new FormatException("Invalid format.");
+        }
+
+        /// <summary>
         /// Tries to parse a string into a <see cref="NetworkAddress"/> instance.
         /// </summary>
         /// <param name="s">The string.</param>
