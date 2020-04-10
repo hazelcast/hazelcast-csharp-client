@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.Clustering
 {
@@ -52,12 +55,20 @@ namespace Hazelcast.Clustering
             await _connections.ConnectToCluster();
         }
 
+        public async Task<ClientMessage> SendAsync(ClientMessage request)
+            => await _connections.SendAsync(request);
+
         private class ClusterConnections // aka ConnectionManager?
         {
             // implement connect-to-cluster
             //  what's the address provider?
             //    deals with config to get configured addresses
             //    can also run a configured cloud discovery
+
+            public async Task<ClientMessage> SendAsync(ClientMessage request)
+            {
+                return await _clients.First().Value.SendAsync(request);
+            }
 
             public async ValueTask ConnectToCluster()
             {
@@ -196,13 +207,38 @@ namespace Hazelcast.Clustering
 
         private async ValueTask<bool> TryAuthenticateAsync(Client client)
         {
-            // pretend it's all right
-            return true;
-            var request = new ClientMessage();
-            var responseMessage = await client.SendAsync(request);
-            // decode, etc...
-            //var response = Decode(responseMessage);
-            return false;
+            // TODO accept parameters etc
+
+            // RC assigns a GUID but the default cluster name is 'dev'
+            var clusterName = "dev";
+            var username = (string)null; // null
+            var password = (string)null; // null
+            var clientId = Guid.NewGuid();
+            var clientType = "CSP"; // CSharp
+            var serializationVersion = (byte)0x01;
+            var clientVersion = "4.0";
+            var clientName = "hz.client_0";
+            var labels = new HashSet<string>();
+
+            var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
+            XConsole.WriteLine(this, "Send auth request");
+            var responseMessage = await client.SendAsync(requestMessage);
+            XConsole.WriteLine(this, "Rcvd auth response\n" + responseMessage.Dump());
+            var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
+
+            // TODO properly handle the response
+
+            switch ((AuthenticationStatus) response.Status)
+            {
+                case AuthenticationStatus.Authenticated:
+                    return true;
+                case AuthenticationStatus.CredentialsFailed:
+                case AuthenticationStatus.NotAllowedInCluster:
+                case AuthenticationStatus.SerializationVersionMismatch:
+                    return false;
+                default:
+                    throw new NotSupportedException();
+            }
         }
     }
 

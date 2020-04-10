@@ -39,41 +39,36 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Dumps an array of bytes into a readable string.
+        /// Gets the native endianness of the computer architecture where the code is executing.
         /// </summary>
-        /// <param name="bytes">The array of bytes.</param>
-        /// <param name="prefix">A prefix.</param>
-        /// <param name="length">The number of bytes to dump, or zero to dump all bytes in the array.</param>
-        /// <returns>A readable string representation of the array of bytes.</returns>
-        public static string Dump(this byte[] bytes, string prefix, int length = 0)
-        {
-            if (length > bytes.Length)
-                throw new InvalidOperationException(ExceptionMessage.NotEnoughBytes);
-
-            return prefix + string.Join(" ", bytes.Take(length > 0 ? length : bytes.Length).Select(x => $"{x:x2}"));
-        }
+        public static Endianness NativeEndianness => BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian;
 
         /// <summary>
-        /// Dumps an sequence of bytes into a readable string.
+        /// Resolves the endianness.
         /// </summary>
-        /// <param name="bytes">The sequence of bytes.</param>
-        /// <param name="prefix">A prefix.</param>
-        /// <param name="length">The number of bytes to dump, or zero to dump all bytes in the sequence.</param>
-        /// <returns>A readable string representation of the sequence of bytes.</returns>
-        public static string Dump(this ReadOnlySequence<byte> bytes, string prefix, int length = 0)
+        /// <param name="endianness">The endianness, which can be 'native'.</param>
+        /// <returns>The resolved endianness, i.e. either 'big-endian' or 'little-endian'.</returns>
+        private static Endianness ResolveEndianness(Endianness endianness)
         {
-            var a = new byte[bytes.Length];
-            bytes.CopyTo(a);
-            return prefix + string.Join(" ", a.Take(length > 0 ? length : (int) bytes.Length).Select(x => $"{x:x2}"));
+            switch (endianness)
+            {
+                case Endianness.Native:
+                    return NativeEndianness;
+                case Endianness.LittleEndian:
+                case Endianness.BigEndian:
+                    return endianness;
+                default:
+                    throw new NotSupportedException();
+            }
         }
 
         /// <summary>
         /// Reads an <see cref="Int32"/> (int) value from a sequence of bytes, and slices the sequence accordingly.
         /// </summary>
         /// <param name="bytes">The sequence of bytes to read from.</param>
-        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt32(ref ReadOnlySequence<byte> bytes, bool bigEndian = BigEndian)
+        public static int ReadInt32(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Native)
         {
             if (bytes.Length < 4)
                 throw new ArgumentException(ExceptionMessage.NotEnoughBytes, nameof(bytes));
@@ -83,13 +78,13 @@ namespace Hazelcast.Core
             if (slice.IsSingleSegment)
             {
                 var span = slice.FirstSpan();
-                value = span.ReadInt32(bigEndian);
+                value = span.ReadInt32(endianness);
             }
             else
             {
                 Span<byte> stackSpan = stackalloc byte[4];
                 slice.Fill(stackSpan);
-                value = ((ReadOnlySpan<byte>) stackSpan).ReadInt32(bigEndian);
+                value = ((ReadOnlySpan<byte>) stackSpan).ReadInt32(endianness);
             }
 
             bytes = bytes.Slice(slice.End);
@@ -100,9 +95,9 @@ namespace Hazelcast.Core
         /// Reads an <see cref="UInt16"/> (ushort) value from a sequence of bytes, and slices the sequence accordingly.
         /// </summary>
         /// <param name="bytes">The sequence of bytes to read from.</param>
-        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static ushort ReadUInt16(ref ReadOnlySequence<byte> bytes, bool bigEndian = BigEndian)
+        public static ushort ReadUInt16(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Native)
         {
             const byte length = sizeof(ushort);
 
@@ -114,13 +109,13 @@ namespace Hazelcast.Core
             if (slice.IsSingleSegment)
             {
                 var span = slice.FirstSpan();
-                value = span.ReadUInt16(bigEndian);
+                value = span.ReadUInt16(endianness);
             }
             else
             {
                 Span<byte> stackSpan = stackalloc byte[length];
                 slice.Fill(stackSpan);
-                value = ((ReadOnlySpan<byte>) stackSpan).ReadUInt16(bigEndian);
+                value = ((ReadOnlySpan<byte>) stackSpan).ReadUInt16(endianness);
             }
 
             bytes = bytes.Slice(slice.End);
@@ -131,16 +126,16 @@ namespace Hazelcast.Core
         /// Reads an <see cref="Int32"/> (int) value from a span of bytes.
         /// </summary>
         /// <param name="bytes">The span of bytes to read from.</param>
-        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt32(this ReadOnlySpan<byte> bytes, bool bigEndian = BigEndian)
+        public static int ReadInt32(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Native)
         {
             const byte length = sizeof(int);
 
             if (bytes.Length < length)
                 throw new ArgumentException(ExceptionMessage.NotEnoughBytes, nameof(bytes));
 
-            return bigEndian
+            return ResolveEndianness(endianness).IsBigEndian()
 
                 ? bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3]
                 : bytes[0] | bytes[1] << 8 | bytes[2] << 16 | bytes[3] << 24;
@@ -150,9 +145,9 @@ namespace Hazelcast.Core
         /// Reads an <see cref="UInt16"/> (ushort) value from a span of bytes.
         /// </summary>
         /// <param name="bytes">The span of bytes to read from.</param>
-        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static ushort ReadUInt16(this ReadOnlySpan<byte> bytes, bool bigEndian = BigEndian)
+        public static ushort ReadUInt16(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Native)
         {
             const byte length = sizeof(ushort);
 
@@ -161,7 +156,7 @@ namespace Hazelcast.Core
 
             unchecked
             {
-                return (ushort) (bigEndian
+                return (ushort) (ResolveEndianness(endianness).IsBigEndian()
 
                     ? bytes[0] << 8 | bytes[1]
                     : bytes[0] | bytes[1] << 8);
@@ -173,16 +168,16 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="bytes">The array of bytes to read from.</param>
         /// <param name="position">The position in the array where the value should be read.</param>
-        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt32(this byte[] bytes, int position, bool bigEndian = BigEndian)
+        public static int ReadInt32(this byte[] bytes, int position, Endianness endianness = Endianness.Native)
         {
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
             {
-                return bigEndian
+                return ResolveEndianness(endianness).IsBigEndian()
 
                     ? bytes[position] << 24     | bytes[position + 1] << 16 |
                       bytes[position + 2] << 8  | bytes[position + 3]
@@ -197,16 +192,16 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="bytes">The array of bytes to read from.</param>
         /// <param name="position">The position in the array where the value should be read.</param>
-        /// <param name="bigEndian">Whether to use big-endian.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static long ReadInt64(this byte[] bytes, int position, bool bigEndian = BigEndian)
+        public static long ReadInt64(this byte[] bytes, int position, Endianness endianness = Endianness.Native)
         {
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
             {
-                return bigEndian
+                return ResolveEndianness(endianness).IsBigEndian()
 
                     ? (long) bytes[position]     << 56 | (long) bytes[position + 1] << 48 |
                       (long) bytes[position + 2] << 40 | (long) bytes[position + 3] << 32 |
@@ -254,8 +249,8 @@ namespace Hazelcast.Core
         /// <param name="bytes">The array of bytes to write to.</param>
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
-        /// <param name="bigEndian">Whether to use big-endian.</param>
-        public static void WriteUInt16(this byte[] bytes, int position, ushort value, bool bigEndian = BigEndian)
+        /// <param name="endianness">The endianness.</param>
+        public static void WriteUInt16(this byte[] bytes, int position, ushort value, Endianness endianness = Endianness.Native)
         {
             if (bytes.Length < position + sizeof(ushort))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -264,7 +259,7 @@ namespace Hazelcast.Core
 
             unchecked
             {
-                if (bigEndian)
+                if (ResolveEndianness(endianness).IsBigEndian())
                 {
                     bytes[position] = (byte) (unsigned >> 8);
                     bytes[position + 1] = (byte) unsigned;
@@ -283,8 +278,8 @@ namespace Hazelcast.Core
         /// <param name="bytes">The array of bytes to write to.</param>
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
-        /// <param name="bigEndian">Whether to use big-endian.</param>
-        public static void WriteInt32(this byte[] bytes, int position, int value, bool bigEndian = BigEndian)
+        /// <param name="endianness">The endianness.</param>
+        public static void WriteInt32(this byte[] bytes, int position, int value, Endianness endianness = Endianness.Native)
         {
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -293,7 +288,7 @@ namespace Hazelcast.Core
 
             unchecked
             {
-                if (bigEndian)
+                if (ResolveEndianness(endianness).IsBigEndian())
                 {
                     bytes[position]     = (byte) (unsigned >> 24);
                     bytes[position + 1] = (byte) (unsigned >> 16);
@@ -316,8 +311,8 @@ namespace Hazelcast.Core
         /// <param name="bytes">The array of bytes to write to.</param>
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
-        /// <param name="bigEndian">Whether to use big-endian.</param>
-        public static void WriteInt64(this byte[] bytes, int position, long value, bool bigEndian = BigEndian)
+        /// <param name="endianness">The endianness.</param>
+        public static void WriteInt64(this byte[] bytes, int position, long value, Endianness endianness = Endianness.Native)
         {
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -326,7 +321,7 @@ namespace Hazelcast.Core
 
             unchecked
             {
-                if (bigEndian)
+                if (ResolveEndianness(endianness).IsBigEndian())
                 {
                     bytes[position]     = (byte) (unsigned >> 56);
                     bytes[position + 1] = (byte) (unsigned >> 48);

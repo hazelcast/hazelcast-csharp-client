@@ -13,13 +13,16 @@
 // limitations under the License.
 
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Data
 {
     /// <summary>Provides serialization methods for arrays by extending DataOutput</summary>
     public interface IObjectDataOutput : IDataOutput
     {
         /// <returns>ByteOrder BIG_ENDIAN or LITTLE_ENDIAN</returns>
-        ByteOrder GetByteOrder();
+        //ByteOrder GetByteOrder();
+        Endianness Endianness { get; }
 
         /// <returns>copy of internal byte array</returns>
         byte[] ToByteArray();

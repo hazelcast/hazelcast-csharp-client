@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Data
 {
     /// <summary>Provides serialization methods for arrays of primitive types</summary>
     public interface IObjectDataInput : IDataInput
     {
         /// <returns>ByteOrder BIG_ENDIAN or LITTLE_ENDIAN</returns>
-        ByteOrder GetByteOrder();
+        //ByteOrder GetByteOrder();
+        Endianness Endianness { get; }
 
         /// <returns>the boolean array read</returns>
         /// <exception cref="System.IO.IOException">

@@ -195,8 +195,7 @@ namespace Hazelcast.Tests
             var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
             XConsole.WriteLine(this, "Send auth request");
             var responseMessage = await client1.SendAsync(requestMessage);
-            XConsole.WriteLine(this, "Rcvd auth response");
-            WriteMessage(responseMessage);
+            XConsole.WriteLine(this, "Rcvd auth response " + responseMessage.Dump());
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
             var status = (AuthenticationStatus) response.Status;
@@ -207,23 +206,6 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
-        }
-
-        private void WriteMessage(ClientMessage message)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("MESSAGE");
-            var frame = message.FirstFrame;
-            while (frame != null)
-            {
-                sb.Append("  FRAME ");
-                sb.Append(frame.Length);
-                sb.Append(" ");
-                sb.Append($"0x{frame.Flags:x} {frame.Flags} {(ClientMessageFlags) frame.Flags}");
-                sb.AppendLine();
-                frame = frame.Next;
-            }
-            XConsole.WriteLine(this, sb.ToString());
         }
 
         [Test]
@@ -242,6 +224,9 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Cluster?");
             var cluster = new Cluster();
             await cluster.Connect();
+
+            // now we can send messages...
+            //await cluster.SendAsync(new ClientMessage());
 
             XConsole.WriteLine(this, "Stop server");
             await server.StopAsync();
