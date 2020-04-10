@@ -120,6 +120,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.8")]
         public virtual void TestValuesPaging_without_comparator_predicate()
         {
             FillMap();
@@ -129,6 +130,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.8")]
         public virtual void TestKeySetPaging_with_comparator()
         {
             FillMap();
@@ -147,6 +149,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.8")]
         public virtual void TestValuePaging_with_comparator()
         {
             FillMap2();
@@ -164,6 +167,7 @@ namespace Hazelcast.Client.Test
 
 
         [Test]
+        [Category("3.8")]
         public virtual void TestEntrySetPaging_with_comparator()
         {
             FillMap2();

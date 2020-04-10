@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -324,6 +324,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.7")]
         public virtual void TestExecuteOnKey()
         {
             FillMap();
@@ -349,6 +350,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.7")]
         public virtual void TestExecuteOnKeys()
         {
             FillMap();
@@ -388,6 +390,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.7")]
         public virtual void TestExecuteOnEntries()
         {
             FillMap();
@@ -402,6 +405,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.7")]
         public virtual void TestExecuteOnEntriesWithPredicate()
         {
             FillMap();
@@ -417,6 +421,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.7")]
         public virtual void TestSubmitToKey()
         {
             FillMap();
@@ -475,7 +480,7 @@ namespace Hazelcast.Client.Test
             IDictionary<object, object> mm = new Dictionary<object, object>();
             const int keycount = 1000;
 
-            //insert dummy keys and values 
+            //insert dummy keys and values
             foreach (var itemIndex in Enumerable.Range(0, keycount))
             {
                 mm.Add(itemIndex.ToString(), itemIndex.ToString());
