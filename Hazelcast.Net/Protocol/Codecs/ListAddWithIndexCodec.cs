@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 332033; // 0x051101
         private const int RequestIndexFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestIndexFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, int index, IData @value)
         {
@@ -53,6 +53,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "List.AddWithIndex";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame, RequestIndexFieldOffset, index);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);

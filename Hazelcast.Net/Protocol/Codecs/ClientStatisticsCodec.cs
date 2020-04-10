@@ -199,7 +199,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 3073; // 0x000C01
         private const int RequestTimestampFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestTimestampFieldOffset + LongSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(long timestamp, string clientAttributes, byte[] metricsBlob)
         {
@@ -208,6 +208,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Client.Statistics";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestTimestampFieldOffset, timestamp);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, clientAttributes);

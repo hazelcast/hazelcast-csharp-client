@@ -48,7 +48,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 67841; // 0x010901
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
@@ -57,6 +57,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.Delete";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestThreadIdFieldOffset, threadId);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);

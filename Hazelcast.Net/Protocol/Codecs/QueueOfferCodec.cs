@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 196865; // 0x030101
         private const int RequestTimeoutMillisFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestTimeoutMillisFieldOffset + LongSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData @value, long timeoutMillis)
@@ -54,6 +54,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Queue.Offer";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestTimeoutMillisFieldOffset, timeoutMillis);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);

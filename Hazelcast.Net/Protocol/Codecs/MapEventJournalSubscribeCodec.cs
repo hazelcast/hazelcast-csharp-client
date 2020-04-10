@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 82176; // 0x014100
         public const int ResponseMessageType = 82177; // 0x014101
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseOldestSequenceFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseOldestSequenceFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseNewestSequenceFieldOffset = ResponseOldestSequenceFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseNewestSequenceFieldOffset + LongSizeInBytes;
 
@@ -55,6 +55,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.EventJournalSubscribe";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;

@@ -43,7 +43,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 78080; // 0x013100
         public const int ResponseMessageType = 78081; // 0x013101
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData entryProcessor, IData predicate)
         {
@@ -52,6 +52,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.ExecuteWithPredicate";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, entryProcessor);

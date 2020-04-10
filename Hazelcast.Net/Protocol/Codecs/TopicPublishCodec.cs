@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 262400; // 0x040100
         public const int ResponseMessageType = 262401; // 0x040101
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData message)
         {
@@ -51,6 +51,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Topic.Publish";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, message);

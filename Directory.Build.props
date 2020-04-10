@@ -1,5 +1,11 @@
 <Project>
 
+  <!--
+    note that project files that define constants must do so as
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+  -->
+
+  <!-- do *not* ship a release with XCONSOLE defined! -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>XCONSOLE</DefineConstants>
   </PropertyGroup>

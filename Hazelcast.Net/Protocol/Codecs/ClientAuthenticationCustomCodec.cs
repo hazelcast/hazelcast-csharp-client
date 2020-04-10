@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestSerializationVersionFieldOffset = RequestUuidFieldOffset + GuidSizeInBytes;
         private const int RequestInitialFrameSize = RequestSerializationVersionFieldOffset + ByteSizeInBytes;
-        private const int ResponseStatusFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseStatusFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseMemberUuidFieldOffset = ResponseStatusFieldOffset + ByteSizeInBytes;
         private const int ResponseSerializationVersionFieldOffset = ResponseMemberUuidFieldOffset + GuidSizeInBytes;
         private const int ResponsePartitionCountFieldOffset = ResponseSerializationVersionFieldOffset + ByteSizeInBytes;
@@ -59,6 +59,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Client.AuthenticationCustom";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeGuid(initialFrame, RequestUuidFieldOffset, uuid);
             EncodeByte(initialFrame, RequestSerializationVersionFieldOffset, serializationVersion);
             clientMessage.Add(initialFrame);

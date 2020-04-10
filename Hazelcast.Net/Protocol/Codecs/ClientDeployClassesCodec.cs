@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 3328; // 0x000D00
         public const int ResponseMessageType = 3329; // 0x000D01
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(ICollection<KeyValuePair<string, byte[]>> classDefinitions)
         {
@@ -53,6 +53,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Client.DeployClasses";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             EntryListCodec.Encode(clientMessage, classDefinitions, StringCodec.Encode, ByteArrayCodec.Encode);
             return clientMessage;

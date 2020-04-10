@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 70912; // 0x011500
         public const int ResponseMessageType = 70913; // 0x011501
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, string id)
@@ -52,6 +52,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.RemoveInterceptor";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             StringCodec.Encode(clientMessage, id);

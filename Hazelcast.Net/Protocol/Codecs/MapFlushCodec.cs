@@ -43,7 +43,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 68096; // 0x010A00
         public const int ResponseMessageType = 68097; // 0x010A01
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name)
         {
@@ -52,6 +52,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.Flush";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;

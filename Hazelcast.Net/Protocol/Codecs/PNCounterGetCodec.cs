@@ -50,7 +50,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 1900801; // 0x1D0101
         private const int RequestTargetReplicaUUIDFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestTargetReplicaUUIDFieldOffset + GuidSizeInBytes;
-        private const int ResponseValueFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseValueFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseReplicaCountFieldOffset = ResponseValueFieldOffset + LongSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseReplicaCountFieldOffset + IntSizeInBytes;
 
@@ -61,6 +61,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "PNCounter.Get";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeGuid(initialFrame, RequestTargetReplicaUUIDFieldOffset, targetReplicaUUID);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);

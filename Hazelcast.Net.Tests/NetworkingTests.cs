@@ -14,6 +14,7 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -21,8 +22,10 @@ using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Testing.TestServer;
 using Hazelcast.Tests.Testing;
+using NuGet.Versioning;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests
@@ -162,6 +165,65 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
+        }
+
+        [Test]
+        [Timeout(10_000)]
+        public async Task Auth()
+        {
+            // need to start a real server (not the RC thing!)
+
+            var endpoint = NetworkAddress.Parse("127.0.0.1").IPEndPoint;
+
+            XConsole.Setup(this, 0, "TST");
+            XConsole.WriteLine(this, "Begin");
+
+            XConsole.WriteLine(this, "Start client ");
+            var client1 = new Clustering.Client(endpoint);
+            await client1.ConnectAsync();
+
+            // RC assigns a GUID but the default cluster name is 'dev'
+            var clusterName = "dev";
+            var username = (string) null; // null
+            var password = (string) null; // null
+            var clientId = Guid.NewGuid();
+            var clientType = "CSP"; // CSharp
+            var serializationVersion = (byte) 0x01;
+            var clientVersion = "4.0";
+            var clientName = "hz.client_0";
+            var labels = new HashSet<string>();
+            var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
+            XConsole.WriteLine(this, "Send auth request");
+            var responseMessage = await client1.SendAsync(requestMessage);
+            XConsole.WriteLine(this, "Rcvd auth response");
+            WriteMessage(responseMessage);
+            var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
+
+            var status = (AuthenticationStatus) response.Status;
+            Assert.AreEqual(AuthenticationStatus.Authenticated, status);
+
+            XConsole.WriteLine(this, "Stop client");
+            await client1.ShutdownAsync();
+
+            XConsole.WriteLine(this, "End");
+            await Task.Delay(100);
+        }
+
+        private void WriteMessage(ClientMessage message)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("MESSAGE");
+            var frame = message.FirstFrame;
+            while (frame != null)
+            {
+                sb.Append("  FRAME ");
+                sb.Append(frame.Length);
+                sb.Append(" ");
+                sb.Append($"0x{frame.Flags:x} {frame.Flags} {(ClientMessageFlags) frame.Flags}");
+                sb.AppendLine();
+                frame = frame.Next;
+            }
+            XConsole.WriteLine(this, sb.ToString());
         }
 
         [Test]

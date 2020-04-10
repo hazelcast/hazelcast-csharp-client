@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 768; // 0x000300
         public const int ResponseMessageType = 769; // 0x000301
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int EventMembersViewVersionFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int EventMembersViewInitialFrameSize = EventMembersViewVersionFieldOffset + IntSizeInBytes;
         // hex: 0x000302
@@ -59,6 +59,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Client.AddClusterViewListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             return clientMessage;
         }

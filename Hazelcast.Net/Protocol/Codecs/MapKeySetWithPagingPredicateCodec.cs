@@ -45,7 +45,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 78848; // 0x013400
         public const int ResponseMessageType = 78849; // 0x013401
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, Hazelcast.Protocol.Data.PagingPredicateHolder predicate)
         {
@@ -54,6 +54,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.KeySetWithPagingPredicate";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);
             PagingPredicateHolderCodec.Encode(clientMessage, predicate);

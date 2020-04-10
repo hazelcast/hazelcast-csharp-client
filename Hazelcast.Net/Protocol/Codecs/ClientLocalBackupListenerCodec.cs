@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 3840; // 0x000F00
         public const int ResponseMessageType = 3841; // 0x000F01
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
         private const int EventBackupSourceInvocationCorrelationIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int EventBackupInitialFrameSize = EventBackupSourceInvocationCorrelationIdFieldOffset + LongSizeInBytes;
@@ -56,6 +56,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Client.LocalBackupListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             return clientMessage;
         }

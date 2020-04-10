@@ -27,7 +27,7 @@ namespace Hazelcast.Messaging.FrameFields
         /// <summary>
         /// Gets the offset of the flags field.
         /// </summary>
-        public const int Flags = SizeOf.Length;
+        public const int Flags = Length + SizeOf.Length;
 
         /// <summary>
         /// Gets the offset of the bytes array.
@@ -47,7 +47,7 @@ namespace Hazelcast.Messaging.FrameFields
         /// <summary>
         /// Gets the offset of the correlation id field.
         /// </summary>
-        public const int CorrelationId = SizeOf.MessageType;
+        public const int CorrelationId = MessageType + SizeOf.MessageType;
 
         /// <summary>
         /// Gets the offset of the partition id field.

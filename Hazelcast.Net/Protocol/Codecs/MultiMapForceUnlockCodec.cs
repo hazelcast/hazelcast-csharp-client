@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 136193; // 0x021401
         private const int RequestReferenceIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestReferenceIdFieldOffset + LongSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData key, long referenceId)
         {
@@ -53,6 +53,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "MultiMap.ForceUnlock";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestReferenceIdFieldOffset, referenceId);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);

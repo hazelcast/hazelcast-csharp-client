@@ -43,7 +43,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 73985; // 0x012101
         private const int RequestReplaceExistingValuesFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestReplaceExistingValuesFieldOffset + BoolSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, ICollection<IData> keys, bool replaceExistingValues)
         {
@@ -52,6 +52,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.LoadGivenKeys";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeBool(initialFrame, RequestReplaceExistingValuesFieldOffset, replaceExistingValues);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);

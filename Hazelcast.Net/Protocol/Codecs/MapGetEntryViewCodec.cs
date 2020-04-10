@@ -45,7 +45,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 72961; // 0x011D01
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
-        private const int ResponseMaxIdleFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseMaxIdleFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseMaxIdleFieldOffset + LongSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData key, long threadId)
@@ -55,6 +55,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.GetEntryView";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestThreadIdFieldOffset, threadId);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);

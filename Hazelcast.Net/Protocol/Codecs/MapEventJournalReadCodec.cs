@@ -52,7 +52,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestMinSizeFieldOffset = RequestStartSequenceFieldOffset + LongSizeInBytes;
         private const int RequestMaxSizeFieldOffset = RequestMinSizeFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestMaxSizeFieldOffset + IntSizeInBytes;
-        private const int ResponseReadCountFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseReadCountFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseNextSeqFieldOffset = ResponseReadCountFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseNextSeqFieldOffset + LongSizeInBytes;
 
@@ -63,6 +63,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.EventJournalRead";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestStartSequenceFieldOffset, startSequence);
             EncodeInt(initialFrame, RequestMinSizeFieldOffset, minSize);
             EncodeInt(initialFrame, RequestMaxSizeFieldOffset, maxSize);

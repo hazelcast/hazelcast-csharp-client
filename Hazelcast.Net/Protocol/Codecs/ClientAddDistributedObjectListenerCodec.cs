@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 2305; // 0x000901
         private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
         private const int EventDistributedObjectSourceFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int EventDistributedObjectInitialFrameSize = EventDistributedObjectSourceFieldOffset + GuidSizeInBytes;
@@ -58,6 +58,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Client.AddDistributedObjectListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeBool(initialFrame, RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Add(initialFrame);
             return clientMessage;

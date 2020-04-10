@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestTimeoutFieldOffset = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int RequestInitialFrameSize = RequestTimeoutFieldOffset + LongSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long timeout)
@@ -56,6 +56,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.TryPut";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestThreadIdFieldOffset, threadId);
             EncodeLong(initialFrame, RequestTimeoutFieldOffset, timeout);
             clientMessage.Add(initialFrame);

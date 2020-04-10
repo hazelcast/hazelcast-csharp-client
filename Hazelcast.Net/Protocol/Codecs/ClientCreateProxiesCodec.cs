@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int RequestMessageType = 3584; // 0x000E00
         public const int ResponseMessageType = 3585; // 0x000E01
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(ICollection<KeyValuePair<string, string>> proxies)
         {
@@ -55,6 +55,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Client.CreateProxies";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);
             EntryListCodec.Encode(clientMessage, proxies, StringCodec.Encode, StringCodec.Encode);
             return clientMessage;

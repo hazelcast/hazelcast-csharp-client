@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestTransactionTypeFieldOffset = RequestDurabilityFieldOffset + IntSizeInBytes;
         private const int RequestThreadIdFieldOffset = RequestTransactionTypeFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
 
         public static ClientMessage EncodeRequest(long timeout, int durability, int transactionType, long threadId)
@@ -56,6 +56,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Transaction.Create";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestTimeoutFieldOffset, timeout);
             EncodeInt(initialFrame, RequestDurabilityFieldOffset, durability);
             EncodeInt(initialFrame, RequestTransactionTypeFieldOffset, transactionType);

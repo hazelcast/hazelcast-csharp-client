@@ -54,7 +54,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestFromFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestToFieldOffset = RequestFromFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestToFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, int @from, int to)
         {
@@ -63,6 +63,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "List.Sub";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame, RequestFromFieldOffset, @from);
             EncodeInt(initialFrame, RequestToFieldOffset, to);
             clientMessage.Add(initialFrame);

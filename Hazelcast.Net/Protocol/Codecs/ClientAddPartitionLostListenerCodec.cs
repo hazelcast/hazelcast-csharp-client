@@ -43,7 +43,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 1537; // 0x000601
         private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
         private const int EventPartitionLostPartitionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int EventPartitionLostLostBackupCountFieldOffset = EventPartitionLostPartitionIdFieldOffset + IntSizeInBytes;
@@ -59,6 +59,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Client.AddPartitionLostListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeBool(initialFrame, RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Add(initialFrame);
             return clientMessage;

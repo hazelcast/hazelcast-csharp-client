@@ -48,7 +48,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int RequestMaxIdleFieldOffset = RequestTtlFieldOffset + LongSizeInBytes;
         private const int RequestInitialFrameSize = RequestMaxIdleFieldOffset + LongSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long ttl, long maxIdle)
         {
@@ -57,6 +57,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.PutWithMaxIdle";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestThreadIdFieldOffset, threadId);
             EncodeLong(initialFrame, RequestTtlFieldOffset, ttl);
             EncodeLong(initialFrame, RequestMaxIdleFieldOffset, maxIdle);

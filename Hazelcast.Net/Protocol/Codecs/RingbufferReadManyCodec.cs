@@ -51,7 +51,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestMinCountFieldOffset = RequestStartSequenceFieldOffset + LongSizeInBytes;
         private const int RequestMaxCountFieldOffset = RequestMinCountFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestMaxCountFieldOffset + IntSizeInBytes;
-        private const int ResponseReadCountFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseReadCountFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseNextSeqFieldOffset = ResponseReadCountFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseNextSeqFieldOffset + LongSizeInBytes;
 
@@ -62,6 +62,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Ringbuffer.ReadMany";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestStartSequenceFieldOffset, startSequence);
             EncodeInt(initialFrame, RequestMinCountFieldOffset, minCount);
             EncodeInt(initialFrame, RequestMaxCountFieldOffset, maxCount);

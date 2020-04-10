@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateBeginStruct());
 
             ListIntegerCodec.Encode(clientMessage, anchorDataListHolder.AnchorPageList);
-            EntryListCodec.Encode(clientMessage, anchorDataListHolder.AnchorDataList, DataCodec.Encode, DataCodec.Encode);
+            EntryListCodec.Encode(clientMessage, anchorDataListHolder.AnchorDataList, DataCodec.Encode, DataCodec.EncodeNullable);
 
             clientMessage.Add(Frame.CreateEndStruct());
         }

@@ -55,7 +55,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 82689; // 0x014301
         private const int RequestTtlFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestTtlFieldOffset + LongSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData key, long ttl)
@@ -65,6 +65,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.SetTtl";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestTtlFieldOffset, ttl);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);

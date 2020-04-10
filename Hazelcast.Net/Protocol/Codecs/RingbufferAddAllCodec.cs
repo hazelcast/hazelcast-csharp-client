@@ -50,7 +50,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 1509377; // 0x170801
         private const int RequestOverflowPolicyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestOverflowPolicyFieldOffset + IntSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + LongSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, ICollection<IData> valueList, int overflowPolicy)
@@ -60,6 +60,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Ringbuffer.AddAll";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame, RequestOverflowPolicyFieldOffset, overflowPolicy);
             clientMessage.Add(initialFrame);
             StringCodec.Encode(clientMessage, name);

@@ -49,7 +49,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestTimeoutFieldOffset = RequestLeaseFieldOffset + LongSizeInBytes;
         private const int RequestReferenceIdFieldOffset = RequestTimeoutFieldOffset + LongSizeInBytes;
         private const int RequestInitialFrameSize = RequestReferenceIdFieldOffset + LongSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, IData key, long threadId, long lease, long timeout, long referenceId)
@@ -59,6 +59,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "MultiMap.TryLock";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeLong(initialFrame, RequestThreadIdFieldOffset, threadId);
             EncodeLong(initialFrame, RequestLeaseFieldOffset, lease);
             EncodeLong(initialFrame, RequestTimeoutFieldOffset, timeout);

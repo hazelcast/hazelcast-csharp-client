@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestListenerFlagsFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int RequestLocalOnlyFieldOffset = RequestListenerFlagsFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
         private const int EventIMapInvalidationSourceUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int EventIMapInvalidationPartitionUuidFieldOffset = EventIMapInvalidationSourceUuidFieldOffset + GuidSizeInBytes;
@@ -63,6 +63,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.AddNearCacheInvalidationListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame, RequestListenerFlagsFieldOffset, listenerFlags);
             EncodeBool(initialFrame, RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Add(initialFrame);

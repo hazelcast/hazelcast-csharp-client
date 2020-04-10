@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestListenerFlagsFieldOffset = RequestIncludeValueFieldOffset + BoolSizeInBytes;
         private const int RequestLocalOnlyFieldOffset = RequestListenerFlagsFieldOffset + IntSizeInBytes;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
         private const int EventEntryEventTypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
         private const int EventEntryUuidFieldOffset = EventEntryEventTypeFieldOffset + IntSizeInBytes;
@@ -62,6 +62,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "Map.AddEntryListener";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeBool(initialFrame, RequestIncludeValueFieldOffset, includeValue);
             EncodeInt(initialFrame, RequestListenerFlagsFieldOffset, listenerFlags);
             EncodeBool(initialFrame, RequestLocalOnlyFieldOffset, localOnly);

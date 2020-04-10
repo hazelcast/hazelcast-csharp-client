@@ -47,7 +47,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + GuidSizeInBytes;
         private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + LongSizeInBytes;
         private const int RequestInitialFrameSize = RequestTtlFieldOffset + LongSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + IntSizeInBytes;
+        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
         public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key, IData @value, long ttl)
         {
@@ -56,6 +56,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.OperationName = "TransactionalMap.Put";
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
+            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeGuid(initialFrame, RequestTxnIdFieldOffset, txnId);
             EncodeLong(initialFrame, RequestThreadIdFieldOffset, threadId);
             EncodeLong(initialFrame, RequestTtlFieldOffset, ttl);
