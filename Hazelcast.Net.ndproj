@@ -3,34 +3,23 @@
   <OutputDir KeepXmlFiles="False">.\NDependOut</OutputDir>
   <IDEFiles />
   <Assemblies>
-    <Name>AsyncTests1</Name>
+    <Name>Hazelcast.Net</Name>
   </Assemblies>
   <FrameworkAssemblies>
-    <Name>System.Runtime</Name>
-    <Name>Microsoft.VisualStudio.TestPlatform.ObjectModel</Name>
-    <Name>nunit.framework</Name>
-    <Name>System.Diagnostics.Debug</Name>
-    <Name>System.Threading.Tasks</Name>
+    <Name>netstandard</Name>
     <Name>System.Memory</Name>
-    <Name>System.Net.Primitives</Name>
-    <Name>System.Collections</Name>
-    <Name>System.Net.Sockets</Name>
-    <Name>System.Threading</Name>
+    <Name>System.Threading.Tasks.Extensions</Name>
     <Name>System.IO.Pipelines</Name>
-    <Name>NuGet.Versioning</Name>
-    <Name>System.Threading.Thread</Name>
-    <Name>System.Console</Name>
-    <Name>System.Linq</Name>
-    <Name>System.Runtime.Extensions</Name>
+    <Name>Microsoft.Extensions.Logging.Abstractions</Name>
     <Name>System.Buffers</Name>
-    <Name>mscorlib</Name>
   </FrameworkAssemblies>
   <Dirs>
-    <Dir>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.0.0</Dir>
-    <Dir>C:\Program Files\dotnet\sdk\NuGetFallbackFolder</Dir>
+    <Dir>.\AsyncTests1\bin\Debug\netcoreapp3.1</Dir>
+    <Dir>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319</Dir>
+    <Dir>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\WPF</Dir>
     <Dir>C:\Users\sgay\.nuget\packages</Dir>
     <Dir>C:\Users\Stéphane\.nuget\packages</Dir>
-    <Dir>.\AsyncTests1\bin\Debug\netcoreapp3.1</Dir>
+    <Dir>.\Hazelcast.Net\bin\Debug\netstandard2.0</Dir>
   </Dirs>
   <MergeCodeGeneratedByCompiler>True</MergeCodeGeneratedByCompiler>
   <ZipSourceFiles>True</ZipSourceFiles>

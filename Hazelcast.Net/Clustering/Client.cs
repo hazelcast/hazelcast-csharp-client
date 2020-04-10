@@ -77,7 +77,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns>A task that will complete when the shutdown has been handled.</returns>
-        private ValueTask SocketShutdown(SocketConnection connection)
+        private ValueTask SocketShutdown(SocketConnectionBase connection)
         {
             foreach (var completion in _completions.Values)
                 completion.SetException(new Exception("shutdown"));

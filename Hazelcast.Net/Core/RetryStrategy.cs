@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.Logging;
 
@@ -26,6 +27,7 @@ namespace Hazelcast.Core
     /// </remarks>
     public class RetryStrategy
     {
+        [SuppressMessage("NDepend", "ND3101:DontUseSystemRandomForSecurityPurposes", Justification = "No security here.")]
         private static readonly Random Random = new Random(DateTime.Now.Millisecond);
 
         private readonly int _initialBackOff;

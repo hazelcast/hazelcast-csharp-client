@@ -27,7 +27,7 @@ namespace Hazelcast.Networking
     /// <para>The client socket connection connects to the server, handle message
     /// bytes, and manages the network socket. It is used by the client connection.</para>
     /// </remarks>
-    public class ClientSocketConnection : SocketConnection
+    public class ClientSocketConnection : SocketConnectionBase
     {
         private readonly IPEndPoint _endpoint;
 
@@ -50,7 +50,7 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <returns>A task that will complete when the connection has been established.</returns>
         /// <remarks>
-        /// <para>The connection can only be established after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
+        /// <para>The connection can only be established after its <see cref="SocketConnectionBase.OnReceiveMessageBytes"/> handler
         /// has been set. If the handler has not been set, an exception is thrown.</para>
         /// </remarks>
         public async ValueTask ConnectAsync()

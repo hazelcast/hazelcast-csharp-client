@@ -32,7 +32,7 @@ namespace Hazelcast.Messaging
     public class ClientMessageConnection
     {
         private readonly Dictionary<long, ClientMessage> _messages = new Dictionary<long, ClientMessage>();
-        private readonly SocketConnection _connection;
+        private readonly SocketConnectionBase _connection;
 
         private Func<ClientMessageConnection, ClientMessage, ValueTask> _onReceiveMessage;
         private int _bytesLength = -1;
@@ -43,8 +43,8 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientMessageConnection"/> class.
         /// </summary>
-        /// <param name="connection">The underlying <see cref="SocketConnection"/>.</param>
-        public ClientMessageConnection(SocketConnection connection)
+        /// <param name="connection">The underlying <see cref="SocketConnectionBase"/>.</param>
+        public ClientMessageConnection(SocketConnectionBase connection)
         {
             _connection = connection;
             _connection.OnReceiveMessageBytes = ReceiveMessageBytes;
@@ -64,7 +64,7 @@ namespace Hazelcast.Messaging
             }
         }
 
-        private bool ReceiveMessageBytes(SocketConnection connection, ref ReadOnlySequence<byte> bytes)
+        private bool ReceiveMessageBytes(SocketConnectionBase connection, ref ReadOnlySequence<byte> bytes)
         {
             XConsole.WriteLine(this, $"Received {bytes.Length} bytes");
 

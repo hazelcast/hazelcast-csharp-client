@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net;
 using System.Threading.Tasks;
@@ -11,7 +10,7 @@ using System.IO;
 using System.Threading;
 #endif
 
-namespace Hazelcast
+namespace Hazelcast.Core
 {
     /// <summary>
     /// Provides workarounds for missing capabilities in netstandard2.0.
@@ -94,7 +93,7 @@ namespace Hazelcast
                 // of course this is sub-optimal :(
                 bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
 
-                // stream.ReadAsync for network streams *ignores* the cancellation token 
+                // stream.ReadAsync for network streams *ignores* the cancellation token
                 // see https://github.com/dotnet/runtime/issues/24093
                 // hences this... workaround
                 //

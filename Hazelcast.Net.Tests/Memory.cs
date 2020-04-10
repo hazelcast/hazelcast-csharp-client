@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests

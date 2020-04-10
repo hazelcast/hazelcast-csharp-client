@@ -19,7 +19,7 @@ namespace Hazelcast.Networking
     /// <remarks>
     /// <para>The socket connection handle message bytes, and manages the network socket.</para>
     /// </remarks>
-    public abstract class SocketConnection
+    public abstract class SocketConnectionBase : IDisposable
     {
         private static readonly byte[] ZeroBytes4 = new byte[4];
 
@@ -29,14 +29,14 @@ namespace Hazelcast.Networking
         /// <param name="connection">The originating connection.</param>
         /// <param name="bytes">The bytes to handle.</param>
         /// <returns>Whether to continue handling the available bytes. Otherwise, wait for more bytes.</returns>
-        public delegate bool MessageBytesHandler(SocketConnection connection, ref ReadOnlySequence<byte> bytes);
+        public delegate bool MessageBytesHandler(SocketConnectionBase connection, ref ReadOnlySequence<byte> bytes);
 
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
         private readonly SemaphoreSlim _writer;
 
         private MessageBytesHandler _onReceiveMessageBytes;
-        private Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
-        private Func<SocketConnection, ValueTask> _onShutdown;
+        private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
+        private Func<SocketConnectionBase, ValueTask> _onShutdown;
         private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
         private Socket _socket;
         private Stream _stream;
@@ -45,12 +45,12 @@ namespace Hazelcast.Networking
         private int _prefixLength;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SocketConnection"/> class.
+        /// Initializes a new instance of the <see cref="SocketConnectionBase"/> class.
         /// </summary>
         /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="prefixLength">An optional prefix length.</param>
         /// <param name="multithread">Whether this connection should manage multi-threading.</param>
-        protected SocketConnection(int id, int prefixLength = 0, bool multithread = true)
+        protected SocketConnectionBase(int id, int prefixLength = 0, bool multithread = true)
         {
             Id = id;
 
@@ -95,7 +95,7 @@ namespace Hazelcast.Networking
         /// function has returned.</para>
         /// <para>The function must be set before the connection is established.</para>
         /// </remarks>
-        public Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> OnReceivePrefixBytes
+        public Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> OnReceivePrefixBytes
         {
             get => _onReceivePrefixBytes;
             set
@@ -112,7 +112,7 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <param name="prefixLength">The prefix length.</param>
         /// <param name="onReceivePrefixBytes">The function that handles prefix bytes.</param>
-        public void ExpectPrefixBytes(int prefixLength, Func<SocketConnection, ReadOnlySequence<byte>, ValueTask> onReceivePrefixBytes)
+        public void ExpectPrefixBytes(int prefixLength, Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> onReceivePrefixBytes)
         {
             _prefixLength = prefixLength;
             _onReceivePrefixBytes = onReceivePrefixBytes;
@@ -124,7 +124,7 @@ namespace Hazelcast.Networking
         /// <remarks>
         /// <para>The function must be set before the connection is established.</para>
         /// </remarks>
-        public Func<SocketConnection, ValueTask> OnShutdown
+        public Func<SocketConnectionBase, ValueTask> OnShutdown
         {
             get => _onShutdown;
             set
@@ -518,6 +518,15 @@ namespace Hazelcast.Networking
                 Failed = true;
                 Exception = ExceptionDispatchInfo.Capture(e);
             }
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _socket.TryDispose();
+            _stream.TryDispose();
+            _writer.TryDispose();
+            _streamReadCancellationTokenSource.TryDispose();
         }
     }
 }

@@ -106,9 +106,19 @@ namespace Hazelcast.Networking
         */
 
         /// <summary>
-        /// Gets or sets the host name.
+        /// Gets the host name.
         /// </summary>
         public string HostName { get; }
+
+        /// <summary>
+        /// Gets the host name (prefer <see cref="HostName"/>).
+        /// </summary>
+        /// <returns>
+        /// <para>This property returns <see cref="HostName"/> and is required by codecs
+        /// that use names derived from the protocol definitions, because the protocol
+        /// codecs generator does not know yet how to map / rename properties.</para>
+        /// </returns>
+        internal string Host => HostName;
 
         /// <summary>
         /// Gets the port.
@@ -199,6 +209,8 @@ namespace Hazelcast.Networking
 
             ReadOnlySpan<char> hostName;
 
+#pragma warning disable IDE0057 // Slice can be simplified
+
             if (brket1 == 0)
             {
                 // if we have brackets, they must contain colons
@@ -214,6 +226,8 @@ namespace Hazelcast.Networking
                 // otherwise, hostname is the whole string
                 hostName = (colon2 > 0 && colon1 == colon2) ? span.Slice(0, colon2) : span;
             }
+
+#pragma warning restore IDE0057 // Slice can be simplified
 
             // must have a hostname
             if (hostName.Length == 0)
@@ -262,10 +276,7 @@ namespace Hazelcast.Networking
         }
 
         /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return IPEndPoint.GetHashCode();
-        }
+        public override int GetHashCode() => IPEndPoint.GetHashCode();
 
         /// <inheritdoc />
         public override bool Equals(object obj)
@@ -282,7 +293,7 @@ namespace Hazelcast.Networking
             if (ReferenceEquals(a1, a2)) return true;
 
             // return false if a1 is null since a2 cannot be null here
-            if (ReferenceEquals(a1, null)) return false;
+            if (a1 is null) return false;
 
             // actual comparison
             return a1.IPEndPoint.Equals(a2.IPEndPoint);

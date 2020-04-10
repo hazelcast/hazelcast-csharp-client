@@ -16,6 +16,7 @@ using System;
 using System.Buffers;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Hazelcast.Core
 {
@@ -171,6 +172,7 @@ namespace Hazelcast.Core
         /// Reads an <see cref="Int32"/> (int) value from an array of bytes.
         /// </summary>
         /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="position">The position in the array where the value should be read.</param>
         /// <param name="bigEndian">Whether to use big-endian.</param>
         /// <returns>The value.</returns>
         public static int ReadInt32(this byte[] bytes, int position, bool bigEndian = BigEndian)
@@ -194,6 +196,7 @@ namespace Hazelcast.Core
         /// Reads an <see cref="Int64"/> (long) value from an array of bytes.
         /// </summary>
         /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="position">The position in the array where the value should be read.</param>
         /// <param name="bigEndian">Whether to use big-endian.</param>
         /// <returns>The value.</returns>
         public static long ReadInt64(this byte[] bytes, int position, bool bigEndian = BigEndian)
@@ -215,6 +218,34 @@ namespace Hazelcast.Core
                       (long) bytes[position + 4] << 32 | (long) bytes[position + 5] << 40 |
                       (long) bytes[position + 6] << 48 | (long) bytes[position + 7] << 56;
             }
+        }
+
+        /// <summary>
+        /// Reads a <see cref="Byte"/> (byte) value from an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="position">The position in the array where the value should be read.</param>
+        /// <returns>The value.</returns>
+        public static byte ReadByte(this byte[] bytes, int position)
+        {
+            if (bytes.Length < position + sizeof(byte))
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            return bytes[position];
+        }
+
+        /// <summary>
+        /// Writes a <see cref="Byte"/> (byte) value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        public static void WriteByte(this byte[] bytes, int position, byte value)
+        {
+            if (bytes.Length < position + sizeof(byte))
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            bytes[position] = value;
         }
 
         /// <summary>
@@ -318,6 +349,158 @@ namespace Hazelcast.Core
                     bytes[position + 7] = (byte) (unsigned >> 56);
                 }
             }
+        }
+
+        /// <summary>
+        /// Reads a <see cref="Boolean"/> (bool) value from an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="position">The position in the array where the value should be read.</param>
+        /// <returns>The value.</returns>
+        public static bool ReadBool(this byte[] bytes, int position)
+            => bytes.ReadByte(position) == 0x01;
+
+        /// <summary>
+        /// Writes a <see cref="Boolean"/> (bool) value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        public static void WriteBool(this byte[] bytes, int position, bool value)
+            => bytes.WriteByte(position, value ? (byte) 0x01 : (byte) 0x00);
+
+        /// <summary>
+        /// Gets the size of a <see cref="Guid"/> in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfGuid = (1 + 16) * SizeOfByte;
+
+        /// <summary>
+        /// Gets the size of a <see cref="Byte"/> (byte) in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfByte = 1;
+
+        /// <summary>
+        /// Gets the size of a <see cref="Boolean"/> (bool) in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfBool = 1;
+
+        /// <summary>
+        /// Gets the size of a <see cref="Int32"/> (int) in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfInt32 = 4;
+
+        /// <summary>
+        /// Gets the size of an <see cref="Int64"/> (long) in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfInt64 = 8;
+
+        /// <summary>
+        /// Reads a <see cref="Guid"/> value from an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="position">The position in the array where the value should be read.</param>
+        /// <returns></returns>
+        public static Guid ReadGuid(this byte[] bytes, int position)
+        {
+            if (bytes.Length < position + SizeOfGuid)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            if (bytes.ReadBool(position)) return Guid.Empty;
+            position += SizeOfByte;
+
+            // ReSharper disable once UseObjectOrCollectionInitializer
+#pragma warning disable IDE0017 // Simplify object initialization
+            var v = new JavaUUIDOrder();
+#pragma warning restore IDE0017 // Simplify object initialization
+
+            v.X0 = bytes[position]; position += SizeOfByte;
+            v.X1 = bytes[position]; position += SizeOfByte;
+            v.X2 = bytes[position]; position += SizeOfByte;
+            v.X3 = bytes[position]; position += SizeOfByte;
+
+            v.X4 = bytes[position]; position += SizeOfByte;
+            v.X5 = bytes[position]; position += SizeOfByte;
+            v.X6 = bytes[position]; position += SizeOfByte;
+            v.X7= bytes[position]; position += SizeOfByte;
+
+            v.X8= bytes[position]; position += SizeOfByte;
+            v.X9 = bytes[position]; position += SizeOfByte;
+            v.XA = bytes[position]; position += SizeOfByte;
+            v.XB = bytes[position]; position += SizeOfByte;
+
+            v.XC = bytes[position]; position += SizeOfByte;
+            v.XD = bytes[position]; position += SizeOfByte;
+            v.XE = bytes[position]; position += SizeOfByte;
+            v.XF = bytes[position]; //position += SizeOfByte;
+
+            return v.Value;
+        }
+
+        /// <summary>
+        /// Writes a <see cref="Guid"/> value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        public static void WriteGuid(this byte[] bytes, int position, Guid value)
+        {
+            if (bytes.Length < position + SizeOfGuid)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            bytes.WriteBool(position, value == Guid.Empty);
+            if (value == Guid.Empty) return;
+            position += SizeOfByte;
+
+            var v = new JavaUUIDOrder { Value = value };
+
+            bytes[position] = v.X0; position += SizeOfByte;
+            bytes[position] = v.X1; position += SizeOfByte;
+            bytes[position] = v.X2; position += SizeOfByte;
+            bytes[position] = v.X3; position += SizeOfByte;
+
+            bytes[position] = v.X4; position += SizeOfByte;
+            bytes[position] = v.X5; position += SizeOfByte;
+            bytes[position] = v.X6; position += SizeOfByte;
+            bytes[position] = v.X7; position += SizeOfByte;
+
+            bytes[position] = v.X8; position += SizeOfByte;
+            bytes[position] = v.X9; position += SizeOfByte;
+            bytes[position] = v.XA; position += SizeOfByte;
+            bytes[position] = v.XB; position += SizeOfByte;
+
+            bytes[position] = v.XC; position += SizeOfByte;
+            bytes[position] = v.XD; position += SizeOfByte;
+            bytes[position] = v.XE; position += SizeOfByte;
+            bytes[position] = v.XF; //position += SizeOfByte;
+        }
+
+        // the following GUID: "00010203-0405-0607-0809-0a0b0c0d0e0f" is:
+        // in .NET ToArray   as 3, 2, 1, 0,     5, 4, 7, 6,     8,   9, 10, 11,     12, 13, 14, 15
+        // in Java UUIDCodec as 7, 6, 5, 4,     3, 2, 1, 0,     15, 14, 13, 12,     11, 10, 9,  8
+        [StructLayout(LayoutKind.Explicit, Pack = 1)]
+        internal struct JavaUUIDOrder
+        {
+            [FieldOffset(0)] public Guid Value;
+
+            [FieldOffset(6)] public byte X0;
+            [FieldOffset(7)] public byte X1;
+            [FieldOffset(4)] public byte X2;
+            [FieldOffset(5)] public byte X3;
+
+            [FieldOffset(0)] public byte X4;
+            [FieldOffset(1)] public byte X5;
+            [FieldOffset(2)] public byte X6;
+            [FieldOffset(3)] public byte X7;
+
+            [FieldOffset(15)] public byte X8;
+            [FieldOffset(14)] public byte X9;
+            [FieldOffset(13)] public byte XA;
+            [FieldOffset(12)] public byte XB;
+
+            [FieldOffset(11)] public byte XC;
+            [FieldOffset(10)] public byte XD;
+            [FieldOffset(9)] public byte XE;
+            [FieldOffset(8)] public byte XF;
         }
 
         /// <summary>

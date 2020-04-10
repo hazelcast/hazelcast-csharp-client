@@ -11,7 +11,7 @@ namespace AsyncTests1
     {
         private static void ObserveTaskException(Task Task)
         {
-            var e = Task.Exception;
+            _ = Task.Exception;
         }
 
         public static Task ObserveException(this Task task)
@@ -47,7 +47,7 @@ namespace AsyncTests1
         public async Task Test1()
         {
             var source = new CancellationTokenSource();
-            var task = DoAsync(source.Token);
+            _ = DoAsync(source.Token);
             //task.ConfigureAwait(false).GetAwaiter().OnCompleted(OnCompleted);
 
             await Task.Delay(1000, CancellationToken.None);
@@ -86,7 +86,7 @@ namespace AsyncTests1
 
             // configure await vs continue with?
             // this DOES observe the exception and we are happy
-            task.ObserveException();
+            var observing = task.ObserveException();
 
             await Task.Delay(4000);
 
@@ -141,9 +141,9 @@ namespace AsyncTests1
             });
         }
 
-        public async Task<int> IntAsync()
+        public Task<int> IntAsync()
         {
-            return 3;
+            return Task.FromResult(3);
         }
     }
 }

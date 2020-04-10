@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using Hazelcast.Core;
 
 namespace Hazelcast.Eventing
 {

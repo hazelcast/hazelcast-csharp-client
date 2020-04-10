@@ -25,8 +25,9 @@ namespace Hazelcast.Networking
     /// <para>The server socket connection handles a client and its message
     /// bytes, and manages the network socket. It is used by the server.</para>
     /// </remarks>
-    public class ServerSocketConnection : SocketConnection
+    public class ServerSocketConnection : SocketConnectionBase
     {
+        // note: the socket is disposed by the SocketConnection parent class
         private readonly Socket _socket;
 
         /// <summary>
@@ -45,7 +46,7 @@ namespace Hazelcast.Networking
         /// Connects to the client.
         /// </summary>
         /// <remarks>
-        /// <para>The connection can only be established after its <see cref="SocketConnection.OnReceiveMessageBytes"/> handler
+        /// <para>The connection can only be established after its <see cref="SocketConnectionBase.OnReceiveMessageBytes"/> handler
         /// has been set. If the handler has not been set, an exception is thrown.</para>
         /// </remarks>
         public void Accept()

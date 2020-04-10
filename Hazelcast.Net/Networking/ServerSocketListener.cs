@@ -25,7 +25,7 @@ namespace Hazelcast.Networking
     /// <summary>
     /// Represents a server listener.
     /// </summary>
-    public class ServerSocketListener
+    public class ServerSocketListener : IDisposable
     {
         private readonly ManualResetEvent _accepted = new ManualResetEvent(false);
         private readonly ISequence<int> _connectionIdSequence = new Int32Sequence();
@@ -224,6 +224,13 @@ namespace Hazelcast.Networking
                     ? "Abort connection (server is stopping)"
                     : "Abort connection");
             }
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _accepted.TryDispose();
+            _cancellationTokenSource.TryDispose();
         }
     }
 }

@@ -102,7 +102,7 @@ namespace Hazelcast.Testing.TestServer
             _connections[serverConnection.Id] = serverConnection;
         }
 
-        private static ValueTask ReceivePrefixBytes(SocketConnection connection, ReadOnlySequence<byte> bytes)
+        private static ValueTask ReceivePrefixBytes(SocketConnectionBase connection, ReadOnlySequence<byte> bytes)
         {
             // do nothing for now - just accept them
             return new ValueTask();
@@ -113,7 +113,7 @@ namespace Hazelcast.Testing.TestServer
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns>A task that will complete when the connection shutdown has been handled.</returns>
-        private ValueTask SocketShutdown(SocketConnection connection)
+        private ValueTask SocketShutdown(SocketConnectionBase connection)
         {
             XConsole.WriteLine(this, "Removing connection " + connection.Id);
             _connections.Remove(connection.Id);
