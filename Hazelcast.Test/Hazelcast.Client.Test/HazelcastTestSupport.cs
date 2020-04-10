@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Config;
@@ -108,10 +109,35 @@ namespace Hazelcast.Client.Test
             return client;
         }
 
+        private Version GetServerVersion()
+        {
+            var versionEnv = Environment.GetEnvironmentVariable("HAZELCAST_SERVER_VERSION");
+            Version version;
+            if (!Version.TryParse(versionEnv, out version)) return null;
+            return version;
+        }
+
+        private string FilterConfiguration(string config)
+        {
+            var serverVersion = GetServerVersion();
+            if (serverVersion.Major == 3 && serverVersion.Minor < 7)
+            {
+                var pattern = @"\<data-serializable-factories\>.*\</data-serializable-factories\>";
+                var replace = @"
+<portable-version>0</portable-version>
+<portable-factories>
+    <portable-factory factory-id=""1"">com.hazelcast.examples.StartServer$MyPortableFactory</portable-factory>
+</portable-factories>";
+                config = Regex.Replace(config, pattern, "", RegexOptions.Singleline);
+            }
+
+            return config;
+        }
+
         protected virtual Cluster CreateCluster(RemoteController.Client remoteController)
         {
             _logger.Info("Creating cluster");
-            var cluster = remoteController.createCluster(null, Resources.hazelcast);
+            var cluster = remoteController.createCluster(null, FilterConfiguration(Resources.hazelcast));
             _logger.Info("Created cluster");
             return cluster;
         }
@@ -119,14 +145,14 @@ namespace Hazelcast.Client.Test
         protected virtual Cluster CreateCluster(RemoteController.Client remoteController, string xmlconfig)
         {
             _logger.Info("Creating cluster using custom config...");
-            var cluster = remoteController.createCluster(null, xmlconfig);
+            var cluster = remoteController.createCluster(null, FilterConfiguration(xmlconfig));
             _logger.Info("Created cluster");
             return cluster;
         }
 
         protected RemoteController.Client CreateRemoteController()
         {
-            
+
             TTransport transport = new TFramedTransport(new TSocket("localhost", 9701));
             transport.Open();
             TProtocol protocol = new TBinaryProtocol(transport);

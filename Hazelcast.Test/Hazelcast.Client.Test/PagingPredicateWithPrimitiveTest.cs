@@ -118,6 +118,7 @@ namespace Hazelcast.Client.Test
         }
 
         [Test]
+        [Category("3.8")]
         public virtual void TestKeySetPaging_with_comparator()
         {
             FillMap();
