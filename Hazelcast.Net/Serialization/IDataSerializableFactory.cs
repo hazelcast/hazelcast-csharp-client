@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Data;
-
 namespace Hazelcast.Serialization
 {
-    /// <summary>DataSerializableFactory is used to create IdentifiedDataSerializable instances during de-serialization.</summary>
-    /// <seealso cref="IIdentifiedDataSerializable">IIdentifiedDataSerializable</seealso>
+    /// <summary>
+    /// Defines a factory that can create instances of classes implementing <see cref="IIdentifiedDataSerializable"/>.
+    /// </summary>
     public interface IDataSerializableFactory
     {
-        /// <summary>Creates an IdentifiedDataSerializable instance using given type id</summary>
-        /// <param name="typeId">IdentifiedDataSerializable type id</param>
-        /// <returns>IdentifiedDataSerializable instance or null if type id is not known by this factory</returns>
-        IIdentifiedDataSerializable Create(int typeId);
+        /// <summary>
+        /// Creates an instance of a type.
+        /// </summary>
+        /// <param name="typeId">The unique identified of the type.</param>
+        /// <returns>An instance of the specified type, or null if the type identifier
+        /// is not know by the factory.</returns>
+        IIdentifiedDataSerializable Create(int typeId); // fixme should throw not supported?
     }
 }

@@ -19,6 +19,7 @@ using Hazelcast.Protocol.CustomCodecs;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using Hazelcast.Protocol.Portability;
 using static Hazelcast.Protocol.Portability.Temp;
@@ -37,7 +38,7 @@ namespace Hazelcast.Protocol.CustomCodecs
     internal static class DistributedObjectInfoCodec
     {
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Client.DistributedObjectInfo distributedObjectInfo)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.DistributedObjectInfo distributedObjectInfo)
         {
             clientMessage.Add(Frame.CreateBeginStruct());
 
@@ -47,7 +48,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Client.DistributedObjectInfo Decode(FrameIterator iterator)
+        public static Hazelcast.Data.DistributedObjectInfo Decode(FrameIterator iterator)
         {
             // begin frame
             iterator.Next();
@@ -57,7 +58,7 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             CodecUtil.FastForwardToEndFrame(iterator);
 
-            return new Hazelcast.Client.DistributedObjectInfo(serviceName, name);
+            return new Hazelcast.Data.DistributedObjectInfo(serviceName, name);
         }
     }
 }

@@ -40,7 +40,7 @@ namespace Hazelcast.Predicates
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(AttributeName);
+            output.WriteUtf(AttributeName);
             output.WriteObject(Value);
         }
 

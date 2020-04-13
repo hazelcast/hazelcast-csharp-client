@@ -155,7 +155,7 @@ namespace Hazelcast.Predicates
             output.WriteObject(Comparer);
             output.WriteInt(Page);
             output.WriteInt(PageSize);
-            output.WriteUTF(IterationType?.ToString().ToUpper());
+            output.WriteUtf(IterationType?.ToString().ToUpper());
             output.WriteInt(AnchorList.Count);
             foreach (var anchor in AnchorList)
             {

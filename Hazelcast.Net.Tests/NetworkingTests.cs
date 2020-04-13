@@ -19,10 +19,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Security;
 using Hazelcast.Testing.TestServer;
 using Hazelcast.Tests.Testing;
 using NuGet.Versioning;
@@ -214,12 +216,15 @@ namespace Hazelcast.Tests
         {
             var endpoint = NetworkAddress.Parse("127.0.0.1").IPEndPoint;
 
+            Services.Reset();
+            Services.Register<IAuthenticator>(() => new Authenticator());
+
             XConsole.Setup(this, 0, "TST");
             XConsole.WriteLine(this, "Begin");
 
-            XConsole.WriteLine(this, "Start server");
-            var server = new Server(endpoint);
-            await server.StartAsync();
+            //XConsole.WriteLine(this, "Start server");
+            //var server = new Server(endpoint);
+            //await server.StartAsync();
 
             XConsole.WriteLine(this, "Cluster?");
             var cluster = new Cluster();
@@ -228,9 +233,9 @@ namespace Hazelcast.Tests
             // now we can send messages...
             //await cluster.SendAsync(new ClientMessage());
 
-            XConsole.WriteLine(this, "Stop server");
-            await server.StopAsync();
-            await Task.Delay(1000);
+            //XConsole.WriteLine(this, "Stop server");
+            //await server.StopAsync();
+            //await Task.Delay(1000);
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);

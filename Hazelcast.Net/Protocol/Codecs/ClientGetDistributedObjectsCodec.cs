@@ -19,6 +19,7 @@ using Hazelcast.Protocol.CustomCodecs;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using Hazelcast.Protocol.Portability;
 using static Hazelcast.Protocol.Portability.Temp;
@@ -62,7 +63,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// An array of distributed object info in the cluster.
             ///</summary>
-            public ICollection<Hazelcast.Client.DistributedObjectInfo> Response;
+            public ICollection<Hazelcast.Data.DistributedObjectInfo> Response;
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

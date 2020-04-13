@@ -33,7 +33,6 @@ namespace Hazelcast.Testing.TestServer
         private readonly IPEndPoint _endpoint;
 
         private ServerSocketListener _listener;
-        private Task _listening;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Server"/> class.

@@ -14,9 +14,9 @@
 
 using System;
 using System.Buffers;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {
@@ -25,19 +25,6 @@ namespace Hazelcast.Core
     /// </summary>
     public static class BytesExtensions
     {
-        /// <summary>
-        /// Determines whether the default endian-ness is big-endian.
-        /// </summary>
-        public const bool BigEndian = false;
-
-        /// <summary>
-        /// Defines exception messages.
-        /// </summary>
-        private static class ExceptionMessage
-        {
-            public const string NotEnoughBytes = "Not enough bytes.";
-        }
-
         /// <summary>
         /// Gets the native endianness of the computer architecture where the code is executing.
         /// </summary>
@@ -71,7 +58,7 @@ namespace Hazelcast.Core
         public static int ReadInt32(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Native)
         {
             if (bytes.Length < 4)
-                throw new ArgumentException(ExceptionMessage.NotEnoughBytes, nameof(bytes));
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
 
             var slice = bytes.Slice(bytes.Start, 4);
             int value;
@@ -102,7 +89,7 @@ namespace Hazelcast.Core
             const byte length = sizeof(ushort);
 
             if (bytes.Length < length)
-                throw new ArgumentException(ExceptionMessage.NotEnoughBytes, nameof(bytes));
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
 
             var slice = bytes.Slice(bytes.Start, length);
             ushort value;
@@ -133,7 +120,7 @@ namespace Hazelcast.Core
             const byte length = sizeof(int);
 
             if (bytes.Length < length)
-                throw new ArgumentException(ExceptionMessage.NotEnoughBytes, nameof(bytes));
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
 
             return ResolveEndianness(endianness).IsBigEndian()
 
@@ -152,7 +139,7 @@ namespace Hazelcast.Core
             const byte length = sizeof(ushort);
 
             if (bytes.Length < length)
-                throw new ArgumentException(ExceptionMessage.NotEnoughBytes, nameof(bytes));
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
 
             unchecked
             {
@@ -513,7 +500,7 @@ namespace Hazelcast.Core
         public static void Fill<T>(in this ReadOnlySequence<T> source, Span<T> destination)
         {
             if (source.Length < destination.Length)
-                throw new ArgumentOutOfRangeException(ExceptionMessage.NotEnoughBytes, nameof(source));
+                throw new ArgumentOutOfRangeException(ExceptionMessages.NotEnoughBytes, nameof(source));
 
             if (source.IsSingleSegment)
             {

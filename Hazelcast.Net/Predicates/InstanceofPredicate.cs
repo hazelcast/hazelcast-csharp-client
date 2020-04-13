@@ -37,7 +37,7 @@ namespace Hazelcast.Predicates
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(_className);
+            output.WriteUtf(_className);
         }
 
         public int GetFactoryId()

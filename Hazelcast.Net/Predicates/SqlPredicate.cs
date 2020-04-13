@@ -36,7 +36,7 @@ namespace Hazelcast.Predicates
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(_sql);
+            output.WriteUtf(_sql);
         }
 
         public void ReadData(IObjectDataInput input)

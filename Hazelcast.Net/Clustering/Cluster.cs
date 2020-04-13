@@ -6,10 +6,9 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
-using Hazelcast.Protocol.Codecs;
+using Hazelcast.Security;
 
 namespace Hazelcast.Clustering
 {
@@ -147,7 +146,7 @@ namespace Hazelcast.Clustering
             {
                 // connect for real
 
-                IAuthenticator authenticator = new Authenticator(); // should be static
+                IAuthenticator authenticator = Services.Get.Authenticator();
 
                 SemaphoreSlim s = null;
                 try
@@ -190,58 +189,4 @@ namespace Hazelcast.Clustering
 
         }
     }
-
-    public interface IAuthenticator
-    {
-        ValueTask AuthenticateAsync(Client client);
-    }
-
-    public class Authenticator : IAuthenticator
-    {
-        public async ValueTask AuthenticateAsync(Client client)
-        {
-            var authenticated = await TryAuthenticateAsync(client);
-            // but maybe we want to capture an exception here?
-            if (!authenticated) throw new Exception("Failed to authenticated.");
-        }
-
-        private async ValueTask<bool> TryAuthenticateAsync(Client client)
-        {
-            // TODO accept parameters etc
-
-            // RC assigns a GUID but the default cluster name is 'dev'
-            var clusterName = "dev";
-            var username = (string)null; // null
-            var password = (string)null; // null
-            var clientId = Guid.NewGuid();
-            var clientType = "CSP"; // CSharp
-            var serializationVersion = (byte)0x01;
-            var clientVersion = "4.0";
-            var clientName = "hz.client_0";
-            var labels = new HashSet<string>();
-
-            var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
-            XConsole.WriteLine(this, "Send auth request");
-            var responseMessage = await client.SendAsync(requestMessage);
-            XConsole.WriteLine(this, "Rcvd auth response\n" + responseMessage.Dump());
-            var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
-
-            // TODO properly handle the response
-
-            switch ((AuthenticationStatus) response.Status)
-            {
-                case AuthenticationStatus.Authenticated:
-                    return true;
-                case AuthenticationStatus.CredentialsFailed:
-                case AuthenticationStatus.NotAllowedInCluster:
-                case AuthenticationStatus.SerializationVersionMismatch:
-                    return false;
-                default:
-                    throw new NotSupportedException();
-            }
-        }
-    }
-
-    public interface IMember
-    { }
 }

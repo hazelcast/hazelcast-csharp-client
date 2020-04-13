@@ -47,7 +47,7 @@ namespace Hazelcast.Predicates
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(_attributeName);
+            output.WriteUtf(_attributeName);
             output.WriteObject(_value);
             output.WriteBoolean(_equal);
             output.WriteBoolean(_less);

@@ -16,6 +16,7 @@
 
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Portability;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {

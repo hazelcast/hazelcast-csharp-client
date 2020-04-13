@@ -13,11 +13,13 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Data;
-using Hazelcast.Predicates;
+using Hazelcast.Serialization;
 
-namespace Hazelcast.Serialization
+namespace Hazelcast.Predicates
 {
+    /// <summary>
+    /// Represents an <see cref="IDataSerializerHook"/> that provides an <see cref="IDataSerializableFactory"/> for predicates.
+    /// </summary>
     internal class PredicateDataSerializerHook : IDataSerializerHook
     {
         private const int FactoryId = FactoryIds.PredicateFactoryId;
@@ -40,6 +42,7 @@ namespace Hazelcast.Serialization
         public const int PartitionPredicate = 16;
         public const int FactorySize = 17;
 
+        /// <inheritdoc />
         public IDataSerializableFactory CreateFactory()
         {
             var constructors = new Func<IIdentifiedDataSerializable>[FactorySize];
@@ -63,6 +66,7 @@ namespace Hazelcast.Serialization
             return new ArrayDataSerializableFactory(constructors);
         }
 
+        /// <inheritdoc />
         public int GetFactoryId()
         {
             return FactoryId;

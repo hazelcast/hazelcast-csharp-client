@@ -40,8 +40,8 @@ namespace Hazelcast.Predicates
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(_attributeName);
-            output.WriteUTF(_regex);
+            output.WriteUtf(_attributeName);
+            output.WriteUtf(_regex);
         }
 
         public int GetFactoryId()

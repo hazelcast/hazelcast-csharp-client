@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Text;
 using Hazelcast.Core;
-using Hazelcast.Serialization;
 
-namespace Hazelcast
+namespace Hazelcast.Serialization
 {
     /// <summary>
     /// Implements <see cref="IData"/> on the heap.
@@ -61,7 +60,7 @@ namespace Hazelcast
                 int hash;
                 return _bytes != null &&
                        _bytes.Length >= HeapDataOverHead &&
-                       (hash = _bytes.ReadInt32(PartitionHashOffset, true)) != 0
+                       (hash = _bytes.ReadInt32(PartitionHashOffset, Endianness.BigEndian)) != 0
                     ? hash
                     : GetHashCode();
             }
@@ -70,14 +69,14 @@ namespace Hazelcast
         public bool HasPartitionHash
             => _bytes != null &&
                _bytes.Length >= HeapDataOverHead &&
-               _bytes.ReadInt32(PartitionHashOffset, true) != 0;
+               _bytes.ReadInt32(PartitionHashOffset, Endianness.BigEndian) != 0;
 
         /// <inheritdoc />
         public byte[] ToByteArray() => _bytes ?? Array.Empty<byte>(); // FIXME should this be null?
 
         /// <inheritdoc />
         public int TypeId
-            => TotalSize == 0 ? SerializationConstants.ConstantTypeNull : _bytes.ReadInt32(TypeOffset, true);
+            => TotalSize == 0 ? SerializationConstants.ConstantTypeNull : _bytes.ReadInt32(TypeOffset, Endianness.BigEndian);
 
         /// <inheritdoc />
         public int HeapCost

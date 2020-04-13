@@ -18,6 +18,7 @@ using Hazelcast.Configuration;
 using Hazelcast.Data.Map;
 using Hazelcast.Exceptions;
 using Hazelcast.Networking;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {

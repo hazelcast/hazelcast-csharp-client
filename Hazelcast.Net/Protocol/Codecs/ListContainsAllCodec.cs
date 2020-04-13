@@ -19,6 +19,7 @@ using Hazelcast.Protocol.CustomCodecs;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using Hazelcast.Protocol.Portability;
 using static Hazelcast.Protocol.Portability.Temp;

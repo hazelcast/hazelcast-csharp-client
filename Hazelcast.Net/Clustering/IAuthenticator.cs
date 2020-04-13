@@ -12,27 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Hazelcast.Data;
+using System.Threading.Tasks;
 
-namespace Hazelcast.Serialization
+namespace Hazelcast.Clustering
 {
-    internal class ArrayDataSerializableFactory : IDataSerializableFactory
+    /// <summary>
+    /// Defines a service that can authenticate a client.
+    /// </summary>
+    public interface IAuthenticator
     {
-        private readonly Func<IIdentifiedDataSerializable>[] _consturctors;
-
-        public ArrayDataSerializableFactory(Func<IIdentifiedDataSerializable>[] consturctors)
-        {
-            _consturctors = consturctors;
-        }
-
-        public IIdentifiedDataSerializable Create(int typeId)
-        {
-            if (typeId < 0 && typeId >= _consturctors.Length)
-            {
-                return null;
-            }
-            return _consturctors[typeId]();
-        }
+        /// <summary>
+        /// Authenticates the client.
+        /// </summary>
+        /// <param name="client">The client to authenticate.</param>
+        /// <returns>A task that will complete when the client is authenticated.</returns>
+        ValueTask AuthenticateAsync(Client client);
     }
 }

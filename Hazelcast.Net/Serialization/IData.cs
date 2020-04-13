@@ -1,4 +1,4 @@
-﻿namespace Hazelcast
+﻿namespace Hazelcast.Serialization
 {
     /// <summary>
     /// Represents the basic unit of serialization.

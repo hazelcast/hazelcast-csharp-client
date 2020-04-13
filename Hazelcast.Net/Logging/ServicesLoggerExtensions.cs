@@ -33,9 +33,9 @@ namespace Hazelcast.Logging
         /// <summary>
         /// Gets the <see cref="ILoggerFactory"/>.
         /// </summary>
-        /// <param name="objects">Container objects.</param>
+        /// <param name="_">The services getter.</param>
         /// <returns>The <see cref="ILoggerFactory"/>.</returns>
-        public static ILoggerFactory LoggerFactory(this Services.ServiceGetter objects)
+        public static ILoggerFactory LoggerFactory(this Services.ServiceGetter _)
             => Services.TryGetInstance<ILoggerFactory>() ?? new NullLoggerFactory();
     }
 }

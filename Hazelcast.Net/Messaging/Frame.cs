@@ -71,29 +71,29 @@ namespace Hazelcast.Messaging
         /// Reads the length of the frame from a sequence of bytes, and slice the sequence accordingly.
         /// </summary>
         /// <param name="bytes">The sequence of bytes.</param>
-        /// <param name="bigEndian">Whether to write using big-endian or not.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The length of the frame.</returns>
-        public static int ReadLength(ref ReadOnlySequence<byte> bytes, bool bigEndian = BytesExtensions.BigEndian)
-            => BytesExtensions.ReadInt32(ref bytes, bigEndian);
+        public static int ReadLength(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Native)
+            => BytesExtensions.ReadInt32(ref bytes, endianness);
 
         /// <summary>
         /// Reads the flags of the frame from a sequence of bytes, and slice the sequence accordingly.
         /// </summary>
         /// <param name="bytes">The sequence of bytes.</param>
-        /// <param name="bigEndian">Whether to write using big-endian or not.</param>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The flags of the frame.</returns>
-        public static FrameFlags ReadFlags(ref ReadOnlySequence<byte> bytes, bool bigEndian = BytesExtensions.BigEndian)
-            => (FrameFlags) BytesExtensions.ReadUInt16(ref bytes, bigEndian);
+        public static FrameFlags ReadFlags(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Native)
+            => (FrameFlags) BytesExtensions.ReadUInt16(ref bytes, endianness);
 
         /// <summary>
         /// Writes the length and flags of the frame to an array of bytes.
         /// </summary>
         /// <param name="bytes">An array of bytes.</param>
-        /// <param name="bigEndian">Whether to write using big-endian or not.</param>
-        public void WriteLengthAndFlags(byte[] bytes, bool bigEndian = BytesExtensions.BigEndian)
+        /// <param name="endianness">The endianness.</param>
+        public void WriteLengthAndFlags(byte[] bytes, Endianness endianness = Endianness.Native)
         {
-            bytes.WriteInt32(0, Length, bigEndian);
-            bytes.WriteUInt16(FrameFields.SizeOf.Length, (ushort) Flags, bigEndian);
+            bytes.WriteInt32(0, Length, endianness);
+            bytes.WriteUInt16(FrameFields.SizeOf.Length, (ushort) Flags, endianness);
         }
 
         /// <summary>

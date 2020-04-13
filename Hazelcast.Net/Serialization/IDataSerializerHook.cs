@@ -14,9 +14,22 @@
 
 namespace Hazelcast.Serialization
 {
+    /// <summary>
+    /// Provides an <see cref="IDataSerializableFactory"/>.
+    /// </summary>
+    /// fixme explain how it all works
     public interface IDataSerializerHook
     {
+        /// <summary>
+        /// Creates the <see cref="IDataSerializableFactory"/> provided by this hook.
+        /// </summary>
+        /// <returns>The <see cref="IDataSerializableFactory"/> provided by this hook.</returns>
         IDataSerializableFactory CreateFactory();
-        int GetFactoryId();
+
+        /// <summary>
+        /// Gets the identifier of the <see cref="IDataSerializableFactory"/> provided by this hook.
+        /// </summary>
+        /// <returns>The identifier of the <see cref="IDataSerializableFactory"/> provided by this hook.</returns>
+        int GetFactoryId(); // fixme rename FactoryId
     }
 }
