@@ -216,15 +216,14 @@ namespace Hazelcast.Tests
         {
             var endpoint = NetworkAddress.Parse("127.0.0.1").IPEndPoint;
 
+            // this test expects a server on localhost:5701
+
+            // of course this is temporary
             Services.Reset();
             Services.Register<IAuthenticator>(() => new Authenticator());
 
             XConsole.Setup(this, 0, "TST");
             XConsole.WriteLine(this, "Begin");
-
-            //XConsole.WriteLine(this, "Start server");
-            //var server = new Server(endpoint);
-            //await server.StartAsync();
 
             XConsole.WriteLine(this, "Cluster?");
             var cluster = new Cluster();
@@ -233,9 +232,8 @@ namespace Hazelcast.Tests
             // now we can send messages...
             //await cluster.SendAsync(new ClientMessage());
 
-            //XConsole.WriteLine(this, "Stop server");
-            //await server.StopAsync();
-            //await Task.Delay(1000);
+            // events?
+            await Task.Delay(2000);
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);

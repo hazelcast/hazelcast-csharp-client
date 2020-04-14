@@ -19,6 +19,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
+using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.Security
@@ -29,14 +30,15 @@ namespace Hazelcast.Security
     public class Authenticator : IAuthenticator
     {
         /// <inheritdoc />
-        public async ValueTask AuthenticateAsync(Clustering.Client client)
+        public async ValueTask<MemberInfo2> AuthenticateAsync(Clustering.Client client)
         {
-            var authenticated = await TryAuthenticateAsync(client);
+            var info = await TryAuthenticateAsync(client);
             // but maybe we want to capture an exception here?
-            if (!authenticated) throw new Exception("Failed to authenticated.");
+            if (info == null) throw new Exception("Failed to authenticated.");
+            return info;
         }
 
-        private async ValueTask<bool> TryAuthenticateAsync(Clustering.Client client)
+        private async ValueTask<MemberInfo2> TryAuthenticateAsync(Clustering.Client client)
         {
             // TODO accept parameters etc
 
@@ -57,19 +59,19 @@ namespace Hazelcast.Security
             XConsole.WriteLine(this, "Rcvd auth response\n" + responseMessage.Dump());
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
-            // TODO properly handle the response
-
             switch ((AuthenticationStatus) response.Status)
             {
                 case AuthenticationStatus.Authenticated:
-                    return true;
+                    break;
                 case AuthenticationStatus.CredentialsFailed:
                 case AuthenticationStatus.NotAllowedInCluster:
                 case AuthenticationStatus.SerializationVersionMismatch:
-                    return false;
+                    return null;
                 default:
                     throw new NotSupportedException();
             }
+
+            return new MemberInfo2(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion);
         }
     }
 }

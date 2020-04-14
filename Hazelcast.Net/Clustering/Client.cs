@@ -16,12 +16,15 @@ namespace Hazelcast.Clustering
     {
         private readonly byte[] _clientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
-        private readonly Dictionary<long, TaskCompletionSource<ClientMessage>> _completions = new Dictionary<long, TaskCompletionSource<ClientMessage>>();
+        private readonly Dictionary<long, TaskCompletionSource<ClientMessage>> _completions
+            = new Dictionary<long, TaskCompletionSource<ClientMessage>>();
+
         private readonly object _isConnectedLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence = new Int64Sequence();
         private readonly IPEndPoint _endpoint;
 
+        private Action<ClientMessage> _receiveEventMessage;
         private ClientSocketConnection _socketConnection;
         private ClientMessageConnection _connection;
         private bool _isConnected;
@@ -49,6 +52,16 @@ namespace Hazelcast.Clustering
             _endpoint = endpoint;
             _connectionIdSequence = connectionIdSequence;
             XConsole.Setup(this, 4, "CLT");
+        }
+
+        public Action<ClientMessage> ReceiveEventMessage
+        {
+            get => _receiveEventMessage;
+            set
+            {
+                // FIXME tests it's ok etc
+                _receiveEventMessage = value;
+            }
         }
 
         /// <summary>
@@ -86,18 +99,18 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Handles response messages..
+        /// Handles messages.
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <param name="message">The message.</param>
-        /// <returns>A task that will complete when the response message has been handled.</returns>
+        /// <returns>A task that will complete when the message has been handled.</returns>
         private ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
             XConsole.WriteLine(this, $"Received message ID:{message.CorrelationId}");
 
             if (message.IsEvent)
             {
-                // TODO: handle events
+                _receiveEventMessage(message);
                 return new ValueTask();
             }
 
@@ -107,22 +120,43 @@ namespace Hazelcast.Clustering
                 throw new NotSupportedException();
             }
 
+            // message has to be a response
+            ReceiveResponseMessage(message);
+            return new ValueTask();
+        }
+
+        /// <summary>
+        /// Handles response messages.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        private void ReceiveResponseMessage(ClientMessage message)
+        {
+            // message is a response: use the correlation id to find the completion
+            // source corresponding to the request, and signal this completion source by
+            // setting either its result (if the response is successful) or its exception
+            // (it the response is an exception).
+
             if (!_completions.TryGetValue(message.CorrelationId, out var completion))
             {
                 // TODO log a warning
                 XConsole.WriteLine(this, $"No completion for ID:{message.CorrelationId}");
-                return new ValueTask();
+                return;
             }
 
-            // signal the completion source
+            // FIXME what about clearing event handlers?
             _completions.Remove(message.CorrelationId);
+
+            // TODO consider switching tread?
+            // the code here, and whatever will happen when completion.SetResult(message) runs,
+            // ie. the continuations on the completion tasks (unless configure-await?) runs on
+            // the same thread and blocks the networking layer
 
             if (message.IsException)
             {
                 // TODO handle exception
                 XConsole.WriteLine(this, "Message is an exception, report.");
-                 completion.SetException(new Exception()); // TODO try/catch this too
-                return new ValueTask();
+                completion.SetException(new Exception()); // TODO try/catch this too
+                return;
             }
 
             try
@@ -135,15 +169,13 @@ namespace Hazelcast.Clustering
                 // TODO log a warning
                 XConsole.WriteLine(this, $"Failed to set result for ID:{message.CorrelationId}");
             }
-
-            return new ValueTask();
         }
 
         /// <summary>
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <param name="timeoutMilliseconds">The maximum number of milliseconds to get a response.</param>
+        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         public async Task<ClientMessage> SendAsync(ClientMessage message, int timeoutMilliseconds = 0)
         {
@@ -163,6 +195,9 @@ namespace Hazelcast.Clustering
             // send the message
             XConsole.WriteLine(this, $"Send message ID:{message.CorrelationId}");
             var success = await _connection.SendAsync(message);
+
+            // FIXME is there a race condition here?
+            // we haven't registered the completion yet: what happens if a response is received?
 
             if (!success)
                 throw new InvalidOperationException("Failed to send message.");

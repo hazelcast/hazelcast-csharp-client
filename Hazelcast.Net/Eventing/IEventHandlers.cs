@@ -16,12 +16,30 @@ using System;
 
 namespace Hazelcast.Eventing
 {
+    /// <summary>
+    /// Defines a collection of event handlers that can handle one type of events.
+    /// </summary>
+    /// <typeparam name="TEvent">The type of the events.</typeparam>
     internal interface IEventHandlers<TEvent>
     {
-        Guid Add(IEventHandler<TEvent> listener);
+        /// <summary>
+        /// Adds an event handler.
+        /// </summary>
+        /// <param name="handler">The event handler.</param>
+        /// <returns>The unique identifier that was assigned to the event handler.</returns>
+        Guid Add(IEventHandler<TEvent> handler);
 
+        /// <summary>
+        /// Remove an event handler.
+        /// </summary>
+        /// <param name="id">The unique identifier of the event handler.</param>
+        /// <returns>true if the event handler was removed; otherwise false.</returns>
         bool Remove(Guid id);
 
-        void Handle(TEvent e);
+        /// <summary>
+        /// Handles an event.
+        /// </summary>
+        /// <param name="eventData">The event data.</param>
+        void Handle(TEvent eventData);
     }
 }

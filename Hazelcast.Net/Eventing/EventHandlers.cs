@@ -18,28 +18,34 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Eventing
 {
+    /// <summary>
+    /// Implements <see cref="IEventHandlers{TEvent}"/>.
+    /// </summary>
+    /// <typeparam name="TEvent">The type of the events.</typeparam>
     internal class EventHandlers<TEvent> : IEventHandlers<TEvent>
     {
-        private readonly ConcurrentDictionary<Guid, IEventHandler<TEvent>> _listeners
+        private readonly ConcurrentDictionary<Guid, IEventHandler<TEvent>> _handlers
             = new ConcurrentDictionary<Guid, IEventHandler<TEvent>>();
 
-        public Guid Add(IEventHandler<TEvent> listener)
+        /// <inheritdoc />
+        public Guid Add(IEventHandler<TEvent> handler)
         {
             var id = Guid.NewGuid();
-            _listeners.AddOrUpdate(id, listener, (_, __) => listener);
+            _handlers.AddOrUpdate(id, handler, (_, __) => handler);
             return id;
         }
 
-
+        /// <inheritdoc />
         public bool Remove(Guid id)
         {
-            return _listeners.TryRemove(id, out _);
+            return _handlers.TryRemove(id, out _);
         }
 
-        public void Handle(TEvent e)
+        /// <inheritdoc />
+        public void Handle(TEvent eventData)
         {
-            foreach (var (_, listener) in _listeners)
-                listener.Handle(e);
+            foreach (var (_, handler) in _handlers)
+                handler.Handle(eventData);
         }
     }
 }
