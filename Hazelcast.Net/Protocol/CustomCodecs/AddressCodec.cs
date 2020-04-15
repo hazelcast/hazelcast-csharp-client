@@ -56,14 +56,14 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Networking.NetworkAddress Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             var port = DecodeInt(initialFrame, PortFieldOffset);
 
             var host = StringCodec.Decode(iterator);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return CustomTypeFactory.CreateAddress(host, port);
         }

@@ -58,22 +58,22 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var result = new List<KeyValuePair<TKey, TValue>>();
 
             //begin frame, map
-            iterator.Next();
-            while (!iterator.NextFrameIsEndStruct)
+            iterator.Take();
+            while (!iterator.CurrentIsEndStruct)
             {
                 var key = decodeKeyFunc(iterator);
                 var value = decodeValueFunc(iterator);
                 result.Add(new KeyValuePair<TKey, TValue>(key, value));
             }
             //end frame, map
-            iterator.Next();
+            iterator.Take();
             return result;
         }
 
         public static IEnumerable<KeyValuePair<TKey, TValue>> DecodeNullable<TKey, TValue>(FrameIterator iterator,
             DecodeDelegate<TKey> decodeKeyFunc, DecodeDelegate<TValue> decodeValueFunc)
         {
-            return iterator.NextFrameIsNullMoveNext() ? null : Decode(iterator, decodeKeyFunc, decodeValueFunc);
+            return iterator.SkipNull() ? null : Decode(iterator, decodeKeyFunc, decodeValueFunc);
         }
     }
 }

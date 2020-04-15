@@ -45,7 +45,7 @@ namespace Hazelcast.Protocol
         {
             var iterator = clientMessage.GetIterator();
             //initial frame
-            iterator.Next();
+            iterator.Take();
             return ListMultiFrameCodec.Decode(iterator, ErrorHolderCodec.Decode);
         }
     }

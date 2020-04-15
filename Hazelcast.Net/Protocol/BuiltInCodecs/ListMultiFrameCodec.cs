@@ -68,14 +68,14 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             var result = new List<T>();
             //begin frame, list
-            iterator.Next();
-            while (!iterator.NextFrameIsNullMoveNext())
+            iterator.Take();
+            while (!iterator.CurrentIsEndStruct)
             {
                 result.Add(decodeFunction(iterator));
             }
 
             //end frame, list
-            iterator.Next();
+            iterator.Take();
             return result;
         }
 
@@ -83,20 +83,20 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             var result = new List<T>();
             //begin frame, list
-            iterator.Next();
-            while (!iterator.NextFrameIsEndStruct)
+            iterator.Take();
+            while (!iterator.CurrentIsEndStruct)
             {
-                result.Add(iterator.NextFrameIsNullMoveNext() ? null : decodeFunction(iterator));
+                result.Add(iterator.SkipNull() ? null : decodeFunction(iterator));
             }
 
             //end frame, list
-            iterator.Next();
+            iterator.Take();
             return result;
         }
 
         public static List<T> DecodeNullable<T>(ref FrameIterator iterator, DecodeDelegate<T> decodeFunction)
         {
-            return iterator.NextFrameIsNullMoveNext() ? null : Decode(iterator, decodeFunction);
+            return iterator.SkipNull() ? null : Decode(iterator, decodeFunction);
         }
     }
 }

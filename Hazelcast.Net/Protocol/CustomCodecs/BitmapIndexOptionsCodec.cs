@@ -56,14 +56,14 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Configuration.BitmapIndexOptions Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             var uniqueKeyTransformation = DecodeInt(initialFrame, UniqueKeyTransformationFieldOffset);
 
             var uniqueKey = StringCodec.Decode(iterator);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return CustomTypeFactory.CreateBitmapIndexOptions(uniqueKey, uniqueKeyTransformation);
         }

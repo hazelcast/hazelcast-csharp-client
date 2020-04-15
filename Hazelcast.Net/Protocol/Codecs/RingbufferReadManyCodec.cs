@@ -101,7 +101,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             response.ReadCount = DecodeInt(initialFrame, ResponseReadCountFieldOffset);
             response.NextSeq = DecodeLong(initialFrame, ResponseNextSeqFieldOffset);
             response.Items = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);

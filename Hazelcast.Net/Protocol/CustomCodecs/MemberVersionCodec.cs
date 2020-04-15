@@ -58,14 +58,14 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Clustering.MemberVersion Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             var major = DecodeByte(initialFrame, MajorFieldOffset);
             var minor = DecodeByte(initialFrame, MinorFieldOffset);
             var patch = DecodeByte(initialFrame, PatchFieldOffset);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return new Hazelcast.Clustering.MemberVersion(major, minor, patch);
         }

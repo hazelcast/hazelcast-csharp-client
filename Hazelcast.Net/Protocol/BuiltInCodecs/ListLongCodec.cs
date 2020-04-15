@@ -39,7 +39,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static List<long> Decode(FrameIterator iterator)
         {
-            return Decode(iterator.Next());
+            return Decode(iterator.Take());
         }
 
         public static List<long> Decode(Frame frame)

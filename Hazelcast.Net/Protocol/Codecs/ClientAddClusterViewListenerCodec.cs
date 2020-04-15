@@ -74,7 +74,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
             //empty initial frame
-            iterator.Next();
+            iterator.Take();
             return response;
         }
 
@@ -85,14 +85,14 @@ namespace Hazelcast.Protocol.Codecs
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventMembersViewMessageType) {
-                    var initialFrame = iterator.Next();
+                    var initialFrame = iterator.Take();
                     int version =  DecodeInt(initialFrame, EventMembersViewVersionFieldOffset);
                     IList<Hazelcast.Clustering.MemberInfo> memberInfos = ListMultiFrameCodec.Decode(iterator, MemberInfoCodec.Decode);
                     handleMembersViewEvent(version, memberInfos);
                     return;
                 }
                 if (messageType == EventPartitionsViewMessageType) {
-                    var initialFrame = iterator.Next();
+                    var initialFrame = iterator.Take();
                     int version =  DecodeInt(initialFrame, EventPartitionsViewVersionFieldOffset);
                     IList<KeyValuePair<Guid, IList<int>>> partitions = EntryListUUIDListIntegerCodec.Decode(iterator);
                     handlePartitionsViewEvent(version, partitions);

@@ -41,7 +41,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static IList<KeyValuePair<int, Guid>> Decode(FrameIterator iterator)
         {
-            var frame = iterator.Next();
+            var frame = iterator.Take();
             var itemCount = frame.Bytes.Length / EntrySizeInBytes;
             var result = new List<KeyValuePair<int, Guid>>();
             for (var i = 0; i < itemCount; i++)

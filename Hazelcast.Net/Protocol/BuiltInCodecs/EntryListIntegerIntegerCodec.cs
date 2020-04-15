@@ -39,7 +39,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static IList<KeyValuePair<int, int>> Decode(FrameIterator iterator)
         {
-            var frame = iterator.Next();
+            var frame = iterator.Take();
             var itemCount = frame.Bytes.Length / EntrySizeInBytes;
             var result = new List<KeyValuePair<int, int>>();
             for (int i = 0; i < itemCount; i++)

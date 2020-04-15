@@ -81,7 +81,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
             //empty initial frame
-            iterator.Next();
+            iterator.Take();
             response.Response = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
             response.AnchorDataList = AnchorDataListHolderCodec.Decode(iterator);
             return response;

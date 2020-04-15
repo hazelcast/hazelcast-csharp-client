@@ -75,7 +75,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             response.Response = DecodeGuid(initialFrame, ResponseResponseFieldOffset);
             return response;
         }
@@ -87,7 +87,7 @@ namespace Hazelcast.Protocol.Codecs
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventBackupMessageType) {
-                    var initialFrame = iterator.Next();
+                    var initialFrame = iterator.Take();
                     long sourceInvocationCorrelationId =  DecodeLong(initialFrame, EventBackupSourceInvocationCorrelationIdFieldOffset);
                     handleBackupEvent(sourceInvocationCorrelationId);
                     return;

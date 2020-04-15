@@ -58,16 +58,16 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Configuration.IndexConfig Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             var type = DecodeInt(initialFrame, TypeFieldOffset);
 
             var name = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
             var attributes = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
             var bitmapIndexOptions = CodecUtil.DecodeNullable(iterator, BitmapIndexOptionsCodec.Decode);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return CustomTypeFactory.CreateIndexConfig(name, type, attributes, bitmapIndexOptions);
         }

@@ -80,7 +80,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             response.OldestSequence = DecodeLong(initialFrame, ResponseOldestSequenceFieldOffset);
             response.NewestSequence = DecodeLong(initialFrame, ResponseNewestSequenceFieldOffset);
             return response;

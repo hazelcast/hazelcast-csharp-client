@@ -81,7 +81,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             response.Response = DecodeGuid(initialFrame, ResponseResponseFieldOffset);
             return response;
         }
@@ -93,7 +93,7 @@ namespace Hazelcast.Protocol.Codecs
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventItemMessageType) {
-                    var initialFrame = iterator.Next();
+                    var initialFrame = iterator.Take();
                     Guid uuid =  DecodeGuid(initialFrame, EventItemUuidFieldOffset);
                     int eventType =  DecodeInt(initialFrame, EventItemEventTypeFieldOffset);
                     IData item = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);

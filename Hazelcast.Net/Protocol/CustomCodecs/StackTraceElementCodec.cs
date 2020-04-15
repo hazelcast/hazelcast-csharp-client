@@ -58,16 +58,16 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Exceptions.StackTraceElement Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             var lineNumber = DecodeInt(initialFrame, LineNumberFieldOffset);
 
             var className = StringCodec.Decode(iterator);
             var methodName = StringCodec.Decode(iterator);
             var fileName = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return new Hazelcast.Exceptions.StackTraceElement(className, methodName, fileName, lineNumber);
         }

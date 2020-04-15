@@ -24,26 +24,6 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
     internal static class CodecUtil
     {
-        public static void FastForwardToEndFrame(FrameIterator iterator)
-        {
-            // We are starting from 1 because of the BeginFrame we read
-            // in the beginning of the Decode method
-            var numberOfExpectedEndFrames = 1;
-
-            while (numberOfExpectedEndFrames != 0)
-            {
-                var frame = iterator.Next();
-                if (frame.IsEndStruct)
-                {
-                    numberOfExpectedEndFrames--;
-                }
-                else if (frame.IsBeginStruct)
-                {
-                    numberOfExpectedEndFrames++;
-                }
-            }
-        }
-
         public static void EncodeNullable<T>(ClientMessage clientMessage, T value, Action<ClientMessage, T> encode)
         {
             if (value == null)
@@ -58,7 +38,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static T DecodeNullable<T>(FrameIterator iterator, DecodeDelegate<T> decode) where T : class
         {
-            return iterator.NextFrameIsNullMoveNext() ? null : decode(iterator);
-        }   
+            return iterator.SkipNull() ? null : decode(iterator);
+        }
     }
 }

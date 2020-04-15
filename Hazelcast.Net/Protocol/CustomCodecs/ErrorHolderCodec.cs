@@ -58,16 +58,16 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Protocol.Data.ErrorHolder Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             var errorCode = DecodeInt(initialFrame, ErrorCodeFieldOffset);
 
             var className = StringCodec.Decode(iterator);
             var message = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
             var stackTraceElements = ListMultiFrameCodec.Decode(iterator, StackTraceElementCodec.Decode);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return new Hazelcast.Protocol.Data.ErrorHolder(errorCode, className, message, stackTraceElements);
         }

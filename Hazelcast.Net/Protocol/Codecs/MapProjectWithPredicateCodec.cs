@@ -74,7 +74,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
             //empty initial frame
-            iterator.Next();
+            iterator.Take();
             response.Response = ListMultiFrameCodec.DecodeContainsNullable(iterator, DataCodec.Decode);
             return response;
         }

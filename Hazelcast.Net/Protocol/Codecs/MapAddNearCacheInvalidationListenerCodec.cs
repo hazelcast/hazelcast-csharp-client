@@ -85,7 +85,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             response.Response = DecodeGuid(initialFrame, ResponseResponseFieldOffset);
             return response;
         }
@@ -97,7 +97,7 @@ namespace Hazelcast.Protocol.Codecs
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventIMapInvalidationMessageType) {
-                    var initialFrame = iterator.Next();
+                    var initialFrame = iterator.Take();
                     Guid sourceUuid =  DecodeGuid(initialFrame, EventIMapInvalidationSourceUuidFieldOffset);
                     Guid partitionUuid =  DecodeGuid(initialFrame, EventIMapInvalidationPartitionUuidFieldOffset);
                     long sequence =  DecodeLong(initialFrame, EventIMapInvalidationSequenceFieldOffset);
@@ -107,7 +107,7 @@ namespace Hazelcast.Protocol.Codecs
                 }
                 if (messageType == EventIMapBatchInvalidationMessageType) {
                     //empty initial frame
-                    iterator.Next();
+                    iterator.Take();
                     IList<IData> keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
                     IList<Guid> sourceUuids = ListUUIDCodec.Decode(iterator);
                     IList<Guid> partitionUuids = ListUUIDCodec.Decode(iterator);

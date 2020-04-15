@@ -73,7 +73,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             response.Response = DecodeLong(initialFrame, ResponseResponseFieldOffset);
             return response;
         }

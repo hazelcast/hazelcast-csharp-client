@@ -84,7 +84,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             response.Response = DecodeGuid(initialFrame, ResponseResponseFieldOffset);
             return response;
         }
@@ -96,7 +96,7 @@ namespace Hazelcast.Protocol.Codecs
                 var messageType = clientMessage.MessageType;
                 var iterator = clientMessage.GetIterator();
                 if (messageType == EventMapPartitionLostMessageType) {
-                    var initialFrame = iterator.Next();
+                    var initialFrame = iterator.Take();
                     int partitionId =  DecodeInt(initialFrame, EventMapPartitionLostPartitionIdFieldOffset);
                     Guid uuid =  DecodeGuid(initialFrame, EventMapPartitionLostUuidFieldOffset);
                     handleMapPartitionLostEvent(partitionId, uuid);

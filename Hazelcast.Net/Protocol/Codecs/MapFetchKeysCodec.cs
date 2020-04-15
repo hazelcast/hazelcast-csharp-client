@@ -80,7 +80,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
             //empty initial frame
-            iterator.Next();
+            iterator.Take();
             response.IterationPointers = EntryListIntegerIntegerCodec.Decode(iterator);
             response.Keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;

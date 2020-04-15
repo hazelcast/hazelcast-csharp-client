@@ -51,12 +51,12 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Data.DistributedObjectInfo Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
             var serviceName = StringCodec.Decode(iterator);
             var name = StringCodec.Decode(iterator);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return new Hazelcast.Data.DistributedObjectInfo(serviceName, name);
         }

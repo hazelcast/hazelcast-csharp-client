@@ -122,7 +122,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             response.Status = DecodeByte(initialFrame, ResponseStatusFieldOffset);
             response.MemberUuid = DecodeGuid(initialFrame, ResponseMemberUuidFieldOffset);
             response.SerializationVersion = DecodeByte(initialFrame, ResponseSerializationVersionFieldOffset);

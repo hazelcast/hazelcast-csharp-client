@@ -60,9 +60,9 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Clustering.MemberInfo Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             var uuid = DecodeGuid(initialFrame, UuidFieldOffset);
             var liteMember = DecodeBool(initialFrame, LiteMemberFieldOffset);
 
@@ -70,7 +70,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             var attributes = MapCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);
             var version = MemberVersionCodec.Decode(iterator);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return new Hazelcast.Clustering.MemberInfo(address, uuid, attributes, liteMember, version);
         }

@@ -84,7 +84,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetIterator();
             var response = new ResponseParameters();
             //empty initial frame
-            iterator.Next();
+            iterator.Take();
             response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }

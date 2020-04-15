@@ -63,9 +63,9 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Protocol.Data.PagingPredicateHolder Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
-            var initialFrame = iterator.Next();
+            var initialFrame = iterator.Take();
             var pageSize = DecodeInt(initialFrame, PageSizeFieldOffset);
             var page = DecodeInt(initialFrame, PageFieldOffset);
             var iterationTypeId = DecodeByte(initialFrame, IterationTypeIdFieldOffset);
@@ -75,7 +75,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             var comparatorData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             var partitionKeyData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return new Hazelcast.Protocol.Data.PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pageSize, page, iterationTypeId, partitionKeyData);
         }

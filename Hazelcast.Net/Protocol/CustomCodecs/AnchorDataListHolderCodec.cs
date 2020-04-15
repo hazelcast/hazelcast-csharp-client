@@ -51,12 +51,12 @@ namespace Hazelcast.Protocol.CustomCodecs
         public static Hazelcast.Protocol.Data.AnchorDataListHolder Decode(FrameIterator iterator)
         {
             // begin frame
-            iterator.Next();
+            iterator.Take();
 
             var anchorPageList = ListIntegerCodec.Decode(iterator);
             var anchorDataList = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
 
-            CodecUtil.FastForwardToEndFrame(iterator);
+            iterator.SkipToStructEnd();
 
             return new Hazelcast.Protocol.Data.AnchorDataListHolder(anchorPageList, anchorDataList);
         }

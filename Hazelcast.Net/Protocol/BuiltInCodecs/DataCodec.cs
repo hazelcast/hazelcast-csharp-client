@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static IData Decode(FrameIterator iterator)
         {
-            return Decode(iterator.Next());
+            return Decode(iterator.Take());
         }
     }
 }
