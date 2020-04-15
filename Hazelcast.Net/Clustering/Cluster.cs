@@ -9,7 +9,10 @@ using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Security;
+using Hazelcast.Partitioning;
+using Partitioner = Hazelcast.Partitioning.Partitioner;
 
 namespace Hazelcast.Clustering
 {
@@ -24,7 +27,12 @@ namespace Hazelcast.Clustering
         private readonly ConcurrentDictionary<long, Action<ClientMessage>> _eventHandlers
             = new ConcurrentDictionary<long, Action<ClientMessage>>();
 
+        private readonly ISequence<long> _correlationIdSequence = new Int64Sequence();
+
+        private readonly Partitioner _partitioner = new Partitioner(null);
         private readonly bool _localOnly; // FIXME initialize from configuration - and then what?
+
+        private Client _clusterEventsClient;
 
 
         // connection manager   <- would be 'ClusterConnections'
@@ -67,25 +75,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public async ValueTask<ClientMessage> SendAsync(ClientMessage message)
         {
-            // FIXME was
-            /*
-            if (IsSmartRoutingEnabled)
-            {
-                var member = _loadBalancer.Next();
-                if (member != null)
-                {
-                    var connection = GetConnection(member.Uuid);
-                    if (connection != null)
-                    {
-                        return connection;
-                    }
-                }
-            }
-            return _connections.Values.SingleOrDefault();
-            */
-
-            var client = _clientsBAD.First().Value;
-            return await client.SendAsync(message);
+            return await GetRandomClient().SendAsync(message);
         }
 
         /// <summary>
@@ -170,7 +160,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="client">The client.</param>
         /// <returns>A task that will complete when the client has subscribed to server events.</returns>
-        public async Task SubscribeClient(Client client)
+        public async Task SubscribeClient(Client client) // fixme private
         {
             foreach (var (_, clusterSubscription) in _eventSubscriptions)
             {
@@ -210,7 +200,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="client">The client.</param>
         /// <returns>A task that will complete when the client has unsubscribed from server events.</returns>
-        public async Task UnsubscribeClient(Client client)
+        public async Task UnsubscribeClient(Client client) // fixme private
         {
             foreach (var (_, eventSubscription) in _eventSubscriptions)
             {
@@ -228,6 +218,30 @@ namespace Hazelcast.Clustering
         #endregion
 
         #region Networking
+
+        private Client GetRandomClient()
+        {
+            // todo implement
+
+            // FIXME was
+            /*
+            if (IsSmartRoutingEnabled)
+            {
+                var member = _loadBalancer.Next();
+                if (member != null)
+                {
+                    var connection = GetConnection(member.Uuid);
+                    if (connection != null)
+                    {
+                        return connection;
+                    }
+                }
+            }
+            return _connections.Values.SingleOrDefault();
+            */
+
+            return _clients.First().Value;
+        }
 
         // implement connect-to-cluster
         //  what's the address provider?
@@ -280,6 +294,9 @@ namespace Hazelcast.Clustering
 
                 // fixme temp
                 //_clients[address].SubscribeAsync(new ClusterEventSubscription());
+                //await SubscribeToClusterEvents(client);
+
+                // fixme not tracking client's death?
 
                 return true;
             }
@@ -328,18 +345,21 @@ namespace Hazelcast.Clustering
                 // + de-duplicate them somehow
                 // fixme: IPEndPoint is lazily dns-resolved each time! not cached!
 
-                var client = new Client(address.IPEndPoint);
+                var client = new Client(address.IPEndPoint, _correlationIdSequence);
                 client.ReceiveEventMessage = ReceiveEventMessage;
+                client.OnShutdown = HandleClientShutdown;
                 await client.ConnectAsync(); // may throw
                 var info = await authenticator.AuthenticateAsync(client); // may throw
 
                 // FIXME info may be null
+                client.Update(info);
                 _clients[info.MemberId] = client;
                 //client.MemberId = info.MemberId;
                 // deal with partition and stuff
 
                 // FIXME but we might want to do this in the background, see ListenerService
-                await SubscribeClient(client);
+                await AssignClusterEventsClient(client);
+                await SubscribeClient(client); // fixme wtf?
 
                 // FIXME we also need to handle clients going down!
 
@@ -351,14 +371,128 @@ namespace Hazelcast.Clustering
             }
         }
 
+        private void HandleClientShutdown(Client client)
+        {
+            _clients.TryRemove(client.MemberId, out _);
+
+            // we need to have one client permanently handling the cluster events.
+            // if the client which just shut down was handling cluster events,
+            // we need to make sure another client takes over.
+            if (ClearClusterEventsClient(client))
+                AssignClusterEventsClient().Wait(); // fixme async!
+        }
+
+
+        private bool ClearClusterEventsClient(Client client)
+            => Interlocked.CompareExchange(ref _clusterEventsClient, null, client) == client;
+
+        private async Task AssignClusterEventsClient(Client client = null)
+        {
+            // todo - log when ending unsuccessfully
+
+            if (client == null) client = GetRandomClient();
+            if (client == null) return; // running out of clients, end
+
+            // try to become the new client by replacing the current value, which is expected to be 'null'
+            // if it is not 'null', it means that 'someone else' has taken over the assignment and we can end
+            if (Interlocked.CompareExchange(ref _clusterEventsClient, client, null) != null)
+                return;
+
+            // arbitrarily decide to end after some amount of trying
+            int GetMaxAttempts() => _clients.Count * 3;
+
+            var failedAttempts = 0;
+            while (!await SubscribeToClusterEvents(client))
+            {
+                // the client we tried failed to subscribe to events, try another client,
+                // but ensure we don't enter some sort of infinite loop by counting attempts
+                // todo: consider using a timeout, instead?
+                var nextClient = GetRandomClient();
+                if (nextClient == null || ++failedAttempts > GetMaxAttempts())
+                {
+                    // running out of clients, or tried too many times - end
+                    Interlocked.CompareExchange(ref _clusterEventsClient, null, client);
+                    return;
+                }
+
+                // try to become the new client by replacing the current value, which is expected to be 'client'
+                // if it is not 'client', it means that 'someone else' has taken over the assignment and we can end
+                if (Interlocked.CompareExchange(ref _clusterEventsClient, nextClient, client) != client)
+                    return;
+
+                client = nextClient;
+            }
+
+            // success
+        }
+
+        private async Task<bool> SubscribeToClusterEvents(Client client) // aka subscribe to member/partition view events?
+        {
+            XConsole.WriteLine(this, "subscribe");
+
+            // todo can this create a circular dep too?
+            var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
+
+#if NETSTANDARD2_1
+            static
+#endif
+            Dictionary<int, Guid> MapPartitions(IEnumerable<KeyValuePair<Guid, IList<int>>> partitions)
+            {
+                var map = new Dictionary<int, Guid>();
+                foreach (var (memberId, partitionIds) in partitions)
+                foreach (var partitionId in partitionIds)
+                    map[partitionId] = memberId;
+                return map;
+            }
+
+            // that one is way more complex
+            void HandleMemberViewEvent(int version, ICollection<MemberInfo> members) { }
+
+            void HandlePartitionViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions)
+                => _partitioner.HandlePartitionViewEvent(client.Id, version, MapPartitions(partitions));
+
+            void HandleEvent(ClientMessage message)
+                => ClientAddClusterViewListenerCodec.EventHandler.HandleEvent(message, HandleMemberViewEvent, HandlePartitionViewEvent);
+
+            try
+            {
+                // fixme subscribe async does not return anything?!
+                // not *all* codecs return a guid and then?
+                // listenerService.RegisterListener expects a response decoder that provides a guid, and a deregister request
+                // but for this event here, clusterService bypasses the listenerService
+
+                // FIXME arh - client.SendAsync is setting the correlation id
+                // but the server may send events before we get the response = ?!
+                subscribeRequest.CorrelationId = _correlationIdSequence.Next;
+                _eventHandlers[subscribeRequest.CorrelationId] = HandleEvent;
+                var response = await client.SendAsync(subscribeRequest);
+                XConsole.WriteLine(this, "subscribed");
+                return true;
+
+                // but then are we ever going to clear that event handler?
+
+                //subscriptionId = await SubscribeAsync(new ClusterEventSubscription(subscribeRequest, HandleEvent));
+            }
+            catch
+            {
+                // todo log the exception?
+                return false;
+            }
+
+            // otherwise, try on random connection?!
+            // or maybe that's the method call this one that should do it?
+        }
+
         // fixme document
         private void ReceiveEventMessage(ClientMessage message)
         {
+            XConsole.WriteLine(this, "Handle event message.\n" + message.Dump("EVENT"));
+
             // TODO threading? handle events in scheduled tasks?
             if (!_eventHandlers.TryGetValue(message.CorrelationId, out var eventHandler))
             {
                 // TODO log a warning
-                XConsole.WriteLine(this, $"No completion for ID:{message.CorrelationId}");
+                XConsole.WriteLine(this, $"No event handler for ID:{message.CorrelationId}");
                 return;
             }
 

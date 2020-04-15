@@ -31,6 +31,16 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="subscribeRequest">The subscribe request message.</param>
         /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
+        /// <param name="eventHandler">The event handler.</param>
+        public ClusterEventSubscription(ClientMessage subscribeRequest, Func<ClientMessage, Guid> subscribeResponseParser, Action<ClientMessage> eventHandler)
+            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, null, eventHandler)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClusterEventSubscription"/> class with an auto-assigned identifier.
+        /// </summary>
+        /// <param name="subscribeRequest">The subscribe request message.</param>
+        /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
         /// <param name="unsubscribeRequestFactory">The unsubscribe request message factory.</param>
         /// <param name="eventHandler">The event handler.</param>
         public ClusterEventSubscription(ClientMessage subscribeRequest, Func<ClientMessage, Guid> subscribeResponseParser, Func<Guid, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage> eventHandler)

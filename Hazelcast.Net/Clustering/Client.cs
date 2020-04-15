@@ -21,10 +21,11 @@ namespace Hazelcast.Clustering
 
         private readonly object _isConnectedLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
-        private readonly ISequence<long> _correlationIdSequence = new Int64Sequence();
+        private readonly ISequence<long> _correlationIdSequence;
         private readonly IPEndPoint _endpoint;
 
-        private Action<ClientMessage> _receiveEventMessage;
+        private Action<ClientMessage> _receiveEventMessage; // fixme onReceiveEventMessage <Client, ClientMessage>?
+        private Action<Client> _onShutdown;
         private ClientSocketConnection _socketConnection;
         private ClientMessageConnection _connection;
         private bool _isConnected;
@@ -33,27 +34,39 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
         /// <param name="endpoint">The socket endpoint.</param>
-        public Client(IPEndPoint endpoint)
-            : this(endpoint, new Int32Sequence())
+        /// <param name="correlationIdSequence">A unique sequence of correlation identifiers.</param>
+        public Client(IPEndPoint endpoint, ISequence<long> correlationIdSequence)
+            : this(endpoint, correlationIdSequence, new Int32Sequence())
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
         /// <param name="endpoint">The socket endpoint.</param>
+        /// <param name="correlationIdSequence">A unique sequence of correlation identifiers.</param>
         /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
         /// <remarks>
         /// <para>The <paramref name="connectionIdSequence"/> parameter can be used to supply a
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public Client(IPEndPoint endpoint, ISequence<int> connectionIdSequence)
+        public Client(IPEndPoint endpoint, ISequence<long> correlationIdSequence, ISequence<int> connectionIdSequence)
         {
             _endpoint = endpoint;
+            _correlationIdSequence = correlationIdSequence;
             _connectionIdSequence = connectionIdSequence;
             XConsole.Setup(this, 4, "CLT");
         }
 
+        /// <summary>
+        /// Gets the unique identifier of this client.
+        /// </summary>
+        public Guid Id { get; } = Guid.NewGuid();
+
+        // todo document
+        public Guid MemberId { get; private set; }
+
+        // todo document
         public Action<ClientMessage> ReceiveEventMessage
         {
             get => _receiveEventMessage;
@@ -62,6 +75,23 @@ namespace Hazelcast.Clustering
                 // FIXME tests it's ok etc
                 _receiveEventMessage = value;
             }
+        }
+
+        // todo document
+        public Action<Client> OnShutdown
+        {
+            get => _onShutdown;
+            set
+            {
+                // FIXME test it's ok etc
+                _onShutdown = value;
+            }
+        }
+
+        // todo document
+        public void Update(MemberInfo2 info) // rename 'complete' or somethin?
+        {
+            MemberId = info.MemberId;
         }
 
         /// <summary>
@@ -94,6 +124,8 @@ namespace Hazelcast.Clustering
         {
             foreach (var completion in _completions.Values)
                 completion.SetException(new Exception("shutdown"));
+
+            _onShutdown?.Invoke(this);
 
             return new ValueTask();
         }
@@ -186,8 +218,8 @@ namespace Hazelcast.Clustering
             }
 
             // assign a unique identifier to the message
-            // create a corresponding completion source
-            message.CorrelationId = _correlationIdSequence.Next;
+            if (message.CorrelationId <= 0)
+                message.CorrelationId = _correlationIdSequence.Next;
 
             // send in one fragment, set flags
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
@@ -202,7 +234,7 @@ namespace Hazelcast.Clustering
             if (!success)
                 throw new InvalidOperationException("Failed to send message.");
 
-            // wait for the response
+            // create a completion source
             var completion = new TaskCompletionSource<ClientMessage>();
             lock (_isConnectedLock)
             {
@@ -215,6 +247,7 @@ namespace Hazelcast.Clustering
                 _completions[message.CorrelationId] = completion;
             }
 
+            // wait for the response
             if (timeoutMilliseconds <= 0)
                 return await completion.Task;
 

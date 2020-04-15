@@ -131,7 +131,18 @@ namespace Hazelcast.Messaging
                 // FIXME consider async?
                 // this method cannot be async because of the ref bytes, and then
                 // should onReceiveMessage be async or not?
-                Task.Run(async () => await _onReceiveMessage(this, fragment));
+                Task.Run(async () =>
+                {
+                    // FIXME this is really bad, because it's swallowing exceptions!
+                    try
+                    {
+                        await _onReceiveMessage(this, fragment);
+                    }
+                    catch (Exception e)
+                    {
+                        XConsole.WriteLine(this, "ERROR\n" + e);
+                    }
+                });
                 return;
             }
 

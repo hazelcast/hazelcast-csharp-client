@@ -161,5 +161,18 @@ namespace Hazelcast.Messaging
             Buffer.BlockCopy(Bytes, 0, bytes, 0, bytes.Length);
             return new Frame(bytes, Flags);
         }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            var flagNames = ((Flags & FrameFlags.AllFlags) > 0
+                                    ? Flags.ToString()
+                                    : "") +
+                                (((ClientMessageFlags) Flags & ClientMessageFlags.AllFlags) > 0
+                                    ? ((ClientMessageFlags) Flags).ToString()
+                                    : "");
+
+            return $"{{Frame: {Length} bytes, 0x{Flags:x} ({flagNames})}}";
+        }
     }
 }

@@ -95,10 +95,11 @@ namespace Hazelcast.Tests
             var server = new Server(endpoint);
             await server.StartAsync();
 
-            var sequence = new Int32Sequence();
+            var corSequence = new Int64Sequence();
+            var conSequence = new Int32Sequence();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(endpoint, sequence);
+            var client1 = new Clustering.Client(endpoint, corSequence, conSequence);
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -108,7 +109,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Start client 2");
-            var client2 = new Clustering.Client(endpoint, sequence);
+            var client2 = new Clustering.Client(endpoint, corSequence, conSequence);
             await client2.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 2");
@@ -148,7 +149,7 @@ namespace Hazelcast.Tests
             await server.StartAsync();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(endpoint);
+            var client1 = new Clustering.Client(endpoint, new Int64Sequence());
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -181,7 +182,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start client ");
-            var client1 = new Clustering.Client(endpoint);
+            var client1 = new Clustering.Client(endpoint, new Int64Sequence());
             await client1.ConnectAsync();
 
             // RC assigns a GUID but the default cluster name is 'dev'
@@ -233,7 +234,7 @@ namespace Hazelcast.Tests
             //await cluster.SendAsync(new ClientMessage());
 
             // events?
-            await Task.Delay(2000);
+            await Task.Delay(4000);
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
@@ -266,7 +267,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
 
             // connect to real server
             var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:5701");
-            var client1 = new Clustering.Client(endpoint);
+            var client1 = new Clustering.Client(endpoint, new Int64Sequence());
             await client1.ConnectAsync();
             /*
             // send poison
