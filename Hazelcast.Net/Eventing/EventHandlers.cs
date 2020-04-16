@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Hazelcast.Core;
 
 namespace Hazelcast.Eventing
@@ -45,6 +46,25 @@ namespace Hazelcast.Eventing
         public void Handle(TEvent eventData)
         {
             foreach (var (_, handler) in _handlers)
+                handler.Handle(eventData);
+        }
+    }
+
+    // FIXME
+    internal class EventHandlers2<TEvent> : IEventHandlers2<TEvent>
+    {
+        private readonly List<IEventHandler<TEvent>> _handlers = new List<IEventHandler<TEvent>>();
+
+        public void Add(IEventHandler<TEvent> handler) => _handlers.Add(handler);
+
+        public void Remove(IEventHandler<TEvent> handler) => _handlers.Remove(handler);
+
+        public void Clear() => _handlers.Clear();
+
+        public void Raise(TEvent eventData)
+        {
+            // fixme try-catch + log
+            foreach (var handler in _handlers)
                 handler.Handle(eventData);
         }
     }

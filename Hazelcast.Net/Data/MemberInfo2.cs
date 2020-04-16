@@ -1,9 +1,9 @@
 ﻿using System;
 using Hazelcast.Networking;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast.Data
 {
-    public class MemberInfo2
+    public class MemberInfo2 // fixme? authResult?
     {
         public MemberInfo2(Guid clusterId, Guid memberId, NetworkAddress memberAddress, string serverVersion, bool failoverSupported, int partitionCount, byte serializationVersion)
         {

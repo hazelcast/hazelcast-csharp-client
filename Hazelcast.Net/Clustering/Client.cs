@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
@@ -209,7 +210,18 @@ namespace Hazelcast.Clustering
         /// <param name="message">The message.</param>
         /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
+        // todo: maybe we don't need that one and require explicit correlation id?
         public async Task<ClientMessage> SendAsync(ClientMessage message, int timeoutMilliseconds = 0)
+            => await SendAsync(message, _correlationIdSequence.Next, timeoutMilliseconds);
+
+        /// <summary>
+        /// Sends a message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="correlationId">The correlation identifier.</param>
+        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
+        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
+        public async Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, int timeoutMilliseconds = 0)
         {
             lock (_isConnectedLock)
             {
@@ -218,8 +230,7 @@ namespace Hazelcast.Clustering
             }
 
             // assign a unique identifier to the message
-            if (message.CorrelationId <= 0)
-                message.CorrelationId = _correlationIdSequence.Next;
+            message.CorrelationId = correlationId;
 
             // send in one fragment, set flags
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;

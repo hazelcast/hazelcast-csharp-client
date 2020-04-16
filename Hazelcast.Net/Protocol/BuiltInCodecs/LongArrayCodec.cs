@@ -13,8 +13,7 @@
 // limitations under the License.
 
 using Hazelcast.Messaging;
-using Hazelcast.Protocol.Portability;
-using static Hazelcast.Protocol.Portability.Temp;
+using static Hazelcast.Protocol.Portability;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {

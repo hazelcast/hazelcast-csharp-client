@@ -18,7 +18,7 @@ namespace Hazelcast.Eventing
     /// Defines an event handler.
     /// </summary>
     /// <typeparam name="TEvent">The type of the event.</typeparam>
-    internal interface IEventHandler<in TEvent>
+    public interface IEventHandler<in TEvent>
     {
         /// <summary>
         /// Handles an event.

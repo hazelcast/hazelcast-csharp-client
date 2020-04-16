@@ -1,4 +1,4 @@
-﻿namespace Hazelcast.Clustering
+﻿namespace Hazelcast.Data
 {
     /// <summary>
     /// Represents the version of a cluster member.

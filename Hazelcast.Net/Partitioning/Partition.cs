@@ -22,15 +22,18 @@ namespace Hazelcast.Partitioning
     {
         // fixme this is going to introduce a mutual dependency with serialization?
         private readonly ISerializationService _serializationService;
+        private readonly bool _isSmartRouting;
         private PartitionTable _partitions; // FIXME lock/threading/etc
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Partitioner"/> class.
         /// </summary>
         /// <param name="serializationService">The serialization service.</param>
-        public Partitioner(ISerializationService serializationService)
+        /// <param name="isSmartRouting">Whether the cluster operates with smart routing.</param>
+        public Partitioner(ISerializationService serializationService, bool isSmartRouting)
         {
             _serializationService = serializationService;// ?? throw new ArgumentNullException(nameof(serializationService));
+            _isSmartRouting = isSmartRouting;
         }
 
         /// <summary>
@@ -81,7 +84,7 @@ namespace Hazelcast.Partitioning
         }
 
         /// <summary>
-        /// Represents a server partition table.
+        /// Represents a cluster partition table.
         /// </summary>
         private class PartitionTable
         {

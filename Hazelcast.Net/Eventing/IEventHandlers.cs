@@ -42,4 +42,13 @@ namespace Hazelcast.Eventing
         /// <param name="eventData">The event data.</param>
         void Handle(TEvent eventData);
     }
+
+    // FIXME
+    public interface IEventHandlers2<TEvent>
+    {
+        void Add(IEventHandler<TEvent> handler);
+        void Remove(IEventHandler<TEvent> handler);
+        void Clear();
+        void Raise(TEvent eventData);
+    }
 }

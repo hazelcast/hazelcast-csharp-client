@@ -13,19 +13,36 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Messaging;
 
-namespace Hazelcast.Protocol.Portability
+namespace Hazelcast.Messaging
 {
+    /// <summary>
+    /// Represents an iterator over linked lists of <see cref="Frame"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>This iterator works slightly differently from traditional .NET
+    /// iterators. It is immediately positioned over the first <see cref="Frame"/>,
+    /// and one moves to next frames by invoking <see cref="Take"/> to take
+    /// frames out. The iteration is complete when <see cref="Take"/> returns
+    /// null.</para>
+    /// </remarks>
     public class FrameIterator
     {
         private Frame _frame;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FrameIterator"/> class for a message.
+        /// </summary>
+        /// <param name="message">The message.</param>
         public FrameIterator(ClientMessage message)
         {
             _frame = message.FirstFrame;
         }
 
+        /// <summary>
+        /// Takes the current frame and moves to the next frame.
+        /// </summary>
+        /// <returns>The current frame, or null if the end of the list has been reached.</returns>
         public Frame Take()
         {
             var result = _frame;
@@ -33,10 +50,21 @@ namespace Hazelcast.Protocol.Portability
             return result;
         }
 
+        /// <summary>
+        /// Determines whether the iterator points to a frame, or has reached the end of the list.
+        /// </summary>
         public bool HasCurrent => _frame != null;
 
+        /// <summary>
+        /// Returns the current frame without advancing the iterator.
+        /// </summary>
+        /// <returns></returns>
         public Frame Peek() => _frame;
 
+        /// <summary>
+        /// Skips the current frame it is a "null frame".
+        /// </summary>
+        /// <returns></returns>
         public bool SkipNull()
         {
             var isNull = _frame != null && _frame.IsNull;
@@ -44,8 +72,14 @@ namespace Hazelcast.Protocol.Portability
             return isNull;
         }
 
+        /// <summary>
+        /// Determines whether the current frame is an "end of structure" frame.
+        /// </summary>
         public bool CurrentIsEndStruct => _frame != null && _frame.IsEndStruct;
 
+        /// <summary>
+        /// Advances the iterator by skipping all frames until the end of a structure.
+        /// </summary>
         public void SkipToStructEnd()
         {
             // We are starting from 1 because of the BeginFrame we read
@@ -68,7 +102,5 @@ namespace Hazelcast.Protocol.Portability
                 }
             }
         }
-
-
     }
 }

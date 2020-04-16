@@ -15,7 +15,6 @@
  */
 
 using Hazelcast.Messaging;
-using Hazelcast.Protocol.Portability;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
@@ -29,14 +28,9 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static void EncodeNullable(ClientMessage clientMessage, IData data)
         {
-            if (data == null)
-            {
-                clientMessage.Add(Frame.CreateNull());
-            }
-            else
-            {
-                clientMessage.Add(new Frame(data.ToByteArray()));
-            }
+            clientMessage.Add(data == null 
+                ? Frame.CreateNull() 
+                : new Frame(data.ToByteArray()));
         }
 
         public static IData Decode(Frame frame)

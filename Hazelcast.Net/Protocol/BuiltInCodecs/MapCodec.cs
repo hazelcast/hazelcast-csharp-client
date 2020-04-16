@@ -14,8 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
-using Hazelcast.Protocol.Portability;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
@@ -25,10 +25,23 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             clientMessage.Add(Frame.CreateBeginStruct());
 
-            foreach (var kvp in map)
+            foreach (var (key, value) in map)
             {
-                encodeKey(clientMessage, kvp.Key);
-                encodeValue(clientMessage, kvp.Value);
+                encodeKey(clientMessage, key);
+                encodeValue(clientMessage, value);
+            }
+
+            clientMessage.Add(Frame.CreateEndStruct());
+        }
+
+        public static void Encode<TKey, TValue>(ClientMessage clientMessage, IReadOnlyDictionary<TKey, TValue> map, Action<ClientMessage, TKey> encodeKey, Action<ClientMessage, TValue> encodeValue)
+        {
+            clientMessage.Add(Frame.CreateBeginStruct());
+
+            foreach (var (key, value) in map)
+            {
+                encodeKey(clientMessage, key);
+                encodeValue(clientMessage, value);
             }
 
             clientMessage.Add(Frame.CreateEndStruct());

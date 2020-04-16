@@ -17,7 +17,6 @@ using Hazelcast.Messaging;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
 using Hazelcast.Protocol.Data;
-using Hazelcast.Protocol.Portability;
 
 namespace Hazelcast.Protocol
 {

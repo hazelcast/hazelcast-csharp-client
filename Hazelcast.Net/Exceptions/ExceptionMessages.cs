@@ -9,5 +9,10 @@
         /// Not enough bytes.
         /// </summary>
         public const string NotEnoughBytes = "Not enough bytes.";
+
+        /// <summary>
+        /// Invalid target.
+        /// </summary>
+        public const string InvalidTarget = "Invalid target.";
     }
 }

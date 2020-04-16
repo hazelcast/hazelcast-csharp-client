@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.Data;
 
 namespace Hazelcast.Clustering
 {

@@ -16,7 +16,7 @@ namespace Hazelcast.Messaging
         public static string Dump(this ClientMessage message, string prefix = "MESSAGE")
         {
             var text = new StringBuilder();
-            text.AppendLine(prefix);
+            text.AppendLine($"{prefix} 0x{message.MessageType:x}");
             var frame = message.FirstFrame;
             while (frame != null)
             {
