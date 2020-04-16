@@ -89,10 +89,13 @@ namespace Hazelcast.Clustering
             }
         }
 
-        // todo document
-        public void Update(MemberInfo2 info) // rename 'complete' or somethin?
+        /// <summary>
+        /// Updates the client after authentication has been performed.
+        /// </summary>
+        /// <param name="result">The result of the authentication.</param>
+        public void Update(AuthenticationResult result)
         {
-            MemberId = info.MemberId;
+            MemberId = result.MemberId;
         }
 
         /// <summary>

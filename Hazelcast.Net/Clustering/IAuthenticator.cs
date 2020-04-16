@@ -27,6 +27,6 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="client">The client to authenticate.</param>
         /// <returns>A task that will complete when the client is authenticated.</returns>
-        ValueTask<MemberInfo2> AuthenticateAsync(Client client);
+        ValueTask<AuthenticationResult> AuthenticateAsync(Client client);
     }
 }
