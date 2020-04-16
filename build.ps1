@@ -27,6 +27,9 @@ if(!($enterprise)) {
 	$testCategory +="cat != enterprise"
 }
 
+# tell tests which server they are talking to
+$env:HAZELCAST_SERVER_VERSION=$serverVersion
+
 Write-Host "PARAMETERS:"
 Write-Host "Server version : $serverVersion"
 Write-Host "Code coverage enabled : $coverage"

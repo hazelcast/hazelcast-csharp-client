@@ -28,6 +28,7 @@ namespace Hazelcast.Client.Test
 {
     [TestFixture]
     [Category("enterprise")]
+    [Category("3.11")]
     public class ClientSSLTest : ClientSSLBaseTest
     {
 

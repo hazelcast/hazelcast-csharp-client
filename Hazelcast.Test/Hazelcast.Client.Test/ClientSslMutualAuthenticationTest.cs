@@ -22,7 +22,7 @@ namespace Hazelcast.Client.Test
 {
     [TestFixture]
     [Category("enterprise")]
-    [Category("3.8")]
+    [Category("3.11")]
     public class ClientSslMutualAuthenticationTest : ClientSSLBaseTest
     {
 
