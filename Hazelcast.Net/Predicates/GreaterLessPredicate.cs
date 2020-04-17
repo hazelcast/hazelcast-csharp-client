@@ -39,7 +39,7 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
-            _attributeName = input.ReadUTF();
+            _attributeName = input.ReadUtf();
             _value = input.ReadObject<object>();
             _equal = input.ReadBoolean();
             _less = input.ReadBoolean();

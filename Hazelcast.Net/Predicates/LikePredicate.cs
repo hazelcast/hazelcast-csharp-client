@@ -34,8 +34,8 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
-            AttributeName = input.ReadUTF();
-            Expression = input.ReadUTF();
+            AttributeName = input.ReadUtf();
+            Expression = input.ReadUtf();
         }
 
         public void WriteData(IObjectDataOutput output)

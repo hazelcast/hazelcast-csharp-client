@@ -36,7 +36,7 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
-            _attributeName = input.ReadUTF();
+            _attributeName = input.ReadUtf();
             var size = input.ReadInt();
             _values = new object[size];
             for (var i = 0; i < size; i++)

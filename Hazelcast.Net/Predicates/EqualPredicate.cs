@@ -34,7 +34,7 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
-            AttributeName = input.ReadUTF();
+            AttributeName = input.ReadUtf();
             Value = input.ReadObject<object>();
         }
 

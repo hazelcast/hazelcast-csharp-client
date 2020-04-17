@@ -32,7 +32,7 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
-            _className = input.ReadUTF();
+            _className = input.ReadUtf();
         }
 
         public void WriteData(IObjectDataOutput output)
