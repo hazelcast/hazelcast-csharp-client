@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Hazelcast.Messaging
 {
@@ -31,7 +33,7 @@ namespace Hazelcast.Messaging
     /// <see cref="LastFrame"/>. The last frame always has the <see cref="FrameFlags.Final"/>
     /// flag set.</para>
     /// </remarks>
-    public class ClientMessage
+    public class ClientMessage : IEnumerable<Frame>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientMessage"/> class.
@@ -209,7 +211,7 @@ namespace Hazelcast.Messaging
         }
 
         /// <summary>
-        /// Gest or sets the fragment id.
+        /// Gets or sets the fragment id.
         /// </summary>
         /// <remarks>
         /// <para>Getting or setting this property requires that the message has the appropriate first frame.</para>
@@ -224,5 +226,59 @@ namespace Hazelcast.Messaging
         /// Determines whether the message carries an exception.
         /// </summary>
         public bool IsException => MessageType == 0; // FIXME message type constants?
+
+        /// <inheritdoc />
+        public IEnumerator<Frame> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Represents an enumerator of frames.
+        /// </summary>
+        private class FrameEnumerator : IEnumerator<Frame>
+        {
+            private readonly ClientMessage _message;
+            private bool _enumerating;
+
+            /// <summary>
+            /// Initialize a new instance of the <see cref="FrameEnumerator"/> class.
+            /// </summary>
+            /// <param name="message">The message.</param>
+            public FrameEnumerator(ClientMessage message)
+            {
+                _message = message;
+            }
+
+            /// <inheritdoc />
+            public bool MoveNext()
+            {
+                Current = _enumerating ? Current?.Next : _message.FirstFrame;
+                return Current != null;
+            }
+
+            /// <inheritdoc />
+            public void Reset()
+            {
+                Current = null;
+                _enumerating = false;
+            }
+
+            /// <inheritdoc />
+            public Frame Current { get; private set; }
+
+            /// <inheritdoc />
+            object IEnumerator.Current => Current;
+
+            /// <inheritdoc />
+            public void Dispose()
+            { }
+        }
     }
 }

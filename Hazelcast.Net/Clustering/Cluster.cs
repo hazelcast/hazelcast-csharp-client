@@ -183,10 +183,16 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the cluster has subscribed to the server event.</returns>
         public async Task SubscribeAsync(ClusterEventSubscription subscription)
         {
-            _eventSubscriptions.TryAdd(subscription.Id, subscription);
+            // register the subscription - but verify that the id really is unique
+            if (!_eventSubscriptions.TryAdd(subscription.Id, subscription))
+                throw new InvalidOperationException("A subscription with the same identifier already exists.");
 
             try
             {
+                // subscribe each client: each client will send a subscription request,
+                // with its own correlation id that is used to register a new instance of
+                // the handler function, and then add itself to the list of registered
+                // clients
                 foreach (var (_, client) in _clients)
                     await Subscribe(client, subscription);
             }
@@ -203,9 +209,10 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="client">The client.</param>
         /// <returns>A task that will complete when the client has subscribed to server events.</returns>
-        private async Task SubscribeClient(Client client)
+        private async Task SubscribeClientToEvents(Client client)
         {
             // FIXME what-if some fail?
+
             foreach (var (_, subscription) in _eventSubscriptions)
                 await Subscribe(client, subscription);
         }
@@ -218,9 +225,14 @@ namespace Hazelcast.Clustering
             var correlationId = _correlationIdSequence.Next;
             _eventHandlers[correlationId] = subscription.EventHandler;
 
+            // we do not control the original subscription.SubscribeRequest message and it may
+            // be used concurrently, and so it is not safe to alter its correlation identifier.
+            // instead, we use a safe clone of the original message
+            var subscribeRequest = subscription.SubscribeRequest.CloneWithNewCorrelationId(correlationId);
+
             try
             {
-                var response = await client.SendAsync(subscription.SubscribeRequest, correlationId);
+                var response = await client.SendAsync(subscribeRequest, correlationId);
                 _ = subscription.AcceptSubscribeResponse(response, client);
             }
             catch
@@ -459,7 +471,7 @@ namespace Hazelcast.Clustering
             // raise events
             foreach (var eventData in events)
             {
-                MembershipEvent.Raise(eventData);
+                MembershipEvent.Handle(eventData);
                 /*
                 foreach (var handler in handlers)
                 {
@@ -477,7 +489,7 @@ namespace Hazelcast.Clustering
 
         // fixme move this!
         private MemberTable _memberTable;
-        public IEventHandlers2<MembershipEvent> MembershipEvent { get; } = new EventHandlers2<MembershipEvent>();
+        public IEventHandlers<MembershipEvent> MembershipEvent { get; } = new EventHandlers<MembershipEvent>();
 
         /// <summary>
         /// Represents a cluster member table.
@@ -667,8 +679,11 @@ namespace Hazelcast.Clustering
                 // deal with partition and stuff
 
                 // FIXME but we might want to do this in the background, see ListenerService
+                // ensure there is always one client dealing with cluster events
                 await AssignClusterEventsClient(client);
-                await SubscribeClient(client); // fixme wtf?
+
+                // subscribe the new client to all events the cluster has subscriptions for
+                await SubscribeClientToEvents(client);
 
                 // FIXME we also need to handle clients going down!
 

@@ -13,59 +13,80 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Hazelcast.Core;
+using Hazelcast.Logging;
+
+// FIXME document and explain
+// - why do we need Guids to identify handlers?
+// - why do we need IEventHandler<TEvent> and not simply Action<TEvent> (or Func<TEvent, Task>)?
+// - why have EventHandlers *and* EventHandlers2 and not do everything the same?
+//
+// traditional events work with just a delegate
+//
+// when an event message is received, it has a correlation id
+// and the cluster has 'event handlers' which are Action<ClientMessage> one per correlation id
+//
+// the cluster keeps track of 'subscriptions'
+//   so it has everything required for unsubscribing
+//   should also keep the immutable correlationId?
+// and registers the associated handler with the correlation id
+//
+//
 
 namespace Hazelcast.Eventing
 {
     /// <summary>
-    /// Implements <see cref="IEventHandlers{TEvent}"/>.
+    /// Represents a collection of event handlers that can handle one type of events.
     /// </summary>
-    /// <typeparam name="TEvent">The type of the events.</typeparam>
+    /// <typeparam name="TEvent"></typeparam>
     internal class EventHandlers<TEvent> : IEventHandlers<TEvent>
     {
-        private readonly ConcurrentDictionary<Guid, IEventHandler<TEvent>> _handlers
-            = new ConcurrentDictionary<Guid, IEventHandler<TEvent>>();
+        // implementation notes
+        // this is using a locked list - simple enough and fast - other concurrent structures
+        // are way heavier, and also take shallow snapshots before enumerating - so before
+        // replacing this with more a complex solution, benchmark to be sure it's actually
+        // faster - also, using a list sort-of ensures a deterministic order of events, and
+        // even if this should not be relied upon, it may make things cleaner
+
+        private readonly List<IEventHandler<TEvent>> _handlers = new List<IEventHandler<TEvent>>();
 
         /// <inheritdoc />
-        public Guid Add(IEventHandler<TEvent> handler)
+        public void Add(IEventHandler<TEvent> handler)
         {
-            var id = Guid.NewGuid();
-            _handlers.AddOrUpdate(id, handler, (_, __) => handler);
-            return id;
+            lock (_handlers) _handlers.Add(handler);
         }
 
         /// <inheritdoc />
-        public bool Remove(Guid id)
+        public bool Remove(IEventHandler<TEvent> handler)
         {
-            return _handlers.TryRemove(id, out _);
+            lock (_handlers) return _handlers.Remove(handler);
+        }
+
+        /// <inheritdoc />
+        public void Clear()
+        {
+            lock (_handlers) _handlers.Clear();
         }
 
         /// <inheritdoc />
         public void Handle(TEvent eventData)
         {
-            foreach (var (_, handler) in _handlers)
-                handler.Handle(eventData);
-        }
-    }
+            List<IEventHandler<TEvent>> snapshot;
+            lock (_handlers) snapshot = new List<IEventHandler<TEvent>>(_handlers);
 
-    // FIXME
-    internal class EventHandlers2<TEvent> : IEventHandlers2<TEvent>
-    {
-        private readonly List<IEventHandler<TEvent>> _handlers = new List<IEventHandler<TEvent>>();
-
-        public void Add(IEventHandler<TEvent> handler) => _handlers.Add(handler);
-
-        public void Remove(IEventHandler<TEvent> handler) => _handlers.Remove(handler);
-
-        public void Clear() => _handlers.Clear();
-
-        public void Raise(TEvent eventData)
-        {
-            // fixme try-catch + log
-            foreach (var handler in _handlers)
-                handler.Handle(eventData);
+            foreach (var handler in snapshot)
+            {
+                try
+                {
+                    handler.Handle(eventData);
+                }
+                catch (Exception e)
+                {
+                    // we cannot let one handler kill everything,
+                    // so are we going to swallow the exception?
+                    XConsole.WriteLine(this, e);
+                }
+            }
         }
     }
 }
