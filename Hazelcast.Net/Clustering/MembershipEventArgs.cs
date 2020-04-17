@@ -5,9 +5,9 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Occurs when a member is added to or removed from the cluster.
     /// </summary>
-    public class MembershipEvent
+    public class MembershipEventArgs
     {
-        public MembershipEvent(MembershipEventType eventType, MemberInfo member)
+        public MembershipEventArgs(MembershipEventType eventType, MemberInfo member)
         {
             EventType = eventType;
             Member = member;

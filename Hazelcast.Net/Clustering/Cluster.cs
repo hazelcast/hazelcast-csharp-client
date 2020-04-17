@@ -43,6 +43,7 @@ namespace Hazelcast.Clustering
         // it is used by ProxyManager to AddDistributedObjectListener - passing that value
 
         private Client _clusterEventsClient;
+        private MemberTable _memberTable;
 
         // FIXME must initialize the load balancer + notify it of all added/removed members
 
@@ -57,7 +58,10 @@ namespace Hazelcast.Clustering
             _loadBalancer = new RandomLoadBalancer();
         }
 
-
+        /// <summary>
+        /// Occurs when a member has been added to or removed from the cluster.
+        /// </summary>
+        public MixedEvent<MembershipEventArgs> MemberAddedOrRemoved { get; } = new MixedEvent<MembershipEventArgs>();
 
         // connection manager   <- would be 'ClusterConnections'
         //   has a set of member id (guid) -> connections
@@ -446,21 +450,21 @@ namespace Hazelcast.Clustering
             _memberTable = table;
 
             // process changes, gather events
-            var events = new List<MembershipEvent>();
+            var eventArgs = new List<MembershipEventArgs>();
             foreach (var (member, status) in diff)
             {
                 switch (status)
                 {
                     case 1: // old but not new = removed
                         XConsole.WriteLine(this, $"Removed member {member.Id}");
-                        events.Add(new MembershipEvent(MembershipEventType.Removed, member));
+                        eventArgs.Add(new MembershipEventArgs(MembershipEventType.Removed, member));
                         if (_clients.TryGetValue(member.Id, out var client))
                             client.ShutdownAsync(); // will self-remove once down FIXME async
                         break;
 
                     case 2: // new but not old = added
                         XConsole.WriteLine(this, $"Added member {member.Id}");
-                        events.Add(new MembershipEvent(MembershipEventType.Added, member));
+                        eventArgs.Add(new MembershipEventArgs(MembershipEventType.Added, member));
                         break;
 
                     default: // unchanged
@@ -469,27 +473,12 @@ namespace Hazelcast.Clustering
             }
 
             // raise events
-            foreach (var eventData in events)
+            foreach (var args in eventArgs)
             {
-                MembershipEvent.Handle(eventData);
-                /*
-                foreach (var handler in handlers)
-                {
-                    // FIXME async events? true event?
-                    // cluster.AddHandler(...)
-                    // cluster.MemberEvent += new MemberEventHandler(...)
-                    if (eventData.EventType == MembershipEvent.MemberAdded)
-                        handler.MemberAdded(eventData);
-                    else
-                        handler.MemberRemoved(eventData);
-                }
-                */
+                // fixme HOORIBLE, ASYNC?!
+                MemberAddedOrRemoved.InvokeAsync(args).AsTask().Wait();
             }
         }
-
-        // fixme move this!
-        private MemberTable _memberTable;
-        public IEventHandlers<MembershipEvent> MembershipEvent { get; } = new EventHandlers<MembershipEvent>();
 
         /// <summary>
         /// Represents a cluster member table.

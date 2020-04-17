@@ -15,7 +15,7 @@
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Defines the types of <see cref="MembershipEvent"/>.
+    /// Defines the types of <see cref="MembershipEventArgs"/>.
     /// </summary>
     public enum MembershipEventType
     {
