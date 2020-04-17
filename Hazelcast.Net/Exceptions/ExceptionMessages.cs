@@ -14,5 +14,10 @@
         /// Invalid target.
         /// </summary>
         public const string InvalidTarget = "Invalid target.";
+
+        /// <summary>
+        /// Value cannot be null nor empty.
+        /// </summary>
+        public const string NullOrEmpty = "Value cannot be null nor empty.";
     }
 }

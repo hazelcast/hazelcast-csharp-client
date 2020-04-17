@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using Hazelcast.Exceptions;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Aggregators
@@ -35,6 +37,7 @@ namespace Hazelcast.Aggregators
         /// <param name="attributePath">The attribute path.</param>
         protected AggregatorBase(string attributePath)
         {
+            if (string.IsNullOrWhiteSpace(attributePath)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(attributePath));
             _attributePath = attributePath;
         }
 

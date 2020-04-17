@@ -17,10 +17,12 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Aggregators
 {
     /// <summary>
-    /// FIXME:Simple interface for marking aggregators. An aggregator implementain must support hazelcast serialization and
-    /// have a counterpart on server side.
+    /// Defines an aggregator that can transform an object into other objects.
     /// </summary>
     /// <typeparam name="TResult">The aggregated result type.</typeparam>
+    /// <remarks>
+    /// <para>Aggregators must have a server-side counterpart.</para>
+    /// </remarks>
     public interface IAggregator<TResult> : IIdentifiedDataSerializable
     { }
 }
