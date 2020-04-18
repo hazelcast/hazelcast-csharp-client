@@ -80,7 +80,7 @@ namespace Hazelcast.Clustering
 
             // handles the "partition view" event
             void HandlePartitionViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions)
-                => _partitioner.NotifyPartitionView(client.Id, version, MapPartitions(partitions));
+                => Partitioner.NotifyPartitionView(client.Id, version, MapPartitions(partitions));
 
             // handles the event
             void HandleEvent(ClientMessage message)

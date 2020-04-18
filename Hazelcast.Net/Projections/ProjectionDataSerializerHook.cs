@@ -11,6 +11,7 @@ namespace Hazelcast.Projections
 
         private const int Len = MultiAttribute + 1;
 
+        /// <inheritdoc />
         public IDataSerializableFactory CreateFactory()
         {
             var constructors = new Func<IIdentifiedDataSerializable>[Len];

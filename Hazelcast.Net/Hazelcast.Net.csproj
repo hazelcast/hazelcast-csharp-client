@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Configuration\" />
     <Folder Include="Aggregators\" />
     <Folder Include="Protocol\BuiltInCodecs\" />
     <Folder Include="Protocol\CustomCodecs\" />

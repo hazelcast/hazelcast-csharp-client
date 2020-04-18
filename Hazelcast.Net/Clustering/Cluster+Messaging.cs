@@ -11,6 +11,8 @@ namespace Hazelcast.Clustering
     /// </summary>
     public partial class Cluster // Messaging
     {
+        // TODO add timeout support to all methods
+
         /// <summary>
         /// Sends a message to a random target.
         /// </summary>
@@ -26,12 +28,13 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="targetId">The identifier of the target.</param>
+        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, Guid targetId)
+        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, Guid targetId, int timeoutMilliseconds = 0)
         {
             if (!_clients.TryGetValue(targetId, out var client))
                 throw new InvalidOperationException(ExceptionMessages.InvalidTarget);
-            return await client.SendAsync(message, _correlationIdSequence.Next);
+            return await client.SendAsync(message, _correlationIdSequence.Next, timeoutMilliseconds);
         }
 
         /// <summary>
@@ -51,7 +54,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public async ValueTask<ClientMessage> SendToKeyOwner(ClientMessage message, IData key)
         {
-            var targetId = _partitioner.GetPartitionOwner(key);
+            var targetId = Partitioner.GetPartitionOwner(key);
             if (targetId == default)
                 throw new InvalidOperationException(ExceptionMessages.InvalidTarget);
             return await SendAsync(message, targetId);
@@ -66,8 +69,8 @@ namespace Hazelcast.Clustering
         // TODO: consider removing that one, so that Partitioner does not require the serialization service
         public async ValueTask<ClientMessage> SendToKeyOwner(ClientMessage message, object key)
         {
-            var partitionId = _partitioner.GetPartitionId(key);
-            var targetId = _partitioner.GetPartitionOwner(partitionId);
+            var partitionId = Partitioner.GetPartitionId(key);
+            var targetId = Partitioner.GetPartitionOwner(partitionId);
             if (targetId == default)
                 throw new InvalidOperationException(ExceptionMessages.InvalidTarget);
             return await SendAsync(message, targetId);
@@ -81,7 +84,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public async ValueTask<ClientMessage> SendToPartitionOwner(ClientMessage message, int partitionId)
         {
-            var targetId = _partitioner.GetPartitionOwner(partitionId);
+            var targetId = Partitioner.GetPartitionOwner(partitionId);
             if (targetId == default)
                 throw new InvalidOperationException(ExceptionMessages.InvalidTarget);
             return await SendAsync(message, targetId);

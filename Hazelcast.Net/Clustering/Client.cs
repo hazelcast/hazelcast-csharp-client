@@ -239,6 +239,7 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // send the message
+            // FIXME there is no timeout on sending the message?
             XConsole.WriteLine(this, $"Send message ID:{message.CorrelationId}");
             var success = await _connection.SendAsync(message);
 

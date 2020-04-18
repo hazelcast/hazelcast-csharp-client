@@ -35,7 +35,6 @@ namespace Hazelcast.Clustering
 
         private readonly ISequence<long> _correlationIdSequence;
 
-        private readonly Partitioner _partitioner;
         private readonly ILoadBalancer _loadBalancer;
 
         private Client _clusterEventsClient;
@@ -54,9 +53,15 @@ namespace Hazelcast.Clustering
 
             _correlationIdSequence = new Int64Sequence();
             IsSmartRouting = isSmartRouting;
-            _partitioner = new Partitioner(serializationService, isSmartRouting);
+            Partitioner = new Partitioner(serializationService, isSmartRouting);
             _loadBalancer = new RandomLoadBalancer();
         }
+
+        /// <summary>
+        /// Gets the unique identifier of the cluster, as assigned by the client.
+        /// </summary>
+        // TODO: are we getting an identifier from the server, for the cluster?
+        public Guid ClientId { get; } = Guid.NewGuid();
 
         /// <summary>
         /// Occurs when a member has been added to or removed from the cluster.
@@ -83,7 +88,14 @@ namespace Hazelcast.Clustering
             await ConnectToCluster();
         }
 
+        /// <summary>
+        /// Gets the partitioner.
+        /// </summary>
+        public Partitioner Partitioner { get; }
 
-
+        /// <summary>
+        /// Gets the lite members.
+        /// </summary>
+        public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLite);
     }
 }

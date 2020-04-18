@@ -40,6 +40,11 @@ namespace Hazelcast.Partitioning
         }
 
         /// <summary>
+        /// Gets the number of partitions.
+        /// </summary>
+        public int Count => _partitions.Count;
+
+        /// <summary>
         /// Gets the unique identifier of the member owning a partition.
         /// </summary>
         /// <param name="partitionId">The identifier of the partition.</param>
