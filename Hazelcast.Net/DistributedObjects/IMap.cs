@@ -1,0 +1,552 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Aggregators;
+using Hazelcast.Configuration;
+using Hazelcast.Data.Map;
+using Hazelcast.Predicates;
+using Hazelcast.Projections;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// <summary>
+    ///
+    /// </summary>
+    /// <typeparam name="TKey"></typeparam>
+    /// <typeparam name="TValue"></typeparam>
+    /// <remarks>
+    /// <para>Keys are identified by their own hash code and equality.</para>
+    /// TODO: add para here about returning clones, and not on every method
+    /// </remarks>
+    public interface IMap<TKey, TValue> : IDistributedObject
+    {
+        // FIXME
+        // careful, all network-related stuff MUST be async here!
+
+        // TODO: every async method returns...
+        // "A task that will complete when... and represents...
+
+        #region Keys and Values, setting
+
+        // FIXME these Add were Put and are actually Replace?
+
+        /// <summary>
+        /// Adds an entry to the map.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <returns>The value previously associated with the key in the map, if any; otherwise default(<typeparamref name="TValue"/>).</returns>
+        Task<TValue> AddAsync(TKey key, TValue value);
+
+        /// <summary>
+        /// Adds an entry to the map with a time-to-live.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <returns>The value previously associated with the key in the map, if any; otherwise default(<typeparamref name="TValue"/>).</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// TODO: is it really removed? or just evicted?
+        /// </remarks>
+        Task<TValue> AddAsync(TKey key, TValue value, TimeSpan timeToLive);
+
+        /// <summary>
+        /// Adds entries to the map.
+        /// </summary>
+        /// <param name="entries">Entries.</param>
+        /// <returns>A task that will complete when all entries have been added to the map.</returns>
+        /// TODO: is this transactional?
+        Task AddAsync(IDictionary<TKey, TValue> entries);
+
+        /// <summary>
+        /// Adds an entry to the map, if no entry with the key exists.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>A task that will complete when ...</returns>
+        /// TODO: how can it return "the previous value" if we only add when it's missing?
+        Task<TValue> AddIfMissing(TKey key, TValue value);
+
+        /// <summary>
+        /// Adds an entry to the map with a time-to-live, if no entry with the key exists.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <returns>A task that will complete when ...</returns>
+        /// TODO: how can it return "the previous value" if we only add when it's missing?
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// TODO: is it really removed? or just evicted?
+        /// </remarks>
+        Task<TValue> AddIfMissing(TKey key, TValue value, TimeSpan timeToLive);
+
+        /// <summary>
+        /// Adds an entry to the map, or its <see cref="MapStore"/>.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <remarks>
+        /// <para>If the map has a <see cref="MapStore"/> attached, the entry is added to the store
+        /// but not persisted. Flushing the store (see <see cref="Flush"/>) is required to make sure
+        /// that the entry is actually persisted to the map.</para>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// TODO: is it really removed? or just evicted?
+        /// </remarks>
+        void AddTransient(TKey key, TValue value, TimeSpan timeToLive);
+
+        // TODO: how is this different from Add?
+        TValue Replace(TKey key, TValue value);
+
+        /// <summary>
+        /// Replaces an entry in the map.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="expectedValue">The expected value.</param>
+        /// <param name="newValue">The new value.</param>
+        /// <returns>true if the entry was replaced; otherwise false.</returns>
+        bool Replace(TKey key, TValue expectedValue, TValue newValue);
+
+        // FIXME these Set are actually true Add?
+        // but with an IDictionary, can only Add once?! only the [] supports overwriting
+        // so we have Add and AddOrReplace, really, or Set and SetAndReplace
+
+        Task SetAsync(TKey key, TValue value);
+        Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
+
+        /// <summary>
+        /// Tries to set an entry into the map within a timeout.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>true if the entry was set; otherwise false.</returns>
+        /// <remarks>
+        /// <para>This method returns false when no lock on the key could be
+        /// acquired within the timeout.</para>
+        /// </remarks>
+        // TODO is this Set or SetAndReplace?
+        bool TryPut(TKey key, TValue value, TimeSpan timeout);
+
+        #endregion
+
+        #region Keys and Values, getting
+
+        /// <summary>
+        /// Gets the value for a key, or null if the map does not contain an entry with this key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
+        /// <remarks>
+        /// <para>This methods returns a clone of the original value. Modifying that clone does not change
+        /// the actual value in the map. One should put the modified value back, to make changes visible
+        /// to all nodes.</para>
+        /// </remarks>
+        Task<TValue> GetAsync(TKey key);
+
+        /// <summary>
+        /// Gets all entries for keys.
+        /// </summary>
+        /// <param name="keys">The keys.</param>
+        /// <returns>The values for the specified keys.</returns>
+        /// <remarks>
+        /// <para>This methods returns clones of the original values. Modifying those clones does not change
+        /// the actual values in the map. One should put the modified values back, to make changes visible
+        /// to all nodes.</para>
+        /// </remarks>
+        Task<IDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys);
+
+        /// <summary>
+        /// Gets an entry view for a key, or null if the map does not contain an entry with this key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>An entry view for the specified key, or null if the map does not contain an entry with this key.</returns>
+        /// <remarks>
+        /// <para>This methods returns a clone of the original value. Modifying that clone does not change
+        /// the actual value in the map. One should put the modified value back, to make changes visible
+        /// to all nodes.</para>
+        /// TODO: what's an entry view?
+        /// </remarks>
+        Task<IEntryView<TKey, TValue>> GetEntryViewAsync(TKey key);
+
+        // TODO: return an IEnumerable, or an IDictionary (async?)
+
+        /// <summary>
+        /// Queries entries.
+        /// </summary>
+        /// <param name="predicate">A predicate to filter the entries with.</param>
+        /// <returns>Entries matching the <paramref name="predicate"/>, or all entries.</returns>
+        /// <remarks>
+        /// <para>The result it *not* backed by the map, so changes to the map are not
+        /// reflected, and vice-versa.</para>
+        /// <para>The <paramref name="predicate"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate predicate = null);
+
+        // TODO: return an IEnumerable? async?
+        // TODO: usual remark about returning clones?
+
+        /// <summary>
+        /// Gets keys.
+        /// </summary>
+        /// <param name="predicate">An optional predicate to filter the entries with.</param>
+        /// <returns>All keys.</returns>
+        ISet<TKey> KeySet(IPredicate predicate = null);
+
+        // TODO: IEnumerable? async?
+        /// <summary>
+        /// Gets all values for entries matching a predicate.
+        /// </summary>
+        /// <param name="predicate">An optional predicate to filter the entries.</param>
+        /// <returns>All values.</returns>
+        ICollection<TValue> Values(IPredicate predicate = null);
+
+        #endregion
+
+        #region Keys and Values, removing
+
+        /// <summary>
+        /// Tries to remove an entry from the map within a timeout.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>true if the entry was removed; otherwise false.</returns>
+        /// <remarks>
+        /// <para>This method returns false when no lock on the key could be
+        /// acquired within the timeout.</para>
+        /// TODO or when there was no value with that key?
+        /// </remarks>
+        bool TryRemoveAsync(TKey key, TimeSpan timeout);
+
+        /// <summary>
+        /// Removes an entry from this map, and returns the corresponding value if any.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The value, if any, or default(TValue).</returns>
+        /// <remarks>
+        /// <para>This method serializes the return value. For performance reasons, prefer
+        /// <see cref="DeleteAsync"/> when the returned value is not used.</para>
+        /// </remarks>
+        Task<TValue> RemoveAsync(TKey key);
+
+        /// <summary>
+        /// Removes an entry from this map.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>The value, if any, or default(TValue).</returns>
+        /// <remarks>
+        /// <para>This method removes an entry if the key and the value both match the
+        /// specified key and value.</para>
+        /// </remarks>
+        Task<bool> RemoveAsync(TKey key, TValue value);
+
+        /// <summary>
+        /// Removes an entry from this map.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <remarks>
+        /// <para>For performance reasons, this method does not return the value. Prefer
+        /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
+        /// </remarks>
+        Task DeleteAsync(TKey key);
+
+        /// <summary>
+        /// Empties this map.
+        /// </summary>
+        Task ClearAsync();
+
+        #endregion
+
+        #region Keys and Values, counting and testing
+
+        /// <summary>
+        /// Gets the number of entries in the map.
+        /// </summary>
+        /// <returns>The total number of entries in the map.</returns>
+        int Count(); // TODO async!
+
+        /// <summary>
+        /// Determines whether this map is empty.
+        /// </summary>
+        /// <returns>true if the map does not contain entries; otherwise false.</returns>
+        Task<bool> IsEmpty();
+
+        /// <summary>
+        /// Determines whether this map contains an entry for a key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>True if the map contains an entry for the specified key; otherwise false.</returns>
+        Task<bool> ContainsKeyAsync(TKey key);
+
+        /// <summary>
+        /// Determines whether this map contains at least one entry with a value.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>True if the map contains at least an entry with the specified value; otherwise false.</returns>
+        Task<bool> ContainsValueAsync(TValue value);
+
+        #endregion
+
+        #region Keys and Values, cache
+
+        /// <summary>
+        /// Evicts an entry from the cache.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>true if the entry was evicted; otherwise false.</returns>
+        /// <remarks>
+        /// <para>Locked entries are not evicted (TODO: true?)</para>
+        /// <para>Evicts the entry from the in-memory cache. The entry is not removed from
+        /// the map. If a <see cref="MapStore"/> is defined for this map, The entry is
+        /// not evicted from the map store.</para>
+        /// </remarks>
+        bool Evict(TKey key);
+
+        /// <summary>
+        /// Evicts all entries but the locked entries from the cache.
+        /// </summary>
+        /// <remarks>
+        /// <para>Locked entries are not evicted.</para>
+        /// <para>Evicts entries from the in-memory cache. Entries are not removed from
+        /// the map. If a <see cref="MapStore"/> is defined for this map, entries are
+        /// not evicted from the map store.</para>
+        /// </remarks>
+        void EvictAll();
+
+        /// <summary>
+        /// Flushes the map store, if any.
+        /// </summary>
+        /// <remarks>
+        /// <para>If a <see cref="MapStore"/> is defined for this map, this method flushes
+        /// all dirty entries by deleting or storing them.</para>
+        /// </remarks>
+        void Flush();
+
+        #endregion
+
+        #region Processing
+
+        /// <summary>
+        /// Processes an entry.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="processor">An entry processor.</param>
+        /// <returns>The result of the process.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        object ExecuteOnKey(TKey key, IEntryProcessor processor);
+
+        // TODO: accept an IEnumerable
+        // TOOD: rename all these 'Execute'
+
+        /// <summary>
+        /// Processes entries.
+        /// </summary>
+        /// <param name="keys">The keys.</param>
+        /// <param name="processor">An entry processor.</param>
+        /// <returns>The result of the processing of each entry.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        IDictionary<TKey, object> ExecuteOnKeys(ISet<TKey> keys, IEntryProcessor processor);
+
+        /// <summary>
+        /// Process all entries.
+        /// </summary>
+        /// <param name="processor">An entry processor.</param>
+        /// <returns>The result of the processing of all entries.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        IDictionary<TKey, object> ExecuteOnEntries(IEntryProcessor processor);
+
+        /// <summary>
+        /// TODO: kill that one, it seems to be ExecuteOnKeyAsync
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="processor"></param>
+        /// <returns></returns>
+        Task<object> SubmitToKey(TKey key, IEntryProcessor processor);
+
+        #endregion
+
+        #region Locking
+
+        /// <summary>
+        /// Locks an entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <remarks>
+        /// TODO: document this properly (also: not distributed lock?)
+        /// <para>If the lock is not available, then "the current thread becomes disabled for thread scheduling
+        /// purposes and lies dormant until the lock has been acquired." The scope of the lock is this map only,
+        /// and the lock is only for the specified key in this map.</para>
+        /// <para>Locks are re-entrant, but counted: if a key is locked N times, then it should be unlocked
+        /// N times before another thread can lock it.</para>
+        /// </remarks>
+        void Lock(TKey key);
+
+        /// <summary>
+        /// Locks an entry for a given time span.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="leaseTime">A time span.</param>
+        /// <remarks>
+        /// TODO: document this properly (also: not distributed lock?)
+        /// <para>If the lock is not available, then "the current thread becomes disabled for thread scheduling
+        /// purposes and lies dormant until the lock has been acquired." The scope of the lock is this map only,
+        /// and the lock is only for the specified key in this map.</para>
+        /// <para>Locks are re-entrant, but counted: if a key is locked N times, then it should be unlocked
+        /// N times before another thread can lock it.</para>
+        /// <para>The lock is released after the time span.</para>
+        /// </remarks>
+        void Lock(TKey key, TimeSpan leaseTime);
+
+        /// <summary>
+        /// Tries to lock an entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <returns>true if the lock was acquired; otherwise false.</returns>
+        /// <remarks>
+        /// <para>If the entry cannot be locked, returns false immediately.</para>
+        /// </remarks>
+        bool TryLock(TKey key);
+
+        /// <summary>
+        /// Tries to lock an entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>true if the lock was acquired; otherwise false.</returns>
+        /// <remarks>
+        /// <para>If the entry cannot be locked after <paramref name="timeout"/>, returns false.</para>
+        /// <para>If <paramref name="timeout"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
+        /// </remarks>
+        bool TryLock(TKey key, TimeSpan timeout);
+
+        /// <summary>
+        /// Tries to lock an entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <param name="leaseTime">A lease time.</param>
+        /// <returns>true if the lock was acquired; otherwise false.</returns>
+        /// <remarks>
+        /// <para>If the entry cannot be locked after <paramref name="timeout"/>, returns false.
+        /// If <paramref name="timeout"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
+        /// <para>If acquired, the lock is automatically released after <paramref cref="leaseTime"/>.
+        /// If <paramref name="leaseTime"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the lock is never
+        /// released.</para>
+        /// </remarks>
+        bool TryLock(TKey key, TimeSpan timeout, TimeSpan leaseTime);
+
+        /// <summary>
+        /// Determines whether an entry is locked.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <returns>true if the entry is locked; otherwise false.</returns>
+        bool IsLocked(TKey key);
+
+        /// <summary>
+        /// Unlocks an entry.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <remarks>
+        /// <para>Unlocks the entry identified by the key, regardless of the lock owner.</para>
+        /// <para>This always succeed, never blocks, and returns immediately.</para>
+        /// TODO: but, async?
+        /// </remarks>
+        void ForceUnlock(TKey key);
+
+        #endregion
+
+        #region Indexing
+
+        void AddIndex(IndexType type, params string[] attributes);
+        void AddIndex(IndexConfig indexConfig);
+
+        #endregion
+
+        #region Predicates, Aggregators and Projections
+
+        /// <summary>
+        /// Aggregates values.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="aggregator">The aggregator.</param>
+        /// <param name="predicate">An optional predicate to filter the entries with.</param>
+        /// <returns>The result of the aggregation.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="aggregator"/> and <paramref name="predicate"/> must be
+        /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
+        /// </remarks>
+        TResult Aggregate<TResult>(IAggregator<TResult> aggregator, IPredicate predicate = null);
+
+        /// <summary>
+        /// Projects values.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="projection">The projection.</param>
+        /// <param name="predicate">An optional predicate to filter the entries with.</param>
+        /// <returns>The projected values.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="projection"/> and <paramref name="predicate"/> must be
+        /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
+        /// </remarks>
+        ICollection<TResult> Project<TResult>(IProjection projection, IPredicate predicate = null);
+
+        #endregion
+
+        #region Interception
+
+        /// <summary>
+        /// Removes an interceptor.
+        /// </summary>
+        /// <param name="id">The identifier of the interceptor.</param>
+        void RemoveInterceptor(string id);
+
+        #endregion
+
+        #region Events
+
+        /// <summary>
+        /// Removes an entry listener, if it exists.
+        /// </summary>
+        /// <param name="id">The identifier of the listener.</param>
+        /// <returns>true if a listener was that identifier was found and removed; otherwise false.</returns>
+        bool RemoveEntryListener(Guid id); // TODO: rename
+
+        // TODO: these should be renamed + done entirely differently
+        // IMapListener is an IEventListener and then we have IEntryAddedListener,
+        // IEntryEvictedListener, etc for each different event and now it's got
+        // to be different
+
+        /*
+        EntryAdded.AddAsync(Action<TKey, TValue> handler, bool includeValue);
+        EntryAdded.Remove(Guid id);
+
+        Task<Guid> SubscribeToEntryAdded(Action<TKey, TValue> handle, bool includeValue);
+        Task Unsubscribe(Guid subscriptionId);
+
+        Guid AddEntryListener(IMapListener listener, bool includeValue);
+        Guid AddEntryListener(IMapListener listener, TKey key, bool includeValue);
+        Guid AddEntryListener(IMapListener listener, IPredicate predicate, TKey key, bool includeValue);
+        Guid AddEntryListener(IMapListener listener, IPredicate predicate, bool includeValue);
+        */
+
+        #endregion
+    }
+}
