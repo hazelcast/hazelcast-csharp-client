@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Partitioning.Strategies
+using System.Collections.Generic;
+
+namespace Hazelcast.Serialization.Portable
 {
-    /// <summary>
-    /// Implements an <see cref="IPartitionStrategy"/> that always returns null, forcing fallback to the default strategy.
-    /// </summary>
-    internal sealed class NullPartitionStrategy : IPartitionStrategy
+    internal interface IPortableHook
     {
-        /// <inheritdoc />
-        public object GetPartitionKey(object o) 
-            => null;
+        IPortableFactory CreateFactory();
+
+        ICollection<IClassDefinition> GetBuiltinDefinitions();
+        int GetFactoryId();
     }
 }

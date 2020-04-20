@@ -35,7 +35,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             ListUUIDCodec.Encode(clientMessage, keyList);
         }
 
-        public static IList<KeyValuePair<Guid, IList<int>>> Decode(FrameIterator iterator)
+        public static IList<KeyValuePair<Guid, IList<int>>> Decode(IEnumerator<Frame> iterator)
         {
             var listV = ListMultiFrameCodec.Decode(iterator, ListIntegerCodec.Decode);
             var listK = ListUUIDCodec.Decode(iterator);

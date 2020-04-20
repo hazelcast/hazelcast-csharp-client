@@ -52,7 +52,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Configuration.BitmapIndexOptions Decode(FrameIterator iterator)
+        public static Hazelcast.Configuration.BitmapIndexOptions Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

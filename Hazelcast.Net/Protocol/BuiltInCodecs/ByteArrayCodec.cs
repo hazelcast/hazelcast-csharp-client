@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
@@ -30,7 +31,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return frame.Bytes;
         }
 
-        public static byte[] Decode(FrameIterator iterator)
+        public static byte[] Decode(IEnumerator<Frame> iterator)
         {
             return Decode(iterator.Take());
         }

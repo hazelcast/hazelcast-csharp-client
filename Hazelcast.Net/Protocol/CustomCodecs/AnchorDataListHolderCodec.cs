@@ -47,7 +47,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Protocol.Data.AnchorDataListHolder Decode(FrameIterator iterator)
+        public static Hazelcast.Protocol.Data.AnchorDataListHolder Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

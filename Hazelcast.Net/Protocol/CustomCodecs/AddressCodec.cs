@@ -52,7 +52,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Networking.NetworkAddress Decode(FrameIterator iterator)
+        public static Hazelcast.Networking.NetworkAddress Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

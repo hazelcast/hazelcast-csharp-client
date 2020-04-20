@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using Hazelcast.Messaging;
 using static Hazelcast.Protocol.Portability;
 
@@ -32,7 +33,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             clientMessage.Add(frame);
         }
 
-        public static long[] Decode(FrameIterator iterator)
+        public static long[] Decode(IEnumerator<Frame> iterator)
         {
             return Decode(iterator.Take());
         }

@@ -54,7 +54,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Exceptions.StackTraceElement Decode(FrameIterator iterator)
+        public static Hazelcast.Exceptions.StackTraceElement Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

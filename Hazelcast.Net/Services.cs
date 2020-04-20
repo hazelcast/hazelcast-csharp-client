@@ -1,5 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Aggregators;
+using Hazelcast.Predicates;
+using Hazelcast.Projections;
+using Hazelcast.Serialization;
 
 namespace Hazelcast
 {
@@ -19,6 +25,20 @@ namespace Hazelcast
         private static readonly ConcurrentDictionary<Type, Func<object>> Factories = new ConcurrentDictionary<Type, Func<object>>();
 
         private static readonly ConcurrentDictionary<Type, object> Instances = new ConcurrentDictionary<Type, object>();
+
+        /// <summary>
+        /// Initializes the <see cref="Services"/> class.
+        /// </summary>
+        static Services()
+        {
+            // register the serializer hooks collection
+            // the purpose of this is to break cross-dependencies between namespaces
+            var serializerHooks = new SerializerHooks();
+            serializerHooks.Add<PredicateDataSerializerHook>();
+            serializerHooks.Add<AggregatorDataSerializerHook>();
+            serializerHooks.Add<ProjectionDataSerializerHook>();
+            Instances[typeof(SerializerHooks)] = serializerHooks;
+        }
 
         /// <summary>
         /// Gets the service getter.
@@ -104,6 +124,36 @@ namespace Hazelcast
             });
 
             return instance != null;
+        }
+
+        /// <summary>
+        /// Represents a collection of <see cref="ISerializerHook{T}"/> types.
+        /// </summary>
+        public sealed class SerializerHooks
+        {
+            private readonly List<Type> _types = new List<Type>();
+
+            /// <summary>
+            /// Adds a type.
+            /// </summary>
+            /// <param name="type">The type.</param>
+            public void Add(Type type) => _types.Add(type);
+
+            /// <summary>
+            /// Adds a type.
+            /// </summary>
+            /// <typeparam name="T">The type.</typeparam>
+            public void Add<T>() => Add(typeof(T));
+
+            /// <summary>
+            /// Gets the types.
+            /// </summary>
+            public IEnumerable<Type> Types => _types;
+
+            /// <summary>
+            /// Gets the hooks.
+            /// </summary>
+            public IEnumerable<IDataSerializerHook> Hooks => _types.Select(Activator.CreateInstance).Cast<IDataSerializerHook>();
         }
     }
 }

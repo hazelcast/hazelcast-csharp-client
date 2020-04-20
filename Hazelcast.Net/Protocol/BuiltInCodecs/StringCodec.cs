@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Messaging;
 
@@ -28,7 +29,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             clientMessage.Add(new Frame(Utf8.GetBytes(value)));
         }
 
-        public static string Decode(FrameIterator iterator)
+        public static string Decode(IEnumerator<Frame> iterator)
         {
             return Decode(iterator.Take());
         }

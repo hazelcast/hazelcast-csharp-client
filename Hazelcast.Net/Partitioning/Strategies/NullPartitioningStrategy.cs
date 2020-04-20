@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
+// 
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+// 
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,12 +15,12 @@
 namespace Hazelcast.Partitioning.Strategies
 {
     /// <summary>
-    /// Implements an <see cref="IPartitionStrategy"/> that relies on <see cref="IPartitionAware"/> when possible, else returns null.
+    /// Implements an <see cref="IPartitioningStrategy"/> that always returns null, forcing fallback to the default strategy.
     /// </summary>
-    internal sealed class AwarePartitionStragegy : IPartitionStrategy
+    internal sealed class NullPartitioningStrategy : IPartitioningStrategy
     {
         /// <inheritdoc />
-        public object GetPartitionKey(object o)
-            => o is IPartitionAware aware ? aware.GetPartitionKey() : null;
+        public object GetPartitionKey(object o) 
+            => null;
     }
 }

@@ -56,7 +56,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.MemberInfo Decode(FrameIterator iterator)
+        public static Hazelcast.Data.MemberInfo Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

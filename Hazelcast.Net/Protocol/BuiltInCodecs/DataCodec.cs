@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using Hazelcast.Messaging;
 using Hazelcast.Serialization;
 
@@ -38,7 +39,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return new HeapData(frame.Bytes);
         }
 
-        public static IData Decode(FrameIterator iterator)
+        public static IData Decode(IEnumerator<Frame> iterator)
         {
             return Decode(iterator.Take());
         }

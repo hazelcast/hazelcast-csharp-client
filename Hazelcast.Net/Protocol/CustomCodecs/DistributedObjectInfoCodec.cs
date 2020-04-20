@@ -47,7 +47,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.DistributedObjectInfo Decode(FrameIterator iterator)
+        public static Hazelcast.Data.DistributedObjectInfo Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

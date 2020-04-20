@@ -71,7 +71,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.Map.SimpleEntryView<IData, IData> Decode(FrameIterator iterator)
+        public static Hazelcast.Data.Map.SimpleEntryView<IData, IData> Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

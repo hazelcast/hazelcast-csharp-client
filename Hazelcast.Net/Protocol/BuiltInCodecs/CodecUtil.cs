@@ -15,11 +15,12 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal delegate T DecodeDelegate<out T>(FrameIterator iterator);
+    internal delegate T DecodeDelegate<out T>(IEnumerator<Frame> iterator);
 
     internal static class CodecUtil
     {
@@ -35,7 +36,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             }
         }
 
-        public static T DecodeNullable<T>(FrameIterator iterator, DecodeDelegate<T> decode) where T : class
+        public static T DecodeNullable<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decode) where T : class
         {
             return iterator.SkipNull() ? null : decode(iterator);
         }

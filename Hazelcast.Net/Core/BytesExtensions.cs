@@ -39,6 +39,7 @@ namespace Hazelcast.Core
         {
             switch (endianness)
             {
+                case Endianness.Unspecified:
                 case Endianness.Native:
                     return NativeEndianness;
                 case Endianness.LittleEndian:
@@ -55,7 +56,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The sequence of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt32(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Native)
+        public static int ReadInt32(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < 4)
                 throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
@@ -84,7 +85,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The sequence of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static ushort ReadUInt16(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Native)
+        public static ushort ReadUInt16(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             const byte length = sizeof(ushort);
 
@@ -115,7 +116,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The span of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt32(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Native)
+        public static int ReadInt32(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             const byte length = sizeof(int);
 
@@ -134,7 +135,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The span of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static ushort ReadUInt16(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Native)
+        public static ushort ReadUInt16(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             const byte length = sizeof(ushort);
 
@@ -151,13 +152,56 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Reads an <see cref="Int16"/> (short) value from a span of bytes.
+        /// </summary>
+        /// <param name="bytes">The span of bytes to read from.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        public static short ReadInt16(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        {
+            const byte length = sizeof(ushort);
+
+            if (bytes.Length < length)
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
+
+            unchecked
+            {
+                return (short) (ResolveEndianness(endianness).IsBigEndian()
+
+                    ? bytes[0] << 8 | bytes[1]
+                    : bytes[0] | bytes[1] << 8);
+            }
+        }
+
+        /// <summary>
+        /// Reads an <see cref="Int16"/> (short) value from an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="position">The position in the array where the value should be read.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        public static short ReadInt16(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
+        {
+            if (bytes.Length < position + sizeof(short))
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            unchecked
+            {
+                return ResolveEndianness(endianness).IsBigEndian()
+
+                    ? (short) (bytes[position + 0] << 8 | bytes[position + 1])
+                    : (short) (bytes[position] | bytes[position + 1] << 8);
+            }
+        }
+
+        /// <summary>
         /// Reads an <see cref="Int32"/> (int) value from an array of bytes.
         /// </summary>
         /// <param name="bytes">The array of bytes to read from.</param>
         /// <param name="position">The position in the array where the value should be read.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt32(this byte[] bytes, int position, Endianness endianness = Endianness.Native)
+        public static int ReadInt32(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -181,7 +225,7 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be read.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static long ReadInt64(this byte[] bytes, int position, Endianness endianness = Endianness.Native)
+        public static long ReadInt64(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -237,7 +281,7 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteUInt16(this byte[] bytes, int position, ushort value, Endianness endianness = Endianness.Native)
+        public static void WriteUInt16(this byte[] bytes, int position, ushort value, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(ushort))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -260,13 +304,42 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Writes an <see cref="Int16"/> (short) value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="endianness">The endianness.</param>
+        public static void WriteInt16(this byte[] bytes, int position, short value, Endianness endianness = Endianness.Unspecified)
+        {
+            if (bytes.Length < position + sizeof(ushort))
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            var unsigned = (ushort) value;
+
+            unchecked
+            {
+                if (ResolveEndianness(endianness).IsBigEndian())
+                {
+                    bytes[position] = (byte)(unsigned >> 8);
+                    bytes[position + 1] = (byte)unsigned;
+                }
+                else
+                {
+                    bytes[position] = (byte)unsigned;
+                    bytes[position + 1] = (byte)(unsigned >> 8);
+                }
+            }
+        }
+
+        /// <summary>
         /// Writes an <see cref="Int32"/> (int) value to an array of bytes.
         /// </summary>
         /// <param name="bytes">The array of bytes to write to.</param>
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteInt32(this byte[] bytes, int position, int value, Endianness endianness = Endianness.Native)
+        public static void WriteInt32(this byte[] bytes, int position, int value, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -299,7 +372,7 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteInt64(this byte[] bytes, int position, long value, Endianness endianness = Endianness.Native)
+        public static void WriteInt64(this byte[] bytes, int position, long value, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -352,6 +425,154 @@ namespace Hazelcast.Core
             => bytes.WriteByte(position, value ? (byte) 0x01 : (byte) 0x00);
 
         /// <summary>
+        /// Reads a <see cref="Char"/> (char) value from an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="position">The position in the array where the value should be read.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        public static char ReadChar(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
+        {
+            const byte length = sizeof(char);
+
+            if (bytes.Length < position + length)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            unchecked
+            {
+                return (char) (ResolveEndianness(endianness).IsBigEndian()
+
+                    ? bytes[position] << 8 | bytes[position + 1]
+                    : bytes[position] | bytes[position + 1] << 8);
+            }
+        }
+
+        /// <summary>
+        /// Writes a <see cref="Char"/> (char) value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="endianness">The endianness.</param>
+        public static void WriteChar(this byte[] bytes, int position, char value, Endianness endianness = Endianness.Unspecified)
+        {
+            if (bytes.Length < position + sizeof(char))
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            var unsigned = value;
+
+            unchecked
+            {
+                if (ResolveEndianness(endianness).IsBigEndian())
+                {
+                    bytes[position] = (byte) (unsigned >> 8);
+                    bytes[position + 1] = (byte) unsigned;
+                }
+                else
+                {
+                    bytes[position] = (byte) unsigned;
+                    bytes[position + 1] = (byte) (unsigned >> 8);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads a <see cref="Char"/> (char) value encoded on 1, 2 or 3 bytes from an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="position">The position in the array where the value should be read.</param>
+        /// <returns>The value.</returns>
+        /// <remarks>
+        /// <para>The position is incremented with the number of bytes read.</para>
+        /// </remarks>
+        public static char ReadUtf8Char(this byte[] bytes, ref int position)
+        {
+            const byte length = sizeof(char);
+
+            if (bytes.Length < position + length)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            unchecked
+            {
+                var b = bytes[position];
+                var x = b >> 4;
+
+                if (x >= 0 && x <= 7)
+                {
+                    position += 1;
+                    return (char)b;
+                }
+
+                if (x == 12 || x == 13)
+                {
+                    if (bytes.Length < position + 2 * length)
+                        throw new ArgumentOutOfRangeException(nameof(position));
+
+                    var first = (b & 0x1f) << 6;
+                    var second = bytes[position + 1] & 0x3f;
+                    position += 2;
+                    return (char)(first | second);
+                }
+
+                if (x == 14)
+                {
+                    if (bytes.Length < position + 3 * length)
+                        throw new ArgumentOutOfRangeException(nameof(position));
+
+                    var first2 = (b & 0x0f) << 12;
+                    var second2 = (bytes[position + 1] & 0x3f) << 6;
+                    var third2 = bytes[position + 2] & 0x3f;
+                    position += 3;
+                    return (char)(first2 | second2 | third2);
+                }
+
+                // TODO: InvalidDataException?
+                throw new InvalidOperationException("Malformed byte sequence");
+            }
+        }
+
+        /// <summary>
+        /// Writes a <see cref="Char"/> (char) value to an array of bytes, encoded on 1, 2 or 3 bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        /// <remarks>
+        /// <para>The position is incremented with the number of bytes written.</para>
+        /// </remarks>
+        public static void WriteUtf8Char(this byte[] bytes, ref int position, char value)
+        {
+            if (value <= 0x007f)
+            {
+                if (bytes.Length < position + sizeof(byte))
+                    throw new ArgumentOutOfRangeException(nameof(position));
+
+                bytes[position] = (byte) value;
+                position += 1;
+                return;
+            }
+
+            if (value <= 0x07ff)
+            {
+                if (bytes.Length < position + 2 * sizeof(byte))
+                    throw new ArgumentOutOfRangeException(nameof(position));
+
+                bytes[position] = (byte) (0xc0 | value >> 6 & 0x1f);
+                bytes[position + 1] = (byte) (0x80 | value & 0x3f);
+                position += 2;
+                return;
+            }
+
+            if (bytes.Length < position + 3 * sizeof(byte))
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            bytes[position] = (byte) (0xe | value >> 12 & 0x0f);
+            bytes[position + 1] = (byte) (0x80 | value >> 6 & 0x3f);
+            bytes[position + 2] = (byte) (0x80 | value & 0x3f);
+            position += 3;
+        }
+
+        /// <summary>
         /// Gets the size of a <see cref="Guid"/> in arrays or sequences of bytes.
         /// </summary>
         public const int SizeOfGuid = (1 + 16) * SizeOfByte;
@@ -377,6 +598,16 @@ namespace Hazelcast.Core
         public const int SizeOfInt64 = 8;
 
         /// <summary>
+        /// Gets the size of an <see cref="Char"/> (char) in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfChar = 2;
+
+        /// <summary>
+        /// Gets the size of an <see cref="Int16"/> (short) in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfInt16 = 2;
+
+        /// <summary>
         /// Reads a <see cref="Guid"/> value from an array of bytes.
         /// </summary>
         /// <param name="bytes">The array of bytes to read from.</param>
@@ -392,7 +623,7 @@ namespace Hazelcast.Core
 
             // ReSharper disable once UseObjectOrCollectionInitializer
 #pragma warning disable IDE0017 // Simplify object initialization
-            var v = new JavaUUIDOrder();
+            var v = new JavaUuidOrder();
 #pragma warning restore IDE0017 // Simplify object initialization
 
             v.X0 = bytes[position]; position += SizeOfByte;
@@ -433,7 +664,7 @@ namespace Hazelcast.Core
             if (value == Guid.Empty) return;
             position += SizeOfByte;
 
-            var v = new JavaUUIDOrder { Value = value };
+            var v = new JavaUuidOrder { Value = value };
 
             bytes[position] = v.X0; position += SizeOfByte;
             bytes[position] = v.X1; position += SizeOfByte;
@@ -454,35 +685,6 @@ namespace Hazelcast.Core
             bytes[position] = v.XD; position += SizeOfByte;
             bytes[position] = v.XE; position += SizeOfByte;
             bytes[position] = v.XF; //position += SizeOfByte;
-        }
-
-        // the following GUID: "00010203-0405-0607-0809-0a0b0c0d0e0f" is:
-        // in .NET ToArray   as 3, 2, 1, 0,     5, 4, 7, 6,     8,   9, 10, 11,     12, 13, 14, 15
-        // in Java UUIDCodec as 7, 6, 5, 4,     3, 2, 1, 0,     15, 14, 13, 12,     11, 10, 9,  8
-        [StructLayout(LayoutKind.Explicit, Pack = 1)]
-        internal struct JavaUUIDOrder
-        {
-            [FieldOffset(0)] public Guid Value;
-
-            [FieldOffset(6)] public byte X0;
-            [FieldOffset(7)] public byte X1;
-            [FieldOffset(4)] public byte X2;
-            [FieldOffset(5)] public byte X3;
-
-            [FieldOffset(0)] public byte X4;
-            [FieldOffset(1)] public byte X5;
-            [FieldOffset(2)] public byte X6;
-            [FieldOffset(3)] public byte X7;
-
-            [FieldOffset(15)] public byte X8;
-            [FieldOffset(14)] public byte X9;
-            [FieldOffset(13)] public byte XA;
-            [FieldOffset(12)] public byte XB;
-
-            [FieldOffset(11)] public byte XC;
-            [FieldOffset(10)] public byte XD;
-            [FieldOffset(9)] public byte XE;
-            [FieldOffset(8)] public byte XF;
         }
 
         /// <summary>

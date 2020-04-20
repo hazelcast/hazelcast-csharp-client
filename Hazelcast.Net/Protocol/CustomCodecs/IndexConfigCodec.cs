@@ -54,7 +54,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Configuration.IndexConfig Decode(FrameIterator iterator)
+        public static Hazelcast.Configuration.IndexConfig Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

@@ -13,11 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol
 {
+    // FIXME MOVE THIS! it is a general utility also used outside of protocol!
+
     /// <summary>
     /// Defines constants and methods used in generated codecs to facilitate porting them,
     /// until their generator has been fully refactored and produced correct code.
@@ -41,6 +44,17 @@ namespace Hazelcast.Protocol
         public const int GuidSizeInBytes = BytesExtensions.SizeOfGuid;
 
         public const int BoolSizeInBytes = BytesExtensions.SizeOfBool;
+
+        public const int CharSizeInBytes = BytesExtensions.SizeOfChar;
+
+        public const int ShortSizeInBytes = BytesExtensions.SizeOfInt16;
+
+        public const int NullArray = -1;
+
+        public static long CombineToLong(int x, int y)
+        {
+            return unchecked(((long)x << 32) | (y & 0xFFFFFFFFL));
+        }
 
         public static void EncodeGuid(Frame frame, int position, Guid value)
             => frame.Bytes.WriteGuid(position, value);
@@ -83,7 +97,58 @@ namespace Hazelcast.Protocol
 
         public static void Add(this ClientMessage message, Frame frame) => message.Append(frame);
 
-        // can we avoid allocating iterators?
-        public static FrameIterator GetIterator(this ClientMessage message) => new FrameIterator(message);
+        public static IEnumerator<Frame> GetIterator(this ClientMessage message) => message.GetEnumerator();
+
+        /// <summary>
+        /// Takes the current frame and moves to the next frame.
+        /// </summary>
+        /// <returns>The current frame, or null if the end of the list has been reached.</returns>
+        public static Frame Take(this IEnumerator<Frame> frames)
+        {
+            return frames.MoveNext() ? frames.Current : null;
+        }
+
+        /// <summary>
+        /// Skips the current frame it is a "null frame".
+        /// </summary>
+        /// <returns></returns>
+        public static bool SkipNull(this IEnumerator<Frame> frames)
+        {
+            var isNull = frames.Current != null && frames.Current.IsNull;
+            if (isNull) frames.Take();
+            return isNull;
+        }
+
+        /// <summary>
+        /// Determines whether the current frame is an "end of structure" frame.
+        /// </summary>
+        public static bool CurrentIsEndStruct(this IEnumerator<Frame> frames) 
+            => frames.Current != null && frames.Current.IsEndStruct;
+
+        /// <summary>
+        /// Advances the iterator by skipping all frames until the end of a structure.
+        /// </summary>
+        public static void SkipToStructEnd(this IEnumerator<Frame> frames)
+        {
+            // We are starting from 1 because of the BeginFrame we read
+            // in the beginning of the Decode method
+            var numberOfExpectedEndFrames = 1;
+
+            while (numberOfExpectedEndFrames != 0)
+            {
+                var frame = frames.Take();
+                if (frame == null)
+                    throw new InvalidOperationException("Reached end of message.");
+
+                if (frame.IsEndStruct)
+                {
+                    numberOfExpectedEndFrames--;
+                }
+                else if (frame.IsBeginStruct)
+                {
+                    numberOfExpectedEndFrames++;
+                }
+            }
+        }
     }
 }

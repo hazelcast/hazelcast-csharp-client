@@ -21,6 +21,8 @@ namespace Hazelcast.Serialization
     /// </summary>
     public interface IDataInput
     {
+        #region Reads
+
         /// <summary>
         /// Reads a <see cref="Boolean"/> (bool) value.
         /// </summary>
@@ -87,6 +89,10 @@ namespace Hazelcast.Serialization
         /// <returns>The value.</returns>
         string ReadUtf(); // fixme name
 
+        #endregion
+
+        #region Special Reads
+
         /// <summary>
         /// Reads the whole object.
         /// </summary>
@@ -101,11 +107,17 @@ namespace Hazelcast.Serialization
         /// <param name="length"></param>
         void ReadFully(byte[] bytes, int offset, int length); // fixme what is this doing?
 
+        #endregion
+
+        #region Buffer Management
+
         /// <summary>
         /// Skips bytes.
         /// </summary>
         /// <param name="count"></param>
         /// <returns></returns>
         int SkipBytes(int count); // fixme what? return?
+
+        #endregion
     }
 }

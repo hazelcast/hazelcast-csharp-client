@@ -59,7 +59,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Protocol.Data.PagingPredicateHolder Decode(FrameIterator iterator)
+        public static Hazelcast.Protocol.Data.PagingPredicateHolder Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

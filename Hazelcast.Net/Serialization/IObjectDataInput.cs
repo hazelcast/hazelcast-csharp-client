@@ -20,12 +20,19 @@ namespace Hazelcast.Serialization
     /// <summary>
     /// Defines a more complete source of data that can be read to deserialize an object.
     /// </summary>
+    /// <remarks>
+    /// <para>The basic <see cref="IDataInput"/> supports primitive types. This
+    /// class adds support for arrays of primitive types.</para>
+    /// TODO: rename + do the same to output
+    /// </remarks>
     public interface IObjectDataInput : IDataInput
     {
         /// <summary>
         /// Gets the endianness to use when deserializing.
         /// </summary>
         Endianness Endianness { get; } // fixme why not on IDataInput?
+
+        #region Reads 
 
         /// <summary>
         /// Reads an array of <see cref="Boolean"/> (bool).
@@ -81,6 +88,10 @@ namespace Hazelcast.Serialization
         /// <returns>The array.</returns>
         string[] ReadUtfArray(); // fixme name
 
+        #endregion
+
+        #region Special Reads
+
         /// <summary>
         /// Reads an <see cref="IData"/> instance.
         /// </summary>
@@ -93,5 +104,7 @@ namespace Hazelcast.Serialization
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <returns>The object.</returns>
         T ReadObject<T>();
+
+        #endregion
     }
 }

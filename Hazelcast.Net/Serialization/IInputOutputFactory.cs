@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Partitioning.Strategies
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization
 {
-    /// <summary>
-    /// Defines ways to get the partition key of objects.
-    /// </summary>
-    public interface IPartitionStrategy
+    internal interface IInputOutputFactory
     {
-        /// <summary>
-        /// Gets the partition key of an object.
-        /// </summary>
-        /// <param name="o">The object.</param>
-        /// <returns>The partition key of the object, or null to fallback to the default strategy.</returns>
-        object GetPartitionKey(object o);
+        IBufferObjectDataInput CreateInput(IData data, ISerializationService service);
+
+        IBufferObjectDataInput CreateInput(byte[] buffer, ISerializationService service);
+
+        IBufferObjectDataOutput CreateOutput(int size, ISerializationService service);
+
+        Endianness Endianness { get; }
     }
 }

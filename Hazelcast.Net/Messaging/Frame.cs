@@ -73,7 +73,7 @@ namespace Hazelcast.Messaging
         /// <param name="bytes">The sequence of bytes.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The length of the frame.</returns>
-        public static int ReadLength(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Native)
+        public static int ReadLength(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
             => BytesExtensions.ReadInt32(ref bytes, endianness);
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Hazelcast.Messaging
         /// <param name="bytes">The sequence of bytes.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The flags of the frame.</returns>
-        public static FrameFlags ReadFlags(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Native)
+        public static FrameFlags ReadFlags(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
             => (FrameFlags) BytesExtensions.ReadUInt16(ref bytes, endianness);
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace Hazelcast.Messaging
         /// </summary>
         /// <param name="bytes">An array of bytes.</param>
         /// <param name="endianness">The endianness.</param>
-        public void WriteLengthAndFlags(byte[] bytes, Endianness endianness = Endianness.Native)
+        public void WriteLengthAndFlags(byte[] bytes, Endianness endianness = Endianness.Unspecified)
         {
             bytes.WriteInt32(0, Length, endianness);
             bytes.WriteUInt16(FrameFields.SizeOf.Length, (ushort) Flags, endianness);
