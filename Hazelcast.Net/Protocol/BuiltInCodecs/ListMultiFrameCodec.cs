@@ -68,7 +68,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var result = new List<T>();
             //begin frame, list
             iterator.Take();
-            while (!iterator.CurrentIsEndStruct())
+            while (!iterator.AtStructEnd())
             {
                 result.Add(decodeFunction(iterator));
             }
@@ -83,7 +83,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var result = new List<T>();
             //begin frame, list
             iterator.Take();
-            while (!iterator.CurrentIsEndStruct())
+            while (!iterator.AtStructEnd())
             {
                 result.Add(iterator.SkipNull() ? null : decodeFunction(iterator));
             }

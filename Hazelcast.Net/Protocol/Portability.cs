@@ -105,7 +105,14 @@ namespace Hazelcast.Protocol
         /// <returns>The current frame, or null if the end of the list has been reached.</returns>
         public static Frame Take(this IEnumerator<Frame> frames)
         {
-            return frames.MoveNext() ? frames.Current : null;
+            // if current is null maybe we haven't started yet - start
+            // (if it's null because we've reached the end, nothing happens)
+            if (frames.Current == null) frames.MoveNext();
+
+            // capture and return the current frame, move to next
+            var frame = frames.Current;
+            frames.MoveNext();
+            return frame;
         }
 
         /// <summary>
@@ -122,7 +129,7 @@ namespace Hazelcast.Protocol
         /// <summary>
         /// Determines whether the current frame is an "end of structure" frame.
         /// </summary>
-        public static bool CurrentIsEndStruct(this IEnumerator<Frame> frames) 
+        public static bool AtStructEnd(this IEnumerator<Frame> frames) 
             => frames.Current != null && frames.Current.IsEndStruct;
 
         /// <summary>

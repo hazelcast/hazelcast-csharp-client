@@ -88,12 +88,12 @@ namespace Hazelcast.Messaging
 
                 if (_currentMessage == null)
                 {
-                    XConsole.WriteLine(this, $"Add frame (0x{(ushort)_currentFrame.Flags:x2}, {_currentFrame.Length} bytes) to new fragment");
+                    XConsole.WriteLine(this, $"Add {_currentFrame} to new fragment");
                     _currentMessage = new ClientMessage(_currentFrame);
                 }
                 else
                 {
-                    XConsole.WriteLine(this, $"Add frame (0x{(ushort)_currentFrame.Flags:x2}, {_currentFrame.Length} bytes) to current fragment");
+                    XConsole.WriteLine(this, $"Add {_currentFrame} to current fragment");
                     _currentMessage.Append(_currentFrame);
                 }
             }

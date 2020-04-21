@@ -58,7 +58,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
             //begin frame, map
             iterator.Take();
-            while (!iterator.CurrentIsEndStruct())
+            while (!iterator.AtStructEnd())
             {
                 var key = decodeKeyFunc(iterator);
                 var value = decodeValueFunc(iterator);

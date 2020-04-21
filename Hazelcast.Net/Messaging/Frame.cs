@@ -164,15 +164,6 @@ namespace Hazelcast.Messaging
 
         /// <inheritdoc />
         public override string ToString()
-        {
-            var flagNames = ((Flags & FrameFlags.AllFlags) > 0
-                                    ? Flags.ToString()
-                                    : "") +
-                                (((ClientMessageFlags) Flags & ClientMessageFlags.AllFlags) > 0
-                                    ? ((ClientMessageFlags) Flags).ToString()
-                                    : "");
-
-            return $"{{Frame: {Length} bytes, 0x{Flags:x} ({flagNames})}}";
-        }
+            => $"{{Frame: {Length} bytes, {Flags.ToBetterString()} (0x{Flags:x})}}";
     }
 }

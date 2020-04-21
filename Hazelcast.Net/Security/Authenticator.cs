@@ -30,7 +30,7 @@ namespace Hazelcast.Security
     public class Authenticator : IAuthenticator
     {
         /// <inheritdoc />
-        public async ValueTask<AuthenticationResult> AuthenticateAsync(Clustering.Client client)
+        public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client)
         {
             var info = await TryAuthenticateAsync(client);
             // but maybe we want to capture an exception here?
@@ -38,7 +38,7 @@ namespace Hazelcast.Security
             return info;
         }
 
-        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Clustering.Client client)
+        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client)
         {
             // TODO accept parameters etc
 

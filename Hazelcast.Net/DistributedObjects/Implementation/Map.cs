@@ -11,6 +11,8 @@ using Hazelcast.Configuration;
 using Hazelcast.Data;
 using Hazelcast.Data.Map;
 using Hazelcast.Exceptions;
+using Hazelcast.Logging;
+using Hazelcast.Messaging;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;
@@ -132,7 +134,9 @@ namespace Hazelcast.DistributedObjects.Implementation
         private async ValueTask InitializeRemote(IDistributedObject o)
         {
             var requestMessage = ClientCreateProxyCodec.EncodeRequest(o.Name, o.ServiceName);
-            _ = await _cluster.SendAsync(requestMessage);
+            XConsole.WriteLine(this, "Send initialize request");
+            var responseMessage = await _cluster.SendAsync(requestMessage);
+            XConsole.WriteLine(this, "Rcvd initialize response\n" + responseMessage.Dump());
         }
     }
 

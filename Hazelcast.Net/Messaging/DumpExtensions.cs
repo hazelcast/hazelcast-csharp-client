@@ -20,18 +20,8 @@ namespace Hazelcast.Messaging
             var frame = message.FirstFrame;
             while (frame != null)
             {
-                var flagNames = ((frame.Flags & FrameFlags.AllFlags) > 0
-                                        ? frame.Flags.ToString()
-                                        : "") +
-                                      (((ClientMessageFlags) frame.Flags & ClientMessageFlags.AllFlags) > 0
-                                        ? ((ClientMessageFlags)frame.Flags).ToString()
-                                        : "");
-
                 text.Append("  FRAME ");
-                text.Append(frame.Length);
-                text.Append(" ");
-                text.Append($"0x{frame.Flags:x} {flagNames}");
-                text.AppendLine();
+                text.AppendLine(frame.ToString());
                 frame = frame.Next;
             }
 

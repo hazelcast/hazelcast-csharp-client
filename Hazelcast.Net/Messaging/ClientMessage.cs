@@ -229,9 +229,7 @@ namespace Hazelcast.Messaging
 
         /// <inheritdoc />
         public IEnumerator<Frame> GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
+            => new FrameEnumerator(this);
 
         /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator()
@@ -245,7 +243,10 @@ namespace Hazelcast.Messaging
         private class FrameEnumerator : IEnumerator<Frame>
         {
             private readonly ClientMessage _message;
-            private bool _enumerating;
+            private bool _started;
+#if DEBUG
+            private int _index;
+#endif
 
             /// <summary>
             /// Initialize a new instance of the <see cref="FrameEnumerator"/> class.
@@ -254,12 +255,30 @@ namespace Hazelcast.Messaging
             public FrameEnumerator(ClientMessage message)
             {
                 _message = message;
+#if DEBUG
+                _index = -1;
+#endif
             }
 
             /// <inheritdoc />
             public bool MoveNext()
             {
-                Current = _enumerating ? Current?.Next : _message.FirstFrame;
+                if (!_started)
+                {
+                    _started = true;
+                    Current = _message.FirstFrame;
+#if DEBUG
+                    _index = 0;
+#endif
+                }
+                else
+                {
+#if DEBUG
+                    if (Current != null) _index++;
+#endif
+                    Current = Current?.Next;
+                }
+
                 return Current != null;
             }
 
@@ -267,7 +286,10 @@ namespace Hazelcast.Messaging
             public void Reset()
             {
                 Current = null;
-                _enumerating = false;
+                _started = false;
+#if DEBUG
+                _index = -1;
+#endif
             }
 
             /// <inheritdoc />
@@ -279,6 +301,16 @@ namespace Hazelcast.Messaging
             /// <inheritdoc />
             public void Dispose()
             { }
+
+            /// <inheritdoc />
+            public override string ToString()
+            {
+#if DEBUG
+                return $"Enumerator at frame[{_index}]: {(Current == null ? "<null>" : Current.ToString())}";
+#else
+                return $"Enumerator at frame: {(Current == null ? "<null>" : Current.ToString())}";
+#endif
+            }
         }
     }
 }

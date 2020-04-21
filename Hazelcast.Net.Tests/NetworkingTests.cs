@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Data;
+using Hazelcast.DistributedObjects;
+using Hazelcast.DistributedObjects.Implementation;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
@@ -305,6 +307,43 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             var buffer = new ReadOnlySequence<byte>(bytes);
             var value = BytesExtensions.ReadInt32(ref buffer);
             Assert.AreEqual(origin, value);
+        }
+
+        [Test]
+        [Timeout(10_000)]
+        public async Task Map()
+        {
+            // this test expects a server on localhost:5701
+
+            // of course this is temporary
+            Services.Reset();
+            Services.Register<IAuthenticator>(() => new Authenticator());
+
+            XConsole.Setup(this, 0, "TST");
+            XConsole.WriteLine(this, "Begin");
+
+            XConsole.WriteLine(this, "Connect cluster");
+            var cluster = new Cluster();
+            await cluster.Connect();
+            XConsole.WriteLine(this, "Connected");
+
+            // time to process the event / members, else the LB has no entries
+            // how is this supposed to work in real life?!
+            await Task.Delay(2000);
+
+            // FIXME nevertheless, still failing due to stupid FrameIterator mess
+
+            var dobj = new DistributedObjects.Implementation.DistributedObjects(cluster);
+            var map = await dobj.GetOrCreateAsync<IMap<string, int>>(Constants.ServiceNames.Map, "testmap");
+
+            // events?
+            await Task.Delay(4000);
+
+            // FIXME how are we supposed to release it all?
+            //cluster.Close();
+
+            XConsole.WriteLine(this, "End");
+            await Task.Delay(100);
         }
     }
 }
