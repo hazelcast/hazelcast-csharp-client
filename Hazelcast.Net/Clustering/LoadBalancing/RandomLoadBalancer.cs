@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.Core;
 
 namespace Hazelcast.Clustering.LoadBalancing
 {
@@ -24,14 +25,12 @@ namespace Hazelcast.Clustering.LoadBalancing
     /// </remarks>
     public class RandomLoadBalancer : LoadBalancerBase
     {
-        private readonly Random _random = new Random(DateTime.Now.Millisecond);
-
         /// <inheritdoc />
         public override Guid Select()
         {
             // get an immutable list of members, and pick one at random
             var members = Members;
-            return members[_random.Next(members.Count)];
+            return members[RandomProvider.Random.Next(members.Count)];
         }
     }
 }

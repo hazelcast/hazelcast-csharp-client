@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Core;
 
 namespace AsyncTests1
 {
@@ -9,8 +10,6 @@ namespace AsyncTests1
     /// </summary>
     public static class EnumerableExtensions
     {
-        private static readonly Random Random = new Random(DateTime.Now.Millisecond);
-
         /// <summary>
         /// Shuffles an enumerable.
         /// </summary>
@@ -18,6 +17,6 @@ namespace AsyncTests1
         /// <param name="source">The original enumerable.</param>
         /// <returns>The original enumerable items, in random order.</returns>
         public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
-            => source.OrderBy(x => Random.Next());
+            => source.OrderBy(x => RandomProvider.Random.Next());
     }
 }

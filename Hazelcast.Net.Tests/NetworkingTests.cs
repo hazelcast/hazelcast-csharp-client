@@ -331,7 +331,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             // how is this supposed to work in real life?!
             await Task.Delay(2000);
 
-            var map = await client.GetMapAsync<string, int>("testmap" + new Random().Next(100));
+            var map = await client.GetMapAsync<string, int>("testmap" + RandomProvider.Random.Next(100));
             await map.AddAsync("key", 42);
 
             // events?

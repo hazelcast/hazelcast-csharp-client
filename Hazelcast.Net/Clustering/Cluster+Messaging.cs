@@ -65,10 +65,10 @@ namespace Hazelcast.Clustering
         /// <param name="message">The message to send.</param>
         /// <param name="key">The key.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendToKeyOwnerAsync(ClientMessage message, IData key)
+        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, IData key)
         {
             var partitionId = Partitioner.GetPartitionId(key);
-            return await SendToPartitionOwner(message, partitionId);
+            return await SendAsync(message, partitionId);
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Hazelcast.Clustering
         /// <param name="key">The key.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         // TODO: consider removing that one, so that Partitioner does not require the serialization service
-        public async ValueTask<ClientMessage> SendToKeyOwnerAsync(ClientMessage message, object key)
+        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, object key)
         {
             var partitionId = Partitioner.GetPartitionId(key);
             var targetId = Partitioner.GetPartitionOwner(partitionId);
@@ -91,7 +91,7 @@ namespace Hazelcast.Clustering
         /// <param name="message">The message to send.</param>
         /// <param name="partitionId">The identifier of the partition.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendToPartitionOwner(ClientMessage message, int partitionId)
+        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, int partitionId)
         {
             // TODO all methods should test!
             if (message == null) throw new ArgumentNullException(nameof(message));

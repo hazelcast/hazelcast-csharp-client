@@ -38,9 +38,13 @@ namespace Hazelcast.DistributedObjects.Implementation
         public async Task<TValue> AddAsync(TKey key, TValue value)
             => await AddAsync(key, value, Timeout.InfiniteTimeSpan);
 
+        /// <inheritdoc />
         public async Task<TValue> AddAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
-            // FIXME but... TKey could be a value type?!
+            // C# specs section 7.10.6 states that "The x == null construct is permitted even though T could represent
+            // a value type, and the result is simply defined to be false when T is a value type." so these lines are
+            // safe BUT see Eric Lippert answer on https://stackoverflow.com/questions/8823239 for caveats.
+            //
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (value == null) throw new ArgumentNullException(nameof(value));
 
@@ -48,10 +52,14 @@ namespace Hazelcast.DistributedObjects.Implementation
             var valueData = ToData(value);
 
             // FIXME again here ClientProxy has the weird ExceptionUtil.Rethrow ??
-            // FIXME what is the resolution of ttl? says seconds?
+            // - if NotImplementedException, throw
+            // - if AggregateException, throw the first inner exception (?!)
+            // - (the 'allowed type' thing is never used)
+            // - throw
+            // so this sort-of just unwrap aggregate exceptions, losing some data = bad, NO!
 
             var requestMessage = MapPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, (long) timeToLive.TotalMilliseconds);
-            var responseMessage = await Cluster.SendToKeyOwnerAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapPutCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }

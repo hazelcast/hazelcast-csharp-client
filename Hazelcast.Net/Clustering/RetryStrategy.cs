@@ -13,8 +13,8 @@
 // limitations under the License.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Logging;
 
 namespace Hazelcast.Clustering
@@ -27,9 +27,6 @@ namespace Hazelcast.Clustering
     /// </remarks>
     public class RetryStrategy
     {
-        [SuppressMessage("NDepend", "ND3101:DontUseSystemRandomForSecurityPurposes", Justification = "No security here.")]
-        private static readonly Random Random = new Random(DateTime.Now.Millisecond);
-
         private readonly int _initialBackOff;
         private readonly int _maxBackOff;
         private readonly double _multiplier;
@@ -88,7 +85,7 @@ namespace Hazelcast.Clustering
                 return false;
             }
 
-            var delay = (int) (_currentBackOff * (1 - _jitter * (1 - Random.NextDouble())));
+            var delay = (int) (_currentBackOff * (1 - _jitter * (1 - RandomProvider.Random.NextDouble())));
             delay = Math.Min(delay, _timeout - elapsed);
 
             XConsole.WriteLine(this, $"Unable to connect to cluster after {_attempts} attempts and {elapsed} ms, retrying in {delay} ms");
