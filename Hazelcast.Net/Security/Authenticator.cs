@@ -42,7 +42,7 @@ namespace Hazelcast.Security
         {
             // TODO accept parameters etc
 
-            // RC assigns a GUID but the default cluster name is 'dev'
+            // RC assigns a GUID but the default cluster name is 'dev' - else, cant connect
             var clusterName = "dev";
             var username = (string)null; // null
             var password = (string)null; // null
@@ -56,7 +56,7 @@ namespace Hazelcast.Security
             var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
             XConsole.WriteLine(this, "Send auth request");
             var responseMessage = await client.SendAsync(requestMessage);
-            XConsole.WriteLine(this, "Rcvd auth response\n" + responseMessage.Dump());
+            XConsole.WriteLine(this, "Rcvd auth response");
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
             switch ((AuthenticationStatus) response.Status)

@@ -147,7 +147,7 @@ namespace Hazelcast.Clustering
         /// <param name="message">The event message.</param>
         private void ReceiveEventMessage(ClientMessage message)
         {
-            XConsole.WriteLine(this, "Handle event message.\n" + message.Dump("EVENT"));
+            XConsole.WriteLine(this, "Handle event message");
 
             // TODO threading? handle events in scheduled tasks?
             if (!_eventHandlers.TryGetValue(message.CorrelationId, out var eventHandler))

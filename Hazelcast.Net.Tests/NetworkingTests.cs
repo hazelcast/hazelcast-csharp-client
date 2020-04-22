@@ -331,9 +331,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             // how is this supposed to work in real life?!
             await Task.Delay(2000);
 
-            //var dobj = new DistributedObjects.Implementation.DistributedObjectFactory(cluster);
-            //var map = await dobj.GetOrCreateAsync<IMap<string, int>>(Constants.ServiceNames.Map, "testmap");
-            var map = await client.GetMapAsync<string, int>("testmap");
+            var map = await client.GetMapAsync<string, int>("testmap" + new Random().Next(100));
             await map.AddAsync("key", 42);
 
             // events?

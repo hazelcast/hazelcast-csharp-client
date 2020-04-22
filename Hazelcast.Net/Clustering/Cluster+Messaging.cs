@@ -67,8 +67,8 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public async ValueTask<ClientMessage> SendToKeyOwnerAsync(ClientMessage message, IData key)
         {
-            var targetId = Partitioner.GetPartitionOwner(key);
-            return await SendAsync(message, targetId);
+            var partitionId = Partitioner.GetPartitionId(key);
+            return await SendToPartitionOwner(message, partitionId);
         }
 
         /// <summary>
@@ -93,6 +93,10 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public async ValueTask<ClientMessage> SendToPartitionOwner(ClientMessage message, int partitionId)
         {
+            // TODO all methods should test!
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (partitionId < 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
+            message.PartitionId = partitionId;
             var targetId = Partitioner.GetPartitionOwner(partitionId);
             return await SendAsync(message, targetId);
         }

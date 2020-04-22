@@ -164,7 +164,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var requestMessage = ClientCreateProxyCodec.EncodeRequest(o.Name, o.ServiceName);
                 XConsole.WriteLine(this, "Send initialize request");
                 var responseMessage = await _cluster.SendAsync(requestMessage);
-                XConsole.WriteLine(this, "Rcvd initialize response\n" + responseMessage.Dump());
+                XConsole.WriteLine(this, "Rcvd initialize response");
             }
 
             o.OnInitialized();
