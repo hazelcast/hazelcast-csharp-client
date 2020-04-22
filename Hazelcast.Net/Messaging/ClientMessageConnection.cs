@@ -223,15 +223,17 @@ namespace Hazelcast.Messaging
 
         internal async ValueTask<bool> SendFrameAsync(Frame frame)
         {
-            var header = ArrayPool<byte>.Shared.Rent(6);
+            const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
+
+            var header = ArrayPool<byte>.Shared.Rent(sizeofHeader);
             frame.WriteLengthAndFlags(header);
 
-            if (!await _connection.SendAsync(header, 6))
+            if (!await _connection.SendAsync(header, sizeofHeader))
                 return false;
 
             ArrayPool<byte>.Shared.Return(header);
 
-            if (!await _connection.SendAsync(frame.Bytes))
+            if (frame.Length > sizeofHeader && !await _connection.SendAsync(frame.Bytes))
                 return false;
 
             return true;

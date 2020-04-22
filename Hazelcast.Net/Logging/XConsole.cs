@@ -84,6 +84,23 @@ namespace Hazelcast.Logging
 #endif
 
         /// <summary>
+        /// Gets the indentation.
+        /// </summary>
+        /// <param name="source">The source object.</param>
+        /// <returns>The indentation.</returns>
+        public static string GetIndent(object source)
+        {
+#if XCONSOLE
+            if (!_prefixes.TryGetValue(source, out var info))
+                info = SourceInfo.Default;
+
+            return new string(' ', info.Indent);
+#else
+            return "";
+#endif
+        }
+
+        /// <summary>
         /// Writes a line.
         /// </summary>
         /// <param name="source">The source object.</param>

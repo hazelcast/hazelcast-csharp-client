@@ -148,7 +148,7 @@ namespace Hazelcast.Clustering
 
             if (message.IsEvent)
             {
-                XConsole.WriteLine(this, $"Receive event ID:{message.CorrelationId}\n" + message.Dump());
+                XConsole.WriteLine(this, $"Receive event ID:{message.CorrelationId}\n" + message.Dump(XConsole.GetIndent(this)));
                 _receiveEventMessage(message);
                 return new ValueTask();
             }
@@ -161,7 +161,7 @@ namespace Hazelcast.Clustering
 
             // message has to be a response
             // FIXME if this fail somehow, it may hang the client because no response will ever come?!
-            XConsole.WriteLine(this, $"Receive response ID:{message.CorrelationId}\n" + message.Dump());
+            XConsole.WriteLine(this, $"Receive response ID:{message.CorrelationId}\n" + message.Dump(XConsole.GetIndent(this)));
             ReceiveResponseMessage(message);
             return new ValueTask();
         }
@@ -247,7 +247,7 @@ namespace Hazelcast.Clustering
 
             // send the message
             // FIXME there is no timeout on sending the message?
-            XConsole.WriteLine(this, $"Send message ID:{message.CorrelationId}\n" + message.Dump());
+            XConsole.WriteLine(this, $"Send message ID:{message.CorrelationId}\n" + message.Dump(XConsole.GetIndent(this)));
             var success = await _connection.SendAsync(message);
 
             // FIXME is there a race condition here?

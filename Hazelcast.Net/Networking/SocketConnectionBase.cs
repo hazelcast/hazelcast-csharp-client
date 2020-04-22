@@ -257,7 +257,7 @@ namespace Hazelcast.Networking
             }
             _writer?.Release();
 
-            XConsole.WriteLine(this, $"Sent {count} bytes" + bytes.Dump("\n> ", count));
+            XConsole.WriteLine(this, $"Sent {count} bytes\n" + bytes.Dump(XConsole.GetIndent(this), count));
             return true;
         }
 
@@ -432,7 +432,7 @@ namespace Hazelcast.Networking
         /// and represents whether to continue processing.</returns>
         private async ValueTask<bool> ReadPipeLoop1(ReadPipeState state)
         {
-            XConsole.WriteLine(this, "Pipe reader processes data" + state.Buffer.Dump("\n< "));
+            XConsole.WriteLine(this, "Pipe reader processes data\n" + state.Buffer.Dump(XConsole.GetIndent(this)));
 
             if (_prefixLength > 0)
             {
@@ -462,7 +462,7 @@ namespace Hazelcast.Networking
                 XConsole.WriteLine(this, "Pipe reader processes data");
             }
 
-            XConsole.WriteLine(this, "Handle message bytes" + state.Buffer.Dump("\n< "));
+            XConsole.WriteLine(this, "Handle message bytes\n" + state.Buffer.Dump(XConsole.GetIndent(this)));
             try
             {
                 // handle the bytes (and slice the buffer accordingly)

@@ -200,7 +200,7 @@ namespace Hazelcast.Tests
             var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
             XConsole.WriteLine(this, "Send auth request");
             var responseMessage = await client1.SendAsync(requestMessage);
-            XConsole.WriteLine(this, "Rcvd auth response " + responseMessage.Dump());
+            XConsole.WriteLine(this, "Rcvd auth response " + responseMessage.Dump(XConsole.GetIndent(this)));
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
             var status = (AuthenticationStatus) response.Status;
