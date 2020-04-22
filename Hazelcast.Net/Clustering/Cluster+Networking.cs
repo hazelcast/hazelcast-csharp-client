@@ -142,8 +142,14 @@ namespace Hazelcast.Clustering
                 var info = await authenticator.AuthenticateAsync(client); // may throw
 
                 // FIXME info may be null
-                client.Update(info);
+                client.Update(info); //client.MemberId = info.MemberId;
                 _clients[info.MemberId] = client;
+                var serverVersion = info.ServerVersion;
+                var remoteAddress = info.MemberAddress;
+                var clusterId = info.ClusterId; // is this the cluster name?
+
+                Partitioner.InitializeCount(info.PartitionCount);
+
                 //client.MemberId = info.MemberId;
                 // deal with partition and stuff
 

@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects
         // TODO: every async method returns...
         // "A task that will complete when... and represents...
 
-        #region Keys and Values, setting
+        #region Setting
 
         // FIXME these Add were Put and are actually Replace?
 
@@ -137,7 +137,7 @@ namespace Hazelcast.DistributedObjects
 
         #endregion
 
-        #region Keys and Values, getting
+        #region Getting
 
         /// <summary>
         /// Gets the value for a key, or null if the map does not contain an entry with this key.
@@ -211,7 +211,7 @@ namespace Hazelcast.DistributedObjects
 
         #endregion
 
-        #region Keys and Values, removing
+        #region Removing
 
         /// <summary>
         /// Tries to remove an entry from the map within a timeout.
@@ -266,7 +266,7 @@ namespace Hazelcast.DistributedObjects
 
         #endregion
 
-        #region Keys and Values, counting and testing
+        #region Counting and Testing
 
         /// <summary>
         /// Gets the number of entries in the map.
@@ -296,7 +296,7 @@ namespace Hazelcast.DistributedObjects
 
         #endregion
 
-        #region Keys and Values, cache
+        #region Caching
 
         /// <summary>
         /// Evicts an entry from the cache.
@@ -475,12 +475,14 @@ namespace Hazelcast.DistributedObjects
 
         #region Indexing
 
+        // TODO what is this?
+
         void AddIndex(IndexType type, params string[] attributes);
         void AddIndex(IndexConfig indexConfig);
 
         #endregion
 
-        #region Predicates, Aggregators and Projections
+        #region Aggregating and Projecting
 
         /// <summary>
         /// Aggregates values.

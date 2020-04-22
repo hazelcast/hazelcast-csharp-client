@@ -39,7 +39,7 @@ namespace Hazelcast.Core
         public static int Hash(byte[] data, int offset, int count, int seed = DefaultMurmurSeed)
         {
             if (offset < 0 || offset >= data.Length) throw new ArgumentOutOfRangeException(nameof(offset));
-            if (count < 0 || offset + count >= data.Length) throw new ArgumentOutOfRangeException(nameof(count));
+            if (count < 0 || offset + count > data.Length) throw new ArgumentOutOfRangeException(nameof(count));
 
             var c1 = unchecked((int)(0xcc9e2d51));
             var c2 = unchecked(0x1b873593);

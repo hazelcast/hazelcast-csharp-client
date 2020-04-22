@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Hazelcast.Logging;
 using Hazelcast.Serialization;
 
@@ -26,6 +27,7 @@ namespace Hazelcast.Partitioning
         private readonly bool _isSmartRouting;
         private readonly object _partitionsLock = new object();
         private PartitionTable _partitions;
+        private int _count;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Partitioner"/> class.
@@ -42,7 +44,19 @@ namespace Hazelcast.Partitioning
         /// <summary>
         /// Gets the number of partitions.
         /// </summary>
-        public int Count => _partitions.Count;
+        public int Count => _count;
+
+        // FIXME explain
+        public void InitializeCount(int count)
+        {
+            // if we don't have a table yet, force the count to be something - urh?
+
+            lock (_partitionsLock)
+            {
+                if (_partitions != null) return;
+                _count = count;
+            }
+        }
 
         /// <summary>
         /// Gets the unique identifier of the member owning a partition.
@@ -75,16 +89,12 @@ namespace Hazelcast.Partitioning
         /// <returns>The partition identifier for the specified <see cref="IData"/> instance.</returns>
         public int GetPartitionId(IData data)
         {
-            // once _partitions has a value, it won't be null again
-            // and we can use whatever value it has, and references are atomic
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (_partitions == null) return default;
-            var partitionCount = _partitions.Count;
+            // we can use whatever value _count has, and it is atomic
 
             var hash = data.PartitionHash;
             return hash == int.MinValue
                 ? 0
-                : Math.Abs(hash) % partitionCount;
+                : Math.Abs(hash) % _count;
         }
 
         /// <summary>
@@ -94,10 +104,6 @@ namespace Hazelcast.Partitioning
         /// <returns>The partition identifier for the specified object.</returns>
         public int GetPartitionId(object o) // FIXME check if we can move this out and not require ISerializationService here
         {
-            // once _partitions has a value, it won't be null again
-            // and we can use whatever value it has, and references are atomic
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (_partitions == null) return default;
             return GetPartitionId(_serializationService.ToData(o));
         }
 
@@ -114,7 +120,10 @@ namespace Hazelcast.Partitioning
             lock (_partitionsLock) // one at a time please
             {
                 if (_partitions == null || _partitions.IsSupersededBy(originClientId, version, partitionsMap))
+                {
                     _partitions = new PartitionTable(originClientId, version, partitionsMap);
+                    _count = _partitions.Count;
+                }
             }
         }
     }

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Hazelcast.Core;
 using Hazelcast.Logging;
 using Microsoft.Extensions.Logging;
 
@@ -50,7 +51,7 @@ namespace Hazelcast.Serialization
 
         private void RegisterHooks()
         {
-            foreach (var hook in Services.GetInstance<Services.SerializerHooks>().Hooks)
+            foreach (var hook in Services.GetInstance<SerializerHooks>().Hooks)
                 RegisterHook(hook);
         }
 

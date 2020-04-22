@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Partitioning;
 using Hazelcast.Serialization;

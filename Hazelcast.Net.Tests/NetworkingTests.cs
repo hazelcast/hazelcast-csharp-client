@@ -322,25 +322,26 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             XConsole.Setup(this, 0, "TST");
             XConsole.WriteLine(this, "Begin");
 
-            XConsole.WriteLine(this, "Connect cluster");
-            var cluster = new Cluster();
-            await cluster.Connect();
+            XConsole.WriteLine(this, "Connect hz client");
+            var client = new HazelcastClient();
+            await client.OpenAsync();
             XConsole.WriteLine(this, "Connected");
 
             // time to process the event / members, else the LB has no entries
             // how is this supposed to work in real life?!
             await Task.Delay(2000);
 
-            // FIXME nevertheless, still failing due to stupid FrameIterator mess
-
-            var dobj = new DistributedObjects.Implementation.DistributedObjects(cluster);
-            var map = await dobj.GetOrCreateAsync<IMap<string, int>>(Constants.ServiceNames.Map, "testmap");
+            //var dobj = new DistributedObjects.Implementation.DistributedObjectFactory(cluster);
+            //var map = await dobj.GetOrCreateAsync<IMap<string, int>>(Constants.ServiceNames.Map, "testmap");
+            var map = await client.GetMapAsync<string, int>("testmap");
+            await map.AddAsync("key", 42);
 
             // events?
             await Task.Delay(4000);
 
             // FIXME how are we supposed to release it all?
-            //cluster.Close();
+            //client.Close();
+            //client.Dispose();
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);

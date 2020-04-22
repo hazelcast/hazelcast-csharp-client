@@ -1,4 +1,5 @@
 ﻿using System;
+using Hazelcast.Core;
 
 namespace Hazelcast.Clustering
 {

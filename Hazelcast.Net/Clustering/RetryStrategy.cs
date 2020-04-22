@@ -17,7 +17,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Hazelcast.Logging;
 
-namespace Hazelcast.Core
+namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Represents a retry strategy.

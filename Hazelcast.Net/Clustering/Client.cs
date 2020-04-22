@@ -7,6 +7,7 @@ using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Hazelcast.Protocol;
 
 namespace Hazelcast.Clustering
 {
@@ -93,6 +94,7 @@ namespace Hazelcast.Clustering
         /// Updates the client after authentication has been performed.
         /// </summary>
         /// <param name="result">The result of the authentication.</param>
+        /// FIXME rename InitializeAfterAuthentication or something!
         public void Update(AuthenticationResult result)
         {
             MemberId = result.MemberId;
@@ -190,8 +192,10 @@ namespace Hazelcast.Clustering
             if (message.IsException)
             {
                 // TODO handle exception
+                var errors = ErrorsCodec.Decode(message);
+                var exception = ClientProtocolExceptions.CreateException(errors.GetEnumerator());
                 XConsole.WriteLine(this, "Message is an exception, report.");
-                completion.SetException(new Exception()); // TODO try/catch this too
+                completion.SetException(exception); // TODO try/catch this too
                 return;
             }
 

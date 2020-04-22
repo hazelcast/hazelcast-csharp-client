@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Net;
+using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Networking;
 using Microsoft.Extensions.Logging;
