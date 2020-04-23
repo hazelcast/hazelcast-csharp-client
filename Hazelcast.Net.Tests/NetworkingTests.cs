@@ -337,6 +337,16 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
 
             var map = await client.GetMapAsync<string, int>("testmap" + RandomProvider.Random.Next(100));
             await map.AddAsync("key", 42);
+            var value = await map.GetAsync("key");
+
+            Assert.AreEqual(42, value);
+
+            var count = await map.CountAsync();
+            Assert.AreEqual(1, count);
+
+            await map.ClearAsync();
+            count = await map.CountAsync();
+            Assert.AreEqual(0, count);
 
             // events?
             await Task.Delay(4000);

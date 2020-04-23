@@ -69,7 +69,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="value">The value.</param>
         /// <returns>A task that will complete when ...</returns>
         /// TODO: how can it return "the previous value" if we only add when it's missing?
-        Task<TValue> AddIfMissing(TKey key, TValue value);
+        Task<TValue> AddIfMissingAsync(TKey key, TValue value);
 
         /// <summary>
         /// Adds an entry to the map with a time-to-live, if no entry with the key exists.
@@ -84,7 +84,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
         /// TODO: is it really removed? or just evicted?
         /// </remarks>
-        Task<TValue> AddIfMissing(TKey key, TValue value, TimeSpan timeToLive);
+        Task<TValue> AddIfMissingAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         /// Adds an entry to the map, or its <see cref="MapStore"/>.
@@ -100,10 +100,10 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
         /// TODO: is it really removed? or just evicted?
         /// </remarks>
-        void AddTransient(TKey key, TValue value, TimeSpan timeToLive);
+        Task AddTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         // TODO: how is this different from Add?
-        TValue Replace(TKey key, TValue value);
+        Task<TValue> ReplaceAsync(TKey key, TValue value);
 
         /// <summary>
         /// Replaces an entry in the map.
@@ -112,7 +112,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="expectedValue">The expected value.</param>
         /// <param name="newValue">The new value.</param>
         /// <returns>true if the entry was replaced; otherwise false.</returns>
-        bool Replace(TKey key, TValue expectedValue, TValue newValue);
+        Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue);
 
         // FIXME these Set are actually true Add?
         // but with an IDictionary, can only Add once?! only the [] supports overwriting
@@ -133,7 +133,7 @@ namespace Hazelcast.DistributedObjects
         /// acquired within the timeout.</para>
         /// </remarks>
         // TODO is this Set or SetAndReplace?
-        bool TryPut(TKey key, TValue value, TimeSpan timeout);
+        Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan timeout);
 
         #endregion
 
@@ -161,7 +161,7 @@ namespace Hazelcast.DistributedObjects
         /// the actual values in the map. One should put the modified values back, to make changes visible
         /// to all nodes.</para>
         /// </remarks>
-        Task<IDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys);
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys);
 
         /// <summary>
         /// Gets an entry view for a key, or null if the map does not contain an entry with this key.
@@ -189,7 +189,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="predicate"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        ISet<KeyValuePair<TKey, TValue>> EntrySet(IPredicate predicate = null);
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate = null);
 
         // TODO: return an IEnumerable? async?
         // TODO: usual remark about returning clones?
@@ -199,7 +199,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="predicate">An optional predicate to filter the entries with.</param>
         /// <returns>All keys.</returns>
-        ISet<TKey> KeySet(IPredicate predicate = null);
+        Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate = null);
 
         // TODO: IEnumerable? async?
         /// <summary>
@@ -207,7 +207,33 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="predicate">An optional predicate to filter the entries.</param>
         /// <returns>All values.</returns>
-        ICollection<TValue> Values(IPredicate predicate = null);
+        Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate = null);
+
+        /// <summary>
+        /// Gets the number of entries in the map.
+        /// </summary>
+        /// <returns>The total number of entries in the map.</returns>
+        Task<int> CountAsync();
+
+        /// <summary>
+        /// Determines whether this map is empty.
+        /// </summary>
+        /// <returns>true if the map does not contain entries; otherwise false.</returns>
+        Task<bool> IsEmptyAsync();
+
+        /// <summary>
+        /// Determines whether this map contains an entry for a key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>True if the map contains an entry for the specified key; otherwise false.</returns>
+        Task<bool> ContainsKeyAsync(TKey key);
+
+        /// <summary>
+        /// Determines whether this map contains at least one entry with a value.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>True if the map contains at least an entry with the specified value; otherwise false.</returns>
+        Task<bool> ContainsValueAsync(TValue value);
 
         #endregion
 
@@ -224,7 +250,7 @@ namespace Hazelcast.DistributedObjects
         /// acquired within the timeout.</para>
         /// TODO or when there was no value with that key?
         /// </remarks>
-        bool TryRemoveAsync(TKey key, TimeSpan timeout);
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeout);
 
         /// <summary>
         /// Removes an entry from this map, and returns the corresponding value if any.
@@ -263,36 +289,6 @@ namespace Hazelcast.DistributedObjects
         /// Empties this map.
         /// </summary>
         Task ClearAsync();
-
-        #endregion
-
-        #region Counting and Testing
-
-        /// <summary>
-        /// Gets the number of entries in the map.
-        /// </summary>
-        /// <returns>The total number of entries in the map.</returns>
-        int Count(); // TODO async!
-
-        /// <summary>
-        /// Determines whether this map is empty.
-        /// </summary>
-        /// <returns>true if the map does not contain entries; otherwise false.</returns>
-        Task<bool> IsEmpty();
-
-        /// <summary>
-        /// Determines whether this map contains an entry for a key.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns>True if the map contains an entry for the specified key; otherwise false.</returns>
-        Task<bool> ContainsKeyAsync(TKey key);
-
-        /// <summary>
-        /// Determines whether this map contains at least one entry with a value.
-        /// </summary>
-        /// <param name="value">The value.</param>
-        /// <returns>True if the map contains at least an entry with the specified value; otherwise false.</returns>
-        Task<bool> ContainsValueAsync(TValue value);
 
         #endregion
 

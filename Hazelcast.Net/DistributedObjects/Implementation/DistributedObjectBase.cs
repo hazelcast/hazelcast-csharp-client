@@ -28,8 +28,6 @@ namespace Hazelcast.DistributedObjects.Implementation
     {
         private static readonly IPartitioningStrategy PartitioningStrategy = new StringPartitioningStrategy();
 
-        private readonly ISerializationService _serializationService;
-
         // TODO consider injecting a "light" cluster not the whole class?
 
         /// <summary>
@@ -48,7 +46,7 @@ namespace Hazelcast.DistributedObjects.Implementation
             Name = name;
 
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
-            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
         }
 
         /// <inheritdoc />
@@ -73,15 +71,59 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         // FIXME and then below, all common services (and only common services)
 
+        protected ISerializationService SerializationService { get; }
+
         protected Cluster Cluster { get; }
 
         // TODO: document
         protected virtual IData ToData(object o)
-            => _serializationService.ToData(o);
+            => SerializationService.ToData(o);
+
+        // NOTES
+        //
+        // C# specs section 7.10.6 states that "The x == null construct is permitted even though T could represent
+        // a value type, and the result is simply defined to be false when T is a value type." so the line below is
+        // safe even when key is of type TKey which can be a value type... BUT see Eric Lippert answer
+        // on https://stackoverflow.com/questions/8823239 for caveats.
+        //
+        // if (key == null) throw new ArgumentNullException(nameof(key));
+
+        protected IData ToSafeData(object o1)
+        {
+            if (o1 == null) throw new ArgumentNullException(nameof(o1));
+
+            var data1 = ToData(o1);
+
+            return data1;
+        }
+
+        protected (IData, IData) ToSafeData(object o1, object o2)
+        {
+            if (o1 == null) throw new ArgumentNullException(nameof(o1));
+            if (o2 == null) throw new ArgumentNullException(nameof(o2));
+
+            var data1 = ToData(o1);
+            var data2 = ToData(o2);
+
+            return (data1, data2);
+        }
+
+        protected (IData, IData, IData) ToSafeData(object o1, object o2, object o3)
+        {
+            if (o1 == null) throw new ArgumentNullException(nameof(o1));
+            if (o2 == null) throw new ArgumentNullException(nameof(o2));
+            if (o3 == null) throw new ArgumentNullException(nameof(o3));
+
+            var data1 = ToData(o1);
+            var data2 = ToData(o2);
+            var data3 = ToData(o3);
+
+            return (data1, data2, data3);
+        }
 
         // TODO: document + isn't 'o' always IData?
         protected virtual TObject ToObject<TObject>(object o)
-            => _serializationService.ToObject<TObject>(o);
+            => SerializationService.ToObject<TObject>(o);
 
         public virtual void OnInitialized() {}
     }
