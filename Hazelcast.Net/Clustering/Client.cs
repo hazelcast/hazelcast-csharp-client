@@ -57,7 +57,8 @@ namespace Hazelcast.Clustering
             _endpoint = endpoint;
             _correlationIdSequence = correlationIdSequence;
             _connectionIdSequence = connectionIdSequence;
-            XConsole.Setup(this, 4, "CLT");
+
+            XConsole.Configure(this, config => config.SetIndent(4).SetPrefix("CLIENT"));
         }
 
         /// <summary>
@@ -111,7 +112,7 @@ namespace Hazelcast.Clustering
 
             _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, _endpoint) { OnShutdown = SocketShutdown };
             _connection = new ClientMessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
-            XConsole.Setup(_connection, 12, $"CLT.MSG({_socketConnection.Id})");
+            XConsole.Configure(_connection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
 
             await _socketConnection.ConnectAsync();
 
@@ -144,11 +145,12 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the message has been handled.</returns>
         private ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
-            XConsole.WriteLine(this, $"Received message ID:{message.CorrelationId}");
+            XConsole.WriteLine(this, $"Received message [{message.CorrelationId}]");
 
             if (message.IsEvent)
             {
-                XConsole.WriteLine(this, $"Receive event ID:{message.CorrelationId}\n" + message.Dump(XConsole.GetIndent(this)));
+                XConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" + 
+                                         XConsole.Lines(this, 1, message.Dump()));
                 _receiveEventMessage(message);
                 return new ValueTask();
             }
@@ -161,7 +163,8 @@ namespace Hazelcast.Clustering
 
             // message has to be a response
             // FIXME if this fail somehow, it may hang the client because no response will ever come?!
-            XConsole.WriteLine(this, $"Receive response ID:{message.CorrelationId}\n" + message.Dump(XConsole.GetIndent(this)));
+            XConsole.WriteLine(this, $"Receive response [{message.CorrelationId}]" +
+                                     XConsole.Lines(this, 1, message.Dump()));
             ReceiveResponseMessage(message);
             return new ValueTask();
         }
@@ -180,7 +183,7 @@ namespace Hazelcast.Clustering
             if (!_completions.TryGetValue(message.CorrelationId, out var completion))
             {
                 // TODO log a warning
-                XConsole.WriteLine(this, $"No completion for ID:{message.CorrelationId}");
+                XConsole.WriteLine(this, $"No completion for [{message.CorrelationId}]");
                 return;
             }
 
@@ -210,7 +213,7 @@ namespace Hazelcast.Clustering
             catch
             {
                 // TODO log a warning
-                XConsole.WriteLine(this, $"Failed to set result for ID:{message.CorrelationId}");
+                XConsole.WriteLine(this, $"Failed to set result for [{message.CorrelationId}]");
             }
         }
 
@@ -247,7 +250,8 @@ namespace Hazelcast.Clustering
 
             // send the message
             // FIXME there is no timeout on sending the message?
-            XConsole.WriteLine(this, $"Send message ID:{message.CorrelationId}\n" + message.Dump(XConsole.GetIndent(this)));
+            XConsole.WriteLine(this, $"Send message [{message.CorrelationId}]" +
+                                     XConsole.Lines(this, 1, message.Dump()));
             var success = await _connection.SendAsync(message);
 
             // FIXME is there a race condition here?

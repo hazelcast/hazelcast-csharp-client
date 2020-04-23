@@ -41,7 +41,7 @@ namespace Hazelcast.Testing.TestServer
         public Server(IPEndPoint endpoint)
         {
             _endpoint = endpoint;
-            XConsole.Setup(this, 20, "SVR");
+            XConsole.Configure(this, config => config.SetIndent(20).SetPrefix("SERVER"));
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Hazelcast.Testing.TestServer
             XConsole.WriteLine(this, $"Start server at {_endpoint}");
 
             _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
-            XConsole.Setup(_listener, 24, "LST");
+            XConsole.Configure(_listener, config => config.SetIndent(24).SetPrefix("LISTENER"));
             await _listener.StartAsync();
 
             XConsole.WriteLine(this, "Server started");
@@ -94,7 +94,7 @@ namespace Hazelcast.Testing.TestServer
             // must wire it properly before accepting
 
             var messageConnection = new ClientMessageConnection(serverConnection) { OnReceiveMessage = ReceiveMessage };
-            XConsole.Setup(messageConnection, 28, "SVR.MSG");
+            XConsole.Configure(messageConnection, config => config.SetIndent(28).SetPrefix("MSG.SERVER"));
             serverConnection.OnShutdown = SocketShutdown;
             serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
             serverConnection.Accept();

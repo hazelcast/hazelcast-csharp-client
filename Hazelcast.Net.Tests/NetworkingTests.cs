@@ -90,7 +90,7 @@ namespace Hazelcast.Tests
 
             var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:11001");
 
-            XConsole.Setup(this, 0, "TST");
+            XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
@@ -143,7 +143,7 @@ namespace Hazelcast.Tests
         {
             var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:11000");
 
-            XConsole.Setup(this, 0, "TST");
+            XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
@@ -180,7 +180,7 @@ namespace Hazelcast.Tests
 
             var endpoint = NetworkAddress.Parse("127.0.0.1").IPEndPoint;
 
-            XConsole.Setup(this, 0, "TST");
+            XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start client ");
@@ -200,7 +200,8 @@ namespace Hazelcast.Tests
             var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
             XConsole.WriteLine(this, "Send auth request");
             var responseMessage = await client1.SendAsync(requestMessage);
-            XConsole.WriteLine(this, "Rcvd auth response " + responseMessage.Dump(XConsole.GetIndent(this)));
+            XConsole.WriteLine(this, "Rcvd auth response " +
+                                     XConsole.Lines(this, 1, responseMessage.Dump()));
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
             var status = (AuthenticationStatus) response.Status;
@@ -225,7 +226,7 @@ namespace Hazelcast.Tests
             Services.Reset();
             Services.Register<IAuthenticator>(() => new Authenticator());
 
-            XConsole.Setup(this, 0, "TST");
+            XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Cluster?");
@@ -313,13 +314,16 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
         [Timeout(10_000)]
         public async Task Map()
         {
+            XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            XConsole.Configure<SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
+            XConsole.Configure<Client>(config => config.SetMaxLevel(1)); // 1: logs message & frames
+
             // this test expects a server on localhost:5701
 
             // of course this is temporary
             Services.Reset();
             Services.Register<IAuthenticator>(() => new Authenticator());
 
-            XConsole.Setup(this, 0, "TST");
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Connect hz client");

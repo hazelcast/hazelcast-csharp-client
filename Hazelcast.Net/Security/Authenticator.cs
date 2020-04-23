@@ -18,8 +18,6 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Data;
 using Hazelcast.Logging;
-using Hazelcast.Messaging;
-using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.Security
@@ -29,6 +27,14 @@ namespace Hazelcast.Security
     /// </summary>
     public class Authenticator : IAuthenticator
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Authenticator"/> class.
+        /// </summary>
+        public Authenticator()
+        {
+            XConsole.Configure(this, config => config.SetIndent(4).SetPrefix("AUTH"));
+        }
+
         /// <inheritdoc />
         public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client)
         {

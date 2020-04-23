@@ -55,6 +55,8 @@ namespace Hazelcast.Clustering
             IsSmartRouting = isSmartRouting;
             Partitioner = new Partitioner(serializationService, isSmartRouting);
             _loadBalancer = new RandomLoadBalancer();
+
+            XConsole.Configure(this, config => config.SetIndent(2).SetPrefix("CLUSTER"));
         }
 
         /// <summary>

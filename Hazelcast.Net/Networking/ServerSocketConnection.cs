@@ -39,7 +39,7 @@ namespace Hazelcast.Networking
             : base(id)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-            XConsole.Setup(this, 32, $"SVR.CON({id})");
+            XConsole.Configure(this, config => config.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]"));
         }
 
         /// <summary>

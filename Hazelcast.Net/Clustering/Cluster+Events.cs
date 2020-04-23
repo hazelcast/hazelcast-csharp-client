@@ -153,7 +153,7 @@ namespace Hazelcast.Clustering
             if (!_eventHandlers.TryGetValue(message.CorrelationId, out var eventHandler))
             {
                 // TODO log a warning
-                XConsole.WriteLine(this, $"No event handler for ID:{message.CorrelationId}");
+                XConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
                 return;
             }
 
