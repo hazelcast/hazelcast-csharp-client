@@ -18,6 +18,9 @@ namespace Hazelcast.Messaging
 
             var text = new StringBuilder();
 
+            // trying to do colors but that does not seem to work w/Nunit
+            //text.Append("\u001b[31m");
+
             if (message.MessageType == 0)
             {
                 prefix = "EXCEPTION";
@@ -48,6 +51,8 @@ namespace Hazelcast.Messaging
                 if (frame != null)
                     text.AppendLine();
             }
+
+            //text.Append("\u001b[0m");
 
             return text.ToString();
         }

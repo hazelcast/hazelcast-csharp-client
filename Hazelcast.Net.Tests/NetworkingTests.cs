@@ -312,7 +312,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
 
         [Test]
         [Timeout(10_000)]
-        public async Task Map()
+        public async Task MapTest()
         {
             XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.Configure<SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
@@ -348,11 +348,13 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             count = await map.CountAsync();
             Assert.AreEqual(0, count);
 
+            var mmap = (Map<string, int>)map;
+
             var id = await map.SubscribeAsync(
-                entryAdded: (sender, args) =>
+                mmap.Handle.EntryAdded((sender, args) =>
                 {
                     XConsole.WriteLine(this, $"!ADDED: {args.Key} {args.Value}");
-                });
+                }));
 
             await map.AddAsync("a", 1);
             await map.AddAsync("b", 2);

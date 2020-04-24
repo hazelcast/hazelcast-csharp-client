@@ -83,14 +83,14 @@ namespace Hazelcast.Clustering
                 => Partitioner.NotifyPartitionView(client.Id, version, MapPartitions(partitions));
 
             // handles the event
-            void HandleEvent(ClientMessage message)
+            void HandleEvent(ClientMessage message, object state)
                 => ClientAddClusterViewListenerCodec.EventHandler.HandleEvent(message, HandleMemberViewEvent, HandlePartitionViewEvent);
 
             var correlationId = _correlationIdSequence.Next;
             try
             {
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
-                _eventHandlers[correlationId] = HandleEvent;
+                _correlatedSubscriptions[correlationId] = new ClusterEventSubscription(HandleEvent);
                 _ = await client.SendAsync(subscribeRequest, correlationId);
                 XConsole.WriteLine(this, "subscribed");
                 return true;
@@ -99,7 +99,7 @@ namespace Hazelcast.Clustering
             }
             catch
             {
-                _eventHandlers[correlationId] = HandleEvent;
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
                 // todo log the exception?
                 return false;
             }

@@ -30,8 +30,10 @@ namespace Hazelcast.Clustering
             = new ConcurrentDictionary<Guid, Client>();
         private readonly ConcurrentDictionary<Guid, ClusterEventSubscription> _eventSubscriptions
             = new ConcurrentDictionary<Guid, ClusterEventSubscription>();
-        private readonly ConcurrentDictionary<long, Action<ClientMessage>> _eventHandlers
-            = new ConcurrentDictionary<long, Action<ClientMessage>>();
+        private readonly ConcurrentDictionary<long, ClusterEventSubscription> _correlatedSubscriptions
+            = new ConcurrentDictionary<long, ClusterEventSubscription>();
+        //private readonly ConcurrentDictionary<long, Action<ClientMessage, object>> _eventHandlers
+        //    = new ConcurrentDictionary<long, Action<ClientMessage, object>>();
 
         private readonly ISequence<long> _correlationIdSequence;
 

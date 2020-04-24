@@ -23,8 +23,9 @@ namespace Hazelcast.Clustering
     /// </summary>
     public class ClusterEventSubscription
     {
-        private readonly Func<ClientMessage, Guid> _subscribeResponseParser;
-        private readonly Func<Guid, ClientMessage> _unsubscribeRequestFactory;
+        private readonly Func<ClientMessage, object, Guid> _subscribeResponseParser;
+        private readonly Func<Guid, object, ClientMessage> _unsubscribeRequestFactory;
+        private readonly Action<ClientMessage, object> _eventHandler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterEventSubscription"/> class with an auto-assigned identifier.
@@ -32,8 +33,9 @@ namespace Hazelcast.Clustering
         /// <param name="subscribeRequest">The subscribe request message.</param>
         /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
         /// <param name="eventHandler">The event handler.</param>
-        public ClusterEventSubscription(ClientMessage subscribeRequest, Func<ClientMessage, Guid> subscribeResponseParser, Action<ClientMessage> eventHandler)
-            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, null, eventHandler)
+        /// <param name="state">A state object.</param>
+        public ClusterEventSubscription(ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Action<ClientMessage, object> eventHandler, object state = null)
+            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, null, eventHandler, state)
         { }
 
         /// <summary>
@@ -43,8 +45,9 @@ namespace Hazelcast.Clustering
         /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
         /// <param name="unsubscribeRequestFactory">The unsubscribe request message factory.</param>
         /// <param name="eventHandler">The event handler.</param>
-        public ClusterEventSubscription(ClientMessage subscribeRequest, Func<ClientMessage, Guid> subscribeResponseParser, Func<Guid, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage> eventHandler)
-            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, unsubscribeRequestFactory, eventHandler)
+        /// <param name="state">A state object.</param>
+        public ClusterEventSubscription(ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Func<Guid, object, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage, object> eventHandler, object state = null)
+            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, unsubscribeRequestFactory, eventHandler, state)
         { }
 
         /// <summary>
@@ -55,19 +58,32 @@ namespace Hazelcast.Clustering
         /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
         /// <param name="unsubscribeRequestFactory">The unsubscribe request message factory.</param>
         /// <param name="eventHandler">The event handler.</param>
-        public ClusterEventSubscription(Guid id, ClientMessage subscribeRequest, Func<ClientMessage, Guid> subscribeResponseParser, Func<Guid, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage> eventHandler)
+        /// <param name="state">A state object.</param>
+        public ClusterEventSubscription(Guid id, ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Func<Guid, object, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage, object> eventHandler, object state = null)
         {
             Id = id;
             SubscribeRequest = subscribeRequest;
             _subscribeResponseParser = subscribeResponseParser;
             _unsubscribeRequestFactory = unsubscribeRequestFactory;
-            EventHandler = eventHandler;
+            _eventHandler = eventHandler;
+            State = state;
+        }
+
+        // FIXME document
+        internal ClusterEventSubscription(Action<ClientMessage, object> eventHandler)
+        {
+            _eventHandler = eventHandler;
         }
 
         /// <summary>
         /// Gets or sets the unique identifier of this subscription.
         /// </summary>
         public Guid Id { get; }
+
+        /// <summary>
+        /// Gets the state object.
+        /// </summary>
+        public object State { get; }
 
         /// <summary>
         /// Gets the registration request message.
@@ -82,7 +98,7 @@ namespace Hazelcast.Clustering
         /// <returns>The client subscription.</returns>
         public ClientEventSubscription AcceptSubscribeResponse(ClientMessage message, Client client)
         {
-            var serverSubscriptionId = _subscribeResponseParser(message);
+            var serverSubscriptionId = _subscribeResponseParser(message, State);
             var clientSubscription = new ClientEventSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
             ClientSubscriptions[clientSubscription.Client] = clientSubscription;
             return clientSubscription;
@@ -93,12 +109,13 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="serverSubscriptionId">The unique identifier assigned to the subscription by the server.</param>
         /// <returns>A new unsubscribe request message.</returns>
-        public ClientMessage CreateUnsubscribeRequest(Guid serverSubscriptionId) => _unsubscribeRequestFactory(serverSubscriptionId);
+        public ClientMessage CreateUnsubscribeRequest(Guid serverSubscriptionId) => _unsubscribeRequestFactory(serverSubscriptionId, State);
 
         /// <summary>
-        /// Gets the event handler.
+        /// Handles an event message.
         /// </summary>
-        public Action<ClientMessage> EventHandler { get; }
+        /// <param name="eventMessage">The event message.</param>
+        public void Handle(ClientMessage eventMessage) => _eventHandler(eventMessage, State);
 
         /// <summary>
         /// Gets the client subscriptions for this cluster subscription.

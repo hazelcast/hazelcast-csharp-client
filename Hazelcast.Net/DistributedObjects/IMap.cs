@@ -545,6 +545,23 @@ namespace Hazelcast.DistributedObjects
         Guid AddEntryListener(IMapListener listener, IPredicate predicate, bool includeValue);
         */
 
+        Task<Guid> SubscribeAsync(params IMapEntryEventHandler<TKey, TValue>[] handlers);
+
+        Task<Guid> SubscribeAsync(bool includeValues, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+
+        Task<Guid> SubscribeAsync(TKey key, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+
+        Task<Guid> SubscribeAsync(IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+
+        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+
+        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+
+        /*
         /// <summary>
         /// Subscribe to events.
         /// </summary>
@@ -562,7 +579,7 @@ namespace Hazelcast.DistributedObjects
             Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null);
 
         // NOTES
-        // 
+        //
         // because TKey can be a value type and have its default value (e.g. zero for an int value),
         // we cannot make it an optional parameter (i.e. 'TKey key = default') and have to explicitly
         // create two overloads of SubscribeAsync.
@@ -583,6 +600,8 @@ namespace Hazelcast.DistributedObjects
         Task<Guid> SubscribeAsync(TKey key, bool includeValues = true, IPredicate predicate = null,
             Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
             Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null);
+            */
+
 
         /// <summary>
         /// Unsubscribe from events.

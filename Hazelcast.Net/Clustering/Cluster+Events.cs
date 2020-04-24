@@ -65,7 +65,7 @@ namespace Hazelcast.Clustering
             // and remove the handler if all fails
 
             var correlationId = _correlationIdSequence.Next;
-            _eventHandlers[correlationId] = subscription.EventHandler;
+            _correlatedSubscriptions[correlationId] = subscription;
 
             // we do not control the original subscription.SubscribeRequest message and it may
             // be used concurrently, and so it is not safe to alter its correlation identifier.
@@ -79,7 +79,7 @@ namespace Hazelcast.Clustering
             }
             catch
             {
-                _eventHandlers.TryRemove(correlationId, out _);
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
                 throw;
             }
         }
@@ -116,7 +116,7 @@ namespace Hazelcast.Clustering
             foreach (var (_, eventSubscription) in _eventSubscriptions)
             {
                 if (eventSubscription.ClientSubscriptions.TryRemove(client, out var clientSubscription))
-                    _eventHandlers.TryRemove(clientSubscription.CorrelationId, out _);
+                    _correlatedSubscriptions.TryRemove(clientSubscription.CorrelationId, out _);
             }
         }
 
@@ -137,7 +137,7 @@ namespace Hazelcast.Clustering
                 // whatever happens, remove the event handler
                 // if the client hasn't properly unsubscribed, it may receive more event messages,
                 // which will be ignored since their correlation identifier won't match any handler.
-                _eventHandlers.TryRemove(clientSubscription.CorrelationId, out _);
+                _correlatedSubscriptions.TryRemove(clientSubscription.CorrelationId, out _);
             }
         }
 
@@ -150,14 +150,15 @@ namespace Hazelcast.Clustering
             XConsole.WriteLine(this, "Handle event message");
 
             // TODO threading? handle events in scheduled tasks?
-            if (!_eventHandlers.TryGetValue(message.CorrelationId, out var eventHandler))
+
+            if (!_correlatedSubscriptions.TryGetValue(message.CorrelationId, out var subscription))
             {
                 // TODO log a warning
                 XConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
                 return;
             }
 
-            eventHandler(message);
+            subscription.Handle(message);
         }
     }
 }

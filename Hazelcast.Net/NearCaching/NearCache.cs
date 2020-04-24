@@ -85,11 +85,12 @@ namespace Hazelcast.NearCaching
                     id => MapRemoveEntryListenerCodec.EncodeRequest(Name, id), (Action<ClientMessage>) Handle);
                 */
 
+                // FIXME the NAME could be a property of a BASE state object (class EventState)
                 var subscription = new ClusterEventSubscription(
                     MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) EntryEventType.Invalidation, false),
-                    message => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
-                    id => MapRemoveEntryListenerCodec.EncodeRequest(Name, id),
-                    message => MapAddNearCacheInvalidationListenerCodec.EventHandler.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent));
+                    (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
+                    (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(Name, id),
+                    (message, state) => MapAddNearCacheInvalidationListenerCodec.EventHandler.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent));
                 _cluster.SubscribeAsync(subscription).Wait(); // FIXME ASYNC!
                 RegistrationId = subscription.Id;
             }
