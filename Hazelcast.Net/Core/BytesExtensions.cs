@@ -487,7 +487,7 @@ namespace Hazelcast.Core
         /// </remarks>
         public static char ReadUtf8Char(this byte[] bytes, ref int position)
         {
-            const byte length = sizeof(char);
+            const byte length = sizeof(byte);
 
             if (bytes.Length < position + length)
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -542,9 +542,11 @@ namespace Hazelcast.Core
         /// </remarks>
         public static void WriteUtf8Char(this byte[] bytes, ref int position, char value)
         {
+            const int length = sizeof(byte);
+
             if (value <= 0x007f)
             {
-                if (bytes.Length < position + sizeof(byte))
+                if (bytes.Length < position + length)
                     throw new ArgumentOutOfRangeException(nameof(position));
 
                 bytes[position] = (byte) value;
@@ -554,7 +556,7 @@ namespace Hazelcast.Core
 
             if (value <= 0x07ff)
             {
-                if (bytes.Length < position + 2 * sizeof(byte))
+                if (bytes.Length < position + 2 * length)
                     throw new ArgumentOutOfRangeException(nameof(position));
 
                 bytes[position] = (byte) (0xc0 | value >> 6 & 0x1f);
@@ -563,7 +565,7 @@ namespace Hazelcast.Core
                 return;
             }
 
-            if (bytes.Length < position + 3 * sizeof(byte))
+            if (bytes.Length < position + 3 * length)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             bytes[position] = (byte) (0xe | value >> 12 & 0x0f);

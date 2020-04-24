@@ -186,5 +186,14 @@ namespace Hazelcast.Clustering
                 MemberAddedOrRemoved.InvokeAsync(args).AsTask().Wait();
             }
         }
+
+        // FIXME document
+        public MemberInfo GetMember(Guid memberId)
+        {
+            if (_memberTable.Members.TryGetValue(memberId, out var memberInfo))
+                return memberInfo;
+
+            return null;
+        }
     }
 }

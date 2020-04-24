@@ -4,10 +4,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregators;
+using Hazelcast.Clustering;
 using Hazelcast.Configuration;
+using Hazelcast.Data;
 using Hazelcast.Data.Map;
+using Hazelcast.DistributedObjects.Implementation;
+using Hazelcast.Messaging;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;
+using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -536,7 +541,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="id">The identifier of the listener.</param>
         /// <returns>true if a listener was that identifier was found and removed; otherwise false.</returns>
-        bool RemoveEntryListener(Guid id); // TODO: rename
+        //bool RemoveEntryListener(Guid id); // TODO: rename
 
         // TODO: these should be renamed + done entirely differently
         // IMapListener is an IEventListener and then we have IEntryAddedListener,
@@ -555,6 +560,15 @@ namespace Hazelcast.DistributedObjects
         Guid AddEntryListener(IMapListener listener, IPredicate predicate, TKey key, bool includeValue);
         Guid AddEntryListener(IMapListener listener, IPredicate predicate, bool includeValue);
         */
+
+        //EntryAddedEventHandlers EntryAdded { get; }
+        //IEventHandlers Events { get; }
+
+        Task<Guid> SubscribeAsync(
+            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
+            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null);
+
+        Task<bool> UnsubscribeAsync(Guid subscriptionId);
 
         #endregion
     }

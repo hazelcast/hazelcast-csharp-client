@@ -9,6 +9,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Core.Collections;
+using Hazelcast.Data;
 using Hazelcast.Data.Map;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
@@ -729,11 +730,110 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         #region Events
 
-        public bool RemoveEntryListener(Guid id)
+        // TODO: do we need state if we have sender?
+        // TODO: need overrides with key, predicate, etc
+
+        /// <inheritdoc />
+        public async Task<Guid> SubscribeAsync(
+            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
+            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null)
         {
-            throw new NotImplementedException();
+            var flags = (EntryEventType) 0;
+            if (entryAdded != null) flags |= EntryEventType.Added;
+            if (entryRemoved != null) flags |= EntryEventType.Removed;
+
+            // FIXME
+            var includeValue = true;
+            var localOnly = false;
+
+            var subscribeRequest = MapAddEntryListenerCodec.EncodeRequest(Name, includeValue, (int) flags, localOnly);
+
+            void HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventType, Guid memberId, int numberOfAffectedEntries)
+            {
+                if (((int)flags & eventType) == 0) return;
+
+                var member = Cluster.GetMember(memberId);
+
+                // TODO or maybe we could initialize the args with Lazy<TKey> ?
+                // but then the args would indirectly capture the serialization service
+
+                var key = ToObject<TKey>(keyData);
+                var value = ToObject<TValue>(valueData);
+
+                if (((EntryEventType)eventType).HasFlag(EntryEventType.Added))
+                    entryAdded?.Invoke(this, new EntryAddedEventArgs<TKey, TValue>(key, value));
+                if (((EntryEventType)eventType).HasFlag(EntryEventType.Removed))
+                    entryRemoved?.Invoke(this, new EntryRemovedEventArgs<TKey, TValue>(key, value));
+                // TODO and many more
+            }
+
+            var subscription = new ClusterEventSubscription(
+                subscribeRequest,
+                responseMessage => MapAddEntryListenerCodec.DecodeResponse(responseMessage).Response,
+                subscriptionId => MapRemoveEntryListenerCodec.EncodeRequest(Name, subscriptionId),
+                eventMessage => MapAddEntryListenerCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent));
+
+            await Cluster.SubscribeAsync(subscription);
+
+            return subscription.Id;
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> UnsubscribeAsync(Guid subscriptionId)
+        {
+            // FIXME why would it return a bool?
+            await Cluster.UnsubscribeAsync(subscriptionId);
+            return true;
         }
 
         #endregion
+    }
+
+    public abstract class EventArgsBase
+    {
+        //protected EventArgsBase(object source) // fixme this is a sender and does not belong here!
+        //{
+        //    Source = source;
+        //}
+
+        //public object Source { get; }
+    }
+
+    public class EntryAddedEventArgs<TKey, TValue> : EventArgsBase
+    {
+        public EntryAddedEventArgs(TKey key, TValue value)
+        {
+            Key = key;
+            Value = value;
+        }
+
+        public MemberInfo Member { get; }
+
+        public string Name { get; } // name of the map, why?
+
+        public EntryEventType EventType { get; } // why?
+
+        public TKey Key { get; }
+
+        public TValue Value { get; }
+    }
+
+    public class EntryRemovedEventArgs<TKey, TValue> : EventArgsBase
+    {
+        public EntryRemovedEventArgs(TKey key, TValue value)
+        {
+            Key = key;
+            Value = value;
+        }
+
+        public MemberInfo Member { get; }
+
+        public string Name { get; } // name of the map, why?
+
+        public EntryEventType EventType { get; } // why?
+
+        public TKey Key { get; }
+
+        public TValue Value { get; }
     }
 }

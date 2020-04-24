@@ -348,6 +348,17 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             count = await map.CountAsync();
             Assert.AreEqual(0, count);
 
+            var id = await map.SubscribeAsync(
+                entryAdded: (sender, args) =>
+                {
+                    XConsole.WriteLine(this, $"!ADDED: {args.Key} {args.Value}");
+                });
+
+            await map.AddAsync("a", 1);
+            await map.AddAsync("b", 2);
+
+            await map.UnsubscribeAsync(id);
+
             // events?
             //await Task.Delay(4000);
 
