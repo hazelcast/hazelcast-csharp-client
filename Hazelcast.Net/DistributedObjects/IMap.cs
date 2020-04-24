@@ -545,63 +545,21 @@ namespace Hazelcast.DistributedObjects
         Guid AddEntryListener(IMapListener listener, IPredicate predicate, bool includeValue);
         */
 
-        Task<Guid> SubscribeAsync(params IMapEntryEventHandler<TKey, TValue>[] handlers);
+        Task<Guid> SubscribeAsync(Action<MapEvents<TKey, TValue>> on);
 
-        Task<Guid> SubscribeAsync(bool includeValues, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+        Task<Guid> SubscribeAsync(bool includeValues, Action<MapEvents<TKey, TValue>> on);
 
-        Task<Guid> SubscribeAsync(TKey key, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+        Task<Guid> SubscribeAsync(TKey key, Action<MapEvents<TKey, TValue>> on);
 
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEvents<TKey, TValue>> on);
 
-        Task<Guid> SubscribeAsync(IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+        Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
 
-        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
 
-        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers);
+        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
 
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers);
-
-        /*
-        /// <summary>
-        /// Subscribe to events.
-        /// </summary>
-        /// <param name="includeValues">Whether the event arguments should contain values.</param>
-        /// <param name="predicate">An optional predicate to filter entries.</param>
-        /// <param name="entryAdded">An optional handler for <see cref="EntryEventType.Added"/> events.</param>
-        /// <param name="entryRemoved">An optional handler for <see cref="EntryEventType.Removed"/> events.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        /// <remarks>
-        /// <para>By default, event arguments contain values. However, for performance reasons, it
-        /// is possible to omit values by specifying <paramref name="includeValues"/> as false.</para>
-        /// </remarks>
-        Task<Guid> SubscribeAsync(bool includeValues = true, IPredicate predicate = null,
-            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
-            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null);
-
-        // NOTES
-        //
-        // because TKey can be a value type and have its default value (e.g. zero for an int value),
-        // we cannot make it an optional parameter (i.e. 'TKey key = default') and have to explicitly
-        // create two overloads of SubscribeAsync.
-
-        /// <summary>
-        /// Subscribe to events.
-        /// </summary>
-        /// <param name="key">The key identifying an entry.</param>
-        /// <param name="includeValues">Whether the event arguments should contain values.</param>
-        /// <param name="predicate">An optional predicate to filter entries.</param>
-        /// <param name="entryAdded">An optional handler for <see cref="EntryEventType.Added"/> events.</param>
-        /// <param name="entryRemoved">An optional handler for <see cref="EntryEventType.Removed"/> events.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        /// <remarks>
-        /// <para>By default, event arguments contain values. However, for performance reasons, it
-        /// is possible to omit values by specifying <paramref name="includeValues"/> as false.</para>
-        /// </remarks>
-        Task<Guid> SubscribeAsync(TKey key, bool includeValues = true, IPredicate predicate = null,
-            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
-            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null);
-            */
-
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
 
         /// <summary>
         /// Unsubscribe from events.

@@ -16,6 +16,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -348,18 +349,21 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             count = await map.CountAsync();
             Assert.AreEqual(0, count);
 
-            var mmap = (Map<string, int>)map;
-
-            var id = await map.SubscribeAsync(
-                mmap.Handle.EntryAdded((sender, args) =>
+            var eventsCount = 0;
+            var id = await map.SubscribeAsync(on => on
+                .EntryAdded((sender, args) =>
                 {
                     XConsole.WriteLine(this, $"!ADDED: {args.Key} {args.Value}");
+                    Interlocked.Increment(ref eventsCount);
                 }));
 
             await map.AddAsync("a", 1);
             await map.AddAsync("b", 2);
 
             await map.UnsubscribeAsync(id);
+
+            while (eventsCount < 2)
+                await Task.Delay(500);
 
             // events?
             //await Task.Delay(4000);

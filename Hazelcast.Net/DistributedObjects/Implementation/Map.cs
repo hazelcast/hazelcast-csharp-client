@@ -9,7 +9,6 @@ using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Core.Collections;
-using Hazelcast.Data;
 using Hazelcast.Data.Map;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
@@ -730,26 +729,20 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         #region Events
 
-        // TODO: do we need state if we have sender?
-        // TODO: need overrides with key, predicate, etc
         // TODO: could any of these events be ASYNC?!
-        // TODO: this, or params Handlers[] handlers? issue here is... we add an event = you have to rebuild!
 
-        public HandleFactory Handle { get; } = new HandleFactory();
+        // TODO: group all event-related in MapEntryAddedEvent.cs file
 
-        public class HandleFactory
-        {
-            public MapEntryAddedEventHandler<TKey, TValue> EntryAdded(Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> handler)
-                => new MapEntryAddedEventHandler<TKey, TValue>(handler);
-        }
-
-        private async Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, params IMapEntryEventHandler<TKey, TValue>[] handlers)
+        private async Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<MapEvents<TKey, TValue>> on)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
 
+            var subscriber = new MapEvents<TKey, TValue>();
+            on(subscriber);
+
             var flags = EntryEventType.Nothing;
-            foreach (var handler in handlers)
+            foreach (var handler in subscriber.Handlers)
                 flags |= handler.EventType;
 
             // FIXME wtf
@@ -759,7 +752,7 @@ namespace Hazelcast.DistributedObjects.Implementation
             // 1: entryKey, no predicate
             // 2: no entryKey, predicate
             // 3: entryKey, predicate
-            var mode = (hasKey ? 1 : 0) + (predicate != null ? 2 : 0);
+            var mode = (hasKey ? 1 : 0) + (hasPredicate ? 2 : 0);
 
             ClientMessage subscribeRequest;
             switch (mode)
@@ -785,43 +778,42 @@ namespace Hazelcast.DistributedObjects.Implementation
                 HandleSubscribeResponse,
                 CreateUnsubscribeRequest,
                 HandleEvent,
-                new SubscriptionState(mode, Name, handlers));
+                new SubscriptionState(mode, Name, subscriber.Handlers));
 
             // the cluster stores the subscription it unsubscribes
-            // TODO so we could store things in there? with a state of some sort?
             await Cluster.SubscribeAsync(subscription);
 
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(params IMapEntryEventHandler<TKey, TValue>[] handlers)
-            => SubscribeAsync(true, default, false, default, false, handlers);
+        public Task<Guid> SubscribeAsync(Action<MapEvents<TKey, TValue>> on)
+            => SubscribeAsync(true, default, false, default, false, on);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, params IMapEntryEventHandler<TKey, TValue>[] handlers)
-            => SubscribeAsync(includeValues, default, false, default, false, handlers);
+        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEvents<TKey, TValue>> on)
+            => SubscribeAsync(includeValues, default, false, default, false, on);
 
-        public Task<Guid> SubscribeAsync(TKey key, params IMapEntryEventHandler<TKey, TValue>[] handlers)
-            => SubscribeAsync(true, default, false, key, true, handlers);
+        public Task<Guid> SubscribeAsync(TKey key, Action<MapEvents<TKey, TValue>> on)
+            => SubscribeAsync(true, default, false, key, true, on);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, params IMapEntryEventHandler<TKey, TValue>[] handlers)
-            => SubscribeAsync(includeValues, default, false, key, true, handlers);
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEvents<TKey, TValue>> on)
+            => SubscribeAsync(includeValues, default, false, key, true, on);
 
-        public Task<Guid> SubscribeAsync(IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers)
-            => SubscribeAsync(true, predicate, true, default, false, handlers);
+        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEvents<TKey, TValue>> on)
+            => SubscribeAsync(true, predicate, true, default, false, on);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers)
-            => SubscribeAsync(includeValues, predicate, true, default, false, handlers);
+        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEvents<TKey, TValue>> on)
+            => SubscribeAsync(includeValues, predicate, true, default, false, on);
 
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers)
-            => SubscribeAsync(true, predicate, true, key, true, handlers);
+        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on)
+            => SubscribeAsync(true, predicate, true, key, true, on);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, params IMapEntryEventHandler<TKey, TValue>[] handlers)
-            => SubscribeAsync(includeValues, predicate, true, key, true, handlers);
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on)
+            => SubscribeAsync(includeValues, predicate, true, key, true, on);
 
 
         private class SubscriptionState
         {
-            public SubscriptionState(int mode, string name, IMapEntryEventHandler<TKey, TValue>[] handlers)
+            public SubscriptionState(int mode, string name, List<IMapEntryEventHandler<TKey, TValue>> handlers)
             {
                 Mode = mode;
                 Name = name;
@@ -832,7 +824,7 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             public string Name { get;}
 
-            public IMapEntryEventHandler<TKey, TValue>[] Handlers { get; }
+            public List<IMapEntryEventHandler<TKey, TValue>> Handlers { get; }
         }
 
         private static SubscriptionState ToSafeState(object state)
@@ -911,192 +903,6 @@ namespace Hazelcast.DistributedObjects.Implementation
             }
         }
 
-        /*
-        /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(bool includeValues = true, IPredicate predicate = null,
-            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
-            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null,
-            Action<IMap<TKey, TValue>, EntryUpdatedEventArgs<TKey, TValue>> entryUpdated = null,
-            Action<IMap<TKey, TValue>, EntryEvictedEventArgs<TKey, TValue>> entryEvicted = null, // evicted from data store
-            Action<IMap<TKey, TValue>, EntryExpiredEventArgs<TKey, TValue>> entryExpired = null, // expired from ... cluster - values?
-            Action<IMap<TKey, TValue>, MapEvictedEventArgs> mapEvicted = null, // evicted from data store
-            Action<IMap<TKey, TValue>, MapClearedEventArgs> mapCleared = null,
-            Action<IMap<TKey, TValue>, EntryMergedEventArgs<TKey, TValue>> entryMerged = null, // merged after split, key+mergingValue
-            Action<IMap<TKey, TValue>, MapInvalidatedEventArgs> invalidated = null,
-            Action<IMap<TKey, TValue>, EntryLoadedEventArgs<TKey, TValue>> entryLoaded = null) // loaded into data store
-        {
-            return SubscribeAsync(default, false, includeValues, predicate,
-                entryAdded,
-                entryRemoved,
-                entryUpdated,
-                entryEvicted,
-                entryExpired,
-                mapEvicted,
-                mapCleared,
-                entryMerged,
-                invalidated, // used by NearCache only...
-                entryLoaded);
-        }
-
-        /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(TKey key, bool includeValues = true, IPredicate predicate = null,
-            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
-            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null,
-            Action<IMap<TKey, TValue>, EntryUpdatedEventArgs<TKey, TValue>> entryUpdated = null,
-            Action<IMap<TKey, TValue>, EntryEvictedEventArgs<TKey, TValue>> entryEvicted = null,
-            Action<IMap<TKey, TValue>, EntryExpiredEventArgs<TKey, TValue>> entryExpired = null,
-            Action<IMap<TKey, TValue>, MapEvictedEventArgs> mapEvicted = null,
-            Action<IMap<TKey, TValue>, MapClearedEventArgs> mapCleared = null,
-            Action<IMap<TKey, TValue>, EntryMergedEventArgs<TKey, TValue>> entryMerged = null,
-            Action<IMap<TKey, TValue>, MapInvalidatedEventArgs> invalidated = null,
-            Action<IMap<TKey, TValue>, EntryLoadedEventArgs<TKey, TValue>> entryLoaded = null)
-        {
-            return SubscribeAsync(key, true, includeValues, predicate,
-                entryAdded,
-                entryRemoved,
-                entryUpdated,
-                entryEvicted,
-                entryExpired,
-                mapEvicted,
-                mapCleared,
-                entryMerged,
-                invalidated,
-                entryLoaded);
-        }
-
-        private async Task<Guid> SubscribeAsync(TKey entryKey, bool hasEntryKey, bool includeValues, IPredicate predicate,
-            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded,
-            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved,
-            Action<IMap<TKey, TValue>, EntryUpdatedEventArgs<TKey, TValue>> entryUpdated,
-            Action<IMap<TKey, TValue>, EntryEvictedEventArgs<TKey, TValue>> entryEvicted,
-            Action<IMap<TKey, TValue>, EntryExpiredEventArgs<TKey, TValue>> entryExpired,
-            Action<IMap<TKey, TValue>, MapEvictedEventArgs> mapEvicted,
-            Action<IMap<TKey, TValue>, MapClearedEventArgs> mapCleared,
-            Action<IMap<TKey, TValue>, EntryMergedEventArgs<TKey, TValue>> entryMerged,
-            Action<IMap<TKey, TValue>, MapInvalidatedEventArgs> invalidated,
-            Action<IMap<TKey, TValue>, EntryLoadedEventArgs<TKey, TValue>> entryLoaded)
-        {
-            var flags = EntryEventType.Nothing;
-            if (entryAdded != null) flags |= EntryEventType.Added;
-            if (entryRemoved != null) flags |= EntryEventType.Removed;
-            if (entryUpdated != null) flags |= EntryEventType.Updated;
-            if (entryEvicted != null) flags |= EntryEventType.Evicted;
-            if (entryExpired != null) flags |= EntryEventType.Expired;
-            if (mapEvicted != null) flags |= EntryEventType.EvictAll;
-            if (mapCleared != null) flags |= EntryEventType.ClearAll;
-            if (entryMerged != null) flags |= EntryEventType.Merged;
-            if (invalidated != null) flags |= EntryEventType.Invalidation;
-            if (entryLoaded != null) flags |= EntryEventType.Loaded;
-
-            // 0: no entryKey, no predicate
-            // 1: entryKey, no predicate
-            // 2: no entryKey, predicate
-            // 3: entryKey, predicate
-            var select = (hasEntryKey ? 1 : 0) + (predicate != null ? 2 : 0);
-
-            // FIXME
-            var localOnly = false;
-
-            void HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
-            {
-                var eventType = (EntryEventType) eventTypeData;
-                if (eventType == EntryEventType.Nothing) return;
-
-                var member = Cluster.GetMember(memberId);
-
-                Lazy<T> LazyArg<T>(IData source) => new Lazy<T>(() => ToObject<T>(source));
-
-                if (eventType.HasFlag(EntryEventType.Added))
-                    entryAdded?.Invoke(this, new EntryAddedEventArgs<TKey, TValue>(member, LazyArg<TKey>(keyData), LazyArg<TValue>(valueData)));
-                if (eventType.HasFlag(EntryEventType.Removed))
-                    entryRemoved?.Invoke(this, new EntryRemovedEventArgs<TKey, TValue>(member, LazyArg<TKey>(keyData), LazyArg<TValue>(valueData)));
-                if (eventType.HasFlag(EntryEventType.Updated))
-                    entryUpdated?.Invoke(this, new EntryUpdatedEventArgs<TKey, TValue>(member, LazyArg<TKey>(keyData), LazyArg<TValue>(oldValueData), LazyArg<TValue>(valueData)));
-                if (eventType.HasFlag(EntryEventType.Evicted))
-                    entryEvicted?.Invoke(this, new EntryEvictedEventArgs<TKey, TValue>(LazyArg<TKey>(keyData), LazyArg<TValue>(valueData)));
-                if (eventType.HasFlag(EntryEventType.Expired))
-                    entryExpired?.Invoke(this, new EntryExpiredEventArgs<TKey, TValue>(LazyArg<TKey>(keyData), LazyArg<TValue>(valueData)));
-                if (eventType.HasFlag(EntryEventType.EvictAll))
-                    mapEvicted?.Invoke(this, new MapEvictedEventArgs(member, numberOfAffectedEntries));
-                if (eventType.HasFlag(EntryEventType.ClearAll))
-                    mapCleared?.Invoke(this, new MapClearedEventArgs(member, numberOfAffectedEntries));
-                if (eventType.HasFlag(EntryEventType.Merged))
-                    entryMerged?.Invoke(this, new EntryMergedEventArgs<TKey, TValue>(LazyArg<TKey>(keyData), LazyArg<TValue>(valueData)));
-                if (eventType.HasFlag(EntryEventType.Invalidation))
-                    invalidated?.Invoke(this, new MapInvalidatedEventArgs(LazyArg<TKey>(keyData), LazyArg<TValue>(valueData)));
-                if (eventType.HasFlag(EntryEventType.Loaded))
-                    entryLoaded?.Invoke(this, new EntryLoadedEventArgs<TKey, TValue>(LazyArg<TKey>(keyData), LazyArg<TValue>(valueData)));
-            }
-
-            void HandleEvent(ClientMessage eventMessage)
-            {
-                switch (select)
-                {
-                    case 0:
-                        MapAddEntryListenerCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
-                        break;
-                    case 1:
-                        MapAddEntryListenerToKeyCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
-                        break;
-                    case 2:
-                        MapAddEntryListenerWithPredicateCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
-                        break;
-                    case 3:
-                        MapAddEntryListenerToKeyWithPredicateCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
-                        break;
-                    default:
-                        throw new Exception();
-                }
-            }
-
-            Guid HandleResponse(ClientMessage responseMessage)
-            {
-                switch (select)
-                {
-                    case 0:
-                        return MapAddEntryListenerCodec.DecodeResponse(responseMessage).Response;
-                    case 1:
-                        return MapAddEntryListenerToKeyCodec.DecodeResponse(responseMessage).Response;
-                    case 2:
-                        return MapAddEntryListenerWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                    case 3:
-                        return MapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                    default:
-                        throw new Exception();
-                }
-            }
-
-            ClientMessage subscribeRequest;
-            switch (select)
-            {
-                case 0:
-                    subscribeRequest = MapAddEntryListenerCodec.EncodeRequest(Name, includeValues, (int) flags, localOnly);
-                    break;
-                case 1:
-                    subscribeRequest = MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(entryKey), includeValues, (int) flags, localOnly);
-                    break;
-                case 2:
-                    subscribeRequest = MapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), includeValues, (int) flags, localOnly);
-                    break;
-                case 3:
-                    subscribeRequest = MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(entryKey), ToData(predicate), includeValues, (int) flags, localOnly);
-                    break;
-                default:
-                    throw new Exception();
-            }
-
-            var subscription = new ClusterEventSubscription(
-                subscribeRequest,
-                HandleResponse,
-                subscriptionId => MapRemoveEntryListenerCodec.EncodeRequest(Name, subscriptionId),
-                HandleEvent);
-
-            await Cluster.SubscribeAsync(subscription);
-
-            return subscription.Id;
-        }
-        */
-
         /// <inheritdoc />
         public async Task<bool> UnsubscribeAsync(Guid subscriptionId)
         {
@@ -1106,126 +912,5 @@ namespace Hazelcast.DistributedObjects.Implementation
         }
 
         #endregion
-    }
-
-    public abstract class MapEventArgsBase
-    {
-        protected MapEventArgsBase(MemberInfo member, int numberOfAffectedEntries)
-        {
-            Member = member;
-            NumberOfAffectedEntries = numberOfAffectedEntries;
-        }
-
-
-        public MemberInfo Member { get; }
-
-        public int NumberOfAffectedEntries { get; }
-    }
-
-    public sealed class MapEvictedEventArgs : MapEventArgsBase
-    {
-        public MapEvictedEventArgs(MemberInfo member, int numberOfAffectedEntries)
-            : base(member, numberOfAffectedEntries)
-        { }
-    }
-
-    public sealed class MapClearedEventArgs : MapEventArgsBase
-    {
-        public MapClearedEventArgs(MemberInfo member, int numberOfAffectedEntries)
-            : base(member, numberOfAffectedEntries)
-        { }
-    }
-
-    public interface IMapEntryEventHandler<TKey, TValue>
-    {
-        EntryEventType EventType { get; }
-
-        void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, EntryEventType eventType, int numberOfAffectedEntries);
-    }
-
-    public abstract class MapEntryEventHandlerBase<TKey, TValue, TArgs> : IMapEntryEventHandler<TKey, TValue>
-    {
-        private readonly Action<IMap<TKey, TValue>, TArgs> _handler;
-
-        protected MapEntryEventHandlerBase(EntryEventType eventType, Action<IMap<TKey, TValue>, TArgs> handler)
-        {
-            EventType = eventType;
-            _handler = handler;
-        }
-
-        public EntryEventType EventType { get; }
-
-        public void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, EntryEventType eventType, int numberOfAffectedEntries)
-            => _handler(sender, CreateEventArgs(member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries));
-
-        protected abstract TArgs CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, EntryEventType eventType, int numberOfAffectedEntries);
-    }
-
-    public class MapEntryAddedEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, EntryAddedEventArgs<TKey, TValue>>
-    {
-        public MapEntryAddedEventHandler(Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> handler)
-            : base(EntryEventType.Added, handler)
-        { }
-
-        protected override EntryAddedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, EntryEventType eventType, int numberOfAffectedEntries)
-            => new EntryAddedEventArgs<TKey, TValue>(member, key, value);
-    }
-
-    public abstract class MapEntryEventArgsBase<TKey>
-    {
-        private readonly Lazy<TKey> _key;
-
-        protected MapEntryEventArgsBase(MemberInfo member, Lazy<TKey> key)
-        {
-            Member = member;
-            _key = key;
-        }
-
-        public MemberInfo Member { get; }
-
-        public TKey Key => _key == null ? default : _key.Value;
-    }
-
-    public sealed class EntryAddedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
-    {
-        private readonly Lazy<TValue> _value;
-
-        public EntryAddedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value)
-            : base(member, key)
-        {
-            _value = value;
-        }
-
-        public TValue Value => _value == null ? default : _value.Value;
-    }
-
-    public sealed class EntryRemovedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
-    {
-        private readonly Lazy<TValue> _oldValue;
-
-        public EntryRemovedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> oldValue)
-            : base(member, key)
-        {
-            _oldValue = oldValue;
-        }
-
-        public TValue OldValue => _oldValue == null ? default : _oldValue.Value;
-    }
-
-    public sealed class EntryUpdatedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
-    {
-        private readonly Lazy<TValue> _oldValue;
-        private readonly Lazy<TValue> _value;
-
-        public EntryUpdatedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> oldValue, Lazy<TValue> value)
-            : base(member, key)
-        {
-            _oldValue = oldValue;
-            _value = value;
-        }
-
-        public TValue OldValue => _oldValue == null ? default : _oldValue.Value;
-
-        public TValue Value => _value == null ? default : _value.Value;
     }
 }
