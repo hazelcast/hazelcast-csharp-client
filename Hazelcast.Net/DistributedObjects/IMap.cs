@@ -536,38 +536,59 @@ namespace Hazelcast.DistributedObjects
 
         #region Events
 
-        /// <summary>
-        /// Removes an entry listener, if it exists.
-        /// </summary>
-        /// <param name="id">The identifier of the listener.</param>
-        /// <returns>true if a listener was that identifier was found and removed; otherwise false.</returns>
-        //bool RemoveEntryListener(Guid id); // TODO: rename
 
         // TODO: these should be renamed + done entirely differently
-        // IMapListener is an IEventListener and then we have IEntryAddedListener,
-        // IEntryEvictedListener, etc for each different event and now it's got
-        // to be different
-
         /*
-        EntryAdded.AddAsync(Action<TKey, TValue> handler, bool includeValue);
-        EntryAdded.Remove(Guid id);
-
-        Task<Guid> SubscribeToEntryAdded(Action<TKey, TValue> handle, bool includeValue);
-        Task Unsubscribe(Guid subscriptionId);
-
         Guid AddEntryListener(IMapListener listener, bool includeValue);
         Guid AddEntryListener(IMapListener listener, TKey key, bool includeValue);
         Guid AddEntryListener(IMapListener listener, IPredicate predicate, TKey key, bool includeValue);
         Guid AddEntryListener(IMapListener listener, IPredicate predicate, bool includeValue);
         */
 
-        //EntryAddedEventHandlers EntryAdded { get; }
-        //IEventHandlers Events { get; }
-
-        Task<Guid> SubscribeAsync(
+        /// <summary>
+        /// Subscribe to events.
+        /// </summary>
+        /// <param name="includeValues">Whether the event arguments should contain values.</param>
+        /// <param name="predicate">An optional predicate to filter entries.</param>
+        /// <param name="entryAdded">An optional handler for <see cref="EntryEventType.Added"/> events.</param>
+        /// <param name="entryRemoved">An optional handler for <see cref="EntryEventType.Removed"/> events.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        /// <remarks>
+        /// <para>By default, event arguments contain values. However, for performance reasons, it
+        /// is possible to omit values by specifying <paramref name="includeValues"/> as false.</para>
+        /// </remarks>
+        Task<Guid> SubscribeAsync(bool includeValues = true, IPredicate predicate = null,
             Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
             Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null);
 
+        // NOTES
+        // 
+        // because TKey can be a value type and have its default value (e.g. zero for an int value),
+        // we cannot make it an optional parameter (i.e. 'TKey key = default') and have to explicitly
+        // create two overloads of SubscribeAsync.
+
+        /// <summary>
+        /// Subscribe to events.
+        /// </summary>
+        /// <param name="key">The key identifying an entry.</param>
+        /// <param name="includeValues">Whether the event arguments should contain values.</param>
+        /// <param name="predicate">An optional predicate to filter entries.</param>
+        /// <param name="entryAdded">An optional handler for <see cref="EntryEventType.Added"/> events.</param>
+        /// <param name="entryRemoved">An optional handler for <see cref="EntryEventType.Removed"/> events.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        /// <remarks>
+        /// <para>By default, event arguments contain values. However, for performance reasons, it
+        /// is possible to omit values by specifying <paramref name="includeValues"/> as false.</para>
+        /// </remarks>
+        Task<Guid> SubscribeAsync(TKey key, bool includeValues = true, IPredicate predicate = null,
+            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
+            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null);
+
+        /// <summary>
+        /// Unsubscribe from events.
+        /// </summary>
+        /// <param name="subscriptionId">The unique identifier of the subscription.</param>
+        /// <returns>fixme</returns>
         Task<bool> UnsubscribeAsync(Guid subscriptionId);
 
         #endregion

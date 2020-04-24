@@ -9,6 +9,11 @@ namespace Hazelcast.Clustering
     public enum EntryEventType
     {
         /// <summary>
+        /// Nothing (default value).
+        /// </summary>
+        Nothing = 0,
+
+        /// <summary>
         /// The entry was added.
         /// </summary>
         Added = 1,

@@ -734,44 +734,121 @@ namespace Hazelcast.DistributedObjects.Implementation
         // TODO: need overrides with key, predicate, etc
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(
+        public Task<Guid> SubscribeAsync(bool includeValues = true, IPredicate predicate = null,
             Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
             Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null)
         {
-            var flags = (EntryEventType) 0;
+            return SubscribeAsync(default, false, includeValues, predicate,
+                entryAdded,
+                entryRemoved);
+        }
+
+        /// <inheritdoc />
+        public Task<Guid> SubscribeAsync(TKey key, bool includeValues = true, IPredicate predicate = null,
+            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded = null,
+            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved = null)
+        {
+            return SubscribeAsync(key, true, includeValues, predicate,
+                entryAdded,
+                entryRemoved);
+        }
+
+        private async Task<Guid> SubscribeAsync(TKey entryKey, bool hasEntryKey, bool includeValues, IPredicate predicate,
+            Action<IMap<TKey, TValue>, EntryAddedEventArgs<TKey, TValue>> entryAdded,
+            Action<IMap<TKey, TValue>, EntryRemovedEventArgs<TKey, TValue>> entryRemoved)
+        {
+            // FIXME must cleanup flags!
+            var flags = EntryEventType.Nothing;
             if (entryAdded != null) flags |= EntryEventType.Added;
             if (entryRemoved != null) flags |= EntryEventType.Removed;
 
+            // 0: no entryKey, no predicate
+            // 1: entryKey, no predicate
+            // 2: no entryKey, predicate
+            // 3: entryKey, predicate
+            var select = (hasEntryKey ? 1 : 0) + (predicate != null ? 2 : 0);
+
             // FIXME
-            var includeValue = true;
             var localOnly = false;
 
-            var subscribeRequest = MapAddEntryListenerCodec.EncodeRequest(Name, includeValue, (int) flags, localOnly);
-
-            void HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventType, Guid memberId, int numberOfAffectedEntries)
+            void HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
             {
-                if (((int)flags & eventType) == 0) return;
+                var eventType = (EntryEventType) eventTypeData;
+                if (eventType == EntryEventType.Nothing) return;
 
                 var member = Cluster.GetMember(memberId);
 
-                // TODO or maybe we could initialize the args with Lazy<TKey> ?
-                // but then the args would indirectly capture the serialization service
+                Lazy<T> LazyArg<T>(IData source) => new Lazy<T>(() => ToObject<T>(source));
 
-                var key = ToObject<TKey>(keyData);
-                var value = ToObject<TValue>(valueData);
-
-                if (((EntryEventType)eventType).HasFlag(EntryEventType.Added))
-                    entryAdded?.Invoke(this, new EntryAddedEventArgs<TKey, TValue>(key, value));
-                if (((EntryEventType)eventType).HasFlag(EntryEventType.Removed))
-                    entryRemoved?.Invoke(this, new EntryRemovedEventArgs<TKey, TValue>(key, value));
+                if (eventType.HasFlag(EntryEventType.Added))
+                    entryAdded?.Invoke(this, new EntryAddedEventArgs<TKey, TValue>(LazyArg<TKey>(keyData), LazyArg<TValue>(valueData)));
+                if (eventType.HasFlag(EntryEventType.Removed))
+                    entryRemoved?.Invoke(this, new EntryRemovedEventArgs<TKey, TValue>(LazyArg<TKey>(keyData), LazyArg<TValue>(valueData)));
                 // TODO and many more
+            }
+
+            void HandleEvent(ClientMessage eventMessage)
+            {
+                switch (select)
+                {
+                    case 0:
+                        MapAddEntryListenerCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
+                        break;
+                    case 1:
+                        MapAddEntryListenerToKeyCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
+                        break;
+                    case 2:
+                        MapAddEntryListenerWithPredicateCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
+                        break;
+                    case 3:
+                        MapAddEntryListenerToKeyWithPredicateCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
+                        break;
+                    default:
+                        throw new Exception();
+                }
+            }
+
+            Guid HandleResponse(ClientMessage responseMessage)
+            {
+                switch (select)
+                {
+                    case 0:
+                        return MapAddEntryListenerCodec.DecodeResponse(responseMessage).Response;
+                    case 1:
+                        return MapAddEntryListenerToKeyCodec.DecodeResponse(responseMessage).Response;
+                    case 2:
+                        return MapAddEntryListenerWithPredicateCodec.DecodeResponse(responseMessage).Response;
+                    case 3:
+                        return MapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(responseMessage).Response;
+                    default:
+                        throw new Exception();
+                }
+            }
+
+            ClientMessage subscribeRequest;
+            switch (select)
+            {
+                case 0:
+                    subscribeRequest = MapAddEntryListenerCodec.EncodeRequest(Name, includeValues, (int) flags, localOnly);
+                    break;
+                case 1:
+                    subscribeRequest = MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(entryKey), includeValues, (int) flags, localOnly);
+                    break;
+                case 2:
+                    subscribeRequest = MapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), includeValues, (int) flags, localOnly);
+                    break;
+                case 3:
+                    subscribeRequest = MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(entryKey), ToData(predicate), includeValues, (int) flags, localOnly);
+                    break;
+                default:
+                    throw new Exception();
             }
 
             var subscription = new ClusterEventSubscription(
                 subscribeRequest,
-                responseMessage => MapAddEntryListenerCodec.DecodeResponse(responseMessage).Response,
+                HandleResponse,
                 subscriptionId => MapRemoveEntryListenerCodec.EncodeRequest(Name, subscriptionId),
-                eventMessage => MapAddEntryListenerCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent));
+                HandleEvent);
 
             await Cluster.SubscribeAsync(subscription);
 
@@ -801,39 +878,45 @@ namespace Hazelcast.DistributedObjects.Implementation
 
     public class EntryAddedEventArgs<TKey, TValue> : EventArgsBase
     {
-        public EntryAddedEventArgs(TKey key, TValue value)
+        private readonly Lazy<TKey> _key;
+        private readonly Lazy<TValue> _value;
+
+        public EntryAddedEventArgs(Lazy<TKey> key, Lazy<TValue> value)
         {
-            Key = key;
-            Value = value;
+            _key = key;
+            _value = value;
         }
 
         public MemberInfo Member { get; }
 
         public string Name { get; } // name of the map, why?
 
-        public EntryEventType EventType { get; } // why?
+        public EntryEventType EventType => EntryEventType.Added;
 
-        public TKey Key { get; }
+        public TKey Key => _key.Value;
 
-        public TValue Value { get; }
+        public TValue Value => _value.Value;
     }
 
     public class EntryRemovedEventArgs<TKey, TValue> : EventArgsBase
     {
-        public EntryRemovedEventArgs(TKey key, TValue value)
+        private readonly Lazy<TKey> _key;
+        private readonly Lazy<TValue> _value;
+
+        public EntryRemovedEventArgs(Lazy<TKey> key, Lazy<TValue> value)
         {
-            Key = key;
-            Value = value;
+            _key = key;
+            _value = value;
         }
 
         public MemberInfo Member { get; }
 
         public string Name { get; } // name of the map, why?
 
-        public EntryEventType EventType { get; } // why?
+        public EntryEventType EventType => EntryEventType.Removed;
 
-        public TKey Key { get; }
+        public TKey Key => _key.Value;
 
-        public TValue Value { get; }
+        public TValue Value => _value.Value;
     }
 }
