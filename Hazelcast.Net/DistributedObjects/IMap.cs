@@ -305,7 +305,7 @@ namespace Hazelcast.DistributedObjects
         /// the map. If a <see cref="MapStore"/> is defined for this map, The entry is
         /// not evicted from the map store.</para>
         /// </remarks>
-        bool Evict(TKey key);
+        Task<bool> EvictAsync(TKey key);
 
         /// <summary>
         /// Evicts all entries but the locked entries from the cache.
@@ -316,7 +316,7 @@ namespace Hazelcast.DistributedObjects
         /// the map. If a <see cref="MapStore"/> is defined for this map, entries are
         /// not evicted from the map store.</para>
         /// </remarks>
-        void EvictAll();
+        Task EvictAllAsync();
 
         /// <summary>
         /// Flushes the map store, if any.
@@ -325,7 +325,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>If a <see cref="MapStore"/> is defined for this map, this method flushes
         /// all dirty entries by deleting or storing them.</para>
         /// </remarks>
-        void Flush();
+        Task FlushAsync();
 
         #endregion
 
@@ -341,10 +341,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        object ExecuteOnKey(TKey key, IEntryProcessor processor);
-
-        // TODO: accept an IEnumerable
-        // TOOD: rename all these 'Execute'
+        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key);
 
         /// <summary>
         /// Processes entries.
@@ -356,7 +353,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        IDictionary<TKey, object> ExecuteOnKeys(ISet<TKey> keys, IEntryProcessor processor);
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys);
 
         /// <summary>
         /// Process all entries.
@@ -367,15 +364,15 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        IDictionary<TKey, object> ExecuteOnEntries(IEntryProcessor processor);
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor);
 
         /// <summary>
-        /// TODO: kill that one, it seems to be ExecuteOnKeyAsync
+        /// TODO: kill that one, it seems to be ExecuteOnKeyAsync? what is this? updating the value?
         /// </summary>
         /// <param name="key"></param>
         /// <param name="processor"></param>
         /// <returns></returns>
-        Task<object> SubmitToKey(TKey key, IEntryProcessor processor);
+        Task<object> ApplyAsync(IEntryProcessor processor, TKey key);
 
         #endregion
 
@@ -393,7 +390,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>Locks are re-entrant, but counted: if a key is locked N times, then it should be unlocked
         /// N times before another thread can lock it.</para>
         /// </remarks>
-        void Lock(TKey key);
+        Task LockAsync(TKey key);
 
         /// <summary>
         /// Locks an entry for a given time span.
@@ -409,7 +406,7 @@ namespace Hazelcast.DistributedObjects
         /// N times before another thread can lock it.</para>
         /// <para>The lock is released after the time span.</para>
         /// </remarks>
-        void Lock(TKey key, TimeSpan leaseTime);
+        Task LockAsync(TKey key, TimeSpan leaseTime);
 
         /// <summary>
         /// Tries to lock an entry.
@@ -419,7 +416,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>If the entry cannot be locked, returns false immediately.</para>
         /// </remarks>
-        bool TryLock(TKey key);
+        Task<bool> TryLockAsync(TKey key);
 
         /// <summary>
         /// Tries to lock an entry.
@@ -431,7 +428,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the entry cannot be locked after <paramref name="timeout"/>, returns false.</para>
         /// <para>If <paramref name="timeout"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
         /// </remarks>
-        bool TryLock(TKey key, TimeSpan timeout);
+        Task<bool> TryLockAsync(TKey key, TimeSpan timeout);
 
         /// <summary>
         /// Tries to lock an entry.
@@ -447,14 +444,21 @@ namespace Hazelcast.DistributedObjects
         /// If <paramref name="leaseTime"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the lock is never
         /// released.</para>
         /// </remarks>
-        bool TryLock(TKey key, TimeSpan timeout, TimeSpan leaseTime);
+        Task<bool> TryLockAsync(TKey key, TimeSpan timeout, TimeSpan leaseTime);
 
         /// <summary>
         /// Determines whether an entry is locked.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <returns>true if the entry is locked; otherwise false.</returns>
-        bool IsLocked(TKey key);
+        Task<bool> IsLockedAsync(TKey key);
+
+        /// <summary>
+        /// Unlocks an entry.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>A task that will complete when the entry has been unlocked.</returns>
+        Task UnlockAsync(TKey key);
 
         /// <summary>
         /// Unlocks an entry.
@@ -465,7 +469,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>This always succeed, never blocks, and returns immediately.</para>
         /// TODO: but, async?
         /// </remarks>
-        void ForceUnlock(TKey key);
+        Task ForceUnlockAsync(TKey key);
 
         #endregion
 

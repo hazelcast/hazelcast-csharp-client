@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
@@ -70,8 +71,12 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var tValue = interfaceType.GetGenericArguments()[1];
                 var actualType = typeof(Map<,>).MakeGenericType(tKey, tValue);
 
+                // FIXME this is obviously TEMP, the sequence belongs to the HazelcastClient (or so it seems)
+                // but then how would cross-client locks work?
+                var lockReferenceIdSequence = new Int64Sequence();
+
                 // create the actual instance
-                var o = Activator.CreateInstance(actualType, Constants.ServiceNames.Map, name, _cluster, _serializationService);
+                var o = Activator.CreateInstance(actualType, Constants.ServiceNames.Map, name, _cluster, _serializationService, lockReferenceIdSequence);
                 if (!(o is DistributedObjectBase d))
                     throw new InvalidOperationException("The created object does not inherit from DistributedObjectBase.");
 

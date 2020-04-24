@@ -333,7 +333,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
 
             // time to process the event / members, else the LB has no entries
             // how is this supposed to work in real life?!
-            await Task.Delay(2000);
+            //await Task.Delay(2000);
 
             var map = await client.GetMapAsync<string, int>("testmap" + RandomProvider.Random.Next(100));
             await map.AddAsync("key", 42);
@@ -349,7 +349,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             Assert.AreEqual(0, count);
 
             // events?
-            await Task.Delay(4000);
+            //await Task.Delay(4000);
 
             // FIXME how are we supposed to release it all?
             //client.Close();

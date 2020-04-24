@@ -26,6 +26,8 @@ namespace Hazelcast.DistributedObjects.Implementation
     /// <typeparam name="TValue">The type of the values.</typeparam>
     internal class Map<TKey, TValue> : DistributedObjectBase, IMap<TKey, TValue>
     {
+        private readonly ISequence<long> _lockReferenceIdSequence;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Map{TKey,TValue}"/> class.
         /// </summary>
@@ -33,9 +35,12 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <param name="name">The unique name of the object.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
-        public Map(string serviceName, string name, Cluster cluster, ISerializationService serializationService)
+        /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
+        public Map(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence)
             : base(serviceName, name, cluster, serializationService)
-        { }
+        {
+            _lockReferenceIdSequence = lockReferenceIdSequence;
+        }
 
         // TODO no timeout management or CancellationToken anywhere?!
 
@@ -250,9 +255,6 @@ namespace Hazelcast.DistributedObjects.Implementation
             };
         }
 
-        private static PagingPredicate UnwrapPagingPredicate(IPredicate predicate)
-            => predicate as PagingPredicate ?? (predicate as PartitionPredicate)?.GetTarget() as PagingPredicate;
-
         /// <inheritdoc />
         public async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate = null)
         {
@@ -395,6 +397,9 @@ namespace Hazelcast.DistributedObjects.Implementation
             return response;
         }
 
+        private static PagingPredicate UnwrapPagingPredicate(IPredicate predicate)
+            => predicate as PagingPredicate ?? (predicate as PartitionPredicate)?.GetTarget() as PagingPredicate;
+
         #endregion
 
         #region Removing
@@ -452,82 +457,164 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         #region Caching
 
-        public bool Evict(TKey key)
+        /// <inheritdoc />
+        public async Task<bool> EvictAsync(TKey key)
         {
-            throw new NotImplementedException();
+            var keyData = ToSafeData(key);
+
+            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
+            return response;
         }
 
-        public void EvictAll()
+        /// <inheritdoc />
+        public async Task EvictAllAsync()
         {
-            throw new NotImplementedException();
+            var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
+            await Cluster.SendAsync(requestMessage);
         }
 
-        public void Flush()
+        /// <inheritdoc />
+        public async Task FlushAsync()
         {
-            throw new NotImplementedException();
+            var requestMessage = MapFlushCodec.EncodeRequest(Name);
+            await Cluster.SendAsync(requestMessage);
         }
 
         #endregion
 
         #region Processing
 
-        public object ExecuteOnKey(TKey key, IEntryProcessor processor)
+        /// <inheritdoc />
+        public async Task<object> ExecuteAsync(IEntryProcessor processor, TKey key)
         {
-            throw new NotImplementedException();
+            var keyData = ToSafeData(key);
+            var processorData = ToSafeData(processor);
+
+            var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ThreadId);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var response = MapExecuteOnKeyCodec.DecodeResponse(responseMessage).Response;
+            return ToObject<object>(response);
         }
 
-        public IDictionary<TKey, object> ExecuteOnKeys(ISet<TKey> keys, IEntryProcessor processor)
+        /// <inheritdoc />
+        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys)
         {
-            throw new NotImplementedException();
+            if (keys == null) throw new ArgumentNullException(nameof(keys));
+
+            var keysmap = keys.ToDictionary(x => ToSafeData(x), x => x);
+            if (keysmap.Count == 0) return new Dictionary<TKey, object>();
+            var processorData = ToSafeData(processor);
+
+            var requestMessage = MapExecuteOnKeysCodec.EncodeRequest(Name, processorData, keysmap.Keys);
+            var responseMessage = await Cluster.SendAsync(requestMessage);
+            var response = MapExecuteOnKeysCodec.DecodeResponse(responseMessage).Response;
+
+            var result = new Dictionary<TKey, object>();
+            foreach (var (keyData, valueData) in response)
+            {
+                if (!keysmap.TryGetValue(keyData, out var key))
+                    throw new InvalidOperationException("Server returned an unexpected key.");
+                result[key] = ToObject<object>(valueData);
+            }
+            return result;
         }
 
-        public IDictionary<TKey, object> ExecuteOnEntries(IEntryProcessor processor)
+        /// <inheritdoc />
+        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor)
         {
-            throw new NotImplementedException();
+            var processorData = ToSafeData(processor);
+
+            var requestMessage = MapExecuteOnAllKeysCodec.EncodeRequest(Name, processorData);
+            var responseMessage = await Cluster.SendAsync(requestMessage);
+            var response = MapExecuteOnAllKeysCodec.DecodeResponse(responseMessage).Response;
+
+            var result = new Dictionary<TKey, object>();
+            foreach (var (keyData, valueData) in response)
+                result[ToObject<TKey>(keyData)] = ToObject<object>(valueData);
+            return result;
+
         }
 
-        public Task<object> SubmitToKey(TKey key, IEntryProcessor processor)
+        /// <inheritdoc />
+        public async Task<object> ApplyAsync(IEntryProcessor processor, TKey key)
         {
-            throw new NotImplementedException();
+            var keyData = ToSafeData(key);
+            var processorData = ToSafeData(processor);
+
+            var requestMessage = MapSubmitToKeyCodec.EncodeRequest(Name, processorData, keyData, ThreadId);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var response = MapSubmitToKeyCodec.DecodeResponse(responseMessage).Response;
+            return ToObject<object>(response);
         }
 
         #endregion
 
         #region Locking
 
-        public void Lock(TKey key)
+        /// <inheritdoc />
+        public async Task LockAsync(TKey key)
+            => await LockAsync(key, Timeout.InfiniteTimeSpan);
+
+        /// <inheritdoc />
+        public async Task LockAsync(TKey key, TimeSpan leaseTime)
+            => await TryLockAsync(key, leaseTime, Timeout.InfiniteTimeSpan);
+
+        /// <inheritdoc />
+        public async Task<bool> TryLockAsync(TKey key)
+            => await TryLockAsync(key, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+
+        /// <inheritdoc />
+        public async Task<bool> TryLockAsync(TKey key, TimeSpan timeout)
+            => await TryLockAsync(key, Timeout.InfiniteTimeSpan, timeout);
+
+        /// <inheritdoc />
+        public async Task<bool> TryLockAsync(TKey key, TimeSpan leaseTime, TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            var keyData = ToSafeData(key);
+
+            var refId = _lockReferenceIdSequence.Next;
+            var leaseTimeMs = leaseTime.CodecDurationMilliseconds();
+            var timeoutMs = timeout.CodecTimeoutMilliseconds();
+
+            var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ThreadId, leaseTimeMs, timeoutMs, refId);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var response = MapTryLockCodec.DecodeResponse(responseMessage).Response;
+            return response;
         }
 
-        public void Lock(TKey key, TimeSpan leaseTime)
+        /// <inheritdoc />
+        public async Task<bool> IsLockedAsync(TKey key)
         {
-            throw new NotImplementedException();
+            var keyData = ToSafeData(key);
+
+            var requestMessage = MapIsLockedCodec.EncodeRequest(Name, keyData);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var response = MapIsLockedCodec.DecodeResponse(responseMessage).Response;
+            return response;
         }
 
-        public bool TryLock(TKey key)
+        /// <inheritdoc />
+        public async Task UnlockAsync(TKey key)
         {
-            throw new NotImplementedException();
+            var keyData = ToSafeData(key);
+
+            var refId = _lockReferenceIdSequence.Next;
+
+            var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ThreadId, refId);
+            await Cluster.SendAsync(requestMessage, keyData);
         }
 
-        public bool TryLock(TKey key, TimeSpan timeout)
+        /// <inheritdoc />
+        public async Task ForceUnlockAsync(TKey key)
         {
-            throw new NotImplementedException();
-        }
+            var keyData = ToSafeData(key);
 
-        public bool TryLock(TKey key, TimeSpan timeout, TimeSpan leaseTime)
-        {
-            throw new NotImplementedException();
-        }
+            var refId = _lockReferenceIdSequence.Next;
 
-        public bool IsLocked(TKey key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ForceUnlock(TKey key)
-        {
-            throw new NotImplementedException();
+            var requestMessage = MapForceUnlockCodec.EncodeRequest(Name, keyData, refId);
+            await Cluster.SendAsync(requestMessage, keyData);
         }
 
         #endregion
