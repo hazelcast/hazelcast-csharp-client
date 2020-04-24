@@ -477,8 +477,8 @@ namespace Hazelcast.DistributedObjects
 
         // TODO what is this?
 
-        void AddIndex(IndexType type, params string[] attributes);
-        void AddIndex(IndexConfig indexConfig);
+        Task AddIndexAsync(IndexType type, params string[] attributes);
+        Task AddIndexAsync(IndexConfig indexConfig);
 
         #endregion
 
@@ -495,7 +495,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="aggregator"/> and <paramref name="predicate"/> must be
         /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
         /// </remarks>
-        TResult Aggregate<TResult>(IAggregator<TResult> aggregator, IPredicate predicate = null);
+        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate = null);
 
         /// <summary>
         /// Projects values.
@@ -508,17 +508,24 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="projection"/> and <paramref name="predicate"/> must be
         /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
         /// </remarks>
-        ICollection<TResult> Project<TResult>(IProjection projection, IPredicate predicate = null);
+        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate = null);
 
         #endregion
 
         #region Interception
 
         /// <summary>
+        /// Adds an interceptor.
+        /// </summary>
+        /// <param name="interceptor">The interceptor.</param>
+        /// <returns>The interceptor unique identifier.</returns>
+        Task<string> AddInterceptorAsync(IMapInterceptor interceptor);
+
+        /// <summary>
         /// Removes an interceptor.
         /// </summary>
         /// <param name="id">The identifier of the interceptor.</param>
-        void RemoveInterceptor(string id);
+        Task RemoveInterceptorAsync(string id);
 
         #endregion
 

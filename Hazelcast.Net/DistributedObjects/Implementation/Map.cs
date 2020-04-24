@@ -10,6 +10,7 @@ using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Core.Collections;
 using Hazelcast.Data.Map;
+using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;
@@ -43,6 +44,7 @@ namespace Hazelcast.DistributedObjects.Implementation
         }
 
         // TODO no timeout management or CancellationToken anywhere?!
+        // TODO return IEnumerable or IReadOnlyList?
 
         #region Setting
 
@@ -55,7 +57,9 @@ namespace Hazelcast.DistributedObjects.Implementation
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
-            var requestMessage = MapPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, (long) timeToLive.TotalMilliseconds);
+            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
+
+            var requestMessage = MapPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapPutCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -104,7 +108,9 @@ namespace Hazelcast.DistributedObjects.Implementation
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
-            var requestMessage = MapPutIfAbsentCodec.EncodeRequest(Name, keyData, valueData, ThreadId, (long) timeToLive.TotalMilliseconds);
+            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
+
+            var requestMessage = MapPutIfAbsentCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapPutIfAbsentCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -115,8 +121,10 @@ namespace Hazelcast.DistributedObjects.Implementation
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
+            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
+
             // FIXME uh?
-            var requestMessage = MapPutTransientCodec.EncodeRequest(Name, keyData, valueData, ThreadId, (long) timeToLive.TotalMilliseconds);
+            var requestMessage = MapPutTransientCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
         }
 
@@ -151,7 +159,9 @@ namespace Hazelcast.DistributedObjects.Implementation
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
-            var requestMessage = MapSetCodec.EncodeRequest(Name, keyData, valueData, ThreadId, (long)timeToLive.TotalMilliseconds);
+            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
+
+            var requestMessage = MapSetCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
             await Cluster.SendAsync(requestMessage, keyData);
         }
 
@@ -160,7 +170,9 @@ namespace Hazelcast.DistributedObjects.Implementation
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
-            var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, (int) timeout.TotalMilliseconds);
+            var timeoutMs = timeout.CodecMilliseconds(0);
+
+            var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeoutMs);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapTryPutCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -409,7 +421,9 @@ namespace Hazelcast.DistributedObjects.Implementation
         {
             var keyData = ToSafeData(key);
 
-            var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ThreadId, (int) timeout.TotalMilliseconds);
+            var timeoutMs = timeout.CodecMilliseconds(0);
+
+            var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ThreadId, timeoutMs);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapTryRemoveCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -575,8 +589,8 @@ namespace Hazelcast.DistributedObjects.Implementation
             var keyData = ToSafeData(key);
 
             var refId = _lockReferenceIdSequence.Next;
-            var leaseTimeMs = leaseTime.CodecDurationMilliseconds();
-            var timeoutMs = timeout.CodecTimeoutMilliseconds();
+            var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
+            var timeoutMs = timeout.CodecMilliseconds(0);
 
             var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ThreadId, leaseTimeMs, timeoutMs, refId);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
@@ -621,37 +635,94 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         #region Indexing
 
-        public void AddIndex(IndexType type, params string[] attributes)
+        /// <inheritdoc />
+        public async Task AddIndexAsync(IndexType type, params string[] attributes)
         {
-            throw new NotImplementedException();
+            if (attributes == null) throw new ArgumentNullException(nameof(attributes));
+            await AddIndexAsync(new IndexConfig { Type = type, Attributes = attributes });
         }
 
-        public void AddIndex(IndexConfig indexConfig)
+        /// <inheritdoc />
+        public async Task AddIndexAsync(IndexConfig indexConfig)
         {
-            throw new NotImplementedException();
+            if (indexConfig == null) throw new ArgumentNullException(nameof(indexConfig));
+
+            var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexConfig.ValidateAndNormalize(Name));
+            await Cluster.SendAsync(requestMessage);
         }
 
         #endregion
 
         #region Aggregating and Projecting
 
-        public TResult Aggregate<TResult>(IAggregator<TResult> aggregator, IPredicate predicate = null)
+        /// <inheritdoc />
+        public async Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate = null)
         {
-            throw new NotImplementedException();
+            var aggregatorData = ToSafeData(aggregator);
+
+            if (predicate == null)
+            {
+                var requestMessage = MapAggregateCodec.EncodeRequest(Name, aggregatorData);
+                var responseMessage = await Cluster.SendAsync(requestMessage);
+                var response = MapAggregateCodec.DecodeResponse(responseMessage).Response;
+                return ToObject<TResult>(response);
+            }
+
+            {
+                var predicateData = ToData(predicate);
+
+                var requestMessage = MapAggregateWithPredicateCodec.EncodeRequest(Name, aggregatorData, predicateData);
+                var responseMessage = await Cluster.SendAsync(requestMessage);
+                var response = MapAggregateWithPredicateCodec.DecodeResponse(responseMessage).Response;
+                return ToObject<TResult>(response);
+            }
         }
 
-        public ICollection<TResult> Project<TResult>(IProjection projection, IPredicate predicate = null)
+        /// <inheritdoc />
+        public async Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate = null)
         {
-            throw new NotImplementedException();
+            var projectionData = ToSafeData(projection);
+
+            if (predicate == null)
+            {
+                var requestMessage = MapProjectCodec.EncodeRequest(Name, projectionData);
+                var responseMessage = await Cluster.SendAsync(requestMessage);
+                var response = MapProjectCodec.DecodeResponse(responseMessage).Response;
+                return new ReadOnlyLazyList<TResult, IData>(response, SerializationService);
+            }
+
+            {
+                var predicateData = ToData(predicate);
+
+                var requestMessage = MapProjectWithPredicateCodec.EncodeRequest(Name, projectionData, predicateData);
+                var responseMessage = await Cluster.SendAsync(requestMessage);
+                var response = MapProjectWithPredicateCodec.DecodeResponse(responseMessage).Response;
+                return new ReadOnlyLazyList<TResult, IData>(response, SerializationService);
+            }
         }
 
         #endregion
 
         #region Intercepting
 
-        public void RemoveInterceptor(string id)
+        /// <inheritdoc />
+        public async Task<string> AddInterceptorAsync(IMapInterceptor interceptor)
         {
-            throw new NotImplementedException();
+            var interceptorData = ToSafeData(interceptor);
+
+            var requestMessage = MapAddInterceptorCodec.EncodeRequest(Name, interceptorData);
+            var responseMessage = await Cluster.SendAsync(requestMessage);
+            var response = MapAddInterceptorCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// <inheritdoc />
+        public async Task RemoveInterceptorAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(id));
+
+            var requestMessage = MapRemoveInterceptorCodec.EncodeRequest(Name, id);
+            await Cluster.SendAsync(requestMessage);
         }
 
         #endregion
