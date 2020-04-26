@@ -5,24 +5,22 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Core.Collections
 {
-
-    // FIXME thread-safety & tests
-    // FIXME document
-
     /// <summary>
-    /// Represent an <see cref="IReadOnlyDictionary{TKey,TValue}"/> that lazily de-serializes its keys and values.
+    /// Represent a lazy dictionary of keys and values.
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <typeparam name="T">The type of the value objects.</typeparam>
+    /// <typeparam name="TSource">The type of the source values.</typeparam>
     /// <remarks>
     /// <para>The key objects are always <see cref="IData"/> instances.</para>
+    /// <para>This class is not thread-safe for writing: it should be entirely populated
+    /// in a thread-safe way, before being returned to readers.</para>
     /// </remarks>
-    internal sealed class ReadOnlyLazyDictionary<TKey, TValue, T> : IReadOnlyDictionary<TKey, TValue>
-        where T : class
+    internal sealed class ReadOnlyLazyDictionary<TKey, TValue, TSource> : IReadOnlyDictionary<TKey, TValue>
+        where TSource : class
     {
-        private readonly Dictionary<IData, T> _content = new Dictionary<IData, T>();
-        private readonly Dictionary<TKey, CacheEntry<TValue, T>> _cache = new Dictionary<TKey, CacheEntry<TValue, T>>();
+        private readonly Dictionary<IData, TSource> _content = new Dictionary<IData, TSource>();
+        private readonly Dictionary<TKey, CacheEntry<TValue, TSource>> _cache = new Dictionary<TKey, CacheEntry<TValue, TSource>>();
         private readonly ISerializationService _serializationService;
 
         /// <summary>
@@ -38,7 +36,7 @@ namespace Hazelcast.Core.Collections
         /// Adds key-value pairs.
         /// </summary>
         /// <param name="values">Values.</param>
-        public void Add(IEnumerable<KeyValuePair<IData, T>> values)
+        public void Add(IEnumerable<KeyValuePair<IData, TSource>> values)
         {
             foreach (var (keyData, valueData) in values)
                 _content.Add(keyData, valueData);
@@ -49,9 +47,21 @@ namespace Hazelcast.Core.Collections
         /// </summary>
         /// <param name="keyData">The key object.</param>
         /// <param name="valueData">The value object.</param>
-        public void Add(IData keyData, T valueData)
+        public void Add(IData keyData, TSource valueData)
         {
             _content.Add(keyData, valueData);
+        }
+
+        /// <summary>
+        /// Ensures that a cache entry has a value.
+        /// </summary>
+        /// <param name="cacheEntry">The cache entry.</param>
+        private void EnsureValue(CacheEntry<TValue, TSource> cacheEntry)
+        {
+            if (cacheEntry.HasValue) return;
+
+            // TODO: this is not thread-safe since Source becomes default: lock?
+            cacheEntry.Value = _serializationService.ToObject<TValue>(cacheEntry.Source);
         }
 
         /// <inheritdoc />
@@ -62,19 +72,14 @@ namespace Hazelcast.Core.Collections
                 var key = _serializationService.ToObject<TKey>(keyData);
                 if (_cache.TryGetValue(key, out var cacheEntry))
                 {
-                    if (!cacheEntry.HasValue)
-                    {
-                        cacheEntry.Value = _serializationService.ToObject<TValue>(cacheEntry.Source);
-                        cacheEntry.HasValue = true;
-                    }
+                    EnsureValue(cacheEntry);
                 }
                 else
                 {
-                    cacheEntry = _cache[key] = new CacheEntry<TValue, T>
+                    // FIXME: this is not thread safe for reading either?
+                    cacheEntry = _cache[key] = new CacheEntry<TValue, TSource>
                     {
-                        Source = valueData,
-                        Value = _serializationService.ToObject<TValue>(valueData),
-                        HasValue = true
+                        Value = _serializationService.ToObject<TValue>(valueData)
                     };
 
                 }
@@ -109,11 +114,7 @@ namespace Hazelcast.Core.Collections
 
             if (_cache.TryGetValue(key, out var cacheEntry))
             {
-                if (!cacheEntry.HasValue)
-                {
-                    cacheEntry.Value = _serializationService.ToObject<TValue>(cacheEntry.Source);
-                    cacheEntry.HasValue = true;
-                }
+                EnsureValue(cacheEntry);
                 value = cacheEntry.Value;
                 return true;
             }
@@ -122,11 +123,10 @@ namespace Hazelcast.Core.Collections
             if (!_content.TryGetValue(keyData, out var valueData))
                 return false;
 
-            _cache[key] = new CacheEntry<TValue, T>
+            // FIXME: this is not thread safe for reading either?
+            _cache[key] = new CacheEntry<TValue, TSource>
             {
-                Source = valueData,
-                Value = value = _serializationService.ToObject<TValue>(valueData),
-                HasValue = true
+                Value = value = _serializationService.ToObject<TValue>(valueData)
             };
 
             return true;
@@ -152,7 +152,8 @@ namespace Hazelcast.Core.Collections
                 foreach (var (keyData, valueData) in _content)
                 {
                     var key = _serializationService.ToObject<TKey>(keyData);
-                    if (!_cache.ContainsKey(key)) _cache[key] = new CacheEntry<TValue, T> { Source = valueData };
+                    // FIXME: this is not thread safe for reading either?
+                    if (!_cache.ContainsKey(key)) _cache[key] = new CacheEntry<TValue, TSource> { Source = valueData };
                     yield return key;
                 }
             }
@@ -168,19 +169,14 @@ namespace Hazelcast.Core.Collections
                     var key = _serializationService.ToObject<TKey>(keyData);
                     if (_cache.TryGetValue(key, out var cacheEntry))
                     {
-                        if (!cacheEntry.HasValue)
-                        {
-                            cacheEntry.Value = _serializationService.ToObject<TValue>(cacheEntry.Source);
-                            cacheEntry.HasValue = true;
-                        }
+                        EnsureValue(cacheEntry);
                     }
                     else
                     {
-                        cacheEntry = _cache[key] = new CacheEntry<TValue, T>
+                        // FIXME: this is not thread safe for reading either?
+                        cacheEntry = _cache[key] = new CacheEntry<TValue, TSource>
                         {
-                            Source = valueData,
-                            Value = _serializationService.ToObject<TValue>(valueData),
-                            HasValue = true
+                            Value = _serializationService.ToObject<TValue>(valueData)
                         };
 
                     }

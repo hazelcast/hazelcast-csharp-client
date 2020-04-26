@@ -49,30 +49,30 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int MaxIdleFieldOffset = TtlFieldOffset + LongSizeInBytes;
         private const int InitialFrameSize = MaxIdleFieldOffset + LongSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.Map.SimpleEntryView<IData, IData> simpleEntryView)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.Map.MapEntry<IData, IData> mapEntry)
         {
             clientMessage.Add(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeLong(initialFrame, CostFieldOffset, simpleEntryView.Cost);
-            EncodeLong(initialFrame, CreationTimeFieldOffset, simpleEntryView.CreationTime);
-            EncodeLong(initialFrame, ExpirationTimeFieldOffset, simpleEntryView.ExpirationTime);
-            EncodeLong(initialFrame, HitsFieldOffset, simpleEntryView.Hits);
-            EncodeLong(initialFrame, LastAccessTimeFieldOffset, simpleEntryView.LastAccessTime);
-            EncodeLong(initialFrame, LastStoredTimeFieldOffset, simpleEntryView.LastStoredTime);
-            EncodeLong(initialFrame, LastUpdateTimeFieldOffset, simpleEntryView.LastUpdateTime);
-            EncodeLong(initialFrame, VersionFieldOffset, simpleEntryView.Version);
-            EncodeLong(initialFrame, TtlFieldOffset, simpleEntryView.Ttl);
-            EncodeLong(initialFrame, MaxIdleFieldOffset, simpleEntryView.MaxIdle);
+            EncodeLong(initialFrame, CostFieldOffset, mapEntry.Cost);
+            EncodeLong(initialFrame, CreationTimeFieldOffset, mapEntry.CreationTime);
+            EncodeLong(initialFrame, ExpirationTimeFieldOffset, mapEntry.ExpirationTime);
+            EncodeLong(initialFrame, HitsFieldOffset, mapEntry.Hits);
+            EncodeLong(initialFrame, LastAccessTimeFieldOffset, mapEntry.LastAccessTime);
+            EncodeLong(initialFrame, LastStoredTimeFieldOffset, mapEntry.LastStoredTime);
+            EncodeLong(initialFrame, LastUpdateTimeFieldOffset, mapEntry.LastUpdateTime);
+            EncodeLong(initialFrame, VersionFieldOffset, mapEntry.Version);
+            EncodeLong(initialFrame, TtlFieldOffset, mapEntry.Ttl);
+            EncodeLong(initialFrame, MaxIdleFieldOffset, mapEntry.MaxIdle);
             clientMessage.Add(initialFrame);
 
-            DataCodec.Encode(clientMessage, simpleEntryView.Key);
-            DataCodec.Encode(clientMessage, simpleEntryView.Value);
+            DataCodec.Encode(clientMessage, mapEntry.Key);
+            DataCodec.Encode(clientMessage, mapEntry.Value);
 
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.Map.SimpleEntryView<IData, IData> Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Data.Map.MapEntry<IData, IData> Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

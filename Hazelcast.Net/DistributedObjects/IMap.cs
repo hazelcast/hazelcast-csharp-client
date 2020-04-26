@@ -1,41 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregators;
-using Hazelcast.Clustering;
 using Hazelcast.Configuration;
-using Hazelcast.Data;
 using Hazelcast.Data.Map;
-using Hazelcast.DistributedObjects.Implementation;
-using Hazelcast.Messaging;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;
-using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    ///
+    /// Represents a distributed map.
     /// </summary>
-    /// <typeparam name="TKey"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
+    /// <typeparam name="TKey">The type of the keys.</typeparam>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
     /// <remarks>
     /// <para>Keys are identified by their own hash code and equality.</para>
-    /// TODO: add para here about returning clones, and not on every method
+    /// <para>Methods return clones of the original keys and values. Modifying these clones does not change
+    /// the actual keys and values in the map. One should put the modified entries back, to make changes visible
+    /// to all nodes.</para>
+    /// <para>All asynchronous methods return a task that will complete when they are done, and represent
+    /// the value which is documented on each method. When documenting each method, we do not repeat "a task
+    /// that will complete..." but this is assumed.</para>
     /// </remarks>
     public interface IMap<TKey, TValue> : IDistributedObject
     {
-        // FIXME
-        // careful, all network-related stuff MUST be async here!
-
-        // TODO: every async method returns...
-        // "A task that will complete when... and represents...
+        // NOTES
+        //
+        // In most cases it would be pointless to return async enumerable since we must fetch
+        // everything from the network anyways (else we'd hang the socket) before returning,
+        // and therefore all that remains is CPU-bound de-serialization of data.
 
         #region Setting
 
-        // FIXME these Add were Put and are actually Replace?
+        // FIXME: rename things
+        // Add returns the previous value, adds or replaces = AddOrReplace
+        // AddIfMissing = Add if missing, returns the existing value if not missing, else default(TKey)
+        // AddTransient = ?
+        // Replace = what-if there is no value, make sure it does not add!
+        // Set = same as AddAndReplace but does not return a value = make it an extra optional parameter?
+        // TryPut = AddOrReplace with a timeout?
 
         /// <summary>
         /// Adds an entry to the map.
@@ -123,7 +128,26 @@ namespace Hazelcast.DistributedObjects
         // but with an IDictionary, can only Add once?! only the [] supports overwriting
         // so we have Add and AddOrReplace, really, or Set and SetAndReplace
 
+        /// <summary>
+        /// Adds an entry to the map.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <returns>Nothing.</returns>
         Task SetAsync(TKey key, TValue value);
+
+        /// <summary>
+        /// Adds an entry to the map with a time-to-live.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <returns>Nothing.</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// TODO: is it really removed? or just evicted?
+        /// </remarks>
         Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
@@ -149,11 +173,6 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
-        /// <remarks>
-        /// <para>This methods returns a clone of the original value. Modifying that clone does not change
-        /// the actual value in the map. One should put the modified value back, to make changes visible
-        /// to all nodes.</para>
-        /// </remarks>
         Task<TValue> GetAsync(TKey key);
 
         /// <summary>
@@ -161,27 +180,14 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="keys">The keys.</param>
         /// <returns>The values for the specified keys.</returns>
-        /// <remarks>
-        /// <para>This methods returns clones of the original values. Modifying those clones does not change
-        /// the actual values in the map. One should put the modified values back, to make changes visible
-        /// to all nodes.</para>
-        /// </remarks>
         Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys);
 
         /// <summary>
-        /// Gets an entry view for a key, or null if the map does not contain an entry with this key.
+        /// Gets an entry for a key, or null if the map does not contain an entry with this key.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <returns>An entry view for the specified key, or null if the map does not contain an entry with this key.</returns>
-        /// <remarks>
-        /// <para>This methods returns a clone of the original value. Modifying that clone does not change
-        /// the actual value in the map. One should put the modified value back, to make changes visible
-        /// to all nodes.</para>
-        /// TODO: what's an entry view?
-        /// </remarks>
-        Task<IEntryView<TKey, TValue>> GetEntryViewAsync(TKey key);
-
-        // TODO: return an IEnumerable, or an IDictionary (async?)
+        /// <returns>An entry for the specified key, or null if the map does not contain an entry with this key.</returns>
+        Task<IMapEntry<TKey, TValue>> GetEntryAsync(TKey key);
 
         /// <summary>
         /// Queries entries.
@@ -196,9 +202,6 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate = null);
 
-        // TODO: return an IEnumerable? async?
-        // TODO: usual remark about returning clones?
-
         /// <summary>
         /// Gets keys.
         /// </summary>
@@ -206,7 +209,6 @@ namespace Hazelcast.DistributedObjects
         /// <returns>All keys.</returns>
         Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate = null);
 
-        // TODO: IEnumerable? async?
         /// <summary>
         /// Gets all values for entries matching a predicate.
         /// </summary>
@@ -536,36 +538,79 @@ namespace Hazelcast.DistributedObjects
 
         #region Events
 
-
-        // TODO: these should be renamed + done entirely differently
-        /*
-        Guid AddEntryListener(IMapListener listener, bool includeValue);
-        Guid AddEntryListener(IMapListener listener, TKey key, bool includeValue);
-        Guid AddEntryListener(IMapListener listener, IPredicate predicate, TKey key, bool includeValue);
-        Guid AddEntryListener(IMapListener listener, IPredicate predicate, bool includeValue);
-        */
-
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
         Task<Guid> SubscribeAsync(Action<MapEvents<TKey, TValue>> on);
 
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
         Task<Guid> SubscribeAsync(bool includeValues, Action<MapEvents<TKey, TValue>> on);
 
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="key">A key to filter events.</param>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
         Task<Guid> SubscribeAsync(TKey key, Action<MapEvents<TKey, TValue>> on);
 
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="key">A key to filter events.</param>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
         Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEvents<TKey, TValue>> on);
 
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
         Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
 
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
         Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
 
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="key">A key to filter events.</param>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
         Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
 
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="key">A key to filter events.</param>
+        /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
         Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
 
         /// <summary>
         /// Unsubscribe from events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        /// <returns>fixme</returns>
+        /// <returns>?</returns>
+        /// TODO: what is returned? how could this fail?
         Task<bool> UnsubscribeAsync(Guid subscriptionId);
 
         #endregion

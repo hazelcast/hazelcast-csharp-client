@@ -51,7 +51,7 @@ namespace Hazelcast.Clustering
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterEventSubscription"/> class.
+        /// Initializes a new complete instance of the <see cref="ClusterEventSubscription"/> class.
         /// </summary>
         /// <param name="id">The unique identifier of the subscription.</param>
         /// <param name="subscribeRequest">The subscribe request message.</param>
@@ -69,7 +69,13 @@ namespace Hazelcast.Clustering
             State = state;
         }
 
-        // FIXME document
+        /// <summary>
+        /// Initializes a new simplified instance of the <see cref="ClusterEventSubscription"/> class.
+        /// </summary>
+        /// <param name="eventHandler">The event handler.</param>
+        /// <remarks>
+        /// <para>A simplified instance only has a handler, and nothing else.</para>
+        /// </remarks>
         internal ClusterEventSubscription(Action<ClientMessage, object> eventHandler)
         {
             _eventHandler = eventHandler;

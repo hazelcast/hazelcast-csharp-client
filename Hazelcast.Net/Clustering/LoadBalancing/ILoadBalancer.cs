@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Hazelcast.Clustering.LoadBalancing
@@ -15,19 +14,13 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <returns>The unique identifier of the selected member.</returns>
         Guid Select();
 
-        // FIXME document / cleanup
+        /// <summary>
+        /// Notifies the load balancer of a new set of members.
+        /// </summary>
+        /// <param name="memberIds">The identifiers of the members.</param>
+        /// <remarks>
+        /// <para>The new set of members fully replace existing members.</para>
+        /// </remarks>
         void NotifyMembers(IEnumerable<Guid> memberIds);
-
-        /// <summary>
-        /// Notifies the load balancer that a member was added to the cluster.
-        /// </summary>
-        /// <param name="memberId">The unique identifier of the member.</param>
-        void NotifyAddedMember(Guid memberId);
-
-        /// <summary>
-        /// Notifies the load balancer that a member was removed from the cluster.
-        /// </summary>
-        /// <param name="memberId">The unique identifier of the member.</param>
-        void NotifyRemovedMember(Guid memberId);
     }
 }

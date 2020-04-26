@@ -70,29 +70,37 @@ namespace Hazelcast.DistributedObjects.Implementation
         {
             // TODO: is this transactional? can some entries be created and others be missing?
 
-            var ownerEntries = new Dictionary<Guid, List<KeyValuePair<IData, IData>>>();
+            var ownerEntries = new Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>>();
 
             // verify entries + group by owner
             foreach (var (key, value) in entries)
             {
                 var (keyData, valueData) = ToSafeData(key, value);
 
-                var ownerId = Cluster.Partitioner.GetPartitionOwner(keyData);
-                if (!ownerEntries.TryGetValue(ownerId, out var list))
-                    list = ownerEntries[ownerId] = new List<KeyValuePair<IData, IData>>();
+                var partitionId = Cluster.Partitioner.GetPartitionId(keyData);
+                var ownerId = Cluster.Partitioner.GetPartitionOwner(partitionId);
+                if (!ownerEntries.TryGetValue(ownerId, out var part))
+                    part = ownerEntries[ownerId] = new Dictionary<int, List<KeyValuePair<IData, IData>>>();
+                if (!part.TryGetValue(partitionId, out var list))
+                    list = part[partitionId] = new List<KeyValuePair<IData, IData>>();
                 list.Add(new KeyValuePair<IData, IData>(keyData, valueData));
             }
 
-            // create parallel tasks to fire a request for each owner
+            // create parallel tasks to fire requests for each owner (each network client)
+            // for each owner, serialize requests for each partition, because each message
+            // needs to have its own partition id
             var tasks = new List<Task>();
-            foreach (var (ownerId, list) in ownerEntries)
+            foreach (var (ownerId, part) in ownerEntries)
             {
-                if (list.Count == 0) continue;
+                foreach (var (partitionId, list) in part)
+                {
+                    if (list.Count == 0) continue;
 
-                var requestMessage = MapPutAllCodec.EncodeRequest(Name, list);
-                var task = Cluster.SendAsync(requestMessage, ownerId).AsTask();
-                task.Start();
-                tasks.Add(task);
+                    var requestMessage = MapPutAllCodec.EncodeRequest(Name, list);
+                    requestMessage.PartitionId = partitionId;
+                    var task = Cluster.SendAsync(requestMessage, ownerId).AsTask();
+                    tasks.Add(task);
+                }
             }
 
             // and wait on all tasks, ignoring the responses
@@ -240,7 +248,7 @@ namespace Hazelcast.DistributedObjects.Implementation
         }
 
         /// <inheritdoc />
-        public async Task<IEntryView<TKey, TValue>> GetEntryViewAsync(TKey key)
+        public async Task<IMapEntry<TKey, TValue>> GetEntryAsync(TKey key)
         {
             var keyData = ToSafeData(key);
 
@@ -250,7 +258,7 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             if (response == null) return null;
 
-            return new SimpleEntryView<TKey, TValue>
+            return new MapEntry<TKey, TValue>
             {
                 Key = ToObject<TKey>(response.Key),
                 Value = ToObject<TValue>(response.Value),

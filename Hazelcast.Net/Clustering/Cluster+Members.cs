@@ -31,7 +31,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when a new client has been assigned to handle cluster events.</returns>
         private async Task AssignClusterEventsClient(Client client = null)
         {
-            // todo - log when ending unsuccessfully
+            // TODO: log when ending unsuccessfully
 
             if (client == null) client = GetRandomClient();
             if (client == null) return; // running out of clients, end
@@ -49,7 +49,7 @@ namespace Hazelcast.Clustering
             {
                 // the client we tried failed to subscribe to events, try another client,
                 // but ensure we don't enter some sort of infinite loop by counting attempts
-                // todo: consider using a timeout, instead?
+                // TODO: consider using a timeout, instead?
                 var nextClient = GetRandomClient();
                 if (nextClient == null || ++failedAttempts > GetMaxAttempts())
                 {
@@ -95,12 +95,12 @@ namespace Hazelcast.Clustering
                 XConsole.WriteLine(this, "subscribed");
                 return true;
 
-                // FIXME but then are we ever going to clear that event handler?
+                // FIXME: but then are we ever going to clear that event handler?
             }
             catch
             {
                 _correlatedSubscriptions.TryRemove(correlationId, out _);
-                // todo log the exception?
+                // TODO: at least, log the exception! OR just throw then exception and return Task
                 return false;
             }
         }
@@ -126,7 +126,7 @@ namespace Hazelcast.Clustering
         /// <param name="members">The members.</param>
         private void HandleMemberViewEvent(int version, ICollection<MemberInfo> members)
         {
-            // FIXME threading
+            // FIXME: threading
 
             // notify the load balancer of the new list of members
             _loadBalancer.NotifyMembers(members.Select(x => x.Id));
@@ -166,7 +166,7 @@ namespace Hazelcast.Clustering
                         XConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add(new MembershipEventArgs(MembershipEventType.Removed, member));
                         if (_clients.TryGetValue(member.Id, out var client))
-                            client.ShutdownAsync(); // will self-remove once down FIXME async
+                            client.ShutdownAsync(); // will self-remove once down FIXME: async oops!!
                         break;
 
                     case 2: // new but not old = added
@@ -182,18 +182,19 @@ namespace Hazelcast.Clustering
             // raise events
             foreach (var args in eventArgs)
             {
-                // fixme HOORIBLE, ASYNC?!
+                // FIXME: async oops!
                 MemberAddedOrRemoved.InvokeAsync(args).AsTask().Wait();
             }
         }
 
-        // FIXME document
+        /// <summary>
+        /// Gets information about a member.
+        /// </summary>
+        /// <param name="memberId">The identifier of the member.</param>
+        /// <returns>Information about the specified member, or null if no member with the specified identifier was found.</returns>
         public MemberInfo GetMember(Guid memberId)
         {
-            if (_memberTable.Members.TryGetValue(memberId, out var memberInfo))
-                return memberInfo;
-
-            return null;
+            return _memberTable.Members.TryGetValue(memberId, out var memberInfo) ? memberInfo : null;
         }
     }
 }

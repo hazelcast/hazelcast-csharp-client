@@ -15,6 +15,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Logging;
@@ -29,10 +30,11 @@ namespace Hazelcast.Messaging
     /// <para>A message connection wraps a socket connection and provides a
     /// message-level communication channel.</para>
     /// </remarks>
-    public class ClientMessageConnection
+    public class ClientMessageConnection // TODO: IDisposable?
     {
         private readonly Dictionary<long, ClientMessage> _messages = new Dictionary<long, ClientMessage>();
         private readonly SocketConnectionBase _connection;
+        private readonly SemaphoreSlim _writer;
 
         private Func<ClientMessageConnection, ClientMessage, ValueTask> _onReceiveMessage;
         private int _bytesLength = -1;
@@ -48,6 +50,9 @@ namespace Hazelcast.Messaging
         {
             _connection = connection;
             _connection.OnReceiveMessageBytes = ReceiveMessageBytes;
+
+            // TODO consider threading an option (if controlled by owner?)
+            _writer = new SemaphoreSlim(1);
         }
 
         /// <summary>
@@ -204,19 +209,29 @@ namespace Hazelcast.Messaging
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection
 
-            XConsole.WriteLine(this, "Send message");
+            // send message, serialize sending via semaphore
+            if (_writer != null) await _writer.WaitAsync();
 
-            var frame = message.FirstFrame;
-            do
+            try
             {
-                XConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
-                if (!await SendFrameAsync(frame))
-                    return false;
+                XConsole.WriteLine(this, "Send message");
 
-                // FIXME what happens if we've sent some frames already?
+                var frame = message.FirstFrame;
+                do
+                {
+                    XConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
+                    if (!await SendFrameAsync(frame))
+                        return false;
 
-                frame = frame.Next;
-            } while (frame != null);
+                    // FIXME what happens if we've sent some frames already?
+
+                    frame = frame.Next;
+                } while (frame != null);
+            }
+            finally
+            {
+                _writer?.Release();
+            }
 
             return true;
         }

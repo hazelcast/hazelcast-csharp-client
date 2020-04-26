@@ -15,7 +15,7 @@
 namespace Hazelcast.Data.Map
 {
     /// <summary>IEntryView represents a readonly view of a map entry.</summary>
-    public interface IEntryView<TKey, TValue>
+    public interface IMapEntry<TKey, TValue>
     {
         /// <summary>Returns the cost (in bytes) of the entry.</summary>
         /// <remarks>

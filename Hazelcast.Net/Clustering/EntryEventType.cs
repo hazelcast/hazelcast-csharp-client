@@ -49,17 +49,17 @@ namespace Hazelcast.Clustering
         ClearAll = 1 << 6,
 
         /// <summary>
-        /// Merged. todo: ?
+        /// The entry was merged.
         /// </summary>
         Merged = 1 << 7,
 
         /// <summary>
-        /// Invalidation. todo: ?
+        /// The entry was invalidated.
         /// </summary>
         Invalidation = 1 << 8,
 
         /// <summary>
-        /// Loaded. todo: ?
+        /// The entry was loaded.
         /// </summary>
         Loaded = 1 << 9
     }

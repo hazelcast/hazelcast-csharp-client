@@ -41,6 +41,12 @@ namespace Hazelcast
         /// </summary>
         static HazelcastClient()
         {
+            // FIXME: this is not the right place to to this
+            InitializeServices();
+        }
+
+        public static void InitializeServices()
+        {
             // plug the serializer hooks.
             var serializerHooks = Services.TryGetInstance<SerializerHooks>();
             if (serializerHooks == null) Services.Register(serializerHooks = new SerializerHooks());
@@ -57,7 +63,7 @@ namespace Hazelcast
         {
             _cluster = new Cluster();
             _serializationService = new SerializationService(
-                new ByteArrayInputOutputFactory(Endianness.Native), 
+                new ByteArrayInputOutputFactory(Endianness.Native),
                 1,
                 new Dictionary<int, IDataSerializableFactory>(),
                 new Dictionary<int, IPortableFactory>(),

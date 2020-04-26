@@ -12,7 +12,7 @@ namespace Hazelcast.Data
     /// <summary>
     /// Represents a member of a cluster.
     /// </summary>
-    public class MemberInfo // todo: consider renaming 'member'? no: codec!
+    public class MemberInfo
     {
         private readonly ILogger _logger;
 

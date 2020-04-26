@@ -50,25 +50,5 @@ namespace Hazelcast.Clustering.LoadBalancing
                 Members = new List<Guid>(_memberIds);
             }
         }
-
-        /// <inheritdoc />
-        public void NotifyAddedMember(Guid memberId)
-        {
-            lock (_memberIds)
-            {
-                _memberIds.Add(memberId);
-                Members = new List<Guid>(_memberIds);
-            }
-        }
-
-        /// <inheritdoc />
-        public void NotifyRemovedMember(Guid memberId)
-        {
-            lock (_memberIds)
-            {
-                _memberIds.Remove(memberId);
-                Members = new List<Guid>(_memberIds);
-            }
-        }
     }
 }

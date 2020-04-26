@@ -16,7 +16,7 @@ using System.Numerics;
 
 namespace Hazelcast.Aggregators
 {
-    // TODO refactor + document
+    // TODO: refactor + document
 
     /// <summary>
     /// A utility class to create basic <see cref="IAggregator{TResult}"/> instances.

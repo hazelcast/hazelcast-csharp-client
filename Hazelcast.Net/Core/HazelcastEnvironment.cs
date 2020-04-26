@@ -13,9 +13,11 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {
+
     /// <summary>
     /// Provides information about the current Hazelcast environment.
     /// </summary>
@@ -26,7 +28,7 @@ namespace Hazelcast.Core
             var variableValue = Environment.GetEnvironmentVariable(variableName);
             if (variableValue == null) return null;
             if (int.TryParse(variableName, out var value)) return value;
-            throw new Exception($"Environment variable {variableName} must be a valid integer (Int32)."); // fixme configuration exception
+            throw new EnvironmentException($"Environment variable {variableName} must be a valid integer (Int32)."); 
         }
 
         private static long? GetInt64(string variableName)
@@ -34,7 +36,7 @@ namespace Hazelcast.Core
             var variableValue = Environment.GetEnvironmentVariable(variableName);
             if (variableValue == null) return null;
             if (long.TryParse(variableName, out var value)) return value;
-            throw new Exception($"Environment variable {variableName} must be a valid long integer (Int64)."); // fixme configuration exception
+            throw new EnvironmentException($"Environment variable {variableName} must be a valid long integer (Int64).");
         }
 
         /// <summary>

@@ -17,7 +17,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Aggregators
 {
-    // TODO document
+    // TODO: document
     internal class AggregatorDataSerializerHook : IDataSerializerHook
     {
         public const int FactoryId = FactoryIds.AggregatorDsFactoryId;

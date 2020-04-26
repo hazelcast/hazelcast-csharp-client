@@ -18,29 +18,41 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Core.Collections
 {
-    // FIXME thread-safety & tests
-    // FIXME document
-    internal sealed class ReadOnlyLazyList<TValue, T> : IReadOnlyList<TValue>
+    /// <summary>
+    /// Represents a lazy list of values.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
+    /// <typeparam name="TSource">The type of the source values.</typeparam>
+    internal sealed class ReadOnlyLazyList<TValue, TSource> : IReadOnlyList<TValue>
     {
-        private readonly List<CacheEntry<TValue, T>> _content = new List<CacheEntry<TValue, T>>();
+        private readonly List<CacheEntry<TValue, TSource>> _content = new List<CacheEntry<TValue, TSource>>();
         private readonly ISerializationService _serializationService;
 
-        public ReadOnlyLazyList(IEnumerable<T> values, ISerializationService serializationService)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReadOnlyLazyList{TValue,T}"/> class.
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="serializationService"></param>
+        public ReadOnlyLazyList(IEnumerable<TSource> values, ISerializationService serializationService)
         {
             _serializationService = serializationService;
             foreach (var value in values)
-                _content.Add(new CacheEntry<TValue, T> { Source = value });
+                _content.Add(new CacheEntry<TValue, TSource> { Source = value });
         }
 
-        private void EnsureValue(CacheEntry<TValue, T> cacheEntry)
+        /// <summary>
+        /// Ensures that a cache entry has a value.
+        /// </summary>
+        /// <param name="cacheEntry">The cache entry.</param>
+        private void EnsureValue(CacheEntry<TValue, TSource> cacheEntry)
         {
             if (cacheEntry.HasValue) return;
 
+            // TODO: this is not thread-safe since Source becomes default: lock?
             cacheEntry.Value = _serializationService.ToObject<TValue>(cacheEntry.Source);
-            cacheEntry.HasValue = true;
-            cacheEntry.Source = default;
         }
 
+        /// <inheritdoc />
         public IEnumerator<TValue> GetEnumerator()
         {
             foreach (var cacheEntry in _content)
@@ -50,13 +62,16 @@ namespace Hazelcast.Core.Collections
             }
         }
 
+        /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
+        /// <inheritdoc />
         public int Count => _content.Count;
 
+        /// <inheritdoc />
         public TValue this[int index]
         {
             get

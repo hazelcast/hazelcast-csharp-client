@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hazelcast.Configuration
 {
-    // TODO implement
+    // TODO: implement
     public class NearCacheConfigs
     {
         public NearCacheConfig GetConfig(string name) => throw new NotImplementedException();

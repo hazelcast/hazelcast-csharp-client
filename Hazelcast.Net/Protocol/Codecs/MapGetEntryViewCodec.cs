@@ -70,7 +70,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Entry view of the specified key.
             ///</summary>
-            public Hazelcast.Data.Map.SimpleEntryView<IData, IData> Response;
+            public Hazelcast.Data.Map.MapEntry<IData, IData> Response;
 
             /// <summary>
             /// Last set max idle in millis.

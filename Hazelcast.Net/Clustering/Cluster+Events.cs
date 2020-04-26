@@ -149,11 +149,12 @@ namespace Hazelcast.Clustering
         {
             XConsole.WriteLine(this, "Handle event message");
 
-            // TODO threading? handle events in scheduled tasks?
+            // TODO: threading? handle events in scheduled tasks?
 
             if (!_correlatedSubscriptions.TryGetValue(message.CorrelationId, out var subscription))
             {
-                // TODO log a warning
+                // TODO: log a warning
+                // TODO: instrumentation, keep track of missed events
                 XConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
                 return;
             }

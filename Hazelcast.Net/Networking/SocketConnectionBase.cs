@@ -32,7 +32,6 @@ namespace Hazelcast.Networking
         public delegate bool MessageBytesHandler(SocketConnectionBase connection, ref ReadOnlySequence<byte> bytes);
 
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
-        private readonly SemaphoreSlim _writer;
 
         private MessageBytesHandler _onReceiveMessageBytes;
         private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
@@ -49,15 +48,11 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="prefixLength">An optional prefix length.</param>
-        /// <param name="multithread">Whether this connection should manage multi-threading.</param>
-        protected SocketConnectionBase(int id, int prefixLength = 0, bool multithread = true)
+        protected SocketConnectionBase(int id, int prefixLength = 0)
         {
             Id = id;
 
             _prefixLength = prefixLength;
-
-            if (multithread)
-                _writer = new SemaphoreSlim(1);
         }
 
         /// <summary>
@@ -240,8 +235,7 @@ namespace Hazelcast.Networking
 
             var count = length <= 0 ? bytes.Length : length;
 
-            // send bytes, serialize sending via semaphore
-            if (_writer != null) await _writer.WaitAsync();
+            // send bytes
             try
             {
                 await _stream.WriteAsync(bytes, 0, count, CancellationToken.None);
@@ -255,7 +249,6 @@ namespace Hazelcast.Networking
                 _streamReadCancellationTokenSource.Cancel();
                 return false;
             }
-            _writer?.Release();
 
             XConsole.WriteLine(this, $"Sent {count} bytes" + XConsole.Lines(this, 1 , bytes.Dump(count)));
             return true;
@@ -274,13 +267,11 @@ namespace Hazelcast.Networking
             // FIXME sending an empty message is non-standard, what is the proper way?
             // also this should be a true message and happen higher in the stack
             XConsole.WriteLine(this, "Send empty message");
-            if (_writer != null) await _writer.WaitAsync();
             try
             {
                 await _stream.WriteAsync(ZeroBytes4, 0, 4, CancellationToken.None);
             }
             catch { /* ignore */ }
-            _writer?.Release();
 
             // requests that the pipe stops processing
             XConsole.WriteLine(this, "Cancel pipe");
@@ -525,7 +516,6 @@ namespace Hazelcast.Networking
         {
             _socket.TryDispose();
             _stream.TryDispose();
-            _writer.TryDispose();
             _streamReadCancellationTokenSource.TryDispose();
         }
     }

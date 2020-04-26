@@ -14,11 +14,40 @@
 
 namespace Hazelcast.Core.Collections
 {
-    // FIXME document
-    internal class CacheEntry<TValue, T>
+    /// <summary>
+    /// Represents an entry in a lazy collection.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the values.</typeparam>
+    /// <typeparam name="TSource">The type of the source values.</typeparam>
+    internal class CacheEntry<TValue, TSource>
     {
-        public T Source;
-        public TValue Value;
-        public bool HasValue;
+        private TValue _value;
+
+        /// <summary>
+        /// Gets or sets the source value.
+        /// </summary>
+        /// <remarks>
+        /// <para>Once <see cref="Value"/> has been assigned, this property is reset to default.</para>
+        /// </remarks>
+        public TSource Source { get; set; }
+
+        /// <summary>
+        /// Gets or sets the value.
+        /// </summary>
+        public TValue Value
+        {
+            get => _value;
+            set
+            {
+                _value = value;
+                HasValue = true;
+                Source = default;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the entry has its value already.
+        /// </summary>
+        public bool HasValue { get; private set; }
     }
 }

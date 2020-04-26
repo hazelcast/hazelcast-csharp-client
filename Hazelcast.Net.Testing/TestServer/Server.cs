@@ -155,6 +155,7 @@ namespace Hazelcast.Testing.TestServer
             // send in one fragment, set flags
             response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
+            // FIXME: not thread-safe!
             await connection.SendAsync(response);
             XConsole.WriteLine(this, "Responded");
         }

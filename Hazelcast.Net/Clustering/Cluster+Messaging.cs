@@ -11,7 +11,7 @@ namespace Hazelcast.Clustering
     /// </summary>
     public partial class Cluster // Messaging
     {
-        // TODO add timeout support to all methods
+        // TODO: add timeout support to all methods
 
         /// <summary>
         /// Sends a message to a random target.
@@ -93,7 +93,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public async ValueTask<ClientMessage> SendAsync(ClientMessage message, int partitionId)
         {
-            // TODO all methods should test!
+            // TODO: all methods should test!
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (partitionId < 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
             message.PartitionId = partitionId;

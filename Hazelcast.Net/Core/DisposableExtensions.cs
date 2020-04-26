@@ -15,7 +15,7 @@ namespace Hazelcast.Core
         {
             if (disposable == null) return;
 
-            // TODO is this evil?
+            // TODO: evil, don't swallow exceptions
             try
             {
                 disposable.Dispose();

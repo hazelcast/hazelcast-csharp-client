@@ -48,12 +48,12 @@ namespace Hazelcast.Clustering
         public Guid ServerSubscriptionId { get; }
 
         /// <summary>
-        /// Gets the fixme
+        /// Gets the FIXME: document
         /// </summary>
         public long CorrelationId { get; }
 
         /// <summary>
-        /// Gets the fixme
+        /// Gets the FIXME: document
         /// </summary>
         public Client Client { get; }
     }

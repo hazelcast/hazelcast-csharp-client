@@ -90,7 +90,7 @@ namespace Hazelcast.Core
             byte[] bytes = null;
             try
             {
-                // TODO optimize?
+                // TODO: optimize
                 // of course this is sub-optimal :(
                 bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
 

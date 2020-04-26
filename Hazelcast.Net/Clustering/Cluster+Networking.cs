@@ -32,11 +32,11 @@ namespace Hazelcast.Clustering
                 if (_clients.TryGetValue(memberId, out var client))
                     return client;
 
-                // todo: what shall we do, actually?
+                // TODO: what shall we do, actually?
                 // SingleOrDefault or FirstOrDefault?
             }
 
-            // todo: nicer exception
+            // TODO: nicer exception
             return _clients.Values.SingleOrDefault();
         }
 
@@ -62,13 +62,13 @@ namespace Hazelcast.Clustering
 
             } while (await retryStrategy.WaitAsync());
 
-            var clusterName = ""; // FIXME
+            var clusterName = ""; // FIXME: cluster name?
             var aggregate = new AggregateException(exceptions);
             throw new InvalidOperationException($"Unable to connect to the cluster \"{clusterName}\". " +
                 $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
         }
 
-        // TODO implement
+        // TODO: implement (and for client etc)
         private void EnsureActive() { } // supposed to validate that the client is still active?
 
         private async ValueTask<bool> TryConnectAsync(NetworkAddress address, List<Exception> exceptions)
@@ -76,18 +76,12 @@ namespace Hazelcast.Clustering
             if (_clientsBAD.TryGetValue(address, out _)) // can the client be inactive?
                 return true;
 
-            // should lock
+            // TODO: should lock something?
 
             try
             {
+                // TODO: _clientsBAD? tracking client's death? other?
                 var client = _clientsBAD[address] = await ConnectAsync(address);
-
-                // fixme temp
-                //_clients[address].SubscribeAsync(new ClusterEventSubscription());
-                //await SubscribeToClusterEvents(client);
-
-                // fixme not tracking client's death?
-
                 return true;
             }
             catch (Exception e)
@@ -102,7 +96,7 @@ namespace Hazelcast.Clustering
         private readonly ConcurrentDictionary<IPEndPoint, SemaphoreSlim> _semaphores
             = new ConcurrentDictionary<IPEndPoint, SemaphoreSlim>();
 
-        // TODO think!
+        // TODO: lock issues?
         // the original code lock(endpoint) but what does that mean?
         // no guarantee that endpoints are unique + concurrent connection?
         // shouldn't we lock the entire connection thing instead?
@@ -128,12 +122,12 @@ namespace Hazelcast.Clustering
             SemaphoreSlim s = null;
             try
             {
-                // fixme: don't understand why we have 1 per address?!
+                // FIXME: don't understand why we have 1 per address?!
                 s = await LockAsync(address.IPEndPoint);
 
                 // translate address
                 // + de-duplicate them somehow
-                // fixme: IPEndPoint is lazily dns-resolved each time! not cached!
+                // FIXME: should IPEndPoint be lazily dns-resolved each time?
 
                 var client = new Client(address.IPEndPoint, _correlationIdSequence);
                 client.ReceiveEventMessage = ReceiveEventMessage;
@@ -141,26 +135,28 @@ namespace Hazelcast.Clustering
                 await client.ConnectAsync(); // may throw
                 var info = await authenticator.AuthenticateAsync(client); // may throw
 
-                // FIXME info may be null
+                // FIXME: can info be null?
                 client.Update(info); //client.MemberId = info.MemberId;
                 _clients[info.MemberId] = client;
                 var serverVersion = info.ServerVersion;
                 var remoteAddress = info.MemberAddress;
                 var clusterId = info.ClusterId; // is this the cluster name?
 
+                // initialize the partitioner & the load balancer
                 Partitioner.InitializeCount(info.PartitionCount);
+                _loadBalancer.NotifyMembers(new[] { info.MemberId });
 
                 //client.MemberId = info.MemberId;
                 // deal with partition and stuff
 
-                // FIXME but we might want to do this in the background, see ListenerService
+                // FIXME: but we might want to do this in the background, see ListenerService
                 // ensure there is always one client dealing with cluster events
                 await AssignClusterEventsClient(client);
 
                 // subscribe the new client to all events the cluster has subscriptions for
                 await SubscribeClientToEvents(client);
 
-                // FIXME we also need to handle clients going down!
+                // FIXME: we also need to handle clients going down!
 
                 return client;
             }
@@ -178,7 +174,7 @@ namespace Hazelcast.Clustering
             // if the client which just shut down was handling cluster events,
             // we need to make sure another client takes over.
             if (ClearClusterEventsClient(client))
-                AssignClusterEventsClient().Wait(); // fixme async!
+                AssignClusterEventsClient().Wait(); // FIXME: async oops!
         }
 
         // rename GetAddresses gets the address to try to connect to
@@ -191,7 +187,8 @@ namespace Hazelcast.Clustering
             // shuffling is an option
 
             // temp. work with a fixed address
-            yield return new NetworkAddress("127.0.0.1");
+            //yield return new NetworkAddress("127.0.0.1");
+            yield return new NetworkAddress("sgay-l4");
 
             //return new List<string>().Shuffle();
         }

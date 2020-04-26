@@ -16,12 +16,10 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Data;
-using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.Implementation;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
@@ -311,69 +309,5 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             Assert.AreEqual(origin, value);
         }
 
-        [Test]
-        [Timeout(10_000)]
-        public async Task MapTest()
-        {
-            XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            XConsole.Configure<SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
-            XConsole.Configure<Client>(config => config.SetMaxLevel(1)); // 1: logs message & frames
-
-            // this test expects a server on localhost:5701
-
-            // of course this is temporary
-            Services.Reset();
-            Services.Register<IAuthenticator>(() => new Authenticator());
-
-            XConsole.WriteLine(this, "Begin");
-
-            XConsole.WriteLine(this, "Connect hz client");
-            var client = new HazelcastClient();
-            await client.OpenAsync();
-            XConsole.WriteLine(this, "Connected");
-
-            // time to process the event / members, else the LB has no entries
-            // how is this supposed to work in real life?!
-            //await Task.Delay(2000);
-
-            var map = await client.GetMapAsync<string, int>("testmap" + RandomProvider.Random.Next(100));
-            await map.AddAsync("key", 42);
-            var value = await map.GetAsync("key");
-
-            Assert.AreEqual(42, value);
-
-            var count = await map.CountAsync();
-            Assert.AreEqual(1, count);
-
-            await map.ClearAsync();
-            count = await map.CountAsync();
-            Assert.AreEqual(0, count);
-
-            var eventsCount = 0;
-            var id = await map.SubscribeAsync(on => on
-                .EntryAdded((sender, args) =>
-                {
-                    XConsole.WriteLine(this, $"!ADDED: {args.Key} {args.Value}");
-                    Interlocked.Increment(ref eventsCount);
-                }));
-
-            await map.AddAsync("a", 1);
-            await map.AddAsync("b", 2);
-
-            await map.UnsubscribeAsync(id);
-
-            while (eventsCount < 2)
-                await Task.Delay(500);
-
-            // events?
-            //await Task.Delay(4000);
-
-            // FIXME how are we supposed to release it all?
-            //client.Close();
-            //client.Dispose();
-
-            XConsole.WriteLine(this, "End");
-            await Task.Delay(100);
-        }
     }
 }

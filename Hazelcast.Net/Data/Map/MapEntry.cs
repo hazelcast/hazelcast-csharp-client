@@ -14,18 +14,22 @@
 
 namespace Hazelcast.Data.Map
 {
-    internal class SimpleEntryView<TKey, TValue> : SimpleEntryView, IEntryView<TKey, TValue>
+    internal class MapEntry<TKey, TValue> : IMapEntry<TKey, TValue>
     {
-        public new TKey Key
-        {
-            get => (TKey)base.Key;
-            set => base.Key = value;
-        }
+        public long Cost { get; set; }
+        public long CreationTime { get; set; }
+        public long EvictionCriteriaNumber { get; set; }
+        public long ExpirationTime { get; set; }
+        public long Hits { get; set; }
+        public long LastAccessTime { get; set; }
+        public long LastStoredTime { get; set; }
+        public long LastUpdateTime { get; set; }
+        public long Ttl { get; set; }
+        public long Version { get; set; }
+        public long MaxIdle { get; set; }
 
-        public new TValue Value
-        {
-            get => (TValue)base.Value;
-            set => base.Value = value;
-        }
+        public TKey Key { get; set; }
+
+        public TValue Value { get; set; }
     }
 }

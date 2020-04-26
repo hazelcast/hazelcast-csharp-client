@@ -6,7 +6,7 @@ namespace Hazelcast.Configuration
     /// <summary>
     /// Contains the configuration for a Near Cache.
     /// </summary>
-    public class NearCacheConfig // FIXME Asim refactoring?
+    public class NearCacheConfig // FIXME: what about Asim's changes to config? merge?
     {
         public const int DefaultTtlSeconds = 0;
         public const int DefaultMaxIdleSeconds = 0;
