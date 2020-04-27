@@ -18,12 +18,12 @@ using System.Collections.Generic;
 namespace Hazelcast.NearCaching
 {
     /// <summary>
-    /// Compares <see cref="NearCacheRecord"/> using the least-frequently-used comparison.
+    /// Compares <see cref="NearCacheEntry"/> using the least-frequently-used comparison.
     /// </summary>
-    internal class LfuComparer : IComparer<Lazy<NearCacheRecord>>
+    internal class LfuComparer : IComparer<AsyncLazy<NearCacheEntry>>
     {
         /// <inheritdoc />
-        public int Compare(Lazy<NearCacheRecord> x, Lazy<NearCacheRecord> y)
+        public int Compare(AsyncLazy<NearCacheEntry> x, AsyncLazy<NearCacheEntry> y)
         {
             if (x == null) throw new ArgumentNullException(nameof(x));
             if (y == null) throw new ArgumentNullException(nameof(y));

@@ -16,32 +16,33 @@ namespace Hazelcast.NearCaching
             : base(name, cluster, serializationService, nearCacheConfig)
         { }
 
+        // FIXME: why is this public?
         public RepairingHandler RepairingHandler => _repairingHandler;
 
         public override void Init()
         {
             if (InvalidateOnChange)
             {
-                _repairingHandler = new RepairingHandler(_cluster.ClientId, this, _cluster.Partitioner);
+                _repairingHandler = new RepairingHandler(Cluster.ClientId, this, Cluster.Partitioner);
                 RegisterInvalidateListener();
             }
         }
 
-        protected override NearCacheRecord CreateRecord(IData key, object value)
+        protected override NearCacheEntry CreateEntry(IData key, object value)
         {
-            var record = base.CreateRecord(key, value);
-            InitInvalidationMetadata(record);
-            return record;
+            var entry = base.CreateEntry(key, value);
+            InitInvalidationMetadata(entry);
+            return entry;
         }
 
-        protected override bool IsStaleRead(IData key, NearCacheRecord record)
+        protected override bool IsStaleRead(IData key, NearCacheEntry entry)
         {
             if (_repairingHandler == null)
             {
                 return false;
             }
-            var latestMetaData = _repairingHandler.GetMetaDataContainer(record.PartitionId);
-            return record.Guid != latestMetaData.Guid || record.Sequence < latestMetaData.StaleSequence;
+            var latestMetaData = _repairingHandler.GetMetaDataContainer(entry.PartitionId);
+            return entry.Guid != latestMetaData.Guid || entry.Sequence < latestMetaData.StaleSequence;
         }
 
         private void HandleIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids,
@@ -55,17 +56,17 @@ namespace Hazelcast.NearCaching
             _repairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);
         }
 
-        private void InitInvalidationMetadata(NearCacheRecord newRecord)
+        private void InitInvalidationMetadata(NearCacheEntry newEntry)
         {
             if (_repairingHandler == null)
             {
                 return;
             }
-            var partitionId = _cluster.Partitioner.GetPartitionId(newRecord.Key);
+            var partitionId = Cluster.Partitioner.GetPartitionId(newEntry.Key);
             var metadataContainer = _repairingHandler.GetMetaDataContainer(partitionId);
-            newRecord.PartitionId = partitionId;
-            newRecord.Sequence = metadataContainer.Sequence;
-            newRecord.Guid = metadataContainer.Guid;
+            newEntry.PartitionId = partitionId;
+            newEntry.Sequence = metadataContainer.Sequence;
+            newEntry.Guid = metadataContainer.Guid;
         }
 
 
@@ -85,19 +86,25 @@ namespace Hazelcast.NearCaching
                     id => MapRemoveEntryListenerCodec.EncodeRequest(Name, id), (Action<ClientMessage>) Handle);
                 */
 
-                // FIXME the NAME could be a property of a BASE state object (class EventState)
                 var subscription = new ClusterEventSubscription(
                     MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) EntryEventType.Invalidation, false),
                     (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
-                    (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(Name, id),
-                    (message, state) => MapAddNearCacheInvalidationListenerCodec.EventHandler.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent));
-                _cluster.SubscribeAsync(subscription).Wait(); // FIXME ASYNC!
+                    (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(((EventState) state).Name, id),
+                    (message, state) => MapAddNearCacheInvalidationListenerCodec.EventHandler.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent),
+                    new EventState { Name = Name });
+
+                Cluster.SubscribeAsync(subscription).Wait(); // FIXME: async oops!
                 RegistrationId = subscription.Id;
             }
             catch (Exception e)
             {
                 Logger.LogCritical(e, "-----------------\n Near Cache is not initialized!!! \n-----------------");
             }
+        }
+
+        private class EventState
+        {
+            public string Name { get; set; }
         }
     }
 }

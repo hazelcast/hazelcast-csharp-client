@@ -19,30 +19,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.NearCaching
 {
-    // NOTES ABOUT ATOMICITY
-    //
-    // Partition I, Section 12.6.6 of the CLI spec states: "A conforming CLI shall guarantee
-    // that read and write access to properly aligned memory locations no larger than the native
-    // word size is atomic when all the write accesses to a location are the same size."
-    //
-    // And, C# specs section 5.5 states: "Reads and writes of the following data types are
-    // atomic: bool, char, byte, sbyte, short, ushort, uint, int, float, and reference types.
-    // In addition, reads and writes of enum types with an underlying type in the previous
-    // list are also atomic. Reads and writes of other types, including long, ulong, double,
-    // and decimal, as well as user-defined types, are not guaranteed to be atomic."
-    //
-    // However - atomic does not imply thread-safety due to the processor reordering reads and
-    // writes. The variables should be marked volatile, or accessed through Interlocked.
-    //
-    // References
-    // https://stackoverflow.com/questions/9666/is-accessing-a-variable-in-c-sharp-an-atomic-operation
-    // https://stackoverflow.com/questions/2433772/are-primitive-data-types-in-c-sharp-atomic-thread-safe
-    //
-    // So,
-    // Anything safe as per section 5.5 quoted above has to be volatile
-    // Anything not safe has to be Interlocked.
-
-    internal class NearCacheRecord
+    internal class NearCacheEntry
     {
         private readonly long _creationTime;
         private readonly long _expirationTime;
@@ -54,13 +31,13 @@ namespace Hazelcast.NearCaching
         private volatile int _partitionId;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NearCacheRecord"/> class.
+        /// Initializes a new instance of the <see cref="NearCacheEntry"/> class.
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <param name="creationTime"></param>
         /// <param name="expirationTime"></param>
-        internal NearCacheRecord(IData key, object value, long creationTime, long expirationTime)
+        internal NearCacheEntry(IData key, object value, long creationTime, long expirationTime)
         {
             Key = key;
             Value = value;
@@ -93,7 +70,7 @@ namespace Hazelcast.NearCaching
         public long Hits => Interlocked.Read(ref _hits);
 
         /// <summary>
-        /// Gets the partition identifier.
+        /// Gets the partition identifier corresponding to the key.
         /// </summary>
         public int PartitionId
         {
@@ -125,30 +102,33 @@ namespace Hazelcast.NearCaching
         }
 
         /// <summary>
-        /// Determines whether the record has expired as a time.
+        /// Determines whether the record has expired at a given time.
         /// </summary>
         /// <param name="time">A time.</param>
         /// <returns>true if the record has expired at the specified time; otherwise false.</returns>
         internal bool IsExpiredAt(long time)
         {
-            return _expirationTime > NearCacheBase.TimeNotSet && _expirationTime <= time;
+            return _expirationTime > Clock.Never && _expirationTime <= time;
         }
 
         /// <summary>
-        /// Determines whether the record ... fixme?
+        /// Determines whether the record is idle at a given time.
         /// </summary>
-        /// <param name="maxIdleMilliseconds"></param>
-        /// <param name="now"></param>
-        /// <returns></returns>
-        internal bool IsIdleAt(long maxIdleMilliseconds, long now)
+        /// <param name="idleMilliseconds">The period of time a record can remain un-hit before becoming idle.</param>
+        /// <param name="time">A time.</param>
+        /// <returns>true if the record is idle at the specified time; otherwise false.</returns>
+        /// <remarks>
+        /// <para>A record is idle if it has not been hit since <paramref name="idleMilliseconds"/>.</para>
+        /// </remarks>
+        internal bool IsIdleAt(long idleMilliseconds, long time)
         {
-            if (maxIdleMilliseconds <= 0) return false;
+            if (idleMilliseconds <= 0) return false;
 
             var lastAccessTime = Interlocked.Read(ref _lastHitTime);
 
-            return lastAccessTime > NearCacheBase.TimeNotSet
-                ? lastAccessTime + maxIdleMilliseconds < now
-                : _creationTime + maxIdleMilliseconds < now;
+            return lastAccessTime > Clock.Never
+                ? lastAccessTime + idleMilliseconds < time
+                : _creationTime + idleMilliseconds < time;
         }
     }
 }

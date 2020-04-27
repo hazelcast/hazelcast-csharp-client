@@ -1,0 +1,23 @@
+﻿
+#### NOTES ABOUT ATOMICITY
+
+Partition I, Section 12.6.6 of the CLI spec states: "A conforming CLI shall guarantee
+that read and write access to properly aligned memory locations no larger than the native
+word size is atomic when all the write accesses to a location are the same size."
+
+And, C# specs section 5.5 states: "Reads and writes of the following data types are
+atomic: bool, char, byte, sbyte, short, ushort, uint, int, float, and reference types.
+In addition, reads and writes of enum types with an underlying type in the previous
+list are also atomic. Reads and writes of other types, including long, ulong, double,
+and decimal, as well as user-defined types, are not guaranteed to be atomic."
+
+However - atomic does not imply thread-safety due to the processor reordering reads and
+writes. The variables should be marked volatile, or accessed through Interlocked.
+
+References
+https://stackoverflow.com/questions/9666/is-accessing-a-variable-in-c-sharp-an-atomic-operation
+https://stackoverflow.com/questions/2433772/are-primitive-data-types-in-c-sharp-atomic-thread-safe
+
+So,
+Anything safe as per section 5.5 quoted above has to be volatile
+Anything not safe has to be Interlocked.

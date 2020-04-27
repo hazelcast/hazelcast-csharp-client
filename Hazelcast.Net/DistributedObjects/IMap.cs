@@ -8,6 +8,10 @@ using Hazelcast.Data.Map;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;
 
+// TODO: remove this directives - only during dev
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMemberInSuper.Global
+
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
@@ -34,24 +38,24 @@ namespace Hazelcast.DistributedObjects
 
         #region Setting
 
-        // FIXME: rename things
-        // Add returns the previous value, adds or replaces = AddOrReplace
-        // AddIfMissing = Add if missing, returns the existing value if not missing, else default(TKey)
-        // AddTransient = ?
-        // Replace = what-if there is no value, make sure it does not add!
-        // Set = same as AddAndReplace but does not return a value = make it an extra optional parameter?
-        // TryPut = AddOrReplace with a timeout?
-
         /// <summary>
-        /// Adds an entry to the map.
+        /// Adds or replaces an entry and returns the previous value.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
         /// <returns>The value previously associated with the key in the map, if any; otherwise default(<typeparamref name="TValue"/>).</returns>
-        Task<TValue> AddAsync(TKey key, TValue value);
+        Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Adds an entry to the map with a time-to-live.
+        /// Adds or replaces an entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <returns>Nothing.</returns>
+        Task AddOrReplaceAsync(TKey key, TValue value);
+
+        /// <summary>
+        /// Adds or replaces an entry with a time-to-live and returns the previous value.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -60,44 +64,83 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// TODO: is it really removed? or just evicted?
         /// </remarks>
-        Task<TValue> AddAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Adds entries to the map.
+        /// Adds or replaces an entry with a time-to-live.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <returns>Nothing.</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// </remarks>
+        Task AddOrReplaceAsync(TKey key, TValue value, TimeSpan timeToLive);
+
+        /// <summary>
+        /// Adds or replaces entries.
         /// </summary>
         /// <param name="entries">Entries.</param>
-        /// <returns>A task that will complete when all entries have been added to the map.</returns>
+        /// <returns>Nothing.</returns>
         /// TODO: is this transactional?
-        Task AddAsync(IDictionary<TKey, TValue> entries);
+        Task AddOrReplace(IDictionary<TKey, TValue> entries);
 
         /// <summary>
-        /// Adds an entry to the map, if no entry with the key exists.
+        /// Replaces an existing entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="newValue">The new value.</param>
+        /// <returns>true if the entry was replaced; otherwise false.</returns>
+        Task<TValue> ReplaceAsync(TKey key, TValue newValue);
+
+        /// <summary>
+        /// Replaces an existing entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="expectedValue">The expected value.</param>
+        /// <param name="newValue">The new value.</param>
+        /// <returns>true if the entry was replaced; otherwise false.</returns>
+        Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue);
+
+        /// <summary>
+        /// Tries to set an entry within a timeout.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>true if the entry was set; otherwise false.</returns>
+        /// <remarks>
+        /// <para>This method returns false when no lock on the key could be
+        /// acquired within the timeout.</para>
+        /// </remarks>
+        Task<bool> TryAddOrReplaceAsync(TKey key, TValue value, TimeSpan timeout);
+
+        /// <summary>
+        /// Adds an entry, if no entry with the key exists.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">The value.</param>
-        /// <returns>A task that will complete when ...</returns>
-        /// TODO: how can it return "the previous value" if we only add when it's missing?
+        /// <returns>The existing value, if any; otherwise the default value.</returns>
         Task<TValue> AddIfMissingAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Adds an entry to the map with a time-to-live, if no entry with the key exists.
+        /// Adds an entry with a time-to-live, if no entry with the key exists.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">The value.</param>
         /// <param name="timeToLive">A time to live.</param>
-        /// <returns>A task that will complete when ...</returns>
-        /// TODO: how can it return "the previous value" if we only add when it's missing?
+        /// <returns>The existing value, if any; otherwise the default value.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// TODO: is it really removed? or just evicted?
         /// </remarks>
         Task<TValue> AddIfMissingAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Adds an entry to the map, or its <see cref="MapStore"/>.
+        /// Adds an entry, or its <see cref="MapStore"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">The value.</param>
@@ -111,58 +154,6 @@ namespace Hazelcast.DistributedObjects
         /// TODO: is it really removed? or just evicted?
         /// </remarks>
         Task AddTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
-
-        // TODO: how is this different from Add?
-        Task<TValue> ReplaceAsync(TKey key, TValue value);
-
-        /// <summary>
-        /// Replaces an entry in the map.
-        /// </summary>
-        /// <param name="key">A key.</param>
-        /// <param name="expectedValue">The expected value.</param>
-        /// <param name="newValue">The new value.</param>
-        /// <returns>true if the entry was replaced; otherwise false.</returns>
-        Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue);
-
-        // FIXME these Set are actually true Add?
-        // but with an IDictionary, can only Add once?! only the [] supports overwriting
-        // so we have Add and AddOrReplace, really, or Set and SetAndReplace
-
-        /// <summary>
-        /// Adds an entry to the map.
-        /// </summary>
-        /// <param name="key">A key.</param>
-        /// <param name="value">A value.</param>
-        /// <returns>Nothing.</returns>
-        Task SetAsync(TKey key, TValue value);
-
-        /// <summary>
-        /// Adds an entry to the map with a time-to-live.
-        /// </summary>
-        /// <param name="key">A key.</param>
-        /// <param name="value">A value.</param>
-        /// <param name="timeToLive">A time to live.</param>
-        /// <returns>Nothing.</returns>
-        /// <remarks>
-        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
-        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// TODO: is it really removed? or just evicted?
-        /// </remarks>
-        Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
-
-        /// <summary>
-        /// Tries to set an entry into the map within a timeout.
-        /// </summary>
-        /// <param name="key">A key.</param>
-        /// <param name="value">A value.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>true if the entry was set; otherwise false.</returns>
-        /// <remarks>
-        /// <para>This method returns false when no lock on the key could be
-        /// acquired within the timeout.</para>
-        /// </remarks>
-        // TODO is this Set or SetAndReplace?
-        Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan timeout);
 
         #endregion
 
@@ -290,7 +281,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>For performance reasons, this method does not return the value. Prefer
         /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
         /// </remarks>
-        Task DeleteAsync(TKey key);
+        Task DeleteAsync(TKey key); // FIXME rename 
 
         /// <summary>
         /// Empties this map.
@@ -521,6 +512,8 @@ namespace Hazelcast.DistributedObjects
 
         #region Interception
 
+        // TODO what is an interceptor?
+
         /// <summary>
         /// Adds an interceptor.
         /// </summary>
@@ -591,6 +584,7 @@ namespace Hazelcast.DistributedObjects
         /// Subscribes to events.
         /// </summary>
         /// <param name="key">A key to filter events.</param>
+        /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
         Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);

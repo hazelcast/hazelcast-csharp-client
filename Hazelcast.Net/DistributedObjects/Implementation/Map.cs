@@ -49,11 +49,15 @@ namespace Hazelcast.DistributedObjects.Implementation
         #region Setting
 
         /// <inheritdoc />
-        public async Task<TValue> AddAsync(TKey key, TValue value)
-            => await AddAsync(key, value, Timeout.InfiniteTimeSpan);
+        public async Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value)
+            => await AddOrReplaceWithValueAsync(key, value, Timeout.InfiniteTimeSpan);
 
         /// <inheritdoc />
-        public async Task<TValue> AddAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task AddOrReplaceAsync(TKey key, TValue value)
+            => await AddOrReplaceAsync(key, value, Timeout.InfiniteTimeSpan);
+
+        /// <inheritdoc />
+        public async Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
@@ -66,7 +70,18 @@ namespace Hazelcast.DistributedObjects.Implementation
         }
 
         /// <inheritdoc />
-        public async Task AddAsync(IDictionary<TKey, TValue> entries)
+        public async Task AddOrReplaceAsync(TKey key, TValue value, TimeSpan timeToLive)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+
+            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
+
+            var requestMessage = MapSetCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
+            await Cluster.SendAsync(requestMessage, keyData);
+        }
+
+        /// <inheritdoc />
+        public async Task AddOrReplace(IDictionary<TKey, TValue> entries)
         {
             // TODO: is this transactional? can some entries be created and others be missing?
 
@@ -85,6 +100,10 @@ namespace Hazelcast.DistributedObjects.Implementation
                     list = part[partitionId] = new List<KeyValuePair<IData, IData>>();
                 list.Add(new KeyValuePair<IData, IData>(keyData, valueData));
             }
+
+            // TODO: add a SendAsync(...) to Cluster/Client
+            // that can send multiple messages and use one single completion source
+            // cannot inherit from TaskCompletionSource: it's not sealed but nothing is virtual
 
             // create parallel tasks to fire requests for each owner (each network client)
             // for each owner, serialize requests for each partition, because each message
@@ -105,6 +124,42 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             // and wait on all tasks, ignoring the responses
             await Task.WhenAll(tasks);
+        }
+
+        /// <inheritdoc />
+        public async Task<TValue> ReplaceAsync(TKey key, TValue newValue)
+        {
+            var (keyData, valueData) = ToSafeData(key, newValue);
+
+            var requestMessage = MapReplaceCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var response = MapReplaceCodec.DecodeResponse(responseMessage).Response;
+            return ToObject<TValue>(response);
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue)
+        {
+            var (keyData, expectedData, newData) = ToSafeData(key, expectedValue, newValue);
+
+            var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ThreadId);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var response = MapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> TryAddOrReplaceAsync(TKey key, TValue value, TimeSpan timeout)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+
+            var timeoutMs = timeout.CodecMilliseconds(0);
+
+            var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeoutMs);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var response = MapTryPutCodec.DecodeResponse(responseMessage).Response;
+            return response;
+
         }
 
         /// <inheritdoc />
@@ -136,66 +191,21 @@ namespace Hazelcast.DistributedObjects.Implementation
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
         }
 
-        /// <inheritdoc />
-        public async Task<TValue> ReplaceAsync(TKey key, TValue value)
-        {
-            var (keyData, valueData) = ToSafeData(key, value);
-
-            var requestMessage = MapReplaceCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
-            var response = MapReplaceCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue)
-        {
-            var (keyData, expectedData, newData) = ToSafeData(key, expectedValue, newValue);
-
-            var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
-            var response = MapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
-            return response;
-        }
-
-        /// <inheritdoc />
-        public async Task SetAsync(TKey key, TValue value)
-            => await SetAsync(key, value, Timeout.InfiniteTimeSpan);
-
-        /// <inheritdoc />
-        public async Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
-        {
-            var (keyData, valueData) = ToSafeData(key, value);
-
-            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
-
-            var requestMessage = MapSetCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
-            await Cluster.SendAsync(requestMessage, keyData);
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan timeout)
-        {
-            var (keyData, valueData) = ToSafeData(key, value);
-
-            var timeoutMs = timeout.CodecMilliseconds(0);
-
-            var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeoutMs);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
-            var response = MapTryPutCodec.DecodeResponse(responseMessage).Response;
-            return response;
-
-        }
-
         #endregion
 
         #region Getting
 
         /// <inheritdoc />
         public async Task<TValue> GetAsync(TKey key)
-        {
-            var keyData = ToSafeData(key);
+            => await GetAsync(ToSafeData(key));
 
+        /// <summary>
+        /// Gets the value for a key, or null if the map does not contain an entry with this key.
+        /// </summary>
+        /// <param name="keyData">The key.</param>
+        /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
+        protected virtual async Task<TValue> GetAsync(IData keyData)
+        {
             var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ThreadId);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapGetCodec.DecodeResponse(responseMessage).Response;
@@ -397,9 +407,15 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         /// <inheritdoc />
         public async Task<bool> ContainsKeyAsync(TKey key)
-        {
-            var keyData = ToSafeData(key);
+            => await ContainsKeyAsync(ToSafeData(key));
 
+        /// <summary>
+        /// Determines whether this map contains an entry for a key.
+        /// </summary>
+        /// <param name="keyData">The key.</param>
+        /// <returns>True if the map contains an entry for the specified key; otherwise false.</returns>
+        protected virtual async Task<bool> ContainsKeyAsync(IData keyData)
+        {
             var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ThreadId);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapContainsKeyCodec.DecodeResponse(responseMessage).Response;
@@ -426,9 +442,21 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         /// <inheritdoc />
         public async Task<bool> TryRemoveAsync(TKey key, TimeSpan timeout)
-        {
-            var keyData = ToSafeData(key);
+            => await TryRemoveAsync(ToSafeData(key), timeout);
 
+        /// <summary>
+        /// Tries to remove an entry from the map within a timeout.
+        /// </summary>
+        /// <param name="keyData">A key.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>true if the entry was removed; otherwise false.</returns>
+        /// <remarks>
+        /// <para>This method returns false when no lock on the key could be
+        /// acquired within the timeout.</para>
+        /// TODO or when there was no value with that key?
+        /// </remarks>
+        protected virtual async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeout)
+        {
             var timeoutMs = timeout.CodecMilliseconds(0);
 
             var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ThreadId, timeoutMs);
@@ -439,9 +467,15 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         /// <inheritdoc />
         public async Task<TValue> RemoveAsync(TKey key)
-        {
-            var keyData = ToSafeData(key);
+            => await RemoveAsync(ToSafeData(key));
 
+        /// <summary>
+        /// Removes an entry from this map, and returns the corresponding value if any.
+        /// </summary>
+        /// <param name="keyData">The key.</param>
+        /// <returns>The value, if any, or default(TValue).</returns>
+        protected virtual async Task<TValue> RemoveAsync(IData keyData)
+        {
             var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ThreadId);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapRemoveCodec.DecodeResponse(responseMessage).Response;
@@ -452,7 +486,21 @@ namespace Hazelcast.DistributedObjects.Implementation
         public async Task<bool> RemoveAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
+            return await RemoveAsync(keyData, valueData);
+        }
 
+        /// <summary>
+        /// Removes an entry from this map.
+        /// </summary>
+        /// <param name="keyData">The key.</param>
+        /// <param name="valueData">The value.</param>
+        /// <returns>The value, if any, or default(TValue).</returns>
+        /// <remarks>
+        /// <para>This method removes an entry if the key and the value both match the
+        /// specified key and value.</para>
+        /// </remarks>
+        protected virtual async Task<bool> RemoveAsync(IData keyData, IData valueData)
+        {
             var requestMessage = MapRemoveIfSameCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
@@ -461,9 +509,18 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         /// <inheritdoc />
         public async Task DeleteAsync(TKey key)
-        {
-            var keyData = ToSafeData(key);
+            => await DeleteAsync(ToSafeData(key));
 
+        /// <summary>
+        /// Removes an entry from this map.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <remarks>
+        /// <para>For performance reasons, this method does not return the value. Prefer
+        /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
+        /// </remarks>
+        protected virtual async Task DeleteAsync(IData keyData)
+        {
             var requestMessage = MapDeleteCodec.EncodeRequest(Name, keyData, ThreadId);
             await Cluster.SendAsync(requestMessage, keyData);
         }

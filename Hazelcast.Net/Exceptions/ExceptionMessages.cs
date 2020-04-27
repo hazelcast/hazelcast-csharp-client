@@ -19,5 +19,10 @@
         /// Value cannot be null nor empty.
         /// </summary>
         public const string NullOrEmpty = "Value cannot be null nor empty.";
+
+        /// <summary>
+        /// Cached value is not of the expected type.
+        /// </summary>
+        public const string InvalidCacheCast = "Cached value is not of the expected type.";
     }
 }

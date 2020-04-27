@@ -2,9 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -16,7 +18,6 @@ namespace Hazelcast.NearCaching
     {
         internal static readonly ILogger Logger = Services.Get.LoggerFactory().CreateLogger<NearCache>();
 
-        internal const long TimeNotSet = -1;
         private const int EvictionPercentage = 20;
         private const int CleanupInterval = 5000;
 
@@ -27,15 +28,10 @@ namespace Hazelcast.NearCaching
         private readonly InMemoryFormat _inMemoryFormat;
         protected readonly bool InvalidateOnChange;
         private readonly long _maxIdleMilliseconds;
-        protected readonly Cluster _cluster; // TODO make this a proper property
 
         private readonly int _maxSize;
-        private readonly string _name;
 
-        private readonly ConcurrentDictionary<IData, Lazy<NearCacheRecord>> _records;
-
-        private readonly IComparer<Lazy<NearCacheRecord>> _selectedComparer;
-        private readonly NearCacheStatistics _stat;
+        private readonly IComparer<AsyncLazy<NearCacheEntry>> _comparer;
         private readonly long _timeToLiveMillis;
 
         private long _lastCleanup;
@@ -43,36 +39,42 @@ namespace Hazelcast.NearCaching
 
         protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, NearCacheConfig nearCacheConfig)
         {
-            _name = name;
-            _cluster = cluster;
-            SerializationService = serializationService; // FIXME null check
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
+            Name = name;
+            Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+
+            Entries = new ConcurrentDictionary<IData, AsyncLazy<NearCacheEntry>>();
+            Statistics = new NearCacheStatistics();
+
+            _canCleanUp = 1;
+            _canEvict = 1;
+            _lastCleanup = Clock.Milliseconds;
+
             _maxSize = nearCacheConfig.GetMaxSize();
             _maxIdleMilliseconds = nearCacheConfig.GetMaxIdleSeconds() * 1000;
             _inMemoryFormat = nearCacheConfig.GetInMemoryFormat();
             _timeToLiveMillis = nearCacheConfig.GetTimeToLiveSeconds() * 1000;
-            _evictionPolicy =
+            _evictionPolicy = // TODO: config should directly return the proper enum value!
                 (EvictionPolicy)Enum.Parse(typeof(EvictionPolicy), nearCacheConfig.GetEvictionPolicy(), true);
-            _records = new ConcurrentDictionary<IData, Lazy<NearCacheRecord>>();
-            _canCleanUp = 1;
-            _canEvict = 1;
-            _lastCleanup = Clock.Milliseconds;
-            _selectedComparer = GetComparer(_evictionPolicy);
-            _stat = new NearCacheStatistics();
+            _comparer = GetComparer(_evictionPolicy);
             InvalidateOnChange = nearCacheConfig.IsInvalidateOnChange();
         }
 
+        protected Cluster Cluster { get; }
+
         protected ISerializationService SerializationService { get; }
 
-        public ConcurrentDictionary<IData, Lazy<NearCacheRecord>> Records => _records;
+        public ConcurrentDictionary<IData, AsyncLazy<NearCacheEntry>> Entries { get; }
 
-        public string Name => _name;
+        public string Name { get; }
 
-        public NearCacheStatistics NearCacheStatistics => _stat;
+        public NearCacheStatistics Statistics { get; }
 
         public void Clear()
         {
-            _records.Clear();
-            _stat.EntryCount = 0L;
+            Entries.Clear();
+            Statistics.EntryCount = 0L;
         }
 
         public bool ContainsKey(IData keyData)
@@ -84,248 +86,271 @@ namespace Hazelcast.NearCaching
         {
             if (RegistrationId != null)
             {
-                _cluster.UnsubscribeAsync(RegistrationId).Wait(); // FIXME ASYNC!
+                Cluster.UnsubscribeAsync(RegistrationId).Wait(); // FIXME ASYNC!
             }
-            _records.Clear();
+            Entries.Clear();
         }
 
         public abstract void Init();
 
         public void Invalidate(IData key)
         {
-            if (_records.TryRemove(key, out _))
+            if (Entries.TryRemove(key, out _))
             {
-                _stat.DecrementEntryCount();
+                Statistics.DecrementEntryCount();
             }
         }
 
         public void InvalidateAll()
         {
-            _records.Clear();
+            Entries.Clear();
         }
 
         public bool Remove(IData key)
         {
-            Lazy<NearCacheRecord> removed;
-            if (_records.TryRemove(key, out removed))
+            if (Entries.TryRemove(key, out _))
             {
-                _stat.DecrementEntryCount();
+                Statistics.DecrementEntryCount();
                 return true;
             }
             return false;
         }
 
+        // NOTE: this method is, and was, bogus but maybe not used?
+        /*
         public bool TryAdd(IData keyData, object value)
         {
-            //TODO this method is not thread safe yet
-            var lazyValue = new Lazy<NearCacheRecord>(() =>
+            // kick eviction policy if needed
+            if (_evictionPolicy != EvictionPolicy.None && _entries.Count >= _maxSize)
+                TryCacheEvict();
+
+            // cannot add if the cache is full
+            if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize)
+                return false;
+
+            // prepare the cache entry
+            var lazyEntry = new AsyncLazy<NearCacheRecord>(async () =>
             {
                 var ncValue = ConvertToRecordValue(value);
-                var nearCacheRecord = CreateRecord(keyData, ncValue);
+                var entry = CreateRecord(keyData, ncValue);
                 _stat.IncrementEntryCount();
-                return nearCacheRecord;
-            }, LazyThreadSafetyMode.ExecutionAndPublication);
+                return entry;
+            });
 
-            if (_evictionPolicy == EvictionPolicy.None && _records.Count >= _maxSize)
+            if (!_entries.TryAdd(keyData, lazyEntry)) 
+                return false;
+
+            value = lazyEntry.Value.Value;
+            if (value == null)
             {
+                _entries.TryRemove(keyData, out _);
                 return false;
             }
-            if (_evictionPolicy != EvictionPolicy.None && _records.Count >= _maxSize)
-            {
-                FireEvictCache();
-            }
-            if (_records.TryAdd(keyData, lazyValue))
-            {
-                var record = lazyValue.Value;
-                value = record.Value;
-                if (value == null)
-                {
-                    _records.TryRemove(keyData, out lazyValue);
-                    return false;
-                }
-                return true;
-            }
-            return false;
+            return true;
         }
+        */
 
-        public bool TryGetOrAdd(IData keyData, Func<IData, object> remoteCall, out object value)
+        public async Task<(bool, TValue)> TryGetOrAddAsync<TValue>(IData keyData, Func<IData, Task<TValue>> valueFactory)
         {
-            if (TryGetValue(keyData, out value))
+            // if it's in the cache already, return it
+            if (TryGetValue(keyData, out var o))
             {
-                return true;
+                if (o is TValue v) return (true, v);
+                throw new InvalidOperationException("Cache is corrupt.");
             }
-            _stat.IncrementMiss();
-            var lazyValue = new Lazy<NearCacheRecord>(() =>
-            {
-                var valueData = remoteCall(keyData);
-                var ncValue = ConvertToRecordValue(valueData);
-                var nearCacheRecord = CreateRecord(keyData, ncValue);
-                _stat.IncrementEntryCount();
-                return nearCacheRecord;
-            }, LazyThreadSafetyMode.ExecutionAndPublication);
 
-            if (_evictionPolicy != EvictionPolicy.None && _records.Count >= _maxSize)
+            // count a miss
+            Statistics.IncrementMiss();
+
+            // kick eviction policy if needed
+            if (_evictionPolicy != EvictionPolicy.None && Entries.Count >= _maxSize)
+                TryCacheEvict();
+            
+            // if the cache is full, directly return the un-cached value
+            if (_evictionPolicy == EvictionPolicy.None && Entries.Count >= _maxSize && !Entries.ContainsKey(keyData))
+                return (false, await valueFactory(keyData));
+
+            // prepare the cache entry
+            var lazyEntry = new AsyncLazy<NearCacheEntry>(async () => 
             {
-                FireEvictCache();
-            }
-            if (_evictionPolicy == EvictionPolicy.None && _records.Count >= _maxSize && !_records.ContainsKey(keyData))
+                var valueData = await valueFactory(keyData);
+                var ncValue = ConvertToRecordValue(valueData);
+                var entry = CreateEntry(keyData, ncValue);
+                Statistics.IncrementEntryCount();
+                return entry;
+            });
+
+            // insert into cache
+            // concurrency is managed by the concurrent dictionary: there will be only one lazy record at a time,
+            // and only once will TryAdd succeed and CreateValueAsync be invoked, and others will wait
+            if (Entries.TryAdd(keyData, lazyEntry))
             {
-                value = remoteCall(keyData);
-                return false;
-            }
-            if (_records.TryAdd(keyData, lazyValue))
-            {
-                var record = lazyValue.Value;
-                value = record.Value;
-                if (value == null)
+                NearCacheEntry entry;
+                try
+                {
+                    entry = await lazyEntry.CreateValueAsync();
+                }
+                catch
                 {
                     Invalidate(keyData);
-                    return false;
+                    throw;
                 }
-                return true;
+
+                switch (entry.Value)
+                {
+                    case TValue v:
+                        return (true, v);
+                    case null:
+                        Invalidate(keyData);
+                        return (false, default);
+                    default:
+                        throw new InvalidOperationException("Cache is corrupt.");
+                }
             }
-            if (TryGetValue(keyData, out value))
+
+            // failed to add, was added by another thread?
+            if (TryGetValue(keyData, out o))
             {
-                return true;
+                if (o is TValue v) return (true, v);
+                throw new InvalidOperationException("Cache is corrupt.");
             }
-            value = remoteCall(keyData);
-            return false;
+
+            // otherwise, add the uncached value
+            return (false, await valueFactory(keyData));
         }
 
         public bool TryGetValue(IData keyData, out object value)
         {
-            FireTtlCleanup();
+            TryTtlCleanup();
+
             value = null;
-            if (_records.TryGetValue(keyData, out var lazyRecord) && lazyRecord != null)
+
+            if (!Entries.TryGetValue(keyData, out var lazyEntry) || lazyEntry == null) 
+                return false;
+
+            var entry = lazyEntry.Value;
+
+            if (IsStaleRead(keyData, entry) || entry.Value == null)
             {
-                var record = lazyRecord.Value;
-                if (IsStaleRead(keyData, record) || record.Value == null)
-                {
-                    Invalidate(keyData);
-                    _stat.IncrementMiss();
-                    return false;
-                }
-                if (IsRecordExpired(record))
-                {
-                    Invalidate(keyData);
-                    _stat.IncrementExpiration();
-                    return false;
-                }
-                record.NotifyHit();
-                _stat.IncrementHit();
-                value = record.Value;
-                return true;
+                Invalidate(keyData);
+                Statistics.IncrementMiss();
+                return false;
             }
-            return false;
+
+            if (IsRecordExpired(entry))
+            {
+                Invalidate(keyData);
+                Statistics.IncrementExpiration();
+                return false;
+            }
+
+            entry.NotifyHit();
+            Statistics.IncrementHit();
+
+            value = entry.Value;
+            return true;
         }
 
-        protected virtual NearCacheRecord CreateRecord(IData key, object value)
+        protected virtual NearCacheEntry CreateEntry(IData key, object value)
         {
-            var now = Clock.Milliseconds;
-            return new NearCacheRecord(key, value, now, _timeToLiveMillis > 0 ? now + _timeToLiveMillis : TimeNotSet);
+            var created = Clock.Milliseconds;
+            var expires = _timeToLiveMillis > 0 ? created + _timeToLiveMillis : Clock.Never;
+            return new NearCacheEntry(key, value, created, expires);
         }
 
-        protected virtual bool IsStaleRead(IData key, NearCacheRecord record)
+        protected virtual bool IsStaleRead(IData key, NearCacheEntry entry)
         {
             return false;
         }
 
         private object ConvertToRecordValue(object o)
         {
-            object value = _inMemoryFormat.Equals(InMemoryFormat.Binary)
+            return _inMemoryFormat.Equals(InMemoryFormat.Binary)
                 ? SerializationService.ToData(o)
                 : SerializationService.ToObject<object>(o);
-            return value;
         }
 
-        private void FireEvictCache()
-        {
-            if (Interlocked.CompareExchange(ref _canEvict, 0, 1) == 1)
-            {
-                try
-                {
-                    // TODO: this was a weird way to hopefully control things, but was not implemented?
-                    //Client.ExecutionService.Submit(FireEvictCacheFunc);
-                    FireEvictCacheFunc();
-                }
-                catch
-                {
-                    Interlocked.Exchange(ref _canEvict, 1);
-                    throw; // wrap in HazelcastException?
-                }
-            }
-        }
-
-        private void FireEvictCacheFunc()
+        private void TryCacheEvict()
         {
             try
             {
-                var records = new SortedSet<Lazy<NearCacheRecord>>(_records.Values, _selectedComparer);
-                var evictSize = _records.Count * EvictionPercentage / 100;
-                var i = 0;
-                foreach (var record in records)
-                {
-                    Lazy<NearCacheRecord> removed;
-                    if (_records.TryRemove(record.Value.Key, out removed))
-                    {
-                        _stat.DecrementEntryCount();
-                        _stat.IncrementEviction();
-                        if (++i > evictSize)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _canEvict, 1);
-            }
+                // only one at a time please
+                if (Interlocked.CompareExchange(ref _canEvict, 0, 1) == 0)
+                    return;
 
-            if (_records.Count >= _maxSize)
-            {
-                FireEvictCache();
-            }
-        }
-
-        private void FireTtlCleanup()
-        {
-            if (Clock.Milliseconds < _lastCleanup + CleanupInterval)
-                return;
-
-            if (Interlocked.CompareExchange(ref _canCleanUp, 0, 1) == 0)
-                return;
-
-            try
-            {
-                // TODO: this was a weird way to hopefully control things, but was not implemented?
-                //Client.ExecutionService.Submit(FireTtlCleanupFunc);
-                FireTtlCleanupFunc();
+                DoCacheEvict();
             }
             catch
             {
-                Interlocked.Exchange(ref _canCleanUp, 1);
-                throw; // wrap in HazelcastException?
+                // make sure to release the lock
+                Interlocked.Exchange(ref _canEvict, 1);
+                throw;
             }
         }
 
-        private void FireTtlCleanupFunc()
+        private void DoCacheEvict()
         {
+            var records = new SortedSet<AsyncLazy<NearCacheEntry>>(Entries.Values, _comparer);
+            var evictCount = Entries.Count * EvictionPercentage / 100;
+            
+            var count = 0;
+
+            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var lazyRecord in records)
+            {
+                var record = lazyRecord.Value;
+
+                if (!Entries.TryRemove(record.Key, out _))
+                    continue;
+
+                Statistics.DecrementEntryCount();
+                Statistics.IncrementEviction();
+                if (++count > evictCount)
+                    break;
+            }
+
+            // FIXME wtf?
+            if (Entries.Count >= _maxSize)
+            {
+                TryCacheEvict();
+            }
+        }
+
+        private void TryTtlCleanup()
+        {
+            // run when it is time to run
+            if (Clock.Milliseconds < _lastCleanup + CleanupInterval)
+                return;
+
             try
             {
+                // only one at a time please
+                if (Interlocked.CompareExchange(ref _canCleanUp, 0, 1) == 0)
+                    return;
+
                 _lastCleanup = Clock.Milliseconds;
-                foreach (var entry in _records)
-                {
-                    if (IsRecordExpired(entry.Value.Value))
-                    {
-                        Invalidate(entry.Key);
-                        _stat.IncrementExpiration();
-                    }
-                }
+
+                DoTtlCleanup();
             }
-            finally
+            catch
             {
+                // make sure to release the lock
                 Interlocked.Exchange(ref _canCleanUp, 1);
+                throw;
+            }
+        }
+
+        private void DoTtlCleanup()
+        {
+            foreach (var (key, lazyRecord) in Entries)
+            {
+                var record = lazyRecord.Value;
+
+                if (IsRecordExpired(record))
+                {
+                    Invalidate(key);
+                    Statistics.IncrementExpiration();
+                }
             }
         }
 
@@ -334,7 +359,7 @@ namespace Hazelcast.NearCaching
         /// </summary>
         /// <param name="policy">The eviction policy.</param>
         /// <returns>The record comparer corresponding to the specified eviction policy.</returns>
-        private static IComparer<Lazy<NearCacheRecord>> GetComparer(EvictionPolicy policy)
+        private static IComparer<AsyncLazy<NearCacheEntry>> GetComparer(EvictionPolicy policy)
         {
             switch (policy)
             {
@@ -355,12 +380,12 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Determines whether a record has expired.
         /// </summary>
-        /// <param name="record">The record.</param>
+        /// <param name="entry">The record.</param>
         /// <returns>true if the record has expired; false otherwise.</returns>
-        private bool IsRecordExpired(NearCacheRecord record)
+        private bool IsRecordExpired(NearCacheEntry entry)
         {
             var now = Clock.Milliseconds;
-            return record.IsExpiredAt(now) || record.IsIdleAt(_maxIdleMilliseconds, now);
+            return entry.IsExpiredAt(now) || entry.IsIdleAt(_maxIdleMilliseconds, now);
         }
     }
 }
