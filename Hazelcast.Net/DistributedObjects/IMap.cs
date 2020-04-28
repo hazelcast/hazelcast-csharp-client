@@ -86,7 +86,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="entries">Entries.</param>
         /// <returns>Nothing.</returns>
         /// TODO: is this transactional?
-        Task AddOrReplace(IDictionary<TKey, TValue> entries);
+        Task AddOrReplaceAsync(IDictionary<TKey, TValue> entries);
 
         /// <summary>
         /// Replaces an existing entry.

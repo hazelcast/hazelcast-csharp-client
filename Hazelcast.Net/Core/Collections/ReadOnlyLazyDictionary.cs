@@ -10,21 +10,22 @@ namespace Hazelcast.Core.Collections
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <typeparam name="TSource">The type of the source values.</typeparam>
     /// <remarks>
     /// <para>The key objects are always <see cref="IData"/> instances.</para>
     /// <para>This class is not thread-safe for writing: it should be entirely populated
     /// in a thread-safe way, before being returned to readers.</para>
     /// </remarks>
-    internal sealed class ReadOnlyLazyDictionary<TKey, TValue, TSource> : IReadOnlyDictionary<TKey, TValue>
-        where TSource : class
+    internal sealed class ReadOnlyLazyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
     {
-        private readonly Dictionary<IData, TSource> _content = new Dictionary<IData, TSource>();
-        private readonly Dictionary<TKey, CacheEntry<TValue, TSource>> _cache = new Dictionary<TKey, CacheEntry<TValue, TSource>>();
         private readonly ISerializationService _serializationService;
 
+        private readonly Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>> _entries = new Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>>();
+        private readonly Dictionary<TKey, ReadOnlyLazyEntry<TKey, TValue>> _keyEntries = new Dictionary<TKey, ReadOnlyLazyEntry<TKey, TValue>>();
+
+        // FIXME this whole class is generally not thread-safe
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReadOnlyLazyDictionary{TKey,TValue,T}"/> class.
+        /// Initializes a new instance of the <see cref="ReadOnlyLazyDictionary{TKey,TValue}"/> class.
         /// </summary>
         /// <param name="serializationService">The serialization service.</param>
         public ReadOnlyLazyDictionary(ISerializationService serializationService)
@@ -33,57 +34,76 @@ namespace Hazelcast.Core.Collections
         }
 
         /// <summary>
-        /// Adds key-value pairs.
+        /// Gets the entries.
         /// </summary>
-        /// <param name="values">Values.</param>
-        public void Add(IEnumerable<KeyValuePair<IData, TSource>> values)
+        public Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>> Entries => _entries;
+
+        /// <summary>
+        /// Adds entries.
+        /// </summary>
+        /// <param name="entries">Entries.</param>
+        public void Add(IEnumerable<KeyValuePair<IData, object>> entries)
         {
-            foreach (var (keyData, valueData) in values)
-                _content.Add(keyData, valueData);
+            foreach (var (keyData, valueObject) in entries)
+                _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueObject));
+        }
+
+        /// <summary>
+        /// Adds entries.
+        /// </summary>
+        /// <param name="entries">Entries.</param>
+        public void Add(IEnumerable<KeyValuePair<IData, IData>> entries)
+        {
+            foreach (var (keyData, valueObject) in entries)
+                _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueObject));
         }
 
         /// <summary>
         /// Adds a key-value pair.
         /// </summary>
-        /// <param name="keyData">The key object.</param>
-        /// <param name="valueData">The value object.</param>
-        public void Add(IData keyData, TSource valueData)
+        /// <param name="keyData">The key data.</param>
+        /// <param name="valueObject">The value source object.</param>
+        public void Add(IData keyData, object valueObject)
         {
-            _content.Add(keyData, valueData);
+            _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueObject));
         }
 
         /// <summary>
-        /// Ensures that a cache entry has a value.
+        /// Ensures that an entry has a key.
         /// </summary>
-        /// <param name="cacheEntry">The cache entry.</param>
-        private void EnsureValue(CacheEntry<TValue, TSource> cacheEntry)
+        /// <param name="entry">The entry.</param>
+        private void EnsureKey(ReadOnlyLazyEntry<TKey, TValue> entry)
         {
-            if (cacheEntry.HasValue) return;
+            if (entry.HasKey) return;
 
-            // TODO: this is not thread-safe since Source becomes default: lock?
-            cacheEntry.Value = _serializationService.ToObject<TValue>(cacheEntry.Source);
+            entry.Value = _serializationService.ToObject<TValue>(entry.ValueObject);
+        }
+
+        /// <summary>
+        /// Ensures that an entry has a value.
+        /// </summary>
+        /// <param name="entry">The entry.</param>
+        private void EnsureValue(ReadOnlyLazyEntry<TValue> entry)
+        {
+            if (entry.HasValue) return;
+
+            entry.Value = _serializationService.ToObject<TValue>(entry.ValueObject);
         }
 
         /// <inheritdoc />
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            foreach (var (keyData, valueData) in _content)
+            foreach (var entry in _entries.Values)
             {
-                var key = _serializationService.ToObject<TKey>(keyData);
-                if (_cache.TryGetValue(key, out var cacheEntry))
-                {
-                    EnsureValue(cacheEntry);
-                }
-                else
-                {
-                    // FIXME: this is not thread safe for reading either?
-                    cacheEntry = _cache[key] = new CacheEntry<TValue, TSource>
-                    {
-                        Value = _serializationService.ToObject<TValue>(valueData)
-                    };
+                // deserialize
+                EnsureKey(entry);
+                EnsureValue(entry);
 
-                }
-                yield return new KeyValuePair<TKey, TValue>(key, cacheEntry.Value);
+                // while we're at it, ensure it's in the key entries too
+                if (!_keyEntries.ContainsKey(entry.Key))
+                    _keyEntries.Add(entry.Key, entry);
+
+                yield return new KeyValuePair<TKey, TValue>(entry.Key, entry.Value);
             }
         }
 
@@ -94,17 +114,27 @@ namespace Hazelcast.Core.Collections
         }
 
         /// <inheritdoc />
-        public int Count => _content.Count;
+        public int Count => _entries.Count;
 
         /// <inheritdoc />
         public bool ContainsKey(TKey key)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 
-            if (_cache.ContainsKey(key)) return true;
+            // fast: use key entries
+            if (_keyEntries.ContainsKey(key)) return true;
 
+            // slower: serialize
             var keyData = _serializationService.ToData(key);
-            return _content.ContainsKey(keyData);
+
+            // exit if no corresponding entry
+            if (!_entries.TryGetValue(keyData, out var entry)) return false;
+
+            // else, while we're at it, update the entry + key entries
+            if (!entry.HasKey) entry.Key = key;
+            _keyEntries.Add(key, entry);
+
+            return true;
         }
 
         /// <inheritdoc />
@@ -112,22 +142,26 @@ namespace Hazelcast.Core.Collections
         {
             value = default;
 
-            if (_cache.TryGetValue(key, out var cacheEntry))
+            // fast: use key entries
+            if (_keyEntries.TryGetValue(key, out var cacheEntry))
             {
                 EnsureValue(cacheEntry);
                 value = cacheEntry.Value;
                 return true;
             }
 
+            // slower: serialize
             var keyData = _serializationService.ToData(key);
-            if (!_content.TryGetValue(keyData, out var valueData))
-                return false;
 
-            // FIXME: this is not thread safe for reading either?
-            _cache[key] = new CacheEntry<TValue, TSource>
-            {
-                Value = value = _serializationService.ToObject<TValue>(valueData)
-            };
+            // exit if no corresponding entry
+            if (!_entries.TryGetValue(keyData, out var entry)) return false;
+
+            // while we're at it, update the entry + key entries
+            if (!entry.HasKey) entry.Key = key;
+            _keyEntries.Add(key, entry);
+
+            EnsureValue(entry);
+            value = entry.Value;
 
             return true;
         }
@@ -149,12 +183,12 @@ namespace Hazelcast.Core.Collections
         {
             get
             {
-                foreach (var (keyData, valueData) in _content)
+                foreach (var entry in _entries.Values)
                 {
-                    var key = _serializationService.ToObject<TKey>(keyData);
-                    // FIXME: this is not thread safe for reading either?
-                    if (!_cache.ContainsKey(key)) _cache[key] = new CacheEntry<TValue, TSource> { Source = valueData };
-                    yield return key;
+                    EnsureKey(entry);
+                    if (!_keyEntries.ContainsKey(entry.Key))
+                        _keyEntries.Add(entry.Key, entry);
+                    yield return entry.Key;
                 }
             }
         }
@@ -164,23 +198,10 @@ namespace Hazelcast.Core.Collections
         {
             get
             {
-                foreach (var (keyData, valueData) in _content)
+                foreach (var entry in _entries.Values)
                 {
-                    var key = _serializationService.ToObject<TKey>(keyData);
-                    if (_cache.TryGetValue(key, out var cacheEntry))
-                    {
-                        EnsureValue(cacheEntry);
-                    }
-                    else
-                    {
-                        // FIXME: this is not thread safe for reading either?
-                        cacheEntry = _cache[key] = new CacheEntry<TValue, TSource>
-                        {
-                            Value = _serializationService.ToObject<TValue>(valueData)
-                        };
-
-                    }
-                    yield return cacheEntry.Value;
+                    EnsureValue(entry);
+                    yield return entry.Value;
                 }
             }
         }

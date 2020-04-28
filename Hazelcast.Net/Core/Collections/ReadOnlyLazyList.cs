@@ -22,34 +22,34 @@ namespace Hazelcast.Core.Collections
     /// Represents a lazy list of values.
     /// </summary>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    /// <typeparam name="TSource">The type of the source values.</typeparam>
-    internal sealed class ReadOnlyLazyList<TValue, TSource> : IReadOnlyList<TValue>
+    internal sealed class ReadOnlyLazyList<TValue> : IReadOnlyList<TValue>
     {
-        private readonly List<CacheEntry<TValue, TSource>> _content = new List<CacheEntry<TValue, TSource>>();
+        private readonly List<ReadOnlyLazyEntry<TValue>> _content = new List<ReadOnlyLazyEntry<TValue>>();
         private readonly ISerializationService _serializationService;
 
+        // FIXME this whole class is generally not thread-safe
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReadOnlyLazyList{TValue,T}"/> class.
+        /// Initializes a new instance of the <see cref="ReadOnlyLazyList{TValue}"/> class.
         /// </summary>
-        /// <param name="values"></param>
-        /// <param name="serializationService"></param>
-        public ReadOnlyLazyList(IEnumerable<TSource> values, ISerializationService serializationService)
+        /// <param name="valueObjects">Value objects.</param>
+        /// <param name="serializationService">The serialization service.</param>
+        public ReadOnlyLazyList(IEnumerable<object> valueObjects, ISerializationService serializationService)
         {
             _serializationService = serializationService;
-            foreach (var value in values)
-                _content.Add(new CacheEntry<TValue, TSource> { Source = value });
+            foreach (var valueObject in valueObjects)
+                _content.Add(new ReadOnlyLazyEntry<TValue>(valueObject));
         }
 
         /// <summary>
         /// Ensures that a cache entry has a value.
         /// </summary>
-        /// <param name="cacheEntry">The cache entry.</param>
-        private void EnsureValue(CacheEntry<TValue, TSource> cacheEntry)
+        /// <param name="entry">The cache entry.</param>
+        private void EnsureValue(ReadOnlyLazyEntry<TValue> entry)
         {
-            if (cacheEntry.HasValue) return;
+            if (entry.HasValue) return;
 
-            // TODO: this is not thread-safe since Source becomes default: lock?
-            cacheEntry.Value = _serializationService.ToObject<TValue>(cacheEntry.Source);
+            entry.Value = _serializationService.ToObject<TValue>(entry.ValueObject);
         }
 
         /// <inheritdoc />

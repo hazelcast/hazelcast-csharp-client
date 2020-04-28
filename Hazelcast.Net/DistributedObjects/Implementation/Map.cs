@@ -44,7 +44,6 @@ namespace Hazelcast.DistributedObjects.Implementation
         }
 
         // TODO no timeout management or CancellationToken anywhere?!
-        // TODO return IEnumerable or IReadOnlyList?
 
         #region Setting
 
@@ -60,7 +59,22 @@ namespace Hazelcast.DistributedObjects.Implementation
         public async Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
+            return await AddOrReplaceWithValueAsync(keyData, valueData, timeToLive);
+        }
 
+        /// <summary>
+        /// Adds or replaces an entry with a time-to-live and returns the previous value.
+        /// </summary>
+        /// <param name="keyData">A key.</param>
+        /// <param name="valueData">A value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <returns>The value previously associated with the key in the map, if any; otherwise default(<typeparamref name="TValue"/>).</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// </remarks>
+        protected virtual async Task<TValue> AddOrReplaceWithValueAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
             var requestMessage = MapPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
@@ -73,7 +87,22 @@ namespace Hazelcast.DistributedObjects.Implementation
         public async Task AddOrReplaceAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
+            await AddOrReplaceAsync(keyData, valueData, timeToLive);
+        }
 
+        /// <summary>
+        /// Adds or replaces an entry with a time-to-live.
+        /// </summary>
+        /// <param name="keyData">A key.</param>
+        /// <param name="valueData">A value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <returns>Nothing.</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// </remarks>
+        protected virtual async Task AddOrReplaceAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
             var requestMessage = MapSetCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
@@ -81,13 +110,13 @@ namespace Hazelcast.DistributedObjects.Implementation
         }
 
         /// <inheritdoc />
-        public async Task AddOrReplace(IDictionary<TKey, TValue> entries)
+        public async Task AddOrReplaceAsync(IDictionary<TKey, TValue> entries)
         {
             // TODO: is this transactional? can some entries be created and others be missing?
 
             var ownerEntries = new Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>>();
 
-            // verify entries + group by owner
+            // verify entries + group by owner and partitions
             foreach (var (key, value) in entries)
             {
                 var (keyData, valueData) = ToSafeData(key, value);
@@ -101,6 +130,16 @@ namespace Hazelcast.DistributedObjects.Implementation
                 list.Add(new KeyValuePair<IData, IData>(keyData, valueData));
             }
 
+            await AddOrReplaceAsync(ownerEntries);
+        }
+
+        /// <summary>
+        /// Adds or replaces entries.
+        /// </summary>
+        /// <param name="ownerEntries">Entries.</param>
+        /// <returns>Nothing.</returns>
+        protected virtual async Task AddOrReplaceAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries)
+        {
             // TODO: add a SendAsync(...) to Cluster/Client
             // that can send multiple messages and use one single completion source
             // cannot inherit from TaskCompletionSource: it's not sealed but nothing is virtual
@@ -141,7 +180,18 @@ namespace Hazelcast.DistributedObjects.Implementation
         public async Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue)
         {
             var (keyData, expectedData, newData) = ToSafeData(key, expectedValue, newValue);
+            return await ReplaceAsync(keyData, expectedData, newData);
+        }
 
+        /// <summary>
+        /// Replaces an existing entry.
+        /// </summary>
+        /// <param name="keyData">A key.</param>
+        /// <param name="expectedData">The expected value.</param>
+        /// <param name="newData">The new value.</param>
+        /// <returns>true if the entry was replaced; otherwise false.</returns>
+        protected async Task<bool> ReplaceAsync(IData keyData, IData expectedData, IData newData)
+        {
             var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ThreadId);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
@@ -152,14 +202,28 @@ namespace Hazelcast.DistributedObjects.Implementation
         public async Task<bool> TryAddOrReplaceAsync(TKey key, TValue value, TimeSpan timeout)
         {
             var (keyData, valueData) = ToSafeData(key, value);
+            return await TryAddOrReplaceAsync(keyData, valueData, timeout);
+        }
 
+        /// <summary>
+        /// Tries to set an entry within a timeout.
+        /// </summary>
+        /// <param name="keyData">A key.</param>
+        /// <param name="valueData">A value.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>true if the entry was set; otherwise false.</returns>
+        /// <remarks>
+        /// <para>This method returns false when no lock on the key could be
+        /// acquired within the timeout.</para>
+        /// </remarks>
+        protected virtual async Task<bool> TryAddOrReplaceAsync(IData keyData, IData valueData, TimeSpan timeout)
+        {
             var timeoutMs = timeout.CodecMilliseconds(0);
 
             var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeoutMs);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapTryPutCodec.DecodeResponse(responseMessage).Response;
             return response;
-
         }
 
         /// <inheritdoc />
@@ -170,7 +234,22 @@ namespace Hazelcast.DistributedObjects.Implementation
         public async Task<TValue> AddIfMissingAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
+            return await AddIfMissingAsync(keyData, valueData, timeToLive);
+        }
 
+        /// <summary>
+        /// Adds an entry with a time-to-live, if no entry with the key exists.
+        /// </summary>
+        /// <param name="keyData">A key.</param>
+        /// <param name="valueData">The value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <returns>The existing value, if any; otherwise the default value.</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// </remarks>
+        protected virtual async Task<TValue> AddIfMissingAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
             var requestMessage = MapPutIfAbsentCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
@@ -183,7 +262,12 @@ namespace Hazelcast.DistributedObjects.Implementation
         public async Task AddTransientAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
+            await AddTransientAsync(keyData, valueData, timeToLive);
+        }
 
+        /// TODO: document?!
+        protected virtual async Task AddTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
             // FIXME uh?
@@ -195,49 +279,72 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         #region Getting
 
+        // NOTES
+        //
+        // all protected getters return objects, because a cached version of the map, overriding these
+        // methods, may choose to cache either the raw IData values coming from the server, or the
+        // de-serialized objects. In the first case, ToObject<TValue> deserializes the value. In the
+        // second case, ToObject<TValue> casts the object value to TValue.
+
         /// <inheritdoc />
         public async Task<TValue> GetAsync(TKey key)
-            => await GetAsync(ToSafeData(key));
+            => ToObject<TValue>(await GetAsync(ToSafeData(key)));
 
         /// <summary>
         /// Gets the value for a key, or null if the map does not contain an entry with this key.
         /// </summary>
-        /// <param name="keyData">The key.</param>
-        /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
-        protected virtual async Task<TValue> GetAsync(IData keyData)
+        /// <param name="keyData">The key data.</param>
+        /// <returns>The value data for the specified key, or null if the map does not contain an entry with this key.</returns>
+        protected virtual async Task<object> GetAsync(IData keyData)
         {
             var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ThreadId);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapGetCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return response;
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys)
         {
-            var ownerKeys = new Dictionary<Guid, List<IData>>();
+            var ownerKeys = new Dictionary<Guid, Dictionary<int, List<IData>>>();
 
-            // verify keys + group by owner
+            // verify keys + group by owner and partitions
             foreach (var key in keys)
             {
                 var keyData = ToSafeData(key);
 
-                var ownerId = Cluster.Partitioner.GetPartitionOwner(keyData);
-                if (!ownerKeys.TryGetValue(ownerId, out var list))
-                    list = ownerKeys[ownerId] = new List<IData>();
+                var partitionId = Cluster.Partitioner.GetPartitionId(keyData);
+                var ownerId = Cluster.Partitioner.GetPartitionOwner(partitionId);
+                if (!ownerKeys.TryGetValue(ownerId, out var part))
+                    part = ownerKeys[ownerId] = new Dictionary<int, List<IData>>();
+                if (!part.TryGetValue(partitionId, out var list))
+                    list = part[partitionId] = new List<IData>();
                 list.Add(keyData);
             }
 
+            return await GetAsync(ownerKeys);
+        }
+
+        /// <summary>
+        /// Gets all entries for keys.
+        /// </summary>
+        /// <param name="ownerKeys">Keys.</param>
+        /// <returns>The values for the specified keys.</returns>
+        protected virtual async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownerKeys)
+        {
             // create parallel tasks to fire a request for each owner
             var tasks = new List<Task<ClientMessage>>();
-            foreach (var (ownerId, list) in ownerKeys)
+            foreach (var (ownerId, part) in ownerKeys)
             {
-                if (list.Count == 0) continue;
+                foreach (var (partitionId, list) in part)
+                {
+                    if (list.Count == 0) continue;
 
-                var requestMessage = MapGetAllCodec.EncodeRequest(Name, list);
-                var task = Cluster.SendAsync(requestMessage, ownerId).AsTask();
-                task.Start();
-                tasks.Add(task);
+                    var requestMessage = MapGetAllCodec.EncodeRequest(Name, list);
+                    requestMessage.PartitionId = partitionId;
+                    var task = Cluster.SendAsync(requestMessage, ownerId).AsTask();
+                    tasks.Add(task);
+                }
             }
 
             // and wait on all tasks, gathering the responses
@@ -245,7 +352,7 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             // decode all responses, in 1 thread: this is CPU-bound
             // (we may want to introduce some parallelism, though, depending on # of cores)
-            var result = new ReadOnlyLazyDictionary<TKey, TValue, IData>(SerializationService);
+            var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
             foreach (var task in tasks)
             {
@@ -293,7 +400,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var requestMessage = MapEntrySetCodec.EncodeRequest(Name);
                 var responseMessage = await Cluster.SendAsync(requestMessage);
                 var response = MapEntrySetCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyDictionary<TKey, TValue, IData>(SerializationService) { response };
+                return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
             }
 
             var pagingPredicate = UnwrapPagingPredicate(predicate);
@@ -306,7 +413,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var responseMessage = await Cluster.SendAsync(requestMessage);
                 var response = MapEntriesWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 pagingPredicate.AnchorList = response.AnchorDataList.AsAnchorIterator(SerializationService).ToList();
-                return new ReadOnlyLazyDictionary<TKey, TValue, IData>(SerializationService) { response.Response };
+                return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response.Response };
             }
 
             {
@@ -315,7 +422,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                     ? Cluster.SendAsync(requestMessage, pp.GetPartitionKey())
                     : Cluster.SendAsync(requestMessage));
                 var response = MapEntriesWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyDictionary<TKey, TValue, IData>(SerializationService) { response };
+                return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
             }
         }
 
@@ -327,7 +434,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var requestMessage = MapKeySetCodec.EncodeRequest(Name);
                 var responseMessage = await Cluster.SendAsync(requestMessage);
                 var response = MapKeySetCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList<TKey, IData>(response, SerializationService);
+                return new ReadOnlyLazyList<TKey>(response, SerializationService);
             }
 
             var pagingPredicate = UnwrapPagingPredicate(predicate);
@@ -340,7 +447,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var responseMessage = await Cluster.SendAsync(requestMessage);
                 var response = MapKeySetWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 pagingPredicate.AnchorList = response.AnchorDataList.AsAnchorIterator(SerializationService).ToList();
-                return new ReadOnlyLazyList<TKey, IData>(response.Response, SerializationService);
+                return new ReadOnlyLazyList<TKey>(response.Response, SerializationService);
             }
 
             {
@@ -349,7 +456,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                     ? Cluster.SendAsync(requestMessage, pp.GetPartitionKey())
                     : Cluster.SendAsync(requestMessage));
                 var response = MapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList<TKey, IData>(response, SerializationService);
+                return new ReadOnlyLazyList<TKey>(response, SerializationService);
             }
         }
 
@@ -361,7 +468,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var requestMessage = MapValuesCodec.EncodeRequest(Name);
                 var responseMessage = await Cluster.SendAsync(requestMessage);
                 var response = MapValuesCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList<TValue, IData>(response, SerializationService);
+                return new ReadOnlyLazyList<TValue>(response, SerializationService);
             }
 
             var pagingPredicate = UnwrapPagingPredicate(predicate);
@@ -374,7 +481,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var responseMessage = await Cluster.SendAsync(requestMessage);
                 var response = MapValuesWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 pagingPredicate.AnchorList = response.AnchorDataList.AsAnchorIterator(SerializationService).ToList();
-                return new ReadOnlyLazyList<TValue, IData>(response.Response, SerializationService);
+                return new ReadOnlyLazyList<TValue>(response.Response, SerializationService);
             }
 
             {
@@ -383,7 +490,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                     ? Cluster.SendAsync(requestMessage, pp.GetPartitionKey())
                     : Cluster.SendAsync(requestMessage));
                 var response = MapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList<TValue, IData>(response, SerializationService);
+                return new ReadOnlyLazyList<TValue>(response, SerializationService);
             }
         }
 
@@ -526,7 +633,7 @@ namespace Hazelcast.DistributedObjects.Implementation
         }
 
         /// <inheritdoc />
-        public async Task ClearAsync()
+        public virtual async Task ClearAsync()
         {
             var requestMessage = MapClearCodec.EncodeRequest(Name);
             await Cluster.SendAsync(requestMessage);
@@ -568,9 +675,21 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <inheritdoc />
         public async Task<object> ExecuteAsync(IEntryProcessor processor, TKey key)
         {
-            var keyData = ToSafeData(key);
-            var processorData = ToSafeData(processor);
+            var (keyData, processorData) = ToSafeData(key, processor);
+            return await ExecuteAsync(keyData, processorData);
+        }
 
+        /// <summary>
+        /// Processes an entry.
+        /// </summary>
+        /// <param name="keyData">The key.</param>
+        /// <param name="processorData">An entry processor.</param>
+        /// <returns>The result of the process.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="processorData"/> must have a counterpart on the server.</para>
+        /// </remarks>
+        protected virtual async Task<object> ExecuteAsync(IData processorData, IData keyData)
+        {
             var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ThreadId);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapExecuteOnKeyCodec.DecodeResponse(responseMessage).Response;
@@ -619,9 +738,13 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <inheritdoc />
         public async Task<object> ApplyAsync(IEntryProcessor processor, TKey key)
         {
-            var keyData = ToSafeData(key);
-            var processorData = ToSafeData(processor);
+            var (keyData, processorData) = ToSafeData(key, processor);
+            return await ApplyAsync(processorData, keyData);
+        }
 
+        // FIXME: do we want this?
+        protected virtual async Task<object> ApplyAsync(IData processorData, IData keyData)
+        {
             var requestMessage = MapSubmitToKeyCodec.EncodeRequest(Name, processorData, keyData, ThreadId);
             var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
             var response = MapSubmitToKeyCodec.DecodeResponse(responseMessage).Response;
@@ -753,7 +876,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var requestMessage = MapProjectCodec.EncodeRequest(Name, projectionData);
                 var responseMessage = await Cluster.SendAsync(requestMessage);
                 var response = MapProjectCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList<TResult, IData>(response, SerializationService);
+                return new ReadOnlyLazyList<TResult>(response, SerializationService);
             }
 
             {
@@ -762,7 +885,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var requestMessage = MapProjectWithPredicateCodec.EncodeRequest(Name, projectionData, predicateData);
                 var responseMessage = await Cluster.SendAsync(requestMessage);
                 var response = MapProjectWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList<TResult, IData>(response, SerializationService);
+                return new ReadOnlyLazyList<TResult>(response, SerializationService);
             }
         }
 

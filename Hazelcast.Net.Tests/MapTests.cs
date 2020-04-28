@@ -155,7 +155,7 @@ namespace Hazelcast.Tests
             var value1 = await map.GetAsync("key1");
             Assert.AreEqual(42, value1);
 
-            await map.AddOrReplace(new Dictionary<string, int>
+            await map.AddOrReplaceAsync(new Dictionary<string, int>
             {
                 ["key1"] = 43,
                 ["key2"] = 44
@@ -300,7 +300,7 @@ namespace Hazelcast.Tests
             for (var i = 0; i < 100; i++)
                 entries["key" + i] = i;
 
-            await map.AddOrReplace(entries);
+            await map.AddOrReplaceAsync(entries);
 
             var count = await map.CountAsync();
             Assert.AreEqual(100, count);
@@ -309,6 +309,54 @@ namespace Hazelcast.Tests
 
             count = await map.CountAsync();
             Assert.AreEqual(0, count);
+        }
+
+        [Test]
+        [Timeout(10_000)]
+        public async Task GetAll()
+        {
+            TestSetUp();
+
+            var client = new HazelcastClient();
+            await client.OpenAsync();
+
+            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+
+            var entries = new Dictionary<string, int>();
+            for (var i = 0; i < 100; i++)
+                entries["key" + i] = i;
+
+            await map.AddOrReplaceAsync(entries);
+
+            var count = await map.CountAsync();
+            Assert.AreEqual(100, count);
+
+            var keys = await map.GetKeysAsync();
+            Assert.AreEqual(100, keys.Count);
+
+            var s = new HashSet<int>();
+            for (var i = 0; i < 100; i++)
+                s.Add(i);
+
+            foreach (var key in keys)
+                Assert.IsTrue(s.Remove(int.Parse(key.Substring(3))));
+
+            Assert.AreEqual(0, s.Count);
+
+            var values = await map.GetValuesAsync();
+            Assert.AreEqual(100, values.Count);
+
+            s = new HashSet<int>();
+            for (var i = 0; i < 100; i++)
+                s.Add(i);
+
+            foreach (var value in values)
+                Assert.IsTrue(s.Remove(value));
+
+            Assert.AreEqual(0, s.Count);
+
+            // FIXME how can we get everything?
+            //var all = await map.GetAsync();
         }
 
         [Test]

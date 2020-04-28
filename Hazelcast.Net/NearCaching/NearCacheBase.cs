@@ -116,48 +116,56 @@ namespace Hazelcast.NearCaching
             return false;
         }
 
-        // NOTE: this method is, and was, bogus but maybe not used?
-        /*
-        public bool TryAdd(IData keyData, object value)
+        public async Task<bool> TryAdd(IData keyData, object value)
         {
             // kick eviction policy if needed
-            if (_evictionPolicy != EvictionPolicy.None && _entries.Count >= _maxSize)
+            if (_evictionPolicy != EvictionPolicy.None && Entries.Count >= _maxSize)
                 TryCacheEvict();
 
             // cannot add if the cache is full
-            if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize)
+            if (_evictionPolicy == EvictionPolicy.None && Entries.Count >= _maxSize)
                 return false;
 
             // prepare the cache entry
-            var lazyEntry = new AsyncLazy<NearCacheRecord>(async () =>
+            var lazyEntry = new AsyncLazy<NearCacheEntry>(async () =>
             {
-                var ncValue = ConvertToRecordValue(value);
-                var entry = CreateRecord(keyData, ncValue);
-                _stat.IncrementEntryCount();
+                // FIXME have to trust caller - uh?
+                var ncValue = value; //ToEntryValue(value);
+                var entry = CreateEntry(keyData, ncValue);
+                Statistics.IncrementEntryCount();
                 return entry;
             });
 
-            if (!_entries.TryAdd(keyData, lazyEntry)) 
+            if (!Entries.TryAdd(keyData, lazyEntry))
                 return false;
 
-            value = lazyEntry.Value.Value;
-            if (value == null)
+            // if we added the entry, make sure to create its value too
+            var value2 = (await lazyEntry.CreateValueAsync()).Value;
+
+            if (value2 == null)
             {
-                _entries.TryRemove(keyData, out _);
+                Entries.TryRemove(keyData, out _);
                 return false;
             }
+
             return true;
         }
-        */
 
-        public async Task<(bool, TValue)> TryGetOrAddAsync<TValue>(IData keyData, Func<IData, Task<TValue>> valueFactory)
+        /// <summary>
+        /// Tries to get or add a value in the cache.
+        /// </summary>
+        /// <param name="keyData">The key data.</param>
+        /// <param name="valueFactory">A factory that accepts the key data and returns the value data.</param>
+        /// <returns>A tuple containing the success or the call, and the resulting object.</returns>
+        /// <remarks>
+        /// <para>Depending on the cache configuration, the returned object can be in serialized form (i.e.
+        /// an <see cref="IData"/> instance) or already de-serialized.</para>
+        /// </remarks>
+        public async Task<(bool, object)> TryGetOrAddAsync(IData keyData, Func<IData, Task<object>> valueFactory)
         {
             // if it's in the cache already, return it
             if (TryGetValue(keyData, out var o))
-            {
-                if (o is TValue v) return (true, v);
-                throw new InvalidOperationException("Cache is corrupt.");
-            }
+                return (true, o);
 
             // count a miss
             Statistics.IncrementMiss();
@@ -165,17 +173,17 @@ namespace Hazelcast.NearCaching
             // kick eviction policy if needed
             if (_evictionPolicy != EvictionPolicy.None && Entries.Count >= _maxSize)
                 TryCacheEvict();
-            
+
             // if the cache is full, directly return the un-cached value
             if (_evictionPolicy == EvictionPolicy.None && Entries.Count >= _maxSize && !Entries.ContainsKey(keyData))
                 return (false, await valueFactory(keyData));
 
             // prepare the cache entry
-            var lazyEntry = new AsyncLazy<NearCacheEntry>(async () => 
+            var lazyEntry = new AsyncLazy<NearCacheEntry>(async () =>
             {
                 var valueData = await valueFactory(keyData);
-                var ncValue = ConvertToRecordValue(valueData);
-                var entry = CreateEntry(keyData, ncValue);
+                var cachedValue = ToEntryValue(valueData);
+                var entry = CreateEntry(keyData, cachedValue);
                 Statistics.IncrementEntryCount();
                 return entry;
             });
@@ -196,24 +204,16 @@ namespace Hazelcast.NearCaching
                     throw;
                 }
 
-                switch (entry.Value)
-                {
-                    case TValue v:
-                        return (true, v);
-                    case null:
-                        Invalidate(keyData);
-                        return (false, default);
-                    default:
-                        throw new InvalidOperationException("Cache is corrupt.");
-                }
+                if (entry.Value != null)
+                    return (true, entry.Value);
+
+                Invalidate(keyData);
+                return (false, default);
             }
 
             // failed to add, was added by another thread?
             if (TryGetValue(keyData, out o))
-            {
-                if (o is TValue v) return (true, v);
-                throw new InvalidOperationException("Cache is corrupt.");
-            }
+                return (true, o);
 
             // otherwise, add the uncached value
             return (false, await valueFactory(keyData));
@@ -225,7 +225,7 @@ namespace Hazelcast.NearCaching
 
             value = null;
 
-            if (!Entries.TryGetValue(keyData, out var lazyEntry) || lazyEntry == null) 
+            if (!Entries.TryGetValue(keyData, out var lazyEntry) || lazyEntry == null)
                 return false;
 
             var entry = lazyEntry.Value;
@@ -263,7 +263,17 @@ namespace Hazelcast.NearCaching
             return false;
         }
 
-        private object ConvertToRecordValue(object o)
+        /// <summary>
+        /// Converts a value object to the internal cached value.
+        /// </summary>
+        /// <param name="o">Value object.</param>
+        /// <returns>Internal cached value.</returns>
+        /// <remarks>
+        /// <para>Depending on the <see cref="InMemoryFormat"/> configured for the cache,
+        /// the internal cached value can be either <see cref="IData"/> (i.e. serialized),
+        /// or the de-serialized value.</para>
+        /// </remarks>
+        private object ToEntryValue(object o)
         {
             return _inMemoryFormat.Equals(InMemoryFormat.Binary)
                 ? SerializationService.ToData(o)
@@ -292,7 +302,7 @@ namespace Hazelcast.NearCaching
         {
             var records = new SortedSet<AsyncLazy<NearCacheEntry>>(Entries.Values, _comparer);
             var evictCount = Entries.Count * EvictionPercentage / 100;
-            
+
             var count = 0;
 
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator

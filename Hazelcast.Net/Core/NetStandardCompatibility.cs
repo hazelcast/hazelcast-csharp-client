@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 #if NETSTANDARD2_0
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 #endif
@@ -98,7 +99,7 @@ namespace Hazelcast.Core
                 // see https://github.com/dotnet/runtime/issues/24093
                 // hences this... workaround
                 //
-                var reading = stream.ReadAsync(bytes, 0, bytes.Length, cancellationToken);
+                var reading = stream.ReadAsync(bytes, 0, memory.Length, cancellationToken);
                 var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken));
 
                 if (completed != reading)

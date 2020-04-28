@@ -743,6 +743,7 @@ namespace Hazelcast.Core
 
                 span.CopyTo(destination);
                 destination = destination.Slice(span.Length);
+                byteCount -= span.Length;
             }
         }
     }
