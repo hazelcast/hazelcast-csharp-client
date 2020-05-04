@@ -37,9 +37,9 @@ namespace Hazelcast.Serialization
         private readonly IDictionary<int, IDataSerializableFactory> _factories =
             new Dictionary<int, IDataSerializableFactory>();
 
-        internal DataSerializer(IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories)
+        internal DataSerializer(SerializerHooks hooks, IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories)
         {
-            RegisterHooks();
+            RegisterHooks(hooks);
             if (dataSerializableFactories != null)
             {
                 foreach (var entry in dataSerializableFactories)
@@ -49,9 +49,9 @@ namespace Hazelcast.Serialization
             }
         }
 
-        private void RegisterHooks()
+        private void RegisterHooks(SerializerHooks hooks)
         {
-            foreach (var hook in Services.GetInstance<SerializerHooks>().Hooks)
+            foreach (var hook in hooks.Hooks)
                 RegisterHook(hook);
         }
 

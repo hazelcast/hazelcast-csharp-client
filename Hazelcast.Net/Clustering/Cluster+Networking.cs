@@ -117,8 +117,6 @@ namespace Hazelcast.Clustering
         {
             // connect for real
 
-            IAuthenticator authenticator = Services.Get.Authenticator();
-
             SemaphoreSlim s = null;
             try
             {
@@ -133,7 +131,7 @@ namespace Hazelcast.Clustering
                 client.ReceiveEventMessage = ReceiveEventMessage;
                 client.OnShutdown = HandleClientShutdown;
                 await client.ConnectAsync(); // may throw
-                var info = await authenticator.AuthenticateAsync(client); // may throw
+                var info = await _authenticator.AuthenticateAsync(client); // may throw
 
                 // FIXME: can info be null?
                 client.Update(info); //client.MemberId = info.MemberId;

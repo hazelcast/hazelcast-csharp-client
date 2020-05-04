@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Aggregators;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Testing.Remote;
@@ -11,6 +12,9 @@ using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Hazelcast.Logging;
 using Hazelcast.Partitioning.Strategies;
+using Hazelcast.Predicates;
+using Hazelcast.Projections;
+using Hazelcast.Security;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Portable;
 
@@ -94,7 +98,7 @@ namespace Hazelcast.Testing
         /// <returns>A cluster.</returns>
         protected virtual Clustering.Cluster CreateCluster()
         {
-            return new Clustering.Cluster();
+            return new Clustering.Cluster(new Authenticator());
         }
 
         /// <summary>
@@ -103,12 +107,18 @@ namespace Hazelcast.Testing
         /// <returns>A serialization service.</returns>
         protected virtual ISerializationService CreateSerializationService()
         {
+            var serializerHooks = new SerializerHooks();
+            serializerHooks.Add<PredicateDataSerializerHook>();
+            serializerHooks.Add<AggregatorDataSerializerHook>();
+            serializerHooks.Add<ProjectionDataSerializerHook>();
+
             return new SerializationService(
                 new ByteArrayInputOutputFactory(Endianness.Native),
                 1,
                 new Dictionary<int, IDataSerializableFactory>(),
                 new Dictionary<int, IPortableFactory>(),
                 new List<IClassDefinition>(),
+                serializerHooks,
                 false,
                 new NullPartitioningStrategy(),
                 512);
@@ -124,15 +134,13 @@ namespace Hazelcast.Testing
 
             Logger.LogInformation("Creating new client");
 
-            var cluster = new Clustering.Cluster();
-
             // FIXME: if that's the only way to create a client, why the interface?
             var client = new HazelcastClient(ConfigureClient, CreateCluster(), CreateSerializationService());
 
             // FIXME there should be a 30 mins timeout on the opening
             // uh - lifecycle events - HOW??? for ClientConnected???
             client.OpenAsync().Wait(); // FIXME async oops!
-            
+
             return client;
         }
 

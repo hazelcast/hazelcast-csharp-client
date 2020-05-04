@@ -419,7 +419,7 @@ namespace Hazelcast.DistributedObjects.Implementation
             {
                 var requestMessage = MapEntriesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.SendAsync(requestMessage, pp.GetPartitionKey())
+                    ? Cluster.SendAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()))
                     : Cluster.SendAsync(requestMessage));
                 var response = MapEntriesWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
@@ -453,7 +453,7 @@ namespace Hazelcast.DistributedObjects.Implementation
             {
                 var requestMessage = MapKeySetWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.SendAsync(requestMessage, pp.GetPartitionKey())
+                    ? Cluster.SendAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()))
                     : Cluster.SendAsync(requestMessage));
                 var response = MapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 return new ReadOnlyLazyList<TKey>(response, SerializationService);
@@ -487,7 +487,7 @@ namespace Hazelcast.DistributedObjects.Implementation
             {
                 var requestMessage = MapValuesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.SendAsync(requestMessage, pp.GetPartitionKey())
+                    ? Cluster.SendAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()))
                     : Cluster.SendAsync(requestMessage));
                 var response = MapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 return new ReadOnlyLazyList<TValue>(response, SerializationService);

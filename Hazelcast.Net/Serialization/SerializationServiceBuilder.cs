@@ -48,6 +48,8 @@ namespace Hazelcast.Serialization
         private ICollection<IClassDefinition> _classDefinitions =
             new HashSet<IClassDefinition>();
 
+        private SerializerHooks _hooks = new SerializerHooks();
+
         private SerializationConfig _config;
 
         // PM.DI
@@ -155,7 +157,7 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public ISerializationService Build()
+        public ISerializationService Build() // FIXME can we kill this "builder"?
         {
             if (_portableVersion < 0)
             {
@@ -174,6 +176,7 @@ namespace Hazelcast.Serialization
                 _dataSerializableFactories,
                 _portableFactories,
                 _classDefinitions,
+                _hooks,
                 _checkClassDefErrors,
                 _partitioningStrategy,
                 _initialOutputBufferSize);

@@ -40,26 +40,6 @@ namespace Hazelcast
         private readonly DistributedObjectFactory _distributedObjectFactory;
 
         /// <summary>
-        /// Initializes the <see cref="HazelcastClient"/> class.
-        /// </summary>
-        static HazelcastClient()
-        {
-            // FIXME: this is not the right place to to this
-            InitializeServices();
-        }
-
-        public static void InitializeServices()
-        {
-            // plug the serializer hooks.
-            var serializerHooks = Services.TryGetInstance<SerializerHooks>();
-            if (serializerHooks == null) Services.Register(serializerHooks = new SerializerHooks());
-
-            serializerHooks.Add<PredicateDataSerializerHook>();
-            serializerHooks.Add<AggregatorDataSerializerHook>();
-            serializerHooks.Add<ProjectionDataSerializerHook>();
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
         /// </summary>
         public HazelcastClient(Cluster cluster, ISerializationService serializationService)

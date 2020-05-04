@@ -229,7 +229,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Cluster?");
-            var cluster = new Cluster();
+            var cluster = new Cluster(new Authenticator());
             await cluster.Connect();
 
             // now we can send messages...

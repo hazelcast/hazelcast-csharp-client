@@ -16,12 +16,15 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Aggregators;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Logging;
 using Hazelcast.Networking;
 using Hazelcast.Partitioning.Strategies;
+using Hazelcast.Predicates;
+using Hazelcast.Projections;
 using Hazelcast.Security;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Portable;
@@ -34,21 +37,25 @@ namespace Hazelcast.Tests
     {
         // these test expects a server on localhost:5701
 
-        private static bool _first = true; // FIXME not like this!
-
         private Cluster CreateCluster()
         {
-            return new Cluster();
+            return new Cluster(new Authenticator());
         }
 
         private ISerializationService CreateSerializationService()
         {
+            var serializerHooks = new SerializerHooks();
+            serializerHooks.Add<PredicateDataSerializerHook>();
+            serializerHooks.Add<AggregatorDataSerializerHook>();
+            serializerHooks.Add<ProjectionDataSerializerHook>();
+
             return new SerializationService(
                 new ByteArrayInputOutputFactory(Endianness.Native),
                 1,
                 new Dictionary<int, IDataSerializableFactory>(),
                 new Dictionary<int, IPortableFactory>(),
                 new List<IClassDefinition>(),
+                serializerHooks,
                 false,
                 new NullPartitioningStrategy(),
                 512);
@@ -66,9 +73,6 @@ namespace Hazelcast.Tests
             // of course this is temporary
             Services.Reset();
             Services.Register<IAuthenticator>(() => new Authenticator());
-
-            if (_first) _first = false;
-            else HazelcastClient.InitializeServices();
         }
 
         [Test]

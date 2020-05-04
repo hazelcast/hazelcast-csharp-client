@@ -36,14 +36,16 @@ namespace Hazelcast.Clustering
         //    = new ConcurrentDictionary<long, Action<ClientMessage, object>>();
 
         private readonly ISequence<long> _correlationIdSequence;
-
         private readonly ILoadBalancer _loadBalancer;
+        private readonly IAuthenticator _authenticator;
 
         private Client _clusterEventsClient;
         private MemberTable _memberTable;
 
-        public Cluster()
+        public Cluster(IAuthenticator authenticator)
         {
+            _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
+
             // TODO: get isSmartRouting from configuration
             // TODO: can we avoid passing the serializationService?
 

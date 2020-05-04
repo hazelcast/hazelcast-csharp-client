@@ -55,34 +55,22 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="client">The target.</param>
+        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, Client client)
-            => await client.SendAsync(message, _correlationIdSequence.Next);
+        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, Client client, int timeoutMilliseconds = 0)
+            => await client.SendAsync(message, _correlationIdSequence.Next, timeoutMilliseconds);
 
         /// <summary>
         /// Sends a message to the target owning a key.
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="key">The key.</param>
+        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, IData key)
+        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, IData key, int timeoutMilliseconds = 0)
         {
             var partitionId = Partitioner.GetPartitionId(key);
-            return await SendAsync(message, partitionId);
-        }
-
-        /// <summary>
-        /// Sends a message to the target owning a key.
-        /// </summary>
-        /// <param name="message">The message to send.</param>
-        /// <param name="key">The key.</param>
-        /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        // TODO: consider removing that one, so that Partitioner does not require the serialization service
-        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, object key)
-        {
-            var partitionId = Partitioner.GetPartitionId(key);
-            var targetId = Partitioner.GetPartitionOwner(partitionId);
-            return await SendAsync(message, targetId);
+            return await SendAsync(message, partitionId, timeoutMilliseconds);
         }
 
         /// <summary>
@@ -90,15 +78,16 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="partitionId">The identifier of the partition.</param>
+        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, int partitionId)
+        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, int partitionId, int timeoutMilliseconds = 0)
         {
             // TODO: all methods should test!
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (partitionId < 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
             message.PartitionId = partitionId;
             var targetId = Partitioner.GetPartitionOwner(partitionId);
-            return await SendAsync(message, targetId);
+            return await SendAsync(message, targetId, timeoutMilliseconds);
         }
     }
 }

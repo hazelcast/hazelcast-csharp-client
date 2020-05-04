@@ -67,6 +67,7 @@ namespace Hazelcast.Serialization
         internal SerializationService(IInputOutputFactory inputOutputFactory, int version,
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
             IDictionary<int, IPortableFactory> portableFactories, ICollection<IClassDefinition> classDefinitions,
+            SerializerHooks hooks,
             bool checkClassDefErrors, IPartitioningStrategy partitioningStrategy, int initialOutputBufferSize)
         {
             _inputOutputFactory = inputOutputFactory;
@@ -76,7 +77,7 @@ namespace Hazelcast.Serialization
             _portableContext = new PortableContext(this, version);
             _dataSerializerAdapter =
                 CreateSerializerAdapterByGeneric<IIdentifiedDataSerializable>(
-                    new DataSerializer(dataSerializableFactories));
+                    new DataSerializer(hooks, dataSerializableFactories));
             _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
             _portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(_portableSerializer);
             _nullSerializerAdapter = CreateSerializerAdapterByGeneric<object>(new ConstantSerializers.NullSerializer());
