@@ -50,7 +50,7 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Gets a thread-safe <see cref="Random"/> instance.
+        /// Gets a thread-safe <see cref="Random"/> instance (do *not* cache this instance).
         /// </summary>
         /// <remarks>
         /// <para>The instance is thread-safe because it is local to the thread. Do *not*

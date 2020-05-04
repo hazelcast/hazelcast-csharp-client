@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Aggregators;
 using Hazelcast.Clustering;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.Implementation;
@@ -30,8 +32,9 @@ namespace Hazelcast
     /// <summary>
     /// Represents the Hazelcast client.
     /// </summary>
-    internal class HazelcastClient
+    internal class HazelcastClient : IHazelcastClient
     {
+        private readonly ClientConfig _configuration;
         private readonly Cluster _cluster;
         private readonly ISerializationService _serializationService;
         private readonly DistributedObjectFactory _distributedObjectFactory;
@@ -59,20 +62,38 @@ namespace Hazelcast
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
         /// </summary>
-        public HazelcastClient()
+        public HazelcastClient(Cluster cluster, ISerializationService serializationService)
         {
-            _cluster = new Cluster();
-            _serializationService = new SerializationService(
-                new ByteArrayInputOutputFactory(Endianness.Native),
-                1,
-                new Dictionary<int, IDataSerializableFactory>(),
-                new Dictionary<int, IPortableFactory>(),
-                new List<IClassDefinition>(),
-                false,
-                new NullPartitioningStrategy(),
-                512);
+            _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             _distributedObjectFactory = new DistributedObjectFactory(_cluster, _serializationService);
+            _configuration = XmlClientConfigBuilder.Build();
         }
+
+        public HazelcastClient(ClientConfig configuration, Cluster cluster, ISerializationService serializationService)
+            : this(cluster, serializationService)
+        {
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        }
+
+        public HazelcastClient(string configurationFilepath, Cluster cluster, ISerializationService serializationService)
+            : this(cluster, serializationService)
+        {
+            _configuration = XmlClientConfigBuilder.Build(configurationFilepath);
+        }
+
+        public HazelcastClient(Action<ClientConfig> configure, Cluster cluster, ISerializationService serializationService)
+            : this(cluster, serializationService)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            _configuration = new ClientConfig();
+            configure(_configuration);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Cluster"/> (FOR TEST PURPOSES ONLY).
+        /// </summary>
+        public Cluster Cluster => _cluster;
 
         public async Task OpenAsync()
         {

@@ -21,7 +21,10 @@ using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Logging;
 using Hazelcast.Networking;
+using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Security;
+using Hazelcast.Serialization;
+using Hazelcast.Serialization.Portable;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests
@@ -32,6 +35,25 @@ namespace Hazelcast.Tests
         // these test expects a server on localhost:5701
 
         private static bool _first = true; // FIXME not like this!
+
+        private Cluster CreateCluster()
+        {
+            return new Cluster();
+        }
+
+        private ISerializationService CreateSerializationService()
+        {
+            return new SerializationService(
+                new ByteArrayInputOutputFactory(Endianness.Native),
+                1,
+                new Dictionary<int, IDataSerializableFactory>(),
+                new Dictionary<int, IPortableFactory>(),
+                new List<IClassDefinition>(),
+                false,
+                new NullPartitioningStrategy(),
+                512);
+        }
+
 
         public void TestSetUp()
         {
@@ -55,7 +77,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -81,7 +103,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -109,7 +131,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -142,7 +164,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -177,7 +199,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -203,7 +225,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -229,7 +251,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -265,7 +287,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -291,7 +313,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -317,7 +339,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -365,7 +387,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient();
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService());
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
