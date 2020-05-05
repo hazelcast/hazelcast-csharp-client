@@ -42,6 +42,8 @@ namespace Hazelcast.DistributedObjects.Implementation
         // TODO: refactor Map and CachedMap, so we don't need to serialize key to keyData all the time!
         //       generally, Map+NearCache can be greatly optimized, but we'll do that later
 
+        // TODO: split regions
+
         #region Setting
 
         /// <inheritdoc />

@@ -88,7 +88,7 @@ namespace Hazelcast.Testing
             }
 
             clientInternal.Cluster.MemberAddedOrRemoved.Add(HandleEvent);
- 
+
             var member = StartMember(remoteController, cluster);
             Assert.Eventually(() =>
             {
