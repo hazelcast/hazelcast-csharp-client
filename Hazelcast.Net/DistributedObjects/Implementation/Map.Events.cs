@@ -32,6 +32,7 @@ namespace Hazelcast.DistributedObjects.Implementation
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
+            if (on == null) throw new ArgumentNullException(nameof(on));
 
             var subscriber = new MapEvents<TKey, TValue>();
             on(subscriber);
@@ -75,7 +76,6 @@ namespace Hazelcast.DistributedObjects.Implementation
                 HandleEvent,
                 new SubscriptionState(mode, Name, subscriber.Handlers));
 
-            // the cluster stores the subscription it unsubscribes
             await Cluster.SubscribeAsync(subscription);
 
             return subscription.Id;
