@@ -6,10 +6,8 @@ using Hazelcast.Messaging;
 
 namespace Hazelcast.Clustering
 {
-    /// <summary>
-    /// Represents an Hazelcast Cluster.
-    /// </summary>
-    public partial class Cluster // Events
+    // partial: events
+    public partial class Cluster
     {
         /// <summary>
         /// Subscribes the cluster to a server event.

@@ -6,10 +6,8 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Clustering
 {
-    /// <summary>
-    /// Represents an Hazelcast Cluster.
-    /// </summary>
-    public partial class Cluster // Messaging
+    // partial: messaging
+    public partial class Cluster
     {
         // TODO: add timeout support to all methods
 

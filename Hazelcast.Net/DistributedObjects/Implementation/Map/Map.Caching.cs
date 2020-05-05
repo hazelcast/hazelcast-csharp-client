@@ -12,33 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
-using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Map
 {
-    // partial: intercepting
+    // partial: caching
     internal partial class Map<TKey, TValue>
     {
         /// <inheritdoc />
-        public async Task<string> AddInterceptorAsync(IMapInterceptor interceptor)
+        public async Task<bool> EvictAsync(TKey key)
         {
-            var interceptorData = ToSafeData(interceptor);
+            var keyData = ToSafeData(key);
 
-            var requestMessage = MapAddInterceptorCodec.EncodeRequest(Name, interceptorData);
-            var responseMessage = await Cluster.SendAsync(requestMessage);
-            var response = MapAddInterceptorCodec.DecodeResponse(responseMessage).Response;
+            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
+            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
 
         /// <inheritdoc />
-        public async Task RemoveInterceptorAsync(string id)
+        public async Task EvictAllAsync()
         {
-            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(id));
+            var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
+            await Cluster.SendAsync(requestMessage);
+        }
 
-            var requestMessage = MapRemoveInterceptorCodec.EncodeRequest(Name, id);
+        /// <inheritdoc />
+        public async Task FlushAsync()
+        {
+            var requestMessage = MapFlushCodec.EncodeRequest(Name);
             await Cluster.SendAsync(requestMessage);
         }
     }

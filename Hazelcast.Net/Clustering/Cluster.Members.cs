@@ -11,10 +11,8 @@ using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.Clustering
 {
-    /// <summary>
-    /// Represents an Hazelcast Cluster.
-    /// </summary>
-    public partial class Cluster // Members
+    // partial: members
+    public partial class Cluster
     {
         /// <summary>
         /// Clears the client currently handling cluster events, if it has not changed.
@@ -166,7 +164,7 @@ namespace Hazelcast.Clustering
                         XConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add(new MembershipEventArgs(MembershipEventType.Removed, member));
                         if (_clients.TryGetValue(member.Id, out var client))
-                            client.ShutdownAsync(); // will self-remove once down FIXME: async oops!!
+                            client.ShutdownAsync().Wait(); // will self-remove once down FIXME: async oops!!
                         break;
 
                     case 2: // new but not old = added
@@ -183,7 +181,17 @@ namespace Hazelcast.Clustering
             foreach (var args in eventArgs)
             {
                 // FIXME: async oops!
-                MemberAddedOrRemoved.InvokeAsync(args).AsTask().Wait();
+                switch (args.EventType)
+                {
+                    case MembershipEventType.Added:
+                        MemberAdded.InvokeAsync(args).AsTask().Wait();
+                        break;
+                    case MembershipEventType.Removed:
+                        MemberRemoved.InvokeAsync(args).AsTask().Wait();
+                        break;
+                    default:
+                        throw new NotSupportedException();
+                }
             }
         }
 

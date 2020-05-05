@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Core.Collections;
-using Hazelcast.Messaging;
+using Hazelcast.DistributedObjects.Implementation.Map;
 using Hazelcast.NearCaching;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 {
     /// <summary>
     /// Implements a caching version of <see cref="IMap{TKey,TValue}"/>.

@@ -87,7 +87,7 @@ namespace Hazelcast.Testing
                     added = true;
             }
 
-            clientInternal.Cluster.MemberAddedOrRemoved.Add(HandleEvent);
+            clientInternal.Cluster.MemberAdded.Add(HandleEvent);
 
             var member = StartMember(remoteController, cluster);
             Assert.Eventually(() =>
@@ -95,7 +95,7 @@ namespace Hazelcast.Testing
                 if (!added) throw new Exception("Member was not added.");
             }, 120);
 
-            clientInternal.Cluster.MemberAddedOrRemoved.Remove(HandleEvent);
+            clientInternal.Cluster.MemberAdded.Remove(HandleEvent);
 
             // make sure partitions are updated
             await Assert.Eventually(async () =>
@@ -139,7 +139,7 @@ namespace Hazelcast.Testing
                     removed = true;
             }
 
-            clientInternal.Cluster.MemberAddedOrRemoved.Add(HandleEvent);
+            clientInternal.Cluster.MemberRemoved.Add(HandleEvent);
 
             StopMember(remoteController, cluster, member);
             Assert.Eventually(() =>
@@ -147,7 +147,7 @@ namespace Hazelcast.Testing
                 if (!removed) throw new Exception("Member was not removed.");
             }, 120);
 
-            clientInternal.Cluster.MemberAddedOrRemoved.Remove(HandleEvent);
+            clientInternal.Cluster.MemberRemoved.Remove(HandleEvent);
         }
 
         protected virtual void SuspendMember(IRemoteController remoteController, Remote.Cluster cluster, Member member)

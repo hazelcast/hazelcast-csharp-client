@@ -10,10 +10,8 @@ using Hazelcast.Networking;
 
 namespace Hazelcast.Clustering
 {
-    /// <summary>
-    /// Represents an Hazelcast Cluster.
-    /// </summary>
-    public partial class Cluster // Networking
+    // partial: networking
+    public partial class Cluster
     {
         private Client GetRandomClient()
         {

@@ -20,9 +20,8 @@ using Hazelcast.Predicates;
 using Hazelcast.Projections;
 using Hazelcast.Protocol.Codecs;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Map
 {
-    #endregion
     internal partial class Map<TKey, TValue>
     {
         /// <inheritdoc />

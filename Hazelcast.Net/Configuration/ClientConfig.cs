@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Serialization;
@@ -31,25 +32,29 @@ namespace Hazelcast.Configuration
 
         private IConfigPatternMatcher _configPatternMatcher = new MatchingPointConfigPatternMatcher();
 
-        /// <summary>
-        /// The Security Configuration for custom Credentials:
-        /// Name and Password that is used to connect to the cluster.
-        /// </summary>
         private ClientSecurityConfig _securityConfig = new ClientSecurityConfig();
+        private ClientNetworkConfig _networkConfig = new ClientNetworkConfig();
+        private SerializationConfig _serializationConfig = new SerializationConfig();
+        private LoadBalancingConfig _loadBalancingConfig = new LoadBalancingConfig();
+
+        private IDictionary<string, NearCacheConfig> _nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
+
+        private string _clusterName = DefaultClusterName; // cluster to connect to
+        private int _executorPoolSize = -1; // for the executor service which handles responses etc
+
+        // FIXME need to merge w/ Asim work on config!
 
         /// <summary>
-        /// Default cluster name.
+        /// Gets the default cluster name.
         /// </summary>
         public const string DefaultClusterName = "dev";
 
         /// <summary>
-        /// The cluster name to connect to.
+        /// Gets the instance name. //TODO: what is it?
         /// </summary>
-        private string _clusterName = DefaultClusterName;
+        public string InstanceName { get; set; }
 
-
-        /// <summary>pool-size for internal ExecutorService which handles responses etc.</summary>
-        private int _executorPoolSize = -1;
+        #region Events
 
         /// <summary>List of listeners that Hazelcast will automatically Add as a part of initialization process.</summary>
         /// <remarks>
@@ -58,22 +63,16 @@ namespace Hazelcast.Configuration
         /// <see cref="LifecycleListener">Hazelcast.Core.LifecycleListener</see>
         /// .
         /// </remarks>
+        //
         private IList<ListenerConfig> _listenerConfigs = new List<ListenerConfig>();
 
-        private IDictionary<string, NearCacheConfig> _nearCacheConfigMap = new Dictionary<string, NearCacheConfig>();
-
         /// <summary>
-        /// The Network Configuration properties like:
-        /// addresses to connect, smart-routing, socket-options...
+        /// Gets the list of ??? FIXME
         /// </summary>
-        private ClientNetworkConfig _networkConfig = new ClientNetworkConfig();
-
-
-        private SerializationConfig _serializationConfig = new SerializationConfig();
-
-        private LoadBalancingConfig _loadBalancingConfig = new LoadBalancingConfig();
-
-        public string InstanceName { get; set; }
+        public virtual IList<ListenerConfig> GetListenerConfigs()
+        {
+            return _listenerConfigs;
+        }
 
         /// <summary>
         /// Helper method to Add a new ListenerConfig.
@@ -85,6 +84,109 @@ namespace Hazelcast.Configuration
             GetListenerConfigs().Add(listenerConfig);
             return this;
         }
+
+        private List<Subs> _subs = new List<Subs>();
+
+        private class Subs
+        {
+            private readonly Action<Clustering.Cluster> _action;
+            private readonly Type _type;
+            private readonly string _typename;
+            private readonly ListenerConfig.ClusterEventSubscriber _subscriber;
+
+            public Subs(Action<Clustering.Cluster> cluster)
+            {
+                _action = cluster;
+            }
+
+            public Subs(Type type)
+            {
+                _type = type;
+            }
+
+            public Subs(string typename)
+            {
+                _typename = typename;
+            }
+
+            public Subs(ListenerConfig.ClusterEventSubscriber subscriber)
+            {
+                _subscriber = subscriber;
+            }
+
+            public void Subscribe(Cluster cluster)
+            {
+                if (_action != null)
+                {
+                    _action(cluster);
+                }
+
+                else if (_subscriber != null)
+                {
+                    _subscriber.Subscribe(cluster);
+                }
+
+                else if (_type != null)
+                {
+                    var subscriber = (ListenerConfig.ClusterEventSubscriber) Activator.CreateInstance(_type);
+                    subscriber.Subscribe(cluster);
+                }
+
+                else if (!string.IsNullOrWhiteSpace(_typename))
+                {
+                    var type = Type.GetType(_typename); // beware!
+                    var subscriber = (ListenerConfig.ClusterEventSubscriber)Activator.CreateInstance(type);
+                    subscriber.Subscribe(cluster);
+                }
+
+                else throw new NotSupportedException();
+            }
+        }
+
+        public virtual ClientConfig AddClusterEventSubscriber(Action<Clustering.Cluster> subscribe)
+        {
+            _subs.Add(new Subs(subscribe));
+            return this;
+        }
+
+        public virtual ClientConfig AddClusterEventSubscriber(ListenerConfig.ClusterEventSubscriber subscriber)
+        {
+            _subs.Add(new Subs(subscriber));
+            return this;
+        }
+
+        public virtual ClientConfig AddClusterEventSubscriber<T>()
+            where T : ListenerConfig.ClusterEventSubscriber
+        {
+            _subs.Add(new Subs(typeof(T)));
+            return this;
+        }
+
+        public virtual ClientConfig AddClusterEventSubscriber(Type type)
+        {
+            _subs.Add(new Subs(type));
+            return this;
+        }
+
+        public virtual ClientConfig AddClusterEventSubscriber(string typename)
+        {
+            _subs.Add(new Subs(typename));
+            return this;
+        }
+
+        /// <summary>
+        /// Sets <see cref="ListenerConfig"/> object.
+        /// </summary>
+        /// <param name="listenerConfigs"><see cref="ListenerConfig"/> to be set</param>
+        /// <returns><see cref="ClientConfig"/> for chaining</returns>
+        public virtual ClientConfig SetListenerConfigs(IList<ListenerConfig> listenerConfigs)
+        {
+            _listenerConfigs = listenerConfigs;
+            return this;
+        }
+
+
+        #endregion
 
         /// <summary>
         /// Helper method to Add a new NearCacheConfig.
@@ -136,16 +238,6 @@ namespace Hazelcast.Configuration
             _connectionStrategyConfig = connectionStrategyConfig
                                         ?? throw new ArgumentNullException(nameof(connectionStrategyConfig));
             return this;
-        }
-
-
-        /// <summary>
-        /// Gets list of configured <see cref="ListenerConfig"/>.
-        /// </summary>
-        /// <returns>list of configured <see cref="ListenerConfig"/></returns>
-        public virtual IList<ListenerConfig> GetListenerConfigs()
-        {
-            return _listenerConfigs;
         }
 
         /// <summary>
@@ -222,17 +314,6 @@ namespace Hazelcast.Configuration
         public ClientConfig SetClusterName(string clusterName)
         {
             _clusterName = clusterName ?? throw new ArgumentNullException(nameof(clusterName));
-            return this;
-        }
-
-        /// <summary>
-        /// Sets <see cref="ListenerConfig"/> object.
-        /// </summary>
-        /// <param name="listenerConfigs"><see cref="ListenerConfig"/> to be set</param>
-        /// <returns><see cref="ClientConfig"/> for chaining</returns>
-        public virtual ClientConfig SetListenerConfigs(IList<ListenerConfig> listenerConfigs)
-        {
-            _listenerConfigs = listenerConfigs;
             return this;
         }
 

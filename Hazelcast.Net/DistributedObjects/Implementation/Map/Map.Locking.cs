@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Map
 {
     // partial: locking
     internal partial class Map<TKey, TValue>

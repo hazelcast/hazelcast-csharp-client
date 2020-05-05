@@ -25,7 +25,7 @@ using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Map
 {
     // partial: getting
     internal partial class Map<TKey, TValue>

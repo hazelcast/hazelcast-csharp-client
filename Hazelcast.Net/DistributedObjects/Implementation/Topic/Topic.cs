@@ -2,7 +2,7 @@
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Topic
 {
     /// <summary>
     /// Implements <see cref="Topic{T}"/>.

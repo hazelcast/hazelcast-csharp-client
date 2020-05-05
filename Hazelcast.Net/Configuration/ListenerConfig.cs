@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.Configuration
 {
@@ -26,6 +27,20 @@ namespace Hazelcast.Configuration
     /// </summary>
     public class ListenerConfig
     {
+        // we do: map.SubscribeAsync(on => on.Something(action))
+        //        topic.SubscribeAsync(on => on.Something(action))
+        //
+        // we want to register "listeners" either via code OR via configuration
+        // configuration = has to be an "injecting" class
+
+        public class ClusterEventSubscriber
+        {
+            public void Subscribe(Hazelcast.Clustering.Cluster cluster)
+            {
+                cluster.MemberRemoved.Add(args => { /* nothing */});
+            }
+        }
+
         private string _className;
         //private IEventListener _implementation;
 

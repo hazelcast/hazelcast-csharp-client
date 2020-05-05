@@ -20,7 +20,7 @@ using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Topic
 {
     // partial: events
     internal partial class Topic<T>
@@ -37,8 +37,7 @@ namespace Hazelcast.DistributedObjects.Implementation
             foreach (var handler in subscriber.Handlers)
                 flags |= handler.EventType;
 
-            var localOnly = false; // FIXME
-            var subscribeRequest = TopicAddMessageListenerCodec.EncodeRequest(Name, localOnly);
+            var subscribeRequest = TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting);
 
             var subscription = new ClusterEventSubscription(
                 subscribeRequest,

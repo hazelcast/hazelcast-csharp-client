@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregators;
 using Hazelcast.Clustering;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Logging;
@@ -420,6 +421,36 @@ namespace Hazelcast.Tests
             // FIXME how are we supposed to release it all?
             //client.Close();
             //client.Dispose();
+        }
+
+        [Test]
+        [Timeout(10_000)]
+        public async Task ConfiguredEvents()
+        {
+            TestSetUp();
+
+            var eventsCount = 0;
+
+            void HandleEntryAdded(IMap<string, int> sender, MapEntryAddedEventArgs<string, int> args)
+            {
+                XConsole.WriteLine(this, $"! added: {args.Key} {args.Value}");
+                Interlocked.Increment(ref eventsCount);
+            }
+
+            void ConfigureClient(ClientConfig config)
+            {
+                config.AddListenerConfig(new ListenerConfig());
+            }
+
+            var client = new HazelcastClient(ConfigureClient, CreateCluster(), CreateSerializationService());
+            await client.OpenAsync();
+
+            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+
+            await map.AddOrReplaceWithValueAsync("a", 1);
+
+            while (eventsCount < 1)
+                await Task.Delay(500);
         }
     }
 }

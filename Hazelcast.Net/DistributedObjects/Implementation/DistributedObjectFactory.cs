@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Data;
+using Hazelcast.DistributedObjects.Implementation.Map;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;

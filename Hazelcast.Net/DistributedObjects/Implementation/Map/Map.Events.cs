@@ -21,7 +21,7 @@ using Hazelcast.Predicates;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Map
 {
     // partial: events
     internal partial class Map<TKey, TValue>
@@ -41,9 +41,6 @@ namespace Hazelcast.DistributedObjects.Implementation
             foreach (var handler in subscriber.Handlers)
                 flags |= handler.EventType;
 
-            // FIXME wtf
-            var localOnly = false;
-
             // 0: no entryKey, no predicate
             // 1: entryKey, no predicate
             // 2: no entryKey, predicate
@@ -54,16 +51,16 @@ namespace Hazelcast.DistributedObjects.Implementation
             switch (mode)
             {
                 case 0:
-                    subscribeRequest = MapAddEntryListenerCodec.EncodeRequest(Name, includeValues, (int)flags, localOnly);
+                    subscribeRequest = MapAddEntryListenerCodec.EncodeRequest(Name, includeValues, (int)flags, Cluster.IsSmartRouting);
                     break;
                 case 1:
-                    subscribeRequest = MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(key), includeValues, (int)flags, localOnly);
+                    subscribeRequest = MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(key), includeValues, (int)flags, Cluster.IsSmartRouting);
                     break;
                 case 2:
-                    subscribeRequest = MapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), includeValues, (int)flags, localOnly);
+                    subscribeRequest = MapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), includeValues, (int)flags, Cluster.IsSmartRouting);
                     break;
                 case 3:
-                    subscribeRequest = MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(key), ToData(predicate), includeValues, (int)flags, localOnly);
+                    subscribeRequest = MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(key), ToData(predicate), includeValues, (int)flags, Cluster.IsSmartRouting);
                     break;
                 default:
                     throw new Exception();

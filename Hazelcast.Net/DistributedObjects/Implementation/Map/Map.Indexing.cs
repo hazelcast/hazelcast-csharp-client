@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using Hazelcast.Configuration;
 using Hazelcast.Protocol.Codecs;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Map
 {
     // partial: indexing
     internal partial class Map<TKey, TValue>

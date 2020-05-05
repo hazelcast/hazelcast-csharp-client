@@ -20,7 +20,7 @@ using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Map
 {
     // partial: setting
     internal partial class Map<TKey, TValue>

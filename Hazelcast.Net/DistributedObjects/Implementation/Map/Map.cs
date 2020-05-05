@@ -1,9 +1,8 @@
-﻿using System.Text;
-using Hazelcast.Clustering;
+﻿using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 
-namespace Hazelcast.DistributedObjects.Implementation
+namespace Hazelcast.DistributedObjects.Implementation.Map
 {
     /// <summary>
     /// Implements <see cref="IMap{TKey,TValue}"/>.

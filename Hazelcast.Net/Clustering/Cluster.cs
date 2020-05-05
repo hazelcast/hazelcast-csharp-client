@@ -70,11 +70,6 @@ namespace Hazelcast.Clustering
         public Guid ClientId { get; } = Guid.NewGuid();
 
         /// <summary>
-        /// Occurs when a member has been added to or removed from the cluster.
-        /// </summary>
-        public MixedEvent<MembershipEventArgs> MemberAddedOrRemoved { get; } = new MixedEvent<MembershipEventArgs>();
-
-        /// <summary>
         /// Determines whether the cluster is using smart routing.
         /// </summary>
         /// <remarks>
@@ -103,5 +98,53 @@ namespace Hazelcast.Clustering
         /// Gets the lite members.
         /// </summary>
         public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLite);
+
+        // FIXME move this to its own partial ?
+        // FIXME wire these events !
+
+        /// <summary>
+        /// Occurs when a member has been added to the cluster.
+        /// </summary>
+        public MixedEvent<MembershipEventArgs> MemberAdded { get; } = new MixedEvent<MembershipEventArgs>();
+
+        /// <summary>
+        /// Occurs when a member has been removed from the cluster.
+        /// </summary>
+        public MixedEvent<MembershipEventArgs> MemberRemoved { get; } = new MixedEvent<MembershipEventArgs>();
+
+        /// <summary>
+        /// Occurs when a partition has been lost.
+        /// </summary>
+        public MixedEvent<PartitionLostEventArgs> PartitionLost { get; } = new MixedEvent<PartitionLostEventArgs>();
+
+        /// <summary>
+        /// Occurs when a distributed object has been created in the cluster.
+        /// </summary>
+        public MixedEvent<ObjectLifeEventArgs> ObjectCreated { get; } = new MixedEvent<ObjectLifeEventArgs>();
+
+        /// <summary>
+        /// Occurs when a distributed object has been destroyed in the cluster.
+        /// </summary>
+        public MixedEvent<ObjectLifeEventArgs> ObjectDestroyed { get; } = new MixedEvent<ObjectLifeEventArgs>();
+
+        /// <summary>
+        /// Occurs when a connection to a member has been added.
+        /// </summary>
+        public MixedEvent<ConnectionEventArgs> ConnectionAdded { get; } = new MixedEvent<ConnectionEventArgs>();
+
+        /// <summary>
+        /// Occurs when a connection to a member has been removed.
+        /// </summary>
+        public MixedEvent<ConnectionEventArgs> ConnectionRemoved { get; } = new MixedEvent<ConnectionEventArgs>();
+
+        /// <summary>
+        /// Occurs when the state of the client has changed.
+        /// </summary>
+        public MixedEvent<ClientLifeEventArgs> ClientStateChanged { get; } = new MixedEvent<ClientLifeEventArgs>();
     }
+
+    public class PartitionLostEventArgs { }
+    public class ObjectLifeEventArgs { }
+    public class ConnectionEventArgs { }
+    public class ClientLifeEventArgs { }
 }
