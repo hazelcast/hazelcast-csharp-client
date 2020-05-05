@@ -13,22 +13,23 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Data;
 
-namespace Hazelcast.DistributedObjects
+namespace Hazelcast.Clustering
 {
-    public abstract class MapEntryEventArgsBase<TKey>
+    /// <summary>
+    /// Specifies the topic event types.
+    /// </summary>
+    [Flags]
+    public enum TopicEventType
     {
-        private readonly Lazy<TKey> _key;
+        /// <summary>
+        /// Nothing (default value).
+        /// </summary>
+        Nothing = 0,
 
-        protected MapEntryEventArgsBase(MemberInfo member, Lazy<TKey> key)
-        {
-            Member = member;
-            _key = key;
-        }
-
-        public MemberInfo Member { get; }
-
-        public TKey Key => _key == null ? default : _key.Value;
+        /// <summary>
+        /// A message was received.
+        /// </summary>
+        Message = 1
     }
 }

@@ -3,10 +3,10 @@
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Specifies the entries event types.
+    /// Specifies the map and entries event types.
     /// </summary>
     [Flags]
-    public enum EntryEventType
+    public enum MapEventType
     {
         /// <summary>
         /// Nothing (default value).
@@ -41,12 +41,12 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// All entries were evicted.
         /// </summary>
-        EvictAll = 1 << 5,
+        AllEvicted = 1 << 5,
 
         /// <summary>
         /// All entries were cleared.
         /// </summary>
-        ClearAll = 1 << 6,
+        AllCleared = 1 << 6,
 
         /// <summary>
         /// The entry was merged.
@@ -56,7 +56,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// The entry was invalidated.
         /// </summary>
-        Invalidation = 1 << 8,
+        Invalidated = 1 << 8,
 
         /// <summary>
         /// The entry was loaded.

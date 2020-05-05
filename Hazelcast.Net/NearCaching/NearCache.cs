@@ -87,7 +87,7 @@ namespace Hazelcast.NearCaching
                 */
 
                 var subscription = new ClusterEventSubscription(
-                    MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) EntryEventType.Invalidation, false),
+                    MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) MapEventType.Invalidated, false),
                     (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                     (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(((EventState) state).Name, id),
                     (message, state) => MapAddNearCacheInvalidationListenerCodec.EventHandler.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent),

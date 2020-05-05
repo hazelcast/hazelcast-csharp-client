@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Hazelcast.Clustering;
-using Hazelcast.Data;
-
-namespace Hazelcast.DistributedObjects
+namespace Hazelcast.Transactions
 {
-    public interface IMapEntryEventHandler<TKey, TValue>
+    public enum TransactionState
     {
-        EntryEventType EventType { get; }
-
-        void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, EntryEventType eventType, int numberOfAffectedEntries);
+        NoTxn,
+        Active,
+        Preparing,
+        Prepared,
+        Committing,
+        Committed,
+        CommitFailed,
+        RollingBack,
+        RolledBack
     }
 }

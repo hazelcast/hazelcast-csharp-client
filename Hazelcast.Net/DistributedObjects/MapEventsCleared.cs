@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using Hazelcast.Clustering;
 using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
@@ -21,5 +23,24 @@ namespace Hazelcast.DistributedObjects
         public MapClearedEventArgs(MemberInfo member, int numberOfAffectedEntries)
             : base(member, numberOfAffectedEntries)
         { }
+    }
+
+    internal sealed class MapClearedEventHandler<TKey, TValue> : MapEventHandlerBase<TKey, TValue, MapClearedEventArgs>
+    {
+        public MapClearedEventHandler(Action<IMap<TKey, TValue>, MapClearedEventArgs> handler) 
+            : base(MapEventType.AllCleared, handler)
+        { }
+
+        protected override MapClearedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries)
+            => new MapClearedEventArgs(member, numberOfAffectedEntries);
+    }
+
+    public static partial class Extensions
+    {
+        public static MapEvents<TKey, TValue> Cleared<TKey, TValue>(this MapEvents<TKey, TValue> events, Action<IMap<TKey, TValue>, MapClearedEventArgs> handler)
+        {
+            events.Handlers.Add(new MapClearedEventHandler<TKey, TValue>(handler));
+            return events;
+        }
     }
 }

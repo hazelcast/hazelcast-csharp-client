@@ -929,7 +929,7 @@ namespace Hazelcast.DistributedObjects.Implementation
             var subscriber = new MapEvents<TKey, TValue>();
             on(subscriber);
 
-            var flags = EntryEventType.Nothing;
+            var flags = MapEventType.Nothing;
             foreach (var handler in subscriber.Handlers)
                 flags |= handler.EventType;
 
@@ -1001,7 +1001,7 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         private class SubscriptionState
         {
-            public SubscriptionState(int mode, string name, List<IMapEntryEventHandler<TKey, TValue>> handlers)
+            public SubscriptionState(int mode, string name, List<IMapEventHandlerBase<TKey, TValue>> handlers)
             {
                 Mode = mode;
                 Name = name;
@@ -1012,7 +1012,7 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             public string Name { get;}
 
-            public List<IMapEntryEventHandler<TKey, TValue>> Handlers { get; }
+            public List<IMapEventHandlerBase<TKey, TValue>> Handlers { get; }
         }
 
         private static SubscriptionState ToSafeState(object state)
@@ -1027,8 +1027,8 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             void HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
             {
-                var eventType = (EntryEventType)eventTypeData;
-                if (eventType == EntryEventType.Nothing) return;
+                var eventType = (MapEventType)eventTypeData;
+                if (eventType == MapEventType.Nothing) return;
 
                 Lazy<T> LazyArg<T>(IData source) => source == null ? null : new Lazy<T>(() => ToObject<T>(source));
 
@@ -1040,10 +1040,23 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var oldValue = LazyArg<TValue>(oldValueData);
                 var mergingValue = LazyArg<TValue>(mergingValueData);
 
+                // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
                 foreach (var handler in sstate.Handlers)
                 {
                     if (handler.EventType.HasFlag(eventType)) // FIXME has any or...
-                        handler.Handle(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries);
+                    {
+                        switch (handler)
+                        {
+                            case IMapEntryEventHandler<TKey, TValue> entryHandler:
+                                entryHandler.Handle(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries);
+                                break;
+                            case IMapEventHandler<TKey, TValue> mapHandler:
+                                mapHandler.Handle(this, member, numberOfAffectedEntries);
+                                break;
+                            default:
+                                throw new NotSupportedException();
+                        }
+                    }
                 }
             }
 

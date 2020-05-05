@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Hazelcast.Data;
-
 namespace Hazelcast.DistributedObjects
 {
-    public sealed class MapEntryRemovedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
+    /// <summary>Marker interface for all transactional distributed objects.</summary>
+    /// <remarks>Marker interface for all transactional distributed objects.</remarks>
+    public interface ITransactionalObject : IDistributedObject
     {
-        private readonly Lazy<TValue> _oldValue;
-
-        public MapEntryRemovedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> oldValue)
-            : base(member, key)
-        {
-            _oldValue = oldValue;
-        }
-
-        public TValue OldValue => _oldValue == null ? default : _oldValue.Value;
     }
 }
