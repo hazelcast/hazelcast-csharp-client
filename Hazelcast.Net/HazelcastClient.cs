@@ -26,6 +26,7 @@ using Hazelcast.Predicates;
 using Hazelcast.Projections;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Portable;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast
 {
@@ -42,28 +43,28 @@ namespace Hazelcast
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
         /// </summary>
-        public HazelcastClient(Cluster cluster, ISerializationService serializationService)
+        public HazelcastClient(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
-            _distributedObjectFactory = new DistributedObjectFactory(_cluster, _serializationService);
+            _distributedObjectFactory = new DistributedObjectFactory(_cluster, _serializationService, loggerFactory);
             _configuration = XmlClientConfigBuilder.Build();
         }
 
-        public HazelcastClient(ClientConfig configuration, Cluster cluster, ISerializationService serializationService)
-            : this(cluster, serializationService)
+        public HazelcastClient(ClientConfig configuration, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : this(cluster, serializationService, loggerFactory)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public HazelcastClient(string configurationFilepath, Cluster cluster, ISerializationService serializationService)
-            : this(cluster, serializationService)
+        public HazelcastClient(string configurationFilepath, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : this(cluster, serializationService, loggerFactory)
         {
             _configuration = XmlClientConfigBuilder.Build(configurationFilepath);
         }
 
-        public HazelcastClient(Action<ClientConfig> configure, Cluster cluster, ISerializationService serializationService)
-            : this(cluster, serializationService)
+        public HazelcastClient(Action<ClientConfig> configure, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : this(cluster, serializationService, loggerFactory)
         {
             if (configure == null) throw new ArgumentNullException(nameof(configure));
             _configuration = new ClientConfig();

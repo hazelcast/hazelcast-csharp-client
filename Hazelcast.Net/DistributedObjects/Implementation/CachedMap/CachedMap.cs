@@ -8,6 +8,7 @@ using Hazelcast.DistributedObjects.Implementation.Map;
 using Hazelcast.NearCaching;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 {
@@ -29,8 +30,9 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="cache">A cache.</param>
-        public CachedMap(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCacheBase cache)
-            : base(serviceName, name, cluster, serializationService, lockReferenceIdSequence)
+        /// <param name="loggerFactory">A logger factory.</param>
+        public CachedMap(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCacheBase cache, ILoggerFactory loggerFactory)
+            : base(serviceName, name, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
         {
             _cache = cache;
         }

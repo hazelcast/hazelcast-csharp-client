@@ -18,6 +18,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Implementation
 {
@@ -37,7 +38,7 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <param name="name">The unique name of the object.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
-        protected DistributedObjectBase(string serviceName, string name, Cluster cluster, ISerializationService serializationService) 
+        protected DistributedObjectBase(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory) 
         {
             if (string.IsNullOrWhiteSpace(serviceName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(serviceName));
             ServiceName = serviceName;
@@ -47,6 +48,7 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
         /// <inheritdoc />
@@ -74,6 +76,8 @@ namespace Hazelcast.DistributedObjects.Implementation
         protected ISerializationService SerializationService { get; }
 
         protected Cluster Cluster { get; }
+
+        protected ILoggerFactory LoggerFactory { get; }
 
         // TODO: document
         protected virtual IData ToData(object o)

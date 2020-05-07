@@ -1,6 +1,7 @@
 ﻿using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Implementation.Map
 {
@@ -21,8 +22,9 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
-        public Map(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence)
-            : base(serviceName, name, cluster, serializationService)
+        /// <param name="logggerFactory">A logger factory.</param>
+        public Map(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
+            : base(serviceName, name, cluster, serializationService, logggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }

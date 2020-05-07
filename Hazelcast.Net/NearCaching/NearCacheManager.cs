@@ -34,6 +34,7 @@ namespace Hazelcast.NearCaching
 
         private readonly Cluster _cluster;
         private readonly ISerializationService _serializationService;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly long _reconciliationIntervalMillis;
         private readonly Task _repairingTask;
         private readonly NearCacheConfigs _configs;
@@ -41,10 +42,11 @@ namespace Hazelcast.NearCaching
         private long _lastAntiEntropyRunMillis;
         private volatile int _running;
 
-        public NearCacheManager(Cluster cluster, ISerializationService serializationService, NearCacheConfigs configs)
+        public NearCacheManager(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheConfigs configs)
         {
             _cluster = cluster;
             _serializationService = serializationService;
+            _loggerFactory = loggerFactory;
             _configs = configs;
 
             _reconciliationIntervalMillis = GetReconciliationIntervalSeconds() * 1000;
@@ -71,7 +73,7 @@ namespace Hazelcast.NearCaching
                 ? null
                 : _caches.GetOrAdd(mapName, newMapName =>
                 {
-                    var nearCache = new NearCache(newMapName, _cluster, _serializationService, nearCacheConfig);
+                    var nearCache = new NearCache(newMapName, _cluster, _serializationService, _loggerFactory, nearCacheConfig);
                     InitNearCache(nearCache);
                     return nearCache;
                 });

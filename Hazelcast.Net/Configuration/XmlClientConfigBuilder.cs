@@ -206,7 +206,7 @@ namespace Hazelcast.Configuration
                 if ("listener".Equals(CleanNodeName(child)))
                 {
                     var className = GetTextContent(child);
-                    _clientConfig.AddListenerConfig(new ListenerConfig(className));
+                    _clientConfig.AddClusterEventSubscriber(className);
                 }
             }
         }

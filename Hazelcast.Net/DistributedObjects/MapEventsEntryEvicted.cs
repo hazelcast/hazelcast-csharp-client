@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Clustering;
 using Hazelcast.Data;
+using Hazelcast.Data.Map;
 
 namespace Hazelcast.DistributedObjects
 {

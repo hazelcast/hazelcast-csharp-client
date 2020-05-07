@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Data.Topic;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -46,7 +47,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
                 HandleEvent,
                 new SubscriptionState(Name, subscriber.Handlers));
 
-            await Cluster.SubscribeAsync(subscription);
+            await Cluster.InstallSubscriptionAsync(subscription);
 
             return subscription.Id;
         }
@@ -91,7 +92,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
                 }
             }
 
-            TopicAddMessageListenerCodec.EventHandler.HandleEvent(eventMessage, HandleEvent);
+            TopicAddMessageListenerCodec.HandleEvent(eventMessage, HandleEvent, LoggerFactory);
         }
 
         private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
@@ -109,7 +110,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         public async Task<bool> UnsubscribeAsync(Guid subscriptionId)
         {
             // FIXME why would it return a bool?
-            await Cluster.UnsubscribeAsync(subscriptionId);
+            await Cluster.RemoveSubscriptionAsync(subscriptionId);
             return true;
         }
     }

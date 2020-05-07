@@ -17,6 +17,7 @@ using Hazelcast.Projections;
 using Hazelcast.Security;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Portable;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast.Testing
 {
@@ -98,7 +99,7 @@ namespace Hazelcast.Testing
         /// <returns>A cluster.</returns>
         protected virtual Clustering.Cluster CreateCluster()
         {
-            return new Clustering.Cluster(new Authenticator());
+            return new Clustering.Cluster(new Authenticator(), new List<IClusterEventSubscriber>(),  new NullLoggerFactory());
         }
 
         /// <summary>
@@ -135,7 +136,7 @@ namespace Hazelcast.Testing
             Logger.LogInformation("Creating new client");
 
             // FIXME: if that's the only way to create a client, why the interface?
-            var client = new HazelcastClient(ConfigureClient, CreateCluster(), CreateSerializationService());
+            var client = new HazelcastClient(ConfigureClient, CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
 
             // FIXME there should be a 30 mins timeout on the opening
             // uh - lifecycle events - HOW??? for ClientConnected???

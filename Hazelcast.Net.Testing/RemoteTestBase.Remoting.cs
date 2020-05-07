@@ -81,13 +81,11 @@ namespace Hazelcast.Testing
             var clientInternal = (HazelcastClient) client;
             var added = false;
 
-            void HandleEvent(MembershipEventArgs args)
-            {
-                if (args.EventType == MembershipEventType.Added)
+            var subscriptionId = await clientInternal.Cluster.SubscribeAsync(on => on
+                .MemberAdded((sender, args) =>
+                {
                     added = true;
-            }
-
-            clientInternal.Cluster.MemberAdded.Add(HandleEvent);
+                }));
 
             var member = StartMember(remoteController, cluster);
             Assert.Eventually(() =>
@@ -95,7 +93,7 @@ namespace Hazelcast.Testing
                 if (!added) throw new Exception("Member was not added.");
             }, 120);
 
-            clientInternal.Cluster.MemberAdded.Remove(HandleEvent);
+            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId);
 
             // make sure partitions are updated
             await Assert.Eventually(async () =>
@@ -133,13 +131,11 @@ namespace Hazelcast.Testing
 
             var removed = false;
 
-            void HandleEvent(MembershipEventArgs args)
-            {
-                if (args.EventType == MembershipEventType.Removed)
+            var subscriptionId = await clientInternal.Cluster.SubscribeAsync(on => on
+                .MemberRemoved((sender, args) =>
+                {
                     removed = true;
-            }
-
-            clientInternal.Cluster.MemberRemoved.Add(HandleEvent);
+                }));
 
             StopMember(remoteController, cluster, member);
             Assert.Eventually(() =>
@@ -147,7 +143,7 @@ namespace Hazelcast.Testing
                 if (!removed) throw new Exception("Member was not removed.");
             }, 120);
 
-            clientInternal.Cluster.MemberRemoved.Remove(HandleEvent);
+            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId);
         }
 
         protected virtual void SuspendMember(IRemoteController remoteController, Remote.Cluster cluster, Member member)

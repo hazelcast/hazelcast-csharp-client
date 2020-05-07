@@ -1,6 +1,7 @@
 ﻿using Hazelcast.Clustering;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Implementation.Topic
 {
@@ -17,8 +18,9 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         /// <param name="name">The unique name of the object.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
-        public Topic(string serviceName, string name, Cluster cluster, ISerializationService serializationService)
-            : base(serviceName, name, cluster, serializationService)
+        /// <param name="loggerFactory">A logger factory.</param>
+        public Topic(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(serviceName, name, cluster, serializationService, loggerFactory)
         { }
 
         /// <inheritdoc />

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
+using Hazelcast.Data.Map;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -12,8 +13,8 @@ namespace Hazelcast.NearCaching
     {
         private RepairingHandler _repairingHandler;
 
-        public NearCache(string name, Cluster cluster, ISerializationService serializationService, NearCacheConfig nearCacheConfig)
-            : base(name, cluster, serializationService, nearCacheConfig)
+        public NearCache(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheConfig nearCacheConfig)
+            : base(name, cluster, serializationService, loggerFactory, nearCacheConfig)
         { }
 
         // FIXME: why is this public?
@@ -90,15 +91,15 @@ namespace Hazelcast.NearCaching
                     MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) MapEventType.Invalidated, false),
                     (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                     (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(((EventState) state).Name, id),
-                    (message, state) => MapAddNearCacheInvalidationListenerCodec.EventHandler.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent),
+                    (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent, LoggerFactory),
                     new EventState { Name = Name });
 
-                Cluster.SubscribeAsync(subscription).Wait(); // FIXME: async oops!
+                Cluster.InstallSubscriptionAsync(subscription).Wait(); // FIXME: async oops!
                 RegistrationId = subscription.Id;
             }
             catch (Exception e)
             {
-                Logger.LogCritical(e, "-----------------\n Near Cache is not initialized!!! \n-----------------");
+                LoggerFactory.CreateLogger<NearCache>().LogCritical(e, "-----------------\n Near Cache is not initialized!!! \n-----------------");
             }
         }
 

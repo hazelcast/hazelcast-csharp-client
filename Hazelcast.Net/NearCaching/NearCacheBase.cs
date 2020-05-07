@@ -16,8 +16,6 @@ namespace Hazelcast.NearCaching
     // TODO: document and cleanup + the implementation may be broken (later)
     internal abstract class NearCacheBase
     {
-        internal static readonly ILogger Logger = Services.Get.LoggerFactory().CreateLogger<NearCache>();
-
         private const int EvictionPercentage = 20;
         private const int CleanupInterval = 5000;
 
@@ -27,6 +25,8 @@ namespace Hazelcast.NearCaching
         private readonly EvictionPolicy _evictionPolicy;
         private readonly InMemoryFormat _inMemoryFormat;
         protected readonly bool InvalidateOnChange;
+        protected readonly ILoggerFactory LoggerFactory;
+        private readonly ILogger _logger;
         private readonly long _maxIdleMilliseconds;
 
         private readonly int _maxSize;
@@ -37,7 +37,7 @@ namespace Hazelcast.NearCaching
         private long _lastCleanup;
         protected Guid RegistrationId;
 
-        protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, NearCacheConfig nearCacheConfig)
+        protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheConfig nearCacheConfig)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
             Name = name;
@@ -59,6 +59,9 @@ namespace Hazelcast.NearCaching
                 (EvictionPolicy)Enum.Parse(typeof(EvictionPolicy), nearCacheConfig.GetEvictionPolicy(), true);
             _comparer = GetComparer(_evictionPolicy);
             InvalidateOnChange = nearCacheConfig.IsInvalidateOnChange();
+
+            LoggerFactory = loggerFactory;
+            _logger = loggerFactory.CreateLogger<NearCacheBase>();
         }
 
         protected Cluster Cluster { get; }
@@ -86,7 +89,7 @@ namespace Hazelcast.NearCaching
         {
             if (RegistrationId != null)
             {
-                Cluster.UnsubscribeAsync(RegistrationId).Wait(); // FIXME ASYNC!
+                Cluster.RemoveSubscriptionAsync(RegistrationId).Wait(); // FIXME ASYNC!
             }
             Entries.Clear();
         }

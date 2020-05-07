@@ -6,15 +6,15 @@ using Hazelcast.Messaging;
 
 namespace Hazelcast.Clustering
 {
-    // partial: events
+    // partial: general events
     public partial class Cluster
     {
         /// <summary>
-        /// Subscribes the cluster to a server event.
+        /// Installs a subscription to server events.
         /// </summary>
         /// <param name="subscription">The subscription.</param>
-        /// <returns>A task that will complete when the cluster has subscribed to the server event.</returns>
-        public async Task SubscribeAsync(ClusterEventSubscription subscription)
+        /// <returns>A task that will complete when the subscription has been installed.</returns>
+        public async Task InstallSubscriptionAsync(ClusterEventSubscription subscription)
         {
             // register the subscription - but verify that the id really is unique
             if (!_eventSubscriptions.TryAdd(subscription.Id, subscription))
@@ -83,11 +83,11 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Unsubscribes the cluster from a server event.
+        /// Removes a subscription to server events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        /// <returns>A task that will complete when the cluster has unsubscribed from the server event.</returns>
-        public async Task UnsubscribeAsync(Guid subscriptionId)
+        /// <returns>A task that will complete when subscription has been removed.</returns>
+        public async Task RemoveSubscriptionAsync(Guid subscriptionId)
         {
             if (!_eventSubscriptions.TryGetValue(subscriptionId, out var clusterSubscription))
                 throw new Exception();

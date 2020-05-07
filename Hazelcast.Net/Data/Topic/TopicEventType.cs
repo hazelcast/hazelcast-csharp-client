@@ -14,7 +14,7 @@
 
 using System;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast.Data.Topic
 {
     /// <summary>
     /// Specifies the topic event types.

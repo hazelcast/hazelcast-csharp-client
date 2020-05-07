@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering.Events;
 using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Eventing;
@@ -14,10 +15,10 @@ using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
-using Hazelcast.Protocol.Codecs;
 using Hazelcast.Security;
 using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 using Partitioner = Hazelcast.Partitioning.Partitioner;
 
 namespace Hazelcast.Clustering
@@ -32,19 +33,26 @@ namespace Hazelcast.Clustering
             = new ConcurrentDictionary<Guid, ClusterEventSubscription>();
         private readonly ConcurrentDictionary<long, ClusterEventSubscription> _correlatedSubscriptions
             = new ConcurrentDictionary<long, ClusterEventSubscription>();
-        //private readonly ConcurrentDictionary<long, Action<ClientMessage, object>> _eventHandlers
-        //    = new ConcurrentDictionary<long, Action<ClientMessage, object>>();
+        private readonly ConcurrentDictionary<Guid, ClusterEvents> _clusterEvents
+            = new ConcurrentDictionary<Guid, ClusterEvents>();
 
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoadBalancer _loadBalancer;
         private readonly IAuthenticator _authenticator;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ObjectLifecycleEvent _objectLifecycleEvent;
+        private readonly IList<IClusterEventSubscriber> _clusterEventSubscribers;
 
         private Client _clusterEventsClient;
         private MemberTable _memberTable;
 
-        public Cluster(IAuthenticator authenticator)
+
+
+        public Cluster(IAuthenticator authenticator, IList<IClusterEventSubscriber> clusterEventSubscribers, ILoggerFactory loggerFactory)
         {
             _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
+            _clusterEventSubscribers = clusterEventSubscribers ?? throw new ArgumentNullException(nameof(clusterEventSubscribers));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             // TODO: get isSmartRouting from configuration
             // TODO: can we avoid passing the serializationService?
@@ -59,6 +67,9 @@ namespace Hazelcast.Clustering
             IsSmartRouting = isSmartRouting;
             Partitioner = new Partitioner(serializationService, isSmartRouting);
             _loadBalancer = new RandomLoadBalancer();
+
+            // setup events
+            _objectLifecycleEvent = InitializeObjectLifecycleEvent();
 
             XConsole.Configure(this, config => config.SetIndent(2).SetPrefix("CLUSTER"));
         }
@@ -87,6 +98,10 @@ namespace Hazelcast.Clustering
         public async ValueTask Connect()
         {
             await ConnectToCluster();
+
+            // FIXME and also for each new client etc?!
+            foreach (var subscriber in _clusterEventSubscribers)
+                await subscriber.SubscribeAsync(this);
         }
 
         /// <summary>
@@ -98,53 +113,5 @@ namespace Hazelcast.Clustering
         /// Gets the lite members.
         /// </summary>
         public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLite);
-
-        // FIXME move this to its own partial ?
-        // FIXME wire these events !
-
-        /// <summary>
-        /// Occurs when a member has been added to the cluster.
-        /// </summary>
-        public MixedEvent<MembershipEventArgs> MemberAdded { get; } = new MixedEvent<MembershipEventArgs>();
-
-        /// <summary>
-        /// Occurs when a member has been removed from the cluster.
-        /// </summary>
-        public MixedEvent<MembershipEventArgs> MemberRemoved { get; } = new MixedEvent<MembershipEventArgs>();
-
-        /// <summary>
-        /// Occurs when a partition has been lost.
-        /// </summary>
-        public MixedEvent<PartitionLostEventArgs> PartitionLost { get; } = new MixedEvent<PartitionLostEventArgs>();
-
-        /// <summary>
-        /// Occurs when a distributed object has been created in the cluster.
-        /// </summary>
-        public MixedEvent<ObjectLifeEventArgs> ObjectCreated { get; } = new MixedEvent<ObjectLifeEventArgs>();
-
-        /// <summary>
-        /// Occurs when a distributed object has been destroyed in the cluster.
-        /// </summary>
-        public MixedEvent<ObjectLifeEventArgs> ObjectDestroyed { get; } = new MixedEvent<ObjectLifeEventArgs>();
-
-        /// <summary>
-        /// Occurs when a connection to a member has been added.
-        /// </summary>
-        public MixedEvent<ConnectionEventArgs> ConnectionAdded { get; } = new MixedEvent<ConnectionEventArgs>();
-
-        /// <summary>
-        /// Occurs when a connection to a member has been removed.
-        /// </summary>
-        public MixedEvent<ConnectionEventArgs> ConnectionRemoved { get; } = new MixedEvent<ConnectionEventArgs>();
-
-        /// <summary>
-        /// Occurs when the state of the client has changed.
-        /// </summary>
-        public MixedEvent<ClientLifeEventArgs> ClientStateChanged { get; } = new MixedEvent<ClientLifeEventArgs>();
     }
-
-    public class PartitionLostEventArgs { }
-    public class ObjectLifeEventArgs { }
-    public class ConnectionEventArgs { }
-    public class ClientLifeEventArgs { }
 }

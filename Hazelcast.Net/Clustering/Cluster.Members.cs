@@ -82,7 +82,7 @@ namespace Hazelcast.Clustering
 
             // handles the event
             void HandleEvent(ClientMessage message, object state)
-                => ClientAddClusterViewListenerCodec.EventHandler.HandleEvent(message, HandleMemberViewEvent, HandlePartitionViewEvent);
+                => ClientAddClusterViewListenerCodec.HandleEvent(message, HandleMemberViewEvent, HandlePartitionViewEvent, _loggerFactory);
 
             var correlationId = _correlationIdSequence.Next;
             try
@@ -155,21 +155,21 @@ namespace Hazelcast.Clustering
             _memberTable = table;
 
             // process changes, gather events
-            var eventArgs = new List<MembershipEventArgs>();
+            var eventArgs = new List<(ClusterMemberLifecycleEventType, ClusterMemberLifecycleEventArgs)>();
             foreach (var (member, status) in diff)
             {
                 switch (status)
                 {
                     case 1: // old but not new = removed
                         XConsole.WriteLine(this, $"Removed member {member.Id}");
-                        eventArgs.Add(new MembershipEventArgs(MembershipEventType.Removed, member));
+                        eventArgs.Add((ClusterMemberLifecycleEventType.Removed, new ClusterMemberLifecycleEventArgs(member)));
                         if (_clients.TryGetValue(member.Id, out var client))
                             client.ShutdownAsync().Wait(); // will self-remove once down FIXME: async oops!!
                         break;
 
                     case 2: // new but not old = added
                         XConsole.WriteLine(this, $"Added member {member.Id}");
-                        eventArgs.Add(new MembershipEventArgs(MembershipEventType.Added, member));
+                        eventArgs.Add((ClusterMemberLifecycleEventType.Added, new ClusterMemberLifecycleEventArgs(member)));
                         break;
 
                     default: // unchanged
@@ -178,20 +178,29 @@ namespace Hazelcast.Clustering
             }
 
             // raise events
-            foreach (var args in eventArgs)
+            foreach (var (eventType, args) in eventArgs)
             {
-                // FIXME: async oops!
-                switch (args.EventType)
+                foreach (var clusterEvents in _clusterEvents)
                 {
-                    case MembershipEventType.Added:
-                        MemberAdded.InvokeAsync(args).AsTask().Wait();
-                        break;
-                    case MembershipEventType.Removed:
-                        MemberRemoved.InvokeAsync(args).AsTask().Wait();
-                        break;
-                    default:
-                        throw new NotSupportedException();
+                    foreach (var handler in clusterEvents.Value.Handlers)
+                    {
+                        // FIXME could handling be async?
+                        if (handler is ClusterMemberLifecycleEventHandler memberLifecycleEventHandler && memberLifecycleEventHandler.EventType == eventType)
+                            memberLifecycleEventHandler.Handle(this, args);
+                    }
                 }
+                // FIXME: async oops!
+                //switch (args.EventType)
+                //{
+                //    case MembershipEventType.Added:
+                //        MemberAdded.InvokeAsync(args).AsTask().Wait();
+                //        break;
+                //    case MembershipEventType.Removed:
+                //        MemberRemoved.InvokeAsync(args).AsTask().Wait();
+                //        break;
+                //    default:
+                //        throw new NotSupportedException();
+                //}
             }
         }
 

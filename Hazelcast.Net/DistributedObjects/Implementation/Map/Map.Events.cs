@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Data.Map;
 using Hazelcast.Messaging;
 using Hazelcast.Predicates;
 using Hazelcast.Protocol.Codecs;
@@ -73,7 +74,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
                 HandleEvent,
                 new SubscriptionState(mode, Name, subscriber.Handlers));
 
-            await Cluster.SubscribeAsync(subscription);
+            await Cluster.InstallSubscriptionAsync(subscription);
 
             return subscription.Id;
         }
@@ -167,16 +168,16 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             switch (sstate.Mode)
             {
                 case 0:
-                    MapAddEntryListenerCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
+                    MapAddEntryListenerCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
                     break;
                 case 1:
-                    MapAddEntryListenerToKeyCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
+                    MapAddEntryListenerToKeyCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
                     break;
                 case 2:
-                    MapAddEntryListenerWithPredicateCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
+                    MapAddEntryListenerWithPredicateCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
                     break;
                 case 3:
-                    MapAddEntryListenerToKeyWithPredicateCodec.EventHandler.HandleEvent(eventMessage, HandleEntryEvent);
+                    MapAddEntryListenerToKeyWithPredicateCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
                     break;
                 default:
                     throw new Exception();
@@ -212,7 +213,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         public async Task<bool> UnsubscribeAsync(Guid subscriptionId)
         {
             // FIXME why would it return a bool?
-            await Cluster.UnsubscribeAsync(subscriptionId);
+            await Cluster.RemoveSubscriptionAsync(subscriptionId);
             return true;
         }
     }

@@ -25,6 +25,7 @@ using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Implementation
 {
@@ -48,7 +49,7 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// </summary>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
-        public DistributedObjectFactory(Cluster cluster, ISerializationService serializationService)
+        public DistributedObjectFactory(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
@@ -77,7 +78,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var lockReferenceIdSequence = new Int64Sequence();
 
                 // create the actual instance
-                var o = Activator.CreateInstance(actualType, Constants.ServiceNames.Map, name, _cluster, _serializationService, lockReferenceIdSequence);
+                var o = Activator.CreateInstance(actualType, Constants.ServiceNames.Map, name, _cluster, _serializationService, lockReferenceIdSequence, loggerFactory);
                 if (!(o is DistributedObjectBase d))
                     throw new InvalidOperationException("The created object does not inherit from DistributedObjectBase.");
 

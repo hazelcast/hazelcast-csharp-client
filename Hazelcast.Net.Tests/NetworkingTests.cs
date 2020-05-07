@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.DistributedObjects.Implementation;
@@ -28,6 +29,7 @@ using Hazelcast.Protocol.Codecs;
 using Hazelcast.Security;
 using Hazelcast.Testing.TestServer;
 using Hazelcast.Tests.Testing;
+using Microsoft.Extensions.Logging.Abstractions;
 using NuGet.Versioning;
 using NUnit.Framework;
 
@@ -221,15 +223,11 @@ namespace Hazelcast.Tests
 
             // this test expects a server on localhost:5701
 
-            // of course this is temporary
-            Services.Reset();
-            Services.Register<IAuthenticator>(() => new Authenticator());
-
             XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Cluster?");
-            var cluster = new Cluster(new Authenticator());
+            var cluster = new Cluster(new Authenticator(), new List<IClusterEventSubscriber>(),  new NullLoggerFactory());
             await cluster.Connect();
 
             // now we can send messages...

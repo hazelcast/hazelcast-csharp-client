@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast.Data.Map
 {
     /// <summary>
     /// Specifies the map and entries event types.

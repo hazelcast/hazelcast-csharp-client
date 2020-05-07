@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Logging;
@@ -56,135 +57,41 @@ namespace Hazelcast.Configuration
 
         #region Events
 
-        /// <summary>List of listeners that Hazelcast will automatically Add as a part of initialization process.</summary>
-        /// <remarks>
-        /// List of listeners that Hazelcast will automatically Add as a part of initialization process.
-        /// Currently only supports
-        /// <see cref="LifecycleListener">Hazelcast.Core.LifecycleListener</see>
-        /// .
-        /// </remarks>
-        //
-        private IList<ListenerConfig> _listenerConfigs = new List<ListenerConfig>();
+        private readonly List<IClusterEventSubscriber> _clusterEventSubscribers = new List<IClusterEventSubscriber>();
 
-        /// <summary>
-        /// Gets the list of ??? FIXME
-        /// </summary>
-        public virtual IList<ListenerConfig> GetListenerConfigs()
-        {
-            return _listenerConfigs;
-        }
+        // FIXME now we must read this somewhere when setting up the cluster
+        public List<IClusterEventSubscriber> ClusterEventSubscribers => _clusterEventSubscribers;
 
-        /// <summary>
-        /// Helper method to Add a new ListenerConfig.
-        /// </summary>
-        /// <param name="listenerConfig">ListenerConfig</param>
-        /// <returns>configured <see cref="ClientConfig"/> for chaining</returns>
-        public virtual ClientConfig AddListenerConfig(ListenerConfig listenerConfig)
+        public virtual ClientConfig AddClusterEventSubscriber(Func<Cluster, Task> subscribeAsync)
         {
-            GetListenerConfigs().Add(listenerConfig);
+            _clusterEventSubscribers.Add(new ClusterEventSubscriber(subscribeAsync));
             return this;
         }
 
-        private List<Subs> _subs = new List<Subs>();
-
-        private class Subs
+        public virtual ClientConfig AddClusterEventSubscriber(IClusterEventSubscriber subscriber)
         {
-            private readonly Action<Clustering.Cluster> _action;
-            private readonly Type _type;
-            private readonly string _typename;
-            private readonly ListenerConfig.ClusterEventSubscriber _subscriber;
-
-            public Subs(Action<Clustering.Cluster> cluster)
-            {
-                _action = cluster;
-            }
-
-            public Subs(Type type)
-            {
-                _type = type;
-            }
-
-            public Subs(string typename)
-            {
-                _typename = typename;
-            }
-
-            public Subs(ListenerConfig.ClusterEventSubscriber subscriber)
-            {
-                _subscriber = subscriber;
-            }
-
-            public void Subscribe(Cluster cluster)
-            {
-                if (_action != null)
-                {
-                    _action(cluster);
-                }
-
-                else if (_subscriber != null)
-                {
-                    _subscriber.Subscribe(cluster);
-                }
-
-                else if (_type != null)
-                {
-                    var subscriber = (ListenerConfig.ClusterEventSubscriber) Activator.CreateInstance(_type);
-                    subscriber.Subscribe(cluster);
-                }
-
-                else if (!string.IsNullOrWhiteSpace(_typename))
-                {
-                    var type = Type.GetType(_typename); // beware!
-                    var subscriber = (ListenerConfig.ClusterEventSubscriber)Activator.CreateInstance(type);
-                    subscriber.Subscribe(cluster);
-                }
-
-                else throw new NotSupportedException();
-            }
-        }
-
-        public virtual ClientConfig AddClusterEventSubscriber(Action<Clustering.Cluster> subscribe)
-        {
-            _subs.Add(new Subs(subscribe));
-            return this;
-        }
-
-        public virtual ClientConfig AddClusterEventSubscriber(ListenerConfig.ClusterEventSubscriber subscriber)
-        {
-            _subs.Add(new Subs(subscriber));
+            _clusterEventSubscribers.Add(new ClusterEventSubscriber(subscriber));
             return this;
         }
 
         public virtual ClientConfig AddClusterEventSubscriber<T>()
-            where T : ListenerConfig.ClusterEventSubscriber
+            where T : IClusterEventSubscriber
         {
-            _subs.Add(new Subs(typeof(T)));
+            _clusterEventSubscribers.Add(new ClusterEventSubscriber(typeof(T)));
             return this;
         }
 
         public virtual ClientConfig AddClusterEventSubscriber(Type type)
         {
-            _subs.Add(new Subs(type));
+            _clusterEventSubscribers.Add(new ClusterEventSubscriber(type));
             return this;
         }
 
         public virtual ClientConfig AddClusterEventSubscriber(string typename)
         {
-            _subs.Add(new Subs(typename));
+            _clusterEventSubscribers.Add(new ClusterEventSubscriber(typename));
             return this;
         }
-
-        /// <summary>
-        /// Sets <see cref="ListenerConfig"/> object.
-        /// </summary>
-        /// <param name="listenerConfigs"><see cref="ListenerConfig"/> to be set</param>
-        /// <returns><see cref="ClientConfig"/> for chaining</returns>
-        public virtual ClientConfig SetListenerConfigs(IList<ListenerConfig> listenerConfigs)
-        {
-            _listenerConfigs = listenerConfigs;
-            return this;
-        }
-
 
         #endregion
 

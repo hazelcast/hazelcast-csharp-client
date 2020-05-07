@@ -15,6 +15,7 @@
 using System;
 using Hazelcast.Clustering;
 using Hazelcast.Data;
+using Hazelcast.Data.Topic;
 
 namespace Hazelcast.DistributedObjects
 {
