@@ -47,7 +47,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
-        public static ClientMessage EncodeRequest(string name, Hazelcast.Configuration.IndexConfig indexConfig)
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Data.Map.IndexConfig indexConfig)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = false;

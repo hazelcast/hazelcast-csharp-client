@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using Hazelcast.Configuration;
+using Hazelcast.Data.Map;
 
 namespace Hazelcast.DistributedObjects.Implementation
 {

@@ -15,6 +15,7 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Configuration;
+using Hazelcast.Data.Map;
 using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects.Implementation.Map

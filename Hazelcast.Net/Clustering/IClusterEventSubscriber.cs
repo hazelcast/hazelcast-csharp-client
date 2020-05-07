@@ -13,9 +13,8 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
 
-namespace Hazelcast.Configuration
+namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Defines an interface for classes that can subscribe to cluster events.

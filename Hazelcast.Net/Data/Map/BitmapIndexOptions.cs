@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading.Tasks;
-using Hazelcast.Configuration;
-using Hazelcast.Data.Map;
-
-namespace Hazelcast.DistributedObjects
+namespace Hazelcast.Data.Map
 {
-    // partial: indexing
-    public partial interface IMap<TKey, TValue>
+    public class BitmapIndexOptions
     {
-        // TODO what is this?
+        public string UniqueKey { get; set; } = Predicates.Predicates.KeyConst;
 
-        Task AddIndexAsync(IndexType type, params string[] attributes);
-        Task AddIndexAsync(IndexConfig indexConfig);
+        public UniqueKeyTransformation UniqueKeyTransformation { get; set; } = UniqueKeyTransformation.Object;
     }
 }

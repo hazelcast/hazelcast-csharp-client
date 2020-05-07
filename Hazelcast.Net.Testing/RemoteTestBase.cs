@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregators;
+using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Testing.Remote;

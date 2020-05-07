@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int UniqueKeyTransformationFieldOffset = 0;
         private const int InitialFrameSize = UniqueKeyTransformationFieldOffset + IntSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Configuration.BitmapIndexOptions bitmapIndexOptions)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.Map.BitmapIndexOptions bitmapIndexOptions)
         {
             clientMessage.Add(Frame.CreateBeginStruct());
 
@@ -55,7 +55,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Configuration.BitmapIndexOptions Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Data.Map.BitmapIndexOptions Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

@@ -14,8 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Protocol;
 
-namespace Hazelcast.Configuration
+namespace Hazelcast.Data.Map
 {
     /// <summary>
     /// Configuration of an index.

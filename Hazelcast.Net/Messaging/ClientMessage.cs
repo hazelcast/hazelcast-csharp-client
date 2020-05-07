@@ -33,7 +33,7 @@ namespace Hazelcast.Messaging
     /// <see cref="LastFrame"/>. The last frame always has the <see cref="FrameFlags.Final"/>
     /// flag set.</para>
     /// </remarks>
-    public class ClientMessage : IEnumerable<Frame>
+    public partial class ClientMessage : IEnumerable<Frame>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientMessage"/> class.
@@ -225,7 +225,12 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Determines whether the message carries an exception.
         /// </summary>
-        public bool IsException => MessageType == 0; // FIXME message type constants?
+        public bool IsException => MessageType == 0;
+
+        /// <summary>
+        /// Gets or sets the <see cref="Exception"/> carried by the message, if any.
+        /// </summary>
+        public Exception Exception { get; set; }
 
         /// <inheritdoc />
         public IEnumerator<Frame> GetEnumerator()
@@ -235,82 +240,6 @@ namespace Hazelcast.Messaging
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
-        }
-
-        /// <summary>
-        /// Represents an enumerator of frames.
-        /// </summary>
-        private class FrameEnumerator : IEnumerator<Frame>
-        {
-            private readonly ClientMessage _message;
-            private bool _started;
-#if DEBUG
-            private int _index;
-#endif
-
-            /// <summary>
-            /// Initialize a new instance of the <see cref="FrameEnumerator"/> class.
-            /// </summary>
-            /// <param name="message">The message.</param>
-            public FrameEnumerator(ClientMessage message)
-            {
-                _message = message;
-#if DEBUG
-                _index = -1;
-#endif
-            }
-
-            /// <inheritdoc />
-            public bool MoveNext()
-            {
-                if (!_started)
-                {
-                    _started = true;
-                    Current = _message.FirstFrame;
-#if DEBUG
-                    _index = 0;
-#endif
-                }
-                else
-                {
-#if DEBUG
-                    if (Current != null) _index++;
-#endif
-                    Current = Current?.Next;
-                }
-
-                return Current != null;
-            }
-
-            /// <inheritdoc />
-            public void Reset()
-            {
-                Current = null;
-                _started = false;
-#if DEBUG
-                _index = -1;
-#endif
-            }
-
-            /// <inheritdoc />
-            public Frame Current { get; private set; }
-
-            /// <inheritdoc />
-            object IEnumerator.Current => Current;
-
-            /// <inheritdoc />
-            public void Dispose()
-            { }
-
-            /// <inheritdoc />
-            public override string ToString()
-            {
-#if DEBUG
-                return $"Enumerator at frame[{_index}]: {(Current == null ? "<null>" : Current.ToString())}";
-#else
-                return $"Enumerator at frame: {(Current == null ? "<null>" : Current.ToString())}";
-#endif
-            }
         }
     }
 }
