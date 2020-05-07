@@ -74,13 +74,18 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Handles the event.
         /// </summary>
-        /// <param name="sender"></param>
+        /// <param name="sender">The originating cluster.</param>
         /// <param name="member">The member.</param>
         /// <param name="serviceName">The unique name of the service managing the object.</param>
         /// <param name="name">The unique name of the object.</param>
         public void Handle(Cluster sender, MemberInfo member, string serviceName, string name)
             => _handler(sender, CreateEventArgs(member, serviceName, name));
 
+        /// <summary>
+        /// Handle the event.
+        /// </summary>
+        /// <param name="sender">The originating cluster.</param>
+        /// <param name="args">The event arguments.</param>
         public void Handle(Cluster sender, ClusterObjectLifecycleEventArgs args)
             => _handler(sender, args);
 

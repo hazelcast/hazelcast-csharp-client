@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Clustering;
 using Hazelcast.Data;
 using Hazelcast.Data.Map;
 
@@ -21,15 +20,9 @@ namespace Hazelcast.DistributedObjects
 {
     public sealed class MapEntryInvalidatedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
     {
-        private readonly Lazy<TValue> _value;
-
-        public MapEntryInvalidatedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value)
+        public MapEntryInvalidatedEventArgs(MemberInfo member, Lazy<TKey> key)
             : base(member, key)
-        {
-            _value = value;
-        }
-
-        public TValue Value => _value == null ? default : _value.Value;
+        { }
     }
 
     internal sealed class MapEntryInvalidatedEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryInvalidatedEventArgs<TKey, TValue>>
@@ -38,8 +31,8 @@ namespace Hazelcast.DistributedObjects
             : base(MapEventType.Invalidated, handler)
         { }
 
-        protected override MapEntryInvalidatedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, MapEventType eventType, int numberOfAffectedEntries)
-            => new MapEntryInvalidatedEventArgs<TKey, TValue>(member, key, value);
+        protected override MapEntryInvalidatedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
+            => new MapEntryInvalidatedEventArgs<TKey, TValue>(member, key);
     }
 
     public static partial class Extensions

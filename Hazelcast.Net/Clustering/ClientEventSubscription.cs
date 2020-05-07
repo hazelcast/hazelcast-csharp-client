@@ -13,23 +13,22 @@
 // limitations under the License.
 
 using System;
-using System.Threading.Tasks;
 
 namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Represents a client subscription to a server event.
     /// </summary>
-    public class ClientEventSubscription
+    public class ClientSubscription
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientEventSubscription"/> class.
+        /// Initializes a new instance of the <see cref="ClientSubscription"/> class.
         /// </summary>
         /// <param name="clusterSubscription">The cluster subscription.</param>
         /// <param name="serverSubscriptionId">The unique identifier assigned by the server to the client subscription.</param>
         /// <param name="correlationId">The correlation identifier.</param>
         /// <param name="client">The subscribed client.</param>
-        public ClientEventSubscription(ClusterEventSubscription clusterSubscription, Guid serverSubscriptionId, long correlationId, Client client)
+        public ClientSubscription(ClusterSubscription clusterSubscription, Guid serverSubscriptionId, long correlationId, Client client)
         {
             ClusterSubscription = clusterSubscription;
             ServerSubscriptionId = serverSubscriptionId;
@@ -40,7 +39,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the registration definition for this registration.
         /// </summary>
-        public ClusterEventSubscription ClusterSubscription { get; }
+        public ClusterSubscription ClusterSubscription { get; }
 
         /// <summary>
         /// Gets the unique identifier assigned by the server to this registration.

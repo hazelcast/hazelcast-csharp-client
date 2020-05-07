@@ -444,7 +444,9 @@ namespace Hazelcast.Tests
             ConfigureClient(clientConfig);
             var clusterEventSubscribers = clientConfig.ClusterEventSubscribers;
 
-            // maybe that overload makes no sense
+            // FIXME maybe that overload makes no sense
+            // or, it does it the client can create everything it needs? => review Asim's configuration code too!
+            // need to review the HazelcastClient constructors...
             //var client = new HazelcastClient(ConfigureClient, CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
             var client = new HazelcastClient(clientConfig, CreateCluster(clusterEventSubscribers), CreateSerializationService(), new NullLoggerFactory());
             await client.OpenAsync();

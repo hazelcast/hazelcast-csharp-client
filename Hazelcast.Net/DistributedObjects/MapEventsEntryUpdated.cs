@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Clustering;
 using Hazelcast.Data;
 using Hazelcast.Data.Map;
 
@@ -31,8 +30,14 @@ namespace Hazelcast.DistributedObjects
             _value = value;
         }
 
+        /// <summary>
+        /// Gets the value before the update.
+        /// </summary>
         public TValue OldValue => _oldValue == null ? default : _oldValue.Value;
 
+        /// <summary>
+        /// Gets the updated value.
+        /// </summary>
         public TValue Value => _value == null ? default : _value.Value;
     }
 
@@ -42,7 +47,7 @@ namespace Hazelcast.DistributedObjects
             : base(MapEventType.Updated, handler)
         { }
 
-        protected override MapEntryUpdatedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, MapEventType eventType, int numberOfAffectedEntries)
+        protected override MapEntryUpdatedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
             => new MapEntryUpdatedEventArgs<TKey, TValue>(member, key, oldValue, value);
     }
 

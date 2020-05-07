@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,18 +13,44 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using Hazelcast.Data;
+using Hazelcast.Networking;
 
 namespace Hazelcast.Clustering
 {
     public class PartitionLostEventArgs
-    { }
+    {
+        public PartitionLostEventArgs(int partitionId, int lostBackupCount, bool isAllReplicasInPartitionLost, MemberInfo member)
+        {
+            PartitionId = partitionId;
+            LostBackupCount = lostBackupCount;
+            IsAllReplicasInPartitionLost = isAllReplicasInPartitionLost;
+            Member = member;
+        }
+
+        public int PartitionId { get; }
+
+        public int LostBackupCount { get; }
+
+        public bool IsAllReplicasInPartitionLost { get; }
+
+        public MemberInfo Member { get; }
+    }
 
     internal class PartitionLostEventHandler : IClusterEventHandler
     {
+        private readonly Action<Cluster, PartitionLostEventArgs> _handler;
+
         public PartitionLostEventHandler(Action<Cluster, PartitionLostEventArgs> handler)
-        {}
+        {
+            _handler = handler;
+        }
+
+        public void Handle(Cluster cluster, int partitionId, int lostBackupCount, bool isAllReplicasInPartitionLost, MemberInfo member)
+            => _handler(cluster, new PartitionLostEventArgs(partitionId, lostBackupCount, isAllReplicasInPartitionLost, member));
+
+        public void Handle(Cluster cluster, PartitionLostEventArgs args)
+            => _handler(cluster, args);
     }
 
     public static partial class Extensions

@@ -16,32 +16,63 @@ using System;
 
 namespace Hazelcast.Clustering
 {
-    internal enum ClientLifecycleEventType
+    public enum ClientLifecycleState
     {
-        Added,
-        Removed
+        Starting,
+        Started,
+        ShuttingDown,
+        Shutdown,
+        Connected,
+        Disconnected
     }
 
     public class ClientLifecycleEventArgs
-    { }
+    {
+        public ClientLifecycleEventArgs(ClientLifecycleState state)
+        {
+            State = state;
+        }
+
+        /// <summary>
+        /// Gets the new state.
+        /// </summary>
+        public ClientLifecycleState State { get; }
+    }
 
     internal class ClientLifecycleEventHandler : IClusterEventHandler
     {
-        public ClientLifecycleEventHandler(ClientLifecycleEventType eventType, Action<Cluster, ClientLifecycleEventArgs> handler)
-        {}
+        private readonly Action<Cluster, ClientLifecycleEventArgs> _handler;
+
+        public ClientLifecycleEventHandler(Action<Cluster, ClientLifecycleEventArgs> handler)
+        {
+            _handler = handler;
+        }
+
+        /// <summary>
+        /// Handle the event.
+        /// </summary>
+        /// <param name="sender">The originating cluster.</param>
+        /// <param name="state">The new state.</param>
+        public void Handle(Cluster sender, ClientLifecycleState state)
+            => _handler(sender, new ClientLifecycleEventArgs(state));
+
+        /// <summary>
+        /// Handle the event.
+        /// </summary>
+        /// <param name="sender">The originating cluster.</param>
+        /// <param name="args">The event arguments.</param>
+        public void Handle(Cluster sender, ClientLifecycleEventArgs args)
+            => _handler(sender, args);
     }
 
     public static partial class Extensions
     {
-        public static ClusterEvents ClientAdded(this ClusterEvents events, Action<Cluster, ClientLifecycleEventArgs> handler)
-        {
-            events.Handlers.Add(new ClientLifecycleEventHandler(ClientLifecycleEventType.Added, handler));
-            return events;
-        }
+        // TODO: original code has 1 unique 'StateChanged' event, consider having 1 event per new state?
+        // eg ClientStarting, ClientStarted, etc...?
 
-        public static ClusterEvents ClientRemoved(this ClusterEvents events, Action<Cluster, ClientLifecycleEventArgs> handler)
+        public static ClusterEvents ClientStateChanged(this ClusterEvents events, Action<Cluster, ClientLifecycleEventArgs> handler)
         {
-            events.Handlers.Add(new ClientLifecycleEventHandler(ClientLifecycleEventType.Removed, handler));
+            events.Handlers.Add(new ClientLifecycleEventHandler(handler));
             return events;
         }
     }

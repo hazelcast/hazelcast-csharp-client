@@ -125,11 +125,20 @@ namespace Hazelcast.Clustering
                 // + de-duplicate them somehow
                 // FIXME: should IPEndPoint be lazily dns-resolved each time?
 
-                var client = new Client(address.IPEndPoint, _correlationIdSequence);
-                client.ReceiveEventMessage = ReceiveEventMessage;
-                client.OnShutdown = HandleClientShutdown;
-                await client.ConnectAsync(); // may throw
-                var info = await _authenticator.AuthenticateAsync(client); // may throw
+                // create the client
+                var client = new Client(address.IPEndPoint, _correlationIdSequence)
+                {
+                    ReceiveEventMessage = ReceiveEventMessage, 
+                    OnShutdown = HandleClientShutdown
+                };
+
+                // connect to the server (may throw)
+                await client.ConnectAsync();
+
+                // authenticate (may throw)
+                var info = await _authenticator.AuthenticateAsync(client);
+
+
 
                 // FIXME: can info be null?
                 client.Update(info); //client.MemberId = info.MemberId;
@@ -142,15 +151,15 @@ namespace Hazelcast.Clustering
                 Partitioner.InitializeCount(info.PartitionCount);
                 _loadBalancer.NotifyMembers(new[] { info.MemberId });
 
-                //client.MemberId = info.MemberId;
-                // deal with partition and stuff
-
                 // FIXME: but we might want to do this in the background, see ListenerService
                 // ensure there is always one client dealing with cluster events
                 await AssignClusterEventsClient(client);
 
                 // subscribe the new client to all events the cluster has subscriptions for
                 await SubscribeClientToEvents(client);
+
+                // trigger connection event
+                OnConnectionAdded(client);
 
                 // FIXME: we also need to handle clients going down!
 

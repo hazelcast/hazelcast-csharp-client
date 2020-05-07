@@ -18,6 +18,8 @@ namespace Hazelcast.Clustering
         }
 
         public MemberInfo Member { get; }
+
+        // TODO: original event args (MembershipEvent class) also carried the complete list of members
     }
 
     internal class ClusterMemberLifecycleEventHandler : IClusterEventHandler

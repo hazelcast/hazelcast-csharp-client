@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,56 +13,24 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering.Events
 {
-    internal class ObjectLifecycleEvent
+    internal class ObjectLifecycleEventSubscription : EventSubscriptionBase
     {
-        private readonly Cluster _cluster;
-        private readonly ILoggerFactory _loggerFactory;
+        public ObjectLifecycleEventSubscription(Cluster cluster, ILoggerFactory loggerFactory)
+            : base(cluster, loggerFactory)
+        { }
 
-        private int _subscriptionsCount;
-        private Guid _subscriptionId;
-
-        public ObjectLifecycleEvent(Cluster cluster, ILoggerFactory loggerFactory)
+        protected override ClusterSubscription CreateSubscription()
         {
-            _cluster = cluster;
-            _loggerFactory = loggerFactory;
-        }
-
-        public async Task AddSubscription()
-        {
-            // add a subscription, increment returns the incremented value
-            // so it's 1 for the first subscription - which requires an actual
-            // cluster subscription
-            if (Interlocked.Increment(ref _subscriptionsCount) > 1)
-                return;
-
-            var subscription = new ClusterEventSubscription(
+            return new ClusterSubscription(
                 ClientAddDistributedObjectListenerCodec.EncodeRequest(true),
                 (message, state) => ClientAddDistributedObjectListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id),
-                (message, state) => ClientAddDistributedObjectListenerCodec.HandleEvent(message, HandleInternal, _loggerFactory));
-
-            await _cluster.InstallSubscriptionAsync(subscription);
-
-            _subscriptionId = subscription.Id;
-        }
-
-        public async Task RemoveSubscription()
-        {
-            // remove a subscription, decrement returns the decremented value
-            // so it's 0 if we don't have subscriptions anymore and can
-            // unsubscribe the cluster
-            if (Interlocked.Decrement(ref _subscriptionsCount) > 0)
-                return;
-
-            await _cluster.RemoveSubscriptionAsync(_subscriptionId);
-            _subscriptionId = default;
+                (message, state) => ClientAddDistributedObjectListenerCodec.HandleEvent(message, HandleInternal, LoggerFactory));
         }
 
         internal Action<ClusterObjectLifecycleEventType, ClusterObjectLifecycleEventArgs> Handle { get; set; }

@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects
 
     public interface IMapEntryEventHandler<TKey, TValue> : IMapEventHandlerBase<TKey, TValue>
     {
-        void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, MapEventType eventType, int numberOfAffectedEntries);
+        void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries);
     }
 
     public abstract class MapEventArgsBase
@@ -101,9 +101,9 @@ namespace Hazelcast.DistributedObjects
 
         public MapEventType EventType { get; }
 
-        public void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, MapEventType eventType, int numberOfAffectedEntries)
-            => _handler(sender, CreateEventArgs(member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries));
+        public void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
+            => _handler(sender, CreateEventArgs(member, key, value, oldValue, mergeValue, eventType, numberOfAffectedEntries));
 
-        protected abstract TArgs CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, MapEventType eventType, int numberOfAffectedEntries);
+        protected abstract TArgs CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries);
     }
 }

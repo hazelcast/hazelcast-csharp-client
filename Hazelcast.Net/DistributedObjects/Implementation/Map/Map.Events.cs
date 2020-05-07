@@ -67,7 +67,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
                     throw new Exception();
             }
 
-            var subscription = new ClusterEventSubscription(
+            var subscription = new ClusterSubscription(
                 subscribeRequest,
                 HandleSubscribeResponse,
                 CreateUnsubscribeRequest,

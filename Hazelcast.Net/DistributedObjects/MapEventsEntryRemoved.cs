@@ -29,6 +29,9 @@ namespace Hazelcast.DistributedObjects
             _oldValue = oldValue;
         }
 
+        /// <summary>
+        /// Gets the value that was removed.
+        /// </summary>
         public TValue OldValue => _oldValue == null ? default : _oldValue.Value;
     }
 
@@ -38,7 +41,7 @@ namespace Hazelcast.DistributedObjects
             : base(MapEventType.Removed, handler)
         { }
 
-        protected override MapEntryRemovedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, MapEventType eventType, int numberOfAffectedEntries)
+        protected override MapEntryRemovedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
             => new MapEntryRemovedEventArgs<TKey, TValue>(member, key, value);
     }
 

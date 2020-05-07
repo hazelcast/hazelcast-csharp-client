@@ -14,7 +14,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="subscription">The subscription.</param>
         /// <returns>A task that will complete when the subscription has been installed.</returns>
-        public async Task InstallSubscriptionAsync(ClusterEventSubscription subscription)
+        public async Task InstallSubscriptionAsync(ClusterSubscription subscription)
         {
             // register the subscription - but verify that the id really is unique
             if (!_eventSubscriptions.TryAdd(subscription.Id, subscription))
@@ -57,7 +57,7 @@ namespace Hazelcast.Clustering
         /// <param name="client">The client.</param>
         /// <param name="subscription">The subscription.</param>
         /// <returns>A task that will complete when the client has subscribed to the server event.</returns>
-        private async ValueTask Subscribe(Client client, ClusterEventSubscription subscription)
+        private async ValueTask Subscribe(Client client, ClusterSubscription subscription)
         {
             // FIXME try...catch, see ListenerService
             // and remove the handler if all fails
@@ -123,7 +123,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="clientSubscription">The subscription.</param>
         /// <returns>A task that will complete when the client has unsubscribed from the server event.</returns>
-        private async ValueTask UnsubscribeClient(ClientEventSubscription clientSubscription)
+        private async ValueTask UnsubscribeClient(ClientSubscription clientSubscription)
         {
             try
             {

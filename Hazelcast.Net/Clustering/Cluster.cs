@@ -29,10 +29,10 @@ namespace Hazelcast.Clustering
             = new ConcurrentDictionary<NetworkAddress, Client>();
         private readonly ConcurrentDictionary<Guid, Client> _clients
             = new ConcurrentDictionary<Guid, Client>();
-        private readonly ConcurrentDictionary<Guid, ClusterEventSubscription> _eventSubscriptions
-            = new ConcurrentDictionary<Guid, ClusterEventSubscription>();
-        private readonly ConcurrentDictionary<long, ClusterEventSubscription> _correlatedSubscriptions
-            = new ConcurrentDictionary<long, ClusterEventSubscription>();
+        private readonly ConcurrentDictionary<Guid, ClusterSubscription> _eventSubscriptions
+            = new ConcurrentDictionary<Guid, ClusterSubscription>();
+        private readonly ConcurrentDictionary<long, ClusterSubscription> _correlatedSubscriptions
+            = new ConcurrentDictionary<long, ClusterSubscription>();
         private readonly ConcurrentDictionary<Guid, ClusterEvents> _clusterEvents
             = new ConcurrentDictionary<Guid, ClusterEvents>();
 
@@ -40,7 +40,8 @@ namespace Hazelcast.Clustering
         private readonly ILoadBalancer _loadBalancer;
         private readonly IAuthenticator _authenticator;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly ObjectLifecycleEvent _objectLifecycleEvent;
+        private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
+        private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
         private readonly IList<IClusterEventSubscriber> _clusterEventSubscribers;
 
         private Client _clusterEventsClient;
@@ -69,7 +70,8 @@ namespace Hazelcast.Clustering
             _loadBalancer = new RandomLoadBalancer();
 
             // setup events
-            _objectLifecycleEvent = InitializeObjectLifecycleEvent();
+            _objectLifecycleEventSubscription = InitializeObjectLifecycleEventSubscription();
+            _partitionLostEventSubscription = InitializePartitionLostEventSubscription();
 
             XConsole.Configure(this, config => config.SetIndent(2).SetPrefix("CLUSTER"));
         }

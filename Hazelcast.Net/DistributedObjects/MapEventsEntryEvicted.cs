@@ -13,9 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using Hazelcast.Clustering;
 using Hazelcast.Data;
 using Hazelcast.Data.Map;
 
@@ -23,15 +20,18 @@ namespace Hazelcast.DistributedObjects
 {
     public sealed class MapEntryEvictedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
     {
-        private readonly Lazy<TValue> _value;
+        private readonly Lazy<TValue> _oldValue;
 
-        public MapEntryEvictedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value)
+        public MapEntryEvictedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> oldValue)
             : base(member, key)
         {
-            _value = value;
+            _oldValue = oldValue;
         }
 
-        public TValue Value => _value == null ? default : _value.Value;
+        /// <summary>
+        /// Gets the value that was evicted.
+        /// </summary>
+        public TValue OldValue => _oldValue == null ? default : _oldValue.Value;
     }
 
     internal sealed class MapEntryEvictedEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryEvictedEventArgs<TKey, TValue>>
@@ -40,8 +40,8 @@ namespace Hazelcast.DistributedObjects
             : base(MapEventType.Evicted, handler)
         { }
 
-        protected override MapEntryEvictedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, MapEventType eventType, int numberOfAffectedEntries)
-            => new MapEntryEvictedEventArgs<TKey, TValue>(member, key, value);
+        protected override MapEntryEvictedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
+            => new MapEntryEvictedEventArgs<TKey, TValue>(member, key, oldValue);
     }
 
     public static partial class Extensions

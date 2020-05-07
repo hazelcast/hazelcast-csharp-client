@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Clustering;
 using Hazelcast.Data;
 using Hazelcast.Data.Map;
 
@@ -22,14 +21,24 @@ namespace Hazelcast.DistributedObjects
     public sealed class MapEntryLoadedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
     {
         private readonly Lazy<TValue> _value;
+        private readonly Lazy<TValue> _oldValue;
 
-        public MapEntryLoadedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value)
+        public MapEntryLoadedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue)
             : base(member, key)
         {
             _value = value;
+            _oldValue = oldValue;
         }
 
+        /// <summary>
+        /// Gets the value that was loaded.
+        /// </summary>
         public TValue Value => _value == null ? default : _value.Value;
+
+        /// <summary>
+        /// Gets the value before load, if the entry existed.
+        /// </summary>
+        public TValue OldValue => _oldValue == null ? default : _oldValue.Value;
     }
 
     internal sealed class MapEntryLoadedEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryLoadedEventArgs<TKey, TValue>>
@@ -38,8 +47,8 @@ namespace Hazelcast.DistributedObjects
             : base(MapEventType.Loaded, handler)
         { }
 
-        protected override MapEntryLoadedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, MapEventType eventType, int numberOfAffectedEntries)
-            => new MapEntryLoadedEventArgs<TKey, TValue>(member, key, value);
+        protected override MapEntryLoadedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
+            => new MapEntryLoadedEventArgs<TKey, TValue>(member, key, value, oldValue);
     }
 
     public static partial class Extensions

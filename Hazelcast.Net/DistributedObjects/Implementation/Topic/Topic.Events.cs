@@ -40,7 +40,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 
             var subscribeRequest = TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting);
 
-            var subscription = new ClusterEventSubscription(
+            var subscription = new ClusterSubscription(
                 subscribeRequest,
                 HandleSubscribeResponse,
                 CreateUnsubscribeRequest,

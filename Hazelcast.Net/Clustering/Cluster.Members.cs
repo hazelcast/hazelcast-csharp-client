@@ -88,7 +88,7 @@ namespace Hazelcast.Clustering
             try
             {
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
-                _correlatedSubscriptions[correlationId] = new ClusterEventSubscription(HandleEvent);
+                _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEvent);
                 _ = await client.SendAsync(subscribeRequest, correlationId);
                 XConsole.WriteLine(this, "subscribed");
                 return true;
@@ -179,29 +179,7 @@ namespace Hazelcast.Clustering
 
             // raise events
             foreach (var (eventType, args) in eventArgs)
-            {
-                foreach (var clusterEvents in _clusterEvents)
-                {
-                    foreach (var handler in clusterEvents.Value.Handlers)
-                    {
-                        // FIXME could handling be async?
-                        if (handler is ClusterMemberLifecycleEventHandler memberLifecycleEventHandler && memberLifecycleEventHandler.EventType == eventType)
-                            memberLifecycleEventHandler.Handle(this, args);
-                    }
-                }
-                // FIXME: async oops!
-                //switch (args.EventType)
-                //{
-                //    case MembershipEventType.Added:
-                //        MemberAdded.InvokeAsync(args).AsTask().Wait();
-                //        break;
-                //    case MembershipEventType.Removed:
-                //        MemberRemoved.InvokeAsync(args).AsTask().Wait();
-                //        break;
-                //    default:
-                //        throw new NotSupportedException();
-                //}
-            }
+                OnMemberLifecycleEvent(eventType, args);
         }
 
         /// <summary>

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.Networking;
 
 namespace Hazelcast.Clustering
 {
@@ -22,15 +23,33 @@ namespace Hazelcast.Clustering
         Removed
     }
 
-    public class ConnectionLifecycleEventArgs 
-    { }
+    public class ConnectionLifecycleEventArgs
+    {
+        public ConnectionLifecycleEventArgs(ClientSocketConnection connection)
+        {
+            Connection = connection;
+        }
+
+        public ClientSocketConnection Connection { get; }
+    }
 
     internal class ConnectionLifecycleEventHandler : IClusterEventHandler
     {
+        private readonly Action<Cluster, ConnectionLifecycleEventArgs> _handler;
+
         public ConnectionLifecycleEventHandler(ConnectionLifecycleEventType eventType, Action<Cluster, ConnectionLifecycleEventArgs> handler)
         {
-
+            EventType = eventType;
+            _handler = handler;
         }
+
+        public ConnectionLifecycleEventType EventType { get; }
+
+        public void Handle(Cluster cluster, ClientSocketConnection connection)
+            => _handler(cluster, new ConnectionLifecycleEventArgs(connection));
+
+        public void Handle(Cluster cluster, ConnectionLifecycleEventArgs args)
+            => _handler(cluster, args);
     }
 
     public static partial class Extensions

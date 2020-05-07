@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering.Events;
-using Hazelcast.Core;
 
 namespace Hazelcast.Clustering
 {
@@ -12,22 +11,19 @@ namespace Hazelcast.Clustering
         /// Initializes the object lifecycle event.
         /// </summary>
         /// <returns>The object lifecycle event manager.</returns>
-        private ObjectLifecycleEvent InitializeObjectLifecycleEvent()
+        private ObjectLifecycleEventSubscription InitializeObjectLifecycleEventSubscription()
         {
-            return new ObjectLifecycleEvent(this, _loggerFactory)
+            return new ObjectLifecycleEventSubscription(this, _loggerFactory)
             {
-                Handle = (eventType, args) =>
-                {
-                    foreach (var (_, clusterEvents) in _clusterEvents)
-                    foreach (var handler in clusterEvents.Handlers)
-                    {
-                        if (handler is ClusterObjectLifecycleEventHandler objectEventHandler &&
-                            objectEventHandler.EventType == eventType)
-                        {
-                            objectEventHandler.Handle(this, args);
-                        }
-                    }
-                }
+                Handle = OnObjectLifecycleEvent
+            };
+        }
+
+        private PartitionLostEventSubscription InitializePartitionLostEventSubscription()
+        {
+            return new PartitionLostEventSubscription(this, _loggerFactory)
+            {
+                Handle = OnPartitionLost
             };
         }
 
@@ -47,7 +43,9 @@ namespace Hazelcast.Clustering
             foreach (var handler in subscriber.Handlers)
             {
                 if (handler is ClusterObjectLifecycleEventHandler)
-                    await _objectLifecycleEvent.AddSubscription();
+                    await _objectLifecycleEventSubscription.AddSubscription();
+                if (handler is PartitionLostEventHandler)
+                    await _partitionLostEventSubscription.AddSubscription();
             }
 
             var id = Guid.NewGuid();
@@ -69,7 +67,9 @@ namespace Hazelcast.Clustering
             foreach (var handler in clusterEvents.Handlers)
             {
                 if (handler is ClusterObjectLifecycleEventHandler)
-                    await _objectLifecycleEvent.RemoveSubscription();
+                    await _objectLifecycleEventSubscription.RemoveSubscription();
+                if (handler is PartitionLostEventHandler)
+                    await _partitionLostEventSubscription.RemoveSubscription();
             }
         }
     }

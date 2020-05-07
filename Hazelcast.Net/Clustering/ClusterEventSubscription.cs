@@ -21,37 +21,37 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents a cluster subscription to a server event.
     /// </summary>
-    public class ClusterEventSubscription
+    public class ClusterSubscription
     {
         private readonly Func<ClientMessage, object, Guid> _subscribeResponseParser;
         private readonly Func<Guid, object, ClientMessage> _unsubscribeRequestFactory;
         private readonly Action<ClientMessage, object> _eventHandler;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterEventSubscription"/> class with an auto-assigned identifier.
+        /// Initializes a new instance of the <see cref="ClusterSubscription"/> class with an auto-assigned identifier.
         /// </summary>
         /// <param name="subscribeRequest">The subscribe request message.</param>
         /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
         /// <param name="eventHandler">The event handler.</param>
         /// <param name="state">A state object.</param>
-        public ClusterEventSubscription(ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Action<ClientMessage, object> eventHandler, object state = null)
+        public ClusterSubscription(ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Action<ClientMessage, object> eventHandler, object state = null)
             : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, null, eventHandler, state)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterEventSubscription"/> class with an auto-assigned identifier.
+        /// Initializes a new instance of the <see cref="ClusterSubscription"/> class with an auto-assigned identifier.
         /// </summary>
         /// <param name="subscribeRequest">The subscribe request message.</param>
         /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
         /// <param name="unsubscribeRequestFactory">The unsubscribe request message factory.</param>
         /// <param name="eventHandler">The event handler.</param>
         /// <param name="state">A state object.</param>
-        public ClusterEventSubscription(ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Func<Guid, object, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage, object> eventHandler, object state = null)
+        public ClusterSubscription(ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Func<Guid, object, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage, object> eventHandler, object state = null)
             : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, unsubscribeRequestFactory, eventHandler, state)
         { }
 
         /// <summary>
-        /// Initializes a new complete instance of the <see cref="ClusterEventSubscription"/> class.
+        /// Initializes a new complete instance of the <see cref="ClusterSubscription"/> class.
         /// </summary>
         /// <param name="id">The unique identifier of the subscription.</param>
         /// <param name="subscribeRequest">The subscribe request message.</param>
@@ -59,7 +59,7 @@ namespace Hazelcast.Clustering
         /// <param name="unsubscribeRequestFactory">The unsubscribe request message factory.</param>
         /// <param name="eventHandler">The event handler.</param>
         /// <param name="state">A state object.</param>
-        public ClusterEventSubscription(Guid id, ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Func<Guid, object, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage, object> eventHandler, object state = null)
+        public ClusterSubscription(Guid id, ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Func<Guid, object, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage, object> eventHandler, object state = null)
         {
             Id = id;
             SubscribeRequest = subscribeRequest;
@@ -70,13 +70,13 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Initializes a new simplified instance of the <see cref="ClusterEventSubscription"/> class.
+        /// Initializes a new simplified instance of the <see cref="ClusterSubscription"/> class.
         /// </summary>
         /// <param name="eventHandler">The event handler.</param>
         /// <remarks>
         /// <para>A simplified instance only has a handler, and nothing else.</para>
         /// </remarks>
-        internal ClusterEventSubscription(Action<ClientMessage, object> eventHandler)
+        internal ClusterSubscription(Action<ClientMessage, object> eventHandler)
         {
             _eventHandler = eventHandler;
         }
@@ -102,10 +102,10 @@ namespace Hazelcast.Clustering
         /// <param name="message">The registration response message.</param>
         /// <param name="client">The client.</param>
         /// <returns>The client subscription.</returns>
-        public ClientEventSubscription AcceptSubscribeResponse(ClientMessage message, Client client)
+        public ClientSubscription AcceptSubscribeResponse(ClientMessage message, Client client)
         {
             var serverSubscriptionId = _subscribeResponseParser(message, State);
-            var clientSubscription = new ClientEventSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
+            var clientSubscription = new ClientSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
             ClientSubscriptions[clientSubscription.Client] = clientSubscription;
             return clientSubscription;
         }
@@ -126,7 +126,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the client subscriptions for this cluster subscription.
         /// </summary>
-        public ConcurrentDictionary<Client, ClientEventSubscription> ClientSubscriptions { get; }
-            = new ConcurrentDictionary<Client, ClientEventSubscription>();
+        public ConcurrentDictionary<Client, ClientSubscription> ClientSubscriptions { get; }
+            = new ConcurrentDictionary<Client, ClientSubscription>();
     }
 }

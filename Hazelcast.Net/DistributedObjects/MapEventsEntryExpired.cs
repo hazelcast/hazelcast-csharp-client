@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Clustering;
 using Hazelcast.Data;
 using Hazelcast.Data.Map;
 
@@ -21,15 +20,18 @@ namespace Hazelcast.DistributedObjects
 {
     public sealed class MapEntryExpiredEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
     {
-        private readonly Lazy<TValue> _value;
+        private readonly Lazy<TValue> _oldValue;
 
-        public MapEntryExpiredEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value)
+        public MapEntryExpiredEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> oldValue)
             : base(member, key)
         {
-            _value = value;
+            _oldValue = oldValue;
         }
 
-        public TValue Value => _value == null ? default : _value.Value;
+        /// <summary>
+        /// Gets the value that expired.
+        /// </summary>
+        public TValue OldValue => _oldValue == null ? default : _oldValue.Value;
     }
 
     internal sealed class MapEntryExpiredEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryExpiredEventArgs<TKey, TValue>>
@@ -38,8 +40,8 @@ namespace Hazelcast.DistributedObjects
             : base(MapEventType.Expired, handler)
         { }
 
-        protected override MapEntryExpiredEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergingValue, MapEventType eventType, int numberOfAffectedEntries)
-            => new MapEntryExpiredEventArgs<TKey, TValue>(member, key, value);
+        protected override MapEntryExpiredEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
+            => new MapEntryExpiredEventArgs<TKey, TValue>(member, key, oldValue);
     }
 
     public static partial class Extensions
