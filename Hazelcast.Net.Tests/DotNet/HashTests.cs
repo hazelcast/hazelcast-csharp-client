@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using NUnit.Framework;
 
-namespace AsyncTests1
+namespace Hazelcast.Tests.DotNet
 {
     [TestFixture]
     public class HashTests

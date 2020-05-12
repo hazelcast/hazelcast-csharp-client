@@ -1,13 +1,12 @@
 using System;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace AsyncTests1
+namespace Hazelcast.Tests.DotNet
 {
-    public static class TaskExtensions
+    public static class ObserveTaskExtensions
     {
         private static void ObserveTaskException(Task Task)
         {
@@ -26,7 +25,7 @@ namespace AsyncTests1
         //}
     }
 
-    public class Tests
+    public class ObservedExceptionTests
     {
         [SetUp]
         public void Setup()

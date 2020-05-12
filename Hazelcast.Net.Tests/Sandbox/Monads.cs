@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace AsyncTests1
+namespace Hazelcast.Tests.Sandbox
 {
     // https://www.dotnetcurry.com/patterns-practices/1510/maybe-monad-csharp
     // https://www.dotnetcurry.com/patterns-practices/1526/maybe-monad-csharp-examples
