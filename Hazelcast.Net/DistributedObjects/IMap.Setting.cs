@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="timeToLive">A time to live.</param>
         /// <returns>The value previously associated with the key in the map, if any; otherwise default(<typeparamref name="TValue"/>).</returns>
         /// <remarks>
-        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
         /// </remarks>
         Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value, TimeSpan timeToLive);
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="timeToLive">A time to live.</param>
         /// <returns>Nothing.</returns>
         /// <remarks>
-        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
         /// </remarks>
         Task AddOrReplaceAsync(TKey key, TValue value, TimeSpan timeToLive);
@@ -118,25 +118,24 @@ namespace Hazelcast.DistributedObjects
         /// <param name="timeToLive">A time to live.</param>
         /// <returns>The existing value, if any; otherwise the default value.</returns>
         /// <remarks>
-        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
         /// </remarks>
         Task<TValue> AddIfMissingAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Adds an entry, or its <see cref="MapStore"/>.
+        /// Adds a transient entry.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">The value.</param>
         /// <param name="timeToLive">A time to live.</param>
         /// <remarks>
-        /// <para>If the map has a <see cref="MapStore"/> attached, the entry is added to the store
-        /// but not persisted. Flushing the store (see <see cref="Flush"/>) is required to make sure
-        /// that the entry is actually persisted to the map.</para>
-        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
+        /// <para>If the map has a MapStore attached, the entry is added to the store but not persisted.
+        /// Flushing the store is required to make sure that the entry is actually persisted.</para>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
         /// TODO: is it really removed? or just evicted?
         /// </remarks>
-        Task AddTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task AddOrReplaceTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
     }
 }

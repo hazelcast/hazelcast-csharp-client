@@ -101,10 +101,10 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         }
 
         /// <inheritdoc />
-        protected override async Task AddTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        protected override async Task AddOrReplaceTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive)
         {
             _cache.Invalidate(keyData);
-            await base.AddTransientAsync(keyData, valueData, timeToLive);
+            await base.AddOrReplaceTransientAsync(keyData, valueData, timeToLive);
         }
 
         #endregion

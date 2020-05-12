@@ -16,7 +16,6 @@ using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
-using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.Implementation;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -26,7 +25,7 @@ namespace Hazelcast
     /// <summary>
     /// Represents the Hazelcast client.
     /// </summary>
-    internal class HazelcastClient : IHazelcastClient
+    internal partial class HazelcastClient : IHazelcastClient
     {
         private readonly ClientConfig _configuration;
         private readonly DistributedObjectFactory _distributedObjectFactory;
@@ -106,41 +105,5 @@ namespace Hazelcast
             // TODO: consider making HazelcastClient IDisposable
             throw new NotImplementedException();
         }
-
-        // TODO: implement HazelcastClient access to other Distributed Objects
-
-        /// <summary>
-        /// Gets an <see cref="IMap{TKey,TValue}"/> distributed object.
-        /// </summary>
-        /// <typeparam name="TKey">The type of the keys.</typeparam>
-        /// <typeparam name="TValue">The type of the values.</typeparam>
-        /// <param name="name">The unique name of the map.</param>
-        /// <returns>A task that will complete when the map has been retrieved or created,
-        /// and represents the map that has been retrieved or created.</returns>
-#if DEBUG // maintain full stack traces
-        public async Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
-            => await GetDistributedObjectAsync<IMap<TKey,TValue>>(Constants.ServiceNames.Map, name);
-#else
-        public Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
-            => GetDistributedObjectAsync<IMap<TKey,TValue>>(Constants.ServiceNames.Map, name);
-#endif
-
-        /// <summary>
-        /// Gets a distributed object.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <param name="serviceName">The name of the service.</param>
-        /// <param name="name">The unique name of the object.</param>
-        /// <returns>A task that will complete when the object has been retrieved or created,
-        /// and represents the object that has been retrieved or created.</returns>
-#if DEBUG // maintain full stack traces
-        private async ValueTask<TObject> GetDistributedObjectAsync<TObject>(string serviceName, string name)
-            where TObject : IDistributedObject
-            => await _distributedObjectFactory.GetOrCreateAsync<TObject>(serviceName, name);
-#else
-        private ValueTask<T> GetDistributedObjectAsync<T>(string serviceName, string name)
-            where T : IDistributedObject
-            => _distributedObjectFactory.GetOrCreateAsync<T>(serviceName, name);
-#endif
     }
 }

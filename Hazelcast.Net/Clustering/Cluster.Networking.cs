@@ -62,6 +62,8 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when connected.</returns>
         public async ValueTask ConnectAsync()
         {
+            _readonlyProperties = true;
+
             await ConnectFirstClientAsync();
 
             // FIXME need timeout etc here!
@@ -81,7 +83,7 @@ namespace Hazelcast.Clustering
         /// Connects a first client to the server-side cluster.
         /// </summary>
         /// <returns>A task that will complete when connected.</returns>
-        public async ValueTask ConnectFirstClientAsync()
+        private async ValueTask ConnectFirstClientAsync()
         {
             var tried = new HashSet<NetworkAddress>();
             var exceptions = new List<Exception>();

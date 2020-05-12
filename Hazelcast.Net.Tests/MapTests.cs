@@ -277,10 +277,31 @@ namespace Hazelcast.Tests
 
         [Test]
         [Timeout(10_000)]
-        public async Task AddTransient()
+        public async Task AddOrReplaceTransient()
         {
-            // I don't know what that does?
-            throw new NotImplementedException();
+            TestSetUp();
+
+            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            await client.OpenAsync();
+
+            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+
+            // AddTransient adds a new value, or replaces an existing value,
+            // and does not return anything
+            // (so it's "add or replace" really)
+            // NOTE: no way to know whether it added or replaced?
+
+            await map.AddOrReplaceTransientAsync("key", 42, Timeout.InfiniteTimeSpan);
+
+            await map.AddOrReplaceTransientAsync("key", 43, Timeout.InfiniteTimeSpan);
+
+            await map.AddOrReplaceTransientAsync("key1", 43, Timeout.InfiniteTimeSpan);
+
+            var value = await map.GetAsync("key");
+            Assert.AreEqual(43, value);
+
+            var count = await map.CountAsync();
+            Assert.AreEqual(2, count);
         }
 
         [Test]

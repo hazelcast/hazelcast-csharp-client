@@ -237,20 +237,24 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         }
 
         /// <inheritdoc />
-        public async Task AddTransientAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task AddOrReplaceTransientAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            await AddTransientAsync(keyData, valueData, timeToLive);
+            await AddOrReplaceTransientAsync(keyData, valueData, timeToLive);
         }
 
-        /// TODO: document?!
-        protected virtual async Task AddTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        /// <summary>
+        /// Adds a transient entry.
+        /// </summary>
+        /// <param name="keyData">A key.</param>
+        /// <param name="valueData">The value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        protected virtual async Task AddOrReplaceTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive)
         {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
-            // FIXME uh?
             var requestMessage = MapPutTransientCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            _ = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
         }
     }
 }
