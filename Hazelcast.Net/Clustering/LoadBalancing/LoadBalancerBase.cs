@@ -37,6 +37,9 @@ namespace Hazelcast.Clustering.LoadBalancing
         protected List<Guid> Members {get; private set; }
 
         /// <inheritdoc />
+        public int Count => Members.Count;
+
+        /// <inheritdoc />
         public abstract Guid Select();
 
         /// <inheritdoc />

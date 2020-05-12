@@ -20,14 +20,18 @@ namespace Hazelcast.Clustering.Events
 {
     internal class ObjectLifecycleEventSubscription : EventSubscriptionBase
     {
-        public ObjectLifecycleEventSubscription(Cluster cluster, ILoggerFactory loggerFactory)
+        private readonly bool _isSmart;
+
+        public ObjectLifecycleEventSubscription(Cluster cluster, ILoggerFactory loggerFactory, bool isSmart)
             : base(cluster, loggerFactory)
-        { }
+        {
+            _isSmart = isSmart;
+        }
 
         protected override ClusterSubscription CreateSubscription()
         {
             return new ClusterSubscription(
-                ClientAddDistributedObjectListenerCodec.EncodeRequest(true),
+                ClientAddDistributedObjectListenerCodec.EncodeRequest(_isSmart),
                 (message, state) => ClientAddDistributedObjectListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id),
                 (message, state) => ClientAddDistributedObjectListenerCodec.HandleEvent(message, HandleInternal, LoggerFactory));

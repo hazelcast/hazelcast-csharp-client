@@ -14,7 +14,6 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Networking;
 
 namespace Hazelcast.Clustering
 {

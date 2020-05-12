@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Hazelcast.Logging;
 using Hazelcast.Serialization;
 
@@ -27,7 +26,6 @@ namespace Hazelcast.Partitioning
         private readonly bool _isSmartRouting;
         private readonly object _partitionsLock = new object();
         private PartitionTable _partitions;
-        private int _count;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Partitioner"/> class.
@@ -44,19 +42,7 @@ namespace Hazelcast.Partitioning
         /// <summary>
         /// Gets the number of partitions.
         /// </summary>
-        public int Count => _count;
-
-        // FIXME explain
-        public void InitializeCount(int count)
-        {
-            // if we don't have a table yet, force the count to be something - urh?
-
-            lock (_partitionsLock)
-            {
-                if (_partitions != null) return;
-                _count = count;
-            }
-        }
+        public int Count { get; private set; }
 
         /// <summary>
         /// Gets the unique identifier of the member owning a partition.
@@ -94,7 +80,7 @@ namespace Hazelcast.Partitioning
             var hash = data.PartitionHash;
             return hash == int.MinValue
                 ? 0
-                : Math.Abs(hash) % _count;
+                : Math.Abs(hash) % Count;
         }
 
         /// <summary>
@@ -122,8 +108,21 @@ namespace Hazelcast.Partitioning
                 if (_partitions == null || _partitions.IsSupersededBy(originClientId, version, partitionsMap))
                 {
                     _partitions = new PartitionTable(originClientId, version, partitionsMap);
-                    _count = _partitions.Count;
+                    Count = _partitions.Count;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Notifies the partitioner of the initial partitions count.
+        /// </summary>
+        /// <param name="count">The partitions count.</param>
+        public void NotifyInitialCount(int count)
+        {
+            lock (_partitionsLock)
+            {
+                if (_partitions != null) return;
+                Count = count;
             }
         }
     }

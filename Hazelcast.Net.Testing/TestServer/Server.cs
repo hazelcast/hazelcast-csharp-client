@@ -37,10 +37,10 @@ namespace Hazelcast.Testing.TestServer
         /// <summary>
         /// Initializes a new instance of the <see cref="Server"/> class.
         /// </summary>
-        /// <param name="endpoint">The socket endpoint.</param>
-        public Server(IPEndPoint endpoint)
+        /// <param name="address">The socket network address.</param>
+        public Server(NetworkAddress address)
         {
-            _endpoint = endpoint;
+            _endpoint = address.IPEndPoint;
             XConsole.Configure(this, config => config.SetIndent(20).SetPrefix("SERVER"));
         }
 

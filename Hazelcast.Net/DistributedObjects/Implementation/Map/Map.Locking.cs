@@ -49,7 +49,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var timeoutMs = timeout.CodecMilliseconds(0);
 
             var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ThreadId, leaseTimeMs, timeoutMs, refId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapTryLockCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var keyData = ToSafeData(key);
 
             var requestMessage = MapIsLockedCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapIsLockedCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -73,7 +73,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var refId = _lockReferenceIdSequence.Next;
 
             var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ThreadId, refId);
-            await Cluster.SendAsync(requestMessage, keyData);
+            await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
         }
 
         /// <inheritdoc />
@@ -84,7 +84,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var refId = _lockReferenceIdSequence.Next;
 
             var requestMessage = MapForceUnlockCodec.EncodeRequest(Name, keyData, refId);
-            await Cluster.SendAsync(requestMessage, keyData);
+            await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
         }
     }
 }

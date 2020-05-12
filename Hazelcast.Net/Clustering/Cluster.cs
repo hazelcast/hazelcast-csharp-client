@@ -2,21 +2,15 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering.Events;
 using Hazelcast.Clustering.LoadBalancing;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Data;
-using Hazelcast.Eventing;
 using Hazelcast.Exceptions;
 using Hazelcast.Logging;
-using Hazelcast.Messaging;
 using Hazelcast.Networking;
-using Hazelcast.Security;
-using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using Partitioner = Hazelcast.Partitioning.Partitioner;
@@ -25,10 +19,10 @@ namespace Hazelcast.Clustering
 {
     public partial class Cluster
     {
-        private readonly ConcurrentDictionary<NetworkAddress, Client> _clientsBAD
-            = new ConcurrentDictionary<NetworkAddress, Client>();
-        private readonly ConcurrentDictionary<Guid, Client> _clients
+        private readonly ConcurrentDictionary<Guid, Client> _memberClients
             = new ConcurrentDictionary<Guid, Client>();
+        private readonly ConcurrentDictionary<NetworkAddress, Client> _addressClients
+            = new ConcurrentDictionary<NetworkAddress, Client>();
         private readonly ConcurrentDictionary<Guid, ClusterSubscription> _eventSubscriptions
             = new ConcurrentDictionary<Guid, ClusterSubscription>();
         private readonly ConcurrentDictionary<long, ClusterSubscription> _correlatedSubscriptions
@@ -44,10 +38,24 @@ namespace Hazelcast.Clustering
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
         private readonly IList<IClusterEventSubscriber> _clusterEventSubscribers;
 
+        private bool _readonlyProperties;
+        private Func<ValueTask> _onConnectionToNewCluster;
         private Client _clusterEventsClient;
         private MemberTable _memberTable;
+        private Guid _clusterId;
+        private ClusterState _state;
+        private volatile int _firstMembersViewed;
+        private volatile int _firstpartitionsViewed;
+        private SemaphoreSlim _firstMembersView = new SemaphoreSlim(0);
+        private SemaphoreSlim _firstPartitionsView = new SemaphoreSlim(0);
 
-
+        private enum ClusterState // FIXME move to partial, etc
+        {
+            Unknown = 0,
+            NotConnected,
+            Connecting,
+            Connected
+        }
 
         public Cluster(IAuthenticator authenticator, IList<IClusterEventSubscriber> clusterEventSubscribers, ILoggerFactory loggerFactory)
         {
@@ -83,6 +91,20 @@ namespace Hazelcast.Clustering
         public Guid ClientId { get; } = Guid.NewGuid();
 
         /// <summary>
+        /// Gets or sets an action that will be executed when connecting to a new cluster.
+        /// </summary>
+        public Func<ValueTask> OnConnectingToNewCluster
+        {
+            get => _onConnectionToNewCluster;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onConnectionToNewCluster = value;
+            }
+        }
+
+        /// <summary>
         /// Determines whether the cluster is using smart routing.
         /// </summary>
         /// <remarks>
@@ -95,16 +117,6 @@ namespace Hazelcast.Clustering
         /// custom networking issues can be the reason for these cases.</para>
         /// </remarks>
         public bool IsSmartRouting { get; } = true;
-
-        // TODO: what's the point of this?
-        public async ValueTask Connect()
-        {
-            await ConnectToCluster();
-
-            // FIXME and also for each new client etc?!
-            foreach (var subscriber in _clusterEventSubscribers)
-                await subscriber.SubscribeAsync(this);
-        }
 
         /// <summary>
         /// Gets the partitioner.

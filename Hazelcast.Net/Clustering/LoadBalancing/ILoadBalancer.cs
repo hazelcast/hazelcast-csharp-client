@@ -9,6 +9,11 @@ namespace Hazelcast.Clustering.LoadBalancing
     public interface ILoadBalancer
     {
         /// <summary>
+        /// Gets the number of members.
+        /// </summary>
+        int Count { get; }
+
+        /// <summary>
         /// Selects a member.
         /// </summary>
         /// <returns>The unique identifier of the selected member.</returns>

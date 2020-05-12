@@ -2,6 +2,8 @@
 using System.Linq;
 using Hazelcast.Core;
 using Hazelcast.Data;
+using Hazelcast.Logging;
+using Hazelcast.Messaging;
 using Hazelcast.Networking;
 
 namespace Hazelcast.Clustering
@@ -73,7 +75,7 @@ namespace Hazelcast.Clustering
 
         private void ForEachHandler<THandler>(Action<THandler> action)
         {
-            // FIXME could handling be async?
+            // FIXME could handling be async? w/ controlled scheduler?
 
             foreach (var (_, clusterEvents) in _clusterEvents)
             foreach (var handler in clusterEvents.Handlers.OfType<THandler>())
@@ -87,6 +89,24 @@ namespace Hazelcast.Clustering
                     // FIXME log, or something!
                 }
             }
+        }
+
+        private void OnEventMessage(ClientMessage message)
+        {
+            XConsole.WriteLine(this, "Handle event message");
+
+            // FIXME could handling be async? w/ controlled scheduler?
+
+            if (!_correlatedSubscriptions.TryGetValue(message.CorrelationId, out var subscription))
+            {
+                // TODO: log a warning
+                // TODO: instrumentation, keep track of missed events
+                XConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
+                return;
+            }
+
+            // FIXME try/catch?
+            subscription.Handle(message);
         }
     }
 }

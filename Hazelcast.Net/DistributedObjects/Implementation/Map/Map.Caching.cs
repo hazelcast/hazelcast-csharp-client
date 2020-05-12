@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var keyData = ToSafeData(key);
 
             var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
             return response;
         }

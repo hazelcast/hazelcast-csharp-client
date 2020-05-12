@@ -164,11 +164,11 @@ namespace Hazelcast.NearCaching
         /// <para>Depending on the cache configuration, the returned object can be in serialized form (i.e.
         /// an <see cref="IData"/> instance) or already de-serialized.</para>
         /// </remarks>
-        public async Task<(bool, object)> TryGetOrAddAsync(IData keyData, Func<IData, Task<object>> valueFactory)
+        public async Task<Attempt<object>> TryGetOrAddAsync(IData keyData, Func<IData, Task<object>> valueFactory)
         {
             // if it's in the cache already, return it
             if (TryGetValue(keyData, out var o))
-                return (true, o);
+                return o;
 
             // count a miss
             Statistics.IncrementMiss();
@@ -179,7 +179,7 @@ namespace Hazelcast.NearCaching
 
             // if the cache is full, directly return the un-cached value
             if (_evictionPolicy == EvictionPolicy.None && Entries.Count >= _maxSize && !Entries.ContainsKey(keyData))
-                return (false, await valueFactory(keyData));
+                return Attempt.Fail(await valueFactory(keyData));
 
             // prepare the cache entry
             var lazyEntry = new AsyncLazy<NearCacheEntry>(async () =>
@@ -208,18 +208,18 @@ namespace Hazelcast.NearCaching
                 }
 
                 if (entry.Value != null)
-                    return (true, entry.Value);
+                    return entry.Value;
 
                 Invalidate(keyData);
-                return (false, default);
+                return Attempt.Failed;
             }
 
             // failed to add, was added by another thread?
             if (TryGetValue(keyData, out o))
-                return (true, o);
+                return o;
 
             // otherwise, add the uncached value
-            return (false, await valueFactory(keyData));
+            return Attempt.Fail(await valueFactory(keyData));
         }
 
         public bool TryGetValue(IData keyData, out object value)

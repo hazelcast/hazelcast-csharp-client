@@ -128,7 +128,7 @@ namespace Hazelcast.NearCaching
                 var request = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
                 try
                 {
-                    var responseMessage = _cluster.SendAsync(request, member.Id, AsyncResultWaitTimeoutMillis).Result; // FIXME ASYNC!
+                    var responseMessage = _cluster.SendToMemberAsync(request, member.Id, AsyncResultWaitTimeoutMillis).Result; // FIXME ASYNC!
                     var responseParameter = MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
                     process(responseParameter);
                     /*

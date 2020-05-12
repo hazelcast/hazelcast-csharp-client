@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
+using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
@@ -24,9 +25,9 @@ namespace Hazelcast.Clustering
         private readonly object _isConnectedLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
-        private readonly IPEndPoint _endpoint;
 
-        private Action<ClientMessage> _receiveEventMessage; // fixme onReceiveEventMessage <Client, ClientMessage>?
+        private bool _readonlyProperties;
+        private Action<ClientMessage> _onReceiveEventMessage;
         private Action<Client> _onShutdown;
         private ClientSocketConnection _socketConnection;
         private ClientMessageConnection _connection;
@@ -35,16 +36,16 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
-        /// <param name="endpoint">The socket endpoint.</param>
+        /// <param name="address">The network address.</param>
         /// <param name="correlationIdSequence">A unique sequence of correlation identifiers.</param>
-        public Client(IPEndPoint endpoint, ISequence<long> correlationIdSequence)
-            : this(endpoint, correlationIdSequence, new Int32Sequence())
+        public Client(NetworkAddress address, ISequence<long> correlationIdSequence)
+            : this(address, correlationIdSequence, new Int32Sequence())
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
-        /// <param name="endpoint">The socket endpoint.</param>
+        /// <param name="address">The network address.</param>
         /// <param name="correlationIdSequence">A unique sequence of correlation identifiers.</param>
         /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
         /// <remarks>
@@ -52,9 +53,9 @@ namespace Hazelcast.Clustering
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public Client(IPEndPoint endpoint, ISequence<long> correlationIdSequence, ISequence<int> connectionIdSequence)
+        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ISequence<int> connectionIdSequence)
         {
-            _endpoint = endpoint;
+            Address = address;
             _correlationIdSequence = correlationIdSequence;
             _connectionIdSequence = connectionIdSequence;
 
@@ -66,27 +67,40 @@ namespace Hazelcast.Clustering
         /// </summary>
         public Guid Id { get; } = Guid.NewGuid();
 
-        // todo document
+        /// <summary>
+        /// Gets the unique identifier of the cluster member that this client is connected to.
+        /// </summary>
         public Guid MemberId { get; private set; }
 
-        // todo document
-        public Action<ClientMessage> ReceiveEventMessage
+        /// <summary>
+        /// Gets the network address the client is connected to.
+        /// </summary>
+        public NetworkAddress Address { get; }
+
+        /// <summary>
+        /// Gets or sets an action that will be executed when the client receives a message.
+        /// </summary>
+        public Action<ClientMessage> OnReceiveEventMessage
         {
-            get => _receiveEventMessage;
+            get => _onReceiveEventMessage;
             set
             {
-                // FIXME tests it's ok etc
-                _receiveEventMessage = value;
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onReceiveEventMessage = value;
             }
         }
 
-        // todo document
+        /// <summary>
+        /// Gets or sets an action that will be executed when the client shuts down.
+        /// </summary>
         public Action<Client> OnShutdown
         {
             get => _onShutdown;
             set
             {
-                // FIXME test it's ok etc
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
                 _onShutdown = value;
             }
         }
@@ -107,10 +121,13 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the client is connected.</returns>
         public async ValueTask ConnectAsync()
         {
+            // as soon as we even try to connect, some properties cannot change anymore
+            _readonlyProperties = true;
+
             // MessageConnection is just a wrapper around a true SocketConnection
             // the SocketConnection must be open *after* everything has been wired
 
-            _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, _endpoint) { OnShutdown = SocketShutdown };
+            _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, Address.IPEndPoint) { OnShutdown = SocketShutdown };
             _connection = new ClientMessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
             XConsole.Configure(_connection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
 
@@ -149,9 +166,9 @@ namespace Hazelcast.Clustering
 
             if (message.IsEvent)
             {
-                XConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" + 
+                XConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +
                                          XConsole.Lines(this, 1, message.Dump()));
-                _receiveEventMessage(message);
+                _onReceiveEventMessage(message);
                 return new ValueTask();
             }
 
@@ -289,6 +306,8 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the client has shut down.</returns>
         public async Task ShutdownAsync()
         {
+            // TODO: consider making Client IDisposable
+
             XConsole.WriteLine(this, "Shutdown");
 
             lock (_isConnectedLock)

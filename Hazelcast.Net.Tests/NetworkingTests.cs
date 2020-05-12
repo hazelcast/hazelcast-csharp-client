@@ -89,20 +89,20 @@ namespace Hazelcast.Tests
             //var ipAddress = host.AddressList[0];
             //var endpoint = new IPEndPoint(ipAddress, _port);
 
-            var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:11001");
+            var address = NetworkAddress.Parse("127.0.0.1:11001");
 
             XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server(endpoint);
+            var server = new Server(address);
             await server.StartAsync();
 
             var corSequence = new Int64Sequence();
             var conSequence = new Int32Sequence();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(endpoint, corSequence, conSequence);
+            var client1 = new Clustering.Client(address, corSequence, conSequence);
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -112,7 +112,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Start client 2");
-            var client2 = new Clustering.Client(endpoint, corSequence, conSequence);
+            var client2 = new Clustering.Client(address, corSequence, conSequence);
             await client2.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 2");
@@ -142,17 +142,17 @@ namespace Hazelcast.Tests
         [Timeout(10_000)]
         public async Task ServerShutdown()
         {
-            var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:11000");
+            var address = NetworkAddress.Parse("127.0.0.1:11000");
 
             XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server(endpoint);
+            var server = new Server(address);
             await server.StartAsync();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(endpoint, new Int64Sequence());
+            var client1 = new Clustering.Client(address, new Int64Sequence());
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -179,13 +179,13 @@ namespace Hazelcast.Tests
         {
             // need to start a real server (not the RC thing!)
 
-            var endpoint = NetworkAddress.Parse("127.0.0.1").IPEndPoint;
+            var address = NetworkAddress.Parse("sgay-l4");
 
             XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start client ");
-            var client1 = new Clustering.Client(endpoint, new Int64Sequence());
+            var client1 = new Clustering.Client(address, new Int64Sequence());
             await client1.ConnectAsync();
 
             // RC assigns a GUID but the default cluster name is 'dev'
@@ -219,7 +219,7 @@ namespace Hazelcast.Tests
         [Timeout(10_000)]
         public async Task Cluster()
         {
-            var endpoint = NetworkAddress.Parse("127.0.0.1").IPEndPoint;
+            var address = NetworkAddress.Parse("sgay-l4");
 
             // this test expects a server on localhost:5701
 
@@ -228,7 +228,7 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Cluster?");
             var cluster = new Cluster(new Authenticator(), new List<IClusterEventSubscriber>(),  new NullLoggerFactory());
-            await cluster.Connect();
+            await cluster.ConnectAsync();
 
             // now we can send messages...
             //await cluster.SendAsync(new ClientMessage());
@@ -266,8 +266,8 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             */
 
             // connect to real server
-            var endpoint = NetStandardCompatibility.IPEndPoint.Parse("127.0.0.1:5701");
-            var client1 = new Clustering.Client(endpoint, new Int64Sequence());
+            var address = NetworkAddress.Parse("127.0.0.1:5701");
+            var client1 = new Clustering.Client(address, new Int64Sequence());
             await client1.ConnectAsync();
             /*
             // send poison

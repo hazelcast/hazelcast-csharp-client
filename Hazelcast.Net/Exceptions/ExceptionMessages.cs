@@ -24,5 +24,10 @@
         /// Cached value is not of the expected type.
         /// </summary>
         public const string InvalidCacheCast = "Cached value is not of the expected type.";
+
+        /// <summary>
+        /// Property is now read only and cannot be modified.
+        /// </summary>
+        public const string PropertyIsNowReadOnly = "The property is now readonly and cannot be modified.";
     }
 }

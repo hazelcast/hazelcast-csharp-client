@@ -13,15 +13,19 @@ namespace Hazelcast.Clustering
         /// <returns>The object lifecycle event manager.</returns>
         private ObjectLifecycleEventSubscription InitializeObjectLifecycleEventSubscription()
         {
-            return new ObjectLifecycleEventSubscription(this, _loggerFactory)
+            return new ObjectLifecycleEventSubscription(this, _loggerFactory, IsSmartRouting)
             {
                 Handle = OnObjectLifecycleEvent
             };
         }
 
+        /// <summary>
+        /// Initializes the partition lost event.
+        /// </summary>
+        /// <returns>The object lifecycle event manager.</returns>
         private PartitionLostEventSubscription InitializePartitionLostEventSubscription()
         {
-            return new PartitionLostEventSubscription(this, _loggerFactory)
+            return new PartitionLostEventSubscription(this, _loggerFactory, IsSmartRouting)
             {
                 Handle = OnPartitionLost
             };

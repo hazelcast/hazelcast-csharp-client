@@ -76,7 +76,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 
                     var requestMessage = MapPutAllCodec.EncodeRequest(Name, list);
                     requestMessage.PartitionId = partitionId;
-                    var task = Cluster.SendAsync(requestMessage, ownerId).AsTask()
+                    var task = Cluster.SendToMemberAsync(requestMessage, ownerId).AsTask()
                         .ContinueWith(_ => InvalidateEntries(list));
                     tasks.Add(task);
                 }
@@ -116,8 +116,8 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         {
             try
             {
-                var (success, valueObject) = await _cache.TryGetOrAddAsync(keyData, data => base.GetAsync(keyData));
-                return success ? valueObject : default;
+                var attempt = await _cache.TryGetOrAddAsync(keyData, data => base.GetAsync(keyData));
+                return attempt.ValueOr(default);
             }
             catch
             {

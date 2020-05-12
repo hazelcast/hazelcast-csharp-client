@@ -13,19 +13,12 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hazelcast.Aggregators;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
-using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.Implementation;
-using Hazelcast.Partitioning.Strategies;
-using Hazelcast.Predicates;
-using Hazelcast.Projections;
 using Hazelcast.Serialization;
-using Hazelcast.Serialization.Portable;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast
@@ -36,54 +29,85 @@ namespace Hazelcast
     internal class HazelcastClient : IHazelcastClient
     {
         private readonly ClientConfig _configuration;
-        private readonly Cluster _cluster;
-        private readonly ISerializationService _serializationService;
         private readonly DistributedObjectFactory _distributedObjectFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
         /// </summary>
-        public HazelcastClient(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-        {
-            _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
-            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
-            _distributedObjectFactory = new DistributedObjectFactory(_cluster, _serializationService, loggerFactory);
-            _configuration = XmlClientConfigBuilder.Build();
-        }
-
+        /// <param name="configuration">The client configuration.</param>
+        /// <param name="cluster">A cluster.</param>
+        /// <param name="serializationService">A serialization service.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
         public HazelcastClient(ClientConfig configuration, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : this(cluster, serializationService, loggerFactory)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        }
+            Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            if (serializationService == null) throw new ArgumentNullException(nameof(serializationService));
 
-        public HazelcastClient(string configurationFilepath, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : this(cluster, serializationService, loggerFactory)
-        {
-            _configuration = XmlClientConfigBuilder.Build(configurationFilepath);
-        }
-
-        public HazelcastClient(Action<ClientConfig> configure, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : this(cluster, serializationService, loggerFactory)
-        {
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            _configuration = new ClientConfig();
-            configure(_configuration);
+            _distributedObjectFactory = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
+            Cluster.OnConnectingToNewCluster = () => _distributedObjectFactory.CreateAllAsync();
         }
 
         /// <summary>
-        /// Gets the <see cref="Cluster"/> (FOR TEST PURPOSES ONLY).
+        /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
         /// </summary>
-        public Cluster Cluster => _cluster;
+        public HazelcastClient(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : this(XmlClientConfigBuilder.Build(), cluster, serializationService, loggerFactory)
+        { }
 
-        public async Task OpenAsync()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
+        /// </summary>
+        public HazelcastClient(string configurationFilepath, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : this(XmlClientConfigBuilder.Build(configurationFilepath), cluster, serializationService, loggerFactory)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
+        /// </summary>
+        public HazelcastClient(Action<ClientConfig> configure, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : this(BuildConfiguration(configure), cluster, serializationService, loggerFactory)
+        { }
+
+        /// <summary>
+        /// Builds the configuration.
+        /// </summary>
+        /// <param name="configure">A configuration builder.</param>
+        /// <returns>The configuration.</returns>
+        private static ClientConfig BuildConfiguration(Action<ClientConfig> configure)
         {
-            await _cluster.Connect(); // FIXME ConnectAsync!!
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            var configuration = new ClientConfig();
+            configure(configuration);
+            return configuration;
         }
 
-        // FIXME Task vs ValueTask
-        // use Task publicly and ValueTask internally? or?
-        // skip async/await in places to be faster, but then bad stacktrace?
+        /// <summary>
+        /// Gets the <see cref="Cluster"/>.
+        /// </summary>
+        public Cluster Cluster { get; }
+
+        /// <summary>
+        /// Opens the client.
+        /// </summary>
+        /// <returns>A task that will complete when the client is open and ready.</returns>
+        public async Task OpenAsync()
+        {
+            await Cluster.ConnectAsync();
+        }
+
+        /// <summary>
+        /// Closes the client.
+        /// </summary>
+        /// <returns>A task that will complete when the client has closed.</returns>
+        public Task CloseAsync()
+        {
+            // TODO: implement HazelcastClient.CloseAsync()
+            // TODO: consider making HazelcastClient IDisposable
+            throw new NotImplementedException();
+        }
+
+        // TODO: implement HazelcastClient access to other Distributed Objects
 
         /// <summary>
         /// Gets an <see cref="IMap{TKey,TValue}"/> distributed object.

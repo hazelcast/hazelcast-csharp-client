@@ -44,7 +44,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         protected virtual async Task<object> ExecuteAsync(IData processorData, IData keyData)
         {
             var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapExecuteOnKeyCodec.DecodeResponse(responseMessage).Response;
             return ToObject<object>(response);
         }
@@ -100,7 +100,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         protected virtual async Task<object> ApplyAsync(IData processorData, IData keyData)
         {
             var requestMessage = MapSubmitToKeyCodec.EncodeRequest(Name, processorData, keyData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapSubmitToKeyCodec.DecodeResponse(responseMessage).Response;
             return ToObject<object>(response);
         }

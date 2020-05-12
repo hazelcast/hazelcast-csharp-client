@@ -49,7 +49,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         protected virtual async Task<object> GetAsync(IData keyData)
         {
             var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapGetCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -93,7 +93,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
                     var requestMessage = MapGetAllCodec.EncodeRequest(Name, list);
                     requestMessage.PartitionId = partitionId;
-                    var task = Cluster.SendAsync(requestMessage, ownerId).AsTask();
+                    var task = Cluster.SendToMemberAsync(requestMessage, ownerId).AsTask();
                     tasks.Add(task);
                 }
             }
@@ -121,7 +121,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var keyData = ToSafeData(key);
 
             var requestMessage = MapGetEntryViewCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapGetEntryViewCodec.DecodeResponse(responseMessage).Response;
 
             if (response == null) return null;
@@ -170,7 +170,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             {
                 var requestMessage = MapEntriesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.SendAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()))
+                    ? Cluster.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()))
                     : Cluster.SendAsync(requestMessage));
                 var response = MapEntriesWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
@@ -204,7 +204,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             {
                 var requestMessage = MapKeySetWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.SendAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()))
+                    ? Cluster.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()))
                     : Cluster.SendAsync(requestMessage));
                 var response = MapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 return new ReadOnlyLazyList<TKey>(response, SerializationService);
@@ -238,7 +238,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             {
                 var requestMessage = MapValuesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.SendAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()))
+                    ? Cluster.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()))
                     : Cluster.SendAsync(requestMessage));
                 var response = MapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 return new ReadOnlyLazyList<TValue>(response, SerializationService);
@@ -275,7 +275,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         protected virtual async Task<bool> ContainsKeyAsync(IData keyData)
         {
             var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapContainsKeyCodec.DecodeResponse(responseMessage).Response;
             return response;
         }

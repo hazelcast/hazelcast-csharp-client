@@ -178,5 +178,22 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             return o;
         }
+
+        /// <summary>
+        /// Creates all known <see cref="IDistributedObject"/> on a cluster.
+        /// </summary>
+        /// <returns>A task that will complete when the state has been sent.</returns>
+        /// <remarks>
+        /// <para>This is used when connecting to a new cluster.</para>
+        /// </remarks>
+        public async ValueTask CreateAllAsync()
+        {
+            foreach (var (o, _) in _objects)
+            {
+                // TODO: what-if some succeed and some fail?
+                var requestMessage = ClientCreateProxyCodec.EncodeRequest(o.Name, o.ServiceName);
+                await _cluster.SendAsync(requestMessage);
+            }
+        }
     }
 }

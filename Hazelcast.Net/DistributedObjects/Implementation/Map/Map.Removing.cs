@@ -43,7 +43,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var timeoutMs = timeout.CodecMilliseconds(0);
 
             var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ThreadId, timeoutMs);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapTryRemoveCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         protected virtual async Task<TValue> RemoveAsync(IData keyData)
         {
             var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapRemoveCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -85,7 +85,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         protected virtual async Task<bool> RemoveAsync(IData keyData, IData valueData)
         {
             var requestMessage = MapRemoveIfSameCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
-            var responseMessage = await Cluster.SendAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
             var response = MapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -105,7 +105,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         protected virtual async Task DeleteAsync(IData keyData)
         {
             var requestMessage = MapDeleteCodec.EncodeRequest(Name, keyData, ThreadId);
-            await Cluster.SendAsync(requestMessage, keyData);
+            await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
         }
 
         /// <inheritdoc />

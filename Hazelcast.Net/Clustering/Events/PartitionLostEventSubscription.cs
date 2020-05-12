@@ -20,14 +20,18 @@ namespace Hazelcast.Clustering.Events
 {
     internal class PartitionLostEventSubscription : EventSubscriptionBase
     {
-        public PartitionLostEventSubscription(Cluster cluster, ILoggerFactory loggerFactory)
+        private readonly bool _isSmart;
+
+        public PartitionLostEventSubscription(Cluster cluster, ILoggerFactory loggerFactory, bool isSmart)
             : base(cluster, loggerFactory)
-        { }
+        {
+            _isSmart = isSmart;
+        }
 
         protected override ClusterSubscription CreateSubscription()
         {
             return new ClusterSubscription(
-                ClientAddPartitionLostListenerCodec.EncodeRequest(true), // FIXME ISSMART EVERYWHERE
+                ClientAddPartitionLostListenerCodec.EncodeRequest(_isSmart),
                 (message, state) => ClientAddPartitionLostListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemovePartitionLostListenerCodec.EncodeRequest(id),
                 (message, state) => ClientAddPartitionLostListenerCodec.HandleEvent(message, HandleInternal, LoggerFactory));

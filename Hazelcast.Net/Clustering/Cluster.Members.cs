@@ -40,7 +40,7 @@ namespace Hazelcast.Clustering
                 return;
 
             // arbitrarily decide to end after some amount of trying
-            int GetMaxAttempts() => _clients.Count * 3;
+            int GetMaxAttempts() => _memberClients.Count * 3;
 
             var failedAttempts = 0;
             while (!await SubscribeToClusterEvents(client))
@@ -76,13 +76,12 @@ namespace Hazelcast.Clustering
         {
             XConsole.WriteLine(this, "subscribe");
 
-            // handles the "partition view" event
-            void HandlePartitionViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions)
-                => Partitioner.NotifyPartitionView(client.Id, version, MapPartitions(partitions));
-
             // handles the event
             void HandleEvent(ClientMessage message, object state)
-                => ClientAddClusterViewListenerCodec.HandleEvent(message, HandleMemberViewEvent, HandlePartitionViewEvent, _loggerFactory);
+                => ClientAddClusterViewListenerCodec.HandleEvent(message, 
+                    HandleMemberViewEvent,
+                    (version, partitions) => HandlePartitionViewEvent(client.Id, version, partitions), 
+                    _loggerFactory);
 
             var correlationId = _correlationIdSequence.Next;
             try
@@ -118,7 +117,22 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Handles the "member view" event.
+        /// Handles the 'partitions view' event.
+        /// </summary>
+        /// <param name="clientId">The unique identifier of the client.</param>
+        /// <param name="version">The version.</param>
+        /// <param name="partitions">The partitions.</param>
+        private void HandlePartitionViewEvent(Guid clientId, int version, IEnumerable<KeyValuePair<Guid, IList<int>>> partitions)
+        {
+            Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
+
+            // signal once
+            if (Interlocked.CompareExchange(ref _firstpartitionsViewed, 1, 0) == 0)
+                _firstPartitionsView.Release();
+        }
+
+        /// <summary>
+        /// Handles the 'members view' event.
         /// </summary>
         /// <param name="version">The version.</param>
         /// <param name="members">The members.</param>
@@ -154,6 +168,10 @@ namespace Hazelcast.Clustering
             // replace the table
             _memberTable = table;
 
+            // signal once
+            if (Interlocked.CompareExchange(ref _firstMembersViewed, 1, 0) == 0)
+                _firstMembersView.Release();
+
             // process changes, gather events
             var eventArgs = new List<(ClusterMemberLifecycleEventType, ClusterMemberLifecycleEventArgs)>();
             foreach (var (member, status) in diff)
@@ -163,7 +181,7 @@ namespace Hazelcast.Clustering
                     case 1: // old but not new = removed
                         XConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add((ClusterMemberLifecycleEventType.Removed, new ClusterMemberLifecycleEventArgs(member)));
-                        if (_clients.TryGetValue(member.Id, out var client))
+                        if (_memberClients.TryGetValue(member.Id, out var client))
                             client.ShutdownAsync().Wait(); // will self-remove once down FIXME: async oops!!
                         break;
 
