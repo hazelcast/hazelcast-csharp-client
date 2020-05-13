@@ -178,7 +178,7 @@ namespace Hazelcast.Clustering
                 await client.ConnectAsync();
 
                 // authenticate (may throw)
-                var info = await _authenticator.AuthenticateAsync(client);
+                var info = await _authenticator.AuthenticateAsync(client, ClientId, Name);
                 if (info == null) throw new HazelcastException("Failed to authenticate");
 
                 // notify partitioner
@@ -190,7 +190,7 @@ namespace Hazelcast.Clustering
                 var remoteAddress = info.MemberAddress;
                 var clusterId = info.ClusterId;
                 var firstClient = _memberClients.Count == 0; // FIXME race-cond here?
-                var newCluster = firstClient && _clusterId != default && _clusterId != clusterId;
+                var newCluster = firstClient && _clusterServerSideId != default && _clusterServerSideId != clusterId;
 
                 if (newCluster)
                 {
@@ -207,7 +207,7 @@ namespace Hazelcast.Clustering
 
                 //
                 if (firstClient)
-                    _clusterId = clusterId;
+                    _clusterServerSideId = clusterId;
 
                 if (newCluster)
                 {

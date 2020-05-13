@@ -20,6 +20,8 @@ namespace Hazelcast.Clustering
 {
     public partial class Cluster
     {
+        private static readonly ISequence<int> ClusterIdSequence = new Int32Sequence();
+
         // member id -> client
         private readonly ConcurrentDictionary<Guid, Client> _memberClients = new ConcurrentDictionary<Guid, Client>();
 
@@ -51,7 +53,7 @@ namespace Hazelcast.Clustering
 
         private Client _clusterEventsClient; // the client which handles 'cluster events'
         private MemberTable _memberTable;
-        private Guid _clusterId;
+        private Guid _clusterServerSideId; // the server-side identifier of the cluster
         private ClusterState _state;
 
         private volatile int _firstMembersViewed;
@@ -85,6 +87,10 @@ namespace Hazelcast.Clustering
             Partitioner = new Partitioner(serializationService, IsSmartRouting);
             _loadBalancer = configuration.LoadBalancing.LoadBalancer;
 
+            Name = string.IsNullOrWhiteSpace(configuration.InstanceName)
+                ? "hz.client_" + ClusterIdSequence.Next
+                : configuration.InstanceName;
+
             // setup events
             _objectLifecycleEventSubscription = InitializeObjectLifecycleEventSubscription();
             _partitionLostEventSubscription = InitializePartitionLostEventSubscription();
@@ -95,8 +101,12 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the unique identifier of the cluster, as assigned by the client.
         /// </summary>
-        // TODO: are we getting an identifier from the server, for the cluster?
         public Guid ClientId { get; } = Guid.NewGuid();
+
+        /// <summary>
+        /// Gets the name of the cluster, as assigned by the client.
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Gets or sets an action that will be executed when connecting to a new cluster.

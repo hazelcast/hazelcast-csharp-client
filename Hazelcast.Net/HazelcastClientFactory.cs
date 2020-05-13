@@ -75,8 +75,10 @@ namespace Hazelcast
                 ;
             var serializationService = serializationServiceBuilder.Build();
 
-            // fixme should cleanup this ctor really
-            var cluster = new Cluster(configuration, serializationService, configuration.Security.Authenticator, configuration.ClusterEventSubscribers, loggerFactory);
+            var authenticator = Services.CreateInstance<IAuthenticator>(configuration.Security.AuthenticatorType, configuration, serializationService);
+            var clusterEventSubscribers = configuration.ClusterEventSubscribers;
+
+            var cluster = new Cluster(configuration, serializationService, authenticator, clusterEventSubscribers, loggerFactory);
 
             return new HazelcastClient(configuration, cluster, serializationService, loggerFactory);
         }

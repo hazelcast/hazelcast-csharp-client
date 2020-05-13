@@ -13,12 +13,14 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Configuration;
 using Hazelcast.Data;
 using Hazelcast.Logging;
+using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Security
 {
@@ -27,41 +29,83 @@ namespace Hazelcast.Security
     /// </summary>
     public class Authenticator : IAuthenticator
     {
-
+        private static string _clientVersion;
+        private readonly HazelcastConfiguration _configuration;
+        private readonly ISerializationService _serializationService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Authenticator"/> class.
         /// </summary>
-        public Authenticator()
+        public Authenticator(HazelcastConfiguration configuration, ISerializationService serializationService)
         {
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             XConsole.Configure(this, config => config.SetIndent(4).SetPrefix("AUTH"));
         }
 
         /// <inheritdoc />
-        public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client)
+        public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, Guid clusterClientId, string clusterClientName)
         {
-            var info = await TryAuthenticateAsync(client);
+            var info = await TryAuthenticateAsync(client, clusterClientId, clusterClientName);
+            if (info != null) return info;
+
+            var credentialsFactory = _configuration.Security.CredentialsFactory;
+            if (credentialsFactory is IResettableCredentialsFactory resettableCredentialsFactory)
+            {
+                resettableCredentialsFactory.Reset();
+
+                // try again
+                info = await TryAuthenticateAsync(client, clusterClientId, clusterClientName);
+                if (info != null) return info;
+            }
+
             // but maybe we want to capture an exception here?
-            if (info == null) throw new Exception("Failed to authenticated.");
-            return info;
+            throw new Exception("Failed to authenticate.");
         }
 
-        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client)
+        private static string ClientVersion
+        {
+            get
+            {
+                if (_clientVersion != null) return _clientVersion;
+                var version = typeof(Authenticator).Assembly.GetName().Version;
+                _clientVersion = version.Major + "." + version.Minor;
+                if (version.Build > 0) _clientVersion += "." + version.Build;
+                return _clientVersion;
+            }
+        }
+
+        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client, Guid clientId, string clientName)
         {
             // TODO accept parameters etc
 
-            // RC assigns a GUID but the default cluster name is 'dev' - else, cant connect
-            var clusterName = "dev";
-            var username = (string)null; // null
-            var password = (string)null; // null
-            var clientId = Guid.NewGuid();
-            var clientType = "CSP"; // CSharp
-            var serializationVersion = (byte)0x01;
-            var clientVersion = "4.0";
-            var clientName = "hz.client_0";
-            var labels = new HashSet<string>();
+            const string clientType = "CSP"; // CSharp
 
-            var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
+            var clusterName = _configuration.ClusterName;
+            var serializationVersion = _serializationService.GetVersion();
+            var clientVersion = ClientVersion;
+            var labels = _configuration.Labels;
+
+            var credentialsFactory = _configuration.Security.CredentialsFactory;
+            var credentials = credentialsFactory.NewCredentials();
+
+            ClientMessage requestMessage;
+            switch (credentials)
+            {
+                case IPasswordCredentials passwordCredentials:
+                    requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
+                    break;
+
+                case ITokenCredentials tokenCredentials:
+                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.Token, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
+                    break;
+
+                default:
+                    var bytes = _serializationService.ToData(credentials).ToByteArray();
+                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
+                    break;
+            }
+
             XConsole.WriteLine(this, "Send auth request");
             var responseMessage = await client.SendAsync(requestMessage);
             XConsole.WriteLine(this, "Rcvd auth response");

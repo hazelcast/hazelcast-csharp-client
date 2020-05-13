@@ -27,6 +27,7 @@ using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Security;
+using Hazelcast.Serialization;
 using Hazelcast.Testing.TestServer;
 using Hazelcast.Tests.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -226,9 +227,13 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Cluster?");
 
+            var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
+                .SetVersion(1)
+                .Build();
+
             var configuration = new HazelcastConfiguration();
             configuration.Networking.Addresses.Add("sgay-l4");
-            var cluster = new Cluster(configuration, null, new Authenticator(), new List<IClusterEventSubscriber>(),  new NullLoggerFactory());
+            var cluster = new Cluster(configuration, null, new Authenticator(configuration, serializationService), new List<IClusterEventSubscriber>(),  new NullLoggerFactory());
             await cluster.ConnectAsync();
 
             // now we can send messages...

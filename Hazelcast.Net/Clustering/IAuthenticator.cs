@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
 using Hazelcast.Data;
 
@@ -26,7 +27,9 @@ namespace Hazelcast.Clustering
         /// Authenticates the client.
         /// </summary>
         /// <param name="client">The client to authenticate.</param>
+        /// <param name="clusterClientId">The cluster unique identifier, as assigned by the client.</param>
+        /// <param name="clusterClientName">The cluster name, as assigned by the client.</param>
         /// <returns>A task that will complete when the client is authenticated.</returns>
-        ValueTask<AuthenticationResult> AuthenticateAsync(Client client);
+        ValueTask<AuthenticationResult> AuthenticateAsync(Client client, Guid clusterClientId, string clusterClientName);
     }
 }
