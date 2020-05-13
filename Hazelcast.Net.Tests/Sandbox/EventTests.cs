@@ -1,9 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
-using Hazelcast.Eventing;
+﻿using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace Hazelcast.Tests
+namespace Hazelcast.Tests.Sandbox
 {
     [TestFixture]
     public class EventTests

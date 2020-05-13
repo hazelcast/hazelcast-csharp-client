@@ -15,11 +15,10 @@
 using System.Collections.Generic;
 using Hazelcast.Exceptions;
 
-namespace Hazelcast.Configuration
+namespace Hazelcast.Core
 {
-    internal class MatchingPointConfigPatternMatcher : IConfigPatternMatcher
+    internal class MatchingPointPatternMatcher : IPatternMatcher
     {
-        /// <exception cref="InvalidConfigurationException" />
         public virtual string Matches(IEnumerable<string> configPatterns, string itemName)
         {
             string candidate = null;
@@ -47,7 +46,7 @@ namespace Hazelcast.Configuration
         /// <param name="pattern">configuration pattern to match with</param>
         /// <param name="itemName">item name to match</param>
         /// <returns>-1 if name does not match at all, zero or positive otherwise</returns>
-        private int GetMatchingPoint(string pattern, string itemName)
+        private static int GetMatchingPoint(string pattern, string itemName)
         {
             var index = pattern.IndexOf('*');
             if (index == -1)

@@ -28,7 +28,7 @@ namespace Hazelcast.Configuration
         /// <returns>The configuration.</returns>
         public static SecurityConfiguration ConfigureKerberosCredentials(this SecurityConfiguration configuration, string spn)
         {
-            configuration.CredentialsFactory = new KerberosCredentialsFactory(spn);
+            configuration.CredentialsFactory.Creator = () => new KerberosCredentialsFactory(spn);
             return configuration;
         }
 
@@ -42,7 +42,7 @@ namespace Hazelcast.Configuration
         private static SecurityConfiguration ConfigurePasswordCredentials(this SecurityConfiguration configuration, string username, string password)
         {
             var credentials = new UsernamePasswordCredentials { Name = username, Password = password };
-            configuration.CredentialsFactory = new StaticCredentialsFactory(credentials);
+            configuration.CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
             return configuration;
         }
 
@@ -54,7 +54,7 @@ namespace Hazelcast.Configuration
         /// <returns>The security configuration.</returns>
         private static SecurityConfiguration ConfigureCredentials(this SecurityConfiguration configuration, ICredentials credentials)
         {
-            configuration.CredentialsFactory = new StaticCredentialsFactory(credentials);
+            configuration.CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
             return configuration;
         }
 

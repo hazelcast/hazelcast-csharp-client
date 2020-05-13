@@ -13,8 +13,11 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Xml;
+using Hazelcast.Configuration;
+using Hazelcast.Core;
 
-namespace Hazelcast.Configuration
+namespace Hazelcast.Networking
 {
     /// <summary>
     /// Represents the networking configuration.
@@ -70,19 +73,19 @@ namespace Hazelcast.Configuration
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.ReconnectSync;
 
         /// <summary>
-        /// Gets the SSL configuration.
+        /// Gets or sets the SSL configuration.
         /// </summary>
-        public SslConfiguration SslConfiguration { get; } = new SslConfiguration();
+        public SslConfiguration Ssl { get; set;  } = new SslConfiguration();
 
         /// <summary>
         /// Gets or sets the cloud configuration.
         /// </summary>
-        public CloudConfiguration CloudConfiguration { get; } = new CloudConfiguration();
+        public CloudConfiguration Cloud { get; set;  } = new CloudConfiguration();
 
         /// <summary>
         /// Gets or sets the socket options.
         /// </summary>
-        public SocketOptions SocketOptions { get; } = new SocketOptions();
+        public SocketOptions SocketOptions { get; set;  } = new SocketOptions();
 
         /// <summary>
         /// FIXME what is this + why strings?
@@ -92,11 +95,61 @@ namespace Hazelcast.Configuration
         /// <summary>
         /// Gets or sets the socket interceptor configuration.
         /// </summary>
-        public SocketInterceptorConfiguration SocketInterceptor { get; } = new SocketInterceptorConfiguration();
+        public SocketInterceptorConfiguration SocketInterceptor { get; set;  } = new SocketInterceptorConfiguration();
 
         /// <summary>
         /// Gets the connection retry configuration.
         /// </summary>
-        public ConnectionRetryConfiguration ConnectionRetry { get; } = new ConnectionRetryConfiguration();
-     }
+        public RetryConfiguration ConnectionRetry { get; } = new RetryConfiguration();
+
+        /// <summary>
+        /// Parses configuration from an Xml document.
+        /// </summary>
+        /// <param name="node">The Xml node.</param>
+        /// <returns>The configuration.</returns>
+        public static NetworkingConfiguration Parse(XmlNode node)
+        {
+            var configuration = new NetworkingConfiguration();
+
+            foreach (XmlNode child in node.ChildNodes)
+            {
+                var nodeName = child.GetCleanName();
+                switch (nodeName)
+                {
+                    case "cluster-members":
+                        foreach (XmlNode child2 in child.ChildNodes)
+                        {
+                            if ("address".Equals(child2.GetCleanName()))
+                            {
+                                configuration.Addresses.Add(child2.GetTextContent());
+                            }
+                        }
+                        break;
+                    case "smart-routing":
+                        configuration.SmartRouting = child.GetBoolContent();
+                        break;
+                    case "redo-operation":
+                        configuration.RedoOperation = child.GetBoolContent();
+                        break;
+                    case "connection-timeout":
+                        configuration.ConnectionTimeoutMilliseconds = child.GetInt32Content();
+                        break;
+                    case "socket-options":
+                        configuration.SocketOptions = SocketOptions.Parse(child);
+                        break;
+                    case "ssl":
+                        configuration.Ssl = SslConfiguration.Parse(child);
+                        break;
+                    case "hazelcast-cloud":
+                        configuration.Cloud = CloudConfiguration.Parse(child);
+                        break;
+                    case "socket-interceptor":
+                        configuration.SocketInterceptor = SocketInterceptorConfiguration.Parse(child);
+                        break;
+                }
+            }
+
+            return configuration;
+        }
+    }
 }

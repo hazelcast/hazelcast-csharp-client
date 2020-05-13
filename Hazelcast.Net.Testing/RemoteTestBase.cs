@@ -12,6 +12,7 @@ using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Hazelcast.Logging;
+using Hazelcast.Networking;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;

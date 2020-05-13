@@ -13,9 +13,8 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Hazelcast.Exceptions;
 
-namespace Hazelcast.Configuration
+namespace Hazelcast.Core
 {
     /// <summary>The IConfigPatternMatcher provides a strategy to match an item name to a configuration pattern.</summary>
     /// <remarks>
@@ -31,10 +30,10 @@ namespace Hazelcast.Configuration
     /// should be thrown.
     /// <p/>
     /// Since Hazelcast 3.5 the default matcher is
-    /// <see cref="MatchingPointConfigPatternMatcher"/>
+    /// <see cref="MatchingPointPatternMatcher"/>
     /// .
     /// </remarks>
-    public interface IConfigPatternMatcher
+    public interface IPatternMatcher
     {
         /// <summary>Returns the best match for an item name out of a list of configuration patterns.</summary>
         /// <param name="configPatterns">list of configuration patterns</param>

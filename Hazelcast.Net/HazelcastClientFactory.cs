@@ -15,11 +15,11 @@
 using System;
 using Hazelcast.Aggregators;
 using Hazelcast.Clustering;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;
+using Hazelcast.Security;
 using Hazelcast.Serialization;
 
 namespace Hazelcast
@@ -34,14 +34,14 @@ namespace Hazelcast
         /// </summary>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         public IHazelcastClient CreateClient()
-            => CreateClient(XmlClientConfigBuilder.Build());
+            => CreateClient(HazelcastConfiguration.CreateDefault());
 
         /// <summary>
         /// Creates an <see cref="IHazelcastClient"/> instance.
         /// </summary>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         public IHazelcastClient CreateClient(string configurationFilepath)
-            => CreateClient(XmlClientConfigBuilder.Build(configurationFilepath));
+            => CreateClient(HazelcastConfiguration.Parse(configurationFilepath));
 
         /// <summary>
         /// Creates an <see cref="IHazelcastClient"/> instance.
@@ -58,7 +58,7 @@ namespace Hazelcast
         {
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
-            var loggerFactory = configuration.Logging.LoggerFactory;
+            var loggerFactory = configuration.Logging.LoggerFactory.Create();
 
             // TODO: refactor serialization service entirely
             // there should not be a 'builder'
@@ -75,10 +75,17 @@ namespace Hazelcast
                 ;
             var serializationService = serializationServiceBuilder.Build();
 
-            var authenticator = Services.CreateInstance<IAuthenticator>(configuration.Security.AuthenticatorType, configuration, serializationService);
-            var clusterEventSubscribers = configuration.ClusterEventSubscribers;
+            // FIXME don't do this here - but it's a default?
+            configuration.Security.Authenticator.Creator = () => new Authenticator(configuration.Security, serializationService);
 
-            var cluster = new Cluster(configuration, serializationService, authenticator, clusterEventSubscribers, loggerFactory);
+            var cluster = new Cluster(configuration.InstanceName, null,
+                configuration.Labels,
+                configuration.Cluster,
+                configuration.Networking,
+                configuration.LoadBalancing,
+                configuration.Security,
+                serializationService,
+                loggerFactory);
 
             return new HazelcastClient(configuration, cluster, serializationService, loggerFactory);
         }

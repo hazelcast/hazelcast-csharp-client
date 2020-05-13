@@ -12,6 +12,7 @@ using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Networking;
+using Hazelcast.Security;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using Partitioner = Hazelcast.Partitioning.Partitioner;
@@ -37,12 +38,13 @@ namespace Hazelcast.Clustering
         // subscription id -> event handlers
         private readonly ConcurrentDictionary<Guid, ClusterEvents> _clusterEvents = new ConcurrentDictionary<Guid, ClusterEvents>();
 
-        private readonly HazelcastConfiguration _configuration;
-
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoadBalancer _loadBalancer;
         private readonly IAuthenticator _authenticator;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly RetryConfiguration _retryConfiguration;
+        private readonly IList<string> _addresses;
+        private readonly ISet<string> _labels;
 
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
@@ -71,25 +73,45 @@ namespace Hazelcast.Clustering
 
         // TODO: refactor this ctor entirely
         // avoid passing serialization service, etc
-        public Cluster(HazelcastConfiguration configuration, ISerializationService serializationService, IAuthenticator authenticator, IList<IClusterEventSubscriber> clusterEventSubscribers, ILoggerFactory loggerFactory)
-        {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        public Cluster(
+            string clusterName,
+            string clientName,
+            ISet<string> labels,
 
-            _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
-            _clusterEventSubscribers = clusterEventSubscribers ?? throw new ArgumentNullException(nameof(clusterEventSubscribers));
+            ClusterConfiguration clusterConfiguration,
+            NetworkingConfiguration networkingConfiguration,
+            LoadBalancingConfiguration loadBalancingConfiguration,
+            SecurityConfiguration securityConfiguration,
+
+            ISerializationService serializationService,
+            ILoggerFactory loggerFactory)
+        {
+            if (clusterConfiguration == null) throw new ArgumentNullException(nameof(clusterConfiguration));
+            if (networkingConfiguration == null) throw new ArgumentNullException(nameof(networkingConfiguration));
+            if (loadBalancingConfiguration == null) throw new ArgumentNullException(nameof(loadBalancingConfiguration));
+            if (securityConfiguration == null) throw new ArgumentNullException(nameof(securityConfiguration));
+
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _labels = labels ?? throw new ArgumentNullException(nameof(labels));
+
+            _clusterEventSubscribers = clusterConfiguration.EventSubscribers;
+            IsSmartRouting = networkingConfiguration.SmartRouting;
+            _retryConfiguration = networkingConfiguration.ConnectionRetry;
+            _addresses = networkingConfiguration.Addresses;
+            _authenticator = securityConfiguration.Authenticator.Create();
+            _loadBalancer = loadBalancingConfiguration.LoadBalancer.Create();
 
             // _localOnly is defined in ListenerService and initialized with IsSmartRouting so it's the same
             // it is used by ProxyManager to AddDistributedObjectListener - passing that value
 
             _correlationIdSequence = new Int64Sequence();
-            IsSmartRouting = configuration.Networking.SmartRouting;
             Partitioner = new Partitioner(serializationService, IsSmartRouting);
-            _loadBalancer = configuration.LoadBalancing.LoadBalancer;
 
-            Name = string.IsNullOrWhiteSpace(configuration.InstanceName)
+            Name = string.IsNullOrWhiteSpace(clusterName) ? "dev" : clusterName;
+
+            ClientName = string.IsNullOrWhiteSpace(clientName)
                 ? "hz.client_" + ClusterIdSequence.Next
-                : configuration.InstanceName;
+                : clientName;
 
             // setup events
             _objectLifecycleEventSubscription = InitializeObjectLifecycleEventSubscription();
@@ -102,6 +124,11 @@ namespace Hazelcast.Clustering
         /// Gets the unique identifier of the cluster, as assigned by the client.
         /// </summary>
         public Guid ClientId { get; } = Guid.NewGuid();
+
+        /// <summary>
+        /// Gets the name of this cluster client, as assigned by the client.
+        /// </summary>
+        public string ClientName { get; }
 
         /// <summary>
         /// Gets the name of the cluster, as assigned by the client.

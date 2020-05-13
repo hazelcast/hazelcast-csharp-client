@@ -37,7 +37,7 @@ namespace Hazelcast.NearCaching
         private long _lastCleanup;
         protected Guid RegistrationId;
 
-        protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheConfig nearCacheConfig)
+        protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheConfiguration nearCacheConfiguration)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
             Name = name;
@@ -51,14 +51,13 @@ namespace Hazelcast.NearCaching
             _canEvict = 1;
             _lastCleanup = Clock.Milliseconds;
 
-            _maxSize = nearCacheConfig.GetMaxSize();
-            _maxIdleMilliseconds = nearCacheConfig.GetMaxIdleSeconds() * 1000;
-            _inMemoryFormat = nearCacheConfig.GetInMemoryFormat();
-            _timeToLiveMillis = nearCacheConfig.GetTimeToLiveSeconds() * 1000;
-            _evictionPolicy = // TODO: config should directly return the proper enum value!
-                (EvictionPolicy)Enum.Parse(typeof(EvictionPolicy), nearCacheConfig.GetEvictionPolicy(), true);
+            _maxSize = nearCacheConfiguration.MaxSize;
+            _maxIdleMilliseconds = nearCacheConfiguration.MaxIdleSeconds * 1000;
+            _inMemoryFormat = nearCacheConfiguration.InMemoryFormat;
+            _timeToLiveMillis = nearCacheConfiguration.TimeToLiveSeconds * 1000;
+            _evictionPolicy = nearCacheConfiguration.EvictionPolicy;
             _comparer = GetComparer(_evictionPolicy);
-            InvalidateOnChange = nearCacheConfig.IsInvalidateOnChange();
+            InvalidateOnChange = nearCacheConfiguration.InvalidateOnChange;
 
             LoggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<NearCacheBase>();

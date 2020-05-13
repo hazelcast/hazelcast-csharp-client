@@ -14,31 +14,21 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Core;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Data;
 
-namespace Hazelcast.NearCaching
+namespace Hazelcast.Security
 {
     /// <summary>
-    /// Compares <see cref="NearCacheEntry"/> using the least-recently-used comparison.
+    /// Represents a not-implemented authenticator.
     /// </summary>
-    internal class LruComparer : IComparer<AsyncLazy<NearCacheEntry>>
+    internal class NotImplementedAuthenticator : IAuthenticator
     {
         /// <inheritdoc />
-        public int Compare(AsyncLazy<NearCacheEntry> x, AsyncLazy<NearCacheEntry> y)
+        public ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels)
         {
-            if (x == null) throw new ArgumentNullException(nameof(x));
-            if (y == null) throw new ArgumentNullException(nameof(y));
-
-            var cx = x.Value.LastHitTime;
-            var cy = y.Value.LastHitTime;
-
-            var c = cx.CompareTo(cy);
-            if (c != 0) return c;
-
-            cx = x.Value.Key.GetHashCode();
-            cy = y.Value.Key.GetHashCode();
-
-            return cx.CompareTo(cy);
+            throw new NotImplementedException();
         }
     }
 }

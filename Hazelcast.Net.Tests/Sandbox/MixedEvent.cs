@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Logging;
 
-namespace Hazelcast.Eventing
+namespace Hazelcast.Tests.Sandbox
 {
     // TODO: consider MixedEvent<TSender, TEventArgs>
 

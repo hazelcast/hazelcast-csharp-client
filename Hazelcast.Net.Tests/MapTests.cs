@@ -423,7 +423,7 @@ namespace Hazelcast.Tests
             {
                 config.Networking.Addresses.Add("sgay-l4");
 
-                config.AddClusterEventSubscriber(async cluster =>
+                config.Cluster.AddEventSubscriber(async cluster =>
                 {
                     await cluster.SubscribeAsync(on => on.ObjectCreated((sender, args) =>
                     {

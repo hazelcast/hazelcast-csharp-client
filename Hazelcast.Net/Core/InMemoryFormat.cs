@@ -1,4 +1,4 @@
-﻿namespace Hazelcast.Configuration
+﻿namespace Hazelcast.Core
 {
     /// <summary>
     /// Specifies the storage format types of values stored in the cluster.

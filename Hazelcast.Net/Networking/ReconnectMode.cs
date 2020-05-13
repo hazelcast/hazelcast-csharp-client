@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.NearCaching
+namespace Hazelcast.Networking
 {
     /// <summary>
-    /// Defines near caching eviction policies.
+    /// Defines options for reconnecting a disconnected client.
     /// </summary>
-    public enum EvictionPolicy
+    public enum ReconnectMode
     {
         /// <summary>
-        /// No eviction policy.
+        /// Do not reconnect.
         /// </summary>
-        None = 0,
+        DoNotReconnect,
 
         /// <summary>
-        /// Evict least-recently used entries first.
+        /// Reconnect while block invocations.
         /// </summary>
-        Lru,
+        ReconnectSync,
 
         /// <summary>
-        /// Evict least-frequently used entries first.
+        /// Reconnect without blocking invocations. Invocations will fail.
         /// </summary>
-        Lfu
+        ReconnectAsync
     }
 }

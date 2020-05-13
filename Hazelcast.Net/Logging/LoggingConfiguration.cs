@@ -12,26 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Configuration
+using Hazelcast.Core;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
+namespace Hazelcast.Logging
 {
     /// <summary>
-    /// Defines options for reconnecting a disconnected client.
+    /// Represents the logging configuration.
     /// </summary>
-    public enum ReconnectMode
+    public class LoggingConfiguration
     {
         /// <summary>
-        /// Do not reconnect.
+        /// Gets the service factory for <see cref="ILoggerFactory"/>.
         /// </summary>
-        DoNotReconnect,
-
-        /// <summary>
-        /// Reconnect while block invocations.
-        /// </summary>
-        ReconnectSync,
-
-        /// <summary>
-        /// Reconnect without blocking invocations. Invocations will fail.
-        /// </summary>
-        ReconnectAsync
+        public ServiceFactory<ILoggerFactory> LoggerFactory { get; } = new ServiceFactory<ILoggerFactory>(() => new NullLoggerFactory());
     }
 }

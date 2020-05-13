@@ -14,9 +14,9 @@
 
 using System;
 using System.Threading.Tasks;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
@@ -26,13 +26,15 @@ namespace Hazelcast.Clustering
     /// <remarks>
     /// <para>Controls retries with a back-off mechanism.</para>
     /// </remarks>
-    public class RetryStrategy
+    public class RetryStrategy : IRetryStrategy
     {
         private readonly int _initialBackOff;
         private readonly int _maxBackOff;
         private readonly double _multiplier;
         private readonly long _timeout;
         private readonly double _jitter;
+        private readonly string _action;
+        private readonly ILogger _logger;
 
         private int _currentBackOff;
         private int _attempts;
@@ -41,51 +43,44 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Initializes a new instance of the <see cref="RetryStrategy"/> class.
         /// </summary>
+        /// <param name="action">The description of the action.</param>
         /// <param name="configuration">Configuration.</param>
-        public RetryStrategy(ConnectionRetryConfiguration configuration)
-            : this(configuration.InitialBackoffMilliseconds, 
-                configuration.MaxBackoffMilliseconds, 
+        /// <param name="logger">A logger.</param>
+        public RetryStrategy(string action, RetryConfiguration configuration, ILogger<RetryStrategy> logger)
+            : this(action,
+                configuration.InitialBackoffMilliseconds,
+                configuration.MaxBackoffMilliseconds,
                 configuration.Multiplier,
                 configuration.ClusterConnectionTimeoutMilliseconds,
-                configuration.Jitter)
+                configuration.Jitter,
+                logger)
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RetryStrategy"/> class.
         /// </summary>
+        /// <param name="action">The description of the action.</param>
         /// <param name="initialBackOff">The initial back-off value in milliseconds.</param>
         /// <param name="maxBackOff">The maximum back-off value in milliseconds.</param>
         /// <param name="multiplier">The multiplier.</param>
         /// <param name="timeout">The timeout in milliseconds.</param>
         /// <param name="jitter">A jitter factor.</param>
-        public RetryStrategy(int initialBackOff, int maxBackOff, double multiplier, long timeout, double jitter)
+        /// <param name="logger">A logger.</param>
+        public RetryStrategy(string action, int initialBackOff, int maxBackOff, double multiplier, long timeout, double jitter, ILogger<RetryStrategy> logger)
         {
+            if (string.IsNullOrWhiteSpace(action)) throw new ArgumentException(nameof(action));
+            _action = action.ToLowerInvariant();
             _initialBackOff = initialBackOff;
             _maxBackOff = maxBackOff;
             _multiplier = multiplier;
             _timeout = timeout;
             _jitter = jitter;
+            _logger = logger;
 
             Restart();
         }
 
-        /// <summary>
-        /// Restarts the strategy.
-        /// </summary>
-        public void Restart()
-        {
-            _attempts = 0;
-            _currentBackOff = Math.Min(_maxBackOff, _initialBackOff);
-            _begin = DateTime.UtcNow;
-        }
-
-        /// <summary>
-        /// Waits before retrying.
-        /// </summary>
-        /// <returns>Whether it is ok to retry.</returns>
-        /// <remarks>
-        /// <para>Returns false when the timeout has been reached.</para>
-        /// </remarks>
+        /// <inheritdoc />
         public async ValueTask<bool> WaitAsync()
         {
             _attempts++;
@@ -94,14 +89,14 @@ namespace Hazelcast.Clustering
 
             if (elapsed > _timeout)
             {
-                XConsole.WriteLine(this, $"Unable to connect to cluster after {_attempts} attempts and {_timeout} ms, giving up.");
+                _logger.LogInternal(this, $"Unable to {_action} after {_attempts} attempts and {_timeout} ms, giving up.");
                 return false;
             }
 
             var delay = (int) (_currentBackOff * (1 - _jitter * (1 - RandomProvider.Random.NextDouble())));
             delay = Math.Min(delay, (int) (_timeout - elapsed));
 
-            XConsole.WriteLine(this, $"Unable to connect to cluster after {_attempts} attempts and {elapsed} ms, retrying in {delay} ms");
+            _logger.LogInternal(this, $"Unable to {_action} after {_attempts} attempts and {elapsed} ms, retrying in {delay} ms");
 
             try
             {
@@ -114,6 +109,14 @@ namespace Hazelcast.Clustering
 
             _currentBackOff = (int) Math.Min(_currentBackOff * _multiplier, _maxBackOff);
             return true;
+        }
+
+        /// <inheritdoc />
+        public void Restart()
+        {
+            _attempts = 0;
+            _currentBackOff = Math.Min(_maxBackOff, _initialBackOff);
+            _begin = DateTime.UtcNow;
         }
     }
 }

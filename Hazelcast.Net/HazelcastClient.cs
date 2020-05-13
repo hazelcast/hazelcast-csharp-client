@@ -51,14 +51,14 @@ namespace Hazelcast
         /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
         /// </summary>
         public HazelcastClient(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : this(XmlClientConfigBuilder.Build(), cluster, serializationService, loggerFactory)
+            : this(HazelcastConfiguration.CreateDefault(), cluster, serializationService, loggerFactory)
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
         /// </summary>
         public HazelcastClient(string configurationFilepath, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : this(XmlClientConfigBuilder.Build(configurationFilepath), cluster, serializationService, loggerFactory)
+            : this(HazelcastConfiguration.Parse(configurationFilepath), cluster, serializationService, loggerFactory)
         { }
 
         /// <summary>

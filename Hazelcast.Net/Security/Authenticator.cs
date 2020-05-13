@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
@@ -30,13 +31,13 @@ namespace Hazelcast.Security
     public class Authenticator : IAuthenticator
     {
         private static string _clientVersion;
-        private readonly HazelcastConfiguration _configuration;
+        private readonly SecurityConfiguration _configuration;
         private readonly ISerializationService _serializationService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Authenticator"/> class.
         /// </summary>
-        public Authenticator(HazelcastConfiguration configuration, ISerializationService serializationService)
+        public Authenticator(SecurityConfiguration configuration, ISerializationService serializationService)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
@@ -44,18 +45,19 @@ namespace Hazelcast.Security
         }
 
         /// <inheritdoc />
-        public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, Guid clusterClientId, string clusterClientName)
+        public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels)
         {
-            var info = await TryAuthenticateAsync(client, clusterClientId, clusterClientName);
+            var credentialsFactory = _configuration.CredentialsFactory.Create();
+
+            var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory);
             if (info != null) return info;
 
-            var credentialsFactory = _configuration.Security.CredentialsFactory;
             if (credentialsFactory is IResettableCredentialsFactory resettableCredentialsFactory)
             {
                 resettableCredentialsFactory.Reset();
 
                 // try again
-                info = await TryAuthenticateAsync(client, clusterClientId, clusterClientName);
+                info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory);
                 if (info != null) return info;
             }
 
@@ -75,34 +77,31 @@ namespace Hazelcast.Security
             }
         }
 
-        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client, Guid clientId, string clientName)
+        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory)
         {
             // TODO accept parameters etc
 
             const string clientType = "CSP"; // CSharp
 
-            var clusterName = _configuration.ClusterName;
             var serializationVersion = _serializationService.GetVersion();
             var clientVersion = ClientVersion;
-            var labels = _configuration.Labels;
 
-            var credentialsFactory = _configuration.Security.CredentialsFactory;
             var credentials = credentialsFactory.NewCredentials();
 
             ClientMessage requestMessage;
             switch (credentials)
             {
                 case IPasswordCredentials passwordCredentials:
-                    requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
+                    requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
                     break;
 
                 case ITokenCredentials tokenCredentials:
-                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.Token, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
+                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.Token, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
                     break;
 
                 default:
                     var bytes = _serializationService.ToData(credentials).ToByteArray();
-                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
+                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
                     break;
             }
 

@@ -14,20 +14,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Hazelcast.Logging;
 
-namespace Hazelcast.Eventing
+namespace Hazelcast.Tests.Sandbox
 {
-    // TODO: consider SyncEvent<TSender, TEventArgs>
+    // TODO: consider AsyncEvent<TSender, TEventArgs>
 
     /// <summary>
-    /// Represents a synchronous event handlers.
+    /// Represents an asynchronous event handler.
     /// </summary>
     /// <typeparam name="TEventArgs">The type of the event arguments.</typeparam>
-    public sealed class SyncEvent<TEventArgs>
+    public sealed class AsyncEvent<TEventArgs>
     {
         // implementation notes
-        //
         // this is using a locked list - simple enough and fast - other concurrent structures
         // are way heavier, and also take shallow snapshots before enumerating - so before
         // replacing this with more a complex solution, benchmark to be sure it's actually
@@ -39,13 +39,13 @@ namespace Hazelcast.Eventing
         // thread safe, even with magic in the event add/remove methods, and so please don't.
         // recommended reading: https://blog.stephencleary.com/2009/06/threadsafe-events.html
 
-        private readonly List<Action<TEventArgs>> _methods = new List<Action<TEventArgs>>();
+        private readonly List<Func<TEventArgs, ValueTask>> _methods = new List<Func<TEventArgs, ValueTask>>();
 
         /// <summary>
-        /// Adds an event handling method.
+        /// Adds a event handling method.
         /// </summary>
         /// <param name="method">The event handling method.</param>
-        public void Add(Action<TEventArgs> method)
+        public void Add(Func<TEventArgs, ValueTask> method)
         {
             lock (_methods) _methods.Add(method ?? throw new ArgumentNullException(nameof(method)));
         }
@@ -57,21 +57,21 @@ namespace Hazelcast.Eventing
         /// <param name="handler">The original event handler.</param>
         /// <param name="method">The event handling method.</param>
         /// <returns>The original event handler, with the specified event handling method added.</returns>
-        public static SyncEventHandler<TEventArgs> operator +(SyncEventHandler<TEventArgs> handler, Action<TEventArgs> method)
+        public static AsyncEventHandler<TEventArgs> operator +(AsyncEventHandler<TEventArgs> handler, Func<TEventArgs, ValueTask> method)
         {
-            handler = handler ?? new SyncEventHandler<TEventArgs>();
+            handler = handler ?? new AsyncEventHandler<TEventArgs>();
             handler.Add(method);
             return handler;
         }
         */
 
         /// <summary>
-        /// Removes a method.
+        /// Removes an event handling method.
         /// </summary>
-        /// <param name="method">The method.</param>
-        public void Remove(Action<TEventArgs> method)
+        /// <param name="func">The event handling method.</param>
+        public void Remove(Func<TEventArgs, ValueTask> func)
         {
-            lock (_methods) _methods.Remove(method ?? throw new ArgumentNullException(nameof(method)));
+            lock (_methods) _methods.Remove(func ?? throw new ArgumentNullException(nameof(func)));
         }
 
         /*
@@ -81,7 +81,7 @@ namespace Hazelcast.Eventing
         /// <param name="handler">The original event handler.</param>
         /// <param name="method">The event handling method.</param>
         /// <returns>The original event handler, with the specified event handling method removed.</returns>
-        public static SyncEventHandler<TEventArgs> operator -(SyncEventHandler<TEventArgs> handler, Action<TEventArgs> method)
+        public static AsyncEventHandler<TEventArgs> operator -(AsyncEventHandler<TEventArgs> handler, Func<TEventArgs, ValueTask> method)
         {
             handler?.Remove(method);
             return handler;
@@ -89,27 +89,20 @@ namespace Hazelcast.Eventing
         */
 
         /// <summary>
-        /// Clears all method.
-        /// </summary>
-        public void Clear()
-        {
-            lock (_methods) _methods.Clear();
-        }
-
-        /// <summary>
-        /// Invokes the method.
+        /// Invokes the methods.
         /// </summary>
         /// <param name="args">The event arguments.</param>
-        public void Invoke(TEventArgs args)
+        /// <returns>A task that will complete when all methods have completed.</returns>
+        public async ValueTask InvokeAsync(TEventArgs args)
         {
-            List<Action<TEventArgs>> snapshot;
-            lock (_methods) snapshot = new List<Action<TEventArgs>>(_methods);
+            List<Func<TEventArgs, ValueTask>> snapshot;
+            lock (_methods) snapshot = new List<Func<TEventArgs, ValueTask>>(_methods);
 
             foreach (var method in snapshot)
             {
                 try
                 {
-                    method(args);
+                    await method(args);
                 }
                 catch (Exception e)
                 {

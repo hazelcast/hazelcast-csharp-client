@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Configuration
+using Hazelcast.Clustering;
+
+namespace Hazelcast.Core
 {
     /// <summary>
-    /// Represents the connection retry configuration.
+    /// Represents a <see cref="RetryStrategy"/> configuration.
     /// </summary>
-    public class ConnectionRetryConfiguration
+    public class RetryConfiguration
     {
         /// <summary>
         /// Gets or sets the back-off time in milliseconds.

@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
-using Hazelcast.Eventing;
 using Hazelcast.Networking;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;

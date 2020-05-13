@@ -3,13 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Networking;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
@@ -90,7 +90,7 @@ namespace Hazelcast.Clustering
         {
             var tried = new HashSet<NetworkAddress>();
             var exceptions = new List<Exception>();
-            var retryStrategy = new RetryStrategy(_configuration.Networking.ConnectionRetry);
+            var retryStrategy = new RetryStrategy("connect to cluster", _retryConfiguration, _loggerFactory.CreateLogger<RetryStrategy>());
 
             do
             {
@@ -108,7 +108,7 @@ namespace Hazelcast.Clustering
 
             } while (await retryStrategy.WaitAsync());
 
-            var clusterName = _configuration.ClusterName;
+            var clusterName = Name;
             var aggregate = new AggregateException(exceptions);
             throw new InvalidOperationException($"Unable to connect to the cluster \"{clusterName}\". " +
                 $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
@@ -178,7 +178,7 @@ namespace Hazelcast.Clustering
                 await client.ConnectAsync();
 
                 // authenticate (may throw)
-                var info = await _authenticator.AuthenticateAsync(client, ClientId, Name);
+                var info = await _authenticator.AuthenticateAsync(client, Name, ClientId, ClientName, _labels);
                 if (info == null) throw new HazelcastException("Failed to authenticate");
 
                 // notify partitioner
@@ -297,7 +297,7 @@ namespace Hazelcast.Clustering
             var addresses = new HashSet<NetworkAddress>();
 
             // take all configured addresses
-            foreach (var addressString in _configuration.Networking.Addresses)
+            foreach (var addressString in _addresses)
             {
                 if (!NetworkAddress.TryParse(addressString, out var address))
                     throw new ConfigurationException($"Could not parse network address \"{addressString}\".");

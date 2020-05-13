@@ -17,12 +17,12 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Hazelcast.NearCaching
+namespace Hazelcast.Core
 {
     /// <summary>
-    /// 
+    /// Represents an asynchronous lazy.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type.</typeparam>
     internal sealed class AsyncLazy<T>
     {
         private volatile State _state; // volatile ref set to null after _value has been set

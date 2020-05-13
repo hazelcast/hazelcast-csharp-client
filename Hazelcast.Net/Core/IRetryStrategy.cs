@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,26 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using System.Threading.Tasks;
 
-namespace Hazelcast.Configuration
+namespace Hazelcast.Core
 {
     /// <summary>
-    /// Represents the logging configuration.
+    /// Defines a retry strategy.
     /// </summary>
-    public class LoggingConfiguration
+    public interface IRetryStrategy
     {
-        private ILoggerFactory _loggerFactory;
+        /// <summary>
+        /// Waits before retrying.
+        /// </summary>
+        /// <returns>Whether it is ok to retry.</returns>
+        /// <remarks>
+        /// <para>Returns false when the timeout has been reached.</para>
+        /// </remarks>
+        ValueTask<bool> WaitAsync();
 
         /// <summary>
-        /// Gets or sets the logger factory instance.
+        /// Restarts the strategy.
         /// </summary>
-        public ILoggerFactory LoggerFactory
-        {
-            get => _loggerFactory ?? (_loggerFactory = new NullLoggerFactory());
-            set => _loggerFactory = value ?? throw new ArgumentNullException(nameof(value));
-        }
+        void Restart();
     }
 }

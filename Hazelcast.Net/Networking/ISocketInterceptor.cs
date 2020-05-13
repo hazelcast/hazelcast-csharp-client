@@ -12,21 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Configuration
-{
-    /// <summary>
-    /// Represents the Hazelcast Cloud configuration.
-    /// </summary>
-    public class CloudConfiguration
-    {
-        /// <summary>
-        /// Whether Hazelcast Cloud is enabled.
-        /// </summary>
-        public bool IsEnabled { get; set; }
+using System.Collections.Generic;
 
-        /// <summary>
-        /// Gets or sets the discovery token of the cluster.
-        /// </summary>
-        public string DiscoveryToken { get; set; }
+namespace Hazelcast.Networking
+{
+    // TODO: what is this?
+    // it can be configured but is never used?!
+    public interface ISocketInterceptor
+    {
+        void Initialize(Dictionary<string, string> properties);
     }
 }

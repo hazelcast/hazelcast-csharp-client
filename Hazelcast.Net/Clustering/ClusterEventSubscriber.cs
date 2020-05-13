@@ -14,11 +14,11 @@
 
 using System;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
-namespace Hazelcast.Configuration
+namespace Hazelcast.Clustering
 {
     internal class ClusterEventSubscriber : IClusterEventSubscriber
     {

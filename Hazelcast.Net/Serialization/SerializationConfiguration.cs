@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml;
 using Hazelcast.Core;
 using Hazelcast.Serialization.Portable;
 
@@ -443,6 +444,117 @@ namespace Hazelcast.Serialization
             sb.Append(", useNativeByteOrder=").Append(_useNativeByteOrder);
             sb.Append('}');
             return sb.ToString();
+        }
+
+        public static SerializationConfiguration Parse(XmlNode node)
+        {
+            var configuration = new SerializationConfiguration();
+
+            foreach (XmlNode child in node.ChildNodes)
+            {
+                var name = child.GetCleanName();
+                switch (name)
+                {
+                    case "portable-version":
+                        configuration.SetPortableVersion(child.GetInt32Content());
+                        break;
+                    case "check-class-def-errors":
+                        configuration.SetCheckClassDefErrors(child.GetTrueFalseContent());
+                        break;
+                    case "use-native-byte-order":
+                        configuration.SetUseNativeByteOrder(child.GetTrueFalseContent());
+                        break;
+                    case "byte-order":
+                        var bigEndian = child.GetTextContent();
+                        var endianness = "BIG_ENDIAN".Equals(bigEndian) ? Endianness.BigEndian : Endianness.LittleEndian;
+                        configuration.SetEndianness(endianness);
+                        break;
+                    case "enable-compression":
+                        configuration.SetEnableCompression(child.GetTrueFalseContent());
+                        break;
+                    case "enable-shared-object":
+                        configuration.SetEnableSharedObject(child.GetTrueFalseContent());
+                        break;
+                    case "data-serializable-factories":
+                        FillDataSerializableFactories(child, configuration);
+                        break;
+                    case "portable-factories":
+                        FillPortableFactories(child, configuration);
+                        break;
+                    case "serializers":
+                        FillSerializers(child, configuration);
+                        break;
+                }
+            }
+
+            return configuration;
+        }
+
+        private static void FillDataSerializableFactories(XmlNode node, SerializationConfiguration serializationConfiguration)
+        {
+            foreach (XmlNode child in node.ChildNodes)
+            {
+                var name = child.GetCleanName();
+                if ("data-serializable-factory".Equals(name))
+                {
+                    var value = child.GetTextContent();
+                    var factoryIdNode = child.Attributes.GetNamedItem("factory-id");
+                    if (factoryIdNode == null)
+                    {
+                        throw new ArgumentException(
+                            "'factory-id' attribute of 'data-serializable-factory' is required!");
+                    }
+
+                    var factoryId = factoryIdNode.GetInt32Content();
+                    serializationConfiguration.AddDataSerializableFactoryClass(factoryId, value);
+                }
+            }
+        }
+
+        private static void FillPortableFactories(XmlNode node, SerializationConfiguration serializationConfiguration)
+        {
+            foreach (XmlNode child in node.ChildNodes)
+            {
+                var name = child.GetCleanName();
+                if ("portable-factory".Equals(name))
+                {
+                    var value = child.GetTextContent();
+                    var factoryIdNode = child.Attributes.GetNamedItem("factory-id");
+                    if (factoryIdNode == null)
+                    {
+                        throw new ArgumentException("'factory-id' attribute of 'portable-factory' is required!");
+                    }
+
+                    var factoryId = factoryIdNode.GetInt32Content();
+                    serializationConfiguration.AddPortableFactoryClass(factoryId, value);
+                }
+            }
+        }
+
+        private static void FillSerializers(XmlNode node, SerializationConfiguration serializationConfiguration)
+        {
+            foreach (XmlNode child in node.ChildNodes)
+            {
+                var name = child.GetCleanName();
+                var value = child.GetTextContent();
+                if ("serializer".Equals(name))
+                {
+                    var serializerConfig = new SerializerConfig();
+                    serializerConfig.SetClassName(value);
+                    var typeClassName = child.GetStringAttribute("type-class");
+                    serializerConfig.SetTypeClassName(typeClassName);
+                    serializationConfiguration.AddSerializerConfig(serializerConfig);
+                }
+                else
+                {
+                    if ("global-serializer".Equals(name))
+                    {
+                        var globalSerializerConfig = new GlobalSerializerConfig();
+                        globalSerializerConfig.SetClassName(value);
+                        serializationConfiguration.SetGlobalSerializerConfig(globalSerializerConfig);
+                    }
+                }
+            }
         }
     }
 }

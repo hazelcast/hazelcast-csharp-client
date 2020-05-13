@@ -232,8 +232,19 @@ namespace Hazelcast.Tests
                 .Build();
 
             var configuration = new HazelcastConfiguration();
+
             configuration.Networking.Addresses.Add("sgay-l4");
-            var cluster = new Cluster(configuration, null, new Authenticator(configuration, serializationService), new List<IClusterEventSubscriber>(),  new NullLoggerFactory());
+            configuration.Security.Authenticator.Creator = ()
+                => new Authenticator(configuration.Security, serializationService);
+
+            var cluster = new Cluster("dev", "hz.client",
+                new HashSet<string>(), 
+                configuration.Cluster,
+                configuration.Networking,
+                configuration.LoadBalancing,
+                configuration.Security,
+                serializationService,
+                new NullLoggerFactory());
             await cluster.ConnectAsync();
 
             // now we can send messages...
