@@ -77,6 +77,9 @@ namespace Hazelcast.Clustering
             // FIXME and also for each new client etc?!
             foreach (var subscriber in _clusterEventSubscribers)
                 await subscriber.SubscribeAsync(this);
+
+            // no need to keep them around
+            //_clusterEventSubscribers = null;
         }
 
         /// <summary>
@@ -87,15 +90,13 @@ namespace Hazelcast.Clustering
         {
             var tried = new HashSet<NetworkAddress>();
             var exceptions = new List<Exception>();
-
-            // TODO: arguments should come from the configuration
-            var retryStrategy = new RetryStrategy(100, 100, 1, 4000, 0);
+            var retryStrategy = new RetryStrategy(_configuration.Networking.ConnectionRetry);
 
             do
             {
                 EnsureActive();
 
-                var addresses = GetPossibleMemberAddresses();
+                var addresses = GetCandidateMemberAddresses();
                 foreach (var address in addresses)
                 {
                     EnsureActive();
@@ -107,7 +108,7 @@ namespace Hazelcast.Clustering
 
             } while (await retryStrategy.WaitAsync());
 
-            var clusterName = ""; // FIXME: cluster name?
+            var clusterName = _configuration.ClusterName;
             var aggregate = new AggregateException(exceptions);
             throw new InvalidOperationException($"Unable to connect to the cluster \"{clusterName}\". " +
                 $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
@@ -287,20 +288,34 @@ namespace Hazelcast.Clustering
                 AssignClusterEventsClient().Wait(); // FIXME: async oops!
         }
 
-        // rename GetAddresses gets the address to try to connect to
-        public IEnumerable<NetworkAddress> GetPossibleMemberAddresses()
+        /// <summary>
+        /// Gets all candidate network addresses for connecting to the cluster.
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerable<NetworkAddress> GetCandidateMemberAddresses()
         {
-            // gather addresses from
-            // - members already known by the cluster service
-            // - "address provider"
-            // should return an enumerable of "address"
-            // shuffling is an option
+            var addresses = new HashSet<NetworkAddress>();
 
-            // temp. work with a fixed address
-            //yield return new NetworkAddress("127.0.0.1");
-            yield return new NetworkAddress("sgay-l4");
+            // take all configured addresses
+            foreach (var addressString in _configuration.Networking.Addresses)
+            {
+                if (!NetworkAddress.TryParse(addressString, out var address))
+                    throw new ConfigurationException($"Could not parse network address \"{addressString}\".");
+                addresses.Add(address);
+            }
 
-            //return new List<string>().Shuffle();
+            // add (de-duplicated thanks to HashSet) all known members
+            var members = _memberTable?.Members;
+            if (members != null)
+            {
+                foreach (var address in _memberTable.Members.Values.Select(x => x.Address))
+                {
+                    addresses.Add(address);
+                }
+            }
+
+            // shuffle
+            return addresses.Shuffle();
         }
     }
 }

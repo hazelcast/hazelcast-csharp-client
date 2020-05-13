@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Core;
-using Hazelcast.Data;
 using Hazelcast.Serialization.Portable;
 
 namespace Hazelcast.Serialization
@@ -25,9 +24,9 @@ namespace Hazelcast.Serialization
     /// Contains the serialization configuration
     /// </summary>
     /// <remarks>
-    /// <see cref="IIdentifiedDataSerializable"/>, <see cref="IPortable"/>, custom serializers, and global serializer can be configured using this config. 
+    /// <see cref="IIdentifiedDataSerializable"/>, <see cref="IPortable"/>, custom serializers, and global serializer can be configured using this config.
     /// </remarks>
-    public class SerializationConfig
+    public class SerializationConfiguration
     {
         private Endianness _endianness = Endianness.BigEndian;
         private bool _checkClassDefErrors = true;
@@ -51,8 +50,8 @@ namespace Hazelcast.Serialization
         /// Adds a <see cref="IPortable"/> class definition to be registered
         /// </summary>
         /// <param name="classDefinition"><see cref="IPortable"/> class definition</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig AddClassDefinition(IClassDefinition classDefinition)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration AddClassDefinition(IClassDefinition classDefinition)
         {
             if (GetClassDefinitions().Contains(classDefinition))
             {
@@ -68,8 +67,8 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="factoryId">factory ID of <see cref="IDataSerializableFactory"/> to be registered</param>
         /// <param name="dataSerializableFactory"><see cref="IDataSerializableFactory"/>object to be registered</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig AddDataSerializableFactory(int factoryId,
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration AddDataSerializableFactory(int factoryId,
             IDataSerializableFactory dataSerializableFactory)
         {
             GetDataSerializableFactories().Add(factoryId, dataSerializableFactory);
@@ -81,8 +80,8 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="factoryId">factory ID of <see cref="IDataSerializableFactory"/> to be registered</param>
         /// <param name="dataSerializableFactoryClass">class name of the factory</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig AddDataSerializableFactoryClass(int factoryId,
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration AddDataSerializableFactoryClass(int factoryId,
             string dataSerializableFactoryClass)
         {
             //TODO dataSerializableFactoryClass paramtere extends ??? IDataSerializableFactory
@@ -95,8 +94,8 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="factoryId">factory ID of <see cref="IDataSerializableFactory"/> to be registered</param>
         /// <param name="dataSerializableFactoryClass">Type of the factory</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig AddDataSerializableFactoryClass(int factoryId,
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration AddDataSerializableFactoryClass(int factoryId,
             Type dataSerializableFactoryClass)
         {
             var factoryClassType = dataSerializableFactoryClass ?? throw new ArgumentNullException(nameof(dataSerializableFactoryClass));
@@ -109,8 +108,8 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="factoryId">factory ID of <see cref="IPortableFactory"/> to be registered</param>
         /// <param name="portableFactory">factory instance to be registered</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig AddPortableFactory(int factoryId, IPortableFactory portableFactory)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration AddPortableFactory(int factoryId, IPortableFactory portableFactory)
         {
             GetPortableFactories().Add(factoryId, portableFactory);
             return this;
@@ -121,8 +120,8 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="factoryId">factory ID of <see cref="IPortableFactory"/> to be registered</param>
         /// <param name="portableFactoryClass">Type of the factory</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig AddPortableFactoryClass(int factoryId, Type portableFactoryClass)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration AddPortableFactoryClass(int factoryId, Type portableFactoryClass)
         {
             var factoryClassType = portableFactoryClass ?? throw new ArgumentNullException(nameof(portableFactoryClass));
             var factoryClassName = factoryClassType.AssemblyQualifiedName;
@@ -134,19 +133,19 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="factoryId">factory ID of <see cref="IPortableFactory"/> to be registered</param>
         /// <param name="portableFactoryClass">class name of the factory</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig AddPortableFactoryClass(int factoryId, string portableFactoryClass)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration AddPortableFactoryClass(int factoryId, string portableFactoryClass)
         {
             GetPortableFactoryClasses().Add(factoryId, portableFactoryClass);
             return this;
         }
 
         /// <summary>
-        /// Adds a <see cref="SerializationConfig"/>
+        /// Adds a <see cref="SerializationConfiguration"/>
         /// </summary>
-        /// <param name="serializerConfig"><see cref="SerializationConfig"/></param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig AddSerializerConfig(SerializerConfig serializerConfig)
+        /// <param name="serializerConfig"><see cref="SerializationConfiguration"/></param>
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration AddSerializerConfig(SerializerConfig serializerConfig)
         {
             GetSerializerConfigs().Add(serializerConfig);
             return this;
@@ -233,7 +232,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// Gets the configured Portable version that will be used to differentiate two versions of the same class 
+        /// Gets the configured Portable version that will be used to differentiate two versions of the same class
         /// that have changes on the class, like adding/removing a field or changing a type of a field.
         /// </summary>
         /// <returns>version of portable classes</returns>
@@ -243,7 +242,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// Gets all <see cref="SerializationConfig"/>s
+        /// Gets all <see cref="SerializationConfiguration"/>s
         /// </summary>
         /// <returns>collection of <see cref="SerializerConfig"/></returns>
         public virtual ICollection<SerializerConfig> GetSerializerConfigs()
@@ -256,7 +255,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// When enabled, serialization system will check for class definitions error at start 
+        /// When enabled, serialization system will check for class definitions error at start
         /// and throw an Serialization Exception with error definition or not.
         /// <br/>
         /// Default value is <c>true</c>
@@ -268,7 +267,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns><c>true</c> if serialization is configured to use native byte order of the underlying platform</returns>
         public virtual bool IsUseNativeByteOrder()
@@ -280,20 +279,20 @@ namespace Hazelcast.Serialization
         /// Sets the serialization's <see cref="ByteOrder"/>
         /// </summary>
         /// <param name="byteOrder">the <see cref="ByteOrder"/> that serialization will use</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetEndianness(Endianness endianness)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetEndianness(Endianness endianness)
         {
             _endianness = endianness;
             return this;
         }
 
         /// <summary>
-        /// When enabled, serialization system will check for class definitions error at start 
+        /// When enabled, serialization system will check for class definitions error at start
         /// and throw an Serialization Exception with error definition or not.
         /// </summary>
         /// <param name="checkClassDefErrors">set to <c>false</c> to disable</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetCheckClassDefErrors(bool checkClassDefErrors)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetCheckClassDefErrors(bool checkClassDefErrors)
         {
             _checkClassDefErrors = checkClassDefErrors;
             return this;
@@ -303,8 +302,8 @@ namespace Hazelcast.Serialization
         /// Sets all <see cref="IClassDefinition"/>s
         /// </summary>
         /// <param name="classDefinitions">collection of <see cref="IClassDefinition"/>s</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetClassDefinitions(ICollection<IClassDefinition> classDefinitions)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetClassDefinitions(ICollection<IClassDefinition> classDefinitions)
         {
             _classDefinitions = classDefinitions;
             return this;
@@ -314,8 +313,8 @@ namespace Hazelcast.Serialization
         /// Sets the dictionary of factory ID and corresponding <see cref="IDataSerializableFactory"/>s
         /// </summary>
         /// <param name="dataSerializableFactories">dictionary of factory ID and corresponding <see cref="IDataSerializableFactory"/>s</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetDataSerializableFactories(
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetDataSerializableFactories(
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories)
         {
             _dataSerializableFactories = dataSerializableFactories;
@@ -326,8 +325,8 @@ namespace Hazelcast.Serialization
         /// Sets the dictionary of factory ID and corresponding factory class names
         /// </summary>
         /// <param name="dataSerializableFactoryClasses">dictionary of factory ID and corresponding factory class names</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetDataSerializableFactoryClasses(
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetDataSerializableFactoryClasses(
             IDictionary<int, string> dataSerializableFactoryClasses)
         {
             _dataSerializableFactoryClasses = dataSerializableFactoryClasses;
@@ -337,9 +336,9 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Not used
         /// </summary>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
         [Obsolete("This configuration is not used in .net client")]
-        public virtual SerializationConfig SetEnableCompression(bool enableCompression)
+        public virtual SerializationConfiguration SetEnableCompression(bool enableCompression)
         {
             _enableCompression = enableCompression;
             return this;
@@ -348,9 +347,9 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Not used
         /// </summary>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
         [Obsolete("This configuration is not used in .net client")]
-        public virtual SerializationConfig SetEnableSharedObject(bool enableSharedObject)
+        public virtual SerializationConfiguration SetEnableSharedObject(bool enableSharedObject)
         {
             _enableSharedObject = enableSharedObject;
             return this;
@@ -360,8 +359,8 @@ namespace Hazelcast.Serialization
         /// Sets <see cref="GlobalSerializerConfig"/>
         /// </summary>
         /// <param name="globalSerializerConfig"><see cref="GlobalSerializerConfig"/></param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetGlobalSerializerConfig(GlobalSerializerConfig globalSerializerConfig)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetGlobalSerializerConfig(GlobalSerializerConfig globalSerializerConfig)
         {
             _globalSerializerConfig = globalSerializerConfig;
             return this;
@@ -371,8 +370,8 @@ namespace Hazelcast.Serialization
         /// Sets the dictionary of factory ID and corresponding <see cref="IPortableFactory"/>s
         /// </summary>
         /// <param name="portableFactories">dictionary of factory ID and corresponding <see cref="IPortableFactory"/>s</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetPortableFactories(IDictionary<int, IPortableFactory> portableFactories)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetPortableFactories(IDictionary<int, IPortableFactory> portableFactories)
         {
             _portableFactories = portableFactories;
             return this;
@@ -382,8 +381,8 @@ namespace Hazelcast.Serialization
         /// Sets the dictionary of factory ID and corresponding factory class names
         /// </summary>
         /// <param name="portableFactoryClasses">dictionary of factory ID and corresponding factory class names</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetPortableFactoryClasses(IDictionary<int, string> portableFactoryClasses)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetPortableFactoryClasses(IDictionary<int, string> portableFactoryClasses)
         {
             _portableFactoryClasses = portableFactoryClasses;
             return this;
@@ -393,9 +392,9 @@ namespace Hazelcast.Serialization
         /// Sets the version of portable classes
         /// </summary>
         /// <param name="portableVersion">version of portable classes</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
         /// <exception cref="ArgumentException">if portableVersion is less than 0</exception>
-        public virtual SerializationConfig SetPortableVersion(int portableVersion)
+        public virtual SerializationConfiguration SetPortableVersion(int portableVersion)
         {
             if (portableVersion < 0)
             {
@@ -406,11 +405,11 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// Sets all <see cref="SerializationConfig"/>s
+        /// Sets all <see cref="SerializationConfiguration"/>s
         /// </summary>
-        /// <param name="serializerConfigs">collection of <see cref="SerializationConfig"/>s</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetSerializerConfigs(ICollection<SerializerConfig> serializerConfigs)
+        /// <param name="serializerConfigs">collection of <see cref="SerializationConfiguration"/>s</param>
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetSerializerConfigs(ICollection<SerializerConfig> serializerConfigs)
         {
             _serializerConfigs = serializerConfigs;
             return this;
@@ -420,8 +419,8 @@ namespace Hazelcast.Serialization
         /// Sets to use native byte order of the underlying platform
         /// </summary>
         /// <param name="useNativeByteOrder">set to <c>true</c> to use native byte order of the underlying platform</param>
-        /// <returns>configured <see cref="SerializationConfig"/> for chaining</returns>
-        public virtual SerializationConfig SetUseNativeByteOrder(bool useNativeByteOrder)
+        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
+        public virtual SerializationConfiguration SetUseNativeByteOrder(bool useNativeByteOrder)
         {
             _useNativeByteOrder = useNativeByteOrder;
             return this;

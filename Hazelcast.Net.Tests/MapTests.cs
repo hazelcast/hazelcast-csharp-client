@@ -16,20 +16,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Aggregators;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Logging;
 using Hazelcast.Networking;
-using Hazelcast.Partitioning.Strategies;
-using Hazelcast.Predicates;
-using Hazelcast.Projections;
-using Hazelcast.Security;
-using Hazelcast.Serialization;
-using Hazelcast.Serialization.Portable;
-using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests
@@ -37,40 +29,18 @@ namespace Hazelcast.Tests
     [TestFixture]
     public class MapTests
     {
-        // these test expects a server on localhost:5701
-
-        private Cluster CreateCluster(IList<IClusterEventSubscriber> clusterEventSubscribers = null)
-        {
-            return new Cluster(new Authenticator(), clusterEventSubscribers ?? new List<IClusterEventSubscriber>(), new NullLoggerFactory());
-        }
-
-        private ISerializationService CreateSerializationService()
-        {
-            var serializerHooks = new SerializerHooks();
-            serializerHooks.Add<PredicateDataSerializerHook>();
-            serializerHooks.Add<AggregatorDataSerializerHook>();
-            serializerHooks.Add<ProjectionDataSerializerHook>();
-
-            return new SerializationService(
-                new ByteArrayInputOutputFactory(Endianness.Native),
-                1,
-                new Dictionary<int, IDataSerializableFactory>(),
-                new Dictionary<int, IPortableFactory>(),
-                new List<IClassDefinition>(),
-                serializerHooks,
-                false,
-                new NullPartitioningStrategy(),
-                512);
-        }
-
-
         public void TestSetUp()
         {
             XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.Configure<SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
             XConsole.Configure<Client>(config => config.SetMaxLevel(1)); // 1: logs message & frames
 
-            // this test expects a server on localhost:5701
+        }
+
+        public void ConfigureClient(HazelcastConfiguration configuration)
+        {
+            // these tests expects a server
+            configuration.Networking.Addresses.Add("sgay-l4");
         }
 
         [Test]
@@ -79,7 +49,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -105,7 +75,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -133,7 +103,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -166,7 +136,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -201,7 +171,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -227,7 +197,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -253,7 +223,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -281,7 +251,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -310,7 +280,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -336,7 +306,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -362,7 +332,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -410,7 +380,7 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = new HazelcastClient(CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
@@ -449,8 +419,10 @@ namespace Hazelcast.Tests
 
             var eventsCount = 0;
 
-            void ConfigureClient(ClientConfig config)
+            void ConfigureClient(HazelcastConfiguration config)
             {
+                config.Networking.Addresses.Add("sgay-l4");
+
                 config.AddClusterEventSubscriber(async cluster =>
                 {
                     await cluster.SubscribeAsync(on => on.ObjectCreated((sender, args) =>
@@ -461,15 +433,7 @@ namespace Hazelcast.Tests
                 });
             }
 
-            var clientConfig = new ClientConfig();
-            ConfigureClient(clientConfig);
-            var clusterEventSubscribers = clientConfig.ClusterEventSubscribers;
-
-            // FIXME maybe that overload makes no sense
-            // or, it does it the client can create everything it needs? => review Asim's configuration code too!
-            // need to review the HazelcastClient constructors...
-            //var client = new HazelcastClient(ConfigureClient, CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
-            var client = new HazelcastClient(clientConfig, CreateCluster(clusterEventSubscribers), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
             await client.OpenAsync();
 
             _ = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));

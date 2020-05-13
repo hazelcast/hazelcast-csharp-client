@@ -27,6 +27,8 @@ namespace Hazelcast.Security
     /// </summary>
     public class Authenticator : IAuthenticator
     {
+
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Authenticator"/> class.
         /// </summary>

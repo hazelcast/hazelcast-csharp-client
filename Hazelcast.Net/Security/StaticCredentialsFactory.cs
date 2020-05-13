@@ -33,7 +33,7 @@ namespace Hazelcast.Security
         }
 
         /// <inheritdoc />
-        public void Init(IDictionary<string, string> properties)
+        public void Initialize(IDictionary<string, string> properties)
         { }
 
         /// <inheritdoc />

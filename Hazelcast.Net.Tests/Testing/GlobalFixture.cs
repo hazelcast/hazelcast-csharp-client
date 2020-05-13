@@ -1,5 +1,4 @@
 ﻿using System;
-using AsyncTests1;
 using NuGet.Versioning;
 using NUnit.Framework;
 

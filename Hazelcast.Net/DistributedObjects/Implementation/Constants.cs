@@ -21,15 +21,6 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// </summary>
         internal class ServiceNames
         {
-            /// <summary>
-            /// Gets the map service name.
-            /// </summary>
-            public const string Map = "hz:impl:mapService";
-
-            /// <summary>
-            /// Gets the topic service name.
-            /// </summary>
-            public const string Topic = "hz:impl:topicService";
 
             /// <summary>
             /// Gets the set service name.

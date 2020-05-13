@@ -2,13 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
-using Hazelcast.Logging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -27,7 +25,7 @@ namespace Hazelcast.NearCaching
         private const int MaxToleratedMissCountDefault = 10;
         private const int AsyncResultWaitTimeoutMillis = 1 * 60 * 1000;
 
-        private static readonly ILogger Logger = Services.Get.LoggerFactory().CreateLogger<NearCacheManager>();
+        private readonly ILogger _logger;
 
         private readonly ConcurrentDictionary<string, NearCacheBase> _caches =
             new ConcurrentDictionary<string, NearCacheBase>();
@@ -47,6 +45,7 @@ namespace Hazelcast.NearCaching
             _cluster = cluster;
             _serializationService = serializationService;
             _loggerFactory = loggerFactory;
+            _logger = loggerFactory.CreateLogger<NearCacheManager>();
             _configs = configs;
 
             _reconciliationIntervalMillis = GetReconciliationIntervalSeconds() * 1000;
@@ -151,7 +150,7 @@ namespace Hazelcast.NearCaching
                 }
                 catch (Exception e)
                 {
-                    Logger.LogWarning(e, $"Cant fetch invalidation meta-data from address:{member.Address}.");
+                    _logger.LogWarning(e, $"Cant fetch invalidation meta-data from address:{member.Address}.");
                 }
             }
         }
@@ -210,7 +209,7 @@ namespace Hazelcast.NearCaching
             }
             catch (Exception e)
             {
-                Logger.LogWarning(e, "Failed to initialize.");
+                _logger.LogWarning(e, "Failed to initialize.");
             }
         }
 
@@ -226,7 +225,7 @@ namespace Hazelcast.NearCaching
                 }
                 catch (Exception e)
                 {
-                    Logger.LogDebug(e, "Failed to repair.");
+                    _logger.LogDebug(e, "Failed to repair.");
                 }
                 finally
                 {

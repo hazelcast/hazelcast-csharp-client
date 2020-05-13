@@ -13,25 +13,30 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Logging;
+using Hazelcast.Security;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Configuration
 {
     /// <summary>
-    /// Loads the <see cref="ClientConfig"/> using XML.
+    /// Loads the <see cref="HazelcastConfiguration"/> using XML.
     /// </summary>
     public class XmlClientConfigBuilder : XmlConfigHelperBase
     {
-        private static readonly ILogger Logger = Services.Get.LoggerFactory().CreateLogger<XmlClientConfigBuilder>();
+        // TODO: this class should be massively refactored
+        // + move to .NET Core configuration style
+        // + move to JSON
 
         private readonly XmlDocument _document = new XmlDocument();
 
-        private ClientConfig _clientConfig;
+        private HazelcastConfiguration _hazelcastConfiguration;
 
         internal XmlClientConfigBuilder(TextReader reader)
         {
@@ -63,10 +68,7 @@ namespace Hazelcast.Configuration
                     }
                     else
                     {
-                        var msg = "Config file at '" + configFile + "' doesn't exist.";
-                        msg +=
-                            "\nHazelcast will try to use the hazelcast-client.xml config file in the working directory.";
-                        Logger.LogWarning(msg);
+                        throw new ConfigurationException($"Could not open file {configFile}.");
                     }
                 }
                 if (input == null)
@@ -75,62 +77,60 @@ namespace Hazelcast.Configuration
                     if (File.Exists(configFile))
                     {
                         input = File.OpenText(configFile);
-                        Logger.LogInformation("Using configuration file at working dir.");
                     }
                     else
                     {
                         input = new StringReader(Resources.hazelcast_client_default);
-                        Logger.LogInformation("Using Default configuration file");
                     }
                 }
+
                 try
                 {
                     _document.Load(input);
-                    input.Dispose();
                 }
-                catch (Exception)
+                finally
                 {
-                    throw new InvalidOperationException("Could not parse configuration file, giving up.");
+                    input.Dispose();
                 }
             }
             catch (Exception e)
             {
-                Logger.LogCritical(e, "Error while creating configuration.");
+                throw new ConfigurationException("Exception while reading configuration.", e);
             }
         }
 
         /// <summary>
-        /// Build a <see cref="ClientConfig"/> from an XML file
+        /// Build a <see cref="HazelcastConfiguration"/> from an XML file
         /// </summary>
         /// <param name="configFile">hazelcast client XML config file</param>
         /// <returns>ClientConfig</returns>
-        public static ClientConfig Build(string configFile = null)
+        public static HazelcastConfiguration Build(string configFile = null)
         {
             return new XmlClientConfigBuilder(configFile).Init();
         }
 
         /// <summary>
-        /// Build a <see cref="ClientConfig"/> from an XML file
+        /// Build a <see cref="HazelcastConfiguration"/> from an XML file
         /// </summary>
         /// <param name="reader">Text reader to provide hazelcast client XML</param>
         /// <returns>ClientConfig</returns>
-        public static ClientConfig Build(TextReader reader)
+        public static HazelcastConfiguration Build(TextReader reader)
         {
             return new XmlClientConfigBuilder(reader).Init();
         }
 
         /// <summary>
-        /// Creates a <see cref="ClientConfig"/> using the XML content
+        /// Creates a <see cref="HazelcastConfiguration"/> using the XML content
         /// </summary>
         /// <returns></returns>
-        protected ClientConfig Init()
+        protected HazelcastConfiguration Init()
         {
-            _clientConfig = new ClientConfig();
-            lock (_clientConfig)
+            _hazelcastConfiguration = new HazelcastConfiguration();
+            lock (_hazelcastConfiguration)
             {
                 HandleConfig(_document.DocumentElement); //PARSE
             }
-            return _clientConfig;
+            return _hazelcastConfiguration;
         }
 
         private void HandleClusterMembers(XmlNode node)
@@ -139,7 +139,7 @@ namespace Hazelcast.Configuration
             {
                 if ("address".Equals(CleanNodeName(child)))
                 {
-                    _clientConfig.GetNetworkConfig().AddAddress(GetTextContent(child));
+                    _hazelcastConfiguration.Networking.Addresses.Add(GetTextContent(child));
                 }
             }
         }
@@ -189,7 +189,7 @@ namespace Hazelcast.Configuration
 
             if (name != null)
             {
-                _clientConfig.SetClusterName(name);
+                _hazelcastConfiguration.ClusterName = name;
             }
 
             if (password != null)
@@ -206,7 +206,7 @@ namespace Hazelcast.Configuration
                 if ("listener".Equals(CleanNodeName(child)))
                 {
                     var className = GetTextContent(child);
-                    _clientConfig.AddClusterEventSubscriber(className);
+                    _hazelcastConfiguration.AddClusterEventSubscriber(className);
                 }
             }
         }
@@ -216,17 +216,13 @@ namespace Hazelcast.Configuration
             var type = GetAttribute(node, "type");
             if ("random".Equals(type))
             {
-                var config = _clientConfig.GetLoadBalancingConfig();
-                if (config == null)
-                    _clientConfig.SetLoadBalancingConfig(config = new LoadBalancingConfig());
-                config.SetRandomLoadBalancer();
+                var config = _hazelcastConfiguration.LoadBalancing;
+                config.LoadBalancer = new RandomLoadBalancer();
             }
             else if ("round-robin".Equals(type))
             {
-                var config = _clientConfig.GetLoadBalancingConfig();
-                if (config == null)
-                    _clientConfig.SetLoadBalancingConfig(config = new LoadBalancingConfig());
-                config.SetRandomLoadBalancer();
+                var config = _hazelcastConfiguration.LoadBalancing;
+                config.LoadBalancer = new RoundRobinLoadBalancer();
             }
         }
 
@@ -261,12 +257,12 @@ namespace Hazelcast.Configuration
                         break;
                 }
             }
-            _clientConfig.AddNearCacheConfig(name, nearCacheConfig);
+            _hazelcastConfiguration.NearCache.Add(name, nearCacheConfig);
         }
 
         private void HandleNetwork(XmlNode node)
         {
-            var clientNetworkConfig = _clientConfig.GetNetworkConfig();
+            var clientNetworkConfig = _hazelcastConfiguration.Networking;
             foreach (XmlNode child in node.ChildNodes)
             {
                 var nodeName = CleanNodeName(child);
@@ -276,19 +272,19 @@ namespace Hazelcast.Configuration
                         HandleClusterMembers(child);
                         break;
                     case "smart-routing":
-                        clientNetworkConfig.SetSmartRouting(bool.Parse(GetTextContent(child)));
+                        clientNetworkConfig.SmartRouting = bool.Parse(GetTextContent(child));
                         break;
                     case "redo-operation":
-                        clientNetworkConfig.SetRedoOperation(bool.Parse(GetTextContent(child)));
+                        clientNetworkConfig.RedoOperation = bool.Parse(GetTextContent(child));
                         break;
                     case "connection-timeout":
-                        clientNetworkConfig.SetConnectionTimeout(Convert.ToInt32(GetTextContent(child)));
+                        clientNetworkConfig.ConnectionTimeoutMilliseconds = Convert.ToInt32(GetTextContent(child));
                         break;
                     case "socket-options":
                         HandleSocketOptions(child, clientNetworkConfig);
                         break;
                     case "ssl":
-                        HandleSSLConfig(child, clientNetworkConfig);
+                        HandleSslConfiguration(child, clientNetworkConfig);
                         break;
                     case "hazelcast-cloud":
                         HandleCloudConfig(child, clientNetworkConfig);
@@ -325,7 +321,7 @@ namespace Hazelcast.Configuration
         /// <exception cref="Exception"></exception>
         private void HandleSecurity(XmlNode node)
         {
-            var clientSecurityConfig = new ClientSecurityConfig();
+            var clientSecurityConfig = _hazelcastConfiguration.Security;
             foreach (XmlNode child in node.ChildNodes)
             {
                 var nodeName = CleanNodeName(child);
@@ -338,81 +334,78 @@ namespace Hazelcast.Configuration
                     HandleCredentialsFactory(child, clientSecurityConfig);
                 }
             }
-            _clientConfig.SetSecurityConfig(clientSecurityConfig);
         }
 
-        private void HandleCredentialsFactory(XmlNode node, ClientSecurityConfig clientSecurityConfig)
+        private void HandleCredentialsFactory(XmlNode node, SecurityConfiguration securityConfiguration)
         {
-            var credentialsFactoryConfig = clientSecurityConfig.CredentialsFactoryConfig;
-            credentialsFactoryConfig.ClassName = GetAttribute(node, "class-name");
+            var classname = GetAttribute(node, "class-name");
+            var factory = Services.CreateInstance<ICredentialsFactory>(classname);
 
             foreach (XmlNode child in node.ChildNodes) {
                 var nodeName = CleanNodeName(child.Name);
                 if ("properties".Equals(nodeName))
                 {
-                    FillProperties(child, credentialsFactoryConfig.Properties);
+                    var props = new Dictionary<string, string>();
+                    FillProperties(child, props);
+                    factory.Initialize(props);
                     break;
                 }
             }
+
+            securityConfiguration.CredentialsFactory = factory;
         }
 
         private void HandleSerialization(XmlNode node)
         {
-            var serializationConfig = ParseSerialization(node);
-            _clientConfig.SetSerializationConfig(serializationConfig);
+            ParseSerialization(_hazelcastConfiguration.Serialization, node);
         }
 
-        private void HandleSocketInterceptorConfig(XmlNode node, ClientNetworkConfig clientNetworkConfig)
+        private void HandleSocketInterceptorConfig(XmlNode node, NetworkingConfiguration networkingConfiguration)
         {
-            var socketInterceptorConfig = ParseSocketInterceptorConfig(node);
-            clientNetworkConfig.SetSocketInterceptorConfig(socketInterceptorConfig);
+            ParseSocketInterceptorConfiguration(networkingConfiguration.SocketInterceptor, node);
         }
 
-        private void HandleSocketOptions(XmlNode node, ClientNetworkConfig clientNetworkConfig)
+        private void HandleSocketOptions(XmlNode node, NetworkingConfiguration networkingConfiguration)
         {
-            var socketOptions = clientNetworkConfig.GetSocketOptions();
+            var socketOptions = networkingConfiguration.SocketOptions;
             foreach (XmlNode child in node.ChildNodes)
             {
                 var nodeName = CleanNodeName(child);
                 switch (nodeName)
                 {
                     case "tcp-no-delay":
-                        socketOptions.SetTcpNoDelay(bool.Parse(GetTextContent(child)));
+                        socketOptions.TcpNoDelay = bool.Parse(GetTextContent(child));
                         break;
                     case "keep-alive":
-                        socketOptions.SetKeepAlive(bool.Parse(GetTextContent(child)));
+                        socketOptions.KeepAlive = bool.Parse(GetTextContent(child));
                         break;
                     case "reuse-address":
-                        socketOptions.SetReuseAddress(bool.Parse(GetTextContent(child)));
+                        socketOptions.ReuseAddress = bool.Parse(GetTextContent(child));
                         break;
                     case "linger-seconds":
-                        socketOptions.SetLingerSeconds(Convert.ToInt32(GetTextContent(child)));
-                        break;
-                    case "timeout":
-                        socketOptions.SetTimeout(Convert.ToInt32(GetTextContent(child)));
+                        socketOptions.LingerSeconds = Convert.ToInt32(GetTextContent(child));
                         break;
                     case "buffer-size":
-                        socketOptions.SetBufferSize(Convert.ToInt32(GetTextContent(child)));
+                        socketOptions.BufferSize = Convert.ToInt32(GetTextContent(child));
                         break;
                 }
             }
         }
-        private void HandleSSLConfig(XmlNode node, ClientNetworkConfig clientNetworkConfig)
+        private void HandleSslConfiguration(XmlNode node, NetworkingConfiguration networkingConfiguration)
         {
-            var sslConfig = ParseSSLConfig(node);
-            clientNetworkConfig.SetSSLConfig(sslConfig);
+            ParseSslConfiguration(networkingConfiguration.SslConfiguration, node);
         }
 
-        private void HandleCloudConfig(XmlNode node, ClientNetworkConfig clientNetworkConfig) {
-            var cloudConfig = clientNetworkConfig.GetCloudConfig();
+        private void HandleCloudConfig(XmlNode node, NetworkingConfiguration networkingConfiguration) {
+            var cloudConfig = networkingConfiguration.CloudConfiguration;
 
             var enabledNode = node.Attributes.GetNamedItem("enabled");
             var enabled = enabledNode != null && CheckTrue(GetTextContent(enabledNode).Trim());
-            cloudConfig.SetEnabled(enabled);
+            cloudConfig.IsEnabled = enabled;
             foreach (XmlNode child in node.ChildNodes) {
                 var nodeName = CleanNodeName(child);
                 if ("discovery-token".Equals(nodeName)) {
-                    cloudConfig.SetDiscoveryToken(GetTextContent(child));
+                    cloudConfig.DiscoveryToken = GetTextContent(child);
                 }
             }
         }

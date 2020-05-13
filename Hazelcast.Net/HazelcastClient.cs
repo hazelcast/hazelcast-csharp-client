@@ -27,7 +27,7 @@ namespace Hazelcast
     /// </summary>
     internal partial class HazelcastClient : IHazelcastClient
     {
-        private readonly ClientConfig _configuration;
+        private readonly HazelcastConfiguration _configuration;
         private readonly DistributedObjectFactory _distributedObjectFactory;
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace Hazelcast
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HazelcastClient(ClientConfig configuration, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HazelcastClient(HazelcastConfiguration configuration, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
@@ -64,32 +64,16 @@ namespace Hazelcast
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
         /// </summary>
-        public HazelcastClient(Action<ClientConfig> configure, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : this(BuildConfiguration(configure), cluster, serializationService, loggerFactory)
+        public HazelcastClient(Action<HazelcastConfiguration> configure, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : this(HazelcastClientFactory.BuildConfiguration(configure), cluster, serializationService, loggerFactory)
         { }
-
-        /// <summary>
-        /// Builds the configuration.
-        /// </summary>
-        /// <param name="configure">A configuration builder.</param>
-        /// <returns>The configuration.</returns>
-        private static ClientConfig BuildConfiguration(Action<ClientConfig> configure)
-        {
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            var configuration = new ClientConfig();
-            configure(configuration);
-            return configuration;
-        }
 
         /// <summary>
         /// Gets the <see cref="Cluster"/>.
         /// </summary>
         public Cluster Cluster { get; }
 
-        /// <summary>
-        /// Opens the client.
-        /// </summary>
-        /// <returns>A task that will complete when the client is open and ready.</returns>
+        /// <inheritdoc />
         public async Task OpenAsync()
         {
             await Cluster.ConnectAsync();

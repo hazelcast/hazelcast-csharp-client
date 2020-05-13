@@ -40,7 +40,8 @@ namespace Hazelcast.Testing
             // #endif
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "finest");
 
-            Logger = Services.Get.LoggerFactory().CreateLogger(GetType());
+            var loggerFactory = new NullLoggerFactory(); // TODO: replace with real logger
+            Logger = loggerFactory.CreateLogger(GetType());
             Logger.LogInformation("LOGGER ACTIVE");
 
             TaskScheduler.UnobservedTaskException += UnobservedTaskException;
@@ -83,47 +84,18 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Configures the client.
         /// </summary>
-        /// <param name="config">The client configuration.</param>
-        protected virtual void ConfigureClient(ClientConfig config)
+        /// <param name="configuration">The client configuration.</param>
+        protected virtual void ConfigureClient(HazelcastConfiguration configuration)
         {
-            config.GetNetworkConfig().AddAddress("localhost:5701");
-            var cs = config.GetConnectionStrategyConfig();
-            cs.AsyncStart = false;
-            cs.ReconnectMode = ReconnectMode.ON;
-            cs.ConnectionRetryConfig.ClusterConnectTimeoutMillis = 60000;
-            cs.ConnectionRetryConfig.InitialBackoffMillis = 2000;
-        }
+            configuration.AsyncStart = false;
 
-        /// <summary>
-        /// Creates the cluster.
-        /// </summary>
-        /// <returns>A cluster.</returns>
-        protected virtual Clustering.Cluster CreateCluster()
-        {
-            return new Clustering.Cluster(new Authenticator(), new List<IClusterEventSubscriber>(),  new NullLoggerFactory());
-        }
+            var n = configuration.Networking;
+            n.Addresses.Add("localhost:5701");
+            n.ReconnectMode = ReconnectMode.ReconnectSync;
 
-        /// <summary>
-        /// Creates the serialization service.
-        /// </summary>
-        /// <returns>A serialization service.</returns>
-        protected virtual ISerializationService CreateSerializationService()
-        {
-            var serializerHooks = new SerializerHooks();
-            serializerHooks.Add<PredicateDataSerializerHook>();
-            serializerHooks.Add<AggregatorDataSerializerHook>();
-            serializerHooks.Add<ProjectionDataSerializerHook>();
-
-            return new SerializationService(
-                new ByteArrayInputOutputFactory(Endianness.Native),
-                1,
-                new Dictionary<int, IDataSerializableFactory>(),
-                new Dictionary<int, IPortableFactory>(),
-                new List<IClassDefinition>(),
-                serializerHooks,
-                false,
-                new NullPartitioningStrategy(),
-                512);
+            var r = n.ConnectionRetry;
+            r.ClusterConnectionTimeoutMilliseconds = 60 * 1000;
+            r.InitialBackoffMilliseconds = 2 * 1000;
         }
 
         /// <summary>
@@ -136,8 +108,7 @@ namespace Hazelcast.Testing
 
             Logger.LogInformation("Creating new client");
 
-            // FIXME: if that's the only way to create a client, why the interface?
-            var client = new HazelcastClient(ConfigureClient, CreateCluster(), CreateSerializationService(), new NullLoggerFactory());
+            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
 
             // FIXME there should be a 30 mins timeout on the opening
             // uh - lifecycle events - HOW??? for ClientConnected???

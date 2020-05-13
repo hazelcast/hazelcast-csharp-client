@@ -14,9 +14,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Security.Authentication;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -25,8 +28,6 @@ namespace Hazelcast.Configuration
 {
     public abstract class XmlConfigHelperBase
     {
-        private static readonly ILogger Logger = Services.Get.LoggerFactory().CreateLogger<XmlConfigHelperBase>();
-
         public string CleanNodeName(XmlNode node)
         {
             return CleanNodeName(node.Name);
@@ -50,7 +51,7 @@ namespace Hazelcast.Configuration
                 "on".Equals(value, StringComparison.OrdinalIgnoreCase);
         }
 
-        protected internal void FillDataSerializableFactories(XmlNode node, SerializationConfig serializationConfig)
+        protected internal void FillDataSerializableFactories(XmlNode node, SerializationConfiguration serializationConfiguration)
         {
             foreach (XmlNode child in node.ChildNodes)
             {
@@ -65,14 +66,14 @@ namespace Hazelcast.Configuration
                             "'factory-id' attribute of 'data-serializable-factory' is required!");
                     }
                     var factoryId = Convert.ToInt32(GetTextContent(factoryIdNode));
-                    serializationConfig.AddDataSerializableFactoryClass(factoryId, value);
+                    serializationConfiguration.AddDataSerializableFactoryClass(factoryId, value);
                 }
             }
         }
 
         protected internal virtual
             void FillPortableFactories
-            (XmlNode node, SerializationConfig serializationConfig)
+            (XmlNode node, SerializationConfiguration serializationConfiguration)
         {
             foreach (XmlNode child in node.ChildNodes)
             {
@@ -86,7 +87,7 @@ namespace Hazelcast.Configuration
                         throw new ArgumentException("'factory-id' attribute of 'portable-factory' is required!");
                     }
                     var factoryId = Convert.ToInt32(GetTextContent(factoryIdNode));
-                    serializationConfig.AddPortableFactoryClass(factoryId, value);
+                    serializationConfiguration.AddPortableFactoryClass(factoryId, value);
                 }
             }
         }
@@ -126,7 +127,7 @@ namespace Hazelcast.Configuration
 
         protected internal virtual
             void FillSerializers
-            (XmlNode node, SerializationConfig serializationConfig)
+            (XmlNode node, SerializationConfiguration serializationConfiguration)
         {
             foreach (XmlNode child in node.ChildNodes)
             {
@@ -138,7 +139,7 @@ namespace Hazelcast.Configuration
                     serializerConfig.SetClassName(value);
                     var typeClassName = GetAttribute(child, "type-class");
                     serializerConfig.SetTypeClassName(typeClassName);
-                    serializationConfig.AddSerializerConfig(serializerConfig);
+                    serializationConfiguration.AddSerializerConfig(serializerConfig);
                 }
                 else
                 {
@@ -146,7 +147,7 @@ namespace Hazelcast.Configuration
                     {
                         var globalSerializerConfig = new GlobalSerializerConfig();
                         globalSerializerConfig.SetClassName(value);
-                        serializationConfig.SetGlobalSerializerConfig(globalSerializerConfig);
+                        serializationConfiguration.SetGlobalSerializerConfig(globalSerializerConfig);
                     }
                 }
             }
@@ -174,10 +175,7 @@ namespace Hazelcast.Configuration
             }
             catch (Exception e)
             {
-                Logger.LogInformation(parameterName + " parameter value, [" + value +
-                            "], is not a proper integer. Default value, [" + defaultValue + "], will be used!");
-                Logger.LogWarning(e, "Exception.");
-                return defaultValue;
+                throw new ConfigurationException($"Invalid integer value {value}.");
             }
         }
 
@@ -190,9 +188,8 @@ namespace Hazelcast.Configuration
             return string.Empty;
         }
 
-        protected internal virtual SerializationConfig ParseSerialization(XmlNode node)
+        protected internal virtual void ParseSerialization(SerializationConfiguration serializationConfig, XmlNode node)
         {
-            var serializationConfig = new SerializationConfig();
             foreach (XmlNode child in node.ChildNodes)
             {
                 var name = CleanNodeName(child);
@@ -229,16 +226,14 @@ namespace Hazelcast.Configuration
                         break;
                 }
             }
-            return serializationConfig;
         }
 
-        protected internal virtual SocketInterceptorConfig ParseSocketInterceptorConfig(XmlNode node)
+        protected internal virtual void ParseSocketInterceptorConfiguration(SocketInterceptorConfiguration socketInterceptorConfig, XmlNode node)
         {
-            var socketInterceptorConfig = new SocketInterceptorConfig();
             var atts = node.Attributes;
             var enabledNode = atts.GetNamedItem("enabled");
             var enabled = enabledNode != null && CheckTrue(GetTextContent(enabledNode).Trim());
-            socketInterceptorConfig.SetEnabled(enabled);
+            socketInterceptorConfig.IsEnabled = enabled;
             foreach (XmlNode n in node.ChildNodes)
             {
                 var nodeName = CleanNodeName(n.Name);
@@ -254,25 +249,199 @@ namespace Hazelcast.Configuration
                     }
                 }
             }
-            return socketInterceptorConfig;
         }
 
-        protected internal virtual SSLConfig ParseSSLConfig(XmlNode node)
+        protected internal virtual void ParseSslConfiguration(SslConfiguration sslConfig, XmlNode node)
         {
-            var sslConfig = new SSLConfig();
             var atts = node.Attributes;
             var enabledNode = atts.GetNamedItem("enabled");
             var enabled = enabledNode != null && CheckTrue(GetTextContent(enabledNode).Trim());
-            sslConfig.SetEnabled(enabled);
+            sslConfig.IsEnabled = enabled;
             foreach (XmlNode n in node.ChildNodes)
             {
                 var nodeName = CleanNodeName(n.Name);
                 if ("properties".Equals(nodeName))
                 {
-                    FillProperties(n, sslConfig.GetProperties());
+                    var props = new Dictionary<string, string>();
+                    FillProperties(props, n);
+                    if (props.TryGetValue(HazelcastProperties.CertificateName, out var certificateName))
+                    {
+                        sslConfig.CertificateName = certificateName;
+                    }
+                    if (props.TryGetValue(HazelcastProperties.ValidateCertificateChain, out var validateCertificateChain))
+                    {
+                        sslConfig.ValidateCertificateChain = Convert.ToBoolean(validateCertificateChain);
+                    }
+                    if (props.TryGetValue(HazelcastProperties.ValidateCertificateName, out var validateCertificateName))
+                    {
+                        sslConfig.ValidateCertificateName = Convert.ToBoolean(validateCertificateName);
+                    }
+                    if (props.TryGetValue(HazelcastProperties.CheckCertificateRevocation, out var checkCertificateRevocation))
+                    {
+                        sslConfig.CheckCertificateRevocation = Convert.ToBoolean(checkCertificateRevocation);
+                    }
+                    if (props.TryGetValue(HazelcastProperties.CertificateFilePath, out var certificateFilePath))
+                    {
+                        sslConfig.CertificatePath = certificateFilePath;
+                    }
+                    if (props.TryGetValue(HazelcastProperties.CertificatePassword, out var certificatePassword))
+                    {
+                        sslConfig.CertificatePassword = certificatePassword;
+                    }
+                    if (props.TryGetValue(HazelcastProperties.SslProtocol, out var sslProtocol))
+                    {
+                        sslConfig.SslProtocol = (SslProtocols)Enum.Parse(typeof(SslProtocols), sslProtocol, true);
+                    }
                 }
             }
-            return sslConfig;
+        }
+
+        private void FillProperties(IDictionary<string, string> properties, XmlNode node)
+        {
+            if (properties == null)
+            {
+                return;
+            }
+            foreach (XmlNode n in node.ChildNodes)
+            {
+                if (n.NodeType == XmlNodeType.Text || n.NodeType == XmlNodeType.Comment)
+                {
+                    continue;
+                }
+                var value = GetTextContent(n).Trim();
+                var name = CleanNodeName(n.Name);
+                string propertyName;
+                if ("property".Equals(name))
+                {
+                    var xmlAttributeCollection = n.Attributes;
+                    if (xmlAttributeCollection != null)
+                    {
+                        propertyName = GetTextContent(xmlAttributeCollection.GetNamedItem("name")).Trim();
+                        properties[propertyName] = value;
+                    }
+                }
+                else
+                {
+                    // old way - probably should be deprecated
+                    propertyName = name;
+                    properties[propertyName] = value;
+                }
+            }
+        }
+
+        public class HazelcastProperty
+        {
+            public HazelcastProperty(string name, string defaultValue)
+            {
+                Name = name;
+                DefaultValue = defaultValue;
+            }
+
+            public string Name { get; }
+
+            public string DefaultValue { get; }
+        }
+
+        public class HazelcastProperties
+        {
+            public static readonly HazelcastProperty ShuffleMemberList =
+                new HazelcastProperty("hazelcast.client.shuffle.member.list", "true");
+
+            public static readonly HazelcastProperty HeartbeatTimeout =
+                new HazelcastProperty("hazelcast.client.heartbeat.timeout", "60000");
+
+            public static readonly HazelcastProperty HeartbeatInterval =
+                new HazelcastProperty("hazelcast.client.heartbeat.interval", "5000");
+
+            public static readonly HazelcastProperty EventThreadCount =
+                new HazelcastProperty("hazelcast.client.event.thread.count", "5");
+
+            public static readonly HazelcastProperty EventQueueCapacity =
+                new HazelcastProperty("hazelcast.client.event.queue.capacity", "1000000");
+
+            public static readonly HazelcastProperty InvocationTimeoutSeconds =
+                new HazelcastProperty("hazelcast.client.invocation.timeout.seconds", "120");
+
+
+            public static readonly HazelcastProperty ConfigFilePath = new HazelcastProperty("hazelcast.client.config", ".");
+
+            public static readonly HazelcastProperty LoggingLevel = new HazelcastProperty("hazelcast.logging.level", "all");
+
+            public static readonly HazelcastProperty LoggingType = new HazelcastProperty("hazelcast.logging.type", "none");
+
+
+            public static readonly HazelcastProperty CloudUrlBase =
+                new HazelcastProperty("hazelcast.client.cloud.url", "https://coordinator.hazelcast.cloud");
+
+
+            public static readonly HazelcastProperty ReconciliationIntervalSecondsProperty =
+                new HazelcastProperty("hazelcast.invalidation.reconciliation.interval.seconds", "60");
+
+            public static readonly HazelcastProperty MinReconciliationIntervalSecondsProperty =
+                new HazelcastProperty("hazelcast.invalidation.min.reconciliation.interval.seconds", "30");
+
+            public static readonly HazelcastProperty MaxToleratedMissCountProperty =
+                new HazelcastProperty("hazelcast.invalidation.max.tolerated.miss.count", "10");
+
+
+            /// <summary>
+            /// Certificate Name to be validated against SAN field of the remote certificate, if not present then the CN part of the Certificate Subject.
+            /// </summary>
+            public static readonly string CertificateName = "CertificateServerName";
+
+            /// <summary>
+            /// Certificate File path.
+            /// </summary>
+            public static readonly string CertificateFilePath = "CertificateFilePath";
+
+            /// <summary>
+            /// Password need to import the certificates.
+            /// </summary>
+            public static readonly string CertificatePassword = "CertificatePassword";
+
+            /// <summary>
+            /// SSL/TLS protocol. string value of enum type <see cref="System.Security.Authentication.SslProtocols"/>
+            /// </summary>
+            public static readonly string SslProtocol = "SslProtocol";
+
+            /// <summary>
+            /// specifies whether the certificate revocation list is checked during authentication.
+            /// </summary>
+            public static readonly string CheckCertificateRevocation = "CheckCertificateRevocation";
+
+            /// <summary>
+            /// The property is used to configure ssl to enable certificate chain validation.
+            /// </summary>
+            public static readonly string ValidateCertificateChain = "ValidateCertificateChain";
+
+            /// <summary>
+            /// The property is used to configure ssl to enable Certificate name validation
+            /// </summary>
+            public static readonly string ValidateCertificateName = "ValidateCertificateName";
+
+
+            internal IReadOnlyDictionary<string, string> Properties { get; }
+
+            internal HazelcastProperties(IDictionary<string, string> properties)
+            {
+                Properties = new ReadOnlyDictionary<string, string>(properties);
+            }
+
+            internal string StringValue(string name) => Properties.TryGetValue(name, out var val) ? val : null;
+
+            internal string StringValue(HazelcastProperty hazelcastProperty)
+            {
+                if (Properties.TryGetValue(hazelcastProperty.Name, out var val))
+                {
+                    return val;
+                }
+                var envVarValue = Environment.GetEnvironmentVariable(hazelcastProperty.Name);
+                return envVarValue ?? hazelcastProperty.DefaultValue;
+            }
+
+            internal bool BoolValue(HazelcastProperty hazelcastProperty) => Convert.ToBoolean(StringValue(hazelcastProperty));
+            internal int IntValue(HazelcastProperty hazelcastProperty) => int.Parse(StringValue(hazelcastProperty));
+            internal long LongValue(HazelcastProperty hazelcastProperty) => long.Parse(StringValue(hazelcastProperty));
         }
     }
 }

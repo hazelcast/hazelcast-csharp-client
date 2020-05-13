@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Hazelcast.Core;
 
-namespace AsyncTests1
+namespace Hazelcast.Core
 {
     /// <summary>
     /// Provides extension methods to the <see cref="IEnumerable{T}"/> interface.

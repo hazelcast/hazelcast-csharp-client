@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,14 +21,19 @@ namespace Hazelcast.Configuration
     /// <summary>
     /// Contains the configuration for interceptor socket.
     /// </summary>
-    public class SocketInterceptorConfig
+    public class SocketInterceptorConfiguration
     {
-        private string _className;
-        private bool _enabled;
 
+        // FIXME see CredentialsFactoryConfiguration - this too is DI - DON'T
+        private string _className;
         private object _implementation;
 
         private Dictionary<string, string> _properties = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Whether socket interception is enabled.
+        /// </summary>
+        public bool IsEnabled { get; set; }
 
         /// <summary>
         ///     Returns the name of the
@@ -72,13 +77,6 @@ namespace Hazelcast.Configuration
             return value;
         }
 
-        /// <summary>Returns if this configuration is enabled</summary>
-        /// <returns>true if enabled, false otherwise</returns>
-        public virtual bool IsEnabled()
-        {
-            return _enabled;
-        }
-
         /// <summary>
         ///     Sets the name for the
         ///     <see cref="ISocketInterceptor" />
@@ -90,17 +88,9 @@ namespace Hazelcast.Configuration
         ///     implementation class to set
         /// </param>
         /// <returns>this SocketInterceptorConfig instance</returns>
-        public virtual SocketInterceptorConfig SetClassName(string className)
+        public virtual SocketInterceptorConfiguration SetClassName(string className)
         {
             _className = className;
-            return this;
-        }
-
-        /// <summary>Enables and disables this configuration</summary>
-        /// <param name="enabled"></param>
-        public virtual SocketInterceptorConfig SetEnabled(bool enabled)
-        {
-            _enabled = enabled;
             return this;
         }
 
@@ -111,7 +101,7 @@ namespace Hazelcast.Configuration
         /// </summary>
         /// <param name="implementation">implementation object</param>
         /// <returns>this SocketInterceptorConfig instance</returns>
-        public virtual SocketInterceptorConfig SetImplementation(object implementation)
+        public virtual SocketInterceptorConfiguration SetImplementation(object implementation)
         {
             _implementation = implementation;
             return this;
@@ -122,7 +112,7 @@ namespace Hazelcast.Configuration
         /// <param name="properties">the properties to set.</param>
         /// <returns>the updated SSLConfig.</returns>
         /// <exception cref="System.ArgumentException">if properties is null.</exception>
-        public virtual SocketInterceptorConfig SetProperties(Dictionary<string, string> properties)
+        public virtual SocketInterceptorConfiguration SetProperties(Dictionary<string, string> properties)
         {
             if (properties == null)
             {
@@ -138,7 +128,7 @@ namespace Hazelcast.Configuration
         /// <param name="value">the value of the property to set</param>
         /// <returns>the updated SocketInterceptorConfig</returns>
         /// <exception cref="System.ArgumentNullException">if name or value is null.</exception>
-        public virtual SocketInterceptorConfig SetProperty(string name, string value)
+        public virtual SocketInterceptorConfiguration SetProperty(string name, string value)
         {
             _properties.Add(name, value);
             return this;
@@ -147,14 +137,9 @@ namespace Hazelcast.Configuration
         /// <inheritdoc />
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            sb.Append("SocketInterceptorConfig");
-            sb.Append("{className='").Append(_className).Append('\'');
-            sb.Append(", enabled=").Append(_enabled);
-            sb.Append(", implementation=").Append(_implementation);
-            sb.Append(", properties=").Append(_properties);
-            sb.Append('}');
-            return sb.ToString();
+            var text = new StringBuilder();
+            text.Append("SocketInterceptorConfig");
+            return text.ToString();
         }
     }
 }

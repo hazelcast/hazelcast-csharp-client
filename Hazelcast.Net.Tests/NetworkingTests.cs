@@ -185,7 +185,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start client ");
-            var client1 = new Clustering.Client(address, new Int64Sequence());
+            var client1 = new Client(address, new Int64Sequence());
             await client1.ConnectAsync();
 
             // RC assigns a GUID but the default cluster name is 'dev'
@@ -219,15 +219,16 @@ namespace Hazelcast.Tests
         [Timeout(10_000)]
         public async Task Cluster()
         {
-            var address = NetworkAddress.Parse("sgay-l4");
-
-            // this test expects a server on localhost:5701
+            // this test expects a server
 
             XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Cluster?");
-            var cluster = new Cluster(new Authenticator(), new List<IClusterEventSubscriber>(),  new NullLoggerFactory());
+
+            var configuration = new HazelcastConfiguration();
+            configuration.Networking.Addresses.Add("sgay-l4");
+            var cluster = new Cluster(configuration, null, new Authenticator(), new List<IClusterEventSubscriber>(),  new NullLoggerFactory());
             await cluster.ConnectAsync();
 
             // now we can send messages...

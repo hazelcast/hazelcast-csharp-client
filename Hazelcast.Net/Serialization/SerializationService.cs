@@ -34,7 +34,7 @@ namespace Hazelcast.Serialization
         private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersArraySize;
 
         private static readonly IPartitioningStrategy TheEmptyPartitioningStrategy = new EmptyPartitioningStrategy();
-        private static readonly ILogger Logger = Services.Get.LoggerFactory().CreateLogger<SerializationService>();
+        private readonly ILogger _logger;
 
         private readonly ISerializerAdapter[] _constantTypeIds = new ISerializerAdapter[ConstantSerializersSize];
 
@@ -68,8 +68,10 @@ namespace Hazelcast.Serialization
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
             IDictionary<int, IPortableFactory> portableFactories, ICollection<IClassDefinition> classDefinitions,
             SerializerHooks hooks,
-            bool checkClassDefErrors, IPartitioningStrategy partitioningStrategy, int initialOutputBufferSize)
+            bool checkClassDefErrors, IPartitioningStrategy partitioningStrategy, int initialOutputBufferSize,
+            ILoggerFactory loggerFactory)
         {
+            _logger = loggerFactory.CreateLogger<SerializationService>();
             _inputOutputFactory = inputOutputFactory;
             GlobalPartitioningStrategy = partitioningStrategy;
             _outputBufferSize = initialOutputBufferSize;
@@ -77,7 +79,7 @@ namespace Hazelcast.Serialization
             _portableContext = new PortableContext(this, version);
             _dataSerializerAdapter =
                 CreateSerializerAdapterByGeneric<IIdentifiedDataSerializable>(
-                    new DataSerializer(hooks, dataSerializableFactories));
+                    new DataSerializer(hooks, dataSerializableFactories, loggerFactory));
             _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
             _portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(_portableSerializer);
             _nullSerializerAdapter = CreateSerializerAdapterByGeneric<object>(new ConstantSerializers.NullSerializer());
@@ -496,7 +498,7 @@ namespace Hazelcast.Serialization
             {
                 if (SafeRegister(type, _serializableSerializerAdapter))
                 {
-                    Logger.LogWarning("Performance Hint: Serialization service will use CLR Serialization for : " + type
+                    _logger.LogWarning("Performance Hint: Serialization service will use CLR Serialization for : " + type
                                    +
                                    ". Please consider using a faster serialization option such as IIdentifiedDataSerializable.");
                 }

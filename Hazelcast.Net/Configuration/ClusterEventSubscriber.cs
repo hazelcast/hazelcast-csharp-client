@@ -15,6 +15,7 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
 namespace Hazelcast.Configuration
@@ -72,29 +73,9 @@ namespace Hazelcast.Configuration
             }
             else
             {
-                var subscriber = _subscriber;
-                if (subscriber == null)
-                {
-                    var type = _type;
-                    if (type == null)
-                    {
-                        type = Type.GetType(_typename);
-                        if (type == null)
-                            throw new InvalidOperationException($"Type \"{_typename}\" not found.");
-                    }
-
-                    try
-                    {
-                        subscriber = Activator.CreateInstance(type) as IClusterEventSubscriber;
-                    }
-                    catch (Exception e)
-                    {
-                        throw new InvalidOperationException($"Failed to create an instance of type {type}.", e);
-                    }
-
-                    if (subscriber == null)
-                        throw new InvalidOperationException($"Type {type} does not implement {typeof(IClusterEventSubscriber)}.");
-                }
+                var subscriber = _subscriber ?? (_type == null
+                    ? Services.CreateInstance<IClusterEventSubscriber>(_typename)
+                    : Services.CreateInstance<IClusterEventSubscriber>(_type));
 
                 await subscriber.SubscribeAsync(cluster);
             }

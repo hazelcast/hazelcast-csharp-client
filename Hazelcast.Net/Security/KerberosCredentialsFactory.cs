@@ -48,7 +48,7 @@ namespace Hazelcast.Security
         /// <summary>
         /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/> class.
         /// </summary>
-        /// <remarks>The new instance needs to be fully initialized with the <see cref="Init"/> method.</remarks>
+        /// <remarks>The new instance needs to be fully initialized with the <see cref="Initialize"/> method.</remarks>
         // ReSharper disable once UnusedMember.Global - created by reflection
         public KerberosCredentialsFactory()
         { }
@@ -90,7 +90,7 @@ namespace Hazelcast.Security
         }
 
         /// <inheritdoc />
-        public void Init(IDictionary<string, string> properties)
+        public void Initialize(IDictionary<string, string> properties)
         {
             if (!properties.TryGetValue("spn", out _spn) || string.IsNullOrWhiteSpace(_spn))
                 throw new InvalidOperationException("Missing Service Principal Name.");

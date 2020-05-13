@@ -18,6 +18,7 @@ using System.Linq;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization.Portable;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
 {
@@ -34,6 +35,7 @@ namespace Hazelcast.Serialization
 
     internal sealed class SerializationServiceBuilder : ISerializationServiceBuilder
     {
+        private readonly ILoggerFactory _loggerFactory;
         private const int DefaultOutBufferSize = 4*1024;
 
         private readonly IDictionary<int, IDataSerializableFactory> _dataSerializableFactories =
@@ -48,9 +50,9 @@ namespace Hazelcast.Serialization
         private ICollection<IClassDefinition> _classDefinitions =
             new HashSet<IClassDefinition>();
 
-        private SerializerHooks _hooks = new SerializerHooks();
+        private readonly SerializerHooks _hooks;
 
-        private SerializationConfig _config;
+        private SerializationConfiguration _configuration;
 
         // PM.DI
         //private IHazelcastInstance _hazelcastInstance;
@@ -62,6 +64,12 @@ namespace Hazelcast.Serialization
         private int _portableVersion = -1;
         private bool _useNativeByteOrder;
         private byte _version = SerializationService.SerializerVersion;
+
+        public SerializationServiceBuilder(ILoggerFactory loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
+            _hooks = new SerializerHooks();
+        }
 
         public ISerializationServiceBuilder SetVersion(byte version)
         {
@@ -75,6 +83,18 @@ namespace Hazelcast.Serialization
             return this;
         }
 
+        public ISerializationServiceBuilder AddHook<T>()
+        {
+            _hooks.Add(typeof(T));
+            return this;
+        }
+
+        public ISerializationServiceBuilder AddHook(Type type)
+        {
+            _hooks.Add(type);
+            return this;
+        }
+
         public ISerializationServiceBuilder SetPortableVersion(int version)
         {
             if (version < 0)
@@ -85,16 +105,16 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public ISerializationServiceBuilder SetConfig(SerializationConfig config)
+        public ISerializationServiceBuilder SetConfig(SerializationConfiguration configuration)
         {
-            _config = config;
+            _configuration = configuration;
             if (_portableVersion < 0)
             {
-                _portableVersion = config.GetPortableVersion();
+                _portableVersion = configuration.GetPortableVersion();
             }
-            _checkClassDefErrors = config.IsCheckClassDefErrors();
-            _useNativeByteOrder = config.IsUseNativeByteOrder();
-            _endianness = config.Endianness;
+            _checkClassDefErrors = configuration.IsCheckClassDefErrors();
+            _useNativeByteOrder = configuration.IsUseNativeByteOrder();
+            _endianness = configuration.Endianness;
             return this;
         }
 
@@ -163,12 +183,14 @@ namespace Hazelcast.Serialization
             {
                 _portableVersion = 0;
             }
-            if (_config != null)
+
+            if (_configuration != null)
             {
-                AddConfigDataSerializableFactories(_dataSerializableFactories, _config);
-                AddConfigPortableFactories(_portableFactories, _config);
-                _classDefinitions = _classDefinitions.Union(_config.GetClassDefinitions()).ToList();
+                AddConfigDataSerializableFactories(_dataSerializableFactories, _configuration);
+                AddConfigPortableFactories(_portableFactories, _configuration);
+                _classDefinitions = _classDefinitions.Union(_configuration.GetClassDefinitions()).ToList();
             }
+
             //TODO: Add support for multiple versions
             var ss = new SerializationService(
                 CreateInputOutputFactory(),
@@ -179,12 +201,14 @@ namespace Hazelcast.Serialization
                 _hooks,
                 _checkClassDefErrors,
                 _partitioningStrategy,
-                _initialOutputBufferSize);
-            if (_config != null)
+                _initialOutputBufferSize,
+                _loggerFactory);
+
+            if (_configuration != null)
             {
-                if (_config.GetGlobalSerializerConfig() != null)
+                if (_configuration.GetGlobalSerializerConfig() != null)
                 {
-                    var globalSerializerConfig = _config.GetGlobalSerializerConfig();
+                    var globalSerializerConfig = _configuration.GetGlobalSerializerConfig();
                     var serializer = globalSerializerConfig.GetImplementation();
                     if (serializer == null)
                     {
@@ -210,7 +234,7 @@ namespace Hazelcast.Serialization
                     //}
                     ss.RegisterGlobal(serializer, globalSerializerConfig.GetOverrideClrSerialization());
                 }
-                var typeSerializers = _config.GetSerializerConfigs();
+                var typeSerializers = _configuration.GetSerializerConfigs();
                 foreach (var serializerConfig in typeSerializers)
                 {
                     var serializer = serializerConfig.GetImplementation();
@@ -256,9 +280,9 @@ namespace Hazelcast.Serialization
 
 
         private void AddConfigDataSerializableFactories(
-            IDictionary<int, IDataSerializableFactory> dataSerializableFactories, SerializationConfig config)
+            IDictionary<int, IDataSerializableFactory> dataSerializableFactories, SerializationConfiguration configuration)
         {
-            foreach (var entry in config.GetDataSerializableFactories())
+            foreach (var entry in configuration.GetDataSerializableFactories())
             {
                 var factoryId = entry.Key;
                 var factory = entry.Value;
@@ -273,7 +297,7 @@ namespace Hazelcast.Serialization
                 }
                 dataSerializableFactories.Add(factoryId, factory);
             }
-            foreach (var entry in config.GetDataSerializableFactoryClasses())
+            foreach (var entry in configuration.GetDataSerializableFactoryClasses())
             {
                 var factoryId = entry.Key;
                 var factoryClassName = entry.Value;
@@ -314,9 +338,9 @@ namespace Hazelcast.Serialization
         }
 
         private void AddConfigPortableFactories(IDictionary<int, IPortableFactory> portableFactories,
-            SerializationConfig config)
+            SerializationConfiguration configuration)
         {
-            foreach (var entry in config.GetPortableFactories())
+            foreach (var entry in configuration.GetPortableFactories())
             {
                 var factoryId = entry.Key;
                 var factory = entry.Value;
@@ -331,7 +355,7 @@ namespace Hazelcast.Serialization
                 }
                 portableFactories.Add(factoryId, factory);
             }
-            foreach (var entry in config.GetPortableFactoryClasses())
+            foreach (var entry in configuration.GetPortableFactoryClasses())
             {
                 var factoryId = entry.Key;
                 var factoryClassName = entry.Value;

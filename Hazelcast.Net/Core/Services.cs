@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {
@@ -16,94 +17,48 @@ namespace Hazelcast.Core
     /// </remarks>
     public static class Services
     {
-        private static readonly ConcurrentDictionary<Type, Func<object>> Factories = new ConcurrentDictionary<Type, Func<object>>();
+        // NOTE
+        //
+        // CreateInstance should be used for things that are created once, as it uses
+        // Activator.CreateInstance and is not optimized for fast creation of instance
 
-        private static readonly ConcurrentDictionary<Type, object> Instances = new ConcurrentDictionary<Type, object>();
-
-        /// <summary>
-        /// Gets the service getter.
-        /// </summary>
-        public static ServiceGetter Get { get; } = new ServiceGetter();
-
-        /// <summary>
-        /// Represents the service getter.
-        /// </summary>
-        public sealed class ServiceGetter
-        { }
-
-        /// <summary>
-        /// Resets services. This method is provided for tests.
-        /// </summary>
-        internal static void Reset()
+        public static T CreateInstance<T>(params object[] args)
         {
-            Factories.Clear();
-            Instances.Clear();
+            var instance = CreateInstance(typeof(T), args);
+            if (instance is T t) return t;
+            throw new InvalidCastException($"Failed to cast object of type {instance.GetType()} to {typeof(T)}.");
         }
 
-        /// <summary>
-        /// Registers a service with an implementation instance.
-        /// </summary>
-        /// <typeparam name="TService">The type of the service.</typeparam>
-        /// <param name="instance">The implementation instance.</param>
-        public static void Register<TService>(TService instance)
-            where TService : class
+        public static T CreateInstance<T>(Type type, params object[] args)
         {
-            Instances[typeof(TService)] = instance;
+            var instance = CreateInstance(type, args);
+            if (instance is T t) return t;
+            throw new InvalidCastException($"Failed to cast object of type {instance.GetType()} to {typeof(T)}.");
         }
 
-        /// <summary>
-        /// Registers a service with an implementation factory.
-        /// </summary>
-        /// <typeparam name="TService">The type of the service.</typeparam>
-        /// <param name="factory">The implementation factory.</param>
-        public static void Register<TService>(Func<TService> factory)
-            where TService : class
+        public static T CreateInstance<T>(string typeName, params object[] args)
         {
-            Factories[typeof(TService)] = factory;
+            var instance = CreateInstance(typeName, args);
+            if (instance is T t) return t;
+            throw new InvalidCastException($"Failed to cast object of type {instance.GetType()} to {typeof(T)}.");
         }
 
-        /// <summary>
-        /// Gets an instance of a service.
-        /// </summary>
-        /// <typeparam name="TService">The type of the service.</typeparam>
-        /// <returns>The implementation instance.</returns>
-        /// <exception cref="InvalidOperationException">Occurs when no instance could be found.</exception>
-        internal static TService GetInstance<TService>()
+        public static object CreateInstance(Type type, params object[] args)
         {
-            if (TryGetInstance(typeof(TService), out var instance))
-                return (TService)instance;
-
-            throw new InvalidOperationException($"Cannot get an instance of type {typeof(TService)}.");
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            return Activator.CreateInstance(type, args);
         }
 
-        /// <summary>
-        /// Tries to get an instance of a service.
-        /// </summary>
-        /// <typeparam name="TService">The type of the service.</typeparam>
-        /// <returns>The implementation instance, or default(TService) if no instance could be found.</returns>
-        internal static TService TryGetInstance<TService>()
+        public static object CreateInstance(string typeName, params object[] args)
         {
-            return TryGetInstance(typeof(TService), out var instance) ? (TService)instance : default;
-        }
+            if (string.IsNullOrWhiteSpace(typeName))
+                throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
 
-        /// <summary>
-        /// Tries to get an instance of a service.
-        /// </summary>
-        /// <param name="type">The type of the service.</param>
-        /// <param name="instance">The implementation instance.</param>
-        /// <returns>Whether an instance could be found.</returns>
-        private static bool TryGetInstance(Type type, out object instance)
-        {
-            instance = Instances.GetOrAdd(type, t =>
-            {
-                if (!Factories.TryGetValue(type, out var factory))
-                    return default;
+            var type = Type.GetType(typeName);
+            if (type == null)
+                throw new ArgumentException($"Unknown type \"{typeName}\".", nameof(typeName));
 
-                var o = factory();
-                return type.IsInstanceOfType(o) ? o : default;
-            });
-
-            return instance != null;
+            return CreateInstance(type, args);
         }
     }
 }

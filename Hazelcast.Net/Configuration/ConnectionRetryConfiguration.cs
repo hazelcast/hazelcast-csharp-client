@@ -15,33 +15,33 @@
 namespace Hazelcast.Configuration
 {
     /// <summary>
-    /// Represents the TCP socket options.
+    /// Represents the connection retry configuration.
     /// </summary>
-    public class SocketOptions
+    public class ConnectionRetryConfiguration
     {
         /// <summary>
-        /// Gets or sets the buffer size.
+        /// Gets or sets the back-off time in milliseconds.
         /// </summary>
-        public int BufferSize { get; set; } = 128; // TODO: bytes? kilobytes?
+        public int InitialBackoffMilliseconds { get; set; } = 1000;
 
         /// <summary>
-        /// Whether to keep the socket alive.
+        /// Gets or sets the maximum back-off time in milliseconds.
         /// </summary>
-        public bool KeepAlive { get; set; } = true;
+        public int MaxBackoffMilliseconds { get; set; } = 30*1000;
 
         /// <summary>
-        /// TODO: document
+        /// Gets or sets the multiplier.
         /// </summary>
-        public int LingerSeconds { get; set; } = 3;
+        public double Multiplier { get; set; } = 1;
 
         /// <summary>
-        /// TODO: document
+        /// Gets or sets the cluster connection timeout in milliseconds.
         /// </summary>
-        public bool ReuseAddress { get; set; } = true;
+        public long ClusterConnectionTimeoutMilliseconds { get; set; } = 20*1000;
 
         /// <summary>
-        /// TODO: document
+        /// Gets or sets the jitter.
         /// </summary>
-        public bool TcpNoDelay { get; set; }
-   }
+        public double Jitter { get; set; } = 0;
+    }
 }

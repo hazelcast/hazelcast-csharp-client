@@ -27,7 +27,7 @@ namespace Hazelcast.Serialization
     /// </remarks>
     /// <seealso cref="IClassDefinition">IClassDefinition</seealso>
     /// <seealso cref="IPortable">IPortable</seealso>
-    /// <seealso cref="SerializationConfig.AddClassDefinition(IClassDefinition)">
+    /// <seealso cref="SerializationConfiguration.AddClassDefinition(IClassDefinition)">
     ///     Hazelcast.Config.SerializationConfig.AddClassDefinition(IClassDefinition)
     /// </seealso>
     public sealed class ClassDefinitionBuilder

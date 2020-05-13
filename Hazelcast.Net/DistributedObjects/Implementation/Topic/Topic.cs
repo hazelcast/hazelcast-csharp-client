@@ -6,6 +6,17 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.DistributedObjects.Implementation.Topic
 {
     /// <summary>
+    /// Provides constants for the topic type.
+    /// </summary>
+    internal class Topic
+    {
+        /// <summary>
+        /// Gets the service name.
+        /// </summary>
+        public const string ServiceName = "hz:impl:topicService";
+    }
+
+    /// <summary>
     /// Implements <see cref="Topic{T}"/>.
     /// </summary>
     /// <typeparam name="T">The type of the message objects.</typeparam>
@@ -14,13 +25,12 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         /// <summary>
         /// Initializes a new instance of the <see cref="Topic{T}"/> class.
         /// </summary>
-        /// <param name="serviceName">The name of the service managing this object.</param>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public Topic(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(serviceName, name, cluster, serializationService, loggerFactory)
+        public Topic(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(Topic.ServiceName, name, cluster, serializationService, loggerFactory)
         { }
 
         /// <inheritdoc />

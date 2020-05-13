@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering.Events;
 using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Exceptions;
@@ -19,37 +20,46 @@ namespace Hazelcast.Clustering
 {
     public partial class Cluster
     {
-        private readonly ConcurrentDictionary<Guid, Client> _memberClients
-            = new ConcurrentDictionary<Guid, Client>();
-        private readonly ConcurrentDictionary<NetworkAddress, Client> _addressClients
-            = new ConcurrentDictionary<NetworkAddress, Client>();
-        private readonly ConcurrentDictionary<Guid, ClusterSubscription> _eventSubscriptions
-            = new ConcurrentDictionary<Guid, ClusterSubscription>();
-        private readonly ConcurrentDictionary<long, ClusterSubscription> _correlatedSubscriptions
-            = new ConcurrentDictionary<long, ClusterSubscription>();
-        private readonly ConcurrentDictionary<Guid, ClusterEvents> _clusterEvents
-            = new ConcurrentDictionary<Guid, ClusterEvents>();
+        // member id -> client
+        private readonly ConcurrentDictionary<Guid, Client> _memberClients = new ConcurrentDictionary<Guid, Client>();
+
+        // address -> client
+        private readonly ConcurrentDictionary<NetworkAddress, Client> _addressClients = new ConcurrentDictionary<NetworkAddress, Client>();
+
+        // subscription id -> subscription
+        private readonly ConcurrentDictionary<Guid, ClusterSubscription> _eventSubscriptions = new ConcurrentDictionary<Guid, ClusterSubscription>();
+
+        // correlation id -> subscription
+        private readonly ConcurrentDictionary<long, ClusterSubscription> _correlatedSubscriptions = new ConcurrentDictionary<long, ClusterSubscription>();
+
+        // subscription id -> event handlers
+        private readonly ConcurrentDictionary<Guid, ClusterEvents> _clusterEvents = new ConcurrentDictionary<Guid, ClusterEvents>();
+
+        private readonly HazelcastConfiguration _configuration;
 
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoadBalancer _loadBalancer;
         private readonly IAuthenticator _authenticator;
         private readonly ILoggerFactory _loggerFactory;
+
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
         private readonly IList<IClusterEventSubscriber> _clusterEventSubscribers;
 
-        private bool _readonlyProperties;
+        private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Func<ValueTask> _onConnectionToNewCluster;
-        private Client _clusterEventsClient;
+
+        private Client _clusterEventsClient; // the client which handles 'cluster events'
         private MemberTable _memberTable;
         private Guid _clusterId;
         private ClusterState _state;
+
         private volatile int _firstMembersViewed;
         private volatile int _firstpartitionsViewed;
         private SemaphoreSlim _firstMembersView = new SemaphoreSlim(0);
         private SemaphoreSlim _firstPartitionsView = new SemaphoreSlim(0);
 
-        private enum ClusterState // FIXME move to partial, etc
+        private enum ClusterState // FIXME move to partial, etc + usage?
         {
             Unknown = 0,
             NotConnected,
@@ -57,25 +67,23 @@ namespace Hazelcast.Clustering
             Connected
         }
 
-        public Cluster(IAuthenticator authenticator, IList<IClusterEventSubscriber> clusterEventSubscribers, ILoggerFactory loggerFactory)
+        // TODO: refactor this ctor entirely
+        // avoid passing serialization service, etc
+        public Cluster(HazelcastConfiguration configuration, ISerializationService serializationService, IAuthenticator authenticator, IList<IClusterEventSubscriber> clusterEventSubscribers, ILoggerFactory loggerFactory)
         {
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+
             _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
             _clusterEventSubscribers = clusterEventSubscribers ?? throw new ArgumentNullException(nameof(clusterEventSubscribers));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-            // TODO: get isSmartRouting from configuration
-            // TODO: can we avoid passing the serializationService?
-
-            ISerializationService serializationService = null;
-
             // _localOnly is defined in ListenerService and initialized with IsSmartRouting so it's the same
             // it is used by ProxyManager to AddDistributedObjectListener - passing that value
-            var isSmartRouting = true;
 
             _correlationIdSequence = new Int64Sequence();
-            IsSmartRouting = isSmartRouting;
-            Partitioner = new Partitioner(serializationService, isSmartRouting);
-            _loadBalancer = new RandomLoadBalancer();
+            IsSmartRouting = configuration.Networking.SmartRouting;
+            Partitioner = new Partitioner(serializationService, IsSmartRouting);
+            _loadBalancer = configuration.LoadBalancing.LoadBalancer;
 
             // setup events
             _objectLifecycleEventSubscription = InitializeObjectLifecycleEventSubscription();

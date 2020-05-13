@@ -15,33 +15,18 @@
 namespace Hazelcast.Configuration
 {
     /// <summary>
-    /// Represents the TCP socket options.
+    /// Represents the Hazelcast Cloud configuration.
     /// </summary>
-    public class SocketOptions
+    public class CloudConfiguration
     {
         /// <summary>
-        /// Gets or sets the buffer size.
+        /// Whether Hazelcast Cloud is enabled.
         /// </summary>
-        public int BufferSize { get; set; } = 128; // TODO: bytes? kilobytes?
+        public bool IsEnabled { get; set; }
 
         /// <summary>
-        /// Whether to keep the socket alive.
+        /// Gets or sets the discovery token of the cluster.
         /// </summary>
-        public bool KeepAlive { get; set; } = true;
-
-        /// <summary>
-        /// TODO: document
-        /// </summary>
-        public int LingerSeconds { get; set; } = 3;
-
-        /// <summary>
-        /// TODO: document
-        /// </summary>
-        public bool ReuseAddress { get; set; } = true;
-
-        /// <summary>
-        /// TODO: document
-        /// </summary>
-        public bool TcpNoDelay { get; set; }
-   }
+        public string DiscoveryToken { get; set; }
+    }
 }

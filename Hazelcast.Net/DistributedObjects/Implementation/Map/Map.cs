@@ -6,6 +6,17 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.DistributedObjects.Implementation.Map
 {
     /// <summary>
+    /// Provides constants for the map type.
+    /// </summary>
+    internal class Map
+    {
+        /// <summary>
+        /// Gets the service name.
+        /// </summary>
+        public const string ServiceName = "hz:impl:mapService";
+    }
+
+    /// <summary>
     /// Implements <see cref="IMap{TKey,TValue}"/>.
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
@@ -17,14 +28,13 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <summary>
         /// Initializes a new instance of the <see cref="Map{TKey,TValue}"/> class.
         /// </summary>
-        /// <param name="serviceName">The name of the service managing this object.</param>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="logggerFactory">A logger factory.</param>
-        public Map(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
-            : base(serviceName, name, cluster, serializationService, logggerFactory)
+        public Map(string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
+            : base(Map.ServiceName, name, cluster, serializationService, logggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }

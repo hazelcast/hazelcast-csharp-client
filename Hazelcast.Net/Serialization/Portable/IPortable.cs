@@ -23,7 +23,7 @@ namespace Hazelcast.Serialization.Portable
     /// <ul>
     /// <li>Support multiversion of the same object type.
     /// (See
-    /// <see cref="SerializationConfig.SetPortableVersion(int)" />
+    /// <see cref="SerializationConfiguration.SetPortableVersion(int)" />
     /// )</li>
     /// <li>Fetching individual fields without having to rely on reflection.</li>
     /// <li>Querying and indexing support without de-serialization and/or reflection.</li>
@@ -34,7 +34,7 @@ namespace Hazelcast.Serialization.Portable
     /// <seealso cref="IPortableReader">IPortableReader</seealso>
     /// <seealso cref="IClassDefinition">IClassDefinition</seealso>
     /// <seealso cref="IIdentifiedDataSerializable">IIdentifiedDataSerializable</seealso>
-    /// <seealso cref="SerializationConfig">Hazelcast.Config.SerializationConfig
+    /// <seealso cref="SerializationConfiguration">Hazelcast.Config.SerializationConfig
     /// 	</seealso>
     public interface IPortable
     {

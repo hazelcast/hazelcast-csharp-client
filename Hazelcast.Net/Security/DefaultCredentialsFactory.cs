@@ -27,7 +27,7 @@ namespace Hazelcast.Security
         private static readonly ICredentials DefaultCredentials = new UsernamePasswordCredentials();
 
         /// <inheritdoc />
-        public void Init(IDictionary<string, string> properties)
+        public void Initialize(IDictionary<string, string> properties)
         { }
 
         /// <inheritdoc />

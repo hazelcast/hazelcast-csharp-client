@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 
@@ -30,7 +31,7 @@ namespace Hazelcast.Clustering
         private readonly int _initialBackOff;
         private readonly int _maxBackOff;
         private readonly double _multiplier;
-        private readonly int _timeout;
+        private readonly long _timeout;
         private readonly double _jitter;
 
         private int _currentBackOff;
@@ -40,12 +41,24 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Initializes a new instance of the <see cref="RetryStrategy"/> class.
         /// </summary>
+        /// <param name="configuration">Configuration.</param>
+        public RetryStrategy(ConnectionRetryConfiguration configuration)
+            : this(configuration.InitialBackoffMilliseconds, 
+                configuration.MaxBackoffMilliseconds, 
+                configuration.Multiplier,
+                configuration.ClusterConnectionTimeoutMilliseconds,
+                configuration.Jitter)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RetryStrategy"/> class.
+        /// </summary>
         /// <param name="initialBackOff">The initial back-off value in milliseconds.</param>
         /// <param name="maxBackOff">The maximum back-off value in milliseconds.</param>
         /// <param name="multiplier">The multiplier.</param>
         /// <param name="timeout">The timeout in milliseconds.</param>
         /// <param name="jitter">A jitter factor.</param>
-        public RetryStrategy(int initialBackOff, int maxBackOff, double multiplier, int timeout, double jitter)
+        public RetryStrategy(int initialBackOff, int maxBackOff, double multiplier, long timeout, double jitter)
         {
             _initialBackOff = initialBackOff;
             _maxBackOff = maxBackOff;
@@ -81,12 +94,12 @@ namespace Hazelcast.Clustering
 
             if (elapsed > _timeout)
             {
-                XConsole.WriteLine(this, $"Unable to connect to cluster after {_timeout} ms and {_attempts} attempts");
+                XConsole.WriteLine(this, $"Unable to connect to cluster after {_attempts} attempts and {_timeout} ms, giving up.");
                 return false;
             }
 
             var delay = (int) (_currentBackOff * (1 - _jitter * (1 - RandomProvider.Random.NextDouble())));
-            delay = Math.Min(delay, _timeout - elapsed);
+            delay = Math.Min(delay, (int) (_timeout - elapsed));
 
             XConsole.WriteLine(this, $"Unable to connect to cluster after {_attempts} attempts and {elapsed} ms, retrying in {delay} ms");
 

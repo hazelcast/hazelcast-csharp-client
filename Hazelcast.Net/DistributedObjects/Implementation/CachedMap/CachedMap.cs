@@ -24,15 +24,14 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         /// <summary>
         /// Initializes a new version of the <see="CacheMap{TKey, TValue}" /> class.
         /// </summary>
-        /// <param name="serviceName">the name of the service managing this object.</param>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="cache">A cache.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public CachedMap(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCacheBase cache, ILoggerFactory loggerFactory)
-            : base(serviceName, name, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
+        public CachedMap(string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCacheBase cache, ILoggerFactory loggerFactory)
+            : base(name, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
         {
             _cache = cache;
         }

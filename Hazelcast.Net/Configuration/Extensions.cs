@@ -11,70 +11,60 @@ namespace Hazelcast.Configuration
         /// <summary>
         /// Configures security.
         /// </summary>
-        /// <param name="config">The client configuration.</param>
-        /// <param name="configure">The delegate for configuring the <see cref="ClientSecurityConfig"/>.</param>
+        /// <param name="configuration">The client configuration.</param>
+        /// <param name="configure">The delegate for configuring the <see cref="SecurityConfiguration"/>.</param>
         /// <returns>The client configuration.</returns>
-        public static ClientConfig ConfigureSecurity(this ClientConfig config, Action<ClientSecurityConfig> configure)
+        public static HazelcastConfiguration ConfigureSecurity(this HazelcastConfiguration configuration, Action<SecurityConfiguration> configure)
         {
-            configure(config.GetSecurityConfig());
-            return config;
-        }
-
-        /// <summary>
-        /// Configures the credentials factory.
-        /// </summary>
-        /// <param name="config">The security configuration.</param>
-        /// <param name="configure">The delegate for configuring the <see cref="CredentialsFactoryConfig"/>.</param>
-        /// <returns>The security configuration.</returns>
-        public static ClientSecurityConfig ConfigureCredentialsFactory(this ClientSecurityConfig config, Action<CredentialsFactoryConfig> configure)
-        {
-            configure(config.CredentialsFactoryConfig);
-            return config;
+            configure(configuration.Security);
+            return configuration;
         }
 
         /// <summary>
         /// Configures Kerberos as the authentication mechanism.
         /// </summary>
-        /// <param name="config">The configuration.</param>
+        /// <param name="configuration">The configuration.</param>
         /// <param name="spn">The service principal name of the Hazelcast cluster.</param>
         /// <returns>The configuration.</returns>
-        public static ClientSecurityConfig ConfigureKerberosCredentials(this ClientSecurityConfig config, string spn)
+        public static SecurityConfiguration ConfigureKerberosCredentials(this SecurityConfiguration configuration, string spn)
         {
-            return config.ConfigureCredentialsFactory(x =>
-                x.Implementation = new KerberosCredentialsFactory(spn));
+            configuration.CredentialsFactory = new KerberosCredentialsFactory(spn);
+            return configuration;
         }
 
         /// <summary>
-        /// Configures a static credentials factory with a username and a password.
+        /// Configures a user name and password as the authentication mechanism.
         /// </summary>
-        /// <param name="config">The security configuration.</param>
+        /// <param name="configuration">The security configuration.</param>
         /// <param name="username">Username.</param>
         /// <param name="password">Password.</param>
         /// <returns>The security configuration.</returns>
-        private static ClientSecurityConfig ConfigurePasswordCredentials(this ClientSecurityConfig config, string username, string password)
+        private static SecurityConfiguration ConfigurePasswordCredentials(this SecurityConfiguration configuration, string username, string password)
         {
-            return config.ConfigureCredentials(new UsernamePasswordCredentials { Name = username, Password = password });
+            var credentials = new UsernamePasswordCredentials { Name = username, Password = password };
+            configuration.CredentialsFactory = new StaticCredentialsFactory(credentials);
+            return configuration;
         }
 
         /// <summary>
-        /// Configures a static credentials factory with supplied credentials.
+        /// Configures static credentials as the authentication mechanism.
         /// </summary>
         /// <param name="config">The security configuration.</param>
         /// <param name="credentials">Credentials.</param>
         /// <returns>The security configuration.</returns>
-        private static ClientSecurityConfig ConfigureCredentials(this ClientSecurityConfig config, ICredentials credentials)
+        private static SecurityConfiguration ConfigureCredentials(this SecurityConfiguration configuration, ICredentials credentials)
         {
-            return config.ConfigureCredentialsFactory(x
-                => x.Implementation = new StaticCredentialsFactory(credentials));
+            configuration.CredentialsFactory = new StaticCredentialsFactory(credentials);
+            return configuration;
         }
 
         /// <summary>
-        /// Configures a static token credentials factory with a supplied token.
+        /// Configures a static token as the authentication mechanism.
         /// </summary>
         /// <param name="config">The security configuration.</param>
         /// <param name="token">A token.</param>
         /// <returns>The security configuration.</returns>
-        private static ClientSecurityConfig ConfigureTokenCredentials(this ClientSecurityConfig config, byte[] token)
+        private static SecurityConfiguration ConfigureTokenCredentials(this SecurityConfiguration config, byte[] token)
         {
             return config.ConfigureCredentials(new TokenCredentials(token));
         }

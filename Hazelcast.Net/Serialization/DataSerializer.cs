@@ -32,13 +32,15 @@ namespace Hazelcast.Serialization
     /// </remarks>
     internal sealed class DataSerializer : IStreamSerializer<IIdentifiedDataSerializable>
     {
-        private static readonly ILogger Logger = Services.Get.LoggerFactory().CreateLogger<DataSerializer>();
+        private readonly ILogger _logger;
 
         private readonly IDictionary<int, IDataSerializableFactory> _factories =
             new Dictionary<int, IDataSerializableFactory>();
 
-        internal DataSerializer(SerializerHooks hooks, IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories)
+        internal DataSerializer(SerializerHooks hooks, IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories, ILoggerFactory loggerFactory )
         {
+            _logger = loggerFactory.CreateLogger<DataSerializer>();
+
             RegisterHooks(hooks);
             if (dataSerializableFactories != null)
             {
@@ -134,7 +136,7 @@ namespace Hazelcast.Serialization
             {
                 if (current.Equals(factory))
                 {
-                    Logger.LogWarning("DataSerializableFactory[" + factoryId + "] is already registered! Skipping " +
+                    _logger.LogWarning("DataSerializableFactory[" + factoryId + "] is already registered! Skipping " +
                                    factory);
                 }
                 else

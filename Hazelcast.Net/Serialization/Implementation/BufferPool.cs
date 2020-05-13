@@ -94,7 +94,8 @@ namespace Hazelcast.Serialization.Implementation
                 }
                 catch (IOException e)
                 {
-                    Services.Get.LoggerFactory().CreateLogger<BufferPool>().LogDebug(e, "closeResource failed");
+                    // FIXME: do not swallow exceptions, fix this class!
+                    //Services.Get.LoggerFactory().CreateLogger<BufferPool>().LogDebug(e, "closeResource failed");
                 }
                 return;
             }

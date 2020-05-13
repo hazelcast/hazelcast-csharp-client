@@ -11,7 +11,7 @@ namespace Hazelcast.NearCaching
 {
     internal class RepairingHandler
     {
-        private static readonly ILogger Logger = Services.Get.LoggerFactory().CreateLogger<RepairingHandler>();
+        private readonly ILogger _logger;
 
         private readonly Guid _localUuid;
         private readonly int _maxToleratedMissCount;
@@ -22,7 +22,7 @@ namespace Hazelcast.NearCaching
 
         private readonly Partitioner _partitioner;
 
-        public RepairingHandler(Guid localUuid, NearCache nearCache, Partitioner partitioner)
+        public RepairingHandler(Guid localUuid, NearCache nearCache, Partitioner partitioner, ILoggerFactory loggerFactory)
         {
             _localUuid = localUuid;
             _nearCache = nearCache;
@@ -30,6 +30,7 @@ namespace Hazelcast.NearCaching
             _partitionCount = partitioner.Count;
             _metaDataContainers = CreateMetadataContainers(_partitionCount);
             _maxToleratedMissCount = NearCacheManager.GetMaxToleratedMissCount();
+            _logger = loggerFactory.CreateLogger<RepairingHandler>();
         }
 
         // multiple threads can concurrently call this method: one is anti-entropy, other one is event service thread
@@ -47,7 +48,7 @@ namespace Hazelcast.NearCaching
                 if (metaData.TrySetGuid(newUuid))
                 {
                     metaData.ResetSequences();
-                    Logger.LogDebug($"Invalid UUID, lost remote partition data unexpectedly:[name={_nearCache.Name},partition={partition},prevUuid={prevUuid},newUuid={newUuid}]");
+                    _logger.LogDebug($"Invalid UUID, lost remote partition data unexpectedly:[name={_nearCache.Name},partition={partition},prevUuid={prevUuid},newUuid={newUuid}]");
                     break;
                 }
             }
@@ -79,7 +80,7 @@ namespace Hazelcast.NearCaching
                         var missCount = viaAntiEntropy ? sequenceDiff : sequenceDiff - 1;
                         var totalMissCount = metaData.AddMissedSequences(missCount);
 
-                        Logger.LogDebug($"Invalid sequence (map={_nearCache.Name}, partition={partition}, " +
+                        _logger.LogDebug($"Invalid sequence (map={_nearCache.Name}, partition={partition}, " +
                                         $"currentSeq={currentSequence}, nextSeq={nextSequence}, totalMiss={totalMissCount})");
                     }
                     break;
@@ -213,7 +214,7 @@ namespace Hazelcast.NearCaching
 
                 if (missCount > _maxToleratedMissCount)
                 {
-                    Logger.LogDebug($"Exceeded tolerated miss count (map={_nearCache.Name}, miss={missCount}, max={_maxToleratedMissCount}).");
+                    _logger.LogDebug($"Exceeded tolerated miss count (map={_nearCache.Name}, miss={missCount}, max={_maxToleratedMissCount}).");
                     return true;
                 }
             } while (++partition < _partitionCount);

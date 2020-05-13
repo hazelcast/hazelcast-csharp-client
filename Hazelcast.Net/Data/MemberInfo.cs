@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Net;
-using Hazelcast.Core;
-using Hazelcast.Logging;
 using Hazelcast.Networking;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Data
 {
@@ -14,8 +10,6 @@ namespace Hazelcast.Data
     /// </summary>
     public class MemberInfo
     {
-        private readonly ILogger _logger;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberInfo"/> class.
         /// </summary>
@@ -26,8 +20,6 @@ namespace Hazelcast.Data
         /// <param name="attributes">Attributes of the member.</param>
         public MemberInfo(Guid id, NetworkAddress address, MemberVersion version, bool isLite, IDictionary<string, string> attributes)
         {
-            _logger = Services.Get.LoggerFactory().CreateLogger(typeof(MemberInfo) + ":" + address);
-
             Id = id;
             Address = address;
             Version = version;
@@ -95,23 +87,7 @@ namespace Hazelcast.Data
         /// </summary>
         public IReadOnlyDictionary<string, string> Attributes { get; }
 
-
-        public IPEndPoint SocketAddress
-        {
-            get
-            {
-                try
-                {
-                    return Address.IPEndPoint;
-                }
-                catch (Exception e)
-                {
-                    _logger.LogWarning(e, "Failed to get socket address.");
-                    return null;
-                }
-            }
-        }
-
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;
@@ -127,8 +103,10 @@ namespace Hazelcast.Data
             return obj1.Id == obj2.Id;
         }
 
+        /// <inheritdoc />
         public override int GetHashCode() => Id.GetHashCode();
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"Member [{Address.Host}]:{Address.Port} - {Id}{(IsLite ? " lite" : "")}";

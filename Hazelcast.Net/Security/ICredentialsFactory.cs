@@ -28,11 +28,11 @@ namespace Hazelcast.Security
         /// </summary>
         /// <remarks>
         /// This method is only invoked when the factory instance is created by Hazelcast from a class
-        /// type provided in <see cref="CredentialsFactoryConfig"/>. It is *not* invoked when an
-        /// <see cref="ICredentialsFactory"/> instance is provided.
+        /// type provided in configuration. It is *not* invoked when an <see cref="ICredentialsFactory"/>
+        /// instance is provided.
         /// </remarks>
         /// <param name="properties">Factory properties defined in configuration.</param>
-        void Init(IDictionary<string, string> properties);
+        void Initialize(IDictionary<string, string> properties);
 
         /// <summary>
         /// Creates and returns a new <see cref="ICredentials"/> object.

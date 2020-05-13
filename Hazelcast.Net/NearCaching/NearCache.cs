@@ -24,7 +24,7 @@ namespace Hazelcast.NearCaching
         {
             if (InvalidateOnChange)
             {
-                _repairingHandler = new RepairingHandler(Cluster.ClientId, this, Cluster.Partitioner);
+                _repairingHandler = new RepairingHandler(Cluster.ClientId, this, Cluster.Partitioner, LoggerFactory);
                 RegisterInvalidateListener();
             }
         }
