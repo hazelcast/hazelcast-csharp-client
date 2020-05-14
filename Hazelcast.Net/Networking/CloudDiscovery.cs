@@ -1,0 +1,98 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
+using Hazelcast.Exceptions;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Networking
+{
+    internal class CloudDiscovery
+    {
+        // internal const string CloudUrlBaseProperty = "hazelcast.client.cloud.url";
+        // internal const string CloudUrlBase = "https://coordinator.hazelcast.cloud";
+        private const string CloudUrlPath = "/cluster/discovery?token=";
+        private const string RegexErrorStr = "(?<=message\":\").*?(?=\")";
+        private const string RegexPrivateStr = "(?<=private-address\":\").*?(?=\")";
+        private const string RegexPublicStr = "(?<=public-address\":\").*?(?=\")";
+
+        private readonly ILogger _logger;
+        private readonly string _endpointUrl;
+        private readonly int _connectionTimeoutMilliseconds;
+
+        internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, string cloudBaseUrl, ILogger logger)
+        {
+            if (string.IsNullOrWhiteSpace(discoveryToken)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(discoveryToken));
+            if (string.IsNullOrWhiteSpace(cloudBaseUrl)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(cloudBaseUrl));
+
+            _endpointUrl = cloudBaseUrl + CloudUrlPath + discoveryToken;
+            _connectionTimeoutMilliseconds = connectionTimeoutMilliseconds;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public IDictionary<NetworkAddress, NetworkAddress> Scan()
+        {
+            try
+            {
+                var uri = new Uri(_endpointUrl);
+
+                // TODO: is this the best way to do an http request?
+                var httpWebRequest = (HttpWebRequest) WebRequest.Create(uri);
+                httpWebRequest.Method = WebRequestMethods.Http.Get;
+                httpWebRequest.Timeout = _connectionTimeoutMilliseconds;
+                httpWebRequest.ReadWriteTimeout = _connectionTimeoutMilliseconds;
+                httpWebRequest.Headers.Set("Accept-Charset", "UTF-8");
+                var resp = ReadFromResponse(httpWebRequest.GetResponse());
+                return ParseResponse(resp);
+            }
+            catch (WebException we)
+            {
+                var resp = ReadFromResponse(we.Response);
+                var errorMsg = ParseErrorResponse(resp);
+                _logger.LogWarning($"Hazelcast cloud discovery error: '{errorMsg}'.");
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Hazelcast cloud discovery failed.");
+            }
+            return null;
+        }
+
+        private static string ReadFromResponse(WebResponse webResponse)
+        {
+            using (var responseStream = webResponse.GetResponseStream())
+            using (var sr = new StreamReader(responseStream, Encoding.UTF8))
+            {
+                return sr.ReadToEnd();
+            }
+        }
+
+        private static Dictionary<NetworkAddress, NetworkAddress> ParseResponse(string jsonResult)
+        {
+            var regexPrivate = new Regex(RegexPrivateStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            var regexPublic = new Regex(RegexPublicStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            var matchesPrivate = regexPrivate.Matches(jsonResult);
+            var matchesPublic = regexPublic.Matches(jsonResult);
+
+            var privateToPublicAddresses = new Dictionary<NetworkAddress, NetworkAddress>();
+            for (var i = 0; i < matchesPrivate.Count; i++)
+            {
+                var privateAddressStr = matchesPrivate[i].Value;
+                var publicAddressStr = matchesPublic[i].Value;
+
+                var publicAddress = NetworkAddress.Parse(publicAddressStr);
+                privateToPublicAddresses.Add(new NetworkAddress(privateAddressStr, publicAddress.Port), publicAddress);
+            }
+            return privateToPublicAddresses;
+        }
+
+        private static string ParseErrorResponse(string jsonResult)
+        {
+            var regexError = new Regex(RegexErrorStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            var matchesError = regexError.Match(jsonResult);
+            return matchesError.Value;
+        }
+    }
+}

@@ -1,12 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
+using Hazelcast.DistributedObjects.Implementation.Topic;
 
 namespace Hazelcast
 {
     /// <summary>
     /// Defines the Hazelcast client.
     /// </summary>
-    public interface IHazelcastClient // TODO: IDisposable + close
+    public interface IHazelcastClient : IAsyncDisposable // TODO: close
     {
         /// <summary>
         /// Opens the client.
@@ -25,7 +27,7 @@ namespace Hazelcast
         Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name);
 
         /// <summary>
-        /// Gets a <see cref="Topic{T}"/> distributed object.
+        /// Gets a <see cref="Topic"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the topic messages.</typeparam>
         /// <param name="name">The unique name of the topic.</param>

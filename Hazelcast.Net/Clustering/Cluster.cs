@@ -42,8 +42,8 @@ namespace Hazelcast.Clustering
         private readonly IAuthenticator _authenticator;
         private readonly ILoggerFactory _loggerFactory;
         private readonly RetryConfiguration _retryConfiguration;
-        private readonly IList<string> _addresses;
         private readonly ISet<string> _labels;
+        private readonly AddressProvider _addressProvider;
 
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
@@ -96,9 +96,9 @@ namespace Hazelcast.Clustering
             _clusterEventSubscribers = clusterConfiguration.EventSubscribers;
             IsSmartRouting = networkingConfiguration.SmartRouting;
             _retryConfiguration = networkingConfiguration.ConnectionRetry;
-            _addresses = networkingConfiguration.Addresses;
             _authenticator = securityConfiguration.Authenticator.Create();
             _loadBalancer = loadBalancingConfiguration.LoadBalancer.Create();
+            _addressProvider = new AddressProvider(networkingConfiguration, loggerFactory);
 
             // _localOnly is defined in ListenerService and initialized with IsSmartRouting so it's the same
             // it is used by ProxyManager to AddDistributedObjectListener - passing that value

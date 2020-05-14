@@ -27,12 +27,31 @@ namespace Hazelcast.Networking
     {
         // TODO for tests, allow overriding these methods
 
+        /// <summary>
+        /// Gets the host name of the local computer.
+        /// </summary>
+        /// <returns></returns>
         public static string GetHostName() => System.Net.Dns.GetHostName();
 
+        /// <summary>
+        /// Gets the DNS host entry for a host.
+        /// </summary>
+        /// <param name="hostNameOrAddress">The host name or IP address.</param>
+        /// <returns>The DNS host entry for the specified host.</returns>
         public static IPHostEntry GetHostEntry(string hostNameOrAddress) => System.Net.Dns.GetHostEntry(hostNameOrAddress);
 
+        /// <summary>
+        /// Gets the DNS host entry for an IP address.
+        /// </summary>
+        /// <param name="address">The IP address.</param>
+        /// <returns>The DNS host entry for the specified IP address.</returns>
         public static IPHostEntry GetHostEntry(IPAddress address) => System.Net.Dns.GetHostEntry(address);
 
+        /// <summary>
+        /// Returns the IP addresses for a host.
+        /// </summary>
+        /// <param name="hostNameOrAddress">The host name or IP address to resolve.</param>
+        /// <returns>The IP addresses for the specified host.</returns>
         public static IPAddress[] GetHostAddresses(string hostNameOrAddress) => System.Net.Dns.GetHostAddresses(hostNameOrAddress);
     }
 }

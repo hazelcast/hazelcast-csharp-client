@@ -1,23 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Aggregators;
-using Hazelcast.Clustering;
-using Hazelcast.Configuration;
-using Hazelcast.Core;
-using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using Hazelcast.Logging;
 using Hazelcast.Networking;
-using Hazelcast.Partitioning.Strategies;
-using Hazelcast.Predicates;
-using Hazelcast.Projections;
-using Hazelcast.Security;
-using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast.Testing
@@ -102,17 +89,24 @@ namespace Hazelcast.Testing
         /// Creates a client.
         /// </summary>
         /// <returns>A client.</returns>
-        protected virtual IHazelcastClient CreateClient()
+        protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync()
+            => await CreateOpenClientAsync(ConfigureClient);
+
+        /// <summary>
+        /// Creates a client.
+        /// </summary>
+        /// <returns>A client.</returns>
+        protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastConfiguration> configureClient)
         {
             // FIXME what is the point of keeping track of all clients?
 
             Logger.LogInformation("Creating new client");
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
+            var client = new HazelcastClientFactory().CreateClient(configureClient);
 
             // FIXME there should be a 30 mins timeout on the opening
             // uh - lifecycle events - HOW??? for ClientConnected???
-            client.OpenAsync().Wait(); // FIXME async oops!
+            await client.OpenAsync();
 
             return client;
         }

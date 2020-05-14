@@ -1,4 +1,6 @@
-﻿using Hazelcast.Networking;
+﻿using System.Collections.Concurrent;
+using System.Net;
+using Hazelcast.Networking;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests
@@ -27,19 +29,30 @@ namespace Hazelcast.Tests
         [TestCase("www.hazelcast", false, "")]
         public void CanTryParse(string s, bool succeeds, string toString)
         {
-            var result = NetworkAddress.TryParse(s, out var networkAddress);
+            var result = NetworkAddress.TryParse(s, out NetworkAddress networkAddress);
             if (succeeds) Assert.IsTrue(result); else Assert.IsFalse(result);
             if (succeeds) Assert.AreEqual(toString, networkAddress.ToString());
         }
 
         [Test]
-        public void EqualAndHash()
+        public void NetworkAddressEqualAndHash()
         {
             Assert.AreEqual(new NetworkAddress("127.0.0.1"), new NetworkAddress("127.0.0.1"));
             Assert.AreEqual(new NetworkAddress("127.0.0.1").GetHashCode(), new NetworkAddress("127.0.0.1").GetHashCode());
 
             // ReSharper disable once EqualExpressionComparison
             Assert.IsTrue(new NetworkAddress("127.0.0.1") == new NetworkAddress("127.0.0.1"));
+        }
+
+        [Test]
+        // ReSharper disable once InconsistentNaming
+        public void IPEndPointEqualAndHash()
+        {
+            var d = new ConcurrentDictionary<IPEndPoint, string>();
+            d[new IPEndPoint(IPAddress.Parse("127.0.0.1"), 666)] = "a";
+            d[new IPEndPoint(IPAddress.Parse("127.0.0.1"), 666)] = "b";
+            Assert.AreEqual(1, d.Count);
+            Assert.AreEqual("b", d[new IPEndPoint(IPAddress.Parse("127.0.0.1"), 666)]);
         }
     }
 }

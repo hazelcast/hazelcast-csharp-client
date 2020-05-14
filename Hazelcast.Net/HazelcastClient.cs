@@ -15,7 +15,6 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
-using Hazelcast.Configuration;
 using Hazelcast.DistributedObjects.Implementation;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -77,6 +76,12 @@ namespace Hazelcast
         public async Task OpenAsync()
         {
             await Cluster.ConnectAsync();
+        }
+
+        /// <inheritdoc />
+        public ValueTask DisposeAsync()
+        {
+            return new ValueTask();
         }
 
         /// <summary>

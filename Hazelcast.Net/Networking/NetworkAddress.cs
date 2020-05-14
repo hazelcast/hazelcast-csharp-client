@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -13,7 +14,8 @@ namespace Hazelcast.Networking
         // NOTES
         //
         // an IP v4 address is 'x.x.x.x' where each octet 'x' is a byte (8 bits unsigned)
-        // an IP v4 endpoint is 'x.x.x.x:p' where 'p' is the port number
+        //
+        // an IP v4 endpoint is '<address>:p' where 'p' is the port number
         //
         // an IP v6 address can be normal (pure v6) or dual (v6 + v4)
         //  normal is 'y:y:y:y:y:y:y:y' where each segment 'y' is a word (16 bits unsigned)
@@ -21,6 +23,9 @@ namespace Hazelcast.Networking
         //  missing segments are assumed to be zeros
         //
         // it can also be 'y:y:y:y:y:y:y:y%i' where 'i' is the scope id (a number, 'eth0'..)
+        //
+        // an IP v6 endpoint is '[<address>]:p' where 'p' is the port number
+        //
         // read
         // https://superuser.com/questions/99746/why-is-there-a-percent-sign-in-the-ipv6-address
         // https://docs.microsoft.com/en-us/previous-versions/aa917150(v=msdn.10)
@@ -30,7 +35,15 @@ namespace Hazelcast.Networking
         // - hostname vs scopeID, can we do www.hazelcast.com%33, etc.
         // - get 'possible addresses' etc.
 
+        /// <summary>
+        /// Gets the default Hazelcast server port.
+        /// </summary>
         public const int DefaultPort = 5701;
+
+        /// <summary>
+        /// Gets the port range to scan.
+        /// </summary>
+        public const int PortRange = 3;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkAddress"/> class with a hostname and a port.
@@ -89,6 +102,20 @@ namespace Hazelcast.Networking
                 HostName = hostName;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkAddress"/>.
+        /// </summary>
+        /// <param name="source">The origin address.</param>
+        /// <param name="port">The port.</param>
+        private NetworkAddress(NetworkAddress source, int port)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
+
+            IPEndPoint = new IPEndPoint(source.IPAddress, port);
+            HostName = source.HostName;
+        }
+
         // TODO consider removing this code
         /*
         /// <summary>
@@ -138,6 +165,16 @@ namespace Hazelcast.Networking
         public IPEndPoint IPEndPoint { get; }
 
         /// <summary>
+        /// Whether the address is an IP v4 address.
+        /// </summary>
+        public bool IsIpV4 => IPAddress.AddressFamily == AddressFamily.InterNetwork;
+
+        /// <summary>
+        /// Whether the address is an IP v6 address.
+        /// </summary>
+        public bool IsIpV6 => IPAddress.AddressFamily == AddressFamily.InterNetworkV6;
+
+        /// <summary>
         /// Gets an IP address by name, via DNS.
         /// </summary>
         /// <param name="hostname">The hostname.</param>
@@ -166,8 +203,8 @@ namespace Hazelcast.Networking
         /// <returns>The network address.</returns>
         public static NetworkAddress Parse(string s)
         {
-            if (TryParse(s, out var address)) return address;
-            throw new FormatException("Invalid format.");
+            if (TryParse(s, out NetworkAddress address)) return address;
+            throw new FormatException($"The string \"{s}\" does not represent a valid network address.");
         }
 
         /// <summary>
@@ -177,6 +214,16 @@ namespace Hazelcast.Networking
         /// <param name="address">The network address.</param>
         /// <returns>Whether the string could be parsed into an address.</returns>
         public static bool TryParse(string s, out NetworkAddress address)
+            => TryParse(s, out address, DefaultPort);
+
+        /// <summary>
+        /// Tries to parse a string into a <see cref="NetworkAddress"/> instance.
+        /// </summary>
+        /// <param name="s">The string.</param>
+        /// <param name="address">The network address.</param>
+        /// <param name="defaultPort">The default port.</param>
+        /// <returns>Whether the string could be parsed into an address.</returns>
+        private static bool TryParse(string s, out NetworkAddress address, int defaultPort)
         {
             address = null;
 
@@ -185,7 +232,7 @@ namespace Hazelcast.Networking
             var colon2 = span.LastIndexOf(':');
             var brket1 = span.IndexOf('[');
             var brket2 = span.IndexOf(']');
-            var port = DefaultPort;
+            var port = defaultPort;
 
             // opening bracket must be first
             if (brket1 > 0) return false;
@@ -237,6 +284,9 @@ namespace Hazelcast.Networking
             if (hostName.Length == 0)
                 return false;
 
+            // note that in IPv6 case, hostname can contain a % followed by a scope id
+            // which is fine, IPAddress.TryParse handles it
+
             string hostNameString;
 
 #if NETSTANDARD2_0
@@ -271,8 +321,79 @@ namespace Hazelcast.Networking
             return true;
         }
 
-        //public static bool TryParse2(string s, out ICollection<NetworkAddress> addresses)
-        //{ }
+        /// <summary>
+        /// Tries to parse a string into all possible <see cref="NetworkAddress"/> instance.
+        /// </summary>
+        /// <param name="s">The string.</param>
+        /// <param name="addresses">The network addresses.</param>
+        /// <returns>Whether the string could be parsed into addresses.</returns>
+        public static bool TryParse(string s, out IEnumerable<NetworkAddress> addresses)
+        {
+            if (!TryParse(s, out var address, 0))
+            {
+                addresses = Enumerable.Empty<NetworkAddress>();
+                return false;
+            }
+
+            if (address.IsIpV4)
+            {
+                var list4 = new List<NetworkAddress>();
+                var port4 = address.Port > 0 ? address.Port : DefaultPort;
+                var range = address.Port > 0 ? 1 : PortRange;
+                for (var i = 0; i < range; port4++, i++)
+                {
+                    list4.Add(new NetworkAddress(address, port4));
+                }
+
+                addresses = list4;
+                return true;
+            }
+
+            if (!address.IsIpV6)
+                throw new NotSupportedException($"Address family {address.IPAddress.AddressFamily} is not supported.");
+
+            var list6 = new List<NetworkAddress>();
+            foreach (var ipAddress in ExplodeV6Local(address.IPAddress))
+            {
+                var port6 = address.Port > 0 ? address.Port : DefaultPort;
+                var range = address.Port > 0 ? 1 : PortRange;
+                for (var i = 0; i < range; i++)
+                {
+                    list6.Add(new NetworkAddress(address.HostName, ipAddress, port6));
+                }
+            }
+
+            addresses = list6;
+            return true;
+        }
+
+        /// <summary>
+        /// Gets all scoped IP addresses corresponding to a non-scoped IP v6 local address.
+        /// </summary>
+        /// <param name="ipAddress">The non-scoped IP v6 local address.</param>
+        /// <returns>All scoped IP addresses corresponding to the specified address.</returns>
+        /// <remarks>
+        /// <para>If <paramref name="ipAddress"/> is not local, or scoped, return it unchanged.</para>
+        /// </remarks>
+        private static IEnumerable<IPAddress> ExplodeV6Local(IPAddress ipAddress)
+        {
+            if (!ipAddress.IsIPv6SiteLocal && !ipAddress.IsIPv6LinkLocal ||
+                ipAddress.ScopeId > 0)
+            {
+                yield return ipAddress;
+            }
+
+            // if the address is IP v6 local without a scope,
+            // resolve
+
+            var hostname = Dns.GetHostName();
+            var entry = Dns.GetHostEntry(hostname);
+            foreach (var address in entry.AddressList)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetworkV6)
+                    yield return address;
+            }
+        }
 
         /// <inheritdoc />
         public override string ToString()
@@ -299,8 +420,8 @@ namespace Hazelcast.Networking
             // return true if both are null or both are the same instance
             if (ReferenceEquals(a1, a2)) return true;
 
-            // return false if a1 is null since a2 cannot be null here
-            if (a1 is null) return false;
+            // return false if either is null since the other cannot be null
+            if (a1 is null || a2 is null) return false;
 
             // actual comparison
             return a1.IPEndPoint.Equals(a2.IPEndPoint);

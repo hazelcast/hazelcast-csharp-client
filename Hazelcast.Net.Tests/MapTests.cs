@@ -17,42 +17,78 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Logging;
 using Hazelcast.Networking;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests
 {
     [TestFixture]
-    public class MapTests
+    public class MapTests : HazelcastTestBase
     {
         public void TestSetUp()
         {
             XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             XConsole.Configure<SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
             XConsole.Configure<Client>(config => config.SetMaxLevel(1)); // 1: logs message & frames
-
         }
 
-        public void ConfigureClient(HazelcastConfiguration configuration)
+        private async ValueTask<IHazelcastClient> CreateOpenClientAsync()
         {
-            // these tests expects a server
-            configuration.Networking.Addresses.Add("sgay-l4");
+            var client = new HazelcastClientFactory().CreateClient(configuration =>
+            {
+                configuration.Networking.Addresses.Add("sgay-l4");
+            });
+            _asyncDisposables.Add(client);
+            await client.OpenAsync();
+            return client;
         }
+
+        private async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastConfiguration> configure)
+        {
+            var client = new HazelcastClientFactory().CreateClient(configure);
+            _asyncDisposables.Add(client);
+            await client.OpenAsync();
+            return client;
+        }
+
+        [TearDown]
+        public async Task TearDown()
+        {
+            var success = true;
+            foreach (var asyncDisposable in _asyncDisposables)
+            {
+                try
+                {
+                    await asyncDisposable.DisposeAsync();
+                }
+                catch (Exception e)
+                {
+                    // FIXME LOG + FAIL!
+                    success = false;
+                }
+            }
+
+            _asyncDisposables.Clear();
+
+            // FIXME: better throw an aggregate exception
+            if (!success) throw new Exception("Failed to dispose IAsyncDisposable items.");
+        }
+
+        private readonly List<IAsyncDisposable> _asyncDisposables = new List<IAsyncDisposable>();
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task AddOrReplace()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and does not return anything
@@ -63,50 +99,48 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceAsync("key", 43);
 
             var value = await map.GetAsync("key");
-            Assert.AreEqual(43, value);
+            NUnit.Framework.Assert.AreEqual(43, value);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(1, count);
+            NUnit.Framework.Assert.AreEqual(1, count);
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task AddOrReplaceWithValue()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and returns the existing value, or the default value
             // NOTE: no way to know if the default value existed (eg zero)?
 
             var result1 = await map.AddOrReplaceWithValueAsync("key", 42);
-            Assert.AreEqual(0, result1);
+            NUnit.Framework.Assert.AreEqual(0, result1);
 
             var result2 = await map.AddOrReplaceWithValueAsync("key", 43);
-            Assert.AreEqual(42, result2);
+            NUnit.Framework.Assert.AreEqual(42, result2);
 
             var value = await map.GetAsync("key");
-            Assert.AreEqual(43, value);
+            NUnit.Framework.Assert.AreEqual(43, value);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(1, count);
+            NUnit.Framework.Assert.AreEqual(1, count);
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task AddIfMissing()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             // TryAdd adds a new value if no value exists already,
             // and returns the existing value, or the default value
@@ -115,31 +149,30 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceWithValueAsync("key1", 42);
 
             var result1 = await map.AddIfMissingAsync("key1", 43);
-            Assert.AreEqual(42, result1);
+            NUnit.Framework.Assert.AreEqual(42, result1);
 
             var result2 = await map.AddIfMissingAsync("key2", 43);
-            Assert.AreEqual(0, result2);
+            NUnit.Framework.Assert.AreEqual(0, result2);
 
             var value1 = await map.GetAsync("key1");
-            Assert.AreEqual(42, value1);
+            NUnit.Framework.Assert.AreEqual(42, value1);
 
             var value2 = await map.GetAsync("key2");
-            Assert.AreEqual(43, value2);
+            NUnit.Framework.Assert.AreEqual(43, value2);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(2, count);
+            NUnit.Framework.Assert.AreEqual(2, count);
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task AddOrReplaceMany()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             // AddOrReplace adds new values, or replaces existing values
             // NOTE: no way to know what happened
@@ -147,7 +180,7 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceWithValueAsync("key1", 42);
 
             var value1 = await map.GetAsync("key1");
-            Assert.AreEqual(42, value1);
+            NUnit.Framework.Assert.AreEqual(42, value1);
 
             await map.AddOrReplaceAsync(new Dictionary<string, int>
             {
@@ -156,25 +189,24 @@ namespace Hazelcast.Tests
             });
 
             value1 = await map.GetAsync("key1");
-            Assert.AreEqual(43, value1);
+            NUnit.Framework.Assert.AreEqual(43, value1);
 
             var value2 = await map.GetAsync("key2");
-            Assert.AreEqual(44, value2);
+            NUnit.Framework.Assert.AreEqual(44, value2);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(2, count);
+            NUnit.Framework.Assert.AreEqual(2, count);
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task ReplaceByKey()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             // Replace replaces an existing value, and returns the existing value,
             // else does nothing if no value exists already (does not add)
@@ -182,25 +214,24 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceAsync("key1", 42);
 
             var result1 = await map.ReplaceAsync("key1", 43);
-            Assert.AreEqual(42, result1);
+            NUnit.Framework.Assert.AreEqual(42, result1);
 
             var result2 = await map.ReplaceAsync("key2", 43);
-            Assert.AreEqual(0, result2);
+            NUnit.Framework.Assert.AreEqual(0, result2);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(1, count);
+            NUnit.Framework.Assert.AreEqual(1, count);
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task ReplaceByKeyAndValue()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             // Replace replaces an existing value, and returns the existing value,
             // else does nothing if no value exists already (does not add)
@@ -208,25 +239,24 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceAsync("key1", 42);
 
             var result1 = await map.ReplaceAsync("key1", 43, 44);
-            Assert.IsFalse(result1);
+            NUnit.Framework.Assert.IsFalse(result1);
 
             var result2 = await map.ReplaceAsync("key1", 42, 44);
-            Assert.IsTrue(result2);
+            NUnit.Framework.Assert.IsTrue(result2);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(1, count);
+            NUnit.Framework.Assert.AreEqual(1, count);
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task AddOrReplaceWithTimeToLive()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and does not return anything
@@ -234,27 +264,26 @@ namespace Hazelcast.Tests
 
             await map.AddOrReplaceAsync("key", 42, TimeSpan.FromSeconds(1));
             var value = await map.GetAsync("key");
-            Assert.AreEqual(42, value);
+            NUnit.Framework.Assert.AreEqual(42, value);
 
             await Task.Delay(1000); // wait for 1 second
 
             value = await map.GetAsync("key");
-            Assert.AreEqual(0, value); // zero vs missing?
+            NUnit.Framework.Assert.AreEqual(0, value); // zero vs missing?
 
             var count = await map.CountAsync();
-            Assert.AreEqual(0, count);
+            NUnit.Framework.Assert.AreEqual(0, count);
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task AddOrReplaceTransient()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             // AddTransient adds a new value, or replaces an existing value,
             // and does not return anything
@@ -268,48 +297,46 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceTransientAsync("key1", 43, Timeout.InfiniteTimeSpan);
 
             var value = await map.GetAsync("key");
-            Assert.AreEqual(43, value);
+            NUnit.Framework.Assert.AreEqual(43, value);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(2, count);
+            NUnit.Framework.Assert.AreEqual(2, count);
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task TryAddOrReplace()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             // TryAddOrReplace is like AddOrReplace but with a timeout
 
             await map.TryAddOrReplaceAsync("key", 42, TimeSpan.FromSeconds(1));
             var value = await map.GetAsync("key");
-            Assert.AreEqual(42, value);
+            NUnit.Framework.Assert.AreEqual(42, value);
 
             await map.TryAddOrReplaceAsync("key", 43, TimeSpan.FromSeconds(1));
             value = await map.GetAsync("key");
-            Assert.AreEqual(43, value);
+            NUnit.Framework.Assert.AreEqual(43, value);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(1, count);
+            NUnit.Framework.Assert.AreEqual(1, count);
 
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task Clear()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             var entries = new Dictionary<string, int>();
             for (var i = 0; i < 100; i++)
@@ -318,24 +345,23 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceAsync(entries);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(100, count);
+            NUnit.Framework.Assert.AreEqual(100, count);
 
             await map.ClearAsync();
 
             count = await map.CountAsync();
-            Assert.AreEqual(0, count);
+            NUnit.Framework.Assert.AreEqual(0, count);
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task GetAll()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             var entries = new Dictionary<string, int>();
             for (var i = 0; i < 100; i++)
@@ -344,46 +370,45 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceAsync(entries);
 
             var count = await map.CountAsync();
-            Assert.AreEqual(100, count);
+            NUnit.Framework.Assert.AreEqual(100, count);
 
             var keys = await map.GetKeysAsync();
-            Assert.AreEqual(100, keys.Count);
+            NUnit.Framework.Assert.AreEqual(100, keys.Count);
 
             var s = new HashSet<int>();
             for (var i = 0; i < 100; i++)
                 s.Add(i);
 
             foreach (var key in keys)
-                Assert.IsTrue(s.Remove(int.Parse(key.Substring(3))));
+                NUnit.Framework.Assert.IsTrue(s.Remove(int.Parse(key.Substring(3))));
 
-            Assert.AreEqual(0, s.Count);
+            NUnit.Framework.Assert.AreEqual(0, s.Count);
 
             var values = await map.GetValuesAsync();
-            Assert.AreEqual(100, values.Count);
+            NUnit.Framework.Assert.AreEqual(100, values.Count);
 
             s = new HashSet<int>();
             for (var i = 0; i < 100; i++)
                 s.Add(i);
 
             foreach (var value in values)
-                Assert.IsTrue(s.Remove(value));
+                NUnit.Framework.Assert.IsTrue(s.Remove(value));
 
-            Assert.AreEqual(0, s.Count);
+            NUnit.Framework.Assert.AreEqual(0, s.Count);
 
             // FIXME how can we get everything?
             //var all = await map.GetAsync();
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task Events()
         {
             TestSetUp();
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync();
 
-            var map = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             var eventsCount = 0;
             var id = await map.SubscribeAsync(on => on
@@ -404,7 +429,7 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceWithValueAsync("c", 3);
             await Task.Delay(500);
 
-            Assert.AreEqual(2, eventsCount);
+            NUnit.Framework.Assert.AreEqual(2, eventsCount);
 
             // FIXME how are we supposed to release it all?
             //client.Close();
@@ -412,7 +437,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(TimeoutMilliseconds)]
         public async Task ConfiguredEvents()
         {
             TestSetUp();
@@ -433,10 +458,9 @@ namespace Hazelcast.Tests
                 });
             }
 
-            var client = new HazelcastClientFactory().CreateClient(ConfigureClient);
-            await client.OpenAsync();
+            var client = await CreateOpenClientAsync(ConfigureClient);
 
-            _ = await client.GetMapAsync<string, int>("map_" + RandomProvider.Random.Next(10000));
+            _ = await client.GetMapAsync<string, int>("map_" + CreateUniqueName());
 
             while (eventsCount < 1)
                 await Task.Delay(500);

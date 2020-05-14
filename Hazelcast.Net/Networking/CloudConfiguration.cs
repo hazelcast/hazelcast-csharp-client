@@ -33,6 +33,11 @@ namespace Hazelcast.Networking
         public string DiscoveryToken { get; set; }
 
         /// <summary>
+        /// Gets or sets the cloud url base.
+        /// </summary>
+        public string UrlBase { get; set; } = "https://coordinator.hazelcast.cloud";
+
+        /// <summary>
         /// Parses configuration from an Xml document.
         /// </summary>
         /// <param name="node">The Xml node.</param>
