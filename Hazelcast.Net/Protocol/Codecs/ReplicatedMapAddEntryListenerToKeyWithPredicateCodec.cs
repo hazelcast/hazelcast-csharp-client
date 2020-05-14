@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -72,13 +72,13 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-        public class ResponseParameters
+        public sealed class ResponseParameters
         {
 
             /// <summary>
             /// A unique string  which is used as a key to remove the listener.
             ///</summary>
-            public Guid Response;
+            public Guid Response { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

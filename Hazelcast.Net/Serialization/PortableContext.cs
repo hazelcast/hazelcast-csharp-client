@@ -15,12 +15,11 @@
 using System;
 using System.Collections.Concurrent;
 using Hazelcast.Core;
-using Hazelcast.Serialization.Portable;
-using Bits = Hazelcast.Protocol.Portability;
+using Bits = Hazelcast.Messaging.Portability;
 
-namespace Hazelcast.Serialization.Implementation
+namespace Hazelcast.Serialization
 {
-    internal sealed class PortableContext : IPortableContext
+    internal sealed partial class PortableContext : IPortableContext
     {
         private readonly ConcurrentDictionary<int, ClassDefinitionContext> _classDefContextMap =
             new ConcurrentDictionary<int, ClassDefinitionContext>();
@@ -202,80 +201,6 @@ namespace Hazelcast.Serialization.Implementation
         {
             return _classDefContextMap.GetOrAdd(factoryId,
                 theFactoryId => new ClassDefinitionContext(this, theFactoryId));
-        }
-
-        private sealed class ClassDefinitionContext
-        {
-            private readonly ConcurrentDictionary<int, int> _currentClassVersions = new ConcurrentDictionary<int, int>();
-            private readonly int _factoryId;
-            private readonly PortableContext _portableContext;
-
-            private readonly ConcurrentDictionary<long, IClassDefinition> _versionedDefinitions =
-                new ConcurrentDictionary<long, IClassDefinition>();
-
-            internal ClassDefinitionContext(PortableContext portableContext, int factoryId)
-            {
-                _portableContext = portableContext;
-                _factoryId = factoryId;
-            }
-
-            internal int GetClassVersion(int classId)
-            {
-                int version;
-                var hasValue = _currentClassVersions.TryGetValue(classId, out version);
-                return hasValue ? version : -1;
-            }
-
-            internal IClassDefinition Lookup(int classId, int version)
-            {
-                var versionedClassId = Bits.CombineToLong(classId, version);
-                IClassDefinition cd;
-                _versionedDefinitions.TryGetValue(versionedClassId, out cd);
-                return cd;
-            }
-
-            internal IClassDefinition Register(IClassDefinition cd)
-            {
-                if (cd == null)
-                {
-                    return null;
-                }
-                if (cd.GetFactoryId() != _factoryId)
-                {
-                    throw new HazelcastSerializationException("Invalid factory-id! " + _factoryId + " -> " + cd);
-                }
-                if (cd is ClassDefinition)
-                {
-                    var cdImpl = (ClassDefinition) cd;
-                    cdImpl.SetVersionIfNotSet(_portableContext.GetVersion());
-                }
-                var versionedClassId = Bits.CombineToLong(cd.GetClassId(), cd.GetVersion());
-                var currentCd = _versionedDefinitions.GetOrAdd(versionedClassId, cd);
-                if (Equals(currentCd, cd))
-                {
-                    return cd;
-                }
-                if (currentCd is ClassDefinition)
-                {
-                    if (!currentCd.Equals(cd))
-                    {
-                        throw new HazelcastSerializationException(
-                            "Incompatible class-definitions with same class-id: " + cd + " VS " + currentCd);
-                    }
-                    return currentCd;
-                }
-                _versionedDefinitions.AddOrUpdate(versionedClassId, cd, (key, oldValue) => cd);
-                return cd;
-            }
-
-            internal void SetClassVersion(int classId, int version)
-            {
-                var hasAdded = _currentClassVersions.TryAdd(classId, version);
-                if (!hasAdded && _currentClassVersions[classId] != version)
-                {
-                    throw new ArgumentException("Class-id: " + classId + " is already registered!");
-                }
-            }
         }
     }
 }

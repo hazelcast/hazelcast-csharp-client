@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Hazelcast.Clustering.Events;
 
 namespace Hazelcast.Clustering
 {

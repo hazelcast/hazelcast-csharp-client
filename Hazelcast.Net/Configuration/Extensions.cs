@@ -1,4 +1,5 @@
 ﻿using System;
+using Hazelcast.Clustering;
 using Hazelcast.Security;
 
 namespace Hazelcast.Configuration

@@ -15,10 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
 using Hazelcast.Data;
 
-namespace Hazelcast.Security
+namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Represents a not-implemented authenticator.

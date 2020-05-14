@@ -14,7 +14,7 @@
 
 using System.Collections.Generic;
 
-namespace Hazelcast.Serialization.Portable
+namespace Hazelcast.Serialization
 {
     /// <summary>
     /// Provides a mean of reading portable fields from a binary in form of primitives, arrays of primitives , nested portable fields and array of portable fields.

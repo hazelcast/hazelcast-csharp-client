@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -63,14 +63,14 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-        public class ResponseParameters
+        public sealed class ResponseParameters
         {
 
             /// <summary>
             /// the index of the last occurrence of the specified element in
             /// this list, or -1 if this list does not contain the element
             ///</summary>
-            public int Response;
+            public int Response { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Configuration;
-using Hazelcast.Serialization.Portable;
 
 namespace Hazelcast.Serialization
 {

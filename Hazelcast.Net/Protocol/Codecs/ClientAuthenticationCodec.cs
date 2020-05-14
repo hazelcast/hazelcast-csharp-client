@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -76,49 +76,49 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-        public class ResponseParameters
+        public sealed class ResponseParameters
         {
 
             /// <summary>
             /// A byte that represents the authentication status. It can be AUTHENTICATED(0), CREDENTIALS_FAILED(1),
             /// SERIALIZATION_VERSION_MISMATCH(2) or NOT_ALLOWED_IN_CLUSTER(3).
             ///</summary>
-            public byte Status;
+            public byte Status { get; set; }
 
             /// <summary>
             /// Address of the Hazelcast member which sends the authentication response.
             ///</summary>
-            public Hazelcast.Networking.NetworkAddress Address;
+            public Hazelcast.Networking.NetworkAddress Address { get; set; }
 
             /// <summary>
             /// UUID of the Hazelcast member which sends the authentication response.
             ///</summary>
-            public Guid MemberUuid;
+            public Guid MemberUuid { get; set; }
 
             /// <summary>
             /// client side supported version to inform server side
             ///</summary>
-            public byte SerializationVersion;
+            public byte SerializationVersion { get; set; }
 
             /// <summary>
             /// Version of the Hazelcast member which sends the authentication response.
             ///</summary>
-            public string ServerHazelcastVersion;
+            public string ServerHazelcastVersion { get; set; }
 
             /// <summary>
             /// Partition count of the cluster.
             ///</summary>
-            public int PartitionCount;
+            public int PartitionCount { get; set; }
 
             /// <summary>
             /// UUID of the cluster that the client authenticated.
             ///</summary>
-            public Guid ClusterId;
+            public Guid ClusterId { get; set; }
 
             /// <summary>
             /// Returns true if server supports clients with failover feature.
             ///</summary>
-            public bool FailoverSupported;
+            public bool FailoverSupported { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

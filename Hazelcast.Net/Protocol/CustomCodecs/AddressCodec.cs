@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {

@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
-using Hazelcast.Serialization.Portable;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization

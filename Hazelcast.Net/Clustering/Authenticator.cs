@@ -15,15 +15,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
-using Hazelcast.Configuration;
 using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Security;
 using Hazelcast.Serialization;
 
-namespace Hazelcast.Security
+namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Represents the default <see cref="IAuthenticator"/>.

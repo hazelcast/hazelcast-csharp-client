@@ -32,16 +32,26 @@ namespace Hazelcast.Core
         //   https://codeblog.jonskeet.uk/2009/11/04/revisiting-randomness/
         // for best-practices.
 
-        [SuppressMessage("NDepend", "ND3101:DontUseSystemRandomForSecurityPurposes", Justification = "No security here.")]
+        private static readonly Random GlobalRandom;
+        private static readonly object GlobalLock;
+        private static readonly ThreadLocal<Random> ThreadRandom;
 
-        private static readonly Random GlobalRandom = new Random();
-        private static readonly object GlobalLock = new object();
-        private static readonly ThreadLocal<Random> ThreadRandom = new ThreadLocal<Random>(NewRandom);
+        /// <summary>
+        /// Initializes the <see cref="RandomProvider"/> class
+        /// </summary>
+        [SuppressMessage("NDepend", "ND3101:DontUseSystemRandomForSecurityPurposes", Justification = "No security here.")]
+        static RandomProvider()
+        {
+            GlobalRandom = new Random();
+            GlobalLock = new object();
+            ThreadRandom = new ThreadLocal<Random>(NewRandom);
+        }
 
         /// <summary>
         /// Creates a new random for a thread.
         /// </summary>
         /// <returns>A new random for a thread.</returns>
+        [SuppressMessage("NDepend", "ND3101:DontUseSystemRandomForSecurityPurposes", Justification = "No security here.")]
         private static Random NewRandom()
         {
             // use GlobalRandom to get a random seed, using GlobalLock

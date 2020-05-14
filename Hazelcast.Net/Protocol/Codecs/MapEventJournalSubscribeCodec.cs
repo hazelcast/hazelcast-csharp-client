@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -64,18 +64,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-        public class ResponseParameters
+        public sealed class ResponseParameters
         {
 
             /// <summary>
             /// Sequence id of the oldest event in the event journal.
             ///</summary>
-            public long OldestSequence;
+            public long OldestSequence { get; set; }
 
             /// <summary>
             /// Sequence id of the newest event in the event journal.
             ///</summary>
-            public long NewestSequence;
+            public long NewestSequence { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

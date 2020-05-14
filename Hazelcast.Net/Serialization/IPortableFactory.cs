@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization.Portable
+namespace Hazelcast.Serialization
 {
     /// <summary>PortableFactory is used to create Portable instances during de-serialization.
     /// 	</summary>

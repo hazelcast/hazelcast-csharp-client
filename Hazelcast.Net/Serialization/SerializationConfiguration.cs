@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 using Hazelcast.Core;
-using Hazelcast.Serialization.Portable;
 
 namespace Hazelcast.Serialization
 {

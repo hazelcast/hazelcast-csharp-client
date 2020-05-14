@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -72,23 +72,23 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-        public class ResponseParameters
+        public sealed class ResponseParameters
         {
 
             /// <summary>
             /// Value of the counter.
             ///</summary>
-            public long Value;
+            public long Value { get; set; }
 
             /// <summary>
             /// last observed replica timestamps (vector clock)
             ///</summary>
-            public IList<KeyValuePair<Guid, long>> ReplicaTimestamps;
+            public IList<KeyValuePair<Guid, long>> ReplicaTimestamps { get; set; }
 
             /// <summary>
             /// Number of replicas that keep the state of this counter.
             ///</summary>
-            public int ReplicaCount;
+            public int ReplicaCount { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

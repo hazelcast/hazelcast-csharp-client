@@ -12,15 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-
-namespace Hazelcast.Serialization.Portable
+namespace Hazelcast.Serialization
 {
-    internal interface IPortableHook
+    internal interface IPortableContextAware
     {
-        IPortableFactory CreateFactory();
-
-        ICollection<IClassDefinition> GetBuiltinDefinitions();
-        int GetFactoryId();
+        IPortableContext GetPortableContext();
     }
 }

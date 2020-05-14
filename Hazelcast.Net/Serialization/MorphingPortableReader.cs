@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Serialization.Implementation;
-using Hazelcast.Serialization.Portable;
-
 namespace Hazelcast.Serialization
 {
     internal class MorphingPortableReader : DefaultPortableReader

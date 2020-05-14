@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Hazelcast.Clustering.Events;
 using Hazelcast.Data;
 
 namespace Hazelcast.Clustering

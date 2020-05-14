@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -63,18 +63,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-        public class ResponseParameters
+        public sealed class ResponseParameters
         {
 
             /// <summary>
             /// The index-size pairs that define the state of iteration
             ///</summary>
-            public IList<KeyValuePair<int, int>> IterationPointers;
+            public IList<KeyValuePair<int, int>> IterationPointers { get; set; }
 
             /// <summary>
             /// List of entries.
             ///</summary>
-            public IList<KeyValuePair<IData, IData>> Entries;
+            public IList<KeyValuePair<IData, IData>> Entries { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

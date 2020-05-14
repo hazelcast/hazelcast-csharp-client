@@ -1,6 +1,5 @@
 ﻿using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
-using Hazelcast.Serialization.Portable;
 
 namespace Hazelcast.Serialization
 {

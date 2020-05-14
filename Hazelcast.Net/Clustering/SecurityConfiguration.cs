@@ -14,10 +14,10 @@
 
 using System.Collections.Generic;
 using System.Xml;
-using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Security;
 
-namespace Hazelcast.Security
+namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Represents the security configuration.

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Hazelcast.Serialization.Portable;
 
 namespace Hazelcast.Serialization
 {

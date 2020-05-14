@@ -16,7 +16,7 @@ using System;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
-namespace Hazelcast.Clustering.Events
+namespace Hazelcast.Clustering
 {
     internal class PartitionLostEventSubscription : EventSubscriptionBase
     {

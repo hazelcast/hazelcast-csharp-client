@@ -15,7 +15,7 @@
 using System;
 using System.Text;
 using Hazelcast.Core;
-using Bits = Hazelcast.Protocol.Portability; // FIXME should not be in this ns
+using Bits = Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Serialization
 {

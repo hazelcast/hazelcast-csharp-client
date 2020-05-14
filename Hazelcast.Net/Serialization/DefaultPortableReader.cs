@@ -15,9 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Hazelcast.Serialization.Implementation;
-using Hazelcast.Serialization.Portable;
-using Bits = Hazelcast.Protocol.Portability;
+using Bits = Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Serialization
 {

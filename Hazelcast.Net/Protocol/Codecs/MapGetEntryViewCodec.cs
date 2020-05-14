@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -66,18 +66,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-        public class ResponseParameters
+        public sealed class ResponseParameters
         {
 
             /// <summary>
             /// Entry view of the specified key.
             ///</summary>
-            public Hazelcast.Data.Map.MapEntry<IData, IData> Response;
+            public Hazelcast.Data.Map.MapEntry<IData, IData> Response { get; set; }
 
             /// <summary>
             /// Last set max idle in millis.
             ///</summary>
-            public long MaxIdle;
+            public long MaxIdle { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

@@ -14,7 +14,7 @@
 
 using Hazelcast.Core;
 
-namespace Hazelcast.Serialization.Portable
+namespace Hazelcast.Serialization
 {
     public interface IPortableContext
     {

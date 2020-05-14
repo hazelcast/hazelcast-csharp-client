@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -62,18 +62,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-        public class ResponseParameters
+        public sealed class ResponseParameters
         {
 
             /// <summary>
             /// Map of partition ids and sequence number of invalidations mapped by the map name.
             ///</summary>
-            public IList<KeyValuePair<string, IList<KeyValuePair<int, long>>>> NamePartitionSequenceList;
+            public IList<KeyValuePair<string, IList<KeyValuePair<int, long>>>> NamePartitionSequenceList { get; set; }
 
             /// <summary>
             /// Map of member UUIDs mapped by the partition ids of invalidations.
             ///</summary>
-            public IList<KeyValuePair<int, Guid>> PartitionUuidList;
+            public IList<KeyValuePair<int, Guid>> PartitionUuidList { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

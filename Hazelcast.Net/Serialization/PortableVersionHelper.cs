@@ -12,10 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization.Portable
+using System;
+
+namespace Hazelcast.Serialization
 {
-    internal interface IPortableContextAware
+    internal sealed class PortableVersionHelper
     {
-        IPortableContext GetPortableContext();
+        public static int GetVersion(IPortable portable, int defaultVersion)
+        {
+            var version = defaultVersion;
+            if (portable is IVersionedPortable)
+            {
+                var versionedPortable = (IVersionedPortable) portable;
+                version = versionedPortable.GetClassVersion();
+                if (version < 0)
+                {
+                    throw new ArgumentException("Version cannot be negative!");
+                }
+            }
+            return version;
+        }
     }
 }

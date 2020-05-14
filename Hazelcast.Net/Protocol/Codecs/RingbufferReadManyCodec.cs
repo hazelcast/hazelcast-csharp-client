@@ -33,7 +33,7 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Protocol.Portability;
+using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -75,28 +75,28 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-        public class ResponseParameters
+        public sealed class ResponseParameters
         {
 
             /// <summary>
             /// Number of items that have been read before filtering.
             ///</summary>
-            public int ReadCount;
+            public int ReadCount { get; set; }
 
             /// <summary>
             /// List of items that have beee read.
             ///</summary>
-            public IList<IData> Items;
+            public IList<IData> Items { get; set; }
 
             /// <summary>
             /// List of sequence numbers for the items that have been read.
             ///</summary>
-            public long[] ItemSeqs;
+            public long[] ItemSeqs { get; set; }
 
             /// <summary>
             /// Sequence number of the item following the last read item.
             ///</summary>
-            public long NextSeq;
+            public long NextSeq { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

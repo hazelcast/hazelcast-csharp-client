@@ -19,7 +19,7 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.Serialization.Formatters.Binary;
 using Hazelcast.Core;
-using Bits = Hazelcast.Protocol.Portability;
+using Bits = Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Serialization
 {

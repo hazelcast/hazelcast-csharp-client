@@ -22,8 +22,6 @@ using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Partitioning.Strategies;
-using Hazelcast.Serialization.Implementation;
-using Hazelcast.Serialization.Portable;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization

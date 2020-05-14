@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Serialization.Implementation;
-using Hazelcast.Serialization.Portable;
 
 namespace Hazelcast.Serialization
 {

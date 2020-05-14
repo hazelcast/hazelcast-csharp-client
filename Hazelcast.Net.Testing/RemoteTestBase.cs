@@ -18,7 +18,6 @@ using Hazelcast.Predicates;
 using Hazelcast.Projections;
 using Hazelcast.Security;
 using Hazelcast.Serialization;
-using Hazelcast.Serialization.Portable;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast.Testing

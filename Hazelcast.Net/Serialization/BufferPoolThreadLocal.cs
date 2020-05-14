@@ -16,12 +16,13 @@ using System;
 using System.Threading;
 using Hazelcast.Exceptions;
 
-namespace Hazelcast.Serialization.Implementation
+namespace Hazelcast.Serialization
 {
     internal class BufferPoolThreadLocal : IDisposable
     {
         /// <summary>
-        /// Thread local has a finalizer and is properly disposable. Once the thread local is disposed, it removes itself from the buckets of the ThreadStatic field.
+        /// Thread local has a finalizer and is properly disposable. Once the thread local is disposed,
+        /// it removes itself from the buckets of the ThreadStatic field.
         /// </summary>
         private readonly ThreadLocal<BufferPool> _threadLocal;
 

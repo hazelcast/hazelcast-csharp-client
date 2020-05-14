@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization.Portable
+namespace Hazelcast.Serialization
 {
     /// <summary>
     /// Provides a mean of writing portable fields to a binary in form of primitives, arrays of  primitives , nested portable fields and array of portable fields.

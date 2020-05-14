@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Clustering.Events;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Configuration;
 using Hazelcast.Core;

@@ -1,33 +1,20 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
 
-namespace Hazelcast.Protocol
+namespace Hazelcast.Messaging
 {
-    // FIXME MOVE THIS! it is a general utility also used outside of protocol!
-
     /// <summary>
-    /// Defines constants and methods used in generated codecs to facilitate porting them,
-    /// until their generator has been fully refactored and produced correct code.
+    /// Provides extension methods for portability.
     /// </summary>
+    /// <remarks>
+    /// <para>These methods were used in the original 4.0 client project,
+    /// and should be refactored and moved to the right place.</para>
+    /// TODO: refactor portability
+    /// </remarks>
     internal static class Portability
     {
-        public const FrameFlags UnfragmentedMessage = (FrameFlags) ClientMessageFlags.Unfragmented;
+        public const FrameFlags UnfragmentedMessage = (FrameFlags)ClientMessageFlags.Unfragmented;
 
         public const int PartitionIdFieldOffset = Messaging.FrameFields.Offset.PartitionId;
 
@@ -92,7 +79,6 @@ namespace Hazelcast.Protocol
 
         public static byte DecodeByte(Frame frame, int position)
             => frame.Bytes.ReadByte(position);
-
         public static ClientMessage CreateForEncode() => new ClientMessage();
 
         public static void Add(this ClientMessage message, Frame frame) => message.Append(frame);
@@ -129,7 +115,7 @@ namespace Hazelcast.Protocol
         /// <summary>
         /// Determines whether the current frame is an "end of structure" frame.
         /// </summary>
-        public static bool AtStructEnd(this IEnumerator<Frame> frames) 
+        public static bool AtStructEnd(this IEnumerator<Frame> frames)
             => frames.Current != null && frames.Current.IsEndStruct;
 
         /// <summary>

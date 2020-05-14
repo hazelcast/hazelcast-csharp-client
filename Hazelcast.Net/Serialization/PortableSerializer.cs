@@ -15,9 +15,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Hazelcast.Serialization.Portable;
 
-namespace Hazelcast.Serialization.Implementation
+namespace Hazelcast.Serialization
 {
     internal sealed class PortableSerializer : IStreamSerializer<IPortable>
     {
