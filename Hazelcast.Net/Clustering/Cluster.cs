@@ -104,7 +104,7 @@ namespace Hazelcast.Clustering
             // it is used by ProxyManager to AddDistributedObjectListener - passing that value
 
             _correlationIdSequence = new Int64Sequence();
-            Partitioner = new Partitioner(serializationService, IsSmartRouting);
+            Partitioner = new Partitioner();
 
             Name = string.IsNullOrWhiteSpace(clusterName) ? "dev" : clusterName;
 

@@ -16,28 +16,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Logging;
-using Hazelcast.Serialization;
 
 namespace Hazelcast.Partitioning
 {
     public class Partitioner
     {
-        private readonly ISerializationService _serializationService;
-        private readonly bool _isSmartRouting;
         private readonly object _partitionsLock = new object();
         private PartitionTable _partitions;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Partitioner"/> class.
-        /// </summary>
-        /// <param name="serializationService">The serialization service.</param>
-        /// <param name="isSmartRouting">Whether the cluster operates with smart routing.</param>
-        public Partitioner(ISerializationService serializationService, bool isSmartRouting)
-        {
-            // FIXME null check
-            _serializationService = serializationService;// ?? throw new ArgumentNullException(nameof(serializationService));
-            _isSmartRouting = isSmartRouting;
-        }
 
         /// <summary>
         /// Gets the number of partitions.
@@ -59,38 +44,28 @@ namespace Hazelcast.Partitioning
         }
 
         /// <summary>
-        /// Gets the unique identifier of the member owning the partition corresponding to a key.
+        /// Gets the unique identifier of the member owning the partition of a key <see cref="IHavePartitionHash"/> instance.
         /// </summary>
-        /// <param name="key">The key.</param>
+        /// <param name="key">The key <see cref="IHavePartitionHash"/> instance.</param>
         /// <returns>The unique identifier of the member owning the partition, or an empty Guid if the partition has no owner.</returns>
-        public Guid GetPartitionOwner(IData key)
+        public Guid GetPartitionOwner(IHavePartitionHash key)
         {
             return GetPartitionOwner(GetPartitionId(key));
         }
 
         /// <summary>
-        /// Gets the partition identifier for an <see cref="IData"/> instance.
+        /// Gets the partition identifier of a key <see cref="IHavePartitionHash"/> instance.
         /// </summary>
-        /// <param name="data">The <see cref="IData"/> instance.</param>
-        /// <returns>The partition identifier for the specified <see cref="IData"/> instance.</returns>
-        public int GetPartitionId(IData data)
+        /// <param name="key">The key <see cref="IHavePartitionHash"/> instance.</param>
+        /// <returns>The partition identifier for the specified key <see cref="IHavePartitionHash"/> instance.</returns>
+        public int GetPartitionId(IHavePartitionHash key)
         {
-            // we can use whatever value _count has, and it is atomic
+            // we can use whatever value count is, and it is atomic
 
-            var hash = data.PartitionHash;
-            return hash == int.MinValue
+            var hash = key.PartitionHash;
+            return hash == int.MinValue // cannot Abs(int.MinValue)
                 ? 0
                 : Math.Abs(hash) % Count;
-        }
-
-        /// <summary>
-        /// Gets the partition identifier for an object.
-        /// </summary>
-        /// <param name="o">The object.</param>
-        /// <returns>The partition identifier for the specified object.</returns>
-        public int GetPartitionId(object o) // FIXME check if we can move this out and not require ISerializationService here
-        {
-            return GetPartitionId(_serializationService.ToData(o));
         }
 
         /// <summary>

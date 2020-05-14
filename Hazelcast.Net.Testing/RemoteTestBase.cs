@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Hazelcast.Networking;
+using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast.Testing
@@ -16,6 +17,8 @@ namespace Hazelcast.Testing
     {
         private readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions =
             new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
+
+        private readonly ISerializationService _serializationService; // FIXME initialize!
 
         protected RemoteTestBase()
         {
@@ -136,7 +139,8 @@ namespace Hazelcast.Testing
             while (true)
             {
                 var randomKey = TestUtils.RandomString();
-                if (clientInternal.Cluster.Partitioner.GetPartitionId(randomKey) == partitionId)
+                var randomKeyData = _serializationService.ToData(randomKey);
+                if (clientInternal.Cluster.Partitioner.GetPartitionId(randomKeyData) == partitionId)
                     return randomKey;
             }
         }

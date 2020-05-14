@@ -20,6 +20,7 @@ namespace Hazelcast.NearCaching
         private readonly NearCache _nearCache;
         private readonly int _partitionCount;
 
+        private readonly ISerializationService _serializationService; // FIXME initialize!
         private readonly Partitioner _partitioner;
 
         public RepairingHandler(Guid localUuid, NearCache nearCache, Partitioner partitioner, ILoggerFactory loggerFactory)
@@ -196,9 +197,8 @@ namespace Hazelcast.NearCaching
         {
             // `name` is used to determine partition ID of map-wide events like clear()
             // since key is `null`, we are using `name` to find the partition ID
-            return key == null
-                ? _partitioner.GetPartitionId(_nearCache.Name)
-                : _partitioner.GetPartitionId(key);
+            if (key == null) key = _serializationService.ToData(_nearCache.Name);
+            return _partitioner.GetPartitionId(key);
         }
 
         // Calculates number of missed invalidations and checks if repair is needed for the supplied handler.
