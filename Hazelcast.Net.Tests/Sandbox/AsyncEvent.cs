@@ -19,7 +19,7 @@ using Hazelcast.Logging;
 
 namespace Hazelcast.Tests.Sandbox
 {
-    // TODO: consider AsyncEvent<TSender, TEventArgs>
+    // consider AsyncEvent<TSender, TEventArgs> ?
 
     /// <summary>
     /// Represents an asynchronous event handler.

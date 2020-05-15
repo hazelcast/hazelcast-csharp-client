@@ -129,6 +129,8 @@ namespace Hazelcast.Clustering
             // signal once
             if (Interlocked.CompareExchange(ref _firstpartitionsViewed, 1, 0) == 0)
                 _firstPartitionsView.Release();
+
+            OnPartitionsUpdated(EventArgs.Empty);
         }
 
         /// <summary>

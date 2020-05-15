@@ -40,37 +40,21 @@ namespace Hazelcast
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
-            if (serializationService == null) throw new ArgumentNullException(nameof(serializationService));
+            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 
             _distributedObjectFactory = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             Cluster.OnConnectingToNewCluster = () => _distributedObjectFactory.CreateAllAsync();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
-        /// </summary>
-        public HazelcastClient(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : this(HazelcastConfiguration.CreateDefault(), cluster, serializationService, loggerFactory)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
-        /// </summary>
-        public HazelcastClient(string configurationFilepath, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : this(HazelcastConfiguration.Parse(configurationFilepath), cluster, serializationService, loggerFactory)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
-        /// </summary>
-        public HazelcastClient(Action<HazelcastConfiguration> configure, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : this(HazelcastClientFactory.BuildConfiguration(configure), cluster, serializationService, loggerFactory)
-        { }
-
-        /// <summary>
         /// Gets the <see cref="Cluster"/>.
         /// </summary>
         public Cluster Cluster { get; }
+
+        /// <summary>
+        /// Gets the <see cref="ISerializationService"/>.
+        /// </summary>
+        public ISerializationService SerializationService { get; }
 
         /// <inheritdoc />
         public async Task OpenAsync()

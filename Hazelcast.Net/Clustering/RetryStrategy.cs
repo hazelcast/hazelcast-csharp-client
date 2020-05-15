@@ -89,14 +89,14 @@ namespace Hazelcast.Clustering
 
             if (elapsed > _timeout)
             {
-                _logger.LogInternal(this, $"Unable to {_action} after {_attempts} attempts and {_timeout} ms, giving up.");
+                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {_timeout} ms, giving up.");
                 return false;
             }
 
             var delay = (int) (_currentBackOff * (1 - _jitter * (1 - RandomProvider.Random.NextDouble())));
             delay = Math.Min(delay, (int) (_timeout - elapsed));
 
-            _logger.LogInternal(this, $"Unable to {_action} after {_attempts} attempts and {elapsed} ms, retrying in {delay} ms");
+            _logger.LogDebug($"Unable to {_action} after {_attempts} attempts and {elapsed} ms, retrying in {delay} ms");
 
             try
             {

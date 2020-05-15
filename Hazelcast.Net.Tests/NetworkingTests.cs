@@ -18,20 +18,16 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Data;
-using Hazelcast.DistributedObjects.Implementation;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Security;
 using Hazelcast.Serialization;
 using Hazelcast.Testing.TestServer;
 using Hazelcast.Tests.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
-using NuGet.Versioning;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests
@@ -39,40 +35,8 @@ namespace Hazelcast.Tests
     [TestFixture]
     public class NetworkingTests
     {
-        // NOTES
-        //
-        // read
-        //  danger of completion source
-        //    https://devblogs.microsoft.com/premier-developer/the-danger-of-taskcompletionsourcet-class/
-        //
-        // sending: we can either queue messages, or just send them immediately
-        //  it does not make a diff for user, who's going to wait anyways
-        //  but queueing may prevent flooding the server
-        //  and, in order to be multi-threaded, we HAVE to serialize the sending
-        //  of messages through the socket - either by queuing or by forcing
-        //  the client to wait - which is kind of a nice way to apply back-
-        //  pressure?
-        //
-        // TODO
-        //  must: implement something, lock in connection
-        //  alternative: implement queuing in connection
-        //
-        // receiving: we process messages immediately so there is no queuing of
-        //  messages - should we have some?
-        //
-        // TODO: understand the schedulers in HZ code
-
-
         private ClientMessage CreateMessage(string text)
         {
-            //return new Message2(text);
-
-            // FIXME tons of frames = tons of packet unless we can write a sequence?
-            // FIXME what is the structure of a message, frame-wise?
-
-            // first frame has message type, correlation id and partition id - what else?
-            // which frame is Begin, End, Final?
-
             var message = new ClientMessage()
                 .Append(new Frame(new byte[64])) // header stuff
                 .Append(new Frame(Encoding.UTF8.GetBytes(text)));
@@ -81,6 +45,39 @@ namespace Hazelcast.Tests
 
         private string GetText(ClientMessage message)
             => Encoding.UTF8.GetString(message.FirstFrame.Next.Bytes);
+
+        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
+        {
+            XConsole.WriteLine(this, "Respond");
+            var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
+#if NETSTANDARD2_1
+            var responseText = text switch
+            {
+                "a" => "alpha",
+                "b" => "bravo",
+                _ => "??"
+            };
+#else
+            var responseText =
+                text == "a" ? "alpha" :
+                text == "b" ? "bravo" :
+                "??";
+#endif
+            // this is very basic stuff and does not respect HZ protocol
+            // the 64-bytes header is nonsense etc
+            var response = new ClientMessage()
+                .Append(new Frame(new byte[64])) // header stuff
+                .Append(new Frame(Encoding.UTF8.GetBytes(responseText)));
+
+            response.CorrelationId = message.CorrelationId;
+            response.MessageType = 0x1; // 0x00 means exception
+
+            // send in one fragment, set flags
+            response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+
+            await connection.SendAsync(response);
+            XConsole.WriteLine(this, "Responded");
+        }
 
         [Test]
         [Timeout(10_000)]
@@ -96,7 +93,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server(address);
+            var server = new Server(address, ReceiveMessage);
             await server.StartAsync();
 
             var corSequence = new Int64Sequence();
@@ -149,7 +146,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server(address);
+            var server = new Server(address, ReceiveMessage);
             await server.StartAsync();
 
             XConsole.WriteLine(this, "Start client 1");

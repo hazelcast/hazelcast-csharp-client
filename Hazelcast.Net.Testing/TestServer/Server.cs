@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
@@ -24,23 +25,24 @@ using Hazelcast.Networking;
 namespace Hazelcast.Testing.TestServer
 {
     /// <summary>
-    /// Represents a server.
+    /// Represents a test server.
     /// </summary>
     public class Server
     {
         private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
-
+        private readonly Func<ClientMessageConnection, ClientMessage, ValueTask> _handler;
         private readonly IPEndPoint _endpoint;
-
         private ServerSocketListener _listener;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Server"/> class.
         /// </summary>
         /// <param name="address">The socket network address.</param>
-        public Server(NetworkAddress address)
+        /// <param name="handler">A handler for incoming messages.</param>
+        public Server(NetworkAddress address, Func<ClientMessageConnection, ClientMessage, ValueTask> handler)
         {
             _endpoint = address.IPEndPoint;
+            _handler = handler;
             XConsole.Configure(this, config => config.SetIndent(20).SetPrefix("SERVER"));
         }
 
@@ -80,6 +82,8 @@ namespace Hazelcast.Testing.TestServer
 
             // stop accepting new connections
             await _listener.StopAsync();
+            _listener.Dispose();
+            _listener = null;
 
             XConsole.WriteLine(this, "Server stopped");
         }
@@ -93,7 +97,7 @@ namespace Hazelcast.Testing.TestServer
             // the connection we receive is not wired yet
             // must wire it properly before accepting
 
-            var messageConnection = new ClientMessageConnection(serverConnection) { OnReceiveMessage = ReceiveMessage };
+            var messageConnection = new ClientMessageConnection(serverConnection) { OnReceiveMessage = _handler };
             XConsole.Configure(messageConnection, config => config.SetIndent(28).SetPrefix("MSG.SERVER"));
             serverConnection.OnShutdown = SocketShutdown;
             serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
@@ -117,47 +121,6 @@ namespace Hazelcast.Testing.TestServer
             XConsole.WriteLine(this, "Removing connection " + connection.Id);
             _connections.Remove(connection.Id);
             return new ValueTask();
-        }
-
-        /// <summary>
-        /// Handles messages.
-        /// </summary>
-        /// <param name="connection">The connection receiving the message.</param>
-        /// <param name="message">The message.</param>
-        /// <returns>A task that will complete when the message has been handled.</returns>
-        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
-        {
-            XConsole.WriteLine(this, "Respond");
-            var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
-#if NETSTANDARD2_0
-            var responseText =
-                text == "a" ? "alpha" :
-                text == "b" ? "bravo" :
-                "??";
-#endif
-#if NETSTANDARD2_1
-            var responseText = text switch
-            {
-                "a" => "alpha",
-                "b" => "bravo",
-                _ => "??"
-            };
-#endif
-            // FIXME what is the proper structure of a message?
-            // the 64-bytes header is nonsense etc
-            var response = new ClientMessage()
-                .Append(new Frame(new byte[64])) // header stuff
-                .Append(new Frame(Encoding.UTF8.GetBytes(responseText)));
-
-            response.CorrelationId = message.CorrelationId;
-            response.MessageType = 0x1; // 0x00 means exception
-
-            // send in one fragment, set flags
-            response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-
-            // FIXME: not thread-safe!
-            await connection.SendAsync(response);
-            XConsole.WriteLine(this, "Responded");
         }
     }
 }

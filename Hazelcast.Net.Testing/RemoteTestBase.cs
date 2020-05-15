@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Hazelcast.Networking;
-using Hazelcast.Serialization;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast.Testing
 {
@@ -18,8 +15,6 @@ namespace Hazelcast.Testing
         private readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions =
             new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
 
-        private readonly ISerializationService _serializationService; // FIXME initialize!
-
         protected RemoteTestBase()
         {
             // #if DEBUG
@@ -30,14 +25,10 @@ namespace Hazelcast.Testing
             // #endif
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "finest");
 
-            var loggerFactory = new NullLoggerFactory(); // TODO: replace with real logger
-            Logger = loggerFactory.CreateLogger(GetType());
             Logger.LogInformation("LOGGER ACTIVE");
 
             TaskScheduler.UnobservedTaskException += UnobservedTaskException;
         }
-
-        protected ILogger Logger { get; }
 
         private void UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
@@ -62,13 +53,6 @@ namespace Hazelcast.Testing
             {
                 Assert.Fail("UnobservedTaskException occured.");
             }
-        }
-
-        [OneTimeTearDown]
-        public void ShutdownAllClients()
-        {
-            // FIXME re-establish by registering clients in CreateClient?
-            //HazelcastClient.ShutdownAll();
         }
 
         /// <summary>
@@ -101,35 +85,23 @@ namespace Hazelcast.Testing
         /// <returns>A client.</returns>
         protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastConfiguration> configureClient)
         {
-            // FIXME what is the point of keeping track of all clients?
-
             Logger.LogInformation("Creating new client");
 
             var client = new HazelcastClientFactory().CreateClient(configureClient);
 
-            // FIXME there should be a 30 mins timeout on the opening
-            // uh - lifecycle events - HOW??? for ClientConnected???
-            await client.OpenAsync();
-
-            return client;
-        }
-
-        protected async Task<int> GetUniquePartitionOwnerCountAsync(IHazelcastClient client)
-        {
-            //trigger partition table create
-            var map = await client.GetMapAsync<object, object>("default");
-            _ = await map.GetAsync(new object());
-
-            var clientInternal = (HazelcastClient) client;
-            var count = clientInternal.Cluster.Partitioner.Count;
-
-            var owners = new HashSet<Guid>();
-            for (var i = 0; i < count; i++)
+            try
             {
-                var owner = clientInternal.Cluster.Partitioner.GetPartitionOwner(i);
-                if (owner != default) owners.Add(owner);
+                // TODO: set a timeout on OpenAsync
+                AddDisposable(client);
+                await client.OpenAsync();
+                return client;
             }
-            return owners.Count;
+            catch
+            {
+                await client.DisposeAsync();
+                RemoveDisposable(client);
+                throw;
+            }
         }
 
         protected object GenerateKeyForPartition(IHazelcastClient client, int partitionId)
@@ -139,7 +111,7 @@ namespace Hazelcast.Testing
             while (true)
             {
                 var randomKey = TestUtils.RandomString();
-                var randomKeyData = _serializationService.ToData(randomKey);
+                var randomKeyData = clientInternal.SerializationService.ToData(randomKey);
                 if (clientInternal.Cluster.Partitioner.GetPartitionId(randomKeyData) == partitionId)
                     return randomKey;
             }

@@ -18,7 +18,7 @@ using Hazelcast.Logging;
 
 namespace Hazelcast.Tests.Sandbox
 {
-    // TODO: consider SyncEvent<TSender, TEventArgs>
+    // consider SyncEvent<TSender, TEventArgs> ?
 
     /// <summary>
     /// Represents a synchronous event handlers.

@@ -22,10 +22,20 @@ using NUnit.Framework.Internal;
 
 namespace Hazelcast.Testing
 {
+    /// <summary>
+    /// Provides extension methods for the <see cref="Asserter"/> class.
+    /// </summary>
     public static class AsserterHazelcastExtensions
     {
-        // TODO: document
-
+        /// <summary>
+        /// Verifiers that an assertion becomes successful within a timeout.
+        /// </summary>
+        /// <param name="asserter">The asserter.</param>
+        /// <param name="assertAction">The assertion action.</param>
+        /// <param name="timeoutSeconds">The timeout expressed in seconds.</param>
+        /// <remarks>
+        /// <para>The assertion is tried once every 1/4th second, until it either succeeds, or the timeout is reached.</para>
+        /// </remarks>
         public static void Eventually(this Asserter asserter, Action assertAction, int timeoutSeconds = 30)
         {
             ExceptionDispatchInfo dispatch = null;
@@ -54,6 +64,15 @@ namespace Hazelcast.Testing
             dispatch?.Throw();
         }
 
+        /// <summary>
+        /// Verifiers that an assertion becomes successful within a timeout.
+        /// </summary>
+        /// <param name="asserter">The asserter.</param>
+        /// <param name="assertAction">The assertion action.</param>
+        /// <param name="timeoutSeconds">The timeout expressed in seconds.</param>
+        /// <remarks>
+        /// <para>The assertion is tried once every 1/4th second, until it either succeeds, or the timeout is reached.</para>
+        /// </remarks>
         public static async Task Eventually(this Asserter asserter, Func<Task> assertAction, int timeoutSeconds = 30)
         {
             ExceptionDispatchInfo dispatch = null;

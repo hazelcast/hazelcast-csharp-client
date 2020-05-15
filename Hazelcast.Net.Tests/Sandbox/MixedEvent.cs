@@ -19,7 +19,7 @@ using Hazelcast.Logging;
 
 namespace Hazelcast.Tests.Sandbox
 {
-    // TODO: consider MixedEvent<TSender, TEventArgs>
+    // consider MixedEvent<TSender, TEventArgs> ?
 
     /// <summary>
     /// Represents a mixed event handler.

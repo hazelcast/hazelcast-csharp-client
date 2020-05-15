@@ -39,6 +39,14 @@ namespace Hazelcast.Clustering
             });
         }
 
+        private void OnPartitionsUpdated(EventArgs args)
+        {
+            ForEachHandler<PartitionsUpdatedEventHandler>(handler =>
+            {
+                handler.Handle(this, args);
+            });
+        }
+
         private void OnPartitionLost(PartitionLostEventArgs args)
         {
             ForEachHandler<PartitionLostEventHandler>(handler =>
