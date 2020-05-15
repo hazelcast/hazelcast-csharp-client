@@ -181,7 +181,7 @@ namespace Hazelcast.Clustering
             await client.ConnectAsync();
 
             // authenticate (may throw)
-            var info = await _authenticator.AuthenticateAsync(client, Name, ClientId, ClientName, _labels);
+            var info = await _authenticator.AuthenticateAsync(client, Name, ClientId, ClientName, _labels, _serializationService);
             if (info == null) throw new HazelcastException("Failed to authenticate");
 
             // notify partitioner

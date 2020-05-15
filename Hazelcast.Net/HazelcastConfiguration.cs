@@ -19,13 +19,11 @@ using System.IO;
 using System.Xml;
 using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.NearCaching;
 using Hazelcast.Networking;
-using Hazelcast.Security;
 using Hazelcast.Serialization;
 
 namespace Hazelcast
@@ -46,22 +44,23 @@ namespace Hazelcast
         public string ClusterName { get; set; } = DefaultClusterName;
 
         /// <summary>
-        /// Gets the instance name. TODO: what is it?
+        /// Gets the client name.
         /// </summary>
-        public string InstanceName { get; set; }
+        public string ClientName { get; set; }
 
         /// <summary>
-        /// Gets or sets the FIXME ??? + why is it concurrent ???
+        /// Gets or sets the client properties.
         /// </summary>
-        public IDictionary<string, string> Properties { get; } = new ConcurrentDictionary<string, string>();
+        // TODO: replace client properties with true configuration options
+        public IDictionary<string, string> Properties { get; } = new Dictionary<string, string>();
 
         /// <summary>
-        /// Gets or sets the FIXME ???
+        /// Gets or sets the client labels.
         /// </summary>
         public ISet<string> Labels { get; } = new HashSet<string>();
 
         /// <summary>
-        /// Whether to start the client asynchronously. TODO: still used?
+        /// Whether to start the client asynchronously. TODO: is AsyncStart still a thing?
         /// </summary>
         public bool AsyncStart { get; set; }
 
@@ -100,10 +99,17 @@ namespace Hazelcast
         /// </summary>
         public NearCacheConfigurations NearCache { get; set;  } = new NearCacheConfigurations();
 
-
-        // TODO: document
+        /// <summary>
+        /// Creates the default configuration.
+        /// </summary>
+        /// <returns></returns>
         public static HazelcastConfiguration CreateDefault() => Parse();
 
+        /// <summary>
+        /// Parses configuration from a configuration file.
+        /// </summary>
+        /// <param name="configFile">The full path and name of the configuration file.</param>
+        /// <returns>The configuration.</returns>
         public static HazelcastConfiguration Parse(string configFile = null)
         {
             if (configFile == null)
@@ -154,6 +160,11 @@ namespace Hazelcast
             }
         }
 
+        /// <summary>
+        /// Parses configuration from a text reader.
+        /// </summary>
+        /// <param name="reader">A text reader.</param>
+        /// <returns>The configuration.</returns>
         public static HazelcastConfiguration Parse(TextReader reader)
         {
             try
@@ -168,6 +179,11 @@ namespace Hazelcast
             }
         }
 
+        /// <summary>
+        /// Parses configuration from an Xml document.
+        /// </summary>
+        /// <param name="document">An Xml document.</param>
+        /// <returns>The configuration.</returns>
         public static HazelcastConfiguration Parse(XmlDocument document)
         {
             var configuration = new HazelcastConfiguration();

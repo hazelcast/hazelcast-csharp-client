@@ -31,24 +31,22 @@ namespace Hazelcast.Clustering
     {
         private static string _clientVersion;
         private readonly SecurityConfiguration _configuration;
-        private readonly ISerializationService _serializationService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Authenticator"/> class.
         /// </summary>
-        public Authenticator(SecurityConfiguration configuration, ISerializationService serializationService)
+        public Authenticator(SecurityConfiguration configuration)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             XConsole.Configure(this, config => config.SetIndent(4).SetPrefix("AUTH"));
         }
 
         /// <inheritdoc />
-        public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels)
+        public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService)
         {
             var credentialsFactory = _configuration.CredentialsFactory.Create();
 
-            var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory);
+            var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService);
             if (info != null) return info;
 
             if (credentialsFactory is IResettableCredentialsFactory resettableCredentialsFactory)
@@ -56,7 +54,7 @@ namespace Hazelcast.Clustering
                 resettableCredentialsFactory.Reset();
 
                 // try again
-                info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory);
+                info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService);
                 if (info != null) return info;
             }
 
@@ -76,13 +74,13 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory)
+        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, ISerializationService serializationService)
         {
             // TODO accept parameters etc
 
             const string clientType = "CSP"; // CSharp
 
-            var serializationVersion = _serializationService.GetVersion();
+            var serializationVersion = serializationService.GetVersion();
             var clientVersion = ClientVersion;
 
             var credentials = credentialsFactory.NewCredentials();
@@ -99,7 +97,7 @@ namespace Hazelcast.Clustering
                     break;
 
                 default:
-                    var bytes = _serializationService.ToData(credentials).ToByteArray();
+                    var bytes = serializationService.ToData(credentials).ToByteArray();
                     requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
                     break;
             }

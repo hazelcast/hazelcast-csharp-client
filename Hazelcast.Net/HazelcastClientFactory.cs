@@ -75,10 +75,7 @@ namespace Hazelcast
                 ;
             var serializationService = serializationServiceBuilder.Build();
 
-            // FIXME don't do this here - but it's a default?
-            configuration.Security.Authenticator.Creator = () => new Authenticator(configuration.Security, serializationService);
-
-            var cluster = new Cluster(configuration.InstanceName, null,
+            var cluster = new Cluster(configuration.ClientName, null,
                 configuration.Labels,
                 configuration.Cluster,
                 configuration.Networking,

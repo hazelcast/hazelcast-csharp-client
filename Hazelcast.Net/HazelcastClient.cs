@@ -65,18 +65,8 @@ namespace Hazelcast
         /// <inheritdoc />
         public ValueTask DisposeAsync()
         {
+            // TODO: properly close the client when disposing.
             return new ValueTask();
-        }
-
-        /// <summary>
-        /// Closes the client.
-        /// </summary>
-        /// <returns>A task that will complete when the client has closed.</returns>
-        public Task CloseAsync()
-        {
-            // TODO: implement HazelcastClient.CloseAsync()
-            // TODO: consider making HazelcastClient IDisposable
-            throw new NotImplementedException();
         }
     }
 }

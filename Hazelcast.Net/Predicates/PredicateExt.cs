@@ -42,9 +42,9 @@ namespace Hazelcast.Predicates
             return new GreaterLessPredicate(predicateProperty.Property, value, true, false);
         }
 
-        public static ILikePredicate ILike(this PredicateProperty predicateProperty, string expression)
+        public static CaseInsensitiveLikePredicate ILike(this PredicateProperty predicateProperty, string expression)
         {
-            return new ILikePredicate(predicateProperty.Property, expression);
+            return new CaseInsensitiveLikePredicate(predicateProperty.Property, expression);
         }
 
         public static InPredicate In(this PredicateProperty predicateProperty, params object[] values)

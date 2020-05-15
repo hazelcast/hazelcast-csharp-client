@@ -8,7 +8,7 @@ namespace Hazelcast
     /// <summary>
     /// Defines the Hazelcast client.
     /// </summary>
-    public interface IHazelcastClient : IAsyncDisposable // TODO: close
+    public interface IHazelcastClient : IAsyncDisposable
     {
         /// <summary>
         /// Opens the client.

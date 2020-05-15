@@ -77,7 +77,6 @@ namespace Hazelcast.Predicates
 
         public override int GetHashCode()
         {
-            // FIXME is it important to have hash codes that match JAVA or not?
             unchecked
             {
                 var hashCode = (_attributeName != null ? _attributeName.GetHashCode() : 0);

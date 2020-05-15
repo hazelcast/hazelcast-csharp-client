@@ -15,7 +15,7 @@
 namespace Hazelcast.Predicates
 {
     /// <summary>
-    ///     Helper mothod for creating builtin predicates
+    /// Creates predicates.
     /// </summary>
     public static class Predicates
     {
@@ -72,9 +72,9 @@ namespace Hazelcast.Predicates
             return new GreaterLessPredicate(attributeName, value, true, false);
         }
 
-        public static ILikePredicate IsILike(string attributeName, string expression)
+        public static CaseInsensitiveLikePredicate IsILike(string attributeName, string expression)
         {
-            return new ILikePredicate(attributeName, expression);
+            return new CaseInsensitiveLikePredicate(attributeName, expression);
         }
 
         public static InPredicate IsIn(string attributeName, params object[] values)

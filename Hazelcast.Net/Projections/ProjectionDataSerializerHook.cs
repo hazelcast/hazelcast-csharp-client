@@ -3,7 +3,10 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Projections
 {
-    public class ProjectionDataSerializerHook : IDataSerializerHook // fixme rename+
+    /// <summary>
+    /// Provides an <see cref="IDataSerializableFactory"/> for projections.
+    /// </summary>
+    public class ProjectionDataSerializerHook : IDataSerializerHook
     {
         public const int FactoryId = FactoryIds.ProjectionDsFactoryId;
         public const int SingleAttribute = 0;

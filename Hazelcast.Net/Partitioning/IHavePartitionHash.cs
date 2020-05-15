@@ -3,7 +3,7 @@
 namespace Hazelcast.Partitioning
 {
     /// <summary>
-    /// TODO: document
+    /// Defines objects that provide their own partition hash.
     /// </summary>
     public interface IHavePartitionHash
     {

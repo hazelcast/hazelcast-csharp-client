@@ -232,7 +232,7 @@ namespace Hazelcast.Tests
 
             configuration.Networking.Addresses.Add("sgay-l4");
             configuration.Security.Authenticator.Creator = ()
-                => new Authenticator(configuration.Security, serializationService);
+                => new Authenticator(configuration.Security);
 
             var cluster = new Cluster("dev", "hz.client",
                 new HashSet<string>(), 

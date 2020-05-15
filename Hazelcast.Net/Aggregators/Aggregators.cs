@@ -16,10 +16,8 @@ using System.Numerics;
 
 namespace Hazelcast.Aggregators
 {
-    // TODO: refactor + document
-
     /// <summary>
-    /// A utility class to create basic <see cref="IAggregator{TResult}"/> instances.
+    /// Creates aggregators.
     /// </summary>
     /// <remarks>
     /// Min/Max/Average aggregators are type specific, so an IntegerAvg() aggregator expects all elements to be integers.
@@ -45,46 +43,36 @@ namespace Hazelcast.Aggregators
     public static class Aggregators
     {
         /// <summary>
-        /// an aggregator that counts the input values. Accepts nulls as input values.
+        /// Counts input values (accepts nulls).
         /// </summary>
-        /// <returns><see cref="CountAggregator"/></returns>
         public static IAggregator<long> Count()
         {
             return new CountAggregator();
         }
 
         /// <summary>
-        /// an aggregator that counts the input values extracted from the given attributePath.
-        /// Accepts null input values and null extracted values.
+        /// Counts input values (accepts nulls).
         /// </summary>
-        /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="CountAggregator"/></returns>
+        /// <param name="attributePath">An attribute path.</param>
+        /// <remarks><para>Values are extracted from the specified <paramref name="attributePath"/>.</para></remarks>
         public static IAggregator<long> Count(string attributePath)
         {
             return new CountAggregator(attributePath);
         }
 
-        // ---------------------------------------------------------------------------------------------------------
-        // average aggregators
-        // ---------------------------------------------------------------------------------------------------------
-
         /// <summary>
-        /// an aggregator that calculates the average of the input values.
-        /// Does NOT accept null input values.
+        /// Averages <see cref="double"/> input values (does not accept nulls).
         /// </summary>
-        /// <returns><see cref="DoubleAverageAggregator"/></returns>
         public static IAggregator<double> DoubleAvg()
         {
             return new DoubleAverageAggregator();
         }
 
         /// <summary>
-        /// an aggregator that calculates the average of the input values extracted from the given attributePath.
-        /// Does NOT accept null input values nor null extracted values.
-        /// Accepts only double input values
+        /// Averages <see cref="double"/> input values (does not accept nulls).
         /// </summary>
-        /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="DoubleAverageAggregator"/></returns>
+        /// <param name="attributePath">An attribute path.</param>
+        /// <remarks><para>Values are extracted from the specified <paramref name="attributePath"/>.</para></remarks>
         public static IAggregator<double> DoubleAvg(string attributePath)
         {
             return new DoubleAverageAggregator(attributePath);

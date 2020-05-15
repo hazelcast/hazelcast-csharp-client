@@ -14,6 +14,8 @@ namespace Hazelcast.Core.Collections
     /// <para>The key objects are always <see cref="IData"/> instances.</para>
     /// <para>This class is not thread-safe for writing: it should be entirely populated
     /// in a thread-safe way, before being returned to readers.</para>
+    /// <para>This class is thread-safe for reading, however for performance purposes, some values may
+    /// be deserialized multiple times in multi-threaded situations.</para>
     /// </remarks>
     internal sealed class ReadOnlyLazyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
     {
@@ -21,8 +23,6 @@ namespace Hazelcast.Core.Collections
 
         private readonly Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>> _entries = new Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>>();
         private readonly Dictionary<TKey, ReadOnlyLazyEntry<TKey, TValue>> _keyEntries = new Dictionary<TKey, ReadOnlyLazyEntry<TKey, TValue>>();
-
-        // FIXME this whole class is generally not thread-safe
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyDictionary{TKey,TValue}"/> class.

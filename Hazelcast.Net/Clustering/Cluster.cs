@@ -44,6 +44,7 @@ namespace Hazelcast.Clustering
         private readonly RetryConfiguration _retryConfiguration;
         private readonly ISet<string> _labels;
         private readonly AddressProvider _addressProvider;
+        private readonly ISerializationService _serializationService;
 
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
@@ -92,6 +93,7 @@ namespace Hazelcast.Clustering
 
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _labels = labels ?? throw new ArgumentNullException(nameof(labels));
+            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 
             _clusterEventSubscribers = clusterConfiguration.EventSubscribers;
             IsSmartRouting = networkingConfiguration.SmartRouting;

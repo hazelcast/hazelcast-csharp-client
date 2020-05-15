@@ -23,6 +23,12 @@ Anything safe as per section 5.5 quoted above has to be volatile
 Anything not safe has to be Interlocked.
 
 
+#### NOTES ABOUT HASHING
+
+In most cases, we keep the original hashing code instead of replacing it with more
+recent and more efficient code available for instance in netstandard 2.1, because before
+we replace the code we need to make sure that it is OK wrt the other clients.
+
 
         // NOTES
         //

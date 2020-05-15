@@ -25,6 +25,14 @@ namespace Hazelcast.Clustering
     public class SecurityConfiguration
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityConfiguration"/> class.
+        /// </summary>
+        public SecurityConfiguration()
+        {
+            Authenticator = new ServiceFactory<IAuthenticator>(() => new Authenticator(this));
+        }
+
+        /// <summary>
         /// Gets or sets the credentials factory factory.
         /// </summary>
         public ServiceFactory<ICredentialsFactory> CredentialsFactory { get; } = new ServiceFactory<ICredentialsFactory>(() => new DefaultCredentialsFactory());
@@ -32,7 +40,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets the authenticator factory.
         /// </summary>
-        public ServiceFactory<IAuthenticator> Authenticator { get; } = new ServiceFactory<IAuthenticator>(() => new NotImplementedAuthenticator());
+        public ServiceFactory<IAuthenticator> Authenticator { get; }
 
         /// <summary>
         /// Parses configuration from an Xml document.

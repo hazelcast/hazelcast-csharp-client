@@ -22,12 +22,16 @@ namespace Hazelcast.Core.Collections
     /// Represents a lazy list of values.
     /// </summary>
     /// <typeparam name="TValue">The type of the values.</typeparam>
+    /// <remarks>
+    /// <para>This class is not thread-safe for writing: it should be entirely populated
+    /// in a thread-safe way, before being returned to readers.</para>
+    /// <para>This class is thread-safe for reading, however for performance purposes, some values may
+    /// be deserialized multiple times in multi-threaded situations.</para>
+    /// </remarks>
     internal sealed class ReadOnlyLazyList<TValue> : IReadOnlyList<TValue>
     {
         private readonly List<ReadOnlyLazyEntry<TValue>> _content = new List<ReadOnlyLazyEntry<TValue>>();
         private readonly ISerializationService _serializationService;
-
-        // FIXME this whole class is generally not thread-safe
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyList{TValue}"/> class.
@@ -48,6 +52,8 @@ namespace Hazelcast.Core.Collections
         private void EnsureValue(ReadOnlyLazyEntry<TValue> entry)
         {
             if (entry.HasValue) return;
+
+            // accepted race-condition here
 
             entry.Value = _serializationService.ToObject<TValue>(entry.ValueObject);
         }

@@ -18,7 +18,7 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Predicates
 {
     /// <summary>
-    /// Represents an <see cref="IDataSerializerHook"/> that provides an <see cref="IDataSerializableFactory"/> for predicates.
+    /// Provides an <see cref="IDataSerializableFactory"/> for predicates.
     /// </summary>
     internal class PredicateDataSerializerHook : IDataSerializerHook
     {
@@ -52,7 +52,7 @@ namespace Hazelcast.Predicates
             constructors[EqualPredicate] = () => new EqualPredicate();
             constructors[GreaterLessPredicate] = () => new GreaterLessPredicate();
             constructors[LikePredicate] = () => new LikePredicate();
-            constructors[ILikePredicate] = () => new ILikePredicate();
+            constructors[ILikePredicate] = () => new CaseInsensitiveLikePredicate();
             constructors[InPredicate] = () => new InPredicate();
             constructors[InstanceofPredicate] = () => new InstanceofPredicate();
             constructors[NotEqualPredicate] = () => new NotEqualPredicate();
