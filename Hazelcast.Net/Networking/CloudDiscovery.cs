@@ -22,14 +22,14 @@ namespace Hazelcast.Networking
         private readonly string _endpointUrl;
         private readonly int _connectionTimeoutMilliseconds;
 
-        internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, string cloudBaseUrl, ILogger logger)
+        internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, string cloudBaseUrl, ILoggerFactory loggerFactory)
         {
             if (string.IsNullOrWhiteSpace(discoveryToken)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(discoveryToken));
             if (string.IsNullOrWhiteSpace(cloudBaseUrl)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(cloudBaseUrl));
 
             _endpointUrl = cloudBaseUrl + CloudUrlPath + discoveryToken;
             _connectionTimeoutMilliseconds = connectionTimeoutMilliseconds;
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = loggerFactory?.CreateLogger<CloudDiscovery>() ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
         public IDictionary<NetworkAddress, NetworkAddress> Scan()

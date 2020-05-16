@@ -90,7 +90,7 @@ namespace Hazelcast.Clustering
         {
             var tried = new HashSet<NetworkAddress>();
             var exceptions = new List<Exception>();
-            var retryStrategy = new RetryStrategy("connect to cluster", _retryConfiguration, _loggerFactory.CreateLogger<RetryStrategy>());
+            var retryStrategy = new RetryStrategy("connect to cluster", _retryConfiguration, _loggerFactory);
 
             do
             {
@@ -188,7 +188,7 @@ namespace Hazelcast.Clustering
             Partitioner.NotifyInitialCount(info.PartitionCount);
 
             // gather infos
-            client.Update(info); // client.MemberId = info.MemberId;
+            client.NotifyAuthenticated(info); // client.MemberId = info.MemberId;
             var serverVersion = info.ServerVersion;
             var remoteAddress = info.MemberAddress;
             var clusterId = info.ClusterId;

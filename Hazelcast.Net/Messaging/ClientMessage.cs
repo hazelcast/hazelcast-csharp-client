@@ -227,11 +227,6 @@ namespace Hazelcast.Messaging
         /// </summary>
         public bool IsException => MessageType == 0;
 
-        /// <summary>
-        /// Gets or sets the <see cref="Exception"/> carried by the message, if any.
-        /// </summary>
-        public Exception Exception { get; set; }
-
         /// <inheritdoc />
         public IEnumerator<Frame> GetEnumerator()
             => new FrameEnumerator(this);

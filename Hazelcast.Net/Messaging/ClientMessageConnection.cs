@@ -82,9 +82,10 @@ namespace Hazelcast.Messaging
                 var flags = Frame.ReadFlags(ref bytes);
                 _bytesLength = frameLength - FrameFields.SizeOf.LengthAndFlags;
 
+                // TODO: refactor byte[] allocations in frames
                 var frameBytes = _bytesLength == 0
                     ? Array.Empty<byte>()
-                    : new byte[_bytesLength]; // TODO can we avoid allocating the byte array at all?
+                    : new byte[_bytesLength];
 
                 // create a frame
                 // preserve the isFinal status, as adding the frame to a message messes it
@@ -110,7 +111,6 @@ namespace Hazelcast.Messaging
                 return false;
 
             bytes.Fill(_currentFrame.Bytes);
-            bytes = bytes.Slice(_bytesLength); // FIXME should fill also slice?
             _bytesLength = -1;
             XConsole.WriteLine(this, $"Frame is complete");
 
@@ -203,11 +203,14 @@ namespace Hazelcast.Messaging
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message.</param>
+        /// <param name="timeoutMilliseconds">The timeout in milliseconds.</param>
         /// <returns>A task that will complete when the message has been sent.</returns>
-        public async ValueTask<bool> SendAsync(ClientMessage message)
+        public async ValueTask<bool> SendAsync(ClientMessage message, int timeoutMilliseconds = 0)
         {
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection
+
+            // FIXME implement timeout
 
             // send message, serialize sending via semaphore
             if (_writer != null) await _writer.WaitAsync();

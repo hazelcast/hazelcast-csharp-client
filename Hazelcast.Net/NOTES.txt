@@ -52,3 +52,16 @@ we replace the code we need to make sure that it is OK wrt the other clients.
         //  messages - should we have some?
         //
         // TODO: understand the schedulers in HZ code
+
+
+#### NOTES ABOUT TASK vs VALUETASK
+
+References
+https://blog.scooletz.com/2018/05/14/task-async-await-valuetask-ivaluetasksource-and-how-to-keep-your-sanity-in-modern-net-world/
+https://stackoverflow.com/questions/43000520/why-would-one-use-taskt-over-valuetaskt-in-c
+https://github.com/dotnet/runtime/issues/15809
+
+ValueTask can greatly improve performances when tasks may complete synchronously,
+but there may be drawbacks too - in fact, the recommendation seems to be to bubble
+ValueTask up when possible, else use Task by default, until actual performance
+benchmarking shows that ValueTask brings some benefits.

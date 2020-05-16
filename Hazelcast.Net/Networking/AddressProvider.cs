@@ -37,7 +37,7 @@ namespace Hazelcast.Networking
                 var urlBase = cloudConfiguration.UrlBase;
                 var connectionTimeoutMilliseconds = networkingConfiguration.ConnectionTimeoutMilliseconds;
                 connectionTimeoutMilliseconds = connectionTimeoutMilliseconds == 0 ? int.MaxValue : connectionTimeoutMilliseconds;
-                var cloudScanner = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, loggerFactory.CreateLogger<CloudDiscovery>());
+                var cloudScanner = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, loggerFactory);
 
                 _createMap = () => cloudScanner.Scan();
                 _isMapping = true;

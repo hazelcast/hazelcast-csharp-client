@@ -15,7 +15,6 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
@@ -45,15 +44,15 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="action">The description of the action.</param>
         /// <param name="configuration">Configuration.</param>
-        /// <param name="logger">A logger.</param>
-        public RetryStrategy(string action, RetryConfiguration configuration, ILogger<RetryStrategy> logger)
+        /// <param name="loggerFactory">A logger factory.</param>
+        public RetryStrategy(string action, RetryConfiguration configuration, ILoggerFactory loggerFactory)
             : this(action,
                 configuration.InitialBackoffMilliseconds,
                 configuration.MaxBackoffMilliseconds,
                 configuration.Multiplier,
                 configuration.ClusterConnectionTimeoutMilliseconds,
                 configuration.Jitter,
-                logger)
+                loggerFactory)
         { }
 
         /// <summary>
@@ -65,8 +64,8 @@ namespace Hazelcast.Clustering
         /// <param name="multiplier">The multiplier.</param>
         /// <param name="timeout">The timeout in milliseconds.</param>
         /// <param name="jitter">A jitter factor.</param>
-        /// <param name="logger">A logger.</param>
-        public RetryStrategy(string action, int initialBackOff, int maxBackOff, double multiplier, long timeout, double jitter, ILogger<RetryStrategy> logger)
+        /// <param name="loggerFactory">A logger factory.</param>
+        public RetryStrategy(string action, int initialBackOff, int maxBackOff, double multiplier, long timeout, double jitter, ILoggerFactory loggerFactory)
         {
             if (string.IsNullOrWhiteSpace(action)) throw new ArgumentException(nameof(action));
             _action = action.ToLowerInvariant();
@@ -75,7 +74,7 @@ namespace Hazelcast.Clustering
             _multiplier = multiplier;
             _timeout = timeout;
             _jitter = jitter;
-            _logger = logger;
+            _logger = loggerFactory?.CreateLogger<RetryStrategy>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             Restart();
         }

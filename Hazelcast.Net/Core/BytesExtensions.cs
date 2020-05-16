@@ -526,8 +526,7 @@ namespace Hazelcast.Core
                     return (char)(first2 | second2 | third2);
                 }
 
-                // TODO: InvalidDataException?
-                throw new InvalidOperationException("Malformed byte sequence");
+                throw new InvalidOperationException("Malformed byte sequence.");
             }
         }
 
@@ -698,10 +697,10 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>There must be enough items in the sequence to fill the span. There can be more
         /// items in the sequence than in the span, and extra items will be ignored.</para>
-        /// FIXME should advance the sequence
+        /// <para>Slices the sequence of the used items.</para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Fill<T>(in this ReadOnlySequence<T> source, Span<T> destination)
+        public static void Fill<T>(ref this ReadOnlySequence<T> source, Span<T> destination)
         {
             if (source.Length < destination.Length)
                 throw new ArgumentOutOfRangeException(ExceptionMessages.NotEnoughBytes, nameof(source));
@@ -717,6 +716,40 @@ namespace Hazelcast.Core
             {
                 FillMultiSegment(source, destination);
             }
+
+            source = source.Slice(destination.Length);
+        }
+
+        /// <summary>
+        /// Fills a span of <typeparamref name="T"/> from a sequence.
+        /// </summary>
+        /// <typeparam name="T">The type of the items in the sequence and span.</typeparam>
+        /// <param name="destination">The span of <typeparamref name="T"/> to copy to.</param>
+        /// <param name="source">The sequence of <typeparamref name="T"/> to copy from.</param>
+        /// <remarks>
+        /// <para>There must be enough items in the sequence to fill the span. There can be more
+        /// items in the sequence than in the span, and extra items will be ignored.</para>
+        /// <para>Slices the sequence of the used items.</para>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Fill<T>(this Span<T> destination, ref ReadOnlySequence<T> source)
+        {
+            if (source.Length < destination.Length)
+                throw new ArgumentOutOfRangeException(ExceptionMessages.NotEnoughBytes, nameof(source));
+
+            if (source.IsSingleSegment)
+            {
+                var span = source.First.Span;
+                if (span.Length > destination.Length)
+                    span = span.Slice(0, destination.Length);
+                span.CopyTo(destination);
+            }
+            else
+            {
+                FillMultiSegment(source, destination);
+            }
+
+            source = source.Slice(destination.Length);
         }
 
         /// <summary>

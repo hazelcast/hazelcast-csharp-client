@@ -25,6 +25,8 @@ namespace Hazelcast.Tests.DotNet
             var ints = new Span<int>(new int[arrayOne.Length + arrayTwo.Length + arrayThree.Length]);
             sequence.Fill(ints);
 
+            Assert.AreEqual(0, sequence.Length);
+
             var i = 0;
             for (var j = 0; j < arrayOne.Length; j++, i++)
                 Assert.AreEqual(arrayOne[j], ints[i]);

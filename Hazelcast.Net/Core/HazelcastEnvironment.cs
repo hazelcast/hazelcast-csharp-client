@@ -28,7 +28,7 @@ namespace Hazelcast.Core
             var variableValue = Environment.GetEnvironmentVariable(variableName);
             if (variableValue == null) return null;
             if (int.TryParse(variableName, out var value)) return value;
-            throw new EnvironmentException($"Environment variable {variableName} must be a valid integer (Int32)."); 
+            throw new EnvironmentException($"Environment variable {variableName} must be a valid integer (Int32).");
         }
 
         private static long? GetInt64(string variableName)
@@ -93,6 +93,23 @@ namespace Hazelcast.Core
             /// Gets the near cache maximal tolerated miss count, or null if it is not specified.
             /// </summary>
             public static int? MaxToleratedMissCount => GetInt32(MaxToleratedMissCountName);
+        }
+
+        /// <summary>
+        /// Provides information about the current Hazelcast invocation environment.
+        /// </summary>
+        public static class Invocation
+        {
+            /// <summary>
+            /// Gets the environment variable name of the default invocation retry delay.
+            /// </summary>
+            public const string DefaultInvocationRetryDelayMillisecondsName =
+                "hazelcast.client.invocation.retry.pause.millis";
+
+            /// <summary>
+            /// Gets the default invocation retry delay.
+            /// </summary>
+            public static int? DefaultInvocationRetryDelayMilliseconds => GetInt32(DefaultInvocationRetryDelayMillisecondsName);
         }
     }
 }
