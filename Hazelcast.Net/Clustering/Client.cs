@@ -25,7 +25,7 @@ namespace Hazelcast.Clustering
         private readonly object _isConnectedLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
-        private readonly ILogger _logger; // FIXME: assign
+        private readonly ILogger _logger;
 
         // FIXME: see defaultInvocationTimeout???
 
@@ -42,8 +42,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="address">The network address.</param>
         /// <param name="correlationIdSequence">A unique sequence of correlation identifiers.</param>
-        public Client(NetworkAddress address, ISequence<long> correlationIdSequence)
-            : this(address, correlationIdSequence, new Int32Sequence())
+        /// <param name="loggerFactory">A logger factory.</param>
+        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+            : this(address, correlationIdSequence, new Int32Sequence(), loggerFactory)
         { }
 
         /// <summary>
@@ -52,16 +53,18 @@ namespace Hazelcast.Clustering
         /// <param name="address">The network address.</param>
         /// <param name="correlationIdSequence">A unique sequence of correlation identifiers.</param>
         /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
         /// <remarks>
         /// <para>The <paramref name="connectionIdSequence"/> parameter can be used to supply a
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ISequence<int> connectionIdSequence)
+        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ISequence<int> connectionIdSequence, ILoggerFactory loggerFactory)
         {
-            Address = address;
-            _correlationIdSequence = correlationIdSequence;
-            _connectionIdSequence = connectionIdSequence;
+            Address = address ?? throw new ArgumentNullException(nameof(address));
+            _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
+            _connectionIdSequence = connectionIdSequence ?? throw new ArgumentNullException(nameof(connectionIdSequence));
+            _logger = loggerFactory?.CreateLogger<Client>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             XConsole.Configure(this, config => config.SetIndent(4).SetPrefix("CLIENT"));
         }
@@ -218,7 +221,7 @@ namespace Hazelcast.Clustering
             // and remove invocation
             if (!TryRemoveInvocation(message.CorrelationId, out var invocation))
             {
-                // orphan messages are ignored (but logged) 
+                // orphan messages are ignored (but logged)
                 _logger.LogWarning($"Received message for unknown invocation [{message.CorrelationId}].");
                 XConsole.WriteLine(this, $"Unknown invocation [{message.CorrelationId}]");
                 return new ValueTask();
@@ -344,10 +347,9 @@ namespace Hazelcast.Clustering
                     {
                         // FIXME more things are retryable
                         // maybe we can retry
-                        if (protocolException.Retryable && 
-                            invocation.TryRetry(() => _correlationIdSequence.Next, out var delay))
+                        if (protocolException.Retryable &&
+                            await invocation.CanRetry(() => _correlationIdSequence.Next))
                         {
-                            if (delay > 0) await Task.Delay(delay);
                             continue;
                         }
                     }

@@ -15,18 +15,23 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Data;
+using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Hazelcast.Protocol;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
 using Hazelcast.Testing.TestServer;
 using Hazelcast.Tests.Testing;
+using Hazelcast.Testing.Protocol;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -79,6 +84,100 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Responded");
         }
 
+        private ClientMessage CreateErrorMessage()
+        {
+            // can we prepare server messages?
+            var errorHolders = new List<ErrorHolder>
+            {
+                new ErrorHolder(ClientProtocolErrors.RetryableHazelcast, "className", "message", Enumerable.Empty<StackTraceElement>())
+            };
+            return ErrorsServerCodec.EncodeResponse(errorHolders);
+        }
+
+
+        [Test]
+        [Timeout(10_000)]
+        public async Task RetryAndTimeout()
+        {
+            var address = NetworkAddress.Parse("127.0.0.1:11001");
+
+            XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            XConsole.WriteLine(this, "Begin");
+
+            XConsole.WriteLine(this, "Start server");
+            var server = new Server(address, async (conn, msg) =>
+            {
+                var response = CreateErrorMessage();
+                response.CorrelationId = msg.CorrelationId;
+                response.MessageType = 0x00; // 0x00 means exception
+                response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                await conn.SendAsync(response);
+            });
+            await server.StartAsync();
+
+            var corSequence = new Int64Sequence();
+            var conSequence = new Int32Sequence();
+
+            XConsole.WriteLine(this, "Start client 1");
+            var client1 = new Client(address, corSequence, conSequence, new NullLoggerFactory());
+            await client1.ConnectAsync();
+
+            XConsole.WriteLine(this, "Send message 1 to client 1");
+            var message = ClientPingServerCodec.EncodeRequest();
+
+            Assert.ThrowsAsync<TimeoutException>(async () => await client1.SendAsync(message, 2_000));
+
+            // TODO dispose the client, the server
+            await server.StopAsync();
+        }
+
+        [Test]
+        [Timeout(10_000)]
+        public async Task RetryAndSucceed()
+        {
+            var address = NetworkAddress.Parse("127.0.0.1:11001");
+
+            XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            XConsole.WriteLine(this, "Begin");
+
+            XConsole.WriteLine(this, "Start server");
+            var count = 0;
+            var server = new Server(address, async (conn, msg) =>
+            {
+                ClientMessage response;
+                if (++count > 3)
+                {
+                    response = ClientPingServerCodec.EncodeResponse();
+                }
+                else
+                {
+                    response = CreateErrorMessage();
+                    response.MessageType = 0x00; // 0x00 means exception
+                    response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                }
+                response.CorrelationId = msg.CorrelationId;
+                await conn.SendAsync(response);
+            });
+            await server.StartAsync();
+
+            var corSequence = new Int64Sequence();
+            var conSequence = new Int32Sequence();
+
+            XConsole.WriteLine(this, "Start client 1");
+            var client1 = new Client(address, corSequence, conSequence, new NullLoggerFactory());
+            await client1.ConnectAsync();
+
+            XConsole.WriteLine(this, "Send message 1 to client 1");
+            var message = ClientPingServerCodec.EncodeRequest();
+
+            await client1.SendAsync(message);
+
+            Assert.AreEqual(4, count);
+
+            // TODO dispose the client, the server
+            await server.StopAsync();
+        }
+
         [Test]
         [Timeout(10_000)]
         public async Task Test()
@@ -100,7 +199,7 @@ namespace Hazelcast.Tests
             var conSequence = new Int32Sequence();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(address, corSequence, conSequence);
+            var client1 = new Clustering.Client(address, corSequence, conSequence, new NullLoggerFactory());
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -110,7 +209,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Start client 2");
-            var client2 = new Clustering.Client(address, corSequence, conSequence);
+            var client2 = new Clustering.Client(address, corSequence, conSequence, new NullLoggerFactory());
             await client2.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 2");
@@ -150,7 +249,7 @@ namespace Hazelcast.Tests
             await server.StartAsync();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(address, new Int64Sequence());
+            var client1 = new Clustering.Client(address, new Int64Sequence(), new NullLoggerFactory());
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -183,7 +282,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start client ");
-            var client1 = new Client(address, new Int64Sequence());
+            var client1 = new Client(address, new Int64Sequence(), new NullLoggerFactory());
             await client1.ConnectAsync();
 
             // RC assigns a GUID but the default cluster name is 'dev'
@@ -235,7 +334,7 @@ namespace Hazelcast.Tests
                 => new Authenticator(configuration.Security);
 
             var cluster = new Cluster("dev", "hz.client",
-                new HashSet<string>(), 
+                new HashSet<string>(),
                 configuration.Cluster,
                 configuration.Networking,
                 configuration.LoadBalancing,
@@ -281,7 +380,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
 
             // connect to real server
             var address = NetworkAddress.Parse("127.0.0.1:5701");
-            var client1 = new Clustering.Client(address, new Int64Sequence());
+            var client1 = new Clustering.Client(address, new Int64Sequence(), new NullLoggerFactory());
             await client1.ConnectAsync();
             /*
             // send poison

@@ -70,7 +70,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the completion source.
         /// </summary>
-        public TaskCompletionSource<ClientMessage> CompletionSource { get; }
+        public TaskCompletionSource<ClientMessage> CompletionSource { get; private set; }
 
         /// <summary>
         /// Gets the completion task.
@@ -97,7 +97,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         public int RemainingMilliseconds =>
             HasTimeout
-                ? TimeoutMilliseconds - (int) (Clock.Milliseconds - StartTime)
+                ? Math.Max(0, TimeoutMilliseconds - (int) (Clock.Milliseconds - StartTime))
                 : int.MaxValue;
 
         /// <summary>
@@ -115,19 +115,20 @@ namespace Hazelcast.Clustering
             => CompletionSource.SetException(exception);
 
         /// <summary>
-        /// Tries to retry the invocation with a new correlation identifier.
+        /// Determines whether to retry the invocation with a new correlation identifier.
         /// </summary>
         /// <param name="correlationIdProvider">A correlation identifier provider.</param>
-        /// <param name="delayMilliseconds">The delay in milliseconds to wait before retrying.</param>
-        /// <returns></returns>
-        public bool TryRetry(Func<long> correlationIdProvider, out int delayMilliseconds)
+        /// <returns>true if the invocation can be retried; otherwise false.</returns>
+        public async ValueTask<bool> CanRetry(Func<long> correlationIdProvider)
         {
             AttemptsCount += 1;
-            delayMilliseconds = 0;
 
             // cannot retry if running out of time
             if (RemainingMilliseconds == 0)
                 return false;
+
+            CompletionSource = new TaskCompletionSource<ClientMessage>();
+            RequestMessage.CorrelationId = CorrelationId = correlationIdProvider();
 
             // fast retry (no delay)
             if (AttemptsCount <= MaxFastInvocationCount)
@@ -138,9 +139,8 @@ namespace Hazelcast.Clustering
             // implement some rudimentary increasing delay based on the number of attempts
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
             // we *may* want to tweak this?
-            delayMilliseconds = Math.Min(1 << (AttemptsCount - MaxFastInvocationCount), InvocationRetryDelayMilliseconds);
-
-            RequestMessage.CorrelationId = CorrelationId = correlationIdProvider();
+            var delayMilliseconds = Math.Min(1 << (AttemptsCount - MaxFastInvocationCount), InvocationRetryDelayMilliseconds);
+            await System.Threading.Tasks.Task.Delay(delayMilliseconds);
             return true;
         }
     }
