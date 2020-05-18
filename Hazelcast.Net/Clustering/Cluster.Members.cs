@@ -40,7 +40,7 @@ namespace Hazelcast.Clustering
                 return;
 
             // arbitrarily decide to end after some amount of trying
-            int GetMaxAttempts() => _memberClients.Count * 3;
+            int GetMaxAttempts() => _clients.Count * 3;
 
             var failedAttempts = 0;
             while (!await SubscribeToClusterEvents(client))
@@ -183,7 +183,7 @@ namespace Hazelcast.Clustering
                     case 1: // old but not new = removed
                         XConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add((ClusterMemberLifecycleEventType.Removed, new ClusterMemberLifecycleEventArgs(member)));
-                        if (_memberClients.TryGetValue(member.Id, out var client))
+                        if (_clients.TryGetValue(member.Id, out var client))
                             client.ShutdownAsync().Wait(); // will self-remove once down FIXME: async oops!!
                         break;
 

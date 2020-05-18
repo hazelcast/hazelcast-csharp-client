@@ -27,7 +27,7 @@ namespace Hazelcast.Testing.TestServer
     /// <summary>
     /// Represents a test server.
     /// </summary>
-    public class Server
+    public class Server : IAsyncDisposable
     {
         private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
         private readonly Func<ClientMessageConnection, ClientMessage, ValueTask> _handler;
@@ -78,12 +78,16 @@ namespace Hazelcast.Testing.TestServer
         /// <returns>A task that will complete when the server has stopped.</returns>
         public async Task StopAsync()
         {
+            var listener = _listener;
+            _listener = null;
+
+            if (listener == null) return;
+
             XConsole.WriteLine(this, "Stop server");
 
             // stop accepting new connections
-            await _listener.StopAsync();
-            _listener.Dispose();
-            _listener = null;
+            await listener.StopAsync();
+            listener.Dispose();
 
             XConsole.WriteLine(this, "Server stopped");
         }
@@ -116,11 +120,16 @@ namespace Hazelcast.Testing.TestServer
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns>A task that will complete when the connection shutdown has been handled.</returns>
-        private ValueTask SocketShutdown(SocketConnectionBase connection)
+        private void SocketShutdown(SocketConnectionBase connection)
         {
             XConsole.WriteLine(this, "Removing connection " + connection.Id);
             _connections.Remove(connection.Id);
-            return new ValueTask();
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
+        {
+            await StopAsync();
         }
     }
 }

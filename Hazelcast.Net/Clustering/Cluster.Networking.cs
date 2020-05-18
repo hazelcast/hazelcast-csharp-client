@@ -38,11 +38,11 @@ namespace Hazelcast.Clustering
                 for (var i = 0; i < maxTries; i++)
                 {
                     var memberId = _loadBalancer.Select();
-                    if (_memberClients.TryGetValue(memberId, out var lbclient))
+                    if (_clients.TryGetValue(memberId, out var lbclient))
                         return lbclient;
                 }
 
-                var client = _memberClients.Values.FirstOrDefault();
+                var client = _clients.Values.FirstOrDefault();
                 if (client == null)
                     throw new HazelcastException("Could not get a client.");
 
@@ -50,7 +50,7 @@ namespace Hazelcast.Clustering
             }
 
             // there should be only one
-            var singleClient = _memberClients.Values.FirstOrDefault();
+            var singleClient = _clients.Values.FirstOrDefault();
             if (singleClient == null)
                 throw new HazelcastException("Could not get a client.");
             return singleClient;
@@ -64,22 +64,20 @@ namespace Hazelcast.Clustering
         {
             _readonlyProperties = true;
 
+            // connects the first client
             await ConnectFirstClientAsync();
 
-            // FIXME need timeout etc here!
-            // wait for the first 'members view' & 'partitions view' events
-            //await Task.WhenAll(_firstMembersView.WaitAsync(), _firstPartitionsView.WaitAsync());
-            //_firstMembersView = _firstPartitionsView = null; // no need to keep them around
-            // FIXME partition comes later but then wtf?
+            // wait for the member table
             await _firstMembersView.WaitAsync();
             _firstMembersView = null;
 
-            // FIXME and also for each new client etc?!
+            // execute subscribers
             foreach (var subscriber in _clusterEventSubscribers)
                 await subscriber.SubscribeAsync(this);
 
-            // no need to keep them around
-            //_clusterEventSubscribers = null;
+            // once subscribers have run, they have created subscriptions
+            // and we don't need them anymore - only the subscriptions
+            _clusterEventSubscribers = null;
         }
 
         /// <summary>
@@ -192,7 +190,7 @@ namespace Hazelcast.Clustering
             var serverVersion = info.ServerVersion;
             var remoteAddress = info.MemberAddress;
             var clusterId = info.ClusterId;
-            var firstClient = _memberClients.Count == 0; // FIXME race-cond here?
+            var firstClient = _clients.Count == 0; // FIXME race-cond here?
             var newCluster = firstClient && _clusterServerSideId != default && _clusterServerSideId != clusterId;
 
             if (newCluster)
@@ -205,8 +203,11 @@ namespace Hazelcast.Clustering
             }
 
             // register the client
-            _memberClients[info.MemberId] = client;
-            _addressClients[address] = client;
+            lock (_clientsLock)
+            {
+                _clients[info.MemberId] = client;
+                _addressClients[address] = client;
+            }
 
             //
             if (firstClient)
@@ -241,13 +242,11 @@ namespace Hazelcast.Clustering
             await AssignClusterEventsClient(client);
 
             // subscribe the new client to all events the cluster has subscriptions for
+            // TODO: do it in the background, see ListenerService?
             await InstallSubscriptionsOnNewClient(client);
-
-            // FIXME: we also need to handle clients going down!
 
             return client;
         }
-
 
         // TODO: implement (and for client etc)
         private void EnsureActive() { } // supposed to validate that the client is still active?
@@ -265,8 +264,18 @@ namespace Hazelcast.Clustering
 
         private void HandleClientShutdown(Client client)
         {
-            _addressClients.TryRemove(client.Address, out _);
-            _memberClients.TryRemove(client.MemberId, out _);
+            // this runs when a client signals that it is shutting down
+
+            // forget about the client
+            lock (_clientsLock)
+            {
+                _addressClients.TryRemove(client.Address, out _);
+                _clients.TryRemove(client.MemberId, out _);
+            }
+
+            // clears its subscriptions - does not unsubscribes from the
+            // server since the client is not connected anymore
+            ClearLostClientSubscriptions(client);
 
             // we need to have one client permanently handling the cluster events.
             // if the client which just shut down was handling cluster events,

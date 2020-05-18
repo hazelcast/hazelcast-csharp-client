@@ -34,6 +34,7 @@ namespace Hazelcast.Clustering
                 ClientAddDistributedObjectListenerCodec.EncodeRequest(_isSmart),
                 (message, state) => ClientAddDistributedObjectListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id),
+                (message, state) => ClientRemoveDistributedObjectListenerCodec.DecodeResponse(message).Response,
                 (message, state) => ClientAddDistributedObjectListenerCodec.HandleEvent(message, HandleInternal, LoggerFactory));
         }
 

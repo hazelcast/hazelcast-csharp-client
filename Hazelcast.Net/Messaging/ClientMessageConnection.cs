@@ -203,9 +203,9 @@ namespace Hazelcast.Messaging
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <param name="timeoutMilliseconds">The timeout in milliseconds.</param>
+        /// <param name="timeoutSeconds">The timeout in seconds.</param>
         /// <returns>A task that will complete when the message has been sent.</returns>
-        public async ValueTask<bool> SendAsync(ClientMessage message, int timeoutMilliseconds = 0)
+        public async ValueTask<bool> SendAsync(ClientMessage message, int timeoutSeconds = 0)
         {
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection

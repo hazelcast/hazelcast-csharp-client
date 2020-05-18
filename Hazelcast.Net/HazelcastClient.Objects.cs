@@ -29,12 +29,12 @@ namespace Hazelcast
 
         /// <inheritdoc />
 
-#if DEBUG // maintain full stack traces
-        public async Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
-            => await GetMapAsyncTask<TKey, TValue>(name);
-#else
+#if OPTIMIZE_ASYNC
         public Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
             => GetMapAsyncTask<TKey, TValue>(name);
+#else
+        public async Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
+            => await GetMapAsyncTask<TKey, TValue>(name);
 #endif
 
         private ValueTask<Map<TKey, TValue>> GetMapAsyncTask<TKey, TValue>(string name)
@@ -44,12 +44,12 @@ namespace Hazelcast
 
         /// <inheritdoc />
 
-#if DEBUG // maintain full stack tracers
-        public async Task<ITopic<T>> GetTopicAsync<T>(string name)
-            => await GetTopicAsyncTask<T>(name);
-#else
+#if OPTIMIZE_ASYNC
         public Task<ITopic<T>> GetTopicAsync<T>(string name)
             => GetTopicAsyncTask<T>(name);
+#else
+        public async Task<ITopic<T>> GetTopicAsync<T>(string name)
+            => await GetTopicAsyncTask<T>(name);
 #endif
 
         private ValueTask<Topic<T>> GetTopicAsyncTask<T>(string name)

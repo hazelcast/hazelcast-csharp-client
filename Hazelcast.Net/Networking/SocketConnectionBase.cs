@@ -35,7 +35,7 @@ namespace Hazelcast.Networking
 
         private MessageBytesHandler _onReceiveMessageBytes;
         private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
-        private Func<SocketConnectionBase, ValueTask> _onShutdown;
+        private Action<SocketConnectionBase> _onShutdown;
         private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
         private Socket _socket;
         private Stream _stream;
@@ -119,7 +119,7 @@ namespace Hazelcast.Networking
         /// <remarks>
         /// <para>The function must be set before the connection is established.</para>
         /// </remarks>
-        public Func<SocketConnectionBase, ValueTask> OnShutdown
+        public Action<SocketConnectionBase> OnShutdown
         {
             get => _onShutdown;
             set
@@ -218,8 +218,7 @@ namespace Hazelcast.Networking
             XConsole.WriteLine(this, "Connection is down");
 
             // notify
-            if (_onShutdown != null)
-                await _onShutdown(this);
+            _onShutdown?.Invoke(this);
         }
 
         /// <summary>

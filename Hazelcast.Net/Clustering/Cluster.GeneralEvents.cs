@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 
@@ -9,122 +12,6 @@ namespace Hazelcast.Clustering
     // partial: general events
     public partial class Cluster
     {
-        // NOTES - FIXME: move this out!
-        //
-        // original hazelcast client internals - on start
-        //
-        // - create configured listeners
-        //     creates the listener classes from configuration
-        //
-        // - start lifecycle service w/listeners
-        //     registers the ILifecycleListener listeners = adds them to _lifecycleListeners
-        //     fire 'starting' lifecycle event
-        //     set 'active'
-        //     fire 'started' lifecycle event
-        //
-        // - start invocation service
-        //     schedules with fixed delay a 'clean resources' task
-        //     which kills the pending 'invocations' when their connection is dead
-        //
-        // - start cluster service w/listeners
-        //     registers the IMembershipListener listeners = adds them to _listeners
-        //     registers the cluster service as a connection listener
-        //       'connection added' => use as 'cluster client' if needed
-        //       'connection removed' => find a new 'cluster client' if needed
-        //
-        // - start connection manager
-        //     start the heartbeat task
-        //       ?
-        //     connects to the cluster
-        //       tries all known addresses until it can obtain a client for that address,
-        //       and that client becomes the 'cluster client' which will handle the 'members
-        //       view' and 'partition view' events
-        //     if smart routing is enabled, schedules with fixed delay a 'connect task'
-        //       which periodically reconnects to all cluster members
-        //     fires 'connection added' / 'connection removed' events
-        //
-        // - wait for initial list of members from cluster service ('members view' event)
-        //     wait for cluster service _initialListFetchedLatch
-        //
-        // - connect to all cluster members
-        //     get or connect to each member (by address)
-        //     todo: maybe this could be lazy?
-        //
-        // - start listener service
-        //     registers the listener service as a connection listener
-        //       'connection added' => for all _registrations, register w/server => _eventHandlers
-        //       'connection removed' => for all _registrations, clear _eventHandlers
-        //
-        // - initialize proxy manager
-        //     fixme: ?
-        //
-        // - initialize load balancer
-        //     fixme: ?
-        //
-        // - add client config listeners
-        //     registers the IDistributedObjectListener listeners = via proxy manager,
-        //       installs the remote subscription on all known clients (in listener service _registrations)
-        //     registers the IPartitionLostListener listeners = via partition service,
-        //       installs the remote subscription on all known clients (in listener service _registrations)
-        //
-        // when a remote subscription is installed via listener service, it goes in _registrations
-        //   this is for any type of subscriptions but cluster events
-        //   ie 'distributed object' and 'partition lost' cluster events, and all dist. object events
-        //   they are installed / maintained on every client
-        //
-        //
-        // obtaining a client for an address means
-        // - establishing a socket connection to that address
-        // - authenticate
-        //     todo: implement retry-able auth for kerberos etc
-        // - if there are no other connections, and cluster id has changed (HandleSuccessfulAuth)
-        //     ha.client.OnClusterRestart fixme=? dispose all 'onClusterChangeDisposables' (none) + clear member list version
-        //     ha.client is 'CONNECTED' + triggers InitializeClientOnCluster
-        //       which "sends state" ie do factory . createAll
-        //       and then, hz.client is 'INITIALIZES' + triggers 'connected' life cycle event
-        //   else if cluster id has not changed, ha.client is 'INITIALIZED' + trigger 'connected' life cycle event
-        // - fire 'connection added'
-        //     cluster considers it for new 'cluster client' if there is none
-        //     listener adds registrations
-        //
-        // the 'cluster client' listens to 'members view' and 'partitions view' events in order to
-        // manage the list of known members and partitions in the cluster
-        //
-        //   handling the 'members view' event means
-        //   - if it's the first time, signal _initialListFetchedLatch
-        //   - fire 'member added' / 'member removed' events
-        //   - which are only used to notify the load balancer
-        //
-        //   handling the 'partition view' event means
-        //   // ?
-        //
-        //
-        // on successful auth, something happens w/cluster?
-        // todo: handle cluster id change (see connection manager)
-        //
-        // when a client is removed,
-        // - properly removed = ListenerService.ConnectionRemoved = ?
-        // - lost = its subscriptions are cleared (but not uninstalled)
-        //
-        // if that client is the 'cluster client', the cluster polls addresses again, to get a new
-        // 'cluster client' - either using the existing client for that address, or connecting a
-        // new client - and then this 'cluster client' subscribes to the 'members view' and
-        // 'partitions view'
-        // todo: it may be faster to consider existing clients first?
-        //
-        //
-        // FIXME and then, create new connections, or re-use existing???
-        //
-        // in 'unisocket' mode, the cluster uses only 1 client - in 'smart routing' mode it
-        // directly talks to the member owning the partition, when relevant.
-        //
-        // wants to talk to a particular member and there is no client for that member yet,
-        //
-        // when a user subscribes to a distributed object (eg, map entry added) event, a subscription
-        // is installed on the cluster, which in turns installs the subscription on each client
-        //
-        // when the user unsubscribes, the subscription is removed on each client
-
         /// <summary>
         /// Installs a subscription on the cluster.
         /// </summary>
@@ -132,27 +19,48 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the subscription has been installed.</returns>
         public async Task InstallSubscriptionAsync(ClusterSubscription subscription)
         {
-            // register the subscription - but verify that the id really is unique
-            if (!_eventSubscriptions.TryAdd(subscription.Id, subscription))
-                throw new InvalidOperationException("A subscription with the same identifier already exists.");
+            List<Client> clients;
+            lock (_clientsLock)
+            {
+                // capture clients
+                clients = _clients.Values.ToList();
 
-            try
+                // register the subscription - but verify that the id really is unique
+                if (!_subscriptions.TryAdd(subscription.Id, subscription))
+                    throw new InvalidOperationException("A subscription with the same identifier already exists.");
+            }
+
+            // if new clients are added now, we won't deal with it here, but they will
+            // see the new subscriptions and will handle it just as new clients do
+            //
+            // if some clients go away now... FIXME: handle clients going away
+
+            List<Exception> exceptions = null;
+
+            // subscribe each client
+            foreach (var client in clients)
             {
-                // subscribe each client: each client will send a subscription request,
-                // with its own correlation id that is used to register a new instance of
-                // the handler function, and then add itself to the list of registered
-                // clients
-                // FIXME: lock the clients list?
-                foreach (var (_, client) in _memberClients)
+                try
+                {
                     await InstallSubscriptionAsync(subscription, client);
+                }
+                catch (Exception e)
+                {
+                    if (exceptions == null) exceptions = new List<Exception>();
+                    exceptions.Add(e);
+                }
             }
-            catch
-            {
-                // FIXME leak!
-                // some clients may have subscribed and registered handlers!
-                _eventSubscriptions.TryRemove(subscription.Id, out _);
-                throw;
-            }
+
+            if (exceptions == null)
+                return;
+
+            // deactivate the subscription
+            subscription.Deactivate();
+
+            // remove
+            // FIXME: leak, we should unregister what we can, etc
+            _subscriptions.TryRemove(subscription.Id, out _);
+            throw new AggregateException("Failed to subscribe.", exceptions.ToArray());
         }
 
         /// <summary>
@@ -163,9 +71,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the client has subscribed to the server event.</returns>
         private async ValueTask InstallSubscriptionAsync(ClusterSubscription subscription, Client client)
         {
-            // FIXME try...catch, see ListenerService
-            // and remove the handler if all fails
-
+            // add immediately, we don't know when the events will start to come
             var correlationId = _correlationIdSequence.Next;
             _correlatedSubscriptions[correlationId] = subscription;
 
@@ -174,16 +80,18 @@ namespace Hazelcast.Clustering
             // instead, we use a safe clone of the original message
             var subscribeRequest = subscription.SubscribeRequest.CloneWithNewCorrelationId(correlationId);
 
+            ClientMessage response;
             try
             {
-                var response = await client.SendAsync(subscribeRequest, correlationId);
-                _ = subscription.AcceptSubscribeResponse(response, client);
+                response = await client.SendAsync(subscribeRequest, correlationId);
             }
             catch
             {
                 _correlatedSubscriptions.TryRemove(correlationId, out _);
                 throw;
             }
+
+            subscription.AddClientSubscription(response, client);
         }
 
         /// <summary>
@@ -194,9 +102,16 @@ namespace Hazelcast.Clustering
         private async Task InstallSubscriptionsOnNewClient(Client client)
         {
             // FIXME what-if some subscriptions fail?
+            // FIXME try...catch
 
-            foreach (var (_, subscription) in _eventSubscriptions)
-                await InstallSubscriptionAsync(subscription, client);
+            foreach (var (_, subscription) in _subscriptions)
+            {
+                // ignore inactive subscriptions
+                if (!subscription.Active) continue;
+
+                // install
+                await InstallSubscriptionAsync(subscription, client); // FIXME may throw!
+            }
         }
 
         /// <summary>
@@ -204,42 +119,72 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
         /// <returns>A task that will complete when subscription has been removed.</returns>
-        public async Task RemoveSubscriptionAsync(Guid subscriptionId)
+        public async ValueTask RemoveSubscriptionAsync(Guid subscriptionId)
         {
-            if (!_eventSubscriptions.TryGetValue(subscriptionId, out var clusterSubscription))
-                throw new Exception();
+            // ignore unknown subscriptions
+            if (!_subscriptions.TryGetValue(subscriptionId, out var clusterSubscription))
+                return;
+
+            // deactivate the subscription, so that new clients don't use it
+            clusterSubscription.Deactivate();
 
             // FIXME if a client goes away do we remove it from the list?!
+            // FIXME some locking is required here?!
+            // FIXME race condition on deactivate too!
 
+            List<Exception> exceptions = null;
+            var allRemoved = true;
+
+            // un-subscribe each client
             foreach (var (_, clientSubscription) in clusterSubscription.ClientSubscriptions)
             {
-                // can we just ignore whatever is returned?
-                // fixme try...catch
-                await RemoveSubscriptionAsync(clientSubscription);
+                // if one client fails, keep the exception but continue with other clients
+                try
+                {
+                    allRemoved &= await RemoveSubscriptionAsync(clientSubscription);
+                }
+                catch (Exception e)
+                {
+                    if (exceptions == null) exceptions = new List<Exception>();
+                    exceptions.Add(e);
+                    allRemoved = false;
+                }
             }
 
-            _eventSubscriptions.TryRemove(subscriptionId, out _);
+            // if at least an exception was thrown, rethrow
+            if (exceptions != null)
+                throw new AggregateException("Failed to fully remove the subscription.", exceptions.ToArray());
+
+            // if everything went well, remove the subscription
+            // otherwise, keep it around and throw (may want to try again?)
+            // in any case client handlers have been removed so no event will be handled
+            if (allRemoved)
+                _subscriptions.TryRemove(subscriptionId, out _);
+            else
+                throw new HazelcastException("Failed to fully remove the subscription.");
         }
 
         /// <summary>
         /// Removes a subscription on one client.
         /// </summary>
         /// <param name="clientSubscription">The subscription.</param>
-        /// <returns>A task that will complete when the client has unsubscribed from the server event.</returns>
-        private async ValueTask RemoveSubscriptionAsync(ClientSubscription clientSubscription)
+        /// <returns>Whether the operation was successful.</returns>
+        /// <remarks>
+        /// <para>This methods always remove the event handlers associated with the subscription, regardless
+        /// of the response from the server. Even when the server returns false, meaning it failed to
+        /// properly remove the subscription, no events for that subscription will be triggered anymore
+        /// because the client will ignore these events when the server sends them.</para>
+        /// </remarks>
+        private async ValueTask<bool> RemoveSubscriptionAsync(ClientSubscription clientSubscription)
         {
-            try
-            {
-                // ignore the response
-                await clientSubscription.Client.SendAsync(clientSubscription.ClusterSubscription.CreateUnsubscribeRequest(clientSubscription.ServerSubscriptionId));
-            }
-            finally
-            {
-                // whatever happens, remove the event handler
-                // if the client hasn't properly unsubscribed, it may receive more event messages,
-                // which will be ignored since their correlation identifier won't match any handler.
-                _correlatedSubscriptions.TryRemove(clientSubscription.CorrelationId, out _);
-            }
+            // whatever happens, remove the event handler
+            // if the client hasn't properly unsubscribed, it may receive more event messages,
+            // which will be ignored since their correlation identifier won't match any handler.
+            _correlatedSubscriptions.TryRemove(clientSubscription.CorrelationId, out _);
+
+            // trigger the server-side un-subscribe
+            var responseMessage = await clientSubscription.Client.SendAsync(clientSubscription.ClusterSubscription.CreateUnsubscribeRequest(clientSubscription.ServerSubscriptionId));
+            return clientSubscription.ClusterSubscription.DecodeUnsubscribeResponse(responseMessage);
         }
 
         /// <summary>
@@ -247,11 +192,15 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="client">The client.</param>
         /// <returns>A task that will complete when the client has unsubscribed from server events.</returns>
-        private async Task ClearLostClientSubscriptions(Client client)
+        private void ClearLostClientSubscriptions(Client client)
         {
-            foreach (var (_, eventSubscription) in _eventSubscriptions)
+            // this is for a lost client, so we don't have a connection to the server anymore,
+            // so we just clear everything we know about that client, but we cannot properly
+            // unsubscribe
+
+            foreach (var (_, subscription) in _subscriptions)
             {
-                if (eventSubscription.ClientSubscriptions.TryRemove(client, out var clientSubscription))
+                if (subscription.ClientSubscriptions.TryRemove(client, out var clientSubscription))
                     _correlatedSubscriptions.TryRemove(clientSubscription.CorrelationId, out _);
             }
         }

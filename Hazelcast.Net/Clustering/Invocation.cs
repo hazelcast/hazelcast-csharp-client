@@ -26,29 +26,40 @@ namespace Hazelcast.Clustering
     {
         private const int MaxFastInvocationCount = 5;
         private const int DefaultInvocationRetryDelayMilliseconds = 1_000;
+        private const int DefaultDefaultTimeoutSeconds = 120;
         private static readonly int InvocationRetryDelayMilliseconds;
+        private static readonly int DefaultTimeoutSeconds;
 
         /// <summary>
         /// Initializes the <see cref="Invocation"/> class.
         /// </summary>
         static Invocation()
         {
-            InvocationRetryDelayMilliseconds = HazelcastEnvironment.Invocation.DefaultInvocationRetryDelayMilliseconds ??
+            InvocationRetryDelayMilliseconds = HazelcastEnvironment.Invocation.DefaultRetryDelayMilliseconds ??
                                                DefaultInvocationRetryDelayMilliseconds;
+
+            DefaultTimeoutSeconds = HazelcastEnvironment.Invocation.DefaultTimeoutSeconds ??
+                                    DefaultDefaultTimeoutSeconds;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Invocation"/> class.
         /// </summary>
         /// <param name="requestMessage">The request message.</param>
-        /// <param name="timeoutMilliseconds">The timeout in milliseconds.</param>
-        public Invocation(ClientMessage requestMessage, int timeoutMilliseconds)
+        /// <param name="boundToClient">Whether the invocation is bound to a client.</param>
+        /// <param name="timeoutSeconds">The timeout in seconds.</param>
+        /// <remarks>
+        /// <para>When an invocation is bound to a client, it cannot be retried if the client dies.</para>
+        /// <para>If <paramref name="timeoutSeconds"/> is zero then the timeout is the default timeout.</para>
+        /// </remarks>
+        public Invocation(ClientMessage requestMessage, bool boundToClient, int timeoutSeconds)
         {
             RequestMessage = requestMessage;
+            BoundToClient = boundToClient;
             CorrelationId = requestMessage.CorrelationId;
             CompletionSource = new TaskCompletionSource<ClientMessage>();
             StartTime = Clock.Milliseconds;
-            TimeoutMilliseconds = timeoutMilliseconds;
+            TimeoutSeconds = timeoutSeconds > 0 ? timeoutSeconds : DefaultTimeoutSeconds;
             AttemptsCount = 1;
         }
 
@@ -56,6 +67,11 @@ namespace Hazelcast.Clustering
         /// Gets the request message.
         /// </summary>
         public ClientMessage RequestMessage { get; }
+
+        /// <summary>
+        /// Whether the invocation to bound to a client.
+        /// </summary>
+        public bool BoundToClient { get; }
 
         /// <summary>
         /// Gets the correlation identifier.
@@ -85,19 +101,19 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the timeout in milliseconds.
         /// </summary>
-        public int TimeoutMilliseconds { get; }
+        public int TimeoutSeconds { get; }
 
         /// <summary>
         /// Whether the invocation has a timeout.
         /// </summary>
-        public bool HasTimeout => TimeoutMilliseconds > 0;
+        public bool HasTimeout => TimeoutSeconds > 0;
 
         /// <summary>
         /// Gets the remaining time in milliseconds.
         /// </summary>
         public int RemainingMilliseconds =>
             HasTimeout
-                ? Math.Max(0, TimeoutMilliseconds - (int) (Clock.Milliseconds - StartTime))
+                ? Math.Max(0, 1000 * TimeoutSeconds - (int) (Clock.Milliseconds - StartTime))
                 : int.MaxValue;
 
         /// <summary>

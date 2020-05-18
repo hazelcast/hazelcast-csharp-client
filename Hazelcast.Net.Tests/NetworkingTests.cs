@@ -29,6 +29,7 @@ using Hazelcast.Protocol;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
+using Hazelcast.Testing;
 using Hazelcast.Testing.TestServer;
 using Hazelcast.Tests.Testing;
 using Hazelcast.Testing.Protocol;
@@ -38,7 +39,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests
 {
     [TestFixture]
-    public class NetworkingTests
+    public class NetworkingTests : HazelcastTestBase
     {
         private ClientMessage CreateMessage(string text)
         {
@@ -105,14 +106,17 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server(address, async (conn, msg) =>
+            Server server = null;
+            server = new Server(address, async (conn, msg) =>
             {
+                XConsole.WriteLine(server, "Respond with error.");
                 var response = CreateErrorMessage();
                 response.CorrelationId = msg.CorrelationId;
                 response.MessageType = 0x00; // 0x00 means exception
                 response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
                 await conn.SendAsync(response);
             });
+            AddDisposable(server);
             await server.StartAsync();
 
             var corSequence = new Int64Sequence();
@@ -125,7 +129,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = ClientPingServerCodec.EncodeRequest();
 
-            Assert.ThrowsAsync<TimeoutException>(async () => await client1.SendAsync(message, 2_000));
+            Assert.ThrowsAsync<TimeoutException>(async () => await client1.SendAsync(message, 3));
 
             // TODO dispose the client, the server
             await server.StopAsync();
@@ -142,15 +146,19 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Start server");
             var count = 0;
-            var server = new Server(address, async (conn, msg) =>
+            Server server = null;
+            server = new Server(address, async (conn, msg) =>
             {
+                XConsole.WriteLine(server, "Handle request.");
                 ClientMessage response;
                 if (++count > 3)
                 {
+                    XConsole.WriteLine(server, "Respond with success.");
                     response = ClientPingServerCodec.EncodeResponse();
                 }
                 else
                 {
+                    XConsole.WriteLine(server, "Respond with error.");
                     response = CreateErrorMessage();
                     response.MessageType = 0x00; // 0x00 means exception
                     response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
@@ -158,6 +166,7 @@ namespace Hazelcast.Tests
                 response.CorrelationId = msg.CorrelationId;
                 await conn.SendAsync(response);
             });
+            AddDisposable(server);
             await server.StartAsync();
 
             var corSequence = new Int64Sequence();
@@ -170,9 +179,9 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = ClientPingServerCodec.EncodeRequest();
 
-            await client1.SendAsync(message);
+            await client1.SendAsync(message, 3); // default is 120s
 
-            Assert.AreEqual(4, count);
+            NUnit.Framework.Assert.AreEqual(4, count);
 
             // TODO dispose the client, the server
             await server.StopAsync();
@@ -303,7 +312,7 @@ namespace Hazelcast.Tests
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
             var status = (AuthenticationStatus) response.Status;
-            Assert.AreEqual(AuthenticationStatus.Authenticated, status);
+            NUnit.Framework.Assert.AreEqual(AuthenticationStatus.Authenticated, status);
 
             XConsole.WriteLine(this, "Stop client");
             await client1.ShutdownAsync();
@@ -417,7 +426,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             bytes.WriteInt32(0, origin);
             var buffer = new ReadOnlySequence<byte>(bytes);
             var value = BytesExtensions.ReadInt32(ref buffer);
-            Assert.AreEqual(origin, value);
+            NUnit.Framework.Assert.AreEqual(origin, value);
         }
 
     }

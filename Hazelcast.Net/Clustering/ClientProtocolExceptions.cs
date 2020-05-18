@@ -23,6 +23,7 @@ namespace Hazelcast.Clustering
             ClientProtocolErrors.WrongTarget,
             ClientProtocolErrors.TargetNotReplicaException,
             ClientProtocolErrors.CannotReplicateException,
+            ClientProtocolErrors.HazelcastInstanceNotActive,
         };
 
         /// <summary>

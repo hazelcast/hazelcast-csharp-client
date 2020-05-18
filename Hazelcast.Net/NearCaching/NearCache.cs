@@ -91,6 +91,7 @@ namespace Hazelcast.NearCaching
                     MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) MapEventType.Invalidated, false),
                     (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                     (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(((EventState) state).Name, id),
+                    (message, state) => MapRemoveEntryListenerCodec.DecodeResponse(message).Response,
                     (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent, LoggerFactory),
                     new EventState { Name = Name });
 

@@ -44,6 +44,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
                 subscribeRequest,
                 HandleSubscribeResponse,
                 CreateUnsubscribeRequest,
+                DecodeUnsubscribeResponse,
                 HandleEvent,
                 new SubscriptionState(Name, handlers));
 
@@ -104,6 +105,11 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         private static Guid HandleSubscribeResponse(ClientMessage responseMessage, object state)
         {
             return TopicAddMessageListenerCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        private static bool DecodeUnsubscribeResponse(ClientMessage message, object state)
+        {
+            return TopicRemoveMessageListenerCodec.DecodeResponse(message).Response;
         }
 
         /// <inheritdoc />

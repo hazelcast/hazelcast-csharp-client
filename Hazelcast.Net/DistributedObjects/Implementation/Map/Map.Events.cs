@@ -70,6 +70,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
                 subscribeRequest,
                 HandleSubscribeResponse,
                 CreateUnsubscribeRequest,
+                DecodeUnsubscribeResponse,
                 HandleEvent,
                 new SubscriptionState(mode, Name, handlers));
 
@@ -204,8 +205,13 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
                 case 3:
                     return MapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(responseMessage).Response;
                 default:
-                    throw new Exception();
+                    throw new NotSupportedException();
             }
+        }
+
+        private static bool DecodeUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
+        {
+            return MapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
         }
 
         /// <inheritdoc />

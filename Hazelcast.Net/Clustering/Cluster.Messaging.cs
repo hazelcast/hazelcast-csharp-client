@@ -13,13 +13,13 @@ namespace Hazelcast.Clustering
         /// Sends a message to a random target.
         /// </summary>
         /// <param name="message">The message to send.</param>
-        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
+        /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, int timeoutMilliseconds = 0)
+        public async ValueTask<ClientMessage> SendAsync(ClientMessage message, int timeoutSeconds = 0)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            return await GetRandomClient().SendAsync(message, _correlationIdSequence.Next, timeoutMilliseconds);
+            return await GetRandomClient().SendAsync(message, _correlationIdSequence.Next, timeoutSeconds);
         }
 
         /// <summary>
@@ -27,24 +27,24 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="memberId">The identifier of the member.</param>
-        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
+        /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         /// <remarks>
         /// <para>If <paramref name="memberId"/> is the default value, sends the message to a random member. If it
         /// is an unknown member, sends the message to a random number too.</para>
         /// </remarks>
-        public async ValueTask<ClientMessage> SendToMemberAsync(ClientMessage message, Guid memberId, int timeoutMilliseconds = 0)
+        public async ValueTask<ClientMessage> SendToMemberAsync(ClientMessage message, Guid memberId, int timeoutSeconds = 0)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
             // try to get the specified member, else use a random member
             // connections to members are maintained elsewhere - we don't lazy-connect on demand
-            if (memberId == default || !_memberClients.TryGetValue(memberId, out var client))
+            if (memberId == default || !_clients.TryGetValue(memberId, out var client))
                 client = GetRandomClient();
 
             if (client == null) throw new InvalidOperationException("Could not get a client.");
 
-            return await client.SendAsync(message, _correlationIdSequence.Next, timeoutMilliseconds);
+            return await client.SendAsync(message, _correlationIdSequence.Next, timeoutSeconds);
         }
 
         /// <summary>
@@ -52,14 +52,14 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="client">The target.</param>
-        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
+        /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendToClientAsync(ClientMessage message, Client client, int timeoutMilliseconds = 0)
+        public async ValueTask<ClientMessage> SendToClientAsync(ClientMessage message, Client client, int timeoutSeconds = 0)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
 
-            return await client.SendAsync(message, _correlationIdSequence.Next, timeoutMilliseconds);
+            return await client.SendAsync(message, _correlationIdSequence.Next, true, timeoutSeconds);
         }
 
         /// <summary>
@@ -67,9 +67,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="key">The key.</param>
-        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
+        /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, int timeoutMilliseconds = 0)
+        public async ValueTask<ClientMessage> SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, int timeoutSeconds = 0)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (key == null) throw new ArgumentNullException(nameof(key));
@@ -77,7 +77,7 @@ namespace Hazelcast.Clustering
             var partitionId = Partitioner.GetPartitionId(key);
             if (partitionId < 0) throw new ArgumentException("Could not get a partition for this key.", nameof(key));
 
-            return await SendToPartitionOwnerAsync(message, partitionId, timeoutMilliseconds);
+            return await SendToPartitionOwnerAsync(message, partitionId, timeoutSeconds);
         }
 
         /// <summary>
@@ -85,9 +85,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="partitionId">The identifier of the partition.</param>
-        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
+        /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async ValueTask<ClientMessage> SendToPartitionOwnerAsync(ClientMessage message, int partitionId, int timeoutMilliseconds = 0)
+        public async ValueTask<ClientMessage> SendToPartitionOwnerAsync(ClientMessage message, int partitionId, int timeoutSeconds = 0)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (partitionId < 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
@@ -96,8 +96,8 @@ namespace Hazelcast.Clustering
 
             var memberId = Partitioner.GetPartitionOwner(partitionId);
             return await (memberId == default
-                ? SendAsync(message, timeoutMilliseconds)
-                : SendToMemberAsync(message, memberId, timeoutMilliseconds));
+                ? SendAsync(message, timeoutSeconds)
+                : SendToMemberAsync(message, memberId, timeoutSeconds));
         }
     }
 }

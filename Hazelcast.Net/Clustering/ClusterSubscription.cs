@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ namespace Hazelcast.Clustering
     {
         private readonly Func<ClientMessage, object, Guid> _subscribeResponseParser;
         private readonly Func<Guid, object, ClientMessage> _unsubscribeRequestFactory;
+        private readonly Func<ClientMessage, object, bool> _unsubscribeResponseDecoder;
         private readonly Action<ClientMessage, object> _eventHandler;
 
         /// <summary>
@@ -32,10 +33,15 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="subscribeRequest">The subscribe request message.</param>
         /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
+        /// <param name="unsubscribeResponseDecoder">An unsubscribe response decoder.</param>
         /// <param name="eventHandler">The event handler.</param>
         /// <param name="state">A state object.</param>
-        public ClusterSubscription(ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Action<ClientMessage, object> eventHandler, object state = null)
-            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, null, eventHandler, state)
+        public ClusterSubscription(ClientMessage subscribeRequest,
+            Func<ClientMessage, object, Guid> subscribeResponseParser,
+            Func<ClientMessage, object, bool> unsubscribeResponseDecoder,
+            Action<ClientMessage, object> eventHandler,
+            object state = null)
+            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, null, unsubscribeResponseDecoder, eventHandler, state)
         { }
 
         /// <summary>
@@ -44,10 +50,16 @@ namespace Hazelcast.Clustering
         /// <param name="subscribeRequest">The subscribe request message.</param>
         /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
         /// <param name="unsubscribeRequestFactory">The unsubscribe request message factory.</param>
+        /// <param name="unsubscribeResponseDecoder">An unsubscribe response decoder.</param>
         /// <param name="eventHandler">The event handler.</param>
         /// <param name="state">A state object.</param>
-        public ClusterSubscription(ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Func<Guid, object, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage, object> eventHandler, object state = null)
-            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, unsubscribeRequestFactory, eventHandler, state)
+        public ClusterSubscription(ClientMessage subscribeRequest,
+            Func<ClientMessage, object, Guid> subscribeResponseParser,
+            Func<Guid, object, ClientMessage> unsubscribeRequestFactory,
+            Func<ClientMessage, object, bool> unsubscribeResponseDecoder,
+            Action<ClientMessage, object> eventHandler,
+            object state = null)
+            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, unsubscribeRequestFactory, unsubscribeResponseDecoder, eventHandler, state)
         { }
 
         /// <summary>
@@ -57,14 +69,21 @@ namespace Hazelcast.Clustering
         /// <param name="subscribeRequest">The subscribe request message.</param>
         /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
         /// <param name="unsubscribeRequestFactory">The unsubscribe request message factory.</param>
+        /// <param name="unsubscribeResponseDecoder">An unsubscribe response decoder.</param>
         /// <param name="eventHandler">The event handler.</param>
         /// <param name="state">A state object.</param>
-        public ClusterSubscription(Guid id, ClientMessage subscribeRequest, Func<ClientMessage, object, Guid> subscribeResponseParser, Func<Guid, object, ClientMessage> unsubscribeRequestFactory, Action<ClientMessage, object> eventHandler, object state = null)
+        public ClusterSubscription(Guid id, ClientMessage subscribeRequest,
+            Func<ClientMessage, object, Guid> subscribeResponseParser,
+            Func<Guid, object, ClientMessage> unsubscribeRequestFactory,
+            Func<ClientMessage, object, bool> unsubscribeResponseDecoder,
+            Action<ClientMessage, object> eventHandler,
+            object state = null)
         {
             Id = id;
             SubscribeRequest = subscribeRequest;
             _subscribeResponseParser = subscribeResponseParser;
             _unsubscribeRequestFactory = unsubscribeRequestFactory;
+            _unsubscribeResponseDecoder = unsubscribeResponseDecoder;
             _eventHandler = eventHandler;
             State = state;
         }
@@ -87,6 +106,11 @@ namespace Hazelcast.Clustering
         public Guid Id { get; }
 
         /// <summary>
+        /// Gets a value indicating whether the subscription is active.
+        /// </summary>
+        public bool Active { get; private set; } = true;
+
+        /// <summary>
         /// Gets the state object.
         /// </summary>
         public object State { get; }
@@ -97,17 +121,23 @@ namespace Hazelcast.Clustering
         public ClientMessage SubscribeRequest { get; }
 
         /// <summary>
-        /// Accepts a subscribe response message and returns the unique identifier assigned to the subscription by the server.
+        /// Deactivates the subscription.
         /// </summary>
-        /// <param name="message">The registration response message.</param>
+        public void Deactivate()
+        {
+            Active = false;
+        }
+
+        /// <summary>
+        /// Adds a client subscription.
+        /// </summary>
+        /// <param name="message">The subscription response message.</param>
         /// <param name="client">The client.</param>
-        /// <returns>The client subscription.</returns>
-        public ClientSubscription AcceptSubscribeResponse(ClientMessage message, Client client)
+        public void AddClientSubscription(ClientMessage message, Client client)
         {
             var serverSubscriptionId = _subscribeResponseParser(message, State);
             var clientSubscription = new ClientSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
             ClientSubscriptions[clientSubscription.Client] = clientSubscription;
-            return clientSubscription;
         }
 
         /// <summary>
@@ -122,6 +152,16 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="eventMessage">The event message.</param>
         public void Handle(ClientMessage eventMessage) => _eventHandler(eventMessage, State);
+
+        /// <summary>
+        /// Decodes the unsubscribe response.
+        /// </summary>
+        /// <param name="message">The unsubscribe response.</param>
+        /// <returns>Whether the operation was successful.</returns>
+        public bool DecodeUnsubscribeResponse(ClientMessage message)
+        {
+            return _unsubscribeResponseDecoder(message, State);
+        }
 
         /// <summary>
         /// Gets the client subscriptions for this cluster subscription.

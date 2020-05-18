@@ -88,7 +88,7 @@ namespace Hazelcast.NearCaching
         {
             if (RegistrationId != null)
             {
-                Cluster.RemoveSubscriptionAsync(RegistrationId).Wait(); // FIXME ASYNC!
+                Cluster.RemoveSubscriptionAsync(RegistrationId).AsTask().Wait(); // FIXME ASYNC!
             }
             Entries.Clear();
         }

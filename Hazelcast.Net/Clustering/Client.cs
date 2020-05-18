@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
@@ -26,8 +28,7 @@ namespace Hazelcast.Clustering
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILogger _logger;
-
-        // FIXME: see defaultInvocationTimeout???
+        private readonly bool _retryOnTargetDisconnected; // FIXME set value = Configuration.NetworkConfig.RedoOperation
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Action<ClientMessage> _onReceiveEventMessage;
@@ -173,14 +174,15 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns>A task that will complete when the shutdown has been handled.</returns>
-        private ValueTask SocketShutdown(SocketConnectionBase connection)
+        private void SocketShutdown(SocketConnectionBase connection)
         {
-            foreach (var completion in _invocations.Values)
-                completion.SetException(new Exception("shutdown"));
+            lock (_isConnectedLock)
+            {
+                if (!_isConnected) return;
+                _isConnected = false;
+            }
 
-            _onShutdown?.Invoke(this);
-
-            return new ValueTask();
+            CompleteShutdown();
         }
 
         /// <summary>
@@ -189,17 +191,14 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The connection.</param>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been handled.</returns>
-        private ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
+        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
-            // FIXME: async oops!
-            // could be remain async all the way?
-
             if (message.IsEvent)
             {
                 XConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +
                                          XConsole.Lines(this, 1, message.Dump()));
-                ReceiveEvent(message);
-                return new ValueTask();
+                await ReceiveEvent(message); // should not throw
+                return;
             }
 
             if (message.IsBackupEvent)
@@ -210,7 +209,7 @@ namespace Hazelcast.Clustering
                 // backup events are not supported
                 //throw new NotSupportedException("Backup events are not supported here.");
                 _logger.LogWarning($"Ignoring unsupported backup event.");
-                return new ValueTask();
+                return;
             }
 
             // message has to be a response
@@ -224,7 +223,7 @@ namespace Hazelcast.Clustering
                 // orphan messages are ignored (but logged)
                 _logger.LogWarning($"Received message for unknown invocation [{message.CorrelationId}].");
                 XConsole.WriteLine(this, $"Unknown invocation [{message.CorrelationId}]");
-                return new ValueTask();
+                return;
             }
 
             // TODO: threading and scheduling?
@@ -232,17 +231,17 @@ namespace Hazelcast.Clustering
             // ie. the continuations on the completion tasks (unless configure-await?) runs on
             // the same thread and blocks the networking layer
 
-            // receive exception or message - try our best to not throw here
+            // receive exception or message
             if (message.IsException)
-                ReceiveException(invocation, message);
+                ReceiveException(invocation, message); // should not throw
             else
-                ReceiveResponse(invocation, message);
-
-            return new ValueTask();
+                ReceiveResponse(invocation, message); // should not throw
         }
 
-        private void ReceiveEvent(ClientMessage message)
+        private ValueTask ReceiveEvent(ClientMessage message)
         {
+            // FIXME: async oops, could events be async too?
+
             try
             {
                 XConsole.WriteLine(this, $"Raise event [{message.CorrelationId}].");
@@ -254,6 +253,8 @@ namespace Hazelcast.Clustering
                 XConsole.WriteLine(this, $"Failed to raise event [{message.CorrelationId}].");
                 /* nothing much we can do */
             }
+
+            return new ValueTask();
         }
 
         private void ReceiveException(Invocation invocation, ClientMessage message)
@@ -307,19 +308,54 @@ namespace Hazelcast.Clustering
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
+        /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public async Task<ClientMessage> SendAsync(ClientMessage message, int timeoutMilliseconds = 0)
-            => await SendAsync(message, _correlationIdSequence.Next, timeoutMilliseconds);
+#if OPTIMIZE_ASYNC
+        public Task<ClientMessage> SendAsync(ClientMessage message, int timeoutSeconds = 0)
+            => SendAsync(message, _correlationIdSequence.Next, false, timeoutSeconds);
+#else
+        public async Task<ClientMessage> SendAsync(ClientMessage message, int timeoutSeconds = 0)
+            => await SendAsync(message, _correlationIdSequence.Next, false, timeoutSeconds);
+#endif
+
+        /// <summary>
+        /// Sends a message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="thisClient">Whether the message is for this client only.</param>
+        /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
+        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
+#if OPTIMIZE_ASYNC
+        public Task<ClientMessage> SendAsync(ClientMessage message, bool thisClient, int timeoutSeconds = 0)
+            => SendAsync(message, _correlationIdSequence.Next, thisClient, timeoutSeconds);
+#else
+        public async Task<ClientMessage> SendAsync(ClientMessage message, bool thisClient, int timeoutSeconds = 0)
+            => await SendAsync(message, _correlationIdSequence.Next, thisClient, timeoutSeconds);
+#endif
 
         /// <summary>
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="correlationId">The correlation identifier.</param>
-        /// <param name="timeoutMilliseconds">The optional maximum number of milliseconds to get a response.</param>
+        /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public async Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, int timeoutMilliseconds = 0)
+#if OPTIMIZE_ASYNC
+        public Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, int timeoutSeconds = 0)
+            => SendAsync(message, correlationId, false, timeoutSeconds);
+#else
+        public async Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, int timeoutSeconds = 0)
+            => await SendAsync(message, correlationId, false, timeoutSeconds);
+#endif
+        /// <summary>
+        /// Sends a message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="correlationId">The correlation identifier.</param>
+        /// <param name="thisClient">Whether the message is for this client only.</param>
+        /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
+        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
+        public async Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, bool thisClient, int timeoutSeconds = 0)
         {
             lock (_isConnectedLock)
             {
@@ -333,7 +369,7 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            var invocation = new Invocation(message, timeoutMilliseconds);
+            var invocation = new Invocation(message, thisClient, timeoutSeconds);
 
             while (true)
             {
@@ -343,20 +379,40 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception exception)
                 {
-                    if (exception is ClientProtocolException protocolException)
+                    // if the client is not connected anymore, die
+                    if (!_isConnected)
+                        throw new HazelcastClientNotActiveException(exception);
+
+                    // if it's retryable, and can be retried (no timeout etc), retry
+                    if (ShouldRetry(invocation, exception) &&
+                        await invocation.CanRetry(() => _correlationIdSequence.Next)) // may wait
                     {
-                        // FIXME more things are retryable
-                        // maybe we can retry
-                        if (protocolException.Retryable &&
-                            await invocation.CanRetry(() => _correlationIdSequence.Next))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
 
                     // else... it's bad enough
                     throw;
                 }
+            }
+        }
+
+        private bool ShouldRetry(Invocation invocation, Exception exception)
+        {
+            switch (exception)
+            {
+                case IOException _:
+                    return !invocation.BoundToClient;
+
+                case SocketException _:
+                case ClientProtocolException cpe when cpe.Retryable:
+                    return true;
+
+                case TargetDisconnectedException _:
+                    return !invocation.BoundToClient &&
+                           (invocation.RequestMessage.IsRetryable || _retryOnTargetDisconnected);
+
+                default:
+                    return false;
             }
         }
 
@@ -404,8 +460,8 @@ namespace Hazelcast.Clustering
             var timeoutTask = Task.Delay(invocation.RemainingMilliseconds);
             await Task.WhenAny(invocation.Task, timeoutTask);
 
-            // success = return result, no need to remove the completion, it's handled elsewhere
-            if (invocation.Task.IsCompletedSuccessfully())
+            // completed = return result, no need to remove the completion, it's handled elsewhere
+            if (invocation.Task.IsCompleted)
                 return await invocation.Task;
 
             // timeout: remove the invocation and throw
@@ -432,9 +488,17 @@ namespace Hazelcast.Clustering
             // shutdown the connection
             await _socketConnection.ShutdownAsync();
 
+            CompleteShutdown();
+        }
+
+        private void CompleteShutdown()
+        {
             // shutdown all pending operations
             foreach (var completion in _invocations.Values)
                 completion.SetException(new Exception("shutdown"));
+
+            // invoke
+            _onShutdown?.Invoke(this);
         }
     }
 }

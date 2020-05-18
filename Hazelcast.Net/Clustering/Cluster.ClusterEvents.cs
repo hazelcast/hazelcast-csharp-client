@@ -42,13 +42,21 @@ namespace Hazelcast.Clustering
             var handlers = new ClusterEventHandlers();
             on(handlers);
 
-            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
             foreach (var handler in handlers)
             {
-                if (handler is ClusterObjectLifecycleEventHandler)
-                    await _objectLifecycleEventSubscription.AddSubscription();
-                if (handler is PartitionLostEventHandler)
-                    await _partitionLostEventSubscription.AddSubscription();
+                switch (handler)
+                {
+                    case ClusterObjectLifecycleEventHandler _:
+                        await _objectLifecycleEventSubscription.AddSubscription();
+                        break;
+
+                    case PartitionLostEventHandler _:
+                        await _partitionLostEventSubscription.AddSubscription();
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
             }
 
             var id = Guid.NewGuid();
@@ -66,7 +74,6 @@ namespace Hazelcast.Clustering
             if (!_clusterHandlers.TryRemove(subscriptionId, out var clusterHandlers))
                 return;
 
-            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
             foreach (var handler in clusterHandlers)
             {
                 switch (handler)

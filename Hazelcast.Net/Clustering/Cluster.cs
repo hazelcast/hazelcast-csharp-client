@@ -23,7 +23,8 @@ namespace Hazelcast.Clustering
 
         // member id -> client
         // the master clients list
-        private readonly ConcurrentDictionary<Guid, Client> _memberClients = new ConcurrentDictionary<Guid, Client>();
+        private readonly ConcurrentDictionary<Guid, Client> _clients = new ConcurrentDictionary<Guid, Client>();
+        private readonly object _clientsLock = new object();
 
         // address -> client
         // used for fast querying of _memberClients by network address
@@ -31,7 +32,7 @@ namespace Hazelcast.Clustering
 
         // subscription id -> subscription
         // the master subscriptions list
-        private readonly ConcurrentDictionary<Guid, ClusterSubscription> _eventSubscriptions = new ConcurrentDictionary<Guid, ClusterSubscription>();
+        private readonly ConcurrentDictionary<Guid, ClusterSubscription> _subscriptions = new ConcurrentDictionary<Guid, ClusterSubscription>();
 
         // correlation id -> subscription
         // used to match a subscription to an incoming event message
@@ -53,7 +54,8 @@ namespace Hazelcast.Clustering
 
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
-        private readonly IList<IClusterEventSubscriber> _clusterEventSubscribers;
+
+        private IList<IClusterEventSubscriber> _clusterEventSubscribers;
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Func<ValueTask> _onConnectionToNewCluster;
