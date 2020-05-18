@@ -38,10 +38,10 @@ namespace Hazelcast.DistributedObjects
 
     public static partial class Extensions
     {
-        public static MapEvents<TKey, TValue> Cleared<TKey, TValue>(this MapEvents<TKey, TValue> events, Action<IMap<TKey, TValue>, MapClearedEventArgs> handler)
+        public static MapEventHandlers<TKey, TValue> Cleared<TKey, TValue>(this MapEventHandlers<TKey, TValue> handlers, Action<IMap<TKey, TValue>, MapClearedEventArgs> handler)
         {
-            events.Handlers.Add(new MapClearedEventHandler<TKey, TValue>(handler));
-            return events;
+            handlers.Add(new MapClearedEventHandler<TKey, TValue>(handler));
+            return handlers;
         }
     }
 }

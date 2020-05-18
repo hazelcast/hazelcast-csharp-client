@@ -9,7 +9,7 @@ namespace Hazelcast.Clustering
     // partial: general events
     public partial class Cluster
     {
-        // NOTES
+        // NOTES - FIXME: move this out!
         //
         // original hazelcast client internals - on start
         //
@@ -142,6 +142,7 @@ namespace Hazelcast.Clustering
                 // with its own correlation id that is used to register a new instance of
                 // the handler function, and then add itself to the list of registered
                 // clients
+                // FIXME: lock the clients list?
                 foreach (var (_, client) in _memberClients)
                     await InstallSubscriptionAsync(subscription, client);
             }

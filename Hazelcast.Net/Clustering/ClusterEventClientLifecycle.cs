@@ -70,10 +70,10 @@ namespace Hazelcast.Clustering
         // TODO: original code has 1 unique 'StateChanged' event, consider having 1 event per new state?
         // eg ClientStarting, ClientStarted, etc...?
 
-        public static ClusterEvents ClientStateChanged(this ClusterEvents events, Action<Cluster, ClientLifecycleEventArgs> handler)
+        public static ClusterEventHandlers ClientStateChanged(this ClusterEventHandlers handlers, Action<Cluster, ClientLifecycleEventArgs> handler)
         {
-            events.Handlers.Add(new ClientLifecycleEventHandler(handler));
-            return events;
+            handlers.Add(new ClientLifecycleEventHandler(handler));
+            return handlers;
         }
     }
 }

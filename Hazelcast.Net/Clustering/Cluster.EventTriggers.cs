@@ -85,8 +85,8 @@ namespace Hazelcast.Clustering
         {
             // FIXME could handling be async? w/ controlled scheduler?
 
-            foreach (var (_, clusterEvents) in _clusterEvents)
-            foreach (var handler in clusterEvents.Handlers.OfType<THandler>())
+            foreach (var (_, clusterEvents) in _clusterHandlers)
+            foreach (var handler in clusterEvents.OfType<THandler>())
             {
                 try
                 {

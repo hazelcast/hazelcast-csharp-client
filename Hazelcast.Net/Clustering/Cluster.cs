@@ -5,13 +5,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering.LoadBalancing;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Networking;
-using Hazelcast.Security;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using Partitioner = Hazelcast.Partitioning.Partitioner;
@@ -20,22 +18,29 @@ namespace Hazelcast.Clustering
 {
     public partial class Cluster
     {
+        // generates unique cluster identifiers
         private static readonly ISequence<int> ClusterIdSequence = new Int32Sequence();
 
         // member id -> client
+        // the master clients list
         private readonly ConcurrentDictionary<Guid, Client> _memberClients = new ConcurrentDictionary<Guid, Client>();
 
         // address -> client
+        // used for fast querying of _memberClients by network address
         private readonly ConcurrentDictionary<NetworkAddress, Client> _addressClients = new ConcurrentDictionary<NetworkAddress, Client>();
 
         // subscription id -> subscription
+        // the master subscriptions list
         private readonly ConcurrentDictionary<Guid, ClusterSubscription> _eventSubscriptions = new ConcurrentDictionary<Guid, ClusterSubscription>();
 
         // correlation id -> subscription
+        // used to match a subscription to an incoming event message
+        // each client has its own correlation id, so there can be many entries per cluster subscription
         private readonly ConcurrentDictionary<long, ClusterSubscription> _correlatedSubscriptions = new ConcurrentDictionary<long, ClusterSubscription>();
 
         // subscription id -> event handlers
-        private readonly ConcurrentDictionary<Guid, ClusterEvents> _clusterEvents = new ConcurrentDictionary<Guid, ClusterEvents>();
+        // for cluster client-level events (not wired to the server)
+        private readonly ConcurrentDictionary<Guid, ClusterEventHandlers> _clusterHandlers = new ConcurrentDictionary<Guid, ClusterEventHandlers>();
 
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoadBalancer _loadBalancer;

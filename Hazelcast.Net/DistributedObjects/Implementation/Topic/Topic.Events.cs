@@ -27,15 +27,15 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
     internal partial class Topic<T>
     {
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<TopicEvents<T>> on)
+        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on)
         {
             if (on == null) throw new ArgumentNullException(nameof(on));
 
-            var subscriber = new TopicEvents<T>();
-            on(subscriber);
+            var handlers = new TopicEventHandlers<T>();
+            on(handlers);
 
             var flags = TopicEventType.Nothing;
-            foreach (var handler in subscriber.Handlers)
+            foreach (var handler in handlers)
                 flags |= handler.EventType;
 
             var subscribeRequest = TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting);
@@ -45,7 +45,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
                 HandleSubscribeResponse,
                 CreateUnsubscribeRequest,
                 HandleEvent,
-                new SubscriptionState(Name, subscriber.Handlers));
+                new SubscriptionState(Name, handlers));
 
             await Cluster.InstallSubscriptionAsync(subscription);
 
@@ -54,7 +54,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 
         private sealed class SubscriptionState
         {
-            public SubscriptionState(string name, List<ITopicEventHandler<T>> handlers)
+            public SubscriptionState(string name, TopicEventHandlers<T> handlers)
             {
                 Name = name;
                 Handlers = handlers;
@@ -62,7 +62,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 
             public string Name { get; }
 
-            public List<ITopicEventHandler<T>> Handlers { get; }
+            public TopicEventHandlers<T> Handlers { get; }
         }
 
         private static SubscriptionState ToSafeState(object state)

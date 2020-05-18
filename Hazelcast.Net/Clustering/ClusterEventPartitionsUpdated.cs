@@ -21,10 +21,10 @@ namespace Hazelcast.Clustering
 
     public static partial class Extensions
     {
-        public static ClusterEvents PartitionsUpdated(this ClusterEvents events, Action<Cluster, EventArgs> handler)
+        public static ClusterEventHandlers PartitionsUpdated(this ClusterEventHandlers handlers, Action<Cluster, EventArgs> handler)
         {
-            events.Handlers.Add(new PartitionsUpdatedEventHandler(handler));
-            return events;
+            handlers.Add(new PartitionsUpdatedEventHandler(handler));
+            return handlers;
         }
     }
 }

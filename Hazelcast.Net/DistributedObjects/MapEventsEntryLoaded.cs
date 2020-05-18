@@ -53,10 +53,10 @@ namespace Hazelcast.DistributedObjects
 
     public static partial class Extensions
     {
-        public static MapEvents<TKey, TValue> EntryLoaded<TKey, TValue>(this MapEvents<TKey, TValue> events, Action<IMap<TKey, TValue>, MapEntryLoadedEventArgs<TKey, TValue>> handler)
+        public static MapEventHandlers<TKey, TValue> EntryLoaded<TKey, TValue>(this MapEventHandlers<TKey, TValue> handlers, Action<IMap<TKey, TValue>, MapEntryLoadedEventArgs<TKey, TValue>> handler)
         {
-            events.Handlers.Add(new MapEntryLoadedEventHandler<TKey, TValue>(handler));
-            return events;
+            handlers.Add(new MapEntryLoadedEventHandler<TKey, TValue>(handler));
+            return handlers;
         }
     }
 }

@@ -101,7 +101,7 @@ namespace Hazelcast.Clustering
 
 
     /// <summary>
-    /// Provides extension to the <see cref="ClusterEvents"/> class.
+    /// Provides extension to the <see cref="ClusterEventHandlers"/> class.
     /// </summary>
     public static partial class Extensions
     {
@@ -109,20 +109,20 @@ namespace Hazelcast.Clustering
         /// Adds an handler for cluster object creation events.
         /// </summary>
         /// <returns>The cluster events.</returns>
-        public static ClusterEvents ObjectCreated(this ClusterEvents events, Action<Cluster, ClusterObjectLifecycleEventArgs> handler)
+        public static ClusterEventHandlers ObjectCreated(this ClusterEventHandlers handlers, Action<Cluster, ClusterObjectLifecycleEventArgs> handler)
         {
-            events.Handlers.Add(new ClusterObjectLifecycleEventHandler(ClusterObjectLifecycleEventType.Created, handler));
-            return events;
+            handlers.Add(new ClusterObjectLifecycleEventHandler(ClusterObjectLifecycleEventType.Created, handler));
+            return handlers;
         }
 
         /// <summary>
         /// Adds an handler for cluster object destruction events.
         /// </summary>
         /// <returns>The cluster events.</returns>
-        public static ClusterEvents ObjectDestroyed(this ClusterEvents events, Action<Cluster, ClusterObjectLifecycleEventArgs> handler)
+        public static ClusterEventHandlers ObjectDestroyed(this ClusterEventHandlers handlers, Action<Cluster, ClusterObjectLifecycleEventArgs> handler)
         {
-            events.Handlers.Add(new ClusterObjectLifecycleEventHandler(ClusterObjectLifecycleEventType.Destroyed, handler));
-            return events;
+            handlers.Add(new ClusterObjectLifecycleEventHandler(ClusterObjectLifecycleEventType.Destroyed, handler));
+            return handlers;
         }
     }
 }

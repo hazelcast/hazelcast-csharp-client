@@ -54,16 +54,16 @@ namespace Hazelcast.Clustering
 
     public static partial class Extensions
     {
-        public static ClusterEvents ConnectionAdded(this ClusterEvents events, Action<Cluster, ConnectionLifecycleEventArgs> handler)
+        public static ClusterEventHandlers ConnectionAdded(this ClusterEventHandlers handlers, Action<Cluster, ConnectionLifecycleEventArgs> handler)
         {
-            events.Handlers.Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, handler));
-            return events;
+            handlers.Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, handler));
+            return handlers;
         }
 
-        public static ClusterEvents ConnectionRemoved(this ClusterEvents events, Action<Cluster, ConnectionLifecycleEventArgs> handler)
+        public static ClusterEventHandlers ConnectionRemoved(this ClusterEventHandlers handlers, Action<Cluster, ConnectionLifecycleEventArgs> handler)
         {
-            events.Handlers.Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler));
-            return events;
+            handlers.Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler));
+            return handlers;
         }
     }
 }

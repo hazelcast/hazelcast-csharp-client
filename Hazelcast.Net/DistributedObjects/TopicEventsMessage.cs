@@ -91,7 +91,7 @@ namespace Hazelcast.DistributedObjects
     }
 
     /// <summary>
-    /// Provides extension to the <see cref="TopicEvents{T}"/> class.
+    /// Provides extension to the <see cref="TopicEventHandlers{T}"/> class.
     /// </summary>
     public static partial class Extensions
     {
@@ -99,13 +99,13 @@ namespace Hazelcast.DistributedObjects
         /// Adds an handler for <see cref="TopicEventType.Message"/> events.
         /// </summary>
         /// <typeparam name="T">The topic object type.</typeparam>
-        /// <param name="events">The topic events.</param>
+        /// <param name="handlers">The topic events.</param>
         /// <param name="handler">The handler.</param>
         /// <returns>The topic events.</returns>
-        public static TopicEvents<T> Message<T>(this TopicEvents<T> events, Action<ITopic<T>, TopicMessageEventArgs<T>> handler)
+        public static TopicEventHandlers<T> Message<T>(this TopicEventHandlers<T> handlers, Action<ITopic<T>, TopicMessageEventArgs<T>> handler)
         {
-            events.Handlers.Add(new TopicMessageEventHandler<T>(handler));
-            return events;
+            handlers.Add(new TopicMessageEventHandler<T>(handler));
+            return handlers;
         }
     }
 }

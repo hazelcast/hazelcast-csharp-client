@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Data.Map;
@@ -29,17 +28,17 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
     {
         // TODO: could any of these events be ASYNC?!
 
-        private async Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<MapEvents<TKey, TValue>> on)
+        private async Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<MapEventHandlers<TKey, TValue>> on)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
             if (on == null) throw new ArgumentNullException(nameof(on));
 
-            var subscriber = new MapEvents<TKey, TValue>();
-            on(subscriber);
+            var handlers = new MapEventHandlers<TKey, TValue>();
+            on(handlers);
 
             var flags = MapEventType.Nothing;
-            foreach (var handler in subscriber.Handlers)
+            foreach (var handler in handlers)
                 flags |= handler.EventType;
 
             // 0: no entryKey, no predicate
@@ -72,41 +71,41 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
                 HandleSubscribeResponse,
                 CreateUnsubscribeRequest,
                 HandleEvent,
-                new SubscriptionState(mode, Name, subscriber.Handlers));
+                new SubscriptionState(mode, Name, handlers));
 
             await Cluster.InstallSubscriptionAsync(subscription);
 
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<MapEvents<TKey, TValue>> on)
+        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> on)
             => SubscribeAsync(true, default, false, default, false, on);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEvents<TKey, TValue>> on)
+        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> on)
             => SubscribeAsync(includeValues, default, false, default, false, on);
 
-        public Task<Guid> SubscribeAsync(TKey key, Action<MapEvents<TKey, TValue>> on)
+        public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> on)
             => SubscribeAsync(true, default, false, key, true, on);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEvents<TKey, TValue>> on)
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> on)
             => SubscribeAsync(includeValues, default, false, key, true, on);
 
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEvents<TKey, TValue>> on)
+        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on)
             => SubscribeAsync(true, predicate, true, default, false, on);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEvents<TKey, TValue>> on)
+        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on)
             => SubscribeAsync(includeValues, predicate, true, default, false, on);
 
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on)
+        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on)
             => SubscribeAsync(true, predicate, true, key, true, on);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on)
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on)
             => SubscribeAsync(includeValues, predicate, true, key, true, on);
 
 
         private class SubscriptionState
         {
-            public SubscriptionState(int mode, string name, List<IMapEventHandlerBase<TKey, TValue>> handlers)
+            public SubscriptionState(int mode, string name, MapEventHandlers<TKey, TValue> handlers)
             {
                 Mode = mode;
                 Name = name;
@@ -117,7 +116,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
             public string Name { get;}
 
-            public List<IMapEventHandlerBase<TKey, TValue>> Handlers { get; }
+            public MapEventHandlers<TKey, TValue> Handlers { get; }
         }
 
         private static SubscriptionState ToSafeState(object state)

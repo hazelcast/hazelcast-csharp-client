@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<MapEvents<TKey, TValue>> on);
+        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> on);
 
         /// <summary>
         /// Subscribes to events.
@@ -34,7 +34,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, Action<MapEvents<TKey, TValue>> on);
+        Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> on);
 
         /// <summary>
         /// Subscribes to events.
@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">A key to filter events.</param>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, Action<MapEvents<TKey, TValue>> on);
+        Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> on);
 
         /// <summary>
         /// Subscribes to events.
@@ -51,7 +51,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">A key to filter events.</param>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEvents<TKey, TValue>> on);
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> on);
 
         /// <summary>
         /// Subscribes to events.
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
+        Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on);
 
         /// <summary>
         /// Subscribes to events.
@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
+        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on);
 
         /// <summary>
         /// Subscribes to events.
@@ -77,7 +77,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
+        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on);
 
         /// <summary>
         /// Subscribes to events.
@@ -87,7 +87,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEvents<TKey, TValue>> on);
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on);
 
         /// <summary>
         /// Unsubscribe from events.

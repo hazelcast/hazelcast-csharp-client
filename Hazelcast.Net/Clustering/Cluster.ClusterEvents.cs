@@ -35,15 +35,15 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="on">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        public async Task<Guid> SubscribeAsync(Action<ClusterEvents> on)
+        public async Task<Guid> SubscribeAsync(Action<ClusterEventHandlers> on)
         {
             if (on == null) throw new ArgumentNullException(nameof(on));
 
-            var subscriber = new ClusterEvents();
-            on(subscriber);
+            var handlers = new ClusterEventHandlers();
+            on(handlers);
 
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var handler in subscriber.Handlers)
+            foreach (var handler in handlers)
             {
                 if (handler is ClusterObjectLifecycleEventHandler)
                     await _objectLifecycleEventSubscription.AddSubscription();
@@ -52,7 +52,7 @@ namespace Hazelcast.Clustering
             }
 
             var id = Guid.NewGuid();
-            _clusterEvents[id] = subscriber;
+            _clusterHandlers[id] = handlers;
             return id;
         }
 
@@ -60,19 +60,28 @@ namespace Hazelcast.Clustering
         /// Unsubscribe from events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        /// <returns>A task that will complete when ???</returns> FIXME map returns a bool???
+        /// <returns>Whether the un-registration was successful.</returns>
         public async Task UnsubscribeAsync(Guid subscriptionId)
         {
-            if (!_clusterEvents.TryRemove(subscriptionId, out var clusterEvents))
-                return; // or throw?
+            if (!_clusterHandlers.TryRemove(subscriptionId, out var clusterHandlers))
+                return;
 
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var handler in clusterEvents.Handlers)
+            foreach (var handler in clusterHandlers)
             {
-                if (handler is ClusterObjectLifecycleEventHandler)
-                    await _objectLifecycleEventSubscription.RemoveSubscription();
-                if (handler is PartitionLostEventHandler)
-                    await _partitionLostEventSubscription.RemoveSubscription();
+                switch (handler)
+                {
+                    case ClusterObjectLifecycleEventHandler _:
+                        await _objectLifecycleEventSubscription.RemoveSubscription();
+                        break;
+
+                    case PartitionLostEventHandler _:
+                        await _partitionLostEventSubscription.RemoveSubscription();
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
             }
         }
     }

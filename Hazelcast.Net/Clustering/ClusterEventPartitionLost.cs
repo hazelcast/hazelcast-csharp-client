@@ -54,10 +54,10 @@ namespace Hazelcast.Clustering
 
     public static partial class Extensions
     {
-        public static ClusterEvents PatitionLost(this ClusterEvents events, Action<Cluster, PartitionLostEventArgs> handler)
+        public static ClusterEventHandlers PatitionLost(this ClusterEventHandlers handlers, Action<Cluster, PartitionLostEventArgs> handler)
         {
-            events.Handlers.Add(new PartitionLostEventHandler(handler));
-            return events;
+            handlers.Add(new PartitionLostEventHandler(handler));
+            return handlers;
         }
     }
 }

@@ -59,8 +59,6 @@ namespace Hazelcast.Clustering
         /// Creates event arguments.
         /// </summary>
         /// <param name="member">The member.</param>
-        /// <param name="serviceName">The unique name of the service managing the object.</param>
-        /// <param name="name">The unique name of the object.</param>
         /// <returns>Event arguments.</returns>
         private static ClusterMemberLifecycleEventArgs CreateEventArgs(MemberInfo member)
             => new ClusterMemberLifecycleEventArgs(member);
@@ -68,16 +66,16 @@ namespace Hazelcast.Clustering
 
     public static partial class Extensions
     {
-        public static ClusterEvents MemberAdded(this ClusterEvents events, Action<Cluster, ClusterMemberLifecycleEventArgs> handler)
+        public static ClusterEventHandlers MemberAdded(this ClusterEventHandlers handlers, Action<Cluster, ClusterMemberLifecycleEventArgs> handler)
         {
-            events.Handlers.Add(new ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType.Added, handler));
-            return events;
+            handlers.Add(new ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType.Added, handler));
+            return handlers;
         }
 
-        public static ClusterEvents MemberRemoved(this ClusterEvents events, Action<Cluster, ClusterMemberLifecycleEventArgs> handler)
+        public static ClusterEventHandlers MemberRemoved(this ClusterEventHandlers handlers, Action<Cluster, ClusterMemberLifecycleEventArgs> handler)
         {
-            events.Handlers.Add(new ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType.Removed, handler));
-            return events;
+            handlers.Add(new ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType.Removed, handler));
+            return handlers;
         }
     }
 }
