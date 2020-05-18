@@ -24,6 +24,14 @@ namespace Hazelcast.Protocol.Data
         public string Message { get; }
         public IEnumerable<StackTraceElement> StackTraceElements { get; }
 
+        public ErrorHolder(ClientProtocolErrors errorCode, string className, string message, IEnumerable<StackTraceElement> stackTraceElements)
+        {
+            ErrorCode = (int) errorCode;
+            ClassName = className;
+            Message = message;
+            StackTraceElements = stackTraceElements;
+        }
+
         public ErrorHolder(int errorCode, string className, string message, IEnumerable<StackTraceElement> stackTraceElements)
         {
             ErrorCode = errorCode;

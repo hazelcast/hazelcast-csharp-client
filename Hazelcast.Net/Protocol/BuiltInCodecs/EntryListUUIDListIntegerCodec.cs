@@ -22,6 +22,19 @@ namespace Hazelcast.Protocol.BuiltInCodecs
     {
         //private const int EntrySizeInBytes = GuidSizeInBytes + LongSizeInBytes;
 
+        public static void Encode(ClientMessage clientMessage, ICollection<KeyValuePair<Guid, IList<int>>> collection)
+        {
+            var keyList = new List<Guid>(collection.Count);
+            clientMessage.Add(Frame.CreateBeginStruct());
+            foreach (var kvp in collection)
+            {
+                keyList.Add(kvp.Key);
+                ListIntegerCodec.Encode(clientMessage, kvp.Value);
+            }
+            clientMessage.Add(Frame.CreateEndStruct());
+            ListUUIDCodec.Encode(clientMessage, keyList);
+        }
+
         public static void Encode(ClientMessage clientMessage, ICollection<KeyValuePair<Guid, ICollection<int>>> collection)
         {
             var keyList = new List<Guid>(collection.Count);
