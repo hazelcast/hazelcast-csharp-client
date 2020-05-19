@@ -226,6 +226,7 @@ namespace Hazelcast.Tests.DotNet
             var remainingMilliseconds = 1_000;
             var taskexec = false;
             var semaphore = new SemaphoreSlim(0);
+            Exception exception = null;
 
             async Task RunTask(CancellationToken token)
             {
@@ -233,11 +234,13 @@ namespace Hazelcast.Tests.DotNet
                 try
                 {
                     await semaphore.WaitAsync(token);
+                    taskexec = true;
                     Console.WriteLine("1");
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("2: " + e);
+                    exception = e;
                     throw;
                 }
             }
@@ -245,10 +248,11 @@ namespace Hazelcast.Tests.DotNet
             var taskCancel = new CancellationTokenSource();
             var task = RunTask(taskCancel.Token);
 
-            Assert.ThrowsAsync<Exception>(async () => await task.WithTimeout(remainingMilliseconds, taskCancel));
+            Assert.ThrowsAsync<TimeoutException>(async () => await task.WithTimeout(remainingMilliseconds, taskCancel));
 
             await Task.Delay(2_000);
             Assert.IsFalse(taskexec);
+            Assert.IsInstanceOf<OperationCanceledException>(exception);
         }
 
         private void Log(string msg)

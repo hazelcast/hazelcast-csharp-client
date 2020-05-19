@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering
         private readonly Func<ClientMessage, object, bool> _unsubscribeResponseDecoder;
         private readonly Action<ClientMessage, object> _eventHandler;
 
-        private volatile bool _active;
+        private volatile bool _active = true; // always start as active
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterSubscription"/> class with an auto-assigned identifier.
