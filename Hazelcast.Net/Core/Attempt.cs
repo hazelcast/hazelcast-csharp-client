@@ -42,9 +42,13 @@ namespace Hazelcast.Core
     }
 
     /// <summary>
-    /// Represents the result of attempting an operation.
+    /// Represents the result of attempting an operation to produce a result.
     /// </summary>
     /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <remarks>
+    /// <para>An <see cref="Attempt{TResult}"/> is either successful or failed, it
+    /// carries a <typeparamref name="TResult"/> result, and an exception.</para>
+    /// </remarks>
     public readonly struct Attempt<TResult>
     {
         /// <summary>

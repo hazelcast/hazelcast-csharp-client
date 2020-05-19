@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Serialization;
 

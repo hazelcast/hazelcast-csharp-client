@@ -203,10 +203,13 @@ namespace Hazelcast.Clustering
             }
 
             // register the client
+            // and capture the subscriptions
+            List<ClusterSubscription> subscriptions;
             lock (_clientsLock)
             {
                 _clients[info.MemberId] = client;
                 _addressClients[address] = client;
+                subscriptions = _subscriptions.Values.Where(x => x.Active).ToList();
             }
 
             //
@@ -241,11 +244,11 @@ namespace Hazelcast.Clustering
             // view' events, and this will initialize the partitioner & load balancer
             // beware: it is not possible to talk to the cluster before that has happen
             // TODO: do it in the background, see ListenerService?
-            await AssignClusterEventsClient(client);
+            await ProposeClusterEventsClient(client);
 
             // subscribe the new client to all events the cluster has subscriptions for
             // TODO: do it in the background, see ListenerService?
-            await InstallSubscriptionsOnNewClient(client);
+            await InstallSubscriptionsOnNewClient(client, subscriptions);
 
             return client;
         }
@@ -269,21 +272,23 @@ namespace Hazelcast.Clustering
             // this runs when a client signals that it is shutting down
 
             // forget about the client
+            List<ClusterSubscription> subscriptions;
             lock (_clientsLock)
             {
                 _addressClients.TryRemove(client.Address, out _);
                 _clients.TryRemove(client.MemberId, out _);
+                subscriptions = _subscriptions.Values.ToList();
             }
 
             // clears its subscriptions - does not unsubscribes from the
             // server since the client is not connected anymore
-            ClearLostClientSubscriptions(client);
+            RemoveClient(subscriptions, client);
 
             // we need to have one client permanently handling the cluster events.
             // if the client which just shut down was handling cluster events,
             // we need to make sure another client takes over.
             if (ClearClusterEventsClient(client))
-                AssignClusterEventsClient().Wait(); // FIXME: async oops!
+                ProposeClusterEventsClient().Wait(); // FIXME: async oops!
         }
 
         /// <summary>

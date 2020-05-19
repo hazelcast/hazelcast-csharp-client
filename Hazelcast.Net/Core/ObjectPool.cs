@@ -17,7 +17,8 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Core
 {
-    // FIXME: this class is *not* thread-safe
+    // TODO: refactor this entirely
+    // this class is *not* thread safe and probably not efficient either
     internal class ObjectPool<T>
         where T : class
     {
@@ -36,7 +37,6 @@ namespace Hazelcast.Core
 
         public T Take()
         {
-            // FIXME: this is totally not efficient
             try
             {
                 return _queue.Dequeue();
@@ -63,7 +63,7 @@ namespace Hazelcast.Core
                     }
                     catch (Exception e)
                     {
-                        // why don't we just
+                        // why don't we just throw
                         // instead of logging & swallowing?
                         throw;
                     }
@@ -72,7 +72,7 @@ namespace Hazelcast.Core
                 return;
             }
 
-            // FIXME: race condition here?
+            // is there a race condition here?
 
             _queue.Enqueue(item);
         }

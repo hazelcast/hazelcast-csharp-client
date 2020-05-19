@@ -8,6 +8,7 @@ using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
@@ -20,46 +21,78 @@ namespace Hazelcast.Clustering
         /// <param name="client">The expected client.</param>
         /// <returns>true if the current client matched the expected client, and was cleared; otherwise false.</returns>
         private bool ClearClusterEventsClient(Client client)
-            => Interlocked.CompareExchange(ref _clusterEventsClient, null, client) == client;
+        {
+            lock (_clusterEventsLock)
+            {
+                if (_clusterEventsClient != client)
+                    return false;
+
+                _clusterEventsClient = null;
+                _correlatedSubscriptions.TryRemove(_clusterEventsCorrelationId, out _);
+                _clusterEventsCorrelationId = 0;
+                return true;
+            }
+        }
 
         /// <summary>
-        /// Assigns a new client to handle cluster events.
+        /// Proposes a new client to handle cluster events.
         /// </summary>
         /// <param name="client">An optional candidate client.</param>
         /// <returns>A task that will complete when a new client has been assigned to handle cluster events.</returns>
-        private async Task AssignClusterEventsClient(Client client = null)
+        private async Task ProposeClusterEventsClient(Client client = null)
         {
-            // TODO: log when ending unsuccessfully
-
             if (client == null) client = GetRandomClient();
             if (client == null) return; // running out of clients, end
 
             // try to become the new client by replacing the current value, which is expected to be 'null'
             // if it is not 'null', it means that 'someone else' has taken over the assignment and we can end
-            if (Interlocked.CompareExchange(ref _clusterEventsClient, client, null) != null)
-                return;
+            lock (_clusterEventsLock)
+            {
+                if (_clusterEventsClient != null)
+                    return; // not replacing
+
+                _clusterEventsCorrelationId = _correlationIdSequence.Next;
+            }
 
             // arbitrarily decide to end after some amount of trying
+            // TODO: consider using a timeout, instead?
             int GetMaxAttempts() => _clients.Count * 3;
 
             var failedAttempts = 0;
-            while (!await SubscribeToClusterEvents(client))
+            while (!await SubscribeToClusterEvents(client, _clusterEventsCorrelationId))
             {
                 // the client we tried failed to subscribe to events, try another client,
                 // but ensure we don't enter some sort of infinite loop by counting attempts
-                // TODO: consider using a timeout, instead?
                 var nextClient = GetRandomClient();
                 if (nextClient == null || ++failedAttempts > GetMaxAttempts())
                 {
                     // running out of clients, or tried too many times - end
-                    Interlocked.CompareExchange(ref _clusterEventsClient, null, client);
+                    var failed = false;
+                    lock (_clusterEventsLock)
+                    {
+                        if (_clusterEventsClient == client)
+                        {
+                            _clusterEventsClient = null;
+                            _clusterEventsCorrelationId = 0;
+                            failed = true;
+                        }
+                    }
+
+                    if (failed) 
+                        _logger.LogWarning("Failed to subscribe to cluster events, giving up.");
                     return;
                 }
 
                 // try to become the new client by replacing the current value, which is expected to be 'client'
                 // if it is not 'client', it means that 'someone else' has taken over the assignment and we can end
-                if (Interlocked.CompareExchange(ref _clusterEventsClient, nextClient, client) != client)
-                    return;
+                lock (_clusterEventsLock)
+                {
+                    if (_clusterEventsClient != client)
+                        return;
+
+                    _clusterEventsClient = nextClient;
+                    _clusterEventsCorrelationId = _correlationIdSequence.Next;
+                }
 
                 client = nextClient;
             }
@@ -71,9 +104,11 @@ namespace Hazelcast.Clustering
         /// Subscribes a client to cluster events.
         /// </summary>
         /// <param name="client">The client.</param>
+        /// <param name="correlationId">The correlation identifier.</param>
         /// <returns>A task that will complete when the subscription has been processed, and represent whether it was successful.</returns>
-        private async Task<bool> SubscribeToClusterEvents(Client client) // aka subscribe to member/partition view events?
+        private async Task<bool> SubscribeToClusterEvents(Client client, long correlationId) 
         {
+            // aka subscribe to member/partition view events
             XConsole.WriteLine(this, "subscribe");
 
             // handles the event
@@ -83,7 +118,6 @@ namespace Hazelcast.Clustering
                     (version, partitions) => HandlePartitionViewEvent(client.Id, version, partitions), 
                     _loggerFactory);
 
-            var correlationId = _correlationIdSequence.Next;
             try
             {
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
@@ -91,13 +125,11 @@ namespace Hazelcast.Clustering
                 _ = await client.SendAsync(subscribeRequest, correlationId);
                 XConsole.WriteLine(this, "subscribed");
                 return true;
-
-                // FIXME: but then are we ever going to clear that event handler?
             }
-            catch
+            catch (Exception e)
             {
                 _correlatedSubscriptions.TryRemove(correlationId, out _);
-                // TODO: at least, log the exception! OR just throw then exception and return Task
+                _logger.LogWarning(e, "Failed to subscribe to cluster events, may retry.");
                 return false;
             }
         }
@@ -184,7 +216,7 @@ namespace Hazelcast.Clustering
                         XConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add((ClusterMemberLifecycleEventType.Removed, new ClusterMemberLifecycleEventArgs(member)));
                         if (_clients.TryGetValue(member.Id, out var client))
-                            client.ShutdownAsync().Wait(); // will self-remove once down FIXME: async oops!!
+                            client.Shutdown(); // shuts down in the background, will self-removed once down
                         break;
 
                     case 2: // new but not old = added
@@ -192,8 +224,8 @@ namespace Hazelcast.Clustering
                         eventArgs.Add((ClusterMemberLifecycleEventType.Added, new ClusterMemberLifecycleEventArgs(member)));
                         break;
 
-                    default: // unchanged
-                        break;
+                    default:
+                        throw new NotSupportedException();
                 }
             }
 

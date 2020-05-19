@@ -44,7 +44,7 @@ namespace Hazelcast.DistributedObjects
         ///     this method does nothing.
         /// </remarks>
         /// <param name="subscriptionId">Id of listener registration.</param>
-        Task UnsubscribeAsync(Guid subscriptionId);
+        ValueTask UnsubscribeAsync(Guid subscriptionId);
 
         //        /// <summary>Returns the name of this ITopic instance</summary>
         //        /// <returns>name of this instance</returns>

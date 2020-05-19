@@ -1,33 +1,45 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Hazelcast.Data;
 
 namespace Hazelcast.Clustering
 {
+    /// <summary>
+    /// Defines the types of object lifecycle events.
+    /// </summary>
     public enum ClusterObjectLifecycleEventType
     {
-        Nothing,
+        /// <summary>
+        /// Nothing (default)
+        /// </summary>
+        Nothing = 0,
+
+        /// <summary>
+        /// The object was created.
+        /// </summary>
         Created,
+
+        /// <summary>
+        /// The object was destroyed.
+        /// </summary>
         Destroyed
     }
 
     /// <summary>
-    /// TODO: document
+    /// Represents event data for a cluster object lifecycle event.
     /// </summary>
     public class ClusterObjectLifecycleEventArgs
     {
         /// <summary>
-        /// TODO: document
+        /// Initializes a new instance of the <see cref="ClusterObjectLifecycleEventArgs"/> class.
         /// </summary>
-        /// <param name="serviceName"></param>
-        /// <param name="name"></param>
-        /// <param name="source"></param>
-        public ClusterObjectLifecycleEventArgs(string serviceName, string name, Guid source)
+        /// <param name="serviceName">The service unique name.</param>
+        /// <param name="name">The object unique name.</param>
+        /// <param name="sourceMemberId">The unique identifier of the source member.</param>
+        public ClusterObjectLifecycleEventArgs(string serviceName, string name, Guid sourceMemberId)
         {
             ServiceName = serviceName;
             Name = name;
-            Source = source;
+            SourceMemberId = sourceMemberId;
         }
 
         /// <summary>
@@ -41,15 +53,14 @@ namespace Hazelcast.Clustering
         public string Name { get; }
 
         /// <summary>
-        /// Gets the source of the event. FIXME: member?
+        /// Gets the unique identifier of the source member.
         /// </summary>
-        public Guid Source { get; }
+        public Guid SourceMemberId { get; }
     }
 
     /// <summary>
     /// Represents a handler for a cluster object lifecycle event.
     /// </summary>
-    /// <typeparam name="T">The topic object type.</typeparam>
     internal class ClusterObjectLifecycleEventHandler : IClusterEventHandler
     {
         private readonly Action<Cluster, ClusterObjectLifecycleEventArgs> _handler;

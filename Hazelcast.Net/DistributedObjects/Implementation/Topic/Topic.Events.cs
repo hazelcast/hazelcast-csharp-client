@@ -13,10 +13,8 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
-using Hazelcast.Data.Topic;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -109,7 +107,13 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         }
 
         /// <inheritdoc />
-        public async Task UnsubscribeAsync(Guid subscriptionId)
+
+#if OPTIMIZE_ASYNC
+        public ValueTask UnsubscribeAsync(Guid subscriptionId)
+            => Cluster.RemoveSubscriptionAsync(subscriptionId);
+#else
+        public async ValueTask UnsubscribeAsync(Guid subscriptionId)
             => await Cluster.RemoveSubscriptionAsync(subscriptionId);
+#endif
     }
 }

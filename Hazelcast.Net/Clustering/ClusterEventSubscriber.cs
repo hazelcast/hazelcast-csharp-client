@@ -14,7 +14,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
@@ -80,18 +79,5 @@ namespace Hazelcast.Clustering
                 await subscriber.SubscribeAsync(cluster);
             }
         }
-
-
-        // FIXME these come from ListenerConfig?!
-        public virtual bool IsIncludeValue()
-        {
-            return true;
-        }
-
-        public virtual bool IsLocal()
-        {
-            return false;
-        }
-
     }
 }

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq;
 using Hazelcast.Core;
-using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
-using Hazelcast.Networking;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
@@ -29,8 +28,7 @@ namespace Hazelcast.Clustering
             });
         }
 
-        // FIXME not invoked!
-        // should be invoked by the cluster...
+        // FIXME: invoke!
         private void OnClientLifecycleEvent(ClientLifecycleState state)
         {
             ForEachHandler<ClientLifecycleEventHandler>(handler =>
@@ -55,35 +53,30 @@ namespace Hazelcast.Clustering
             });
         }
 
-        // TODO: see ListenerService:165 to understand what we do with this
-        // - register stuff ??? explain!
-        // and also cluster
-        // - connection added = try to register
-        // - connection removed = re-register to random
-        // maybe we don't need this to be an event at all?
-
         private void OnConnectionAdded(Client client)
         {
+            var args = new ConnectionLifecycleEventArgs(client);
             ForEachHandler<ConnectionLifecycleEventHandler>(handler =>
             {
                 if (handler.EventType == ConnectionLifecycleEventType.Added)
-                    handler.Handle(this, (ConnectionLifecycleEventArgs) null); // FIXME: client);
+                    handler.Handle(this, args);
             });
         }
 
-        // FIXME not invoked!
+        // FIXME: invoke!
         private void OnConnectionRemoved(Client client)
         {
+            var args = new ConnectionLifecycleEventArgs(client);
             ForEachHandler<ConnectionLifecycleEventHandler>(handler =>
             {
                 if (handler.EventType == ConnectionLifecycleEventType.Removed)
-                    handler.Handle(this, (ConnectionLifecycleEventArgs)null); // FIXME: client);
+                    handler.Handle(this, args);
             });
         }
 
         private void ForEachHandler<THandler>(Action<THandler> action)
         {
-            // FIXME could handling be async? w/ controlled scheduler?
+            // TODO: consider async handlers + running on background threads + limiting concurrency
 
             foreach (var (_, clusterEvents) in _clusterHandlers)
             foreach (var handler in clusterEvents.OfType<THandler>())
@@ -94,7 +87,8 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception e)
                 {
-                    // FIXME log, or something!
+                    // TODO: instrumentation, keep track of exceptions
+                    _logger.LogError(e, "Caught exception in event handler.");
                 }
             }
         }
@@ -103,17 +97,17 @@ namespace Hazelcast.Clustering
         {
             XConsole.WriteLine(this, "Handle event message");
 
-            // FIXME could handling be async? w/ controlled scheduler?
+            // FIXME: consider async handlers + running on background threads + limiting concurrency
 
             if (!_correlatedSubscriptions.TryGetValue(message.CorrelationId, out var subscription))
             {
-                // TODO: log a warning
                 // TODO: instrumentation, keep track of missed events
+                _logger.LogWarning($"No event handler for [{message.CorrelationId}]");
                 XConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
                 return;
             }
 
-            // FIXME try/catch?
+            // exceptions are handled by caller (see Client.ReceiveEvent)
             subscription.Handle(message);
         }
     }

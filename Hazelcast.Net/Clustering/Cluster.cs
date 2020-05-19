@@ -61,7 +61,10 @@ namespace Hazelcast.Clustering
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Func<ValueTask> _onConnectionToNewCluster;
 
+        private readonly object _clusterEventsLock = new object();
         private Client _clusterEventsClient; // the client which handles 'cluster events'
+        private long _clusterEventsCorrelationId; // the correlation id of the 'cluster events'
+
         private MemberTable _memberTable;
         private Guid _clusterServerSideId; // the server-side identifier of the cluster
         private ClusterState _state;

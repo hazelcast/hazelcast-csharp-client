@@ -17,20 +17,45 @@ using Hazelcast.Networking;
 
 namespace Hazelcast.Clustering
 {
+    /// <summary>
+    /// Defines the types of connection lifecycle events.
+    /// </summary>
     internal enum ConnectionLifecycleEventType
     {
+        /// <summary>
+        /// Nothing (default).
+        /// </summary>
+        Nothing = 0,
+
+        /// <summary>
+        /// A connection was added.
+        /// </summary>
         Added,
+
+        /// <summary>
+        /// A connection was removed.
+        /// </summary>
         Removed
     }
 
+    /// <summary>
+    /// Represents event data for connection lifecycle events.
+    /// </summary>
     public class ConnectionLifecycleEventArgs
     {
-        public ConnectionLifecycleEventArgs(ClientSocketConnection connection)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConnectionLifecycleEventArgs"/> class.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        public ConnectionLifecycleEventArgs(Client client)
         {
-            Connection = connection;
+            Client = client;
         }
 
-        public ClientSocketConnection Connection { get; }
+        /// <summary>
+        /// Gets the client.
+        /// </summary>
+        public Client Client { get; }
     }
 
     internal class ConnectionLifecycleEventHandler : IClusterEventHandler
@@ -45,8 +70,8 @@ namespace Hazelcast.Clustering
 
         public ConnectionLifecycleEventType EventType { get; }
 
-        public void Handle(Cluster cluster, ClientSocketConnection connection)
-            => _handler(cluster, new ConnectionLifecycleEventArgs(connection));
+        public void Handle(Cluster cluster, Client client)
+            => _handler(cluster, new ConnectionLifecycleEventArgs(client));
 
         public void Handle(Cluster cluster, ConnectionLifecycleEventArgs args)
             => _handler(cluster, args);

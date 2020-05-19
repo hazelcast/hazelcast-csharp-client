@@ -42,7 +42,8 @@ namespace Hazelcast.Clustering
 
         private void HandleInternal(int partitionId, int lostBackupCount, Guid memberId)
         {
-            const int maxLostBackupCount = 6; // TODO: document
+            // TODO: document + avoid hard-coded constants
+            const int maxLostBackupCount = 6;
 
             var member = Cluster.GetMember(memberId);
 

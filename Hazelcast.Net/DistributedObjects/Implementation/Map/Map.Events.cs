@@ -215,7 +215,13 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         }
 
         /// <inheritdoc />
-        public async Task UnsubscribeAsync(Guid subscriptionId)
+
+#if OPTIMIZE_ASYNC
+        public ValueTask UnsubscribeAsync(Guid subscriptionId)
+            => Cluster.RemoveSubscriptionAsync(subscriptionId);
+#else
+        public async ValueTask UnsubscribeAsync(Guid subscriptionId)
             => await Cluster.RemoveSubscriptionAsync(subscriptionId);
+#endif
     }
 }

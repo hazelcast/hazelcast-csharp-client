@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,22 +37,28 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Gets the registration definition for this registration.
+        /// Gets the cluster subscription owning this client subscription.
         /// </summary>
         public ClusterSubscription ClusterSubscription { get; }
 
         /// <summary>
-        /// Gets the unique identifier assigned by the server to this registration.
+        /// Gets the unique identifier assigned by the server to this subscription.
         /// </summary>
+        /// <remarks>
+        /// <para>This is the identifier that needs to be used to unsubscribe.</para>
+        /// </remarks>
         public Guid ServerSubscriptionId { get; }
 
         /// <summary>
-        /// Gets the FIXME: document
+        /// Gets the correlation identifier.
         /// </summary>
+        /// <remarks>
+        /// <para>Event messages for this subscription will have this correlation identifier.</para>
+        /// </remarks>
         public long CorrelationId { get; }
 
         /// <summary>
-        /// Gets the FIXME: document
+        /// Gets the client.
         /// </summary>
         public Client Client { get; }
     }

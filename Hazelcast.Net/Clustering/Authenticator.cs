@@ -76,8 +76,6 @@ namespace Hazelcast.Clustering
 
         private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, ISerializationService serializationService)
         {
-            // TODO accept parameters etc
-
             const string clientType = "CSP"; // CSharp
 
             var serializationVersion = serializationService.GetVersion();

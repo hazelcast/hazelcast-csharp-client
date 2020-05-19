@@ -75,6 +75,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         public Guid Id { get; } = Guid.NewGuid();
 
+        /// <summary>
+        /// Whether the client is active.
+        /// </summary>
         public bool Active { get; private set; }
 
         /// <summary>
@@ -473,6 +476,14 @@ namespace Hazelcast.Clustering
                 RemoveInvocation(invocation);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Shuts the client down in the background.
+        /// </summary>
+        public void Shutdown()
+        {
+            Task.Run(ShutdownAsync);
         }
 
         /// <summary>

@@ -93,6 +93,6 @@ namespace Hazelcast.DistributedObjects
         /// Unsubscribe from events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        Task UnsubscribeAsync(Guid subscriptionId);
+        ValueTask UnsubscribeAsync(Guid subscriptionId);
     }
 }

@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Clustering
@@ -21,28 +23,16 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents a cluster subscription to a server event.
     /// </summary>
-    public class ClusterSubscription
+    public class ClusterSubscription : IEnumerable<ClientSubscription>
     {
+        private readonly object _activeLock = new object();
+        private readonly ConcurrentDictionary<Client, ClientSubscription> _clientSubscriptions = new ConcurrentDictionary<Client, ClientSubscription>();
         private readonly Func<ClientMessage, object, Guid> _subscribeResponseParser;
         private readonly Func<Guid, object, ClientMessage> _unsubscribeRequestFactory;
         private readonly Func<ClientMessage, object, bool> _unsubscribeResponseDecoder;
         private readonly Action<ClientMessage, object> _eventHandler;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterSubscription"/> class with an auto-assigned identifier.
-        /// </summary>
-        /// <param name="subscribeRequest">The subscribe request message.</param>
-        /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
-        /// <param name="unsubscribeResponseDecoder">An unsubscribe response decoder.</param>
-        /// <param name="eventHandler">The event handler.</param>
-        /// <param name="state">A state object.</param>
-        public ClusterSubscription(ClientMessage subscribeRequest,
-            Func<ClientMessage, object, Guid> subscribeResponseParser,
-            Func<ClientMessage, object, bool> unsubscribeResponseDecoder,
-            Action<ClientMessage, object> eventHandler,
-            object state = null)
-            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, null, unsubscribeResponseDecoder, eventHandler, state)
-        { }
+        private volatile bool _active;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterSubscription"/> class with an auto-assigned identifier.
@@ -93,7 +83,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="eventHandler">The event handler.</param>
         /// <remarks>
-        /// <para>A simplified instance only has a handler, and nothing else.</para>
+        /// <para>A simplified instance only has a handler, and nothing else. It cannot be unsubscribed,
+        /// because it is bound to a client and just dies when the client dies. It will not have any
+        /// associated client subscriptions.</para>
         /// </remarks>
         internal ClusterSubscription(Action<ClientMessage, object> eventHandler)
         {
@@ -108,7 +100,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets a value indicating whether the subscription is active.
         /// </summary>
-        public bool Active { get; private set; } = true;
+        public bool Active => _active;
 
         /// <summary>
         /// Gets the state object.
@@ -125,22 +117,41 @@ namespace Hazelcast.Clustering
         /// </summary>
         public void Deactivate()
         {
-            Active = false;
+            lock (_activeLock)
+            {
+                _active = false;
+            }
         }
 
         /// <summary>
-        /// Adds a client subscription.
+        /// Tries to add a client subscription.
         /// </summary>
         /// <param name="message">The subscription response message.</param>
         /// <param name="client">The client.</param>
-        public void AddClientSubscription(ClientMessage message, Client client)
+        /// <returns>Whether the client subscription was added, and its server identifier.</returns>
+        public (bool, Guid) TryAddClientSubscription(ClientMessage message, Client client)
         {
-            // FIXME: what-if it's not active anymore?
-
             var serverSubscriptionId = _subscribeResponseParser(message, State);
-            var clientSubscription = new ClientSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
-            ClientSubscriptions[clientSubscription.Client] = clientSubscription;
+
+            bool active;
+            lock (_activeLock)
+            {
+                active = _active;
+                if (active)
+                    _clientSubscriptions[client] = new ClientSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
+            }
+
+            return (active, serverSubscriptionId);
         }
+
+        /// <summary>
+        /// Removes a client subscription.
+        /// </summary>
+        /// <param name="client">The client.</param>
+        /// <param name="clientSubscription">The client subscription.</param>
+        /// <returns>Whether a client subscription was removed.</returns>
+        public bool TryRemove(Client client, out ClientSubscription clientSubscription)
+            => _clientSubscriptions.TryRemove(client, out clientSubscription);
 
         /// <summary>
         /// Creates an unsubscribe request message.
@@ -155,7 +166,7 @@ namespace Hazelcast.Clustering
         /// <param name="eventMessage">The event message.</param>
         public void Handle(ClientMessage eventMessage)
         {
-            if (!Active)
+            if (!_active)
                 return;
 
             _eventHandler(eventMessage, State);
@@ -171,10 +182,12 @@ namespace Hazelcast.Clustering
             return _unsubscribeResponseDecoder(message, State);
         }
 
-        /// <summary>
-        /// Gets the client subscriptions for this cluster subscription.
-        /// </summary>
-        public ConcurrentDictionary<Client, ClientSubscription> ClientSubscriptions { get; }
-            = new ConcurrentDictionary<Client, ClientSubscription>();
+        /// <inheritdoc />
+        public IEnumerator<ClientSubscription> GetEnumerator()
+            => _clientSubscriptions.Values.GetEnumerator();
+
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator()
+            => GetEnumerator();
     }
 }
